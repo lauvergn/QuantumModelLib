@@ -22,7 +22,6 @@
 !===========================================================================
 PROGRAM main_pot
 !$ USE omp_lib
-USE mod_dnS
   IMPLICIT NONE
 
   real (kind=8),      allocatable     :: Q(:)
