@@ -1,0 +1,151 @@
+== TESTING dnSca module with nderiv= 3
+============================================
+operators: == /= > >= < <=
+============================================
+dnX == dnX:   T ? T
+dnX == dn2X:  F ? F
+dnX /= dnX:   F ? F
+dnX /= dn2X:  T ? T
+dnX  > dnX:   F ? F
+dnX  > dn2X:  F ? F
+dn2X > dnX:   T ? T
+dnX  >= dnX:  T ? T
+dnX  >= dn2X: F ? F
+dn2X >= dnX:  T ? T
+dnX  < dnX:   F ? F
+dnX  < dn2X:  T ? T
+dn2X < dnX:   F ? F
+dnX  <= dnX:  T ? T
+dnX  <= dn2X: T ? T
+dn2X <= dnX:  F ? F
+============================================
+operators: .EQ.
+============================================
+dnX .EQ. dnX:   T ? T
+dnX .NE.dn2X:   T ? T
+dnX .GT. dnX:   F ? F
+dnX .GE. dnX:   T ? T
+dnX .LT. dnX:   F ? F
+dnX .LE. dnX:   T ? T
+============================================
+operators: + - * / **
+============================================
+a+dnX:         (Sana-Snum)==0? T
+dnX+a:         (Sana-Snum)==0? T
+dnX+dnX=2*dnX: (Sana-Snum)==0? T
++(a-dnX):      (Sana-Snum)==0? T
+-(dnX-a):      (Sana-Snum)==0? T
+dnX-dnX==0                   ? T
+a*dnX:         (Sana-Snum)==0? T
+dnX*a:         (Sana-Snum)==0? T
+dnX*dnX-dnX**2.==0           ? T
+dnX/0.5-dnX*2==0             ? T
+0.5/dnX-0.5.dnX*^-1==0       ? T
+dnX/dnX-1.==0                ? T
+dnX**0.5-sqrt(dnX)==0        ? T
+dnX**3 - dnX*dnX*dnX==0      ? T
+============================================
+functions: sqrt, exp, log, ... sin, asin, ... acosh ...
+============================================
+sqrt: (Sana-Snum)==0? T
+ test on sqrt
+ 0   derivative           +0.7071E+00
+ 1st derivative  1        +0.7071E+00
+ 2d  derivative  1  1     -0.7071E+00
+ 3d  derivative  1  1  1  +0.2121E+01
+abs:  (Sana-Snum)==0? T
+ test on abs
+ 0   derivative           +0.5000E+00
+ 1st derivative  1        +0.1000E+01
+ 2d  derivative  1  1     +0.0000E+00
+ 3d  derivative  1  1  1  +0.0000E+00
+exp:  (Sana-Snum)==0? T
+ test on exp
+ 0   derivative           +0.1649E+01
+ 1st derivative  1        +0.1649E+01
+ 2d  derivative  1  1     +0.1649E+01
+ 3d  derivative  1  1  1  +0.1649E+01
+log:  (Sana-Snum)==0? T
+ test on log
+ 0   derivative           -0.6931E+00
+ 1st derivative  1        +0.2000E+01
+ 2d  derivative  1  1     -0.4000E+01
+ 3d  derivative  1  1  1  +0.1600E+02
+log10:(Sana-Snum)==0? T
+ test on log10
+ 0   derivative           -0.3010E+00
+ 1st derivative  1        +0.8686E+00
+ 2d  derivative  1  1     -0.1737E+01
+ 3d  derivative  1  1  1  +0.6949E+01
+sin:  (Sana-Snum)==0? T
+ test on sin
+ 0   derivative           +0.4794E+00
+ 1st derivative  1        +0.8776E+00
+ 2d  derivative  1  1     -0.4794E+00
+ 3d  derivative  1  1  1  -0.8776E+00
+asin: (Sana-Snum)==0? T
+ test on asin
+ 0   derivative           +0.5236E+00
+ 1st derivative  1        +0.1155E+01
+ 2d  derivative  1  1     +0.7698E+00
+ 3d  derivative  1  1  1  +0.3079E+01
+cos:  (Sana-Snum)==0? T
+ test on cos
+ 0   derivative           +0.8776E+00
+ 1st derivative  1        -0.4794E+00
+ 2d  derivative  1  1     -0.8776E+00
+ 3d  derivative  1  1  1  +0.4794E+00
+acos: (Sana-Snum)==0? T
+ test on acos
+ 0   derivative           +0.1047E+01
+ 1st derivative  1        -0.1155E+01
+ 2d  derivative  1  1     -0.7698E+00
+ 3d  derivative  1  1  1  -0.3079E+01
+tan:  (Sana-Snum)==0? T
+ test on tan
+ 0   derivative           +0.5463E+00
+ 1st derivative  1        +0.1298E+01
+ 2d  derivative  1  1     +0.1419E+01
+ 3d  derivative  1  1  1  +0.4922E+01
+atan: (Sana-Snum)==0? T
+ test on atan
+ 0   derivative           +0.4636E+00
+ 1st derivative  1        +0.8000E+00
+ 2d  derivative  1  1     -0.6400E+00
+ 3d  derivative  1  1  1  -0.2560E+00
+sinh: (Sana-Snum)==0? T
+ test on sinh
+ 0   derivative           +0.5211E+00
+ 1st derivative  1        +0.1128E+01
+ 2d  derivative  1  1     +0.5211E+00
+ 3d  derivative  1  1  1  +0.1128E+01
+asinh:(Sana-Snum)==0? T
+ test on asinh
+ 0   derivative           +0.4812E+00
+ 1st derivative  1        +0.8944E+00
+ 2d  derivative  1  1     -0.3578E+00
+ 3d  derivative  1  1  1  -0.2862E+00
+cosh: (Sana-Snum)==0? T
+ test on cosh
+ 0   derivative           +0.1128E+01
+ 1st derivative  1        +0.5211E+00
+ 2d  derivative  1  1     +0.1128E+01
+ 3d  derivative  1  1  1  +0.5211E+00
+acosh:(Sana-Snum)==0? T
+ test on acosh
+ 0   derivative           +0.1317E+01
+ 1st derivative  1        +0.5774E+00
+ 2d  derivative  1  1     -0.3849E+00
+ 3d  derivative  1  1  1  +0.5774E+00
+tanh: (Sana-Snum)==0? T
+ test on tanh
+ 0   derivative           +0.4621E+00
+ 1st derivative  1        +0.7864E+00
+ 2d  derivative  1  1     -0.7269E+00
+ 3d  derivative  1  1  1  -0.5652E+00
+atanh:(Sana-Snum)==0? T
+ test on atanh
+ 0   derivative           +0.5493E+00
+ 1st derivative  1        +0.1333E+01
+ 2d  derivative  1  1     +0.1778E+01
+ 3d  derivative  1  1  1  +0.8296E+01

@@ -1,0 +1,5 @@
+for i in *f90
+do
+ sed "s/dnS/dnSca/g" $i > $i.0
+ mv $i.0 $i
+done

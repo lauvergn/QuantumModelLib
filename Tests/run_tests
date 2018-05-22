@@ -1,0 +1,49 @@
+./clean
+here=`pwd`
+
+cd ..
+ make
+ make dnS.x
+cd  $here
+
+
+
+echo "=========================================="
+echo " TESTING the internal potentials of ModLib"
+echo "=========================================="
+
+../ModLib.x < input.dat > res
+
+
+awk '/----- CHECK POT/,/- END CHECK POT/' res > res_check
+awk '/----- CHECK POT/,/- END CHECK POT/' RES_old/res > res_v0_check
+
+err=`diff res_check res_v0_check`
+rm res_check res_v0_check
+
+if test -z "$err"
+then
+   echo "No error!"
+else
+   echo "Error(s) detected!!"
+   echo $err
+fi
+echo "=========================================="
+
+echo "=========================================="
+echo " TESTING the dnS module"
+echo "=========================================="
+
+../dnS.x > res_dnS
+
+err=`diff res_dnS RES_old/res_dnS`
+
+if test -z "$err"
+then
+   echo "No error!"
+else
+   echo "Error(s) detected!!"
+   echo $err
+fi
+
+echo "=========================================="

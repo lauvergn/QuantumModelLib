@@ -1,0 +1,36 @@
+#!/bin/bash -x
+
+
+a=$1
+nom_rep=/Users/lauvergn/trav/ModLib-old
+
+nom_sd="ModLib-v"$a
+
+
+nom=$nom_rep/$nom_sd
+
+if test -s $nom  
+then
+    echo le repertoire $nom existe !!
+else
+    echo le repertoire $nom n existe pas
+    
+
+    mkdir $nom
+
+    cp -r * $nom
+
+    cd $nom
+    make clean
+
+
+fi
+
+cd $nom_rep
+
+nom_tar=ML.$a
+echo $nom_tar.tar
+tar cvf $nom_tar.tar $nom_sd
+gzip $nom_tar.tar
+ scp $nom_tar.tar.gz styx2:/u/lauvergn/trav/ModLib
+
