@@ -231,14 +231,14 @@ CONTAINS
 !> @brief Subroutine wich calculates the LinearHBond potential with derivatives up to the 2d order if required.
 !!
 !> @author David Lauvergnat
-!! @date 03/08/2017
+!! @date 25/05/2018
 !!
 !! @param PotVal             TYPE(dnMatPot):          derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param Q                  real:                    table of two values for which the potential is calculated (R,theta)
 !! @param Para_LinearHBond   TYPE(Param_LinearHBond): derived type with the Morse parameters.
 !! @param nderiv             integer:                 it enables to specify up to which derivatives the potential is calculated:
 !!                                                    the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_LinearHBondPot(PotVal,r,Para_LinearHBond,nderiv)
+   SUBROUTINE Eval_LinearHBondPot(PotVal,r,Para_LinearHBond,nderiv)
     USE mod_dnMatPot
     USE mod_dnSca
 
@@ -253,13 +253,30 @@ CONTAINS
     real (kind=Rkind), parameter  :: a0      = 0.52917720835354106_Rkind
     real (kind=Rkind), parameter  :: auTOkcalmol_inv  = 627.51_Rkind
 
+    logical, parameter :: debug=.FALSE.
+
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING Eval_LinearHBondPot'
+      write(out_unitp,*) 'r(:) or QQ,q: ',r
+      write(out_unitp,*) 'nderiv',nderiv
+      flush(out_unitp)
+    END IF
+
     IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
       CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=2,nderiv=nderiv)
     END IF
 
-    !write(out_unitp,*) 'QQ,q',r
     dnQQ    = init_dnSca(r(1),ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
     dnq     = init_dnSca(r(2),ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
+
+
+    IF (debug) THEN
+      write(out_unitp,*) 'dnQQ'
+      CALL write_dnSca(dnQQ)
+      write(out_unitp,*) 'dnq'
+      CALL write_dnSca(dnq)
+      flush(out_unitp)
+    END IF
 
     IF (.NOT. Para_LinearHBond%PubliUnit) THEN
       dnQQ = a0*dnQQ ! to convert the bhor into Angstrom
@@ -271,25 +288,42 @@ CONTAINS
     dnX = dnQQ/TWO + dnq
     dnY = dnQQ/TWO - dnq
 
-    !CALL write_dnSca(dnX)
-    !CALL write_dnSca(dnY)
-
+    IF (debug) THEN
+      write(out_unitp,*) 'dnX'
+      CALL write_dnSca(dnX)
+      write(out_unitp,*) 'dnY'
+      CALL write_dnSca(dnY)
+      flush(out_unitp)
+    END IF
 
     PotVal_m1 = dnMorse(dnX,Para_LinearHBond%Morse1)
-    !write(out_unitp,*) 'PotVal_m1. x:',get_d0_FROM_dnSca(dnX)
-    !CALL Write_dnSca(PotVal_m1)
+    IF (debug) THEN
+      write(out_unitp,*) 'PotVal_m1. x:',get_d0_FROM_dnSca(dnX)
+      CALL Write_dnSca(PotVal_m1)
+      flush(out_unitp)
+    END IF
 
     PotVal_m2 = dnMorse(dnY,Para_LinearHBond%Morse2)+Para_LinearHBond%Eref2
-    !write(out_unitp,*) 'PotVal_m2. y:',get_d0_FROM_dnSca(dnY)
-    !CALL Write_dnSca(PotVal_m2)
+    IF (debug) THEN
+      write(out_unitp,*) 'PotVal_m2. y:',get_d0_FROM_dnSca(dnY)
+      CALL Write_dnSca(PotVal_m2)
+      flush(out_unitp)
+    END IF
 
     PotVal_Buck = dnBuck(dnQQ,Para_LinearHBond%Buck)
-    !write(out_unitp,*) 'PotVal_Buck. QQ:',r(1)
-    !CALL Write_dnSca(PotVal_Buck)
+    IF (debug) THEN
+      write(out_unitp,*) 'PotVal_Buck. QQ:',r(1)
+      CALL Write_dnSca(PotVal_Buck)
+      flush(out_unitp)
+    END IF
 
 
-    ! Potential calculation
     CALL sub_dnSca_TO_dnMatPot(PotVal_m1+PotVal_m2+PotVal_Buck,PotVal,i=1,j=1)
+    IF (debug) THEN
+      write(out_unitp,*) 'PotVal:'
+      CALL Write_dnMatPot(PotVal)
+      flush(out_unitp)
+    END IF
 
     IF (.NOT. Para_LinearHBond%PubliUnit) THEN
       PotVal = PotVal*(ONE/auTOkcalmol_inv) ! to convert the kcal/mol into Hartree
@@ -303,6 +337,11 @@ CONTAINS
     CALL dealloc_dnSca(PotVal_m1)
     CALL dealloc_dnSca(PotVal_m2)
     CALL dealloc_dnSca(PotVal_Buck)
+
+    IF (debug) THEN
+      write(out_unitp,*) 'END Eval_LinearHBondPot'
+      flush(out_unitp)
+    END IF
 
   END SUBROUTINE Eval_LinearHBondPot
 

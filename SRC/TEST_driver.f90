@@ -39,16 +39,21 @@ PROGRAM main_pot
   ndim     = 2
   nsurf    = 3
   option   = 0
-  nb_eval  = 10**6
+  nb_eval  = 10**1
   pot_name = 'phenol'
 
-  allocate(Q(ndim))
-  allocate(V(nsurf,nsurf))
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  CALL time_perso('Test ' // pot_name)
 
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
 !$OMP   PRIVATE(i,k,Q,V) &
 !$OMP   NUM_THREADS(maxth)
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
 
 !$OMP   DO SCHEDULE(STATIC)
   DO i=1,nb_eval
@@ -60,9 +65,153 @@ PROGRAM main_pot
   END DO
 !$OMP   END DO
 
+  deallocate(Q)
+  deallocate(V)
+
 !$OMP   END PARALLEL
+
+  CALL time_perso('Test ' // pot_name)
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  ndim     = 6
+  nsurf    = 1
+  nb_eval  = 10**6
+  pot_name = 'henonheiles'
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+  option   = -1 ! to force the initalization
+  CALL sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
+  option   = 0 ! ! normal use of sub_model1_V (without initialization)
+  deallocate(Q)
+  deallocate(V)
+
+  write(6,*) '============================================================'
+  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  CALL time_perso('Test ' // pot_name)
+
+!$OMP   PARALLEL DEFAULT(NONE) &
+!$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
+!$OMP   PRIVATE(i,k,Q,V) &
+!$OMP   NUM_THREADS(maxth)
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+
+!$OMP   DO SCHEDULE(STATIC)
+  DO i=1,nb_eval
+    CALL  random_number(Q)
+
+    CALL sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
+
+    !write(6,*) Q,(V(k,k),k=1,nsurf)
+  END DO
+!$OMP   END DO
 
   deallocate(Q)
   deallocate(V)
 
+!$OMP   END PARALLEL
+
+  CALL time_perso('Test ' // pot_name)
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+
 END PROGRAM main_pot
+  SUBROUTINE time_perso(name)
+  IMPLICIT NONE
+
+    character (len=*) :: name
+
+
+    integer           :: tab_time(8) = 0
+    real (kind=8)     :: t_real
+    integer           :: count,count_work,freq
+    real              :: t_cpu
+    integer           :: seconds,minutes,hours,days
+
+    integer, save     :: count_old,count_ini
+    real,    save     :: t_cpu_old,t_cpu_ini
+    logical, save     :: begin = .TRUE.
+
+
+!$OMP    CRITICAL (time_perso_CRIT)
+
+    CALL date_and_time(values=tab_time)
+    write(6,21) name,tab_time(5:8),tab_time(3:1:-1)
+ 21 format('     Time and date in ',a,' : ',i2,'h:',                &
+            i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
+
+     CALL system_clock(count=count,count_rate=freq)
+     call cpu_time(t_cpu)
+
+     IF (begin) THEN
+       begin = .FALSE.
+       count_old = count
+       count_ini = count
+       t_cpu_old = t_cpu
+       t_cpu_ini = t_cpu
+     END IF
+
+
+     !============================================
+     !cpu time in the subroutine: "name"
+
+     count_work = count-count_old
+     seconds = count_work/freq
+
+     minutes = seconds/60
+     seconds = mod(seconds,60)
+     hours   = minutes/60
+     minutes = mod(minutes,60)
+     days    = hours/24
+     hours   = mod(hours,24)
+
+
+     t_real = real(count_work,kind=8)/real(freq,kind=8)
+     write(6,31) t_real,name
+ 31  format('        real (s): ',f18.3,' in ',a)
+     write(6,32) days,hours,minutes,seconds,name
+ 32  format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
+
+     write(6,33) t_cpu-t_cpu_old,name
+ 33  format('        cpu (s): ',f18.3,' in ',a)
+
+
+     !============================================
+     !Total cpu time
+
+     count_work = count-count_ini
+     seconds = count_work/freq
+
+     minutes = seconds/60
+     seconds = mod(seconds,60)
+     hours   = minutes/60
+     minutes = mod(minutes,60)
+     days    = hours/24
+     hours   = mod(hours,24)
+
+     t_real = real(count_work,kind=8)/real(freq,kind=8)
+     write(6,41) t_real
+ 41  format('  Total real (s): ',f18.3)
+     write(6,42) days,hours,minutes,seconds
+ 42  format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
+     write(6,43) t_cpu-t_cpu_ini
+ 43  format('  Total cpu (s): ',f18.3)
+
+ 51  format(a,i10,a,a)
+
+
+     flush(6)
+     !============================================
+
+     count_old = count
+     t_cpu_old = t_cpu
+
+!$OMP   END CRITICAL (time_perso_CRIT)
+
+
+  END SUBROUTINE time_perso

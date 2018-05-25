@@ -517,7 +517,7 @@ CONTAINS
 !! @date 03/08/2017
 !!
 !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
-!! @param d1                 real  (result):      d1=S%d1
+!! @param d1                 real  (result):        d1=S%d1, d1 is allocatable
   FUNCTION get_d1_FROM_dnSca(S) RESULT(d1)
     real (kind=Rkind), allocatable   :: d1(:)
     TYPE (dnSca),        intent(in)    :: S
@@ -528,40 +528,88 @@ CONTAINS
     IF (allocated(S%d1)) d1 = S%d1
 
   END FUNCTION get_d1_FROM_dnSca
-!> @brief Public function to get d2 from a derived type dnSca.
-!!
-!> @author David Lauvergnat
-!! @date 03/08/2017
-!!
-!! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
-!! @param d2                 real  (result):      d2=S%d2
-  FUNCTION get_d2_FROM_dnSca(S) RESULT(d2)
-    real (kind=Rkind), allocatable   :: d2(:,:)
-    TYPE (dnSca),        intent(in)    :: S
+  !> @brief Public function to get d1 from a derived type dnSca. Similar to get_d1_FROM_dnSca, but d1 is NOT allocatable.
+  !!
+  !> @author David Lauvergnat
+  !! @date 25/05/2018
+  !!
+  !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
+  !! @param d1                 real       :           d1=S%d1, d1 is NOT allocatable
+    SUBROUTINE sub_get_d1_FROM_dnSca(d1,S)
+      real (kind=Rkind),   intent(inout) :: d1(:)
+      TYPE (dnSca),        intent(in)    :: S
 
-    character (len=*), parameter :: name_sub='get_d2_FROM_dnSca'
+      character (len=*), parameter :: name_sub='sub_get_d1_FROM_dnSca'
 
-    !IF (allocated(d2)) deallocate(d2)
-    IF (allocated(S%d2)) d2 = S%d2
+      IF (allocated(S%d1)) d1(:) = S%d1
 
-  END FUNCTION get_d2_FROM_dnSca
-!> @brief Public function to get d3 from a derived type dnSca.
-!!
-!> @author David Lauvergnat
-!! @date 03/08/2017
-!!
-!! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
-!! @param d3                 real  (result):      d3=S%d3
-  FUNCTION get_d3_FROM_dnSca(S) RESULT(d3)
-    real (kind=Rkind), allocatable   :: d3(:,:,:)
-    TYPE (dnSca),        intent(in)    :: S
+    END SUBROUTINE sub_get_d1_FROM_dnSca
+  !> @brief Public function to get d2 from a derived type dnSca.
+  !!
+  !> @author David Lauvergnat
+  !! @date 03/08/2017
+  !!
+  !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
+  !! @param d2                 real  (result):        d2=S%d2, d2 is allocatable
+    FUNCTION get_d2_FROM_dnSca(S) RESULT(d2)
+      real (kind=Rkind), allocatable   :: d2(:,:)
+      TYPE (dnSca),        intent(in)    :: S
 
-    character (len=*), parameter :: name_sub='get_d3_FROM_dnSca'
+      character (len=*), parameter :: name_sub='get_d2_FROM_dnSca'
 
-    !IF (allocated(d3)) deallocate(d3)
-    IF (allocated(S%d3)) d3 = S%d3
+      !IF (allocated(d2)) deallocate(d2)
+      IF (allocated(S%d2)) d2 = S%d2
 
-  END FUNCTION get_d3_FROM_dnSca
+    END FUNCTION get_d2_FROM_dnSca
+  !> @brief Public function to get d2 from a derived type dnSca. Similar to get_d2_FROM_dnSca, but d2 is NOT allocatable.
+  !!
+  !> @author David Lauvergnat
+  !! @date 25/05/2018
+  !!
+  !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
+  !! @param d2                 real:                  d2=S%d2, d2 is NOT allocatable
+    SUBROUTINE sub_get_d2_FROM_dnSca(d2,S)
+      real (kind=Rkind),   intent(inout) :: d2(:,:)
+      TYPE (dnSca),        intent(in)    :: S
+
+      character (len=*), parameter :: name_sub='sub_get_d2_FROM_dnSca'
+
+      IF (allocated(S%d2)) d2(:,:) = S%d2
+
+    END SUBROUTINE sub_get_d2_FROM_dnSca
+  !> @brief Public function to get d3 from a derived type dnSca.
+  !!
+  !> @author David Lauvergnat
+  !! @date 03/08/2017
+  !!
+  !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
+  !! @param d3                 real  (result):        d3=S%d3, d3 is allocatable
+    FUNCTION get_d3_FROM_dnSca(S) RESULT(d3)
+      real (kind=Rkind), allocatable   :: d3(:,:,:)
+      TYPE (dnSca),        intent(in)    :: S
+
+      character (len=*), parameter :: name_sub='get_d3_FROM_dnSca'
+
+      !IF (allocated(d3)) deallocate(d3)
+      IF (allocated(S%d3)) d3 = S%d3
+
+    END FUNCTION get_d3_FROM_dnSca
+  !> @brief Public function to get d3 from a derived type dnSca. Similar to get_d3_FROM_dnSca, but d3 is NOT allocatable.
+  !!
+  !> @author David Lauvergnat
+  !! @date 25/05/2018
+  !!
+  !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
+  !! @param d3                 real:                  d3=S%d3, d3 is NOT allocatable
+    SUBROUTINE sub_get_d3_FROM_dnSca(d3,S)
+      real (kind=Rkind),   intent(inout) :: d3(:,:,:)
+      TYPE (dnSca),        intent(in)    :: S
+
+      character (len=*), parameter :: name_sub='sub_get_d3_FROM_dnSca'
+
+      IF (allocated(S%d3)) d3(:,:,:) = S%d3
+
+    END SUBROUTINE sub_get_d3_FROM_dnSca
 !> @brief Public subroutine which prints a derived type dnSca.
 !!
 !> @author David Lauvergnat
@@ -590,13 +638,13 @@ CONTAINS
     ndim = 0
     IF (allocated(S%d1)) ndim = size(S%d1)
 
-    write(nio_loc,'(a,3(3x),x,sp,e12.4)') ' 0   derivative',S%d0
+    write(nio_loc,'(a,3(3x),x,sp,e12.3)') ' 0   derivative',S%d0
 
     IF (allocated(S%d1)) THEN
       IF (ndim > 99) THEN
-        fformat = '(a,(x,i0),x,sp,e12.4)'
+        fformat = '(a,(x,i0),x,sp,e12.3)'
       ELSE
-        fformat = '(a,(x,i2),2(3x),x,sp,e12.4)'
+        fformat = '(a,(x,i2),2(3x),x,sp,e12.3)'
       END IF
       DO i=1,ubound(S%d1,dim=1)
         write(nio_loc,fformat) ' 1st derivative',i,S%d1(i)
@@ -605,9 +653,9 @@ CONTAINS
 
     IF (allocated(S%d2)) THEN
       IF (ndim > 99) THEN
-        fformat = '(a,2(x,i0),x,sp,e12.4)'
+        fformat = '(a,2(x,i0),x,sp,e12.3)'
       ELSE
-        fformat = '(a,2(x,i2),1(3x),x,sp,e12.4)'
+        fformat = '(a,2(x,i2),1(3x),x,sp,e12.3)'
       END IF
       DO i=1,ubound(S%d2,dim=2)
       DO j=1,ubound(S%d2,dim=1)
@@ -618,9 +666,9 @@ CONTAINS
 
     IF (allocated(S%d3)) THEN
       IF (ndim > 99) THEN
-        fformat = '(a,3(x,i0),x,sp,e12.4)'
+        fformat = '(a,3(x,i0),x,sp,e12.3)'
       ELSE
-        fformat = '(a,3(x,i2),x,sp,e12.4)'
+        fformat = '(a,3(x,i2),x,sp,e12.3)'
       END IF
       DO i=1,ubound(S%d3,dim=3)
       DO j=1,ubound(S%d3,dim=2)
@@ -761,6 +809,7 @@ CONTAINS
     TYPE (dnSca)            :: Sloc
     real (kind=Rkind)     :: xloc,step=ONETENTH**4
     integer               :: nderiv_loc,i,j,k
+    real (kind=Rkind)     :: f0,fp,fm,fpp,fmm,fppp,fmmm
 
 
     character (len=*), parameter :: name_sub='get_Num_dnSca_FROM_f_x'
@@ -780,17 +829,41 @@ CONTAINS
     CASE(0)
       Snum%d0 = f(x)
     CASE(1)
-      Snum%d0 = f(x)
-      Snum%d1 = (f(x+step)-f(x-step))/(step+step)
+      f0  = f(x)
+      fp  = f(x+step)
+      fm  = f(x-step)
+      !fpp = f(x+step+step)
+      !fmm = f(x-step-step)
+
+      Snum%d0 = f0
+      Snum%d1 = (fp-fm)/(step+step)
     CASE(2)
-      Snum%d0 = f(x)
-      Snum%d1 = (f(x+step)-f(x-step))/(step+step)
-      Snum%d2 = (f(x+step)+f(x-step)-TWO*f(x))/step**2
+      f0  = f(x)
+      fp  = f(x+step)
+      fm  = f(x-step)
+      fpp = f(x+step+step)
+      fmm = f(x-step-step)
+
+      Snum%d0 = f0
+      Snum%d1 = (fp-fm)/(step+step)
+      Snum%d2 = (fp+fm-TWO*f0)/step**2
     CASE(3)
-      Snum%d0 = f(x)
-      Snum%d1 = (f(x+step)-f(x-step))/(step+step)
-      Snum%d2 = (f(x+step)+f(x-step)-TWO*f(x))/step**2
-      Snum%d3 = (f(x+TWO*step)-f(x-TWO*step)-TWO*(f(x+step)-f(x-step)))/(TWO*step**3)
+      f0   = f(x)
+      fp   = f(x+step)
+      fm   = f(x-step)
+      fpp  = f(x+step+step)
+      fmm  = f(x-step-step)
+      fppp = f(x+step+step+step)
+      fmmm = f(x-step-step-step)
+
+      Snum%d0 = f0
+      Snum%d1 = ( THREE/FOUR*(fp-fm) - &
+                 THREE/20_Rkind*(fpp-fmm) + &
+                 ONE/60_Rkind*(fppp-fmmm) )/step
+
+      Snum%d2 = (-30_Rkind*f0+16_Rkind*(fp+fm)-(fpp+fmm))/(TWELVE*step**2)
+
+      Snum%d3 = (-13_Rkind*(fp-fm)+EIGHT*(fpp-fmm)-(fppp-fmmm))/(EIGHT*step**3)
 
     END SELECT
 

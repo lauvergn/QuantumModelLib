@@ -39,8 +39,7 @@ SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
 
 !$OMP CRITICAL (CRIT_sub_model_V)
   IF (begin) THEN
-    !$ write(6,*) 'begining: thread?',OMP_GET_THREAD_NUM(),begin
-    !CALL Init_Model(Para_Model,pot_name='phenol',read_param=.FALSE.)
+    !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
     CALL Init_Model(Para_Model,pot_name='HenonHeiles',ndim=ndim,read_param=.FALSE.)
 
     IF (ndim /= Para_Model%ndim .OR. nsurf /= Para_Model%nsurf) THEN
@@ -51,7 +50,7 @@ SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
       write(6,*) ' model name                  : ',Para_Model%pot_name
       write(6,*) ' ndim, nsurf (from the model): ',Para_Model%ndim,Para_Model%nsurf
       write(6,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model_V: wrong dim or nsurf'
+      STOP 'ERROR in sub_model_V: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
   END IF
@@ -81,8 +80,8 @@ SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
 
 
 !$OMP CRITICAL (CRIT_sub_model_V)
-  IF (begin) THEN
-    !$ write(6,*) 'begining: thread?',OMP_GET_THREAD_NUM(),begin
+  IF (begin .OR. option < 0) THEN
+    !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
     write(6,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
     write(6,*) 'ndim,nsurf,    : ',ndim,nsurf
     flush(6)
@@ -96,7 +95,7 @@ SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
       write(6,*) ' model name                  : ',Para_Model%pot_name
       write(6,*) ' ndim, nsurf (from the model): ',Para_Model%ndim,Para_Model%nsurf
       write(6,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model_V: wrong dim or nsurf'
+      STOP 'ERROR in sub_model_V: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
   END IF
@@ -127,7 +126,7 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
 
 !$OMP CRITICAL (CRIT_sub_model_V)
   IF (begin) THEN
-    !$ write(6,*) 'begining: thread?',OMP_GET_THREAD_NUM(),begin
+    !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
     write(6,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
     write(6,*) 'ndim,nsurf,    : ',ndim,nsurf
     flush(6)
@@ -141,7 +140,7 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
       write(6,*) ' model name                  : ',Para_Model%pot_name
       write(6,*) ' ndim, nsurf (from the model): ',Para_Model%ndim,Para_Model%nsurf
       write(6,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model_V: wrong dim or nsurf'
+      STOP 'ERROR in sub_model_V: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
   END IF
@@ -172,7 +171,7 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 
 !$OMP CRITICAL (CRIT_sub_model_V)
   IF (begin) THEN
-    !$ write(6,*) 'begining: thread?',OMP_GET_THREAD_NUM(),begin
+    !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
     write(6,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
     write(6,*) 'ndim,nsurf,    : ',ndim,nsurf
     flush(6)
@@ -186,7 +185,7 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
       write(6,*) ' model name                  : ',Para_Model%pot_name
       write(6,*) ' ndim, nsurf (from the model): ',Para_Model%ndim,Para_Model%nsurf
       write(6,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model_V: wrong dim or nsurf'
+      STOP 'ERROR in sub_model_V: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
   END IF

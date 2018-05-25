@@ -49,103 +49,103 @@ functions: sqrt, exp, log, ... sin, asin, ... acosh ...
 ============================================
 sqrt: (Sana-Snum)==0? T
  test on sqrt
- 0   derivative           +0.7071E+00
- 1st derivative  1        +0.7071E+00
- 2d  derivative  1  1     -0.7071E+00
- 3d  derivative  1  1  1  +0.2121E+01
+ 0   derivative            +0.707E+00
+ 1st derivative  1         +0.707E+00
+ 2d  derivative  1  1      -0.707E+00
+ 3d  derivative  1  1  1   +0.212E+01
 abs:  (Sana-Snum)==0? T
  test on abs
- 0   derivative           +0.5000E+00
- 1st derivative  1        +0.1000E+01
- 2d  derivative  1  1     +0.0000E+00
- 3d  derivative  1  1  1  +0.0000E+00
+ 0   derivative            +0.500E+00
+ 1st derivative  1         +0.100E+01
+ 2d  derivative  1  1      +0.000E+00
+ 3d  derivative  1  1  1   +0.000E+00
 exp:  (Sana-Snum)==0? T
  test on exp
- 0   derivative           +0.1649E+01
- 1st derivative  1        +0.1649E+01
- 2d  derivative  1  1     +0.1649E+01
- 3d  derivative  1  1  1  +0.1649E+01
+ 0   derivative            +0.165E+01
+ 1st derivative  1         +0.165E+01
+ 2d  derivative  1  1      +0.165E+01
+ 3d  derivative  1  1  1   +0.165E+01
 log:  (Sana-Snum)==0? T
  test on log
- 0   derivative           -0.6931E+00
- 1st derivative  1        +0.2000E+01
- 2d  derivative  1  1     -0.4000E+01
- 3d  derivative  1  1  1  +0.1600E+02
+ 0   derivative            -0.693E+00
+ 1st derivative  1         +0.200E+01
+ 2d  derivative  1  1      -0.400E+01
+ 3d  derivative  1  1  1   +0.160E+02
 log10:(Sana-Snum)==0? T
  test on log10
- 0   derivative           -0.3010E+00
- 1st derivative  1        +0.8686E+00
- 2d  derivative  1  1     -0.1737E+01
- 3d  derivative  1  1  1  +0.6949E+01
+ 0   derivative            -0.301E+00
+ 1st derivative  1         +0.869E+00
+ 2d  derivative  1  1      -0.174E+01
+ 3d  derivative  1  1  1   +0.695E+01
 sin:  (Sana-Snum)==0? T
  test on sin
- 0   derivative           +0.4794E+00
- 1st derivative  1        +0.8776E+00
- 2d  derivative  1  1     -0.4794E+00
- 3d  derivative  1  1  1  -0.8776E+00
+ 0   derivative            +0.479E+00
+ 1st derivative  1         +0.878E+00
+ 2d  derivative  1  1      -0.479E+00
+ 3d  derivative  1  1  1   -0.878E+00
 asin: (Sana-Snum)==0? T
  test on asin
- 0   derivative           +0.5236E+00
- 1st derivative  1        +0.1155E+01
- 2d  derivative  1  1     +0.7698E+00
- 3d  derivative  1  1  1  +0.3079E+01
+ 0   derivative            +0.524E+00
+ 1st derivative  1         +0.115E+01
+ 2d  derivative  1  1      +0.770E+00
+ 3d  derivative  1  1  1   +0.308E+01
 cos:  (Sana-Snum)==0? T
  test on cos
- 0   derivative           +0.8776E+00
- 1st derivative  1        -0.4794E+00
- 2d  derivative  1  1     -0.8776E+00
- 3d  derivative  1  1  1  +0.4794E+00
+ 0   derivative            +0.878E+00
+ 1st derivative  1         -0.479E+00
+ 2d  derivative  1  1      -0.878E+00
+ 3d  derivative  1  1  1   +0.479E+00
 acos: (Sana-Snum)==0? T
  test on acos
- 0   derivative           +0.1047E+01
- 1st derivative  1        -0.1155E+01
- 2d  derivative  1  1     -0.7698E+00
- 3d  derivative  1  1  1  -0.3079E+01
+ 0   derivative            +0.105E+01
+ 1st derivative  1         -0.115E+01
+ 2d  derivative  1  1      -0.770E+00
+ 3d  derivative  1  1  1   -0.308E+01
 tan:  (Sana-Snum)==0? T
  test on tan
- 0   derivative           +0.5463E+00
- 1st derivative  1        +0.1298E+01
- 2d  derivative  1  1     +0.1419E+01
- 3d  derivative  1  1  1  +0.4922E+01
+ 0   derivative            +0.546E+00
+ 1st derivative  1         +0.130E+01
+ 2d  derivative  1  1      +0.142E+01
+ 3d  derivative  1  1  1   +0.492E+01
 atan: (Sana-Snum)==0? T
  test on atan
- 0   derivative           +0.4636E+00
- 1st derivative  1        +0.8000E+00
- 2d  derivative  1  1     -0.6400E+00
- 3d  derivative  1  1  1  -0.2560E+00
+ 0   derivative            +0.464E+00
+ 1st derivative  1         +0.800E+00
+ 2d  derivative  1  1      -0.640E+00
+ 3d  derivative  1  1  1   -0.256E+00
 sinh: (Sana-Snum)==0? T
  test on sinh
- 0   derivative           +0.5211E+00
- 1st derivative  1        +0.1128E+01
- 2d  derivative  1  1     +0.5211E+00
- 3d  derivative  1  1  1  +0.1128E+01
+ 0   derivative            +0.521E+00
+ 1st derivative  1         +0.113E+01
+ 2d  derivative  1  1      +0.521E+00
+ 3d  derivative  1  1  1   +0.113E+01
 asinh:(Sana-Snum)==0? T
  test on asinh
- 0   derivative           +0.4812E+00
- 1st derivative  1        +0.8944E+00
- 2d  derivative  1  1     -0.3578E+00
- 3d  derivative  1  1  1  -0.2862E+00
+ 0   derivative            +0.481E+00
+ 1st derivative  1         +0.894E+00
+ 2d  derivative  1  1      -0.358E+00
+ 3d  derivative  1  1  1   -0.286E+00
 cosh: (Sana-Snum)==0? T
  test on cosh
- 0   derivative           +0.1128E+01
- 1st derivative  1        +0.5211E+00
- 2d  derivative  1  1     +0.1128E+01
- 3d  derivative  1  1  1  +0.5211E+00
+ 0   derivative            +0.113E+01
+ 1st derivative  1         +0.521E+00
+ 2d  derivative  1  1      +0.113E+01
+ 3d  derivative  1  1  1   +0.521E+00
 acosh:(Sana-Snum)==0? T
  test on acosh
- 0   derivative           +0.1317E+01
- 1st derivative  1        +0.5774E+00
- 2d  derivative  1  1     -0.3849E+00
- 3d  derivative  1  1  1  +0.5774E+00
+ 0   derivative            +0.132E+01
+ 1st derivative  1         +0.577E+00
+ 2d  derivative  1  1      -0.385E+00
+ 3d  derivative  1  1  1   +0.577E+00
 tanh: (Sana-Snum)==0? T
  test on tanh
- 0   derivative           +0.4621E+00
- 1st derivative  1        +0.7864E+00
- 2d  derivative  1  1     -0.7269E+00
- 3d  derivative  1  1  1  -0.5652E+00
+ 0   derivative            +0.462E+00
+ 1st derivative  1         +0.786E+00
+ 2d  derivative  1  1      -0.727E+00
+ 3d  derivative  1  1  1   -0.565E+00
 atanh:(Sana-Snum)==0? T
  test on atanh
- 0   derivative           +0.5493E+00
- 1st derivative  1        +0.1333E+01
- 2d  derivative  1  1     +0.1778E+01
- 3d  derivative  1  1  1  +0.8296E+01
+ 0   derivative            +0.549E+00
+ 1st derivative  1         +0.133E+01
+ 2d  derivative  1  1      +0.178E+01
+ 3d  derivative  1  1  1   +0.830E+01

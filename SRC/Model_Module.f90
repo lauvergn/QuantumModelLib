@@ -23,6 +23,7 @@
 MODULE mod_Model
 !$ USE omp_lib
   USE mod_NumParameters
+  !USE mod_Lib,            ONLY: time_perso
   USE mod_dnMatPot,       ONLY: dnMatPot,alloc_dnMatPot,dealloc_dnMatPot,Check_NotAlloc_dnMatPot, &
                                 get_maxval_OF_dnMatPot,Write_dnMatPot,get_nsurf_FROM_dnMatPot,    &
                                 get_ndim_FROM_dnMatPot,dnmatpot2_minus_dnmatpot1,assignment (=)

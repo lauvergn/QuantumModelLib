@@ -258,10 +258,11 @@ CONTAINS
     END IF
   END SUBROUTINE sub_dnMatPot2_TO_dnMatPot1
 
+
   SUBROUTINE sub_dnSca_TO_dnMatPot(S,Mat,i,j)
     USE mod_dnSca
     TYPE (dnMatPot),    intent(inout) :: Mat
-    TYPE (dnSca),         intent(in)    :: S
+    TYPE (dnSca),       intent(in)    :: S
     integer, optional,  intent(in)    :: i,j
 
     integer :: nderiv_dnMat,nsurf_dnMat,ndim_dnMat,nderiv_dnSca,ndim_dnSca
@@ -314,12 +315,12 @@ CONTAINS
 
     ! gradient
     IF (nderiv_dnSca >= 1) THEN
-      Mat%d1(i_loc,j_loc,:) = get_d1_FROM_dnSca(S)
+      CALL sub_get_d1_FROM_dnSca(Mat%d1(i_loc,j_loc,:),S)
     END IF
 
     ! Hessian
     IF (nderiv_dnSca >= 2) then
-      Mat%d2(i_loc,j_loc,:,:) = get_d2_FROM_dnSca(S)
+      CALL sub_get_d2_FROM_dnSca(Mat%d2(i_loc,j_loc,:,:),S)
     END IF
 
 
