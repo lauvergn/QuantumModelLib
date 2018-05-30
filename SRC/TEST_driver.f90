@@ -37,6 +37,7 @@ PROGRAM main_pot
 
   write(6,*) 'TEST_driver. number of threads:',maxth
 
+  nb_eval  = 10**5
 
   write(6,*) '============================================================'
   write(6,*) '============================================================'
@@ -46,7 +47,6 @@ PROGRAM main_pot
   ndim     = 2
   nsurf    = 3
   option   = 0
-  nb_eval  = 10**5
   pot_name = 'phenol'
 
   allocate(Q(ndim))
