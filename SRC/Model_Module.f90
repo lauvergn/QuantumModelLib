@@ -23,7 +23,6 @@
 MODULE mod_Model
 !$ USE omp_lib
   USE mod_NumParameters
-  !USE mod_Lib,            ONLY: time_perso
   USE mod_dnMatPot,       ONLY: dnMatPot,alloc_dnMatPot,dealloc_dnMatPot,Check_NotAlloc_dnMatPot, &
                                 get_maxval_OF_dnMatPot,Write_dnMatPot,get_nsurf_FROM_dnMatPot,    &
                                 get_ndim_FROM_dnMatPot,dnmatpot2_minus_dnmatpot1,assignment (=)
@@ -52,7 +51,7 @@ MODULE mod_Model
     logical :: adiabatic   = .TRUE.
     logical :: PubliUnit   = .FALSE. ! when PubliUnit=.TRUE., the units of a reference (publi ...) are used. Default (atomic unit)
 
-    character (len=20) :: pot_name
+    character (len=:), allocatable :: pot_name
 
     TYPE (dnMatPot)          :: Vec0 ! to get the correct phase of the adiatic couplings
 
@@ -101,19 +100,19 @@ CONTAINS
     read(nio,nml=potential)
     !write(out_unitp,nml=potential)
 
-    option1            = option
+    option1              = option
     Para_Model%ndim      = ndim
     Para_Model%nsurf     = nsurf
     Para_Model%adiabatic = adiabatic
     Para_Model%numeric   = numeric
-    Para_Model%pot_name  = pot_name
+    Para_Model%pot_name  = strdup(pot_name)
     Para_Model%PubliUnit = PubliUnit
 
   END SUBROUTINE Read_Model
  
   SUBROUTINE Init_Model(Para_Model,pot_name,ndim,nsurf,                 &
-                      read_param,param_file_name,nio_param_file,        &
-                      option,PubliUnit)
+                        read_param,param_file_name,nio_param_file,      &
+                        option,PubliUnit)
   USE mod_Lib
   IMPLICIT NONE
 
@@ -160,7 +159,7 @@ CONTAINS
     END IF
 
     IF (present(pot_name)) THEN
-      Para_Model%pot_name  = pot_name
+      Para_Model%pot_name  = strdup(pot_name)
     ELSE
       IF (.NOT. read_param_loc) THEN
         write(out_unitp,*) 'ERROR in Init_Model'
@@ -189,9 +188,6 @@ CONTAINS
 
     CALL dealloc_dnMatPot(Para_Model%Vec0)
 
-    Para_Model%adiabatic = .true.
-    Para_Model%numeric   = .false.
-
     IF (read_param_loc) THEN
 
       IF (nio_loc /= in_unitp) THEN
@@ -212,6 +208,7 @@ CONTAINS
 
     CALL string_uppercase_TO_lowercase(Para_Model%pot_name)
     write(out_unitp,*) 'Para_Model%pot_name: ',Para_Model%pot_name
+
     SELECT CASE (Para_Model%pot_name)
     CASE ('morse')
       !! Morse potential: V(R) = D*(1-exp(-a*(r-Req))**2

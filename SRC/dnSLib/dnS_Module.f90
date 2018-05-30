@@ -55,7 +55,7 @@
 !! @li ....
 !!
 !! All fortran comparison operators (== /= > >= < <=) and (.EQ. .LT. ....) are overloaded, as well.
-!! The comparison are done on the zero-order component :
+!! The comparison are done on the zero-order component:
 !! S1 == S2                   =>   S1%d0 == S2%d0
 !! S1 > S2                    =>   S1%d0  > S2%d0
 !!

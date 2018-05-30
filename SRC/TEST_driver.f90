@@ -26,6 +26,7 @@ PROGRAM main_pot
 
   real (kind=8),      allocatable     :: Q(:)
   real (kind=8),      allocatable     :: V(:,:)
+  real (kind=8),      allocatable     :: g(:,:,:)
   character (len=16)                  :: pot_name
 
   integer                             :: i,k,ndim,nsurf,option,nb_eval,maxth
@@ -36,20 +37,36 @@ PROGRAM main_pot
 
   write(6,*) 'TEST_driver. number of threads:',maxth
 
-  ndim     = 2
-  nsurf    = 3
-  option   = 0
-  nb_eval  = 10**1
-  pot_name = 'phenol'
 
   write(6,*) '============================================================'
   write(6,*) '============================================================'
   write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
   CALL time_perso('Test ' // pot_name)
 
+  ndim     = 2
+  nsurf    = 3
+  option   = 0
+  nb_eval  = 10**5
+  pot_name = 'phenol'
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+
+  Q = (/1._8,-0.5_8 /)
+  CALL sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
+
+  write(6,*) ' Diabatic potential as a 3x3 matrix:'
+  write(6,'(3f12.8)') V
+
+  deallocate(Q)
+  deallocate(V)
+
+
+
+
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
-!$OMP   PRIVATE(i,k,Q,V) &
+!$OMP   PRIVATE(i,Q,V) &
 !$OMP   NUM_THREADS(maxth)
 
   allocate(Q(ndim))
@@ -59,9 +76,7 @@ PROGRAM main_pot
   DO i=1,nb_eval
     CALL  random_number(Q)
     Q = Q + (/1._8,-0.5_8 /)
-    CALL sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
-
-    !write(6,*) Q,(V(k,k),k=1,nsurf)
+    CALL sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
   END DO
 !$OMP   END DO
 
@@ -77,15 +92,53 @@ PROGRAM main_pot
 
   write(6,*) '============================================================'
   write(6,*) '============================================================'
-  ndim     = 6
-  nsurf    = 1
-  nb_eval  = 10**6
-  pot_name = 'henonheiles'
+  write(6,*) ' Test of the adiatic potential ',pot_name
+
+
+  ndim     = 2
+  nsurf    = 3
+  option   = 0 ! normal use of sub_model1_V (without initialization)
+  pot_name = 'phenol'
+
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
-  option   = -1 ! to force the initalization
-  CALL sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
-  option   = 0 ! ! normal use of sub_model1_V (without initialization)
+  allocate(g(nsurf,nsurf,ndim))
+
+  CALL sub_model1_VG(V,g,Q,ndim,nsurf,pot_name,-1) ! option=-1 to be able to redo an initialization
+
+
+  Q = (/1._8,-0.5_8 /)
+  CALL sub_model1_VG(V,g,Q,ndim,nsurf,pot_name,option)
+
+  write(6,*) ' Adiabatic potential as a 3x3 matrix:'
+  write(6,'(3f12.8)') V
+  write(6,*) ' Adiabatic gradient. Each component as a 3x3 matrix:'
+  DO i=1,ndim
+    write(6,*) ' Component:',i
+    write(6,'(3f12.8)') g(:,:,i)
+  END DO
+
+
+  deallocate(Q)
+  deallocate(V)
+  deallocate(g)
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+
+  ndim     = 6
+  nsurf    = 1
+  option   = 0 ! normal use of sub_model1_V (without initialization)
+  nb_eval  = 10**6
+  pot_name = 'henonheiles'
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+  CALL sub_model1_V(V,Q,ndim,nsurf,pot_name,-1) ! option=-1 to be able to redo an initialization
   deallocate(Q)
   deallocate(V)
 

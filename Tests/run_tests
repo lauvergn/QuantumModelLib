@@ -14,9 +14,8 @@ echo "=========================================="
 
 ../ModLib.x < input.dat > res
 
-
-awk '/----- CHECK POT/,/- END CHECK POT/' res > res_check
-awk '/----- CHECK POT/,/- END CHECK POT/' RES_old/res > res_v0_check
+awk '/----- CHECK POT/,/- END CHECK POT/' res | grep -v "max of the relative Potential diff" > res_check
+awk '/----- CHECK POT/,/- END CHECK POT/' RES_old/res | grep -v "max of the relative Potential diff" > res_v0_check
 
 err=`diff res_check res_v0_check`
 rm res_check res_v0_check

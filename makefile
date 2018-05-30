@@ -4,7 +4,7 @@
 #Possible values: 
 #                ifort (version: 14.0.2, 16.0.3, 17.0.1 linux)
 #                gfortran (version: 6.3.0 linux and osx)
-#                pgf90 (version: 17.10-0, linux): problems because datanh, dasinh, dacosh are not present in the compiler !!!
+#                pgf90 (version: 17.10-0, linux): problems because datanh, dasinh, dacosh are not available with this compiler !!!
 F90 = gfortran
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation

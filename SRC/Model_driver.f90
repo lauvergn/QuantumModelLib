@@ -40,6 +40,7 @@ SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
 !$OMP CRITICAL (CRIT_sub_model_V)
   IF (begin) THEN
     !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
+    Para_Model%adiabatic = .TRUE.
     CALL Init_Model(Para_Model,pot_name='HenonHeiles',ndim=ndim,read_param=.FALSE.)
 
     IF (ndim /= Para_Model%ndim .OR. nsurf /= Para_Model%nsurf) THEN
@@ -70,7 +71,7 @@ SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
   integer,                intent(in)        :: ndim,nsurf
   real (kind=Rkind),      intent(in)        :: Q(ndim)
   real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-  character (len=16),     intent(in)        :: pot_name
+  character (len=*),      intent(in)        :: pot_name
   integer,                intent(in)        :: option
   !real (kind=Rkind),      intent(inout)     :: g(nsurf,nsurf,ndim)
   !real (kind=Rkind),      intent(inout)     :: h(nsurf,nsurf,ndim,ndim)
@@ -79,9 +80,15 @@ SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
   logical, SAVE                    :: begin = .TRUE.
 
 
-!$OMP CRITICAL (CRIT_sub_model_V)
+  IF (option < 0) THEN
+    begin = .TRUE.
+    RETURN
+  END IF
+
+!$OMP CRITICAL (CRIT_sub_model1_V)
   IF (begin .OR. option < 0) THEN
     !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
+    Para_Model%adiabatic = .TRUE.
     write(6,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
     write(6,*) 'ndim,nsurf,    : ',ndim,nsurf
     flush(6)
@@ -99,7 +106,7 @@ SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
     END IF
     begin = .FALSE.
   END IF
-!$OMP END CRITICAL (CRIT_sub_model_V)
+!$OMP END CRITICAL (CRIT_sub_model1_V)
 
   CALL calc_pot(V,Para_Model,Q)
 
@@ -115,7 +122,7 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
   integer,                intent(in)        :: ndim,nsurf
   real (kind=Rkind),      intent(in)        :: Q(ndim)
   real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-  character (len=16),     intent(in)        :: pot_name
+  character (len=*),      intent(in)        :: pot_name
   integer,                intent(in)        :: option
   real (kind=Rkind),      intent(inout)     :: G(nsurf,nsurf,ndim)
   !real (kind=Rkind),      intent(inout)     :: h(nsurf,nsurf,ndim,ndim)
@@ -123,10 +130,15 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
   TYPE (Param_Model), SAVE         :: Para_Model
   logical, SAVE                    :: begin = .TRUE.
 
+  IF (option < 0) THEN
+    begin = .TRUE.
+    RETURN
+  END IF
 
-!$OMP CRITICAL (CRIT_sub_model_V)
+!$OMP CRITICAL (CRIT_sub_model1_VG)
   IF (begin) THEN
     !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
+    Para_Model%adiabatic = .TRUE.
     write(6,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
     write(6,*) 'ndim,nsurf,    : ',ndim,nsurf
     flush(6)
@@ -144,7 +156,7 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
     END IF
     begin = .FALSE.
   END IF
-!$OMP END CRITICAL (CRIT_sub_model_V)
+!$OMP END CRITICAL (CRIT_sub_model1_VG)
 
   CALL calc_pot_grad(V,G,Para_Model,Q)
 
@@ -160,7 +172,7 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
   integer,                intent(in)        :: ndim,nsurf
   real (kind=Rkind),      intent(in)        :: Q(ndim)
   real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-  character (len=16),     intent(in)        :: pot_name
+  character (len=*),      intent(in)        :: pot_name
   integer,                intent(in)        :: option
   real (kind=Rkind),      intent(inout)     :: G(nsurf,nsurf,ndim)
   real (kind=Rkind),      intent(inout)     :: H(nsurf,nsurf,ndim,ndim)
@@ -168,10 +180,15 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
   TYPE (Param_Model), SAVE         :: Para_Model
   logical, SAVE                    :: begin = .TRUE.
 
+  IF (option < 0) THEN
+    begin = .TRUE.
+    RETURN
+  END IF
 
-!$OMP CRITICAL (CRIT_sub_model_V)
+!$OMP CRITICAL (CRIT_sub_model1_VGH)
   IF (begin) THEN
     !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
+    Para_Model%adiabatic = .TRUE.
     write(6,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
     write(6,*) 'ndim,nsurf,    : ',ndim,nsurf
     flush(6)
@@ -189,9 +206,160 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
     END IF
     begin = .FALSE.
   END IF
-!$OMP END CRITICAL (CRIT_sub_model_V)
+!$OMP END CRITICAL (CRIT_sub_model1_VGH)
 
   CALL calc_pot_grad_hess(V,G,H,Para_Model,Q)
 
 
 END SUBROUTINE sub_model1_VGH
+SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
+  USE mod_NumParameters
+  USE mod_dnMatPot
+  USE mod_Model
+  USE mod_Lib
+  IMPLICIT NONE
+
+  integer,                intent(in)        :: ndim,nsurf
+  real (kind=Rkind),      intent(in)        :: Q(ndim)
+  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
+  character (len=*),      intent(in)        :: pot_name
+  integer,                intent(in)        :: option
+  !real (kind=Rkind),      intent(inout)     :: g(nsurf,nsurf,ndim)
+  !real (kind=Rkind),      intent(inout)     :: h(nsurf,nsurf,ndim,ndim)
+
+  TYPE (Param_Model), SAVE         :: Para_Model
+  logical, SAVE                    :: begin = .TRUE.
+
+  IF (option < 0) THEN
+    begin = .TRUE.
+    RETURN
+  END IF
+
+!$OMP CRITICAL (CRIT_sub_model1_DiaV)
+  IF (begin .OR. option < 0) THEN
+    !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
+    Para_Model%adiabatic = .FALSE.
+    write(6,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(6,*) 'ndim,nsurf,    : ',ndim,nsurf
+    flush(6)
+    CALL Init_Model(Para_Model,pot_name=trim(adjustl(pot_name)),ndim=ndim,read_param=.FALSE.,option=option)
+
+    IF (ndim /= Para_Model%ndim .OR. nsurf /= Para_Model%nsurf) THEN
+      write(6,*) ' ERROR in sub_model_V'
+      write(6,*) ' ndim, nsurf :',ndim,nsurf
+      write(6,*) ' The ndim or nsurf values are incompatible ...'
+      write(6,*) '   .... with the intialized ones !!'
+      write(6,*) ' model name                  : ',Para_Model%pot_name
+      write(6,*) ' ndim, nsurf (from the model): ',Para_Model%ndim,Para_Model%nsurf
+      write(6,*) '   CHECK your data !!'
+      STOP 'ERROR in sub_model_V: wrong ndim or nsurf'
+    END IF
+    begin = .FALSE.
+  END IF
+!$OMP END CRITICAL (CRIT_sub_model1_DiaV)
+
+  CALL calc_pot(V,Para_Model,Q)
+
+
+END SUBROUTINE sub_model1_DiaV
+SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
+  USE mod_NumParameters
+  USE mod_dnMatPot
+  USE mod_Model
+  USE mod_Lib
+  IMPLICIT NONE
+
+  integer,                intent(in)        :: ndim,nsurf
+  real (kind=Rkind),      intent(in)        :: Q(ndim)
+  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
+  character (len=*),      intent(in)        :: pot_name
+  integer,                intent(in)        :: option
+  real (kind=Rkind),      intent(inout)     :: G(nsurf,nsurf,ndim)
+  !real (kind=Rkind),      intent(inout)     :: h(nsurf,nsurf,ndim,ndim)
+
+  TYPE (Param_Model), SAVE         :: Para_Model
+  logical, SAVE                    :: begin = .TRUE.
+
+
+  IF (option < 0) THEN
+    begin = .TRUE.
+    RETURN
+  END IF
+
+!$OMP CRITICAL (CRIT_sub_model1_DiaVG)
+  IF (begin) THEN
+    !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
+    Para_Model%adiabatic = .FALSE.
+    write(6,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(6,*) 'ndim,nsurf,    : ',ndim,nsurf
+    flush(6)
+    CALL Init_Model(Para_Model,pot_name=trim(adjustl(pot_name)),ndim=ndim,read_param=.FALSE.,option=option)
+
+    IF (ndim /= Para_Model%ndim .OR. nsurf /= Para_Model%nsurf) THEN
+      write(6,*) ' ERROR in sub_model_V'
+      write(6,*) ' ndim, nsurf :',ndim,nsurf
+      write(6,*) ' The ndim or nsurf values are incompatible ...'
+      write(6,*) '   .... with the intialized ones !!'
+      write(6,*) ' model name                  : ',Para_Model%pot_name
+      write(6,*) ' ndim, nsurf (from the model): ',Para_Model%ndim,Para_Model%nsurf
+      write(6,*) '   CHECK your data !!'
+      STOP 'ERROR in sub_model_V: wrong ndim or nsurf'
+    END IF
+    begin = .FALSE.
+  END IF
+!$OMP END CRITICAL (CRIT_sub_model1_DiaVG)
+
+  CALL calc_pot_grad(V,G,Para_Model,Q)
+
+
+END SUBROUTINE sub_model1_DiaVG
+SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
+  USE mod_NumParameters
+  USE mod_dnMatPot
+  USE mod_Model
+  USE mod_Lib
+  IMPLICIT NONE
+
+  integer,                intent(in)        :: ndim,nsurf
+  real (kind=Rkind),      intent(in)        :: Q(ndim)
+  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
+  character (len=*),      intent(in)        :: pot_name
+  integer,                intent(in)        :: option
+  real (kind=Rkind),      intent(inout)     :: G(nsurf,nsurf,ndim)
+  real (kind=Rkind),      intent(inout)     :: H(nsurf,nsurf,ndim,ndim)
+
+  TYPE (Param_Model), SAVE         :: Para_Model
+  logical, SAVE                    :: begin = .TRUE.
+
+  IF (option < 0) THEN
+    begin = .TRUE.
+    RETURN
+  END IF
+
+!$OMP CRITICAL (CRIT_sub_model1_DiaVGH)
+  IF (begin) THEN
+    !$ write(6,*) 'begining: max threads?',begin,omp_get_max_threads()
+    Para_Model%adiabatic = .FALSE.
+    write(6,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(6,*) 'ndim,nsurf,    : ',ndim,nsurf
+    flush(6)
+    CALL Init_Model(Para_Model,pot_name=trim(adjustl(pot_name)),ndim=ndim,read_param=.FALSE.,option=option)
+
+    IF (ndim /= Para_Model%ndim .OR. nsurf /= Para_Model%nsurf) THEN
+      write(6,*) ' ERROR in sub_model_V'
+      write(6,*) ' ndim, nsurf :',ndim,nsurf
+      write(6,*) ' The ndim or nsurf values are incompatible ...'
+      write(6,*) '   .... with the intialized ones !!'
+      write(6,*) ' model name                  : ',Para_Model%pot_name
+      write(6,*) ' ndim, nsurf (from the model): ',Para_Model%ndim,Para_Model%nsurf
+      write(6,*) '   CHECK your data !!'
+      STOP 'ERROR in sub_model_V: wrong ndim or nsurf'
+    END IF
+    begin = .FALSE.
+  END IF
+!$OMP END CRITICAL (CRIT_sub_model1_DiaVGH)
+
+  CALL calc_pot_grad_hess(V,G,H,Para_Model,Q)
+
+
+END SUBROUTINE sub_model1_DiaVGH
