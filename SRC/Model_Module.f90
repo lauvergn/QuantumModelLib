@@ -33,6 +33,7 @@ MODULE mod_Model
   USE mod_BuckPot,        ONLY: Param_Buck,Init_BuckPot,Write_BuckPot,Eval_BuckPot
   USE mod_PhenolPot,      ONLY: Param_Phenol,Init_PhenolPot,Write_PhenolPot,Eval_PhenolPot
   USE mod_SigmoidPot,     ONLY: Param_Sigmoid,Init_SigmoidPot,Write_SigmoidPot,Eval_SigmoidPot
+  USE mod_TemplatePot,    ONLY: Param_Template,Init_TemplatePot,Write_TemplatePot,Eval_TemplatePot
 
   IMPLICIT NONE
 
@@ -64,6 +65,8 @@ MODULE mod_Model
     TYPE (Param_HenonHeiles) :: Para_HenonHeiles
     TYPE (Param_Tully)       :: Para_Tully
     TYPE (Param_Phenol)      :: Para_Phenol
+
+    TYPE (Param_Template)    :: Para_Template
 
   END TYPE Param_Model
 
@@ -267,6 +270,13 @@ CONTAINS
 
         CALL Init_PhenolPot(Para_Model%Para_Phenol,PubliUnit=Para_Model%PubliUnit)
 
+    CASE ('template')
+        !! 3D-potential with 1 surface
+        Para_Model%nsurf     = 1
+        Para_Model%ndim      = 3
+
+        CALL Init_TemplatePot(Para_Model%Para_Template)
+
     CASE DEFAULT
         STOP 'STOP in Init_Model: Other potentials have to be done'
     END SELECT
@@ -356,6 +366,10 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
         !CALL Eval_PhenolPot_old(PotVal,Q,Para_Model%Para_Phenol,nderiv_loc)
         CALL Eval_PhenolPot(PotVal,Q,Para_Model%Para_Phenol,nderiv_loc)
+
+      CASE ('template')
+
+        CALL Eval_TemplatePot(PotVal,Q,Para_Model%Para_Template,nderiv_loc)
 
       CASE DEFAULT
         STOP 'ERROR in Eval_Pot: Other potentials have to be done'
@@ -708,6 +722,8 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
         CALL Write_TullyPot(Para_Model%Para_Tully,nio=nio_loc)
     CASE ('phenol')
         CALL Write_PhenolPot(Para_Model%Para_Phenol,nio=nio_loc)
+    CASE ('template')
+        CALL  Write_TemplatePot(Para_Model%Para_Template,nio=nio_loc)
     CASE DEFAULT
         write(nio_loc,*) 'WARNING in Write_Model: Other potentials have to be done'
     END SELECT

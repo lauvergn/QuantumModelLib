@@ -22,6 +22,31 @@
 !       <http://pagesperso.lcp.u-psud.fr/lauvergnat/ElVibRot/ElVibRot.html>
 !===========================================================================
 !===========================================================================
+!> @brief Module which deals with derivatives of a matrix (as function of coordinates).
+!!
+!! This module deals with operations or functions of a scalar function and its derivatives, dnSca.
+!!
+!! There is a mapping between the saclar function S, its derivatives and the dnSca derived type components:
+!!
+!! @li M(:,:)                 => M%d0(:,:)
+!! @li dM(:,:)/dQ_i           => M%d1(:,:,i)
+!! @li d^2M(:,:)/dQ_idQ_j     => M%d2(:,:,i,j)
+!!
+!! with M defined as:
+!!  TYPE(dnMatPot) :: M
+!!
+!!
+!! Some standard fortran operators (= + - * **) are overloaded (!!! not /):
+!!
+!! For instance the sum (+) of two dnMatPot variables, M1 and M2 correspond to:
+!! @li (M1+M2)                 => M1%d0    + M2%d0
+!! @li d(M1+M2)/dQ_i           => M1%d1(:,:,i) + M2%d1(:,:,i)
+!! @li ....
+!!
+!!
+!! @author David Lauvergnat
+!! @date 09/08/2017
+!!
 MODULE mod_dnMatPot
   USE mod_NumParameters
   IMPLICIT NONE
@@ -56,11 +81,22 @@ MODULE mod_dnMatPot
    END INTERFACE
 
 CONTAINS
-
+!> @brief Public subroutine which allocates a derived type dnMatPot.
+!!
+!> @author David Lauvergnat
+!! @date 21/06/2018
+!!
+!! @param Mat                TYPE(dnMatPot):        derived type which deals with the derivatives of a matrix (as function of coordinates).
+!! @param nsurf              integer (optional):    number of electronic surfaces.
+!! @param ndim               integer (optional):    number of coordinates (for the derivatives).
+!! @param nderiv             integer (optional):    it enables to chose the derivative order (from 0 to 2).
+!! @param err_dnMatPot       integer (optional):    to handle the errors errors (0: no error).
+!! @param name_var           character (optional):  Name of the variable from the calling subroutine (debuging purpose).
+!! @param name_sub           character (optional):  Name of the calling subroutine (debuging purpose).
   SUBROUTINE alloc_dnMatPot(Mat,nsurf,ndim,nderiv,name_var,name_sub,err_dnMatPot)
   IMPLICIT NONE
 
-    TYPE(dnMatPot), intent(inout)  :: Mat !< derived type, which contains, matrix potential, its derivatives
+    TYPE(dnMatPot), intent(inout)  :: Mat   !< derived type, which contains, matrix potential, its derivatives
     integer, intent(in), optional  :: nsurf !< number of electronic surfaces
     integer, intent(in), optional  :: ndim  !< number of coordinates (for the derivatives)
     integer, intent(in), optional  :: nderiv  !< order of the derivatives [0,1,2]
@@ -165,7 +201,13 @@ CONTAINS
     END IF
 
   END SUBROUTINE alloc_dnMatPot
-
+!> @brief Public subroutine which deallocates a derived type dnMatPot.
+!!
+!> @author David Lauvergnat
+!! @date 21/06/2018
+!!
+!! @param Mat                TYPE(dnMatPot):        derived type which deals with the derivatives of a matrix (as function of coordinates).
+!! @param err_dnMatPot       integer (optional):    to handle the errors errors (0: no error).
   SUBROUTINE dealloc_dnMatPot(Mat,err_dnMatPot)
   IMPLICIT NONE
 
@@ -219,7 +261,13 @@ CONTAINS
     Mat%nderiv = -1
 
   END SUBROUTINE dealloc_dnMatPot
-
+!> @brief Public subroutine which copies two "dnMatPot" derived types.
+!!
+!> @author David Lauvergnat
+!! @date 21/06/2018
+!!
+!! @param dnMat1                TYPE(dnMatPot):     derived type which deals with the derivatives of a matrix (as function of coordinates).
+!! @param dnMat2                TYPE(dnMatPot):     derived type which deals with the derivatives of a matrix (as function of coordinates).
   SUBROUTINE sub_dnMatPot2_TO_dnMatPot1(dnMat1,dnMat2)
     TYPE (dnMatPot), intent(inout) :: dnMat1
     TYPE (dnMatPot), intent(in)    :: dnMat2
@@ -257,8 +305,14 @@ CONTAINS
       STOP
     END IF
   END SUBROUTINE sub_dnMatPot2_TO_dnMatPot1
-
-
+!> @brief Public subroutine which copies a dnSca derived type to one element of dnMatPot derived type.
+!!
+!> @author David Lauvergnat
+!! @date 25/06/2018
+!!
+!! @param Mat                   TYPE(dnMatPot):    derived type which deals with the derivatives of a matrix.
+!! @param S                     TYPE(dnSca):       derived type which deals with the derivatives of a scalar.
+!! @param i,j                   integer (optional) indices of the matrix element. If not present i=j=1
   SUBROUTINE sub_dnSca_TO_dnMatPot(S,Mat,i,j)
     USE mod_dnSca
     TYPE (dnMatPot),    intent(inout) :: Mat
@@ -325,7 +379,13 @@ CONTAINS
 
 
   END SUBROUTINE sub_dnSca_TO_dnMatPot
-
+!> @brief Public function which calculate set dnMatPot to zero (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Mat                   TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param set_dnMatPot_TO_zero  TYPE(dnMatPot) (result):  dnMatPot derived type
   SUBROUTINE set_dnMatPot_TO_zero(dnMat)
     TYPE (dnMatPot), intent(inout) :: dnMat
 
@@ -337,6 +397,14 @@ CONTAINS
     CALL set_dnMatPot_TO_R(dnMat,ZERO)
 
   END SUBROUTINE set_dnMatPot_TO_zero
+!> @brief Public function which calculate set dnMatPot to R (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param R                  real:                     some real number
+!! @param set_dnMatPot_TO_R  TYPE(dnMatPot) (result):  dnMatPot derived type
   SUBROUTINE set_dnMatPot_TO_R(dnMat,R)
 
     TYPE (dnMatPot), intent(inout) :: dnMat
@@ -367,6 +435,14 @@ CONTAINS
       STOP
     END IF
   END SUBROUTINE set_dnMatPot_TO_R
+!> @brief Public function which calculate dnMatPot*R (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param R                  real:                     some real number
+!! @param sub_dnMatPot_TIME_R TYPE(dnMatPot) (result):  dnMatPot derived type
   FUNCTION sub_dnMatPot_TIME_R(dnMat,R)
 
     TYPE (dnMatPot)                :: sub_dnMatPot_TIME_R
@@ -407,6 +483,14 @@ CONTAINS
       STOP
     END IF
   END FUNCTION sub_dnMatPot_TIME_R
+!> @brief Public function which calculate R*dnMatPot (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param R                  real:                     some real number
+!! @param sub_R_TIME_dnMatPot TYPE(dnMatPot) (result):  dnMatPot derived type
   FUNCTION sub_R_TIME_dnMatPot(R,dnMat)
 
     TYPE (dnMatPot)                :: sub_R_TIME_dnMatPot
@@ -447,7 +531,15 @@ CONTAINS
       STOP
     END IF
   END FUNCTION sub_R_TIME_dnMatPot
- FUNCTION dnMatPot2_PLUS_dnMatPot1(dnMat1,dnMat2)
+!> @brief Public function which calculate dnMat1+dnMat2 (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param dnMat1                    TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param dnMat2                    TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param dnMatPot2_PLUS_dnMatPot1 TYPE(dnMatPot) (result):  dnMatPot derived type
+  FUNCTION dnMatPot2_PLUS_dnMatPot1(dnMat1,dnMat2)
     TYPE (dnMatPot)                :: dnMatPot2_PLUS_dnMatPot1
     TYPE (dnMatPot), intent(in)    :: dnMat1,dnMat2
 
@@ -483,6 +575,14 @@ CONTAINS
       STOP
     END IF
   END FUNCTION dnMatPot2_PLUS_dnMatPot1
+!> @brief Public function which calculate dnMatPot+R (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param R                  real:                     some real number
+!! @param sub_dnMatPot_EXP_R TYPE(dnMatPot) (result):  dnMatPot derived type
   FUNCTION sub_dnMatPot_PLUS_R(dnMat,R)
 
     TYPE (dnMatPot)                :: sub_dnMatPot_PLUS_R
@@ -501,6 +601,14 @@ CONTAINS
     ! the derivatives of R are zero => nothing to be add to %d1 and %d2
 
   END FUNCTION sub_dnMatPot_PLUS_R
+!> @brief Public function which calculate R+dnMatPot (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param R                  real:                     some real number
+!! @param sub_R_PLUS_dnMatPot TYPE(dnMatPot) (result):  dnMatPot derived type
   FUNCTION sub_R_PLUS_dnMatPot(R,dnMat)
 
     TYPE (dnMatPot)                :: sub_R_PLUS_dnMatPot
@@ -519,7 +627,15 @@ CONTAINS
     ! the derivatives of R are zero
 
   END FUNCTION sub_R_PLUS_dnMatPot
- FUNCTION dnMatPot2_MINUS_dnMatPot1(dnMat1,dnMat2)
+!> @brief Public function which calculate dnMat1-dnMat2 (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param dnMat1                    TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param dnMat2                    TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param dnMatPot2_MINUS_dnMatPot1 TYPE(dnMatPot) (result):  dnMatPot derived type
+  FUNCTION dnMatPot2_MINUS_dnMatPot1(dnMat1,dnMat2)
     TYPE (dnMatPot)                :: dnMatPot2_MINUS_dnMatPot1
     TYPE (dnMatPot), intent(in)    :: dnMat1,dnMat2
 
@@ -554,6 +670,14 @@ CONTAINS
       STOP
     END IF
   END FUNCTION dnMatPot2_MINUS_dnMatPot1
+!> @brief Public function which calculate dnMatPot-R (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Mat                  TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param R                    real:                     some real number
+!! @param sub_dnMatPot_MINUS_R TYPE(dnMatPot) (result):  dnMatPot derived type
   FUNCTION sub_dnMatPot_MINUS_R(dnMat,R)
 
     TYPE (dnMatPot)                :: sub_dnMatPot_MINUS_R
@@ -572,6 +696,14 @@ CONTAINS
     ! the derivatives of R are zero
 
   END FUNCTION sub_dnMatPot_MINUS_R
+!> @brief Public function which calculate R-dnMatPot (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Mat                  TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param R                    real:                     some real number
+!! @param sub_R_MINUS_dnMatPot TYPE(dnMatPot) (result):  dnMatPot derived type
   FUNCTION sub_R_MINUS_dnMatPot(R,dnMat)
 
     TYPE (dnMatPot)                :: sub_R_MINUS_dnMatPot
@@ -612,7 +744,14 @@ CONTAINS
     END IF
 
   END FUNCTION sub_R_MINUS_dnMatPot
-
+!> @brief Public function which calculate dnMatPot**R (and derivatives).
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param R                  real:                     exponent
+!! @param sub_dnMatPot_EXP_R TYPE(dnMatPot) (result):  dnMatPot derived type
   FUNCTION sub_dnMatPot_EXP_R(dnMat,R)
 
     TYPE (dnMatPot)                :: sub_dnMatPot_EXP_R
@@ -662,7 +801,13 @@ CONTAINS
       STOP
     END IF
   END FUNCTION sub_dnMatPot_EXP_R
-
+!> @brief Public subroutine which prints a derived type dnMatPot.
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Mat                TYPE(dnMatPot):      derived type which deals with the derivatives of a matrix.
+!! @param nio                integer (optional):  when present unit to print S, otherwise it is the default unit:out_unitp
   SUBROUTINE Write_dnMatPot(Mat,nio)
     USE mod_Lib
 
@@ -718,7 +863,13 @@ CONTAINS
     END IF
 
   END SUBROUTINE Write_dnMatPot
-
+!> @brief Public function to get nderiv from a derived type dnMatPot.
+!!
+!> @author David Lauvergnat
+!! @date 25/06/2018
+!!
+!! @param Mat                         TYPE(dnMatPot):     derived type which deals with the derivatives of a matrix (as function of coordinates).
+!! @param get_nderiv_FROM_dnMatPot    integer  (result):  nderiv value, check against Mat%nederiv
   FUNCTION get_nderiv_FROM_dnMatPot(Mat)
     integer :: get_nderiv_FROM_dnMatPot
 
@@ -748,6 +899,13 @@ CONTAINS
 
     END FUNCTION get_nderiv_FROM_dnMatPot
 
+!> @brief Public function to get nsurf (the number of electronic surfaces, dimension of the matrix) from a derived type dnMatPot.
+!!
+!> @author David Lauvergnat
+!! @date 25/06/2018
+!!
+!! @param Mat                         TYPE(dnMatPot):     derived type which deals with the derivatives of a matrix (as function of coordinates).
+!! @param get_nderiv_FROM_dnMatPot    integer  (result):  nderiv value
   FUNCTION get_nsurf_FROM_dnMatPot(Mat)
     integer :: get_nsurf_FROM_dnMatPot
 
@@ -762,6 +920,13 @@ CONTAINS
 
     END FUNCTION get_nsurf_FROM_dnMatPot
 
+!> @brief Public function to get ndim (number of coordinates) from a derived type dnMatPot.
+!!
+!> @author David Lauvergnat
+!! @date 25/06/2018
+!!
+!! @param Mat                       TYPE(dnMatPot):      derived type which deals with the derivatives of a scalar functions.
+!! @param get_ndim_FROM_dnMatPot    integer  (result):   ndim value from the size of Mat%d1.
   FUNCTION get_ndim_FROM_dnMatPot(Mat)
     integer :: get_ndim_FROM_dnMatPot
 
@@ -775,7 +940,14 @@ CONTAINS
     END IF
 
     END FUNCTION get_ndim_FROM_dnMatPot
-
+!> @brief Public function which ckecks a derived type dnMatPot is zero (all components).
+!!
+!> @author David Lauvergnat
+!! @date 25/06/2018
+!!
+!! @param Check_dnMatPot_IS_ZERO   logical  (result):   result of the comparison
+!! @param Mat                      TYPE(dnMatPot):      derived type which deals with the derivatives of a matrix.
+!! @param epsi                     real (optional):     when present zero limit, otherwise 10^-10
   FUNCTION Check_dnMatPot_IS_ZERO(Mat,epsi)
     USE mod_NumParameters
     logical :: Check_dnMatPot_IS_ZERO
@@ -810,7 +982,13 @@ CONTAINS
     END IF
 
     END FUNCTION Check_dnMatPot_IS_ZERO
-
+!> @brief Public function which gets the largest value of a derived type get_maxval_OF_dnMatPot (all components).
+!!
+!> @author David Lauvergnat
+!! @date 25/06/2018
+!!
+!! @param get_maxval_OF_dnMatPot   real  (result):      largest value (all components)
+!! @param Mat                      TYPE(dnMatPot):      derived type which deals with the derivatives of a matrix.
   FUNCTION get_maxval_OF_dnMatPot(Mat)
     USE mod_NumParameters
 
@@ -819,8 +997,6 @@ CONTAINS
     TYPE(dnMatPot), intent(in)    :: Mat
 
     real(kind=Rkind) :: e0,e1,e2
-
-
 
    IF (.NOT. allocated(Mat%d0)) THEN
       get_maxval_OF_dnMatPot = ZERO
@@ -839,7 +1015,13 @@ CONTAINS
     END IF
 
     END FUNCTION get_maxval_OF_dnMatPot
-
+!! @brief Public subroutine which checks if the derived type dnMatPot is (correctly) allocated.
+!!
+!> @author David Lauvergnat
+!! @date 25/06/2018
+!!
+!! @param Mat                TYPE(dnMatPot):  derived type which deals with the derivatives of a matrix.
+!! @param nderiv             integer:         the derivative order.
   FUNCTION Check_NotAlloc_dnMatPot(Mat,nderiv)
 
     TYPE(dnMatPot), intent(in)    :: Mat

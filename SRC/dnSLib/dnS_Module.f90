@@ -42,7 +42,7 @@
 !! @li d(S1+S2)/dQ_i           => S1%d1(i) + S2%d1(i)
 !! @li ....
 !!
-!! The product (*) of two dnSca variables, S1 and S2 corresponds to:
+!! The product (*) of two dnSca variables, S1 and S2 correspond to:
 !! @li (S1*S2)                 => S1%d0 * S1%d0
 !! @li d(S1*S2)/dQ_i           => S1%d0 * S2%d1(i) + S1%d1(i) * S2%d0    (derivative of a product)
 !! @li ....
@@ -358,7 +358,7 @@ CONTAINS
 !! @date 03/08/2017
 !!
 !! @param S                  TYPE(dnSca):  derived type which deals with the derivatives of a scalar functions.
-!! @param nderiv             integer:    the derviative order.
+!! @param nderiv             integer:    the derivative order.
   FUNCTION Check_NotAlloc_dnSca(S,nderiv)
 
     logical :: Check_NotAlloc_dnSca

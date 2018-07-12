@@ -27,6 +27,8 @@ PROGRAM main_pot
   real (kind=8),      allocatable     :: Q(:)
   real (kind=8),      allocatable     :: V(:,:)
   real (kind=8),      allocatable     :: g(:,:,:)
+  real (kind=8),      allocatable     :: h(:,:,:,:)
+
   character (len=16)                  :: pot_name
 
   integer                             :: i,k,ndim,nsurf,option,nb_eval,maxth
@@ -36,6 +38,38 @@ PROGRAM main_pot
   !$ maxth           = omp_get_max_threads()
 
   write(6,*) 'TEST_driver. number of threads:',maxth
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  CALL time_perso('Test ' // pot_name)
+
+  ndim     = 3
+  nsurf    = 1
+  option   = 0
+  pot_name = 'Template'
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+  allocate(g(nsurf,nsurf,ndim))
+  allocate(h(nsurf,nsurf,ndim,ndim))
+
+  Q = (/1._8,1._8,2._8 /)
+  CALL sub_model1_DiaVGH(V,g,h,Q,ndim,nsurf,pot_name,option)
+
+  write(6,*) ' Template potential:',V
+  write(6,*) ' Template potential, gradient:',g
+  write(6,*) ' Template potential, hessian as a 3x3 matrix:'
+  write(6,'(3f12.8)') h
+
+  CALL sub_model1_DiaVGH(V,g,h,Q,ndim,nsurf,pot_name,-1)
+  deallocate(Q)
+  deallocate(V)
+  deallocate(g)
+  deallocate(h)
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
 
   nb_eval  = 10**5
 

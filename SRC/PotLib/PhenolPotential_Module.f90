@@ -243,7 +243,7 @@ CONTAINS
     real (kind=Rkind) :: auTOeV  = 27.211384_Rkind
 
     IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=2,nderiv=nderiv)
+      CALL alloc_dnMatPot(PotVal,nsurf=3,ndim=2,nderiv=nderiv)
     END IF
 
    !write(out_unitp,*) 'phenol pot in:'

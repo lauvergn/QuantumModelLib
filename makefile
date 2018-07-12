@@ -8,7 +8,7 @@
 F90 = gfortran
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 #=================================================================================
@@ -118,6 +118,7 @@ DIRPot    = $(DIRSRC)/PotLib
 #
 OBJ_lib        = $(DIROBJ)/dnMatPot_Module.o $(DIROBJ)/dnS_Module.o $(DIROBJ)/Lib_module.o $(DIROBJ)/sub_diago.o $(DIROBJ)/sub_module_NumParameters.o
 OBJ_Pot        = $(DIROBJ)/LinearHBondPotential_Module.o $(DIROBJ)/TullyPotential_Module.o $(DIROBJ)/PhenolPotential_Module.o \
+                 $(DIROBJ)/TemplatePotential_Module.o \
                  $(DIROBJ)/HenonHeilesPotential_Module.o \
                  $(DIROBJ)/BuckinghamPotential_Module.o $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/SigmoidPotential_Module.o
 
@@ -199,6 +200,8 @@ $(DIROBJ)/HenonHeilesPotential_Module.o: $(OBJ_lib)
 $(DIROBJ)/TullyPotential_Module.o: $(OBJ_lib)
 $(DIROBJ)/LinearHBondPotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/BuckinghamPotential_Module.o
 $(DIROBJ)/PhenolPotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/SigmoidPotential_Module.o
+$(DIROBJ)/TemplatePotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o
+
 
 $(DIROBJ)/Lib_module.o: $(DIROBJ)/sub_module_NumParameters.o
 $(DIROBJ)/dnS_Module.o: $(DIROBJ)/Lib_module.o $(DIROBJ)/sub_module_NumParameters.o
@@ -208,6 +211,8 @@ $(DIROBJ)/sub_diago.o: $(DIROBJ)/sub_module_NumParameters.o
 ##################################################################################
 ### Potential libraries
 #
+$(DIROBJ)/TemplatePotential_Module.o:$(DIRPot)/TemplatePotential_Module.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/TemplatePotential_Module.f90
 $(DIROBJ)/LinearHBondPotential_Module.o:$(DIRPot)/LinearHBondPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/LinearHBondPotential_Module.f90
 $(DIROBJ)/PhenolPotential_Module.o:$(DIRPot)/PhenolPotential_Module.f90
