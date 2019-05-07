@@ -430,7 +430,7 @@ CONTAINS
        dnMat%d2 = ZERO
     ELSE
       write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' nderiv > 2 is NOT possible',nderiv_loc
+      write(6,*) ' nderiv > 2 or nderiv < 0 is NOT possible',nderiv_loc
       write(6,*) 'It should never append! Check the source'
       STOP
     END IF

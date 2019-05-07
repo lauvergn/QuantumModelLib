@@ -29,6 +29,7 @@ PROGRAM TEST_model
   CALL test_Buckingham()
   CALL test_Morse()
   CALL test_Tully()
+  CALL test_1DSOC()
 
 END PROGRAM TEST_model
 
@@ -130,6 +131,110 @@ SUBROUTINE test_Tully
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_Tully
+
+
+SUBROUTINE test_1DSOC
+  USE mod_Lib
+  USE mod_dnMatPot
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Param_Model)             :: Para_Model
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMatPot)                :: Vec ! for non adiabatic couplings
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' 1D-SOC potential'
+  write(out_unitp,*) ' With units: Bohr Hartree (au)'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(Para_Model,pot_name='1DSOC')
+  CALL Write_Model(Para_Model)
+
+  allocate(q(Para_Model%ndim))
+  q(:) = (/ 9.5_Rkind /) ! one evaluation to get vec0%d0(:,:)
+  write(out_unitp,*) ' ref Eigenvectors at Q:',Q
+  CALL Eval_Pot(Para_Model,Q,PotVal,Vec=Vec,nderiv=0)
+  ! ref Eigenvectors
+  CALL Write_dnMatPot(Para_Model%vec0,nio=out_unitp)
+
+
+
+  q(:) = (/ 10._Rkind /)
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) 'ADIABATIC potential'
+  write(out_unitp,*) 'Q (Bohr):'
+  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+
+  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+
+  CALL Eval_Pot(Para_Model,Q,PotVal,Vec=Vec,nderiv=nderiv)
+  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+
+  write(out_unitp,*) 'Non adiatic couplings:'
+  CALL Write_dnMatPot(Vec,nio=out_unitp)
+
+  write(out_unitp,*) 'DIABATIC potential'
+  Para_Model%adiabatic = .FALSE.
+  write(out_unitp,*) 'Q (Bohr):'
+  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+
+  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+
+  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+
+  CALL dealloc_dnMatPot(PotVal)
+  CALL dealloc_dnMatPot(Vec)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----------- 1D-SOC on a grid ----------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential on a 1D grid (as a function of R in Bohr)'
+  write(out_unitp,*) '   file name: "grid_1DSOC"'
+  write(out_unitp,*) ' You should get the 1 curves of figure 2 of ... '
+  write(out_unitp,*) '  ... Granucci et al. J. Chem. Phys. V137, p22A501 (2012)'
+
+  CALL Init_Model(Para_Model,pot_name='1DSOC',option=1)
+  Para_Model%adiabatic = .TRUE.
+  flush(out_unitp)
+
+  q(:) = (/ 9.5_Rkind /) ! one evaluation to get vec0%d0(:,:)
+  CALL Eval_Pot(Para_Model,Q,PotVal,Vec=Vec,nderiv=1)
+
+  ! ref Eigenvectors
+  write(out_unitp,*) ' ref Eigenvectors at Q:',Q
+  CALL Write_dnMatPot(Para_Model%vec0,nio=out_unitp)
+
+
+  CALL Eval_pot_ON_Grid(Para_Model,Qmin=(/3._Rkind/),Qmax=(/20._Rkind/), &
+                        nb_points=1001,nderiv=0,grid_file='grid_1DSOC')
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  deallocate(q)
+  CALL dealloc_dnMatPot(PotVal)
+  CALL dealloc_dnMatPot(Vec)
+END SUBROUTINE test_1DSOC
 
 SUBROUTINE test_Morse
   USE mod_dnMatPot
@@ -273,6 +378,7 @@ SUBROUTINE test_Phenol
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMatPot)                :: Vec ! for non adiabatic couplings
 
 
   nderiv = 2
@@ -301,8 +407,11 @@ SUBROUTINE test_Phenol
 
   CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Eval_Pot(Para_Model,Q,PotVal,Vec=Vec,nderiv=nderiv)
   CALL Write_dnMatPot(PotVal,nio=out_unitp)
+
+  write(out_unitp,*) 'Non adiatic couplings:'
+  CALL Write_dnMatPot(Vec,nio=out_unitp)
 
   write(out_unitp,*) 'DIABATIC potential'
   Para_Model%adiabatic = .FALSE.
@@ -319,6 +428,7 @@ SUBROUTINE test_Phenol
   write(out_unitp,*) '---------------------------------------------'
 
   CALL dealloc_dnMatPot(PotVal)
+  CALL dealloc_dnMatPot(Vec)
   deallocate(q)
 
 

@@ -80,7 +80,7 @@ MODULE mod_PhenolPot
 
 
 CONTAINS
-!> @brief Subroutine which makes the initialization of the Morse parameters.
+!> @brief Subroutine which makes the initialization of the phenol parameters.
 !!      Those parameters cannot be modified (PRIVATE).
 !!
 !> @author David Lauvergnat

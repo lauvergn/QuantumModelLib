@@ -75,6 +75,12 @@ PROGRAM TEST_dnSca
     dnX     = init_dnSca(x  ,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
     dn2X    = init_dnSca(x+x,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
    write(out_unitp,'(a)') "============================================"
+   write(out_unitp,'(a)') "TEST with dnX=0.5"
+   CALL Write_dnSca(dnX,out_unitp,info='dnX')
+   CALL Write_dnSca(dn2X,out_unitp,info='dn2X')
+   write(out_unitp,'(a)') "============================================"
+
+   write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a)') "operators: == /= > >= < <="
    write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a,l2)') 'dnX == dnX:   T ?',(dnX == dnX)
@@ -118,9 +124,11 @@ PROGRAM TEST_dnSca
    Sana = 0.5_Rkind + dnX
    Snum = get_Num_dnSca_FROM_f_x(x,faplusx,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'a+dnX:         (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
+
    Sana = dnX + 0.5_Rkind
    Snum = get_Num_dnSca_FROM_f_x(x,faplusx,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'dnX+a:         (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
+
    Sana = dnX + dnX
    Snum = get_Num_dnSca_FROM_f_x(x,fatimex,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'dnX+dnX=2*dnX: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
@@ -128,26 +136,32 @@ PROGRAM TEST_dnSca
    Sana = +(0.5_Rkind - dnX)
    Snum = get_Num_dnSca_FROM_f_x(x,faminusx,nderiv=nderiv)
    write(out_unitp,'(a,l2)') '+(a-dnX):      (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
+
    Sana = -(dnX - 0.5_Rkind)
    Snum = get_Num_dnSca_FROM_f_x(x,faminusx,nderiv=nderiv)
    write(out_unitp,'(a,l2)') '-(dnX-a):      (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
+
    Sana = dnX - dnX
    write(out_unitp,'(a,l2)') 'dnX-dnX==0                   ?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
-
 
    Sana = 2._Rkind * dnX
    Snum = get_Num_dnSca_FROM_f_x(x,fatimex,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'a*dnX:         (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
+
    Sana =  dnX * 2._Rkind
    Snum = get_Num_dnSca_FROM_f_x(x,fatimex,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'dnX*a:         (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
+
    Sana =  dnX * dnX - dnX**(2._Rkind)
    write(out_unitp,'(a,l2)') 'dnX*dnX-dnX**2.==0           ?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
 
    Sana =  dnX / 0.5_Rkind -dnX*2._Rkind
    write(out_unitp,'(a,l2)') 'dnX/0.5-dnX*2==0             ?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
+   !CALL Write_dnSca(Sana,out_unitp,info='dnX/0.5-dnX*2')
+
    Sana =  0.5_Rkind / dnX - 0.5_Rkind*dnX**(-1)
    write(out_unitp,'(a,l2)') '0.5/dnX-0.5.dnX*^-1==0       ?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
+
    Sana =  dnX / dnX - 1._Rkind
    write(out_unitp,'(a,l2)') 'dnX/dnX-1.==0                ?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
 

@@ -118,6 +118,7 @@ DIRPot    = $(DIRSRC)/PotLib
 #
 OBJ_lib        = $(DIROBJ)/dnMatPot_Module.o $(DIROBJ)/dnS_Module.o $(DIROBJ)/Lib_module.o $(DIROBJ)/sub_diago.o $(DIROBJ)/sub_module_NumParameters.o
 OBJ_Pot        = $(DIROBJ)/LinearHBondPotential_Module.o $(DIROBJ)/TullyPotential_Module.o $(DIROBJ)/PhenolPotential_Module.o \
+                 $(DIROBJ)/SOC_1DModel_Module.o \
                  $(DIROBJ)/TemplatePotential_Module.o \
                  $(DIROBJ)/HenonHeilesPotential_Module.o \
                  $(DIROBJ)/BuckinghamPotential_Module.o $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/SigmoidPotential_Module.o
@@ -176,6 +177,7 @@ $(ModLib): $(OBJ_driver) $(OBJ_all)
 #===============================================
 clean: 
 	rm -f  $(MODEXE) $(GRIDEXE) $(dnSEXE) $(DriverEXE) $(ModLib)
+	rm -fr *.dSYM
 	cd $(DIROBJ) ; rm -f *.o *.mod *.MOD
 	@cd Tests && ./clean
 	@echo "  done cleaning up the example directories"
@@ -198,6 +200,7 @@ $(DIROBJ)/MorsePotential_Module.o: $(OBJ_lib)
 $(DIROBJ)/SigmoidPotential_Module.o: $(OBJ_lib)
 $(DIROBJ)/HenonHeilesPotential_Module.o: $(OBJ_lib)
 $(DIROBJ)/TullyPotential_Module.o: $(OBJ_lib)
+$(DIROBJ)/SOC_1DModel_Module.o: $(OBJ_lib)
 $(DIROBJ)/LinearHBondPotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/BuckinghamPotential_Module.o
 $(DIROBJ)/PhenolPotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/SigmoidPotential_Module.o
 $(DIROBJ)/TemplatePotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o
@@ -213,18 +216,28 @@ $(DIROBJ)/sub_diago.o: $(DIROBJ)/sub_module_NumParameters.o
 #
 $(DIROBJ)/TemplatePotential_Module.o:$(DIRPot)/TemplatePotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/TemplatePotential_Module.f90
+
 $(DIROBJ)/LinearHBondPotential_Module.o:$(DIRPot)/LinearHBondPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/LinearHBondPotential_Module.f90
+
 $(DIROBJ)/PhenolPotential_Module.o:$(DIRPot)/PhenolPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/PhenolPotential_Module.f90
+
 $(DIROBJ)/TullyPotential_Module.o:$(DIRPot)/TullyPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/TullyPotential_Module.f90
+
+$(DIROBJ)/SOC_1DModel_Module.o:$(DIRPot)/SOC_1DModel_Module.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/SOC_1DModel_Module.f90
+
 $(DIROBJ)/MorsePotential_Module.o:$(DIRPot)/MorsePotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/MorsePotential_Module.f90
+
 $(DIROBJ)/BuckinghamPotential_Module.o:$(DIRPot)/BuckinghamPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/BuckinghamPotential_Module.f90
+
 $(DIROBJ)/SigmoidPotential_Module.o:$(DIRPot)/SigmoidPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/SigmoidPotential_Module.f90
+
 $(DIROBJ)/HenonHeilesPotential_Module.o:$(DIRPot)/HenonHeilesPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/HenonHeilesPotential_Module.f90
 #

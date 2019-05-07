@@ -172,7 +172,7 @@ CONTAINS
     CASE Default
         write(out_unitp,*) 'ERROR in Init0_TullyPot'
         write(out_unitp,*) ' This option is not possible. option:',Para_Tully%option
-        write(out_unitp,*) ' Its value MUST be 1 or 3 or 3'
+        write(out_unitp,*) ' Its value MUST be 1 or 2 or 3'
         STOP
     END SELECT
 

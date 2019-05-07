@@ -254,7 +254,7 @@ CONTAINS
     TYPE(dnSca)                          :: dnBuck
     TYPE(dnSca),          intent(in)     :: dnR
 
-    TYPE (Param_Buck), intent(in)      :: Para_Buck
+    TYPE (Param_Buck),    intent(in)     :: Para_Buck
 
 
     !write(out_unitp,*) 'BEGINNING in dnBuck'

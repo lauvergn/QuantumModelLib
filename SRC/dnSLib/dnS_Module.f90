@@ -880,6 +880,10 @@ CONTAINS
 
     lres = (S1%d0 == S2%d0)
 
+    IF (allocated(S1%d1) .AND. allocated(S2%d1)) lres = lres .AND. all(S1%d1 == S2%d1)
+    IF (allocated(S1%d2) .AND. allocated(S2%d2)) lres = lres .AND. all(S1%d2 == S2%d2)
+    IF (allocated(S1%d3) .AND. allocated(S2%d3)) lres = lres .AND. all(S1%d3 == S2%d3)
+
   END FUNCTION dnSca_EQ_dnSca
   FUNCTION dnSca_EQ_R(S1,R) RESULT(lres)
     TYPE (dnSca),        intent(in)    :: S1
@@ -909,6 +913,10 @@ CONTAINS
     character (len=*), parameter :: name_sub='dnSca_NEQ_dnSca'
 
     lres = (S1%d0 /= S2%d0)
+
+    IF (allocated(S1%d1) .AND. allocated(S2%d1)) lres = lres .OR. all(S1%d1 /= S2%d1)
+    IF (allocated(S1%d2) .AND. allocated(S2%d2)) lres = lres .OR. all(S1%d2 /= S2%d2)
+    IF (allocated(S1%d3) .AND. allocated(S2%d3)) lres = lres .OR. all(S1%d3 /= S2%d3)
 
   END FUNCTION dnSca_NEQ_dnSca
   FUNCTION dnSca_NEQ_R(S1,R) RESULT(lres)
@@ -1315,7 +1323,6 @@ CONTAINS
 
     nderiv = get_nderiv_FROM_dnSca(S)
     ndim   = get_ndim_FROM_dnSca(S)
-
 
     CALL dealloc_dnSca(Sres)
 

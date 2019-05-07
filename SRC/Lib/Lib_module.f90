@@ -207,7 +207,7 @@ CONTAINS
      IF (present(Rformat)) THEN
        wformat = strdup( wformat // 'i0,x,10' // trim(Rformat) // ')' )
      ELSE
-       wformat = strdup( wformat // 'i0,x,10f15.6)' )
+       wformat = strdup( wformat // 'i0,x,10f18.9)' )
      END IF
 
      DO nb=0,nbblocs-1
