@@ -464,7 +464,7 @@ CONTAINS
     IF (present(d1)) THEN
       S%d1     = d1
       S%nderiv = 1
-      IF (present(d0)) THEN
+      IF (.NOT. present(d0)) THEN
         write(out_unitp,*) ' ERROR in set_dnSca'
         write(out_unitp,*) ' d1 is present but not d0'
         write(out_unitp,*) ' CHECK the fortran!!'
@@ -475,7 +475,7 @@ CONTAINS
     IF (present(d2)) THEN
       S%d2     = d2
       S%nderiv = 2
-      IF (present(d1)) THEN
+      IF (.NOT. present(d1)) THEN
         write(out_unitp,*) ' ERROR in set_dnSca'
         write(out_unitp,*) ' d2 is present but not d1'
         write(out_unitp,*) ' CHECK the fortran!!'
@@ -486,7 +486,7 @@ CONTAINS
     IF (present(d3)) THEN
       S%d3     = d3
       S%nderiv = 3
-      IF (present(d2)) THEN
+      IF (.NOT. present(d2)) THEN
         write(out_unitp,*) ' ERROR in set_dnSca'
         write(out_unitp,*) ' d3 is present but not d2'
         write(out_unitp,*) ' CHECK the fortran!!'
@@ -1104,7 +1104,7 @@ CONTAINS
 
   SUBROUTINE set_dnSca_TO_R(S,R)
 
-    TYPE (dnSca),        intent(inout) :: S
+    TYPE (dnSca),      intent(inout) :: S
     real (kind=Rkind), intent(in)    :: R
 
     integer :: nderiv_loc,ndim_loc

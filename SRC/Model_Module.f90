@@ -30,6 +30,7 @@ MODULE mod_Model
   USE mod_HenonHeilesPot, ONLY: Param_HenonHeiles,Init_HenonHeilesPot,Write_HenonHeilesPot,Eval_HenonHeilesPot
   USE mod_TullyPot,       ONLY: Param_Tully,Init_TullyPot,Write_TullyPot,Eval_TullyPot
   USE mod_1DSOC_Model
+  USE mod_1DSOC_2S1T_Model
 
   USE mod_LinearHBondPot, ONLY: Param_LinearHBond,Init_LinearHBondPot,Write_LinearHBondPot,Eval_LinearHBondPot
   USE mod_BuckPot,        ONLY: Param_Buck,Init_BuckPot,Write_BuckPot,Eval_BuckPot
@@ -69,6 +70,7 @@ MODULE mod_Model
     TYPE (Param_HenonHeiles) :: Para_HenonHeiles
     TYPE (Param_Tully)       :: Para_Tully
     TYPE (Param_1DSOC)       :: Para_1DSOC
+    TYPE (Param_1DSOC_2S1T)  :: Para_1DSOC_2S1T
 
     TYPE (Param_Phenol)      :: Para_Phenol
 
@@ -90,6 +92,7 @@ CONTAINS
     integer :: ndim,nsurf,nderiv,option
     logical :: adiabatic,numeric,PubliUnit
     character (len=20) :: pot_name
+    integer :: err_read
 
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit
@@ -106,7 +109,23 @@ CONTAINS
 
 
     write(out_unitp,*) 'Reading input file . . .'
-    read(nio,nml=potential)
+    read(nio,nml=potential,IOSTAT=err_read)
+
+    IF (err_read < 0) THEN
+      write(out_unitp,*) ' ERROR in Read_Model'
+      write(out_unitp,*) ' End-of-file or End-of-record'
+      write(out_unitp,*) ' The namelist "potential" is probably absent'
+      write(out_unitp,*) ' check your data!'
+      write(out_unitp,*)
+      STOP ' ERROR in Read_Model'
+    ELSE IF (err_read > 0) THEN
+      write(out_unitp,*) ' ERROR in Read_Model'
+      write(out_unitp,*) ' Some parameter names of the namelist "potential" are probaly wrong'
+      write(out_unitp,*) ' check your data!'
+      write(out_unitp,nml=potential)
+      STOP ' ERROR in Read_Model'
+    END IF
+
     !write(out_unitp,nml=potential)
 
     option1              = option
@@ -268,14 +287,20 @@ CONTAINS
         CALL Init_TullyPot(Para_Model%Para_Tully, option=option_loc,      &
                            nio=nio_loc,read_param=read_param_loc)
 
-    CASE ('1dsoc')
+    CASE ('1dsoc','1dsoc_1s1t')
         !! from  J. Chem. Phys. V137, p22A501 (2012)
         Para_Model%nsurf     = 4
         Para_Model%ndim      = 1
 
         CALL Init_1DSOC(Para_Model%Para_1DSOC, option=option_loc,       &
                         nio=nio_loc,read_param=read_param_loc)
+    CASE ('1dsoc_2s1t')
+        !! from  J. Chem. Phys. V137, p22A501 (2012)
+        Para_Model%nsurf     = 4
+        Para_Model%ndim      = 1
 
+        CALL Init_1DSOC_2S1T(Para_Model%Para_1DSOC_2S1T,option=option_loc,&
+                             nio=nio_loc,read_param=read_param_loc)
 
     CASE ('phenol')
         !! from Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, ...
@@ -381,9 +406,13 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
         CALL Eval_TullyPot(PotVal,Q(1),Para_Model%Para_Tully,nderiv_loc)
 
-      CASE ('1dsoc')
+      CASE ('1dsoc','1dsoc_1s1t')
 
         CALL Eval_1DSOC(PotVal,Q(1),Para_Model%Para_1DSOC,nderiv_loc)
+
+      CASE ('1dsoc_2s1t')
+
+        CALL Eval_1DSOC_2S1T(PotVal,Q(1),Para_Model%Para_1DSOC_2S1T,nderiv_loc)
 
       CASE ('phenol')
 
@@ -909,8 +938,10 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
         CALL Write_HenonHeilesPot(Para_Model%Para_HenonHeiles,nio=nio_loc)
     CASE ('tully')
         CALL Write_TullyPot(Para_Model%Para_Tully,nio=nio_loc)
-    CASE ('1dsoc')
+    CASE ('1dsoc','1dsoc_1s1t')
         CALL Write_1DSOC(Para_Model%Para_1DSOC,nio=nio_loc)
+    CASE ('1dsoc_2s1t')
+        CALL Write_1DSOC_2S1T(Para_Model%Para_1DSOC_2S1T,nio=nio_loc)
     CASE ('phenol')
         CALL Write_PhenolPot(Para_Model%Para_Phenol,nio=nio_loc)
     CASE ('template')

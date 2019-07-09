@@ -293,6 +293,9 @@ SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
   TYPE (Param_Model), SAVE         :: Para_Model
   logical, SAVE                    :: begin = .TRUE.
 
+  character (len=:), allocatable   :: pot_name_loc
+
+
   IF (option < 0) THEN
     begin = .TRUE.
     RETURN
@@ -305,18 +308,28 @@ SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
     write(6,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
     write(6,*) 'ndim,nsurf,    : ',ndim,nsurf
     flush(6)
-    CALL Init_Model(Para_Model,pot_name=trim(adjustl(pot_name)),ndim=ndim,read_param=.FALSE.,option=option)
 
-    IF (ndim /= Para_Model%ndim .OR. nsurf /= Para_Model%nsurf) THEN
-      write(6,*) ' ERROR in sub_model1_DiaV'
-      write(6,*) ' ndim, nsurf :',ndim,nsurf
-      write(6,*) ' The ndim or nsurf values are incompatible ...'
-      write(6,*) '   .... with the intialized ones !!'
-      write(6,*) ' model name                  : ',Para_Model%pot_name
-      write(6,*) ' ndim, nsurf (from the model): ',Para_Model%ndim,Para_Model%nsurf
-      write(6,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model1_DiaV: wrong ndim or nsurf'
+    pot_name_loc = trim(adjustl(pot_name))
+    CALL string_uppercase_TO_lowercase(pot_name_loc)
+    IF (pot_name_loc == 'read_model') THEN
+      Para_Model%adiabatic = .FALSE.
+      CALL Init_Model(Para_Model,read_param=.TRUE.)
+    ELSE
+      CALL Init_Model(Para_Model,pot_name=trim(adjustl(pot_name)),      &
+                      ndim=ndim,read_param=.FALSE.,option=option)
+      IF (ndim /= Para_Model%ndim .OR. nsurf /= Para_Model%nsurf) THEN
+        write(6,*) ' ERROR in sub_model1_DiaV'
+        write(6,*) ' ndim, nsurf :',ndim,nsurf
+        write(6,*) ' The ndim or nsurf values are incompatible ...'
+        write(6,*) '   .... with the intialized ones !!'
+        write(6,*) ' model name                  : ',Para_Model%pot_name
+        write(6,*) ' ndim, nsurf (from the model): ',Para_Model%ndim,Para_Model%nsurf
+        write(6,*) '   CHECK your data !!'
+        STOP 'ERROR in sub_model1_DiaV: wrong ndim or nsurf'
+      END IF
     END IF
+    deallocate(pot_name_loc)
+
     begin = .FALSE.
   END IF
 !$OMP END CRITICAL (CRIT_sub_model1_DiaV)

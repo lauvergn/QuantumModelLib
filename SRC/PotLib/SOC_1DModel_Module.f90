@@ -96,15 +96,9 @@ CONTAINS
        STOP 'STOP in Init_1DSOC_ModelPot: impossible to read the input file. The file unit (nio) is not present'
     END IF
 
-    Para_1DSOC%option = option
-
-    IF (Para_1DSOC%option < 1 .OR. Para_1DSOC%option > 2) Para_1DSOC%option = 1
-
-    !write(out_unitp,*) 'read_param',read_param,nio
-
 
     IF (read_param_loc) THEN
-      Rsig = 8._Rkind
+      Rsig   = 8._Rkind
       read(nio,OneD_SOC_Model,IOSTAT=err_read)
 
       IF (err_read < 0) THEN
@@ -123,7 +117,6 @@ CONTAINS
       END IF
 
       Para_1DSOC%Rsig     = Rsig
-
     ELSE
       IF (present(Rsig_in)) THEN
         Para_1DSOC%Rsig     = Rsig_in
@@ -132,10 +125,13 @@ CONTAINS
       END IF
     END IF
 
+    Para_1DSOC%option   = option
+    IF (Para_1DSOC%option < 1 .OR. Para_1DSOC%option > 2) Para_1DSOC%option = 1
+
+    !CALL Write_1DSOC(Para_1DSOC,nio=out_unitp)
+
 
   END SUBROUTINE Init_1DSOC
-
-
 !> @brief Subroutine wich prints the 1D-SOC Model parameters.
 !!
 !> @author David Lauvergnat
@@ -193,6 +189,7 @@ CONTAINS
 
     write(nio,*) '   Rsig:          ',Para_1DSOC%Rsig
     write(nio,*) '  DRsig:          ',Para_1DSOC%DRsig
+    write(nio,*) ' option:          ',Para_1DSOC%option
 
     write(nio,*) 'end 1DSOC_Model parameters'
 
