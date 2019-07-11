@@ -57,6 +57,9 @@ MODULE mod_1DSOC_Model
      integer           :: option = 1
 
 
+     real (kind=Rkind), PUBLIC :: mu  = 20000._Rkind !< Reduced mass from Granucci et al. paper (in au)
+
+
   END TYPE Param_1DSOC
 
 !  PRIVATE Read_1DSOC_ModelPot,Init0_1DSOC_ModelPot,eval_1DSOC_ModelPot1,eval_1DSOC_ModelPot2,eval_1DSOC_ModelPot3

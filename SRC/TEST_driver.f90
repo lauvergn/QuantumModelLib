@@ -17,6 +17,7 @@
 !
 !    Copyright 2017 David Lauvergnat
 !      with contributions of Félix MOUHAT and Liang LIANG
+!      last modification, 11/07/2019 DML
 !
 !===========================================================================
 !===========================================================================
@@ -25,78 +26,64 @@ PROGRAM main_pot
   IMPLICIT NONE
 
   real (kind=8),      allocatable     :: Q(:)
+  real (kind=8),      allocatable     :: GGdef(:,:)
   real (kind=8),      allocatable     :: V(:,:)
   real (kind=8),      allocatable     :: g(:,:,:)
   real (kind=8),      allocatable     :: h(:,:,:,:)
+  real (kind=8),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
+  logical                             :: adiabatic
 
-  integer                             :: i,k,ndim,nsurf,option,nb_eval,maxth
+  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
 
   maxth = 1
   !$ maxth           = omp_get_max_threads()
-
-  write(6,*) 'TEST_driver. number of threads:',maxth
-
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
-  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL time_perso('Test ' // pot_name)
-
-  ndim     = 3
-  nsurf    = 1
-  option   = 0
-  pot_name = 'Template'
-
-  allocate(Q(ndim))
-  allocate(V(nsurf,nsurf))
-  allocate(g(nsurf,nsurf,ndim))
-  allocate(h(nsurf,nsurf,ndim,ndim))
-
-  Q = (/1._8,1._8,2._8 /)
-  CALL sub_model1_DiaVGH(V,g,h,Q,ndim,nsurf,pot_name,option)
-
-  write(6,*) ' Template potential:',V
-  write(6,*) ' Template potential, gradient:',g
-  write(6,*) ' Template potential, hessian as a 3x3 matrix:'
-  write(6,'(3f12.8)') h
-
-  CALL sub_model1_DiaVGH(V,g,h,Q,ndim,nsurf,pot_name,-1)
-  deallocate(Q)
-  deallocate(V)
-  deallocate(g)
-  deallocate(h)
+  write(6,*) 'NTEST_driver. number of threads:',maxth
 
   write(6,*) '============================================================'
   write(6,*) '============================================================'
 
-  nb_eval  = 10**5
+  nb_eval  = 10**7
 
   write(6,*) '============================================================'
   write(6,*) '============================================================'
+  pot_name = 'phenol'
   write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
   CALL time_perso('Test ' // pot_name)
 
   ndim     = 2
   nsurf    = 3
   option   = 0
+  adiabatic = .FALSE.
   pot_name = 'phenol'
+
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+
 
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
+  allocate(GGdef(ndim,ndim))
+
+  ! write GGdef
+  write(6,*) 'Get and Write the metric Tensor'
+  CALL get_Qmodel_GGdef(GGdef,ndim)
+  DO i=1,ndim
+    write(6,*) i,GGdef(:,i)
+  END DO
+
 
   Q = (/1._8,-0.5_8 /)
-  CALL sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
-
+  CALL sub_Qmodel_V(V,Q)
   write(6,*) ' Diabatic potential as a 3x3 matrix:'
   write(6,'(3f12.8)') V
 
   deallocate(Q)
   deallocate(V)
+  deallocate(GGdef)
 
-
-
+  CALL time_perso('Test ' // pot_name)
 
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
@@ -110,7 +97,7 @@ PROGRAM main_pot
   DO i=1,nb_eval
     CALL  random_number(Q)
     Q = Q + (/1._8,-0.5_8 /)
-    CALL sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
+    CALL sub_Qmodel_V(V,Q)
   END DO
 !$OMP   END DO
 
@@ -126,23 +113,26 @@ PROGRAM main_pot
 
   write(6,*) '============================================================'
   write(6,*) '============================================================'
+  pot_name = 'phenol'
   write(6,*) ' Test of the adiatic potential ',pot_name
 
 
   ndim     = 2
   nsurf    = 3
-  option   = 0 ! normal use of sub_model1_V (without initialization)
+  option   = 0
+  adiabatic = .TRUE.
   pot_name = 'phenol'
 
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
   allocate(g(nsurf,nsurf,ndim))
+  allocate(NAC(nsurf,nsurf,ndim))
 
-  CALL sub_model1_VG(V,g,Q,ndim,nsurf,pot_name,-1) ! option=-1 to be able to redo an initialization
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
 
 
   Q = (/1._8,-0.5_8 /)
-  CALL sub_model1_VG(V,g,Q,ndim,nsurf,pot_name,option)
+  CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
 
   write(6,*) ' Adiabatic potential as a 3x3 matrix:'
   write(6,'(3f12.8)') V
@@ -152,10 +142,16 @@ PROGRAM main_pot
     write(6,'(3f12.8)') g(:,:,i)
   END DO
 
+  write(6,*) ' NAC. Each component as a 3x3 matrix:'
+  DO i=1,ndim
+    write(6,*) ' Component:',i
+    write(6,'(3f12.8)') NAC(:,:,i)
+  END DO
 
   deallocate(Q)
   deallocate(V)
   deallocate(g)
+  deallocate(NAC)
 
   write(6,*) '============================================================'
   write(6,*) '============================================================'
@@ -166,15 +162,11 @@ PROGRAM main_pot
 
   ndim     = 6
   nsurf    = 1
-  option   = 0 ! normal use of sub_model1_V (without initialization)
-  nb_eval  = 10**6
+  option   = 0
+  adiabatic = .TRUE.
+  nb_eval  = 10**8
   pot_name = 'henonheiles'
-
-  allocate(Q(ndim))
-  allocate(V(nsurf,nsurf))
-  CALL sub_model1_V(V,Q,ndim,nsurf,pot_name,-1) ! option=-1 to be able to redo an initialization
-  deallocate(Q)
-  deallocate(V)
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
 
   write(6,*) '============================================================'
   write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
@@ -192,7 +184,7 @@ PROGRAM main_pot
   DO i=1,nb_eval
     CALL  random_number(Q)
 
-    CALL sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
+    CALL sub_Qmodel_V(V,Q)
 
     !write(6,*) Q,(V(k,k),k=1,nsurf)
   END DO

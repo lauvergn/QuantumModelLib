@@ -59,6 +59,8 @@ MODULE mod_Model
 
     character (len=:), allocatable :: pot_name
 
+    real (kind=Rkind), allocatable :: d0GGdef(:,:)
+
     TYPE (dnMatPot)          :: Vec0 ! to get the correct phase of the adiatic couplings
 
     ! list of potentials ....
@@ -77,6 +79,8 @@ MODULE mod_Model
     TYPE (Param_Template)    :: Para_Template
 
   END TYPE Param_Model
+
+  TYPE(Param_Model), PUBLIC  :: QuantumModel
 
 
 CONTAINS
@@ -101,9 +105,9 @@ CONTAINS
     ! Default values defined
     ndim      = 1
     nsurf     = 1
-    adiabatic = .true.
+    adiabatic = .TRUE.
     pot_name  = 'morse'
-    numeric   = .false.
+    numeric   = .FALSE.
     PubliUnit = .FALSE.
     option    = -1 ! no option
 
@@ -138,7 +142,26 @@ CONTAINS
 
   END SUBROUTINE Read_Model
  
-  SUBROUTINE Init_Model(Para_Model,pot_name,ndim,nsurf,                 &
+  SUBROUTINE Init_IdMat(Mat,ndim)
+  IMPLICIT NONE
+
+  integer,                        intent(in)    :: ndim
+  real (kind=Rkind), allocatable, intent(inout) :: mat(:,:)
+
+  integer :: i
+
+    IF (allocated(mat)) deallocate(mat)
+
+    allocate(mat(ndim,ndim))
+    mat(:,:) = ZERO
+    DO i=1,ndim
+      mat(i,i) = ONE
+    END DO
+
+  END SUBROUTINE Init_IdMat
+
+
+  SUBROUTINE Init_Model(Para_Model,pot_name,ndim,nsurf,adiabatic,       &
                         read_param,param_file_name,nio_param_file,      &
                         option,PubliUnit)
   USE mod_Lib
@@ -147,6 +170,7 @@ CONTAINS
     TYPE (Param_Model), intent(inout)      :: Para_Model
     character (len=*), intent(in),optional :: pot_name
     integer, intent(in), optional          :: ndim,nsurf
+    logical, intent(in), optional          :: adiabatic
 
     logical, intent(in), optional          :: read_param
     integer, intent(in), optional          :: nio_param_file
@@ -155,9 +179,16 @@ CONTAINS
     integer, intent(in), optional          :: option
     logical, intent(in), optional          :: PubliUnit
 
-    integer :: option_loc,nio_loc
-    logical :: read_param_loc
+    integer ::i, option_loc,nio_loc
+    logical :: read_param_loc,adiabatic_loc
     character (len=:), allocatable :: param_file_name_loc
+
+
+    IF (present(adiabatic)) THEN
+      adiabatic_loc = adiabatic
+    ELSE
+      adiabatic_loc = .TRUE.
+    END IF
 
     IF (present(option)) THEN
       option_loc = option
@@ -213,7 +244,6 @@ CONTAINS
       Para_Model%PubliUnit      = .FALSE.
     END IF
 
-
     CALL dealloc_dnMatPot(Para_Model%Vec0)
 
     IF (read_param_loc) THEN
@@ -246,12 +276,16 @@ CONTAINS
 
       CALL Init_MorsePot(Para_Model%Para_Morse,nio=nio_loc,read_param=read_param_loc)
 
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+      Para_Model%d0GGdef(1,1) = ONE/Para_Model%Para_Morse%mu
+
     CASE ('sigmoid')
       !! sigmoid function: A * 1/2(1+e*tanh((x-B)/C))  remark: e=+/-1
       Para_Model%nsurf     = 1
       Para_Model%ndim      = 1
 
       CALL Init_SigmoidPot(Para_Model%Para_Sigmoid,nio=nio_loc,read_param=read_param_loc)
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
 
     CASE ('buck')
       !! Buckingham potential: V(R) = A*exp(-B*R)-C/R^6
@@ -260,6 +294,7 @@ CONTAINS
       Para_Model%nsurf     = 1
 
       CALL Init_BuckPot(Para_Model%Para_Buck,nio=nio_loc,read_param=read_param_loc)
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
 
     CASE ('hbond')
       !write(out_unitp,*) 'We are working with Linear H-Bond potential'
@@ -267,55 +302,78 @@ CONTAINS
       Para_Model%ndim      = 2
       Para_Model%nsurf     = 1
 
-      CALL Init_LinearHBondPot(Para_Model%Para_LinearHBond,               &
+      CALL Init_LinearHBondPot(Para_Model%Para_LinearHBond,             &
                                nio=nio_loc,read_param=read_param_loc,   &
                                PubliUnit=Para_Model%PubliUnit)
 
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+      Para_Model%d0GGdef(1,1) = Para_Model%Para_LinearHBond%muQQ
+      Para_Model%d0GGdef(2,2) = Para_Model%Para_LinearHBond%muq
+
     CASE ('henonheiles')
 
-        Para_Model%nsurf     = 1
+      Para_Model%nsurf     = 1
 
-        CALL Init_HenonHeilesPot(Para_Model%Para_HenonHeiles,ndim=Para_Model%ndim, &
+      CALL Init_HenonHeilesPot(Para_Model%Para_HenonHeiles,ndim=Para_Model%ndim, &
                                  nio=nio_loc,read_param=read_param_loc)
 
-    CASE ('tully')
-        !! from Tully, J. Chem. Phys. V93, pp15, 1990
-        Para_Model%nsurf     = 2
-        Para_Model%ndim      = 1
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
 
-        write(out_unitp,*) 'option_loc',option_loc
-        CALL Init_TullyPot(Para_Model%Para_Tully, option=option_loc,      &
+
+    CASE ('tully')
+      !! from Tully, J. Chem. Phys. V93, pp15, 1990
+      Para_Model%nsurf     = 2
+      Para_Model%ndim      = 1
+
+      write(out_unitp,*) 'option_loc',option_loc
+      CALL Init_TullyPot(Para_Model%Para_Tully, option=option_loc,      &
                            nio=nio_loc,read_param=read_param_loc)
 
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+      Para_Model%d0GGdef(1,1) = ONE/Para_Model%Para_Tully%mu
+
+
     CASE ('1dsoc','1dsoc_1s1t')
-        !! from  J. Chem. Phys. V137, p22A501 (2012)
-        Para_Model%nsurf     = 4
-        Para_Model%ndim      = 1
+      !! from  J. Chem. Phys. V137, p22A501 (2012)
+      Para_Model%nsurf     = 4
+      Para_Model%ndim      = 1
 
-        CALL Init_1DSOC(Para_Model%Para_1DSOC, option=option_loc,       &
+      CALL Init_1DSOC(Para_Model%Para_1DSOC, option=option_loc,         &
                         nio=nio_loc,read_param=read_param_loc)
-    CASE ('1dsoc_2s1t')
-        !! from  J. Chem. Phys. V137, p22A501 (2012)
-        Para_Model%nsurf     = 4
-        Para_Model%ndim      = 1
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+      Para_Model%d0GGdef(1,1) = ONE/Para_Model%Para_1DSOC%mu
 
-        CALL Init_1DSOC_2S1T(Para_Model%Para_1DSOC_2S1T,option=option_loc,&
+    CASE ('1dsoc_2s1t')
+      !! from  J. Chem. Phys. V137, p22A501 (2012)
+      Para_Model%nsurf     = 4
+      Para_Model%ndim      = 1
+
+      CALL Init_1DSOC_2S1T(Para_Model%Para_1DSOC_2S1T,option=option_loc,&
                              nio=nio_loc,read_param=read_param_loc)
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+      Para_Model%d0GGdef(1,1) = ONE/Para_Model%Para_1DSOC_2S1T%mu
+
 
     CASE ('phenol')
-        !! from Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, ...
-        !!  J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
-        Para_Model%nsurf     = 3
-        Para_Model%ndim      = 2
+      !! from Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, ...
+      !!  J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
+      Para_Model%nsurf     = 3
+      Para_Model%ndim      = 2
 
-        CALL Init_PhenolPot(Para_Model%Para_Phenol,PubliUnit=Para_Model%PubliUnit)
+      CALL Init_PhenolPot(Para_Model%Para_Phenol,PubliUnit=Para_Model%PubliUnit)
+
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+      ! The metric tensor of Tnum with rigid_type=100 from B3LYP/6-31G** of the ground stat
+      Para_Model%d0GGdef(1,1) = 0.0005786177_Rkind
+      Para_Model%d0GGdef(2,2) = 0.0002550307_Rkind
 
     CASE ('template')
-        !! 3D-potential with 1 surface
-        Para_Model%nsurf     = 1
-        Para_Model%ndim      = 3
+      !! 3D-potential with 1 surface
+      Para_Model%nsurf     = 1
+      Para_Model%ndim      = 3
 
-        CALL Init_TemplatePot(Para_Model%Para_Template)
+      CALL Init_TemplatePot(Para_Model%Para_Template)
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
 
     CASE DEFAULT
         STOP 'STOP in Init_Model: Other potentials have to be done'
@@ -897,6 +955,7 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
   END SUBROUTINE dia_TO_adia
 
   SUBROUTINE Write_Model(Para_Model,nio)
+  USE mod_Lib
   IMPLICIT NONE
 
     TYPE (Param_Model), intent(in)              :: Para_Model
@@ -924,6 +983,12 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
     write(nio_loc,*) 'numeric:   ',Para_Model%numeric
     write(nio_loc,*) 'adiabatic: ',Para_Model%adiabatic
     write(nio_loc,*)
+
+    IF (allocated(Para_Model%d0GGdef)) THEN
+      write(nio_loc,*) 'Deformation metric tensor (~ 1/Mii)'
+      CALL Write_RMat(Para_Model%d0GGdef,nio_loc,nbcol1=5)
+    END IF
+
 
     SELECT CASE (Para_Model%pot_name)
     CASE ('morse')

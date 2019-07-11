@@ -155,6 +155,7 @@ CONTAINS
 
 
    write(out_unitp,*) 'TemplatePot, nderiv:',nderiv
+   write(out_unitp,*) 'Q(:):',Q(:)
    CALL Write_dnMatPot(PotVal,6)
    write(out_unitp,*)
    flush(out_unitp)

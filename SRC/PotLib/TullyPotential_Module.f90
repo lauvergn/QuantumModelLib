@@ -37,6 +37,8 @@ MODULE mod_TullyPot
 !! @date 03/08/2017
 !!
 !! @param A,B,C,D,e0              real:    Tully parameters
+!! @param mu                      real:   mass used in Tully paper
+
 !! @param option                  integer: it enables to chose between the 3 models (default 1, Simple avoided crossing)
   TYPE Param_Tully
      PRIVATE
@@ -45,6 +47,10 @@ MODULE mod_TullyPot
      real (kind=Rkind) :: C      = 0.005_Rkind
      real (kind=Rkind) :: D      = 1.0_Rkind
      real (kind=Rkind) :: E0     = 0.0_Rkind
+
+     real (kind=Rkind), PUBLIC :: mu     = 2000._Rkind
+
+
      integer           :: option = 1
      
   END TYPE Param_Tully

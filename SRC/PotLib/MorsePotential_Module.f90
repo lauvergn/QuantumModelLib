@@ -24,7 +24,7 @@
 !!
 !> @author David Lauvergnat
 !> @author Félix MOUHAT
-!! @date 03/08/2017
+!! @date 10/07/2019
 !!
 MODULE mod_MorsePot
   USE mod_NumParameters
@@ -40,11 +40,13 @@ MODULE mod_MorsePot
 !! @param D              real: Dissociation energy (in Hartree)
 !! @param a              real: Scaling parameter (in bohr^-1)
 !! @param req            real: Equilibrium distance (in bohr)
+!! @param mu             real: Reduced mass of HF (in au)
   TYPE Param_Morse ! V(R) = D*(1-exp(-a*(r-Req))**2
      private
-     real (kind=Rkind) :: D   = 0.225d0  !< Dissociation energy for HF (in Hartree)
-     real (kind=Rkind) :: a   = 1.1741d0 !< Scaling parameter for HF (in bohr^-1)
-     real (kind=Rkind) :: req = 1.7329d0 !< Equilibrium HF distance (in bohr)
+     real (kind=Rkind) :: D   = 0.225_Rkind  !< Dissociation energy for HF (in Hartree)
+     real (kind=Rkind) :: a   = 1.1741_Rkind !< Scaling parameter for HF (in bohr^-1)
+     real (kind=Rkind) :: req = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
+     real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
   END TYPE Param_Morse
 
   PRIVATE Read_MorsePot
@@ -158,6 +160,7 @@ CONTAINS
     write(nio,*) '  D:   ',Para_Morse%D
     write(nio,*) '  a:   ',Para_Morse%a
     write(nio,*) '  req: ',Para_Morse%req
+    write(nio,*) '  mu:  ',Para_Morse%mu
     write(nio,*) 'end Morse parameters'
 
   END SUBROUTINE Write_MorsePot

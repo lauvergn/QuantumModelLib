@@ -51,6 +51,10 @@ MODULE mod_LinearHBondPot
 
      logical            :: PubliUnit = .FALSE.
 
+     real (kind=Rkind), PUBLIC  :: muQQ= 29156.946380706224_Rkind/TWO  ! reduced mass associated to QQ (O---O)
+     real (kind=Rkind), PUBLIC  :: muq = 1837.1526464003414_Rkind      ! reduced mass associated to q (H atom)
+
+
   END TYPE Param_LinearHBond
   PRIVATE Read_LinearHBondPot
 
@@ -363,10 +367,10 @@ CONTAINS
 
     !write(out_unitp,*) 'QQ,q',r
     ! new variables for the Morse potentials
-    x        = r(1)/2.d0 + r(2)
-    y        = r(1)/2.d0 - r(2)
-    Jac(:,1) = (/0.5d0, 1.d0/)
-    Jac(:,2) = (/0.5d0,-1.d0/)
+    x        = r(1)/TWO + r(2)
+    y        = r(1)/TWO - r(2)
+    Jac(:,1) = (/HALF, ONE /)
+    Jac(:,2) = (/HALF,-ONE /)
 
     CALL alloc_dnMatPot(PotVal_m1,nsurf=1,ndim=1,nderiv=nderiv)
     CALL Eval_MorsePot(PotVal_m1,x,Para_LinearHBond%Morse1,nderiv)
@@ -401,7 +405,7 @@ CONTAINS
 
     ! Hessian calculation
     if (nderiv >= 2) then
-       h(:,:) = 0.d0
+       h(:,:) = ZERO
        h(1,1) = PotVal_m1%d2(1,1,1,1)
        h(2,2) = PotVal_m2%d2(1,1,1,1)
 
