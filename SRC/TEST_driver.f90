@@ -45,6 +45,8 @@ PROGRAM main_pot
   write(6,*) '============================================================'
   write(6,*) '============================================================'
 
+
+
   nb_eval  = 10**7
 
   write(6,*) '============================================================'
@@ -68,7 +70,7 @@ PROGRAM main_pot
 
   ! write GGdef
   write(6,*) 'Get and Write the metric Tensor'
-  CALL get_Qmodel_GGdef(GGdef,ndim)
+  CALL get_Qmodel_GGdef(GGdef)
   DO i=1,ndim
     write(6,*) i,GGdef(:,i)
   END DO

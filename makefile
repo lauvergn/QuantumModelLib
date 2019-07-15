@@ -121,6 +121,7 @@ OBJ_Pot        = $(DIROBJ)/LinearHBondPotential_Module.o $(DIROBJ)/TullyPotentia
                  $(DIROBJ)/SOC_1DModel_Module.o $(DIROBJ)/SOC_2S1T_1DModel_Module.o \
                  $(DIROBJ)/TemplatePotential_Module.o \
                  $(DIROBJ)/HenonHeilesPotential_Module.o \
+                 $(DIROBJ)/TwoD_Potential_Module.o \
                  $(DIROBJ)/BuckinghamPotential_Module.o $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/SigmoidPotential_Module.o
 
 OBJ_Model      = $(DIROBJ)/Model_Module.o
@@ -137,7 +138,7 @@ OBJ_all        = $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
 #===============================================
 #============= Main program ====================
 #
-all: dnS lib model grid driver
+all: dnS lib model grid driver readme
 # model tests
 model:$(MODEXE)
 testmodel:$(MODEXE)
@@ -162,12 +163,15 @@ $(dnSEXE): $(OBJ_testdnS) $(OBJ_all)
 driver:$(DriverEXE)
 $(DriverEXE): $(OBJ_testdriver) $(ModLib)
 	$(LYNK90)   -o $(DriverEXE) $(OBJ_testdriver) $(LYNKFLAGS) -L$(DIR0) -lpot
-
+#
+#readme
+readme:
+	bin/extractReadMe
 
 #===============================================
 #============= Model Lib =======================
 #
-lib: $(ModLib)
+lib: $(ModLib) readme
 	echo "create the library: ",$(ModLib)
 $(ModLib): $(OBJ_driver) $(OBJ_all)
 	ar -r $(ModLib) $(OBJ_driver) $(OBJ_all)
@@ -202,6 +206,7 @@ $(DIROBJ)/HenonHeilesPotential_Module.o: $(OBJ_lib)
 $(DIROBJ)/TullyPotential_Module.o: $(OBJ_lib)
 $(DIROBJ)/SOC_1DModel_Module.o: $(OBJ_lib)
 $(DIROBJ)/SOC_2S1T_1DModel_Module.o: $(OBJ_lib)
+$(DIROBJ)/TwoD_Potential_Module.o: $(OBJ_lib)
 $(DIROBJ)/LinearHBondPotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/BuckinghamPotential_Module.o
 $(DIROBJ)/PhenolPotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/SigmoidPotential_Module.o
 $(DIROBJ)/TemplatePotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o
@@ -223,6 +228,9 @@ $(DIROBJ)/LinearHBondPotential_Module.o:$(DIRPot)/LinearHBondPotential_Module.f9
 
 $(DIROBJ)/PhenolPotential_Module.o:$(DIRPot)/PhenolPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/PhenolPotential_Module.f90
+
+$(DIROBJ)/TwoD_Potential_Module.o:$(DIRPot)/TwoD_Potential_Module.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/TwoD_Potential_Module.f90
 
 $(DIROBJ)/TullyPotential_Module.o:$(DIRPot)/TullyPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/TullyPotential_Module.f90

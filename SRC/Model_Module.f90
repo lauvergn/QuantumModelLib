@@ -36,6 +36,7 @@ MODULE mod_Model
   USE mod_BuckPot,        ONLY: Param_Buck,Init_BuckPot,Write_BuckPot,Eval_BuckPot
   USE mod_PhenolPot,      ONLY: Param_Phenol,Init_PhenolPot,Write_PhenolPot,Eval_PhenolPot
   USE mod_SigmoidPot,     ONLY: Param_Sigmoid,Init_SigmoidPot,Write_SigmoidPot,Eval_SigmoidPot
+  USE mod_TwoDPot,        ONLY: Param_TwoD,Init_TwoDPot,Write_TwoDPot,Eval_TwoDPot
 
   USE mod_TemplatePot,    ONLY: Param_Template,Init_TemplatePot,Write_TemplatePot,Eval_TemplatePot
 
@@ -75,6 +76,7 @@ MODULE mod_Model
     TYPE (Param_1DSOC_2S1T)  :: Para_1DSOC_2S1T
 
     TYPE (Param_Phenol)      :: Para_Phenol
+    TYPE (Param_TwoD)        :: Para_TwoD
 
     TYPE (Param_Template)    :: Para_Template
 
@@ -269,8 +271,14 @@ CONTAINS
 
     SELECT CASE (Para_Model%pot_name)
     CASE ('morse')
+      !! === README ==
       !! Morse potential: V(R) = D*(1-exp(-a*(r-Req))**2
-
+      !! pot_name  = 'Morse'
+      !! ndim      = 1
+      !! nsurf     = 1
+      !! reduced mass      = 1744.60504565084306291455 au
+      !! remark: Default parameters for H-F
+      !! === END README ==
       Para_Model%ndim      = 1
       Para_Model%nsurf     = 1
 
@@ -288,8 +296,15 @@ CONTAINS
       CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
 
     CASE ('buck')
+      !! === README ==
       !! Buckingham potential: V(R) = A*exp(-B*R)-C/R^6
-
+      !! pot_name  = 'buck'
+      !! ndim      = 1
+      !! nsurf     = 1
+      !! reduced mass      = 36423.484024390622 au
+      !! remark: default parameters for Ar2
+      !! ref:  R.A. Buckingham, Proc. R. Soc. A Math. Phys. Eng. Sci. 168 (1938) 264–283. doi:10.1098/rspa.1938.0173
+      !! === END README ==
       Para_Model%ndim      = 1
       Para_Model%nsurf     = 1
 
@@ -297,8 +312,18 @@ CONTAINS
       CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
 
     CASE ('hbond')
-      !write(out_unitp,*) 'We are working with Linear H-Bond potential'
-
+      !! === README ==
+      !! LinearHBond potential: Morse1(QQ/2+q,param1)+Morse2(QQ/2-q,param2)+Eref2+Buckingham(QQ)
+      !! pot_name  = 'HBond'
+      !! ndim      = 2   (QQ,q)
+      !! nsurf     = 1
+      !! reduced masses      = (/ 29156.946380706224, 1837.1526464003414 /) au
+      !! remark:
+      !!    A--------------H-----X--------------------B
+      !!     <--------------QQ----------------------->
+      !!                    <-q->
+      !! ref:  Eq 3.79 of J. Beutier, thesis.
+      !! === END README ==
       Para_Model%ndim      = 2
       Para_Model%nsurf     = 1
 
@@ -307,11 +332,18 @@ CONTAINS
                                PubliUnit=Para_Model%PubliUnit)
 
       CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
-      Para_Model%d0GGdef(1,1) = Para_Model%Para_LinearHBond%muQQ
-      Para_Model%d0GGdef(2,2) = Para_Model%Para_LinearHBond%muq
+      Para_Model%d0GGdef(1,1) = ONE/Para_Model%Para_LinearHBond%muQQ
+      Para_Model%d0GGdef(2,2) = ONE/Para_Model%Para_LinearHBond%muq
 
     CASE ('henonheiles')
-
+      !! === README ==
+      !! HenonHeiles potential
+      !! pot_name  = 'HenonHeiles'
+      !! ndim      > 1
+      !! nsurf     = 1
+      !! reduced masses(:)      = ONE au
+      !! ref:  parameters taken from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
+      !! === END README ==
       Para_Model%nsurf     = 1
 
       CALL Init_HenonHeilesPot(Para_Model%Para_HenonHeiles,ndim=Para_Model%ndim, &
@@ -321,7 +353,15 @@ CONTAINS
 
 
     CASE ('tully')
-      !! from Tully, J. Chem. Phys. V93, pp15, 1990
+      !! === README ==
+      !! Tully potential: three options
+      !! pot_name  = 'Tully'
+      !! ndim      = 1
+      !! nsurf     = 2
+      !! reduced mass      = 2000. au
+      !! remark: three options are possible (option = 1,2,3)
+      !! ref:  Tully, J. Chem. Phys. V93, pp15, 1990
+      !! === END README ==
       Para_Model%nsurf     = 2
       Para_Model%ndim      = 1
 
@@ -334,7 +374,15 @@ CONTAINS
 
 
     CASE ('1dsoc','1dsoc_1s1t')
-      !! from  J. Chem. Phys. V137, p22A501 (2012)
+      !! === README ==
+      !! Spin Orbit coupling model
+      !! pot_name  = '1DSOC_1S1T'
+      !! ndim      = 1
+      !! nsurf     = 4
+      !! reduced mass      = 20000. au
+      !! remark: 1 singlet and 1 triplet (3 components) => nsurf     = 4
+      !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
+      !! === END README ==
       Para_Model%nsurf     = 4
       Para_Model%ndim      = 1
 
@@ -344,7 +392,15 @@ CONTAINS
       Para_Model%d0GGdef(1,1) = ONE/Para_Model%Para_1DSOC%mu
 
     CASE ('1dsoc_2s1t')
-      !! from  J. Chem. Phys. V137, p22A501 (2012)
+      !! === README ==
+      !! Spin Orbit coupling model
+      !! pot_name  = '1DSOC_2S1T'
+      !! ndim      = 1
+      !! nsurf     = 4
+      !! reduced mass      = 20000. au
+      !! remark: 2 singlets and 1 triplet (2 linear combinations of the triplet components are not included) => nsurf     = 4
+      !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
+      !! === END README ==
       Para_Model%nsurf     = 4
       Para_Model%ndim      = 1
 
@@ -355,8 +411,15 @@ CONTAINS
 
 
     CASE ('phenol')
-      !! from Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, ...
-      !!  J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
+      !! === README ==
+      !! Phenol model
+      !! pot_name  = 'Phenol'
+      !! ndim      = 2 (R=rOH, th=OH-torsion)
+      !! nsurf     = 3
+      !! Diagonal Metric Tensor(:)      = (/ 0.0005786177, 0.0002550307 /) au
+      !! remark:
+      !! ref: Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
+      !! === END README ==
       Para_Model%nsurf     = 3
       Para_Model%ndim      = 2
 
@@ -364,8 +427,29 @@ CONTAINS
 
       CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
       ! The metric tensor of Tnum with rigid_type=100 from B3LYP/6-31G** of the ground stat
-      Para_Model%d0GGdef(1,1) = 0.0005786177_Rkind
-      Para_Model%d0GGdef(2,2) = 0.0002550307_Rkind
+      Para_Model%d0GGdef(1,1) = Para_Model%Para_Phenol%G_RR
+      Para_Model%d0GGdef(2,2) = Para_Model%Para_Phenol%G_ThTh
+
+
+    CASE ('twod')
+      !! === README ==
+      !! 2D model
+      !! pot_name  = 'TwoD'
+      !! ndim      = 2 (X,Y)
+      !! nsurf     = 2
+      !! Reduced masses(:)      = (/ 20000., 6667. /) au
+      !! remark: The parameter values have been modified
+      !! ref: A. Ferretti, G. Granucci, A. Lami, M. Persico, G. Villani, J. Chem. Phys. 104, 5517 (1996); https://doi.org/10.1063/1.471791
+      !! === END README ==
+      Para_Model%nsurf     = 2
+      Para_Model%ndim      = 2
+
+      CALL Init_TwoDPot(Para_Model%Para_TwoD,PubliUnit=Para_Model%PubliUnit)
+
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+      ! The metric tensor from the publication
+      Para_Model%d0GGdef(1,1) = ONE/Para_Model%Para_TwoD%muX
+      Para_Model%d0GGdef(2,2) = ONE/Para_Model%Para_TwoD%muY
 
     CASE ('template')
       !! 3D-potential with 1 surface
@@ -476,6 +560,12 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
         !CALL Eval_PhenolPot_old(PotVal,Q,Para_Model%Para_Phenol,nderiv_loc)
         CALL Eval_PhenolPot(PotVal,Q,Para_Model%Para_Phenol,nderiv_loc)
+
+      CASE ('twod')
+        CALL Eval_TwoDPot(PotVal,Q,Para_Model%Para_TwoD,nderiv_loc)
+
+
+
 
       CASE ('template')
 

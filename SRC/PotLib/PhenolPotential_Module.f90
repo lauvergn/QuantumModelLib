@@ -76,6 +76,11 @@ MODULE mod_PhenolPot
      ! V(1,3), and V(1,2) terms
      TYPE (Param_Sigmoid) :: lambda12,lambda13
 
+
+      ! The metric tensor of Tnum with rigid_type=100 from B3LYP/6-31G** of the ground state (in au)
+     real (kind=Rkind), PUBLIC :: G_RR    = 0.0005786177_Rkind
+     real (kind=Rkind), PUBLIC :: G_ThTh  = 0.0002550307_Rkind
+
   END TYPE Param_Phenol
 
 

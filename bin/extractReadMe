@@ -1,0 +1,110 @@
+mkdir -p temp 
+rm -f temp/*
+
+cat << ** > ReadMe.txt
+=========================================
+=========================================
+ QuantumModelLib use
+=========================================
+ 1) Installation
+   From the QuantumModelLib directory, execute make
+   the "libpot.a" must be created
+
+ 2) Link "libpot.a" to your code
+
+   gfortran ....   -L\$QuantumModelLib_path -lpot
+
+      QuantumModelLib_path contains the path of the QuantumModelLib
+
+
+ 3) In your fortan code
+ 3a) Initialization of the potential (see the list below)
+
+        CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+
+        where
+           ndim       is the number of degree(s) of freedom
+           nsurf      is the number of electronic surface(s) (adiabatic or diabatic)
+           pot_name   is the name of the potential or model (phenol, Tully, HenonHeiles ...)
+           adiabatic  is a logical flag (.TRUE. or .FALSE.)
+           option     enables to select a model with several options (Tully ...)
+
+     The list of available models is given below
+
+     Example:
+        CALL sub_Init_Qmodel(2,3,'phenol',.FALSE.,0)
+
+        It initializes the phenol potential (2D and 3 PES).
+
+
+ 3b) Potential energy surface(s), PES, evaluation
+
+        CALL sub_Qmodel_V(V,Q)
+
+        where
+           Q(:)   is the ndim coordinates (vector of real(kind=8))
+           V(:,:) is PES and a  nsurf x nsurf matrix of real (kind=8)
+
+     Remarks:
+      - when adiabatic is set to .TRUE., V(:,:) is a diagonal matrix.
+      - Use sub_Qmodel_VG(V,G,Q) to get the potential and the gradient 
+            G(:,:,:) are real (kind=8) of nsurf x nsurf x ndim 
+      - Use sub_Qmodel_VGH(V,G,H,Q) to get the potential, the gradient and the hessian
+            H(:,:,:,:) are real (kind=8) of nsurf x nsurf x ndim x ndim
+      - Use sub_Qmodel_VG_NAC(V,G,NAC,Q) to get the potential, the gradient and the
+            non-adiabatic couplings (NAC).
+            NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim 
+
+
+ 3c) Get the metric tensor, GGdef
+
+        CALL get_Qmodel_GGdef(GGdef)
+
+        where
+           GGdef(:,)  is the ndim x ndim matrix of real (kind=8)
+
+     Most of the models are associated with a specific kinetic energy operator (KEO)
+     Here, it is given through a constant metric tensor, GGdef, so the that the KEO is:
+
+        T = -1/2 Sum_ij d./dQi GGdef(i,j) d./dQj
+
+     Its diagonal components, GGdef(i,i), can be view as the invers of masses (1/Mi)
+
+     The volume element, dTau, is:
+
+        dTau = dQ1.dQ2 ... dQndim
+
+     Remark: The metric tensor can be modified:
+        CALL set_Qmodel_GGdef(GGdef,ndim)
+
+        where
+           ndim       is the number of degree(s) of freedom it MUST be indentical to the initialized value (with sub_Init_Qmodel)
+           GGdef(:,)  is the new metric tansor a ndim x ndim matrix of real (kind=8)
+
+=========================================
+=========================================
+**
+
+
+awk '/=== README ==/,/=== END README ==/' SRC/Model_Module.f90 > temp/RMtmp
+
+cd temp
+
+split -p "END README" RMtmp readme_
+rm RMtmp
+
+for name in readme_*
+do
+  #echo $name
+  echo ========================================= >> ../ReadMe.txt
+  echo ========================================= >> ../ReadMe.txt
+  grep pot_name $name >> ../ReadMe.txt
+  echo ========================================= >> ../ReadMe.txt
+  grep -v README $name >> ../ReadMe.txt
+  echo ========================================= >> ../ReadMe.txt
+  echo ========================================= >> ../ReadMe.txt
+done
+
+cd ..
+
+rm -r temp

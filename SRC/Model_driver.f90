@@ -153,26 +153,15 @@ SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
   CALL calc_pot_grad_hess(V,G,H,QuantumModel,Q)
 
 END SUBROUTINE sub_Qmodel_VGH
-SUBROUTINE get_Qmodel_GGdef(GGdef,ndim)
+SUBROUTINE get_Qmodel_GGdef(GGdef)
   USE mod_NumParameters
   USE mod_dnMatPot
   USE mod_Model
   USE mod_Lib
   IMPLICIT NONE
 
-  integer,                intent(in)        :: ndim
-  real (kind=Rkind),      intent(inout)     :: GGdef(ndim,ndim)
+  real (kind=Rkind),      intent(inout)     :: GGdef(QuantumModel%ndim,QuantumModel%ndim)
 
-  IF (.NOT. allocated(QuantumModel%d0GGdef) .OR. ndim /= QuantumModel%ndim) THEN
-      write(out_unitp,*) ' ERROR in get_Qmodel_GGdef'
-      write(out_unitp,*) ' QuantumModel%d0GGdef is not allocated or'
-      write(out_unitp,*) ' ndim /= QuantumModel%ndim'
-      write(out_unitp,*) ' Probably, the initialization is not done!!'
-      write(out_unitp,*) '   => CALL sub_Init_Qmodel(...)'
-      write(out_unitp,*) ' check the fortran!'
-      write(out_unitp,*)
-      STOP ' ERROR in get_Qmodel_GGdef'
-  END IF
   GGdef(:,:) = QuantumModel%d0GGdef
 
 END SUBROUTINE get_Qmodel_GGdef
