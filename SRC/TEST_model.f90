@@ -30,6 +30,7 @@ PROGRAM TEST_model
   CALL test_Morse()
   CALL test_Tully()
   CALL test_1DSOC()
+  CALL test_PSB3()
 
 END PROGRAM TEST_model
 
@@ -615,3 +616,55 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_LinearHBond
+SUBROUTINE test_PSB3
+
+  USE mod_Lib
+  USE mod_dnMatPot
+  USE mod_Model
+
+  IMPLICIT NONE
+
+  TYPE (Param_Model)             :: Para_Model
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMatPot)                :: PotVal
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' PSB3 potential'
+  IF(Para_Model%PubliUnit) THEN
+     write(out_unitp,*) ' With units: Atomic Units (Angstrom, Rad, Rad, Kcal/mol)'
+  END IF
+  IF(.NOT. Para_Model%PubliUnit) THEN
+     write(out_unitp,*) ' With units: Atomic Units (Bhor, Rad, Rad, Hartree)'
+  END IF
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(Para_Model,pot_name='psb3',PubliUnit=.FALSE.)
+
+  CALL Write_Model(Para_Model)
+
+  allocate(q(Para_Model%ndim))
+
+  q(:) = (/0.172459_Rkind,-3.14_Rkind,0._Rkind/)
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------- CHECK POT ------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) 'Evaluated in', q
+
+  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+
+  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+
+  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+
+  write(out_unitp,*) '---------- END CHECK POT --------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL dealloc_dnMatPot(PotVal)
+
+  deallocate(q)
+
+END SUBROUTINE test_PSB3

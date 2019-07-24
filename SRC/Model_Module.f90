@@ -29,6 +29,9 @@ MODULE mod_Model
   USE mod_MorsePot,       ONLY: Param_Morse,Init_MorsePot,Write_MorsePot,Eval_MorsePot
   USE mod_HenonHeilesPot, ONLY: Param_HenonHeiles,Init_HenonHeilesPot,Write_HenonHeilesPot,Eval_HenonHeilesPot
   USE mod_TullyPot,       ONLY: Param_Tully,Init_TullyPot,Write_TullyPot,Eval_TullyPot
+
+  USE mod_PSB3Pot,        ONLY: Param_PSB3,Init_PSB3Pot,Write_PSB3Pot,Eval_PSB3Pot
+
   USE mod_1DSOC_Model
   USE mod_1DSOC_2S1T_Model
 
@@ -77,6 +80,7 @@ MODULE mod_Model
 
     TYPE (Param_Phenol)      :: Para_Phenol
     TYPE (Param_TwoD)        :: Para_TwoD
+    TYPE (Param_PSB3)        :: Para_PSB3
 
     TYPE (Param_Template)    :: Para_Template
 
@@ -451,6 +455,17 @@ CONTAINS
       Para_Model%d0GGdef(1,1) = ONE/Para_Model%Para_TwoD%muX
       Para_Model%d0GGdef(2,2) = ONE/Para_Model%Para_TwoD%muY
 
+    CASE ('psb3')
+        !! Marsili et All.
+        Para_Model%nsurf     = 2
+        Para_Model%ndim      = 3
+
+        CALL Init_PSB3Pot(Para_Model%Para_PSB3,option=option_loc,      &
+                           nio=nio_loc,PubliUnit=Para_Model%PubliUnit)
+
+        CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+
+
     CASE ('template')
       !! 3D-potential with 1 surface
       Para_Model%nsurf     = 1
@@ -467,7 +482,7 @@ CONTAINS
        close(nio_loc)
     END IF
 
-    !CALL Write_Model(Para_Model)
+    CALL Write_Model(Para_Model)
 
   END SUBROUTINE Init_Model
 
@@ -524,51 +539,42 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
       SELECT CASE (Para_Model%pot_name)
       CASE ('morse')
-
         CALL Eval_MorsePot(PotVal,Q(1),Para_Model%Para_Morse,nderiv_loc)
 
       CASE ('buck')
-
         CALL Eval_BuckPot(PotVal,Q(1),Para_Model%Para_Buck,nderiv_loc)
 
       CASE ('sigmoid')
-
         CALL Eval_SigmoidPot(PotVal,Q(1),Para_Model%Para_Sigmoid,nderiv_loc)
 
       CASE ('hbond')
-
         !CALL Eval_LinearHBondPot_old(PotVal,Q,Para_Model%Para_LinearHBond,nderiv_loc)
         CALL Eval_LinearHBondPot(PotVal,Q,Para_Model%Para_LinearHBond,nderiv_loc)
 
       CASE ('henonheiles')
-
         CALL Eval_HenonHeilesPot(PotVal,Q,Para_Model%Para_HenonHeiles,nderiv_loc)
 
       CASE ('tully')
-
         CALL Eval_TullyPot(PotVal,Q(1),Para_Model%Para_Tully,nderiv_loc)
 
       CASE ('1dsoc','1dsoc_1s1t')
-
         CALL Eval_1DSOC(PotVal,Q(1),Para_Model%Para_1DSOC,nderiv_loc)
 
       CASE ('1dsoc_2s1t')
-
         CALL Eval_1DSOC_2S1T(PotVal,Q(1),Para_Model%Para_1DSOC_2S1T,nderiv_loc)
 
       CASE ('phenol')
-
         !CALL Eval_PhenolPot_old(PotVal,Q,Para_Model%Para_Phenol,nderiv_loc)
         CALL Eval_PhenolPot(PotVal,Q,Para_Model%Para_Phenol,nderiv_loc)
 
       CASE ('twod')
         CALL Eval_TwoDPot(PotVal,Q,Para_Model%Para_TwoD,nderiv_loc)
 
-
+      CASE ('psb3')
+        CALL Eval_PSB3Pot(PotVal,Q,Para_Model%Para_PSB3,nderiv_loc)
 
 
       CASE ('template')
-
         CALL Eval_TemplatePot(PotVal,Q,Para_Model%Para_Template,nderiv_loc)
 
       CASE DEFAULT
@@ -1079,7 +1085,6 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       CALL Write_RMat(Para_Model%d0GGdef,nio_loc,nbcol1=5)
     END IF
 
-
     SELECT CASE (Para_Model%pot_name)
     CASE ('morse')
       CALL Write_MorsePot(Para_Model%Para_Morse,nio=nio_loc)
@@ -1099,6 +1104,8 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
         CALL Write_1DSOC_2S1T(Para_Model%Para_1DSOC_2S1T,nio=nio_loc)
     CASE ('phenol')
         CALL Write_PhenolPot(Para_Model%Para_Phenol,nio=nio_loc)
+    CASE ('psb3')
+        CALL Write_PSB3Pot(Para_Model%Para_PSB3,nio=nio_loc)
     CASE ('template')
         CALL  Write_TemplatePot(Para_Model%Para_Template,nio=nio_loc)
     CASE DEFAULT

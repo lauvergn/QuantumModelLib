@@ -105,6 +105,7 @@ CONTAINS
         write(out_unitp,nml=OneD_SOC_Model)
         STOP ' ERROR in Init_1DSOC_2S1T'
       END IF
+      write(out_unitp,OneD_SOC_Model)
 
       Para_1DSOC_2S1T%Phi_12     = Phi_12
     ELSE
@@ -142,12 +143,8 @@ CONTAINS
     write(nio,*) '        |RT1>=|T,+> = 1/sqrt(2) * [ |T,1> + |T,-1> ]'
     write(nio,*) '        |RT2>=|T,-> = i/sqrt(2) * [ |T,1> - |T,-1> ]'
     write(nio,*) '        |RT3>=|T,z> = i *           |T,0> '
+    write(nio,*) 'Furthermore, the triplet components are transformed, so that 4 states are used (see Eq 31).'
     write(nio,*)
-    write(nio,*) 'Two options (1 and 2):'
-    write(nio,*) '     -The first one, as in the publication (the default).'
-    write(nio,*) '     -The second one, the function sigma(R) is defined as tanh(-4*(R-Rsig)/DRsig).'
-    write(nio,*)
-    write(nio,*) 'Values for the first option:'
     write(nio,*) 'Diabatic Potential, 1DSOC_2S1T_Model (with Rsig=8.0)'
     write(nio,*) 'Value at: R=10. Bohr'
     write(nio,*) 'Vdia (Hartree)   = [ 0.041042414      -0.000707107       0.000707107       0.001000000]'
@@ -174,6 +171,7 @@ CONTAINS
     write(nio,*) '  alpha1,alpha2:  ',Para_1DSOC_2S1T%alpha1,Para_1DSOC_2S1T%alpha2
     write(nio,*) '  gamma_1,gamma_2:',Para_1DSOC_2S1T%gamma_1,Para_1DSOC_2S1T%gamma_2
     write(nio,*) '  DE,DEs:         ',Para_1DSOC_2S1T%DE,Para_1DSOC_2S1T%DEs
+    write(nio,*) '  Phi_12:         ',Para_1DSOC_2S1T%Phi_12
 
 
     write(nio,*) ' option:          ',Para_1DSOC_2S1T%option

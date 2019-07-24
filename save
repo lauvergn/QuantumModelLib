@@ -1,37 +1,56 @@
 #!/bin/bash -x
 
 
-
 a=$1
-nom_rep=/Users/lauvergn/trav/ModLib-old
+name_rep=/Users/lauvergn/trav/QModLib-old
 
-nom_sd="ModLib-v"$a
-
-
-nom=$nom_rep/$nom_sd
-
-if test -s $nom  
+if test $a = "+"
 then
-    echo le repertoire $nom existe !!
+  echo with +
+  aold=`grep QML  version-QML | awk '{print $3}' | awk -F. '{print $1 " " $2}'`
+  echo $aold
+
+  if test $a = "+"
+  then
+    a=`echo $aold | awk '{print $1 "." $2+1}'`
+  else
+    a=`echo $aold | awk '{print $1 "." $2}'`
+  fi
+
+  echo $a
+
+fi
+name_sd="QModLib-v"$a
+
+
+name=$name_rep/$name_sd
+
+if test -s $name  
+then
+    echo The directory $name exists !!
 else
-    echo le repertoire $nom n existe pas
+    echo le repertoire $name does not exist
+
+    #modify the version in versionQML
+    echo "QML =  "$a >  version-QML
     
 
-    mkdir $nom
+    mkdir $name
 
-    cp -r * $nom
+    cp -r * $name
 
-    cd $nom
+    cd $name
     make clean
 
 
 fi
 
-cd $nom_rep
+cd $name_rep
 
-nom_tar=ML.$a
-echo $nom_tar.tar
-tar cvf $nom_tar.tar $nom_sd
-gzip $nom_tar.tar
- scp $nom_tar.tar.gz styx2:/u/lauvergn/trav/ModLib
+name_tar=QML.$a
+echo $name_tar.tar
+tar cvf $name_tar.tar $name_sd
+gzip $name_tar.tar
+#scp $name_tar.tar.gz styx2:/u/lauvergn/trav/QModLib
+ scp $name_tar.tar.gz styx2:/userTMP/lauvergn/QModLib
 
