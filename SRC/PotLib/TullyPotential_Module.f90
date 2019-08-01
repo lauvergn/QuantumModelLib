@@ -56,7 +56,6 @@ MODULE mod_TullyPot
   END TYPE Param_Tully
 
   PRIVATE Read_TullyPot,Init0_TullyPot,eval_TullyPot1,eval_TullyPot2,eval_TullyPot3
-  PRIVATE eval_TullyPot1_old,eval_TullyPot2_old,eval_TullyPot3_old
 
 CONTAINS
 !> @brief Subroutine which makes the initialization of the Tully parameters.
@@ -241,43 +240,76 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
+!! @param nio                integer:             file unit to print the parameters.
+  SUBROUTINE Write0_TullyPot(nio)
+    integer, intent(in) :: nio
+
+    write(nio,*) 'Tully parameters, from reference:'
+    write(nio,*) '  Reference: Tully, J. Chem. Phys. V93, pp15, 1990'
+    write(nio,*)
+    write(nio,*) '  mu     = 2000 au'
+    write(nio,*)
+    write(nio,*) 'Adiabatic Potential, Tully A (option=1)'
+    write(nio,*)
+    write(nio,*) 'V11(R) =  A.[1-Exp(-B.R)]    R>0'
+    write(nio,*) 'V11(R) = -A.[1-Exp( B.R)]    R<0'
+    write(nio,*) 'V22(R) = -V11(R)'
+    write(nio,*) 'V12(R) = C.Exp(-D.R^2)'
+    write(nio,*) 'A = 0.01, B = 1.6, C = 0.005, D = 1.0'
+    write(nio,*)
+    write(nio,*) 'Value at: R=-1.1 Bohr'
+    write(nio,*) 'V        = [-0.008413,  0.008413] Hartree'
+    write(nio,*) 'gradient = [ 0.002128, -0.002128] '
+    write(nio,*) 'hessian  = [ 0.001943, -0.001943] '
+    write(nio,*)
+    write(nio,*) 'Adiabatic Potential, Tully B (option=2)'
+    write(nio,*)
+    write(nio,*) 'V11(R) =  0'
+    write(nio,*) 'V22(R) = -A.Exp(-B.R^2) + E0'
+    write(nio,*) 'V12(R) = C.Exp(-D.R^2)'
+    write(nio,*) 'A = 0.10, B = 0.28, E0=0.05, C = 0.015, D = 0.06'
+    write(nio,*)
+    write(nio,*) 'Value at: R=-1.1 Bohr'
+    write(nio,*) 'V        = [-0.028170,  0.006908] Hartree'
+    write(nio,*) 'gradient = [-0.036718, -0.007180] '
+    write(nio,*) 'hessian  = [-0.003754,  0.016620] '
+    write(nio,*)
+    write(nio,*) 'Adiabatic Potential, Tully C (option=3)'
+    write(nio,*)
+    write(nio,*) 'V11(R) =  A'
+    write(nio,*) 'V22(R) = -A'
+    write(nio,*) 'V12(R) = B.   Exp( C.R)    R<0'
+    write(nio,*) 'V12(R) = B.[2-Exp(-C.R)]   R>0'
+    write(nio,*) 'A = 0.0006, B = 0.1, C = 0.90'
+    write(nio,*)
+    write(nio,*) 'Value at: R=-1.1 Bohr'
+    write(nio,*) 'V        = [-0.037163,  0.037163] Hartree'
+    write(nio,*) 'gradient = [-0.033438,  0.033438] '
+    write(nio,*) 'hessian  = [-0.030102,  0.030102] '
+    write(nio,*)
+    write(nio,*) 'end Tully parameters'
+
+  END SUBROUTINE Write0_TullyPot
+!> @brief Subroutine wich prints the Tully parameters.
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
 !! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
 !! @param nio                integer:             file unit to print the parameters.
   SUBROUTINE Write_TullyPot(Para_Tully,nio)
     TYPE (Param_Tully), intent(in) :: Para_Tully
     integer, intent(in) :: nio
 
-    write(nio,*) 'Tully parameters, from reference:'
-    write(nio,*) '  Reference: Tully, J. Chem. Phys. V93, pp15, 1990'
+    write(nio,*) 'Tully current parameters:'
     write(nio,*)
-
-    write(nio,*) 'Adiabatic Potential, Tully 1'
-    write(nio,*) 'Value at: R=-1.1 Bohr'
-    write(nio,*) 'V        = [-0.008413,  0.008413] Hartree'
-    write(nio,*) 'gradient = [ 0.002128, -0.002128] '
-    write(nio,*) 'hessian  = [ 0.001943, -0.001943] '
-    write(nio,*)
-    write(nio,*) 'Adiabatic Potential, Tully 2'
-    write(nio,*) 'Value at: R=-1.1 Bohr'
-    write(nio,*) 'V        = [-0.028170,  0.006908] Hartree'
-    write(nio,*) 'gradient = [-0.036718, -0.007180] '
-    write(nio,*) 'hessian  = [-0.003754,  0.016620] '
-    write(nio,*)
-    write(nio,*) 'Adiabatic Potential, Tully 3'
-    write(nio,*) 'Value at: R=-1.1 Bohr'
-    write(nio,*) 'V        = [-0.037163,  0.037163] Hartree'
-    write(nio,*) 'gradient = [-0.033438,  0.033438] '
-    write(nio,*) 'hessian  = [-0.030102,  0.030102] '
-    write(nio,*)
-
-    write(nio,*) 'Current parameters:'
     write(nio,*) '  A:      ',Para_Tully%A
     write(nio,*) '  B:      ',Para_Tully%B
     write(nio,*) '  C:      ',Para_Tully%C
     write(nio,*) '  D:      ',Para_Tully%D
     write(nio,*) '  E0:     ',Para_Tully%E0
     write(nio,*) '  option: ',Para_Tully%option
-
+    write(nio,*)
     write(nio,*) 'end Tully parameters'
 
   END SUBROUTINE Write_TullyPot
@@ -292,21 +324,21 @@ CONTAINS
 !! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot(PotVal,r,Para_Tully,nderiv)
-    USE mod_dnMatPot
+  SUBROUTINE eval_TullyPot(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
+    USE mod_dnSca
 
     TYPE (Param_Tully), intent(in)     :: Para_Tully
-    real (kind=Rkind),  intent(in)     :: r
-    TYPE(dnMatPot),     intent(inout)  :: PotVal
+    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
     SELECT CASE (Para_Tully%option)
     CASE (1)
-      CALL eval_TullyPot1(PotVal,r,Para_Tully,nderiv)
+      CALL eval_TullyPot1(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
     CASE (2)
-      CALL eval_TullyPot2(PotVal,r,Para_Tully,nderiv)
+      CALL eval_TullyPot2(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
     CASE (3)
-      CALL eval_TullyPot3(PotVal,r,Para_Tully,nderiv)
+      CALL eval_TullyPot3(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
     CASE Default
         write(out_unitp,*) 'ERROR in eval_TullyPot'
         write(out_unitp,*) ' This option is not possible. option:',Para_Tully%option
@@ -325,40 +357,28 @@ CONTAINS
 !! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot1(PotVal,r,Para_Tully,nderiv)
+  SUBROUTINE eval_TullyPot1(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
   ! A. Simple avoided crossing
-    USE mod_dnMatPot
     USE mod_dnSca
 
     TYPE (Param_Tully), intent(in)     :: Para_Tully
-    real (kind=Rkind),  intent(in)     :: r
-    TYPE(dnMatPot),     intent(inout)  :: PotVal
+    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
 
-    !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)     :: dnPot,dnR
-
-    dnR     = init_dnSca(r,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
-
     ! Potential calculation
     IF (dnR >= ZERO) THEN
-      dnPot =  Para_Tully%A*(ONE-exp(-Para_Tully%B*dnR))
+      Mat_OF_PotDia(1,1) =  Para_Tully%A*(ONE-exp(-Para_Tully%B*dnR))
     ELSE
-      dnPot = -Para_Tully%A*(ONE-exp( Para_Tully%B*dnR))
+      Mat_OF_PotDia(1,1) = -Para_Tully%A*(ONE-exp( Para_Tully%B*dnR))
     END IF
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=1)
-
-    CALL sub_dnSca_TO_dnMatPot(-dnPot,PotVal,i=2,j=2)
+    Mat_OF_PotDia(2,2)   = -Mat_OF_PotDia(1,1)
 
 
-    dnPot = Para_Tully%C*exp(-Para_Tully%D*dnR**2)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=2)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=1)
+    Mat_OF_PotDia(1,2) = Para_Tully%C*exp(-Para_Tully%D*dnR**2)
+    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
-
-    CALL dealloc_dnSca(dnR)
-    CALL dealloc_dnSca(dnPot)
 
   END SUBROUTINE eval_TullyPot1
 !> @brief Subroutine wich calculates the Tully potential (for the 2d model) with derivatives up to the 2d order is required.
@@ -371,36 +391,23 @@ CONTAINS
 !! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot2(PotVal,r,Para_Tully,nderiv) !2d Tully's potential
+  SUBROUTINE eval_TullyPot2(Mat_OF_PotDia,dnR,Para_Tully,nderiv) !2d Tully's potential
   !  B. Dual avoided crossing
-    USE mod_dnMatPot
     USE mod_dnSca
 
     TYPE (Param_Tully), intent(in)     :: Para_Tully
-    real (kind=Rkind),  intent(in)     :: r
-    TYPE(dnMatPot),     intent(inout)  :: PotVal
+    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
-
-    !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)     :: dnPot,dnR
-
-    dnR     = init_dnSca(r,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
-
-
 ! Potential calculation
-    PotVal         = ZERO ! to initialized the PotVal%d0(1,1) and its derivatives
+    Mat_OF_PotDia(1,1)  = ZERO ! to initialized the PotVal%d0(1,1) and its derivatives
 
-    dnPot = -Para_Tully%A*exp(-Para_Tully%B*dnR**2)+Para_Tully%E0
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=2)
+    Mat_OF_PotDia(2,2)  = -Para_Tully%A*exp(-Para_Tully%B*dnR**2)+Para_Tully%E0
 
-    dnPot =  Para_Tully%C*exp(-Para_Tully%D*dnR**2)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=2)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=1)
+    Mat_OF_PotDia(1,2) = Para_Tully%C*exp(-Para_Tully%D*dnR**2)
+    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
-
-    CALL dealloc_dnSca(dnR)
-    CALL dealloc_dnSca(dnPot)
 
   END SUBROUTINE eval_TullyPot2
 !> @brief Subroutine wich calculates the Tully potential (for the 3d model) with derivatives up to the 2d order is required.
@@ -413,163 +420,28 @@ CONTAINS
 !! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot3(PotVal,r,Para_Tully,nderiv) !3d Tully's potential
+  SUBROUTINE eval_TullyPot3(Mat_OF_PotDia,dnR,Para_Tully,nderiv) !3d Tully's potential
     !  C. Extended coupling with reflection
-    USE mod_dnMatPot
     USE mod_dnSca
 
     TYPE (Param_Tully), intent(in)     :: Para_Tully
-    real (kind=Rkind),  intent(in)     :: r
-    TYPE(dnMatPot),     intent(inout)  :: PotVal
+    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
 
-    !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)     :: dnPot,dnR
-
-    dnR     = init_dnSca(r,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
-
-
 ! Potential calculation
-    PotVal         = ZERO ! to initialized the PotVal%d0(1,1) and PotVal%d0(2,2) and their derivatives
-    PotVal%d0(1,1) =  Para_Tully%A
-    PotVal%d0(2,2) = -Para_Tully%A
+    Mat_OF_PotDia(1,1) =  Para_Tully%A
+    Mat_OF_PotDia(2,2) = -Para_Tully%A
 
     IF (dnR >= ZERO) THEN
-      dnPot = Para_Tully%B*(TWO-exp(-Para_Tully%C*dnR))
+      Mat_OF_PotDia(1,2) = Para_Tully%B*(TWO-exp(-Para_Tully%C*dnR))
     ELSE
-      dnPot = Para_Tully%B*exp(Para_Tully%C*dnr)
+      Mat_OF_PotDia(1,2) = Para_Tully%B*exp(Para_Tully%C*dnR)
     END IF
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=2)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=1)
+    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
-
-    CALL dealloc_dnSca(dnR)
-    CALL dealloc_dnSca(dnPot)
 
   END SUBROUTINE eval_TullyPot3
-
-
-  SUBROUTINE eval_TullyPot1_old(PotVal,r,Para_Tully,nderiv)
-  ! A. Simple avoided crossing
-    USE mod_dnMatPot
-
-    TYPE (Param_Tully), intent(in)     :: Para_Tully
-    real (kind=Rkind),  intent(in)     :: r
-    TYPE(dnMatPot),     intent(inout)  :: PotVal
-    integer, intent(in)                :: nderiv
-
-!write(out_unitp,*) 'coucou Tully 1',r
-! Potential calculation
-    if (r >= ZERO) then
-      PotVal%d0(1,1) =  Para_Tully%A*(ONE-exp(-Para_Tully%B*r))
-    else
-      PotVal%d0(1,1) = -Para_Tully%A*(ONE-exp(Para_Tully%B*r))
-    endif
-    PotVal%d0(2,2) = -PotVal%d0(1,1)
-
-    PotVal%d0(1,2) = Para_Tully%C*exp(-Para_Tully%D*r**2)
-    PotVal%d0(2,1) = PotVal%d0(1,2)
-
-! gradient calculation
-    if (nderiv >= 1) then
-         if (r >= ZERO) then
-           PotVal%d1(1,1,1) = Para_Tully%A*Para_Tully%B*exp(-Para_Tully%B*r)
-         else
-           PotVal%d1(1,1,1) = Para_Tully%A*Para_Tully%B*exp(Para_Tully%B*r)
-         endif
-         PotVal%d1(2,2,1) = - PotVal%d1(1,1,1)
-
-         PotVal%d1(1,2,1) = -TWO*Para_Tully%D*r*PotVal%d0(1,2)
-         PotVal%d1(2,1,1) = PotVal%d1(1,2,1)
-    endif
-
-! Hessian calculation
-    if (nderiv >= 2) then
-        if (r > ZERO) then
-          PotVal%d2(1,1,1,1) = -Para_Tully%B*PotVal%d1(1,1,1)
-        else
-          PotVal%d2(1,1,1,1) = Para_Tully%B*PotVal%d1(1,1,1)
-        endif
-        PotVal%d2(2,2,1,1) = -PotVal%d2(1,1,1,1)
-
-        PotVal%d2(1,2,1,1) = (-TWO*Para_Tully%D+FOUR*Para_Tully%D**2*r**2)*PotVal%d0(1,2)
-        PotVal%d2(2,1,1,1) = PotVal%d2(1,2,1,1)
-    endif
-
-  END SUBROUTINE eval_TullyPot1_old
-  SUBROUTINE eval_TullyPot2_old(PotVal,r,Para_Tully,nderiv) !2nd Tully's potential
-  !  B. Dual avoided crossing
-    USE mod_dnMatPot
-
-    TYPE (Param_Tully), intent(in)     :: Para_Tully
-    real (kind=Rkind),  intent(in)     :: r
-    TYPE(dnMatPot),     intent(inout)  :: PotVal
-    integer, intent(in)                :: nderiv
-
-! Potential calculation
-    PotVal%d0(1,1) =  ZERO
-    PotVal%d0(2,2) = -Para_Tully%A*exp(-Para_Tully%B*r**2)+Para_Tully%E0
-    PotVal%d0(1,2) =  Para_Tully%C*exp(-Para_Tully%D*r**2)
-    PotVal%d0(2,1) =  PotVal%d0(1,2)
-
-! Gradient calculation
-    if (nderiv .ge. 1) then
-      PotVal%d1(1,1,1) =  ZERO
-      PotVal%d1(2,2,1) =  TWO*Para_Tully%A*Para_Tully%B*r*exp(-Para_Tully%B*r**2)
-      PotVal%d1(1,2,1) = -TWO*Para_Tully%C*Para_Tully%D*r*exp(-Para_Tully%D*r**2)
-      PotVal%d1(2,1,1) =  PotVal%d1(1,2,1)
-    endif
-
-! Hessian calculation
-    if (nderiv .eq. 2) then
-      PotVal%d2(1,1,1,1) =  ZERO
-      PotVal%d2(2,2,1,1) =  TWO*Para_Tully%A*Para_Tully%B*(ONE-TWO*Para_Tully%B*r**2)*exp(-Para_Tully%B*r**2)
-      PotVal%d2(1,2,1,1) = -TWO*Para_Tully%C*Para_Tully%D*(ONE-TWO*Para_Tully%D*r**2)*exp(-Para_Tully%D*r**2)
-      PotVal%d2(2,1,1,1) =  PotVal%d2(1,2,1,1)
-    endif
-
-  END SUBROUTINE eval_TullyPot2_old
-
-  SUBROUTINE eval_TullyPot3_old(PotVal,r,Para_Tully,nderiv)   ! 3rd Tully's potential
-    !  C. Extended coupling with reflection
-    USE mod_dnMatPot
-
-    TYPE (Param_Tully), intent(in)     :: Para_Tully
-    real (kind=Rkind),  intent(in)     :: r
-    TYPE(dnMatPot),     intent(inout)  :: PotVal
-    integer, intent(in)                :: nderiv
-
-! Potential calculation
-    PotVal%d0(1,1) =  Para_Tully%A
-    PotVal%d0(2,2) = -Para_Tully%A
-    if (r >= ZERO) then
-      PotVal%d0(1,2) = Para_Tully%B*(TWO-exp(-Para_Tully%C*r))
-    else 
-      PotVal%d0(1,2) = Para_Tully%B*exp(Para_Tully%C*r)
-    endif
-    PotVal%d0(2,1) = PotVal%d0(1,2)
-
-! gradient calculation
-    if (nderiv .ge. 1) then
-      PotVal%d1(1,1,1) = ZERO
-      PotVal%d1(2,2,1) = ZERO
-      PotVal%d1(1,2,1) = Para_Tully%B*Para_Tully%C*exp(-Para_Tully%C*abs(r))
-      PotVal%d1(2,1,1) = PotVal%d1(1,2,1)
-    endif
-
-! Hessian calculation
-    if (nderiv .eq. 2) then
-        PotVal%d2(1,1,1,1) = ZERO
-        PotVal%d2(2,2,1,1) = ZERO
-        if (r >= ZERO) then
-          PotVal%d2(1,2,1,1) = -Para_Tully%C*PotVal%d1(1,2,1)
-        else
-          PotVal%d2(1,2,1,1) = Para_Tully%C*PotVal%d1(1,2,1)
-        endif 
-        PotVal%d2(2,1,1,1) = PotVal%d2(1,2,1,1)
-    endif
-
-  END SUBROUTINE eval_TullyPot3_old
 
 END MODULE mod_TullyPot

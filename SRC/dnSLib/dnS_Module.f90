@@ -680,6 +680,95 @@ CONTAINS
     END IF
 
   END SUBROUTINE Write_dnSca
+  SUBROUTINE WriteAll_dnSca(S,nio)
+    USE mod_Lib
+
+    TYPE(dnSca),      intent(in)           :: S
+    integer,          intent(in), optional :: nio
+
+    integer :: i,j,k,nio_loc,ndim
+
+    IF (present(nio)) THEN
+      nio_loc = nio
+    ELSE
+      nio_loc = out_unitp
+    END IF
+
+    write(nio_loc,*) '-------------------------------------------'
+    write(nio_loc,*) 'WriteAll_dnSca'
+
+    write(nio_loc,*) 'nderiv',S%nderiv
+
+    write(nio_loc,*) 'S%d0',S%d0
+
+    IF (allocated(S%d1)) THEN
+      write(nio_loc,*) 'S%d1:',S%d1
+    ELSE
+      write(nio_loc,*) 'S%d1: not allocated'
+    END IF
+
+    IF (allocated(S%d2)) THEN
+      write(nio_loc,*) 'S%d2:',S%d2
+    ELSE
+      write(nio_loc,*) 'S%d2: not allocated'
+    END IF
+
+    IF (allocated(S%d3)) THEN
+      write(nio_loc,*) 'S%d3:',S%d3
+    ELSE
+      write(nio_loc,*) 'S%d3: not allocated'
+    END IF
+
+    write(nio_loc,*) 'END WriteAll_dnSca'
+    write(nio_loc,*) '-------------------------------------------'
+
+  END SUBROUTINE WriteAll_dnSca
+  SUBROUTINE Write_dnSca_FOR_test(S,nio,info)
+    USE mod_Lib
+
+    TYPE(dnSca),        intent(in)           :: S
+    integer,            intent(in), optional :: nio
+    character(len=*),   intent(in), optional :: info
+
+    integer :: nio_loc,ndim
+
+    IF (present(nio)) THEN
+      nio_loc = nio
+    ELSE
+      nio_loc = out_unitp
+    END IF
+
+    IF (present(info)) THEN
+      write(nio_loc,*) 'TEST dnSca: ',trim(adjustl(info))
+    ELSE
+      write(nio_loc,*) 'TEST dnSca: '
+    END IF
+
+    write(nio_loc,*) 'S%d0'
+    write(nio_loc,*) 1
+    write(nio_loc,*) S%d0
+
+    IF (allocated(S%d1)) THEN
+      write(nio_loc,*) 'S%d1'
+      write(nio_loc,*) size(S%d1)
+      write(nio_loc,*) S%d1
+    END IF
+
+    IF (allocated(S%d2)) THEN
+      write(nio_loc,*) 'S%d2'
+      write(nio_loc,*) size(S%d2)
+      write(nio_loc,*) S%d2
+    END IF
+
+    IF (allocated(S%d3)) THEN
+      write(nio_loc,*) 'S%d3'
+      write(nio_loc,*) size(S%d3)
+      write(nio_loc,*) S%d3
+    END IF
+
+    write(nio_loc,*) 'END_TEST dnSca: '
+
+  END SUBROUTINE Write_dnSca_FOR_test
 !> @brief Public function to get nderiv from a derived type dnSca.
 !!
 !> @author David Lauvergnat
@@ -693,8 +782,10 @@ CONTAINS
     TYPE(dnSca), intent(in)    :: S
     integer :: nderiv
 
-    nderiv = S%nderiv
-
+   nderiv = S%nderiv
+    !IF (S%nderiv == -1) THEN
+    !  nderiv = S%nderiv
+    !ELSE IF (.NOT. allocated(S%d1)) THEN
     IF (.NOT. allocated(S%d1)) THEN
       nderiv = 0
     ELSE IF (.NOT. allocated(S%d2)) THEN
@@ -708,7 +799,10 @@ CONTAINS
     IF (S%nderiv /= nderiv) THEN
       write(out_unitp,*) ' ERROR in get_nderiv_FROM_dnSca'
       write(out_unitp,*) '  Problem with nderiv in S'
-      CALL Write_dnSca(S)
+      write(out_unitp,*) '  nderiv from the allocation',nderiv
+      write(out_unitp,*) '  S%nderiv',S%nderiv
+
+      CALL WriteAll_dnSca(S)
       STOP 'ERROR in get_nderiv_FROM_dnSca'
     END IF
 
@@ -1463,7 +1557,7 @@ CONTAINS
   FUNCTION R_TIME_dnSca(R,S) RESULT(Sres)
     TYPE (dnSca)                       :: Sres
     TYPE (dnSca),        intent(in)    :: S
-    real (kind=Rkind), intent(in)    :: R
+    real (kind=Rkind),   intent(in)    :: R
 
 
     integer :: nderiv,ndim

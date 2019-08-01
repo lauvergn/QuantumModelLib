@@ -127,12 +127,10 @@ CONTAINS
 !> @brief Subroutine wich prints the 1D-SOC Model parameters.
 !!
 !> @author David Lauvergnat
-!! @date 27/06/2019
+!! @date 30/07/2019
 !!
-!! @param Para_1DSOC_2S1T    TYPE(Param_1DSOC_2S1T):  derived type in which the parameters are set-up.
 !! @param nio                integer:                 file unit to print the parameters.
-  SUBROUTINE Write_1DSOC_2S1T(Para_1DSOC_2S1T,nio)
-    TYPE (Param_1DSOC_2S1T), intent(in) :: Para_1DSOC_2S1T
+  SUBROUTINE Write0_1DSOC_2S1T(nio)
     integer,            intent(in) :: nio
 
     write(nio,*) '1DSOC_2S1T_Model parameters, from reference:'
@@ -145,38 +143,49 @@ CONTAINS
     write(nio,*) '        |RT3>=|T,z> = i *           |T,0> '
     write(nio,*) 'Furthermore, the triplet components are transformed, so that 4 states are used (see Eq 31).'
     write(nio,*)
-    write(nio,*) 'Diabatic Potential, 1DSOC_2S1T_Model (with Rsig=8.0)'
-    write(nio,*) 'Value at: R=10. Bohr'
-    write(nio,*) 'Vdia (Hartree)   = [ 0.041042414      -0.000707107       0.000707107       0.001000000]'
-    write(nio,*) '                   [-0.000707107       0.041042499       0.000000000       0.000000000]'
-    write(nio,*) '                   [ 0.000707107       0.000000000       0.041042499       0.000000000]'
-    write(nio,*) '                   [ 0.001000000       0.000000000       0.000000000       0.041042499]'
-
+    write(nio,*) 'Diabatic Potential, 1DSOC_2S1T_Model (with Phi_12=pi/4=0.7853981....)'
+    write(nio,*) 'Value at: R=8.5 Bohr'
+    write(nio,*) 'Vdia (Hartree)   = [ 0.006762157       0.001414214       0.000000000       0.000000000]'
+    write(nio,*) '                   [ 0.001414214       0.059716484       0.000000000       0.001000000]'
+    write(nio,*) '                   [ 0.000000000       0.000000000       0.059716484       0.001000000]'
+    write(nio,*) '                   [ 0.000000000       0.001000000       0.001000000       0.041762157]'
     write(nio,*)
-    write(nio,*) 'Adiabatic Potential, 1DSOC_2S1T_Model (with Rsig=8.0)'
-    write(nio,*) 'Value at: R=10. Bohr'
-    write(nio,*) 'Vadia (Hartree)   = [ 0.039628243      0.041042499       0.041042499       0.042456670]'
-
+    write(nio,*) 'Adiabatic Potential, 1DSOC_2S1T_Model (with Phi_12=pi/4=0.7853981....)'
+    write(nio,*) 'Value at: R=8.5 Bohr'
+    write(nio,*) 'Vadia (Hartree)   = [ 0.006724396      0.041651620       0.059732248       0.059849020]'
     write(nio,*)
-    write(nio,*) 'Non Adiabatic Coupling (with Rsig=8.0)'
-    write(nio,*) 'Value at: R=10. Bohr'
-    write(nio,*) 'NAC              = [ 0.000000000       0.000000000       0.000000000       1.749343292]'
-    write(nio,*) '                   [-0.000000000       0.000000000      -0.125000000       0.000000000]'
-    write(nio,*) '                   [-0.000000000       0.125000000       0.000000000       0.000000000]'
-    write(nio,*) '                   [-1.749343292      -0.000000000      -0.000000000       0.000000000]'
-    write(nio,*) 'WARNING: The NAC, associated to the 2 degenerated vectors, are numerically not well defined !!!!'
+    write(nio,*) 'Non Adiabatic Coupling (with Phi_12=pi/4=0.7853981....)'
+    write(nio,*) 'Value at: R=8.5 Bohr'
+    write(nio,*) 'NAC              = [ 0.000000000      -0.000602048      -0.004194444       0.005831219]'
+    write(nio,*) '                   [ 0.000602048       0.000000000       0.010136691       0.060254264]'
+    write(nio,*) '                   [ 0.004194444      -0.010136691       0.000000000       0.079570422]'
+    write(nio,*) '                   [-0.005831219      -0.060254264      -0.079570422       0.000000000]'
+    write(nio,*)
+    write(nio,*) 'end 1DSOC_2S1T_Model parameters'
 
-    write(nio,*) 'Current parameters:'
+  END SUBROUTINE Write0_1DSOC_2S1T
+!> @brief Subroutine wich prints the 1D-SOC Model parameters.
+!!
+!> @author David Lauvergnat
+!! @date 30/07/2019
+!!
+!! @param Para_1DSOC_2S1T    TYPE(Param_1DSOC_2S1T):  derived type in which the parameters are set-up.
+!! @param nio                integer:                 file unit to print the parameters.
+  SUBROUTINE Write_1DSOC_2S1T(Para_1DSOC_2S1T,nio)
+    TYPE (Param_1DSOC_2S1T), intent(in) :: Para_1DSOC_2S1T
+    integer,            intent(in) :: nio
+
+    write(nio,*) '1DSOC_2S1T_Model current parameters'
+    write(nio,*)
     write(nio,*) '  a1,a2:          ',Para_1DSOC_2S1T%a1,Para_1DSOC_2S1T%a2
     write(nio,*) '  alpha1,alpha2:  ',Para_1DSOC_2S1T%alpha1,Para_1DSOC_2S1T%alpha2
     write(nio,*) '  gamma_1,gamma_2:',Para_1DSOC_2S1T%gamma_1,Para_1DSOC_2S1T%gamma_2
     write(nio,*) '  DE,DEs:         ',Para_1DSOC_2S1T%DE,Para_1DSOC_2S1T%DEs
     write(nio,*) '  Phi_12:         ',Para_1DSOC_2S1T%Phi_12
-
-
-    write(nio,*) ' option:          ',Para_1DSOC_2S1T%option
-
-    write(nio,*) 'end 1DSOC_2S1T_Model parameters'
+    !write(nio,*)
+    !write(nio,*) ' option:          ',Para_1DSOC_2S1T%option
+    write(nio,*)
+    write(nio,*) 'end 1DSOC_2S1T_Model current parameters'
 
   END SUBROUTINE Write_1DSOC_2S1T
 
@@ -190,63 +199,60 @@ CONTAINS
 !! @param Para_1DSOC_2S1T   TYPE(Param_1DSOC_2S1T):  derived type in which the parameters are set-up.
 !! @param nderiv            integer:            it enables to specify up to which derivatives the potential is calculated:
 !!                                              the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_1DSOC_2S1T(PotVal,r,Para_1DSOC_2S1T,nderiv)
-    USE mod_dnMatPot
+  SUBROUTINE eval_1DSOC_2S1T(Mat_OF_PotDia,dnR,Para_1DSOC_2S1T,nderiv)
     USE mod_dnSca
 
     TYPE (Param_1DSOC_2S1T),  intent(in)     :: Para_1DSOC_2S1T
-    real (kind=Rkind),        intent(in)     :: r
-    TYPE(dnMatPot),           intent(inout)  :: PotVal
+    TYPE(dnSca),              intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),              intent(in)     :: dnR
     integer,                  intent(in)     :: nderiv
 
-    !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)     :: dnPot,dnR
 
-    PotVal = ZERO
-
-    dnR     = init_dnSca(r,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
+    integer :: i,j
 
     ! mat_V(4,4)=a1*DEXP(-alpha1*R)+DE                    !Eq 17 without DEs
-    dnPot   = Para_1DSOC_2S1T%a1 * exp(-Para_1DSOC_2S1T%alpha1*dnR) + &
-              Para_1DSOC_2S1T%DE
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=4,j=4)
+    Mat_OF_PotDia(4,4)   = Para_1DSOC_2S1T%a1 * exp(-Para_1DSOC_2S1T%alpha1*dnR) + &
+                           Para_1DSOC_2S1T%DE
 
     ! mat_V(1,1)=a1*DEXP(-alpha1*R)+DE-DEs                !Eq 17
-    dnPot   = dnPot - Para_1DSOC_2S1T%DEs
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=1)
+    Mat_OF_PotDia(1,1)   = Mat_OF_PotDia(4,4) - Para_1DSOC_2S1T%DEs
 
     ! mat_V(2,2)=a2*DEXP(-alpha2*R)                       !Eq 18
     ! mat_V(3,3)=a2*DEXP(-alpha2*R)                       !Eq 18
-    dnPot   = Para_1DSOC_2S1T%a2 * exp(-Para_1DSOC_2S1T%alpha2*dnR)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=2)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=3,j=3)
+    Mat_OF_PotDia(2,2)   = Para_1DSOC_2S1T%a2 * exp(-Para_1DSOC_2S1T%alpha2*dnR)
+    Mat_OF_PotDia(3,3)   = Mat_OF_PotDia(2,2)
+
 
 
 
     !Generate non diagonal constant terms
     !mat_V(1,2)=gamma_1
     !mat_V(2,1)=gamma_1
-    dnPot = dnR ! to have the correct initialization for thr constant !!!!
-    dnPot = Para_1DSOC_2S1T%gamma_1
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=2)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=1)
+    Mat_OF_PotDia(1,2) = Para_1DSOC_2S1T%gamma_1
+    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
+
 
     !mat_V(2,4)=gamma_2*dcos(Phi_12)
     !mat_V(4,2)=gamma_2*dcos(Phi_12)
-    dnPot = Para_1DSOC_2S1T%gamma_2*cos(Para_1DSOC_2S1T%Phi_12)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=4,j=2)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=4)
+    Mat_OF_PotDia(2,4) = Para_1DSOC_2S1T%gamma_2*cos(Para_1DSOC_2S1T%Phi_12)
+    Mat_OF_PotDia(4,2) = Mat_OF_PotDia(2,4)
+
 
     !mat_V(3,4)=gamma_2*dsin(Phi_12)
     !mat_V(4,3)=gamma_2*dsin(Phi_12)
-    dnPot = Para_1DSOC_2S1T%gamma_2*sin(Para_1DSOC_2S1T%Phi_12)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=4,j=3)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=3,j=4)
+    Mat_OF_PotDia(3,4) = Para_1DSOC_2S1T%gamma_2*sin(Para_1DSOC_2S1T%Phi_12)
+    Mat_OF_PotDia(4,3) = Mat_OF_PotDia(3,4)
 
-
-    CALL dealloc_dnSca(dnR)
-    CALL dealloc_dnSca(dnPot)
-
+    ! ZERO couplings
+    i=1 ; j=3
+    Mat_OF_PotDia(i,j) = ZERO
+    Mat_OF_PotDia(j,i) = ZERO
+    i=1 ; j=4
+    Mat_OF_PotDia(i,j) = ZERO
+    Mat_OF_PotDia(j,i) = ZERO
+    i=2 ; j=3
+    Mat_OF_PotDia(i,j) = ZERO
+    Mat_OF_PotDia(j,i) = ZERO
 
   END SUBROUTINE eval_1DSOC_2S1T
 

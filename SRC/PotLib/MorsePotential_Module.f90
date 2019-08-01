@@ -135,8 +135,33 @@ CONTAINS
     Para_Morse = Param_Morse(D,a,req)
 
   END SUBROUTINE Read_MorsePot
-
 !> @brief Subroutine wich prints the Morse parameters.
+!!
+!> @author David Lauvergnat
+!! @date 30/07/2019
+!!
+!! @param nio                integer          :   file unit to print the parameters.
+  SUBROUTINE Write0_MorsePot(nio)
+    integer, intent(in) :: nio
+
+    write(nio,*) 'Morse parameters:'
+    write(nio,*)
+    write(nio,*) ' For H-F (Default values):'
+    write(nio,*) '    V(R) = D.( 1 - exp(-a.(r-req)) )^2'
+    write(nio,*) '  D   = 0.225  Hartree'
+    write(nio,*) '  a   = 1.1741 bohr^-1'
+    write(nio,*) '  req = 1.7329 bohr'
+    write(nio,*) '  mu  = 1744.60504565084306291455 au'
+    write(nio,*)
+    write(nio,*) 'Value at: R=2.0 Bohr'
+    write(nio,*) 'V        = 0.016304 Hartree'
+    write(nio,*) 'gradient = 0.103940'
+    write(nio,*) 'hessian  = 0.209272'
+    write(nio,*)
+    write(nio,*) 'end Morse parameters'
+
+  END SUBROUTINE Write0_MorsePot
+!> @brief Subroutine wich prints the Morse curent parameters.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
@@ -147,21 +172,14 @@ CONTAINS
     TYPE (Param_Morse), intent(in) :: Para_Morse
     integer, intent(in) :: nio
 
-    write(nio,*) 'Morse parameters:'
-    write(nio,*) ' For H-F (Default values):'
-    write(nio,*) 'Value at: R=2.0 Bohr'
-    write(nio,*) 'V        = 0.016304 Hartree'
-    write(nio,*) 'gradient = 0.103940'
-    write(nio,*) 'hessian  = 0.209272'
-
+    write(nio,*) 'Morse current parameters:'
     write(nio,*)
-    write(nio,*) 'Current parameters:'
     write(nio,*) '    V(R) = D.( 1 - exp(-a.(r-req)) )^2'
     write(nio,*) '  D:   ',Para_Morse%D
     write(nio,*) '  a:   ',Para_Morse%a
     write(nio,*) '  req: ',Para_Morse%req
-    write(nio,*) '  mu:  ',Para_Morse%mu
-    write(nio,*) 'end Morse parameters'
+    write(nio,*)
+    write(nio,*) 'end Morse current parameters'
 
   END SUBROUTINE Write_MorsePot
 
@@ -175,38 +193,20 @@ CONTAINS
 !! @param Para_Morse         TYPE(Param_Morse):   derived type with the Morse parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_MorsePot(PotVal,r,Para_Morse,nderiv)
-    USE mod_dnMatPot
+  SUBROUTINE Eval_MorsePot(Mat_OF_PotDia,dnR,Para_Morse,nderiv)
     USE mod_dnSca
 
-    TYPE (Param_Morse), intent(in)    :: Para_Morse
-    TYPE(dnMatPot),     intent(inout) :: PotVal
-    real (kind=Rkind),  intent(in)    :: r
-    integer,            intent(in)    :: nderiv
+    TYPE (Param_Morse), intent(in)     :: Para_Morse
+    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),        intent(in)     :: dnR
+    integer,            intent(in)     :: nderiv
 
-    !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)     :: dnPot,dnR
 
     !write(out_unitp,*) 'BEGINNING in Eval_MorsePot'
     !flush(out_unitp)
 
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=1,nderiv=nderiv)
-    END IF
+    Mat_OF_PotDia(1,1) = dnMorse(dnR,Para_Morse)
 
-    dnR     = init_dnSca(r,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
-
-    dnPot = dnMorse(dnR,Para_Morse)
-
-    !transfert the 1D-potential and its derivatives (dnPot) to the matrix form (PotVal)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=1)
-
-
-    CALL dealloc_dnSca(dnPot)
-    CALL dealloc_dnSca(dnR)
-
-    !write(out_unitp,*) 'Morse PotVal at',r
-    !CALL Write_dnMatPot(PotVal)
     !write(out_unitp,*) 'END in Eval_MorsePot'
     !flush(out_unitp)
 

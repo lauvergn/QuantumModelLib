@@ -110,6 +110,14 @@ CONTAINS
     deallocate(name_int)
 
   END FUNCTION int_TO_char
+  FUNCTION string_IS_empty(String)
+    logical                          :: string_IS_empty
+    character(len=*), intent(in)     :: String
+
+    string_IS_empty = (len_trim(String) == 0)
+
+  END FUNCTION string_IS_empty
+
   SUBROUTINE sub_Format_OF_Line(wformat,nb_line,max_col,cplx,       &
                                 Rformat,name_info)
   USE mod_NumParameters
@@ -184,7 +192,7 @@ CONTAINS
      character (len=*), optional :: name_info
 
      integer, intent(in)         :: nio,nbcol1
-     real(kind=8), intent(in) :: f(:,:)
+     real(kind=Rkind), intent(in) :: f(:,:)
 
      integer         :: nl,nc
      integer i,j,nb,nbblocs,nfin,nbcol
@@ -454,4 +462,101 @@ CONTAINS
 
   END SUBROUTINE time_perso
 
+  FUNCTION err_file_name(file_name,name_sub)
+  integer                                 :: err_file_name
+  character (len=*), intent(in)           :: file_name
+  character (len=*), intent(in), optional :: name_sub
+
+    IF (string_IS_empty(file_name) ) THEN
+      IF (present(name_sub)) THEN
+        write(out_unitp,*) ' ERROR in err_file_name, called from: ',name_sub
+      ELSE
+        write(out_unitp,*) ' ERROR in err_file_name'
+      END IF
+      write(out_unitp,*) '   The file name is empty'
+      err_file_name = 1
+    ELSE
+      err_file_name = 0
+    END IF
+
+  END FUNCTION err_file_name
+  SUBROUTINE file_open2(name_file,iunit,lformatted,append,old,err_file)
+
+  character (len=*),   intent(in)              :: name_file
+  integer,             intent(inout)           :: iunit
+  logical,             intent(in),    optional :: lformatted,append,old
+  integer,             intent(out),   optional :: err_file
+
+  character (len=20)   :: fform,fstatus,fposition
+  logical              :: unit_opened
+  integer              :: err_file_loc
+
+! - default for the open ---------------------------
+
+! - test if optional arguments are present ---------
+  IF (present(lformatted)) THEN
+    IF (.NOT. lformatted) THEN
+      fform = 'unformatted'
+    ELSE
+      fform = 'formatted'
+    END IF
+  ELSE
+    fform = 'formatted'
+  END IF
+
+  IF (present(append)) THEN
+    IF (append) THEN
+      fposition = 'append'
+    ELSE
+      fposition = 'asis'
+    END IF
+  ELSE
+    fposition = 'asis'
+  END IF
+
+  IF (present(old)) THEN
+    IF (old) THEN
+      fstatus = 'old'
+    ELSE
+      fstatus = 'unknown'
+    END IF
+  ELSE
+      fstatus = 'unknown'
+  END IF
+
+  err_file_loc = err_file_name(name_file,'file_open2')
+  IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
+  IF (present(err_file)) err_file = err_file_loc
+
+! - check if the file is already open ------------------
+! write(out_unitp,*) 'name,unit,unit_opened ',name_file,unit,unit_opened
+
+  inquire(FILE=name_file,NUMBER=iunit,OPENED=unit_opened)
+! write(out_unitp,*) 'name,unit,unit_opened ',name_file,unit,unit_opened
+
+
+! - the file is not open, find an unused UNIT ---------
+  IF (unit_opened) RETURN ! the file is already open
+
+  iunit = 9
+  DO
+    iunit = iunit + 1
+    inquire(UNIT=iunit,OPENED=unit_opened)
+!   write(out_unitp,*) 'name,iunit,unit_opened ',name_file,iunit,unit_opened
+    IF (.NOT. unit_opened) exit
+  END DO
+
+
+! -- open the file
+  IF (present(err_file)) THEN
+    open(UNIT=iunit,FILE=name_file,FORM=fform,STATUS=fstatus,       &
+         POSITION=fposition,ACCESS='SEQUENTIAL',IOSTAT=err_file)
+  ELSE
+    open(UNIT=iunit,FILE=name_file,FORM=fform,STATUS=fstatus,       &
+         POSITION=fposition,ACCESS='SEQUENTIAL')
+  END IF
+
+! write(out_unitp,*) 'open ',name_file,iunit
+
+  END SUBROUTINE file_open2
 END MODULE mod_Lib

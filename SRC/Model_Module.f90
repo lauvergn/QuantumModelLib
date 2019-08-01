@@ -25,28 +25,29 @@ MODULE mod_Model
   USE mod_NumParameters
   USE mod_dnMatPot,       ONLY: dnMatPot,alloc_dnMatPot,dealloc_dnMatPot,Check_NotAlloc_dnMatPot, &
                                 get_maxval_OF_dnMatPot,Write_dnMatPot,get_nsurf_FROM_dnMatPot,    &
-                                get_ndim_FROM_dnMatPot,dnmatpot2_minus_dnmatpot1,assignment (=)
-  USE mod_MorsePot,       ONLY: Param_Morse,Init_MorsePot,Write_MorsePot,Eval_MorsePot
-  USE mod_HenonHeilesPot, ONLY: Param_HenonHeiles,Init_HenonHeilesPot,Write_HenonHeilesPot,Eval_HenonHeilesPot
-  USE mod_TullyPot,       ONLY: Param_Tully,Init_TullyPot,Write_TullyPot,Eval_TullyPot
+                                get_ndim_FROM_dnMatPot,dnmatpot2_minus_dnmatpot1,assignment (=),  &
+                                sub_dnSca_TO_dnMatPot
+  USE mod_MorsePot
+  USE mod_HenonHeilesPot
+  USE mod_TullyPot
 
-  USE mod_PSB3Pot,        ONLY: Param_PSB3,Init_PSB3Pot,Write_PSB3Pot,Eval_PSB3Pot
+  USE mod_PSB3Pot
 
   USE mod_1DSOC_Model
   USE mod_1DSOC_2S1T_Model
 
-  USE mod_LinearHBondPot, ONLY: Param_LinearHBond,Init_LinearHBondPot,Write_LinearHBondPot,Eval_LinearHBondPot
-  USE mod_BuckPot,        ONLY: Param_Buck,Init_BuckPot,Write_BuckPot,Eval_BuckPot
-  USE mod_PhenolPot,      ONLY: Param_Phenol,Init_PhenolPot,Write_PhenolPot,Eval_PhenolPot
-  USE mod_SigmoidPot,     ONLY: Param_Sigmoid,Init_SigmoidPot,Write_SigmoidPot,Eval_SigmoidPot
-  USE mod_TwoDPot,        ONLY: Param_TwoD,Init_TwoDPot,Write_TwoDPot,Eval_TwoDPot
+  USE mod_LinearHBondPot
+  USE mod_BuckPot
+  USE mod_PhenolPot
+  USE mod_SigmoidPot
+  USE mod_TwoDPot
 
-  USE mod_TemplatePot,    ONLY: Param_Template,Init_TemplatePot,Write_TemplatePot,Eval_TemplatePot
+  USE mod_TemplatePot
 
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: Param_Model,Init_Model,Eval_Pot,Write_Model
+  PUBLIC :: Param_Model,Init_Model,Eval_Pot,Write0_Model,Write_Model,Write_QdnV_FOR_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
   PUBLIC :: Eval_pot_ON_Grid
@@ -109,9 +110,9 @@ CONTAINS
 
 
     ! Default values defined
-    ndim      = 1
-    nsurf     = 1
-    adiabatic = .TRUE.
+    ndim      = Para_Model%ndim
+    nsurf     = Para_Model%nsurf
+    adiabatic = Para_Model%adiabatic
     pot_name  = 'morse'
     numeric   = .FALSE.
     PubliUnit = .FALSE.
@@ -229,7 +230,7 @@ CONTAINS
       IF (.NOT. read_param_loc) THEN
         write(out_unitp,*) 'ERROR in Init_Model'
         write(out_unitp,*) ' pot_name is not present and read_param=F'
-        STOP
+        STOP ' pot_name is not present and read_param=F'
       END IF
     END IF
 
@@ -259,6 +260,7 @@ CONTAINS
       END IF
       CALL Read_Model(Para_Model,nio_loc,option_loc)
 
+      IF (allocated(param_file_name_loc)) deallocate(param_file_name_loc)
     END IF
 
     IF (Para_Model%adiabatic) THEN
@@ -456,14 +458,14 @@ CONTAINS
       Para_Model%d0GGdef(2,2) = ONE/Para_Model%Para_TwoD%muY
 
     CASE ('psb3')
-        !! Marsili et All.
-        Para_Model%nsurf     = 2
-        Para_Model%ndim      = 3
+      !! Marsili et al.
+      Para_Model%nsurf     = 2
+      Para_Model%ndim      = 3
 
-        CALL Init_PSB3Pot(Para_Model%Para_PSB3,option=option_loc,      &
+      CALL Init_PSB3Pot(Para_Model%Para_PSB3,option=option_loc,      &
                            nio=nio_loc,PubliUnit=Para_Model%PubliUnit)
 
-        CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
 
 
     CASE ('template')
@@ -473,8 +475,11 @@ CONTAINS
 
       CALL Init_TemplatePot(Para_Model%Para_Template)
       CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+      Para_Model%d0GGdef = Para_Model%d0GGdef * 2000._Rkind
 
     CASE DEFAULT
+        write(out_unitp,*) ' ERROR in Init_Model'
+        write(out_unitp,*) ' This model/potential is unknown. Para_Model%pot_name: ',Para_Model%pot_name
         STOP 'STOP in Init_Model: Other potentials have to be done'
     END SELECT
 
@@ -482,23 +487,26 @@ CONTAINS
        close(nio_loc)
     END IF
 
-    CALL Write_Model(Para_Model)
+    !CALL Write_Model(Para_Model)
 
   END SUBROUTINE Init_Model
 
-RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
-  USE mod_diago
+  SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,NAC,Vec,numeric)
+  USE mod_dnSca
+  !USE mod_diago
   IMPLICIT NONE
 
-    TYPE (Param_Model), intent(inout)         :: Para_Model
-    TYPE (dnMatPot), intent(inout)            :: PotVal
-    real (kind=Rkind),dimension(:),intent(in) :: Q
-    integer, intent(in), optional             :: nderiv
-    TYPE (dnMatPot), intent(inout), optional  :: Vec
+    TYPE (Param_Model),  intent(inout)            :: Para_Model
+    TYPE (dnMatPot),     intent(inout)            :: PotVal
+    real (kind=Rkind),   intent(in)               :: Q(:)
+    integer,             intent(in),    optional  :: nderiv
+    TYPE (dnMatPot),     intent(inout), optional  :: NAC,Vec
+    logical,             intent(in),    optional  :: numeric
 
-    ! local variable
-    integer                    :: i,j,id,nderiv_loc
-    TYPE (dnMatPot)            :: PotVal_dia,Vec_loc
+    ! local variables
+    integer                    :: nderiv_loc
+    TYPE (dnMatPot)            :: Vec_loc,NAC_loc
+    logical                    :: numeric_loc,adia_loc
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Eval_Pot'
@@ -511,6 +519,7 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       IF (present(nderiv)) write(out_unitp,*) '   nderiv',nderiv
       write(out_unitp,*) '  numeric   ',Para_Model%numeric
       write(out_unitp,*) '  adiabatic ',Para_Model%adiabatic
+      flush(out_unitp)
     END IF
 
     IF (present(nderiv)) THEN
@@ -520,86 +529,48 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       nderiv_loc = 0
     END IF
 
-
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv_loc) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=Para_Model%nsurf,ndim=Para_Model%ndim,&
-                          nderiv=nderiv_loc)
-      PotVal = ZERO
-      !CALL Write_dnMatPot(PotVal)
-      !STOP 'PotVal%dn NOT allocated in Eval_Pot'
+    IF (present(numeric)) THEN
+      numeric_loc = (numeric .AND. nderiv_loc > 0)
+    ELSE
+      numeric_loc = (Para_Model%numeric .AND. nderiv_loc > 0)
     END IF
 
-    IF (Para_Model%numeric .AND. nderiv_loc > 0) THEN
-      IF (present(Vec)) THEN
-        CALL Eval_Pot_Numeric_WITH_Vec(Para_Model,Q,PotVal,nderiv_loc,Vec)
+    adia_loc = (Para_Model%adiabatic .AND. Para_Model%nsurf > 1)
+
+    IF (numeric_loc) THEN  ! numerical
+      IF (adia_loc) THEN
+         CALL Eval_Pot_Numeric_dia(Para_Model,Q,PotVal,nderiv_loc)
       ELSE
-        CALL Eval_Pot_Numeric(Para_Model,Q,PotVal,nderiv_loc)
-      END IF
-    ELSE
-
-      SELECT CASE (Para_Model%pot_name)
-      CASE ('morse')
-        CALL Eval_MorsePot(PotVal,Q(1),Para_Model%Para_Morse,nderiv_loc)
-
-      CASE ('buck')
-        CALL Eval_BuckPot(PotVal,Q(1),Para_Model%Para_Buck,nderiv_loc)
-
-      CASE ('sigmoid')
-        CALL Eval_SigmoidPot(PotVal,Q(1),Para_Model%Para_Sigmoid,nderiv_loc)
-
-      CASE ('hbond')
-        !CALL Eval_LinearHBondPot_old(PotVal,Q,Para_Model%Para_LinearHBond,nderiv_loc)
-        CALL Eval_LinearHBondPot(PotVal,Q,Para_Model%Para_LinearHBond,nderiv_loc)
-
-      CASE ('henonheiles')
-        CALL Eval_HenonHeilesPot(PotVal,Q,Para_Model%Para_HenonHeiles,nderiv_loc)
-
-      CASE ('tully')
-        CALL Eval_TullyPot(PotVal,Q(1),Para_Model%Para_Tully,nderiv_loc)
-
-      CASE ('1dsoc','1dsoc_1s1t')
-        CALL Eval_1DSOC(PotVal,Q(1),Para_Model%Para_1DSOC,nderiv_loc)
-
-      CASE ('1dsoc_2s1t')
-        CALL Eval_1DSOC_2S1T(PotVal,Q(1),Para_Model%Para_1DSOC_2S1T,nderiv_loc)
-
-      CASE ('phenol')
-        !CALL Eval_PhenolPot_old(PotVal,Q,Para_Model%Para_Phenol,nderiv_loc)
-        CALL Eval_PhenolPot(PotVal,Q,Para_Model%Para_Phenol,nderiv_loc)
-
-      CASE ('twod')
-        CALL Eval_TwoDPot(PotVal,Q,Para_Model%Para_TwoD,nderiv_loc)
-
-      CASE ('psb3')
-        CALL Eval_PSB3Pot(PotVal,Q,Para_Model%Para_PSB3,nderiv_loc)
-
-
-      CASE ('template')
-        CALL Eval_TemplatePot(PotVal,Q,Para_Model%Para_Template,nderiv_loc)
-
-      CASE DEFAULT
-        STOP 'ERROR in Eval_Pot: Other potentials have to be done'
-      END SELECT
-
-      IF ( Para_Model%adiabatic .AND. Para_Model%nsurf > 1 .AND. &
-          .NOT. (Para_Model%numeric .AND. nderiv_loc > 0) ) THEN
-        IF (debug) THEN
-          write(out_unitp,*) 'PotVal (dia)'
-          CALL Write_dnMatPot(PotVal,6)
-          flush(out_unitp)
-        END IF
-
-        PotVal_dia = PotVal
-
         IF (present(Vec)) THEN
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,Para_Model%Vec0,nderiv)
+          IF (present(NAC)) THEN
+            CALL Eval_Pot_Numeric_adia(Para_Model,Q,PotVal,nderiv_loc,Vec,NAC)
+          ELSE
+            CALL Eval_Pot_Numeric_adia(Para_Model,Q,PotVal,nderiv_loc,Vec,NAC_loc)
+            CALL dealloc_dnMatPot(NAC_loc)
+          END IF
         ELSE
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,Para_Model%Vec0,nderiv)
+          IF (present(NAC)) THEN
+            CALL Eval_Pot_Numeric_adia(Para_Model,Q,PotVal,nderiv_loc,Vec_loc,NAC)
+          ELSE
+            CALL Eval_Pot_Numeric_adia(Para_Model,Q,PotVal,nderiv_loc,Vec_loc,NAC_loc)
+            CALL dealloc_dnMatPot(NAC_loc)
+          END IF
           CALL dealloc_dnMatPot(Vec_loc)
         END IF
-
-        CALL dealloc_dnMatPot(PotVal_dia)
-
+      END IF
+    ELSE ! analytical calculation
+      IF (present(Vec)) THEN
+        IF (present(NAC)) THEN
+          CALL Eval_Pot_ana(Para_Model,Q,PotVal,nderiv_loc,Vec=Vec,Nac=NAC)
+        ELSE
+          CALL Eval_Pot_ana(Para_Model,Q,PotVal,nderiv_loc,Vec=Vec)
+        END IF
+      ELSE
+        IF (present(NAC)) THEN
+          CALL Eval_Pot_ana(Para_Model,Q,PotVal,nderiv_loc,Nac=NAC)
+        ELSE
+          CALL Eval_Pot_ana(Para_Model,Q,PotVal,nderiv_loc)
+        END IF
       END IF
 
     END IF
@@ -617,7 +588,160 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
   END SUBROUTINE Eval_Pot
 
-  SUBROUTINE Eval_Pot_Numeric(Para_Model,Q,PotVal,nderiv)
+  SUBROUTINE Eval_Pot_ana(Para_Model,Q,PotVal,nderiv,NAC,Vec)
+  USE mod_dnSca
+  IMPLICIT NONE
+
+    TYPE (Param_Model), intent(inout)            :: Para_Model
+    TYPE (dnMatPot),    intent(inout)            :: PotVal
+    real (kind=Rkind),  intent(in)               :: Q(:)
+    integer,            intent(in)               :: nderiv
+    TYPE (dnMatPot),    intent(inout), optional  :: NAC,Vec
+
+    ! local variables
+    integer                    :: i,j,id,nderiv_loc
+    TYPE (dnMatPot)            :: PotVal_dia,Vec_loc,NAC_loc
+    TYPE(dnSca), allocatable   :: dnQ(:)
+    TYPE(dnSca), allocatable   :: Mat_OF_PotDia(:,:)
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Eval_Pot_ana'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      write(out_unitp,*) '   nderiv    ',nderiv
+      write(out_unitp,*) '   adiabatic ',Para_Model%adiabatic
+      flush(out_unitp)
+    END IF
+
+    nderiv_loc = nderiv
+
+
+    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv_loc) ) THEN
+      CALL alloc_dnMatPot(PotVal,nsurf=Para_Model%nsurf,ndim=Para_Model%ndim,&
+                          nderiv=nderiv_loc)
+    END IF
+    PotVal = ZERO
+
+
+    ! allocate Mat_OF_PotDia
+    allocate(Mat_OF_PotDia(Para_Model%nsurf,Para_Model%nsurf))
+    DO j=1,size(Mat_OF_PotDia(1,:))
+    DO i=1,size(Mat_OF_PotDia(:,1))
+        CALL alloc_dnSca(Mat_OF_PotDia(i,j),Para_Model%ndim,nderiv_loc)
+    END DO
+    END DO
+
+    ! intialization of the dnQ(:)
+    allocate(dnQ(Para_Model%ndim))
+    DO i=1,Para_Model%ndim
+      dnQ(i) = init_dnSca(Q(i),ndim=Para_Model%ndim,nderiv=nderiv_loc,iQ=i) ! to set up the derivatives
+    END DO
+
+    SELECT CASE (Para_Model%pot_name)
+    CASE ('morse')
+      CALL Eval_MorsePot(Mat_OF_PotDia,dnQ(1),Para_Model%Para_Morse,nderiv_loc)
+
+    CASE ('buck')
+      CALL Eval_BuckPot(Mat_OF_PotDia,dnQ(1),Para_Model%Para_Buck,nderiv_loc)
+
+    CASE ('sigmoid')
+      CALL Eval_SigmoidPot(Mat_OF_PotDia,dnQ(1),Para_Model%Para_Sigmoid,nderiv_loc)
+
+    CASE ('hbond')
+      CALL Eval_LinearHBondPot(Mat_OF_PotDia,dnQ,Para_Model%Para_LinearHBond,nderiv_loc)
+
+    CASE ('henonheiles') ! Q(:) is used insted of dnQ(:)
+      CALL Eval_HenonHeilesPot(Mat_OF_PotDia,Q,Para_Model%Para_HenonHeiles,nderiv_loc)
+
+    CASE ('tully')
+      CALL Eval_TullyPot(Mat_OF_PotDia,dnQ(1),Para_Model%Para_Tully,nderiv_loc)
+
+    CASE ('1dsoc','1dsoc_1s1t')
+      CALL Eval_1DSOC(Mat_OF_PotDia,dnQ(1),Para_Model%Para_1DSOC,nderiv_loc)
+
+    CASE ('1dsoc_2s1t')
+      CALL Eval_1DSOC_2S1T(Mat_OF_PotDia,dnQ(1),Para_Model%Para_1DSOC_2S1T,nderiv_loc)
+
+    CASE ('phenol')
+      CALL Eval_PhenolPot(Mat_OF_PotDia,dnQ,Para_Model%Para_Phenol,nderiv_loc)
+
+    CASE ('twod')
+      CALL Eval_TwoDPot(Mat_OF_PotDia,dnQ,Para_Model%Para_TwoD,nderiv_loc)
+
+    CASE ('psb3')
+      CALL Eval_PSB3Pot(Mat_OF_PotDia,dnQ,Para_Model%Para_PSB3,nderiv_loc)
+
+    CASE ('template')
+      CALL Eval_TemplatePot(Mat_OF_PotDia,dnQ,Para_Model%Para_Template,nderiv_loc)
+
+    CASE DEFAULT
+      write(out_unitp,*) ' ERROR in Eval_Pot'
+      write(out_unitp,*) ' This model/potential is unknown. Para_Model%pot_name: ',Para_Model%pot_name
+      STOP 'STOP in Eval_Pot: Other potentials have to be done'
+    END SELECT
+
+    PotVal = Mat_OF_PotDia ! transfert the potential and its derivatives to the matrix form (PotVal)
+
+    ! deallocation
+    DO i=1,size(dnQ)
+      CALL dealloc_dnSca(dnQ(i))
+    END DO
+    deallocate(dnQ)
+
+    DO j=1,size(Mat_OF_PotDia(1,:))
+    DO i=1,size(Mat_OF_PotDia(:,1))
+      CALL dealloc_dnSca(Mat_OF_PotDia(i,j))
+    END DO
+    END DO
+    deallocate(Mat_OF_PotDia)
+    ! end deallocation
+
+    IF ( Para_Model%adiabatic .AND. Para_Model%nsurf > 1) THEN
+      IF (debug) THEN
+        write(out_unitp,*) 'PotVal (dia)'
+        CALL Write_dnMatPot(PotVal,6)
+        flush(out_unitp)
+      END IF
+
+      PotVal_dia = PotVal
+
+      IF (present(Vec)) THEN
+        IF (present(NAC)) THEN
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,Para_Model%Vec0,NAC,nderiv)
+        ELSE
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,Para_Model%Vec0,NAC_loc,nderiv)
+          CALL dealloc_dnMatPot(NAC_loc)
+        END IF
+      ELSE
+        IF (present(NAC)) THEN
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,Para_Model%Vec0,NAC,nderiv)
+        ELSE
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,Para_Model%Vec0,NAC_loc,nderiv)
+          CALL dealloc_dnMatPot(NAC_loc)
+        END IF
+        CALL dealloc_dnMatPot(Vec_loc)
+      END IF
+      CALL dealloc_dnMatPot(PotVal_dia)
+
+    END IF
+
+
+    IF (debug) THEN
+      IF ( Para_Model%adiabatic) write(out_unitp,*) 'PotVal (adia)'
+      IF ( .NOT. Para_Model%adiabatic) write(out_unitp,*) 'PotVal (dia)'
+      CALL Write_dnMatPot(PotVal,6)
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    END IF
+
+
+  END SUBROUTINE Eval_Pot_ana
+
+  SUBROUTINE Eval_Pot_Numeric_dia(Para_Model,Q,PotVal,nderiv)
   IMPLICIT NONE
 
     TYPE (Param_Model), intent(inout)  :: Para_Model
@@ -626,26 +750,34 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
     integer,            intent(in)     :: nderiv
 
     ! local variable
-    real (kind=Rkind),dimension(size(Q))  :: Q_loc
-    TYPE (dnMatPot)                       :: PotVal_loc0
-    integer                               :: i,j
+    real (kind=Rkind), allocatable     :: Q_loc(:)
+    TYPE (dnMatPot)                    :: PotVal_loc0
+    integer                            :: i,j
 
+    !write(6,*) 'coucou0 Eval_Pot_Numeric' ; flush(6)
 
-    Q_loc = Q
+    IF (Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
+      CALL alloc_dnMatPot(PotVal,nsurf=Para_Model%nsurf,ndim=Para_Model%ndim,&
+                          nderiv=nderiv)
+    END IF
+    PotVal = ZERO
+
+    allocate(Q_loc(Para_Model%ndim))
+    Q_loc(:) = Q
     CALL alloc_dnMatPot(PotVal_loc0,Para_Model%nsurf,Para_Model%ndim,nderiv=0)
 
     ! no derivative : PotVal%d0
-    PotVal = ZERO
-    CALL Eval_Pot(Para_Model,Q,PotVal_loc0,nderiv=0)
+    CALL Eval_Pot_ana(Para_Model,Q,PotVal_loc0,nderiv=0)
     PotVal%d0 = PotVal_loc0%d0
+
 
     IF (nderiv >= 1) THEN ! 1st derivatives
 
-        ! Numeric evaluation of forces
+      ! Numeric evaluation of forces
       DO i=1,Para_Model%ndim
 
         Q_loc(i) = Q(i) + step        ! q+dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0) ! Ep(q+dq)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0) ! Ep(q+dq)
         PotVal%d1(:,:,i) = PotVal_loc0%d0
 
         IF (nderiv >= 2) THEN
@@ -653,8 +785,9 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
         END IF
 
         Q_loc(i) = Q(i) - step        ! q-dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0) ! Ep(q-dq)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0) ! Ep(q-dq)
         PotVal%d1(:,:,i) = (PotVal%d1(:,:,i)-PotVal_loc0%d0)/(TWO*step)
+
 
         IF (nderiv >= 2) THEN
           PotVal%d2(:,:,i,i) = (PotVal%d2(:,:,i,i) + PotVal_loc0%d0 - TWO*PotVal%d0)/ &
@@ -673,22 +806,22 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
         Q_loc(i) = Q(i) + step        ! qi+dq
         Q_loc(j) = Q(j) + step        ! qj+dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0)
         PotVal%d2(:,:,j,i) = PotVal_loc0%d0
 
         Q_loc(i) = Q(i) - step        ! qi-dq
         Q_loc(j) = Q(j) - step        ! qj-dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0)
         PotVal%d2(:,:,j,i) = PotVal%d2(:,:,j,i) + PotVal_loc0%d0
 
         Q_loc(i) = Q(i) + step        ! qi+dq
         Q_loc(j) = Q(j) - step        ! qj-dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0)
         PotVal%d2(:,:,j,i) = PotVal%d2(:,:,j,i) - PotVal_loc0%d0
 
         Q_loc(i) = Q(i) - step        ! qi-dq
         Q_loc(j) = Q(j) + step        ! qj+dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0)
         PotVal%d2(:,:,j,i) = PotVal%d2(:,:,j,i) - PotVal_loc0%d0
 
         PotVal%d2(:,:,j,i) = PotVal%d2(:,:,j,i)/(FOUR*step**2)
@@ -700,39 +833,59 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       END DO
     END IF
 
+    deallocate(Q_loc)
     CALL dealloc_dnMatPot(PotVal_loc0)
 
-  END SUBROUTINE Eval_Pot_Numeric
-  SUBROUTINE Eval_Pot_Numeric_WITH_Vec(Para_Model,Q,PotVal,nderiv,Vec)
+  END SUBROUTINE Eval_Pot_Numeric_dia
+  SUBROUTINE Eval_Pot_Numeric_adia(Para_Model,Q,PotVal,nderiv,Vec,NAC)
   IMPLICIT NONE
 
     TYPE (Param_Model), intent(inout)  :: Para_Model
     TYPE (dnMatPot),    intent(inout)  :: PotVal
     real (kind=Rkind) , intent(in)     :: Q(:)
     integer,            intent(in)     :: nderiv
-    TYPE (dnMatPot),    intent(inout)  :: Vec
+    TYPE (dnMatPot),    intent(inout)  :: Vec,NAC
 
     ! local variable
-    real (kind=Rkind)                  :: Q_loc(size(Q))
+    real (kind=Rkind), allocatable     :: Q_loc(:)
     TYPE (dnMatPot)                    :: PotVal_loc0,Vec_loc0
     integer                            :: i,j
-    real (kind=Rkind)                  :: tVec(Para_Model%nsurf,Para_Model%nsurf)
+    real (kind=Rkind), allocatable     :: tVec(:,:)
 
-    !write(6,*) 'coucou0 Eval_Pot_Numeric_WITH_Vec' ; flush(6)
+    !write(6,*) 'coucou0 Eval_Pot_Numeric' ; flush(6)
 
-    Q_loc = Q
-    CALL alloc_dnMatPot(PotVal_loc0,Para_Model%nsurf,Para_Model%ndim,nderiv=0)
-    CALL alloc_dnMatPot(Vec_loc0,Para_Model%nsurf,Para_Model%ndim,nderiv=0)
-
+    IF (Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
+      CALL alloc_dnMatPot(PotVal,nsurf=Para_Model%nsurf,ndim=Para_Model%ndim,&
+                          nderiv=nderiv)
+    END IF
     PotVal = ZERO
-    Vec    = PotVal ! allocate Vec% and set to ZERO
+
+    IF (Check_NotAlloc_dnMatPot(Vec,nderiv) ) THEN
+      CALL alloc_dnMatPot(Vec,nsurf=Para_Model%nsurf,ndim=Para_Model%ndim,&
+                          nderiv=nderiv)
+    END IF
+    Vec = ZERO
+
+    IF (Check_NotAlloc_dnMatPot(NAC,nderiv) ) THEN
+      CALL alloc_dnMatPot(NAC,nsurf=Para_Model%nsurf,ndim=Para_Model%ndim,&
+                          nderiv=nderiv)
+    END IF
+    NAC = ZERO
+
+    allocate(Q_loc(Para_Model%ndim))
+    Q_loc(:) = Q
+    CALL alloc_dnMatPot(PotVal_loc0,Para_Model%nsurf,Para_Model%ndim,nderiv=0)
+    CALL alloc_dnMatPot(Vec_loc0,   Para_Model%nsurf,Para_Model%ndim,nderiv=0)
 
     ! no derivative : PotVal%d0
-    CALL Eval_Pot(Para_Model,Q,PotVal_loc0,nderiv=0,vec=Vec_loc0)
+    CALL Eval_Pot_ana(Para_Model,Q,PotVal_loc0,nderiv=0,vec=Vec_loc0)
 
     PotVal%d0 = PotVal_loc0%d0
     Vec%d0    = Vec_loc0%d0
-    tVec      = transpose(Vec%d0)
+    CALL Init_IdMat(NAC%d0,Para_Model%nsurf)
+
+    allocate(tVec(Para_Model%nsurf,Para_Model%nsurf))
+    tVec(:,:)      = transpose(Vec%d0)
 
 
     IF (nderiv >= 1) THEN ! 1st derivatives
@@ -741,7 +894,7 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       DO i=1,Para_Model%ndim
 
         Q_loc(i) = Q(i) + step        ! q+dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0) ! Ep(q+dq)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0) ! Ep(q+dq)
         PotVal%d1(:,:,i) = PotVal_loc0%d0
         Vec%d1(:,:,i)    = Vec_loc0%d0
 
@@ -751,24 +904,18 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
         END IF
 
         Q_loc(i) = Q(i) - step        ! q-dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0) ! Ep(q-dq)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0) ! Ep(q-dq)
         PotVal%d1(:,:,i) = (PotVal%d1(:,:,i)-PotVal_loc0%d0)/(TWO*step)
         Vec%d1(:,:,i)    = (Vec%d1(:,:,i)-Vec_loc0%d0)/(TWO*step)
 
-        !projection on Vec%d0
-        Vec%d1(:,:,i) = matmul(tVec,Vec%d1(:,:,i))
+        NAC%d1(:,:,i)   = matmul(tVec,Vec%d1(:,:,i))
 
         IF (nderiv >= 2) THEN
           PotVal%d2(:,:,i,i) = (PotVal%d2(:,:,i,i) + PotVal_loc0%d0 - TWO*PotVal%d0)/ &
                                 step**2
           Vec%d2(:,:,i,i)    = (Vec%d2(:,:,i,i) + Vec_loc0%d0 - TWO*Vec%d0)/ &
                                 step**2
-
-          !projection on Vec%d0
-          Vec%d2(:,:,i,i)    = matmul(tVec,Vec%d2(:,:,i,i))
         END IF
-
-
 
         Q_loc(i) = Q(i)
 
@@ -782,35 +929,31 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
         Q_loc(i) = Q(i) + step        ! qi+dq
         Q_loc(j) = Q(j) + step        ! qj+dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0)
         PotVal%d2(:,:,j,i) = PotVal_loc0%d0
         Vec%d2(:,:,j,i)    = Vec_loc0%d0
 
         Q_loc(i) = Q(i) - step        ! qi-dq
         Q_loc(j) = Q(j) - step        ! qj-dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0)
         PotVal%d2(:,:,j,i) = PotVal%d2(:,:,j,i) + PotVal_loc0%d0
         Vec%d2(:,:,j,i)    = Vec%d2(:,:,j,i)    + Vec_loc0%d0
 
         Q_loc(i) = Q(i) + step        ! qi+dq
         Q_loc(j) = Q(j) - step        ! qj-dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0)
         PotVal%d2(:,:,j,i) = PotVal%d2(:,:,j,i) - PotVal_loc0%d0
         Vec%d2(:,:,j,i)   = Vec%d2(:,:,j,i)     - Vec_loc0%d0
 
         Q_loc(i) = Q(i) - step        ! qi-dq
         Q_loc(j) = Q(j) + step        ! qj+dq
-        CALL Eval_Pot(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0)
+        CALL Eval_Pot_ana(Para_Model,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0)
         PotVal%d2(:,:,j,i) = PotVal%d2(:,:,j,i) - PotVal_loc0%d0
         Vec%d2(:,:,j,i)    = Vec%d2(:,:,j,i)    - Vec_loc0%d0
 
         PotVal%d2(:,:,j,i) = PotVal%d2(:,:,j,i)/(FOUR*step**2)
         PotVal%d2(:,:,i,j) = PotVal%d2(:,:,j,i)
         Vec%d2(:,:,j,i)    = Vec%d2(:,:,j,i)/(FOUR*step**2)
-
-        !projection on Vec%d0
-        Vec%d2(:,:,j,i)    = matmul(tVec,Vec%d2(:,:,j,i))
-
         Vec%d2(:,:,i,j)    = Vec%d2(:,:,j,i)
 
         Q_loc(i) = Q(i)
@@ -819,16 +962,18 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       END DO
     END IF
 
+    deallocate(tVec)
+    deallocate(Q_loc)
     CALL dealloc_dnMatPot(PotVal_loc0)
     CALL dealloc_dnMatPot(Vec_loc0)
 
-  END SUBROUTINE Eval_Pot_Numeric_WITH_Vec
-  SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,nderiv)
+  END SUBROUTINE Eval_Pot_Numeric_adia
+  SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,nderiv)
     USE mod_diago
     IMPLICIT NONE
 
     TYPE (dnMatPot), intent(in)               :: PotVal_dia
-    TYPE (dnMatPot), intent(inout)            :: PotVal_adia,Vec,Vec0
+    TYPE (dnMatPot), intent(inout)            :: PotVal_adia,Vec,Vec0,NAC
 
     integer, intent(in), optional             :: nderiv
 
@@ -836,7 +981,8 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
     integer                        :: i,j,k,id,jd,nderiv_loc,ndim,nsurf
     real (kind=Rkind)              :: ai,aj,aii,aij,aji,ajj,th,cc,ss
     real (kind=Rkind), allocatable :: Eig(:),tVec(:,:),Vdum(:),Vi(:)
-    TYPE (dnMatPot)                :: PotVal_dia_onadia,VecSave
+
+    TYPE (dnMatPot)                :: PotVal_dia_onadia
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='dia_TO_adia'
@@ -881,6 +1027,12 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       CALL alloc_dnMatPot(Vec,nsurf=nsurf,ndim=ndim,nderiv=nderiv_loc)
     END IF
     Vec = ZERO
+
+    IF ( Check_NotAlloc_dnMatPot(NAC,nderiv_loc) ) THEN
+      CALL alloc_dnMatPot(NAC,nsurf=nsurf,ndim=ndim,nderiv=nderiv_loc)
+    END IF
+    NAC = ZERO
+
 
     ! local variables
     CALL alloc_dnMatPot(PotVal_dia_onadia,nsurf=nsurf,ndim=ndim,nderiv=nderiv_loc)
@@ -947,7 +1099,7 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
     IF (debug) write(out_unitp,*) 'Eig',Eig
 
-    ! transfortion of PotVal_dia on the adiabatic basis (Vec)
+    ! transformation of PotVal_dia on the adiabatic basis (Vec)
     !PotVal_dia_onadia%d0 = matmul(tVec,matmul(PotVal_dia%d0,Vec%d0))
     DO i=1,nsurf
       PotVal_dia_onadia%d0(i,i) = Eig(i)
@@ -973,14 +1125,14 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
     END IF
 
 
-    VecSave = Vec ! save the eigenvectors
+    ! project the eigenvector derivatives on the eigenvectors => NAC
 
     ! no derivative
     PotVal_adia%d0 = ZERO
-    Vec%d0         = ZERO
+    NAC%d0         = ZERO
     DO i=1,nsurf
       PotVal_adia%d0(i,i) = PotVal_dia_onadia%d0(i,i)
-      Vec%d0(i,i)         = ONE
+      NAC%d0(i,i)         = ONE
     END DO
 
     ! 1st order derivatives
@@ -999,10 +1151,10 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       DO i=1,nsurf ! I Psi_i' >
       DO j=1,nsurf ! projection on < Psi_j I
         IF (j /= i) THEN
-          Vec%d1(j,i,id) = - PotVal_dia_onadia%d1(j,i,id)/              &
+          NAC%d1(j,i,id) = - PotVal_dia_onadia%d1(j,i,id)/              &
                             ( PotVal_adia%d0(j,j) - PotVal_adia%d0(i,i) )
         ELSE
-          Vec%d1(j,i,id) = ZERO
+          NAC%d1(j,i,id) = ZERO
         END IF
       END DO
       END DO
@@ -1019,12 +1171,12 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       DO id=1,ndim
       DO jd=1,ndim
         DO i=1,nsurf
-          Vdum = matmul(PotVal_dia_onadia%d2(:,:,id,jd),Vec%d0(:,i))    + &
-                 matmul(PotVal_dia_onadia%d1(:,:,jd),   Vec%d1(:,i,id)) + &
-                 matmul(PotVal_dia_onadia%d1(:,:,id),   Vec%d1(:,i,jd))
+          Vdum = matmul(PotVal_dia_onadia%d2(:,:,id,jd),NAC%d0(:,i))    + &
+                 matmul(PotVal_dia_onadia%d1(:,:,jd),   NAC%d1(:,i,id)) + &
+                 matmul(PotVal_dia_onadia%d1(:,:,id),   NAC%d1(:,i,jd))
 
           !write(out_unitp,*) 'Dum',id,jd,i,':',Vdum
-          PotVal_adia%d2(i,i,id,jd) = dot_product(Vec%d0(:,i),Vdum)
+          PotVal_adia%d2(i,i,id,jd) = dot_product(NAC%d0(:,i),Vdum)
         END DO
 
       END DO
@@ -1033,10 +1185,7 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
     END IF
 
 
-    Vec%d0 = VecSave%d0
-
-    CALL alloc_dnMatPot(PotVal_dia_onadia)
-    CALL alloc_dnMatPot(VecSave)
+    CALL dealloc_dnMatPot(PotVal_dia_onadia)
 
     IF (debug) THEN
       write(out_unitp,*) 'PotVal_adia'
@@ -1044,6 +1193,9 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
       write(out_unitp,*) 'Vec'
       CALL Write_dnMatPot(Vec,6)
+
+      write(out_unitp,*) 'NAC'
+      CALL Write_dnMatPot(NAC,6)
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)
     END IF
@@ -1070,6 +1222,7 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
     END IF
 
 
+    write(nio_loc,*) '-----------------------------------------------'
     write(nio_loc,*) 'Output file for potential library'
     write(nio_loc,*)
     write(nio_loc,*) 'Potential parameters are written just below'
@@ -1115,9 +1268,210 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
      IF (nio_loc /= 6) THEN
       close(nio_loc)
     END IF
+    write(nio_loc,*) '-----------------------------------------------'
+    flush(nio_loc)
 
 
   END SUBROUTINE Write_Model
+  SUBROUTINE Write0_Model(Para_Model,pot_name,nio)
+  USE mod_Lib
+  IMPLICIT NONE
+
+    TYPE (Param_Model), intent(in), optional    :: Para_Model
+    character (len=*),  intent(in), optional    :: pot_name
+    integer,            intent(in), optional    :: nio
+
+    character (len=:), allocatable :: pot_name_loc
+    integer :: nio_loc
+
+    IF (present(pot_name) .AND. present(Para_Model)) THEN
+      write(out_unitp,*) 'ERROR in Write0_Model'
+      write(out_unitp,*) ' pot_name and Para_Model are both present'
+      write(out_unitp,*) ' ONE only MUST be present! CHECK the source'
+      STOP 'pot_name and Para_Model are both present'
+    END IF
+    IF (.NOT. present(pot_name) .AND. .NOT. present(Para_Model)) THEN
+      write(out_unitp,*) 'ERROR in Write0_Model'
+      write(out_unitp,*) ' pot_name and Para_Model are both absent'
+      write(out_unitp,*) ' ONE only MUST be present! CHECK the source'
+      STOP ' pot_name and Para_Model are both absent'
+    END IF
+
+    IF (present(pot_name)) THEN
+      pot_name_loc = strdup(pot_name)
+    ELSE
+      pot_name_loc = strdup(Para_Model%pot_name)
+    END IF
+
+
+    IF (present(nio)) THEN
+      nio_loc = nio
+    ELSE
+      nio_loc = 6
+    END IF
+
+    IF (nio_loc /= 6) THEN
+      open(nio_loc,file=trim(adjustl(Para_Model%pot_name))//'.out',form='formatted')
+    END IF
+
+
+
+    write(nio_loc,*) 'QUANTUM MODEL default parameters'
+    flush(nio_loc)
+
+
+    write(nio_loc,*)
+    write(nio_loc,*) 'Potential parameters are written just below'
+    write(nio_loc,*)
+    IF (present(Para_Model)) THEN
+      write(nio_loc,*) 'nsurf:     ',Para_Model%nsurf
+      write(nio_loc,*) 'ndim:      ',Para_Model%ndim
+      write(nio_loc,*) 'numeric:   ',Para_Model%numeric
+      write(nio_loc,*) 'adiabatic: ',Para_Model%adiabatic
+      write(nio_loc,*)
+
+      IF (allocated(Para_Model%d0GGdef)) THEN
+        write(nio_loc,*) 'Deformation metric tensor (~ 1/Mii)'
+        CALL Write_RMat(Para_Model%d0GGdef,nio_loc,nbcol1=5)
+      END IF
+    END IF
+
+    CALL string_uppercase_TO_lowercase(pot_name_loc)
+    SELECT CASE (pot_name_loc)
+    CASE ('morse')
+      CALL Write0_MorsePot(nio=nio_loc)
+    CASE ('sigmoid')
+      CONTINUE
+    CASE ('buck')
+      CALL Write0_BuckPot(nio=nio_loc)
+   CASE ('hbond')
+      CALL Write0_LinearHBondPot(nio=nio_loc)
+    CASE ('henonheiles')
+        CALL Write0_HenonHeilesPot(nio=nio_loc)
+    CASE ('tully')
+        CALL Write0_TullyPot(nio=nio_loc)
+    CASE ('1dsoc','1dsoc_1s1t')
+        CALL Write0_1DSOC(nio=nio_loc)
+    CASE ('1dsoc_2s1t')
+        CALL Write0_1DSOC_2S1T(nio=nio_loc)
+    CASE ('phenol')
+        CALL Write0_PhenolPot(nio=nio_loc)
+    CASE ('psb3')
+        CALL Write0_PSB3Pot(nio=nio_loc)
+    CASE ('template')
+        CALL  Write0_TemplatePot(nio=nio_loc)
+    CASE DEFAULT
+        write(nio_loc,*) 'WARNING in Write0_Model: Other potentials have to be done'
+    END SELECT
+
+     IF (nio_loc /= 6) THEN
+      close(nio_loc)
+    END IF
+
+    write(nio_loc,*) 'END QUANTUM MODEL default parameters'
+    flush(nio_loc)
+
+    IF (allocated(pot_name_loc)) deallocate(pot_name_loc)
+
+
+  END SUBROUTINE Write0_Model
+  SUBROUTINE Write_QdnV_FOR_Model(Q,PotVal,Para_Model,Vec,NAC,info)
+  USE mod_Lib
+  IMPLICIT NONE
+
+    TYPE (Param_Model), intent(in)           :: Para_Model
+    TYPE (dnMatPot),    intent(in)           :: PotVal
+    real (kind=Rkind),  intent(in)           :: Q(:)
+    TYPE (dnMatPot),    intent(in), optional :: Vec ! for non adiabatic couplings
+    TYPE (dnMatPot),    intent(in), optional :: NAC ! for non adiabatic couplings
+    character(len=*),   intent(in), optional :: info
+
+    integer :: nio_loc,err_io
+
+    CALL file_open2(trim(adjustl(Para_Model%pot_name))//'.txt',nio_loc,lformatted=.TRUE.,append=.TRUE.,err_file=err_io)
+    IF (err_io /= 0) THEN
+      write(out_unitp,*) 'ERROR in Write_QdnV_FOR_Model'
+      write(out_unitp,*) ' Impossible to open the file "',trim(adjustl(Para_Model%pot_name))//'.txt','"'
+      STOP 'Impossible to open the file'
+    END IF
+    !nio_loc = 99
+    !open(nio_loc,file=trim(adjustl(Para_Model%pot_name))//'.xyz',form='formatted',POSITION='append')
+
+    write(nio_loc,'(a)',advance='no') 'TEST output: '
+    IF (present(info)) THEN
+      write(nio_loc,'(a)',advance='no') info
+    END IF
+    IF (Para_Model%adiabatic) THEN
+      write(nio_loc,'(a)') ' Adiabatic'
+    ELSE
+      write(nio_loc,'(a)') ' Diabatic'
+    END IF
+
+      write(nio_loc,*) 'Q'
+      write(nio_loc,*) size(Q)
+      write(nio_loc,*) Q
+
+    IF (allocated(PotVal%d0)) THEN
+      write(nio_loc,*) 'V'
+      write(nio_loc,*) size(PotVal%d0)
+      write(nio_loc,*) PotVal%d0
+    END IF
+    IF (allocated(PotVal%d1)) THEN
+      write(nio_loc,*) 'Grad'
+      write(nio_loc,*) size(PotVal%d1)
+      write(nio_loc,*) PotVal%d1
+    END IF
+    IF (allocated(PotVal%d2)) THEN
+      write(nio_loc,*) 'Hess'
+      write(nio_loc,*) size(PotVal%d2)
+      write(nio_loc,*) PotVal%d2
+    END IF
+
+    IF (present(Vec)) THEN
+    IF (allocated(Vec%d0)) THEN
+      write(nio_loc,*) 'Vec'
+      write(nio_loc,*) size(Vec%d0)
+      write(nio_loc,*) Vec%d0
+    END IF
+    IF (allocated(Vec%d1)) THEN
+      write(nio_loc,*) 'd1Vec'
+      write(nio_loc,*) size(Vec%d1)
+      write(nio_loc,*) Vec%d1
+    END IF
+    IF (allocated(Vec%d2)) THEN
+      write(nio_loc,*) 'd2Vec'
+      write(nio_loc,*) size(Vec%d2)
+      write(nio_loc,*) Vec%d2
+    END IF
+    END IF
+
+    IF (present(NAC)) THEN
+    IF (allocated(NAC%d1)) THEN
+      write(nio_loc,*) 'NAC'
+      write(nio_loc,*) size(NAC%d1)
+      write(nio_loc,*) NAC%d1
+    END IF
+    END IF
+
+    IF (allocated(Para_Model%d0GGdef)) THEN
+      write(nio_loc,*) 'd0GGdef'
+      write(nio_loc,*) size(Para_Model%d0GGdef)
+      write(nio_loc,*) Para_Model%d0GGdef
+    END IF
+
+    write(nio_loc,'(a)',advance='no') 'END_TEST output: '
+    IF (present(info)) THEN
+      write(nio_loc,'(a)',advance='no') info
+    END IF
+    IF (Para_Model%adiabatic) THEN
+      write(nio_loc,'(a)') ' Adiabatic'
+    ELSE
+      write(nio_loc,'(a)') ' Diabatic'
+    END IF
+
+    close(nio_loc)
+
+  END SUBROUTINE Write_QdnV_FOR_Model
   SUBROUTINE Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
   IMPLICIT NONE
 
@@ -1140,9 +1494,17 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
 
       Para_Model%numeric = .FALSE.
+      !write(6,*) 'coucou'
       CALL Eval_Pot(Para_Model,Q,PotVal_ana,nderiv)
+      !write(out_unitp,*)   'PotVal_ana'
+      !CALL Write_dnMatPot(PotVal_ana,nio=6)
+      !flush(6)
       Para_Model%numeric = .TRUE.
       CALL Eval_Pot(Para_Model,Q,PotVal_num,nderiv)
+      !write(out_unitp,*)   'PotVal_num'
+      !CALL Write_dnMatPot(PotVal_num,nio=6)
+      !flush(6)
+
       MaxPot     = get_maxval_OF_dnMatPot(PotVal_ana)
 
 
@@ -1153,6 +1515,7 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       write(out_unitp,'(a,l9)')   'Potential diff (numer-ana), ZERO?  ',(MaxDiffPot/MaxPot <= step)
 
       IF (MaxDiffPot/MaxPot > step) THEN
+        write(out_unitp,*)   'Potential diff (ana-numer)'
         CALL Write_dnMatPot(PotVal_diff,nio=6)
       END IF
 
@@ -1174,10 +1537,10 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
 
     integer           :: unit_grid_file
 
-    integer           :: i,iq,jq,i1,i2,nb_points_loc,nderiv_loc,ndim_loc,i_Q(Para_Model%ndim)
-    real (kind=Rkind) :: dQ(Para_Model%ndim),Q(Para_Model%ndim)
-
-    TYPE (dnMatPot)           :: PotVal,Vec
+    integer                        :: i,iq,jq,i1,i2,nb_points_loc,nderiv_loc,ndim_loc
+    integer, allocatable           :: i_Q(:)
+    real (kind=Rkind), allocatable :: dQ(:),Q(:)
+    TYPE (dnMatPot)                :: PotVal,NAC
 
 
     IF (size(Qmin) /= Para_Model%ndim .OR. size(Qmax) /= Para_Model%ndim) THEN
@@ -1208,9 +1571,13 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
       nderiv_loc = 0
     END IF
 
-    dQ       = (Qmax-Qmin) / real(nb_points_loc-1,kind=Rkind)
-    ndim_loc = 0
-    i_Q      = 0
+    allocate(dQ(Para_Model%ndim))
+    allocate(Q(Para_Model%ndim))
+    allocate(i_Q(Para_Model%ndim))
+
+    dQ(:)       = (Qmax-Qmin) / real(nb_points_loc-1,kind=Rkind)
+    ndim_loc    = 0
+    i_Q(:)      = 0
     DO i=1,Para_Model%ndim
       IF (dQ(i) /= ZERO) THEN
         ndim_loc = ndim_loc + 1
@@ -1223,23 +1590,24 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
     write(out_unitp,*) 'i_Q',i_Q(1:ndim_loc)
 
 
-    Q = Qmin
+    Q(:) = Qmin
 
     IF (ndim_loc == 1) THEN
       i1 = i_Q(1)
       DO iq=0,nb_points_loc-1
         Q(i1) = Qmin(i1) + dQ(i1)*real(iq,kind=Rkind)
         IF (Para_Model%nsurf > 1 .AND. Para_Model%adiabatic) THEN
-          CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=max(1,nderiv_loc),Vec=Vec)
+          CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=max(1,nderiv_loc),NAC=NAC)
 
           IF (nderiv_loc == 0) THEN
-            write(unit_grid_file,*) Q(i1),(PotVal%d0(i,i),i=1,Para_Model%nsurf),Vec%d1
+            write(unit_grid_file,*) Q(i1),(PotVal%d0(i,i),i=1,Para_Model%nsurf),NAC%d1
           ELSE IF (nderiv_loc == 1) THEN
             write(unit_grid_file,*) Q(i1),(PotVal%d0(i,i),i=1,Para_Model%nsurf),(PotVal%d1(i,i,:),i=1,Para_Model%nsurf)
           ELSE
             write(unit_grid_file,*) Q(i1),(PotVal%d0(i,i),i=1,Para_Model%nsurf),(PotVal%d1(i,i,:),i=1,Para_Model%nsurf), &
                             (PotVal%d2(i,i,:,:),i=1,Para_Model%nsurf)
           END IF
+          flush(unit_grid_file)
 
         ELSE
           CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv_loc)
@@ -1251,6 +1619,7 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
           ELSE
             write(unit_grid_file,*) Q(i1),PotVal%d0,PotVal%d1,PotVal%d2
           END IF
+          flush(unit_grid_file)
 
         END IF
       END DO
@@ -1263,12 +1632,14 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
         Q(i2) = Qmin(i2) + dQ(i2)*real(jq,kind=Rkind)
 
         IF (Para_Model%nsurf > 1 .AND. Para_Model%adiabatic) THEN
-          CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=0,Vec=Vec)
+          CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=0,NAC=NAC)
           write(unit_grid_file,*) Q(i1),Q(i2),(PotVal%d0(i,i),i=1,Para_Model%nsurf)
         ELSE
           CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv_loc)
           write(unit_grid_file,*) Q(i1),Q(i2),PotVal%d0
         END IF
+        flush(unit_grid_file)
+
       END DO
       write(unit_grid_file,*)
       END DO
@@ -1277,7 +1648,10 @@ RECURSIVE SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,Vec)
     END IF
 
     CALL dealloc_dnMatPot(PotVal)
-    CALL dealloc_dnMatPot(Vec)
+    CALL dealloc_dnMatPot(NAC)
+    deallocate(dQ)
+    deallocate(Q)
+    deallocate(i_Q)
 
     IF (unit_grid_file /= 6) THEN
       close(unit_grid_file)

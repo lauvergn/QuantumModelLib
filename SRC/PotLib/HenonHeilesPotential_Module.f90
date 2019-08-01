@@ -130,24 +130,24 @@ CONTAINS
 
 
   END SUBROUTINE Read_HenonHeilesPot
-!> @brief Subroutine wich prints the Hénon-Heiles potential parameters.
+!> @brief Subroutine wich prints the Hénon-Heiles potential parameters and 4D-calculations
 !!
 !> @author David Lauvergnat
-!! @date 03/08/2017
+!! @date 30/07/2019
 !!
-!! @param Para_HenonHeiles   TYPE(Param_HenonHeiles):   derived type with the Phenol potential parameters.
 !! @param nio                integer:                   file unit to print the parameters.
-  SUBROUTINE Write_HenonHeilesPot(Para_HenonHeiles,nio)
-    TYPE (Param_HenonHeiles), intent(in) :: Para_HenonHeiles
+  SUBROUTINE Write0_HenonHeilesPot(nio)
     integer,                  intent(in) :: nio
 
 
-    write(nio,*) 'HenonHeiles parameters'
+    write(nio,*) 'HenonHeiles default parameters'
+    write(nio,*)
     write(nio,*) ' Potential and parameters from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499'
     write(nio,*) '    lambda = 0.111803'
+    write(nio,*)
     write(nio,*) '4D-Potential Value at: Q:'
     write(nio,*) '      0.1000000000  0.2000000000  0.3000000000  0.4000000000'
-    write(nio,*) 'V = -21.433838'
+    write(nio,*) 'V = 0.151900651'
     write(nio,*) 'gradient = [0.1044721200  0.2100622700  0.3212425700  0.3921737900]'
     write(nio,*) 'hessian'
     write(nio,*) '1        1.044721       0.022361       0.000000       0.000000'
@@ -164,12 +164,28 @@ CONTAINS
     write(nio,*)  ' The first five energy levels:'
     write(nio,*)  ' 1.995725  2.972602  2.980991  2.987181  2.989254'
     write(nio,*)  '    precision around 10^-6'
-
     write(nio,*)
-    write(nio,*) 'Current parameters:'
+    write(nio,*) 'end HenonHeiles default parameters'
+
+  END SUBROUTINE Write0_HenonHeilesPot
+!> @brief Subroutine wich prints the Hénon-Heiles potential parameters.
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Para_HenonHeiles   TYPE(Param_HenonHeiles):   derived type with the Phenol potential parameters.
+!! @param nio                integer:                   file unit to print the parameters.
+  SUBROUTINE Write_HenonHeilesPot(Para_HenonHeiles,nio)
+    TYPE (Param_HenonHeiles), intent(in) :: Para_HenonHeiles
+    integer,                  intent(in) :: nio
+
+
+    write(nio,*) 'HenonHeiles current parameters'
+    write(nio,*)
     write(nio,*) '    ndim  :  ',Para_HenonHeiles%ndim
     write(nio,*) '    lambda:  ',Para_HenonHeiles%lambda
-    write(nio,*) 'end HenonHeiles parameters'
+    write(nio,*)
+    write(nio,*) 'end HenonHeiles current parameters'
 
   END SUBROUTINE Write_HenonHeilesPot
 
@@ -183,13 +199,81 @@ CONTAINS
 !! @param Para_HenonHeiles   TYPE(Param_HenonHeiles): derived type with the Hénon-Heiles parameters.
 !! @param nderiv             integer:                 it enables to specify up to which derivatives the potential is calculated:
 !!                                                    the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_HenonHeilesPot(PotVal,Q,Para_HenonHeiles,nderiv)
+  SUBROUTINE Eval_HenonHeilesPot(Mat_OF_PotDia,Q,Para_HenonHeiles,nderiv)
+    USE mod_dnSca
+
+    TYPE (Param_HenonHeiles), intent(in)     :: Para_HenonHeiles
+    TYPE(dnSca),              intent(inout)  :: Mat_OF_PotDia(:,:)
+    real(kind=Rkind),         intent(in)     :: Q(:)
+    integer, intent(in)                      :: nderiv
+
+    integer :: i
+    real(kind=Rkind) :: d0,d1(Para_HenonHeiles%ndim),d2(Para_HenonHeiles%ndim,Para_HenonHeiles%ndim)
+
+    ! Potential calculation
+    d0 = ZERO
+    DO i=1,Para_HenonHeiles%ndim
+      d0 = d0 + HALF * Q(i)**2
+    END DO
+    DO i=1,Para_HenonHeiles%ndim-1
+      d0 = d0 + Para_HenonHeiles%lambda * &
+         ( Q(i)**2 * Q(i+1) - Q(i+1)**3/THREE )
+    END DO
+
+    ! Forces calculation
+    IF (nderiv >= 1) THEN
+      d1(:) = ZERO
+
+      ! first the anharmonic part without lambda
+      DO i=1,Para_HenonHeiles%ndim-1 ! derivative along the coodinate Q(i)
+        d1(i)   = d1(i)   +  TWO * Q(i)*Q(i+1)
+        d1(i+1) = d1(i+1) +  Q(i)**2 - Q(i+1)**2
+      END DO
+
+      d1(:) = d1(:) * Para_HenonHeiles%lambda
+
+      ! Then the harmonic part
+      DO i=1,Para_HenonHeiles%ndim ! derivative along the coodinate Q(k)
+        d1(i) = d1(i) + Q(i)
+      END DO
+
+    END IF
+
+    ! Hessian calculation
+    IF (nderiv >= 2) THEN
+      d2(:,:) = ZERO
+
+      ! first the anharmonic part without lambda
+      DO i=1,Para_HenonHeiles%ndim-1 ! derivative along the coodinate Q(i)
+        d2(i  ,i  ) = d2(i  ,i  ) + TWO * Q(i+1)
+
+        d2(i  ,i+1) = d2(i  ,i+1) + TWO * Q(i)
+        d2(i+1,i  ) = d2(i+1,i  ) + TWO * Q(i)
+
+        d2(i+1,i+1) = d2(i+1,i+1) - TWO * Q(i+1)
+
+      END DO
+
+      d2(:,:) = d2(:,:) * Para_HenonHeiles%lambda
+
+      ! Then the harmonic part
+      DO i=1,Para_HenonHeiles%ndim ! derivative along the coodinate Q(i)
+        d2(i,i) = d2(i,i) + ONE
+      END DO
+    END IF
+
+    IF (nderiv == 0) CALL set_dnSca(Mat_OF_PotDia(1,1),d0)
+    IF (nderiv == 1) CALL set_dnSca(Mat_OF_PotDia(1,1),d0,d1)
+    IF (nderiv == 2) CALL set_dnSca(Mat_OF_PotDia(1,1),d0,d1,d2)
+
+  END SUBROUTINE Eval_HenonHeilesPot
+  SUBROUTINE Eval_HenonHeilesPot_old(PotVal,Q,Para_HenonHeiles,nderiv)
     USE mod_dnMatPot
 
-    TYPE (Param_HenonHeiles), intent(in) :: Para_HenonHeiles
-    TYPE(dnMatPot), intent(inout)        :: PotVal
-    real (kind=Rkind),intent(in)         :: Q(:)
-    integer, intent(in)                  :: nderiv
+    TYPE (Param_HenonHeiles), intent(in)     :: Para_HenonHeiles
+    TYPE(dnMatPot),           intent(inout)  :: PotVal
+    real(kind=Rkind),         intent(in)     :: Q(:)
+    integer, intent(in)                      :: nderiv
 
     integer :: i
 
@@ -249,6 +333,5 @@ CONTAINS
       END DO
     END IF
   
-  END SUBROUTINE Eval_HenonHeilesPot
-
+  END SUBROUTINE Eval_HenonHeilesPot_old
 END MODULE mod_HenonHeilesPot

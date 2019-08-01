@@ -146,12 +146,13 @@ CONTAINS
     TYPE (Param_Sigmoid), intent(in) :: Para_Sigmoid
     integer, intent(in) :: nio
 
-    write(nio,*) 'Sigmoid parameters'
+    write(nio,*) 'Sigmoid curent parameters'
+    write(nio,*) '  s(x) = A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)'
     write(nio,*) '  A:   ',Para_Sigmoid%A
     write(nio,*) '  B:   ',Para_Sigmoid%B
     write(nio,*) '  C:   ',Para_Sigmoid%C
     write(nio,*) '  e:   ',Para_Sigmoid%e
-    write(nio,*) 'end Sigmoid parameters'
+    write(nio,*) 'end Sigmoid curent parameters'
 
   END SUBROUTINE Write_SigmoidPot
 
@@ -165,38 +166,22 @@ CONTAINS
 !! @param Para_Sigmoid       TYPE(Param_Sigmoid): derived type with the Sigmoid parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_SigmoidPot(PotVal,r,Para_Sigmoid,nderiv)
-    USE mod_dnMatPot
+  SUBROUTINE Eval_SigmoidPot(Mat_OF_PotDia,dnR,Para_Sigmoid,nderiv)
     USE mod_dnSca
 
-    TYPE (Param_Sigmoid), intent(in) :: Para_Sigmoid
-    TYPE(dnMatPot), intent(inout)    :: PotVal
-    real (kind=Rkind),intent(in)     :: r
-    integer, intent(in)              :: nderiv
+    TYPE (Param_Sigmoid), intent(in)     :: Para_Sigmoid
+    TYPE(dnSca),          intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),          intent(in)     :: dnR
+    integer, intent(in)                  :: nderiv
 
-    !local variables. They have to be deallocated
-    TYPE(dnSca)     :: dnPot,dnR
 
     !write(out_unitp,*) 'BEGINNING in Eval_SigmoidPot'
     !flush(out_unitp)
 
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=1,nderiv=nderiv)
-    END IF
 
-    dnR     = init_dnSca(r,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
-
-    dnPot = dnScaigmoid(dnR,Para_Sigmoid)
-
-    !transfert the 1D-potential and its derivatives (dnPot) to the matrix form (PotVal)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=1)
+    Mat_OF_PotDia(1,1) = dnScaigmoid(dnR,Para_Sigmoid)
 
 
-    CALL dealloc_dnSca(dnPot)
-    CALL dealloc_dnSca(dnR)
-
-    !write(out_unitp,*) 'Sigmoid PotVal at',r
-    !CALL Write_dnMatPot(PotVal)
     !write(out_unitp,*) 'END in Eval_SigmoidPot'
     !flush(out_unitp)
 

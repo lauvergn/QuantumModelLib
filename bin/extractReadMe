@@ -90,7 +90,10 @@ awk '/=== README ==/,/=== END README ==/' SRC/Model_Module.f90 > temp/RMtmp
 
 cd temp
 
-split -p "END README" RMtmp readme_
+#split with a patern works on a max (osx)
+#split -p "END README" RMtmp readme_  
+
+awk '/END README/{c++} {ff="readme_"c ; print > ff }' RMtmp
 rm RMtmp
 
 for name in readme_*

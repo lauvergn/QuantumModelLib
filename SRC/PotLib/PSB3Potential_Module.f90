@@ -71,8 +71,11 @@ MODULE mod_PSB3Pot
       real (kind=Rkind) :: k3  = 1.1347_Rkind
 !-----------------------------------------------------!
 
+     ! Warning the parameters are given as in the publication.
+     !   Therefore, the BLA(=Q(1)) is in Angstrom and the energy is in kcal.mol^-1.
+
       integer :: option    = 1
-      logical :: PubliUnit = .FALSE.    
+      logical :: PubliUnit = .FALSE.
  
   END TYPE Param_PSB3
  
@@ -339,17 +342,33 @@ MODULE mod_PSB3Pot
       Para_PSB3%k3       = k3
 
   END SUBROUTINE Read_PSB3Pot
+!> @brief Subroutine wich prints the PSB3 parameters.
+!!
+!! @param nio                integer:             file unit to print the parameters.
+  SUBROUTINE Write0_PSB3Pot(nio)
+
+    integer         , intent(in) :: nio
+
+    write(nio,*) 'PSB3 default parameters'
+    write(nio,*)
+    write(nio,*) ' Warning the parameters are given as in the publication.'
+    write(nio,*) '  Therefore, the BLA(=Q(1)) is in Angstrom and the energy is in kcal.mol^-1.'
+    write(nio,*)
+    write(nio,*) 'end PSB3 default parameters'
+
+  END SUBROUTINE Write0_PSB3Pot
 
 !> @brief Subroutine wich prints the PSB3 parameters.
 !!
 !! @param Para_PSB3         TYPE(Param_PSB3):   derived type in which the parameters are set-up.
 !! @param nio                integer:             file unit to print the parameters.
-
   SUBROUTINE Write_PSB3Pot(Para_PSB3,nio)
     
     TYPE(Param_PSB3), intent(in) :: Para_PSB3
     integer         , intent(in) :: nio
 
+    write(nio,*) 'PSB3 current parameters'
+    write(nio,*)
     write(nio,*) '  PubliUnit:      ',Para_PSB3%PubliUnit
     write(nio,*)
     write(nio,*) '  Option   :      ',Para_PSB3%option
@@ -359,7 +378,7 @@ MODULE mod_PSB3Pot
 
     CASE (1)
 
-    write(nio,*) '  Current parameters for first Model:'
+    write(nio,*) '  ... for first Model:'
     write(nio,*) '  blamin   :      ',Para_PSB3%blamin
     write(nio,*) '  blaTSdir :      ',Para_PSB3%blaTSdir
     write(nio,*) '  deepth   :      ',Para_PSB3%deepth
@@ -377,7 +396,7 @@ MODULE mod_PSB3Pot
 
     CASE (2)
 
-    write(nio,*) '  Current parameters for second Model:'
+    write(nio,*) '  ... for second Model:'
     write(nio,*) '  blamin   :      ',Para_PSB3%blamin
     write(nio,*) '  d1       :      ',Para_PSB3%d1
     write(nio,*) '  d2       :      ',Para_PSB3%d2
@@ -403,7 +422,8 @@ MODULE mod_PSB3Pot
         STOP
     END SELECT
 
-    write(nio,*) 'end PSB3 parameters'
+    write(nio,*)
+    write(nio,*) 'end PSB3 current parameters'
 
   END SUBROUTINE Write_PSB3Pot
 
@@ -414,22 +434,21 @@ MODULE mod_PSB3Pot
 !! @param Para_PSB3          TYPE(Param_PSB3):    derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_PSB3Pot(PotVal,Q,Para_PSB3,nderiv)
-
-    USE mod_dnMatPot
+  SUBROUTINE eval_PSB3Pot(Mat_OF_PotDia,dnQ,Para_PSB3,nderiv)
+    USE mod_dnSca
 
     TYPE(Param_PSB3) , intent(in)    :: Para_PSB3
-    real (kind=Rkind), intent(in)    :: Q(3)
-    TYPE(dnMatPot)   , intent(inout) :: PotVal
+    TYPE(dnSca),       intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),       intent(in)    :: dnQ(:) ! BLA, Tors, HOOP
     integer          , intent(in)    :: nderiv
 
     SELECT CASE (Para_PSB3%option)
 
     CASE (1)
-      CALL eval_PSB3Pot1(PotVal,Q,Para_PSB3,nderiv)
+      CALL eval_PSB3Pot1(Mat_OF_PotDia,dnQ,Para_PSB3,nderiv)
 
     CASE (2)
-      CALL eval_PSB3Pot2(PotVal,Q,Para_PSB3,nderiv)
+      CALL eval_PSB3Pot2(Mat_OF_PotDia,dnQ,Para_PSB3,nderiv)
 
     CASE Default
         write(out_unitp,*) ' ERROR in eval_PSB3Pot '
@@ -449,28 +468,29 @@ MODULE mod_PSB3Pot
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
-  SUBROUTINE eval_PSB3Pot1(PotVal,Q,Para_PSB3,nderiv)
-
+  SUBROUTINE eval_PSB3Pot1(Mat_OF_PotDia,dnQ,Para_PSB3,nderiv)
     !Not Published model potential 
-
-    USE mod_dnMatPot
     USE mod_dnSca
 
     real (kind=Rkind),  parameter     :: EnergyConv = 627.509_Rkind,LenghtConv = 0.52917721067121_Rkind
-    real (kind=Rkind),  intent(in)    :: Q(3)
+    TYPE(dnSca),        intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),        intent(in)    :: dnQ(:) ! BLA, Tors, HOOP
     TYPE(Param_PSB3) ,  intent(in)    :: Para_PSB3
-    TYPE(dnMatPot),     intent(inout) :: PotVal
     integer,            intent(in)    :: nderiv
-    real (kind=Rkind)                 :: d1,d4
+
 
     !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)     :: dnPot,BLA,Tors,HOOP
-    TYPE(dnSca)     :: MorseBLAP,Morsemin,Overlap
-    TYPE(dnSca)     :: Hdir2D,Hct2D
+    TYPE(dnSca)        :: dnPot,BLA,Tors,HOOP
+    TYPE(dnSca)        :: MorseBLAP,Morsemin,Overlap
+    TYPE(dnSca)        :: Hdir2D,Hct2D
 
-    BLA      = init_dnSca(Q(1),ndim=3,nderiv=nderiv,iQ=1)    
-    Tors     = init_dnSca(Q(2),ndim=3,nderiv=nderiv,iQ=2)    
-    HOOP     = init_dnSca(Q(3),ndim=3,nderiv=nderiv,iQ=3)
+    real (kind=Rkind)  :: d1,d4
+
+
+
+    BLA      = dnQ(1)
+    Tors     = dnQ(2)
+    HOOP     = dnQ(3)
 
     !If PubliUnit is False conversion must be done, the potential is expressed in Angstrom 
     !and it requires the proper conversion into Bhor  
@@ -487,36 +507,41 @@ MODULE mod_PSB3Pot
 
     Overlap   = Tors - HOOP/TWO
 
-    Hdir2D = SIN(Overlap)**2 * (MorseBLAP + Para_PSB3%d2) + Para_PSB3%d3 * COS(Overlap / TWO)**2 + Morsemin * Cos(Overlap)**2
-    Hct2D  = (ONE + Para_PSB3%c5 * SIN(Overlap)**2) * (Para_PSB3%c1 * BLA**2 + &
-             Para_PSB3%c2 * BLA + Para_PSB3%c3) + Para_PSB3%c4 * COS(Overlap)**2
+    Hdir2D = sin(Overlap)**2 * (MorseBLAP + Para_PSB3%d2) + Para_PSB3%d3 * cos(Overlap / TWO)**2 + Morsemin * Cos(Overlap)**2
+    Hct2D  = (ONE + Para_PSB3%c5 * sin(Overlap)**2) * (Para_PSB3%c1 * BLA**2 + &
+             Para_PSB3%c2 * BLA + Para_PSB3%c3) + Para_PSB3%c4 * cos(Overlap)**2
 !-----------------------------------------------------------------------!
 
+!-----------------------------------------------------------------------!
 ! V11 matrix element 
 
-   dnPot =  Hdir2D + Para_PSB3%h1 * Sin(HOOP/FOUR)**2
+   dnPot =  Hdir2D + Para_PSB3%h1 * sin(HOOP/FOUR)**2
 
    IF(.NOT. Para_PSB3%PubliUnit) dnPot = dnPot/EnergyConv
 
-   CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=1)
+   Mat_OF_PotDia(1,1) = dnPot
  
+!-----------------------------------------------------------------------!
 ! V22 matrix element 
 
-   dnPot =  Hct2D + Para_PSB3%h1 * Sin(HOOP/FOUR)**2 
+   dnPot =  Hct2D + Para_PSB3%h1 * sin(HOOP/FOUR)**2
 
    IF(.NOT. Para_PSB3%PubliUnit) dnPot = dnPot/EnergyConv
 
-   CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=2)
+   Mat_OF_PotDia(2,2) = dnPot
 
+!-----------------------------------------------------------------------!
 !V12 = V21
 
-   dnPot = Para_PSB3%k1 * SIN((Overlap) * TWO)        
+   dnPot = Para_PSB3%k1 * sin((Overlap) * TWO)
 
    IF(.NOT. Para_PSB3%PubliUnit) dnPot = dnPot/EnergyConv
 
-   CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=2)
-   CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=1)
+   Mat_OF_PotDia(1,2) = dnPot
+   Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
+
+!-----------------------------------------------------------------------!
    CALL dealloc_dnSca(BLA)
    CALL dealloc_dnSca(Tors)
    CALL dealloc_dnSca(HOOP)
@@ -539,16 +564,14 @@ MODULE mod_PSB3Pot
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
-  SUBROUTINE eval_PSB3Pot2(PotVal,Q,Para_PSB3,nderiv) !Second PSB3's potential
+  SUBROUTINE eval_PSB3Pot2(Mat_OF_PotDia,dnQ,Para_PSB3,nderiv) !Second PSB3's potential
   ! Published potential 
-
-    USE mod_dnMatPot
     USE mod_dnSca
 
     real (kind=Rkind),  parameter      :: EnergyConv = 627.509_Rkind,LenghtConv = 0.52917721067121_Rkind 
     TYPE (Param_PSB3),  intent(in)     :: Para_PSB3
-    real (kind=Rkind),  intent(in)     :: Q(3)
-    TYPE(dnMatPot),     intent(inout)  :: PotVal
+    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),        intent(in)     :: dnQ(:) ! BLA, Tors, HOOP
     integer, intent(in)                :: nderiv
     real (kind=Rkind)                  :: d1,d4
 
@@ -557,9 +580,12 @@ MODULE mod_PSB3Pot
     TYPE(dnSca)     :: Overlap
     TYPE(dnSca)     :: Hdir2D,Hct2D
 
-    BLA      = init_dnSca(Q(1),ndim=3,nderiv=nderiv,iQ=1) 
-    Tors     = init_dnSca(Q(2),ndim=3,nderiv=nderiv,iQ=2)
-    HOOP     = init_dnSca(Q(3),ndim=3,nderiv=nderiv,iQ=3)
+
+
+    BLA      = dnQ(1)
+    Tors     = dnQ(2)
+    HOOP     = dnQ(3)
+
 
     !If PubliUnit is False conversion must be done, the potential is expressed in Angstrom 
     !and it requires the proper conversion into Bhor  
@@ -576,31 +602,36 @@ MODULE mod_PSB3Pot
              (Para_PSB3%c1 * BLA**2 + Para_PSB3%c2 * BLA + Para_PSB3%c3) + Para_PSB3%c4 * COS(Tors)**2
 !-----------------------------------------------------------------------!
 
+!-----------------------------------------------------------------------!
 ! V11 matrix element 
 
    dnPot =  Hdir2D + Para_PSB3%hd1 * Sin(HOOP/FOUR)**2 - Para_PSB3%hd2 * Sin(HOOP/FOUR) * Sin(Tors * TWO) 
 
    IF(.NOT. Para_PSB3%PubliUnit) dnPot = dnPot/EnergyConv
 
-   CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=1)
+   Mat_OF_PotDia(1,1) = dnPot
 
+!-----------------------------------------------------------------------!
 ! V22 matrix element 
 
    dnPot =  Hct2D  + Para_PSB3%hc1 * Sin(HOOP/FOUR)**2 + Para_PSB3%hc2 * Sin(HOOP/FOUR) * Sin(Tors * TWO)
 
    IF(.NOT. Para_PSB3%PubliUnit) dnPot = dnPot/EnergyConv
 
-   CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=2)
+   Mat_OF_PotDia(2,2) = dnPot
 
+!-----------------------------------------------------------------------!
 ! V12 = V21
 
    dnPot = (ONE + Para_PSB3%k3 * SIN(Tors)**2) *  Para_PSB3%k1 * SIN((Overlap) * TWO)
 
    IF(.NOT. Para_PSB3%PubliUnit) dnPot = dnPot/EnergyConv
 
-   CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=2)
-   CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=1)
+   Mat_OF_PotDia(1,2) = dnPot
+   Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
+
+!-----------------------------------------------------------------------!
    CALL dealloc_dnSca(BLA)
    CALL dealloc_dnSca(Tors)
    CALL dealloc_dnSca(HOOP)

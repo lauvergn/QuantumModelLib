@@ -1,4 +1,4 @@
-#./clean
+./clean
 here=`pwd`
 
 cd ..
@@ -13,6 +13,6 @@ echo "=========================================="
 
 #export OMP_NUM_THREADS=1
 
-../Driver.x > res
+ ../Driver.x > res
 #../ModLib.x < input.dat > res
-
+#../bin/Compare_QML > Test_QML.log

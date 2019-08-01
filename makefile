@@ -8,7 +8,7 @@
 F90 = gfortran
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 #=================================================================================
@@ -38,7 +38,35 @@ endif
 #=================================================================================
 #=================================================================================
 
+#=================================================================================
+# pgf90 compillation v12 with mkl
+#=================================================================================
+ifeq ($(F90),pgf90)
 
+   # for c++ preprocessing
+   CPP    = -Mpreprocess
+
+   # omp management
+   ifeq ($(OMP),0)
+      OMPFLAG =
+   else
+       OMPFLAG = -mp=allcores
+       F90LIB = -lpthread
+   endif
+   # opt management
+   ifeq ($(OPT),1)
+      F90FLAGS = -O $(OMPFLAG) -fast -Mallocatable=03
+   else
+      F90FLAGS = -O0 $(OMPFLAG)      -Mallocatable=03 -Mbounds -Mchkstk -g
+   endif
+
+   ifeq ($(LAPACK),1)
+     F90LIB += -lblas -llapack
+   else
+     F90LIB +=
+   endif
+
+endif
 
 #=================================================================================
 #=================================================================================
@@ -106,6 +134,7 @@ MODEXE    = ModLib.x
 dnSEXE    = dnS.x
 DriverEXE = Driver.x
 ModLib    = libpot.a
+QMLib     = libQMLib.a
 
 DIR0      = $(shell pwd)
 DIROBJ    = $(DIR0)/OBJ
@@ -119,7 +148,7 @@ DIRPot    = $(DIRSRC)/PotLib
 OBJ_lib        = $(DIROBJ)/dnMatPot_Module.o $(DIROBJ)/dnS_Module.o $(DIROBJ)/Lib_module.o $(DIROBJ)/sub_diago.o $(DIROBJ)/sub_module_NumParameters.o
 OBJ_Pot        = $(DIROBJ)/LinearHBondPotential_Module.o $(DIROBJ)/TullyPotential_Module.o \
                  $(DIROBJ)/PhenolPotential_Module.o $(DIROBJ)/PSB3Potential_Module.o \
-                 $(DIROBJ)/SOC_1DModel_Module.o $(DIROBJ)/SOC_2S1T_1DModel_Module.o \
+                 $(DIROBJ)/SOC_1S1T_1DModel_Module.o $(DIROBJ)/SOC_2S1T_1DModel_Module.o \
                  $(DIROBJ)/TemplatePotential_Module.o \
                  $(DIROBJ)/HenonHeilesPotential_Module.o \
                  $(DIROBJ)/TwoD_Potential_Module.o \
@@ -176,12 +205,14 @@ lib: $(ModLib) readme
 	echo "create the library: ",$(ModLib)
 $(ModLib): $(OBJ_driver) $(OBJ_all)
 	ar -r $(ModLib) $(OBJ_driver) $(OBJ_all)
+	rm -f $(QMLib)
+	ln -s $(ModLib) $(QMLib)
 #
 #
 #===============================================
 #===============================================
 clean: 
-	rm -f  $(MODEXE) $(GRIDEXE) $(dnSEXE) $(DriverEXE) $(ModLib)
+	rm -f  $(MODEXE) $(GRIDEXE) $(dnSEXE) $(DriverEXE) $(ModLib) libQMLib.a
 	rm -fr *.dSYM
 	cd $(DIROBJ) ; rm -f *.o *.mod *.MOD
 	@cd Tests && ./clean
@@ -205,7 +236,7 @@ $(DIROBJ)/MorsePotential_Module.o: $(OBJ_lib)
 $(DIROBJ)/SigmoidPotential_Module.o: $(OBJ_lib)
 $(DIROBJ)/HenonHeilesPotential_Module.o: $(OBJ_lib)
 $(DIROBJ)/TullyPotential_Module.o: $(OBJ_lib)
-$(DIROBJ)/SOC_1DModel_Module.o: $(OBJ_lib)
+$(DIROBJ)/SOC_1S1T_1DModel_Module.o: $(OBJ_lib)
 $(DIROBJ)/SOC_2S1T_1DModel_Module.o: $(OBJ_lib)
 $(DIROBJ)/TwoD_Potential_Module.o: $(OBJ_lib)
 $(DIROBJ)/PSB3Potential_Module.o: $(OBJ_lib)
@@ -240,8 +271,8 @@ $(DIROBJ)/TwoD_Potential_Module.o:$(DIRPot)/TwoD_Potential_Module.f90
 $(DIROBJ)/TullyPotential_Module.o:$(DIRPot)/TullyPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/TullyPotential_Module.f90
 
-$(DIROBJ)/SOC_1DModel_Module.o:$(DIRPot)/SOC_1DModel_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/SOC_1DModel_Module.f90
+$(DIROBJ)/SOC_1S1T_1DModel_Module.o:$(DIRPot)/SOC_1S1T_1DModel_Module.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/SOC_1S1T_1DModel_Module.f90
 $(DIROBJ)/SOC_2S1T_1DModel_Module.o:$(DIRPot)/SOC_2S1T_1DModel_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/SOC_2S1T_1DModel_Module.f90
 $(DIROBJ)/MorsePotential_Module.o:$(DIRPot)/MorsePotential_Module.f90

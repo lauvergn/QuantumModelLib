@@ -135,55 +135,27 @@ CONTAINS
 !! @param Para_TwoD          TYPE(Param_TwoD):    derived type with the Morse parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TwoDPot(PotVal,Q,Para_TwoD,nderiv)
-    USE mod_dnMatPot
+  SUBROUTINE eval_TwoDPot(Mat_OF_PotDia,dnQ,Para_TwoD,nderiv)
     USE mod_dnSca
 
     TYPE (Param_TwoD),   intent(in)     :: Para_TwoD
-    real (kind=Rkind),   intent(in)     :: Q(2)
-    TYPE(dnMatPot),      intent(inout)  :: PotVal
+    TYPE(dnSca),         intent(in)     :: dnQ(2) ! X,Y
+    TYPE(dnSca),         intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,             intent(in)     :: nderiv
-
-    TYPE(dnSca)  :: dnX,dnY
-    TYPE(dnSca)  :: vTemp
-
-
-
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=2,ndim=2,nderiv=nderiv)
-    END IF
-
-   !write(out_unitp,*) 'TwoD pot in:'
-   PotVal = ZERO
-   !CALL Write_dnMatPot(PotVal)
-
-   dnX     = init_dnSca(Q(1),ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
-   dnY     = init_dnSca(Q(2),ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
 
 
    !Hel(1,1,x,y)=0.5d0*KX*(R(1,x)-X1)**2 + 0.5d0*KY*(R(2,y))**2
-   vTemp = HALF * Para_TwoD%KX*(dnX-Para_TwoD%X1)**2 + HALF * Para_TwoD%KY*(dnY)**2
-   CALL sub_dnSca_TO_dnMatPot(vTemp,PotVal,i=1,j=1)
+   Mat_OF_PotDia(1,1) = HALF * Para_TwoD%KX*(dnQ(1)-Para_TwoD%X1)**2 + HALF * Para_TwoD%KY*(dnQ(2))**2
 
    !Hel(2,2,x,y)=0.5d0*KX*(R(1,x)-X2)**2 + 0.5d0*KY*(R(2,y))**2 +DELTA
-   vTemp = HALF * Para_TwoD%KX*(dnX-Para_TwoD%X2)**2 + HALF * Para_TwoD%KY*(dnY)**2 + Para_TwoD%DELTA
-   CALL sub_dnSca_TO_dnMatPot(vTemp,PotVal,i=2,j=2)
+   Mat_OF_PotDia(2,2) = HALF * Para_TwoD%KX*(dnQ(1)-Para_TwoD%X2)**2 + HALF * Para_TwoD%KY*(dnQ(2))**2 + Para_TwoD%DELTA
 
    !Hel(1,2,x,y)=GAMMA*R(2,y)*dexp(-ALPHA*(R(1,x)-X3)**2)*dexp(-BETA*(R(2,y))**2)
-   vTemp = Para_TwoD%GAMMA * dnY * exp(-Para_TwoD%ALPHA*(dnX-Para_TwoD%X3)**2) * exp(-Para_TwoD%BETA*(dnY)**2)
+   Mat_OF_PotDia(1,2) = Para_TwoD%GAMMA * dnQ(2) * exp(-Para_TwoD%ALPHA*(dnQ(1)-Para_TwoD%X3)**2) * exp(-Para_TwoD%BETA*(dnQ(2))**2)
+   Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
    !write(out_unitp,*) 'vTemp for V(1,2):'
    !CALL Write_dnSca(vTemp,6)
-
-
-   CALL sub_dnSca_TO_dnMatPot(vTemp,PotVal,i=1,j=2)
-   CALL sub_dnSca_TO_dnMatPot(vTemp,PotVal,i=2,j=1)
-
-
-   CALL dealloc_dnSca(dnX)
-   CALL dealloc_dnSca(dnY)
-   CALL dealloc_dnSca(vTemp)
-
 
    !write(out_unitp,*) 'TwoD pot diabatic:',nderiv
    !CALL Write_dnMatPot(PotVal,6)

@@ -57,11 +57,12 @@ MODULE mod_dnMatPot
      real (kind=Rkind), allocatable :: d0(:,:)
      real (kind=Rkind), allocatable :: d1(:,:,:)
      real (kind=Rkind), allocatable :: d2(:,:,:,:)
+
   END TYPE dnMatPot
 
 
   INTERFACE assignment (=)
-     MODULE PROCEDURE sub_dnMatPot2_TO_dnMatPot1,set_dnMatPot_TO_R
+     MODULE PROCEDURE sub_dnMatPot2_TO_dnMatPot1,set_dnMatPot_TO_R,set_dnMatPot_FROM_MatOFdnSca
   END INTERFACE
 
    INTERFACE operator (*)
@@ -379,6 +380,39 @@ CONTAINS
 
 
   END SUBROUTINE sub_dnSca_TO_dnMatPot
+!> @brief Public subroutine which copies a dnSca derived type to one element of dnMatPot derived type.
+!!
+!> @author David Lauvergnat
+!! @date 30/07/2019
+!!
+!! @param Mat                   TYPE(dnMatPot):    derived type which deals with the derivatives of a matrix.
+!! @param MatOFS                TYPE(dnSca):       matrix of derived type which deals with the derivatives of a scalar.
+  SUBROUTINE set_dnMatPot_FROM_MatOFdnSca(Mat,MatOFS)
+    USE mod_dnSca
+    TYPE (dnMatPot),    intent(inout) :: Mat
+    TYPE (dnSca),       intent(in)    :: MatOFS(:,:)
+
+    integer :: nderiv_dnMat,nsurf_dnMat,ndim_dnMat,nderiv_dnSca,ndim_dnSca
+    integer :: i,j
+
+    integer :: err_dnMatPot_loc
+    character (len=*), parameter :: name_sub='set_dnMatPot_FROM_MatOFdnSca'
+
+    IF (lbound(Mat%d0,dim=1) /= lbound(MatOFS,dim=1) .OR. ubound(Mat%d0,dim=1) /= ubound(MatOFS,dim=1) .OR. &
+        lbound(Mat%d0,dim=2) /= lbound(MatOFS,dim=2) .OR. ubound(Mat%d0,dim=2) /= ubound(MatOFS,dim=2) ) THEN
+      write(6,*) ' ERROR in ',name_sub
+      write(6,*) '  the matrices have not the same dimensions'
+      write(6,*) 'It should never append! Check the source'
+      STOP
+    END IF
+
+    DO i=lbound(MatOFS,dim=2),ubound(MatOFS,dim=2)
+    DO j=lbound(MatOFS,dim=1),ubound(MatOFS,dim=1)
+      CALL sub_dnSca_TO_dnMatPot(MatOFS(i,j),Mat,i,j)
+    END DO
+    END DO
+
+  END SUBROUTINE set_dnMatPot_FROM_MatOFdnSca
 !> @brief Public function which calculate set dnMatPot to zero (and derivatives).
 !!
 !> @author David Lauvergnat

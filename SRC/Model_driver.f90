@@ -44,11 +44,10 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
     pot_name_loc = trim(adjustl(pot_name))
     CALL string_uppercase_TO_lowercase(pot_name_loc)
     IF (pot_name_loc == 'read_model') THEN
-      QuantumModel%adiabatic = .FALSE.
-      CALL Init_Model(QuantumModel,read_param=.TRUE.)
+      CALL Init_Model(QuantumModel,ndim=ndim,nsurf=nsurf,read_param=.TRUE.)
     ELSE
       CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
-                      ndim=ndim,read_param=.FALSE.,option=option)
+                      ndim=ndim,nsurf=nsurf,read_param=.FALSE.,option=option)
     END IF
     deallocate(pot_name_loc)
 
@@ -63,7 +62,6 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
       STOP 'ERROR in sub_Init_Qmodel: wrong ndim or nsurf'
     END IF
 !$OMP END CRITICAL (CRIT_sub_Init_Qmodel)
-
 
 END SUBROUTINE sub_Init_Qmodel
 SUBROUTINE sub_Write_Qmodel(nio)
@@ -121,21 +119,21 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   real (kind=Rkind),      intent(inout)     :: NAC(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
 
 
-  TYPE (dnMatPot)                  :: Vec_loc,PotVal_loc
+  TYPE (dnMatPot)                  :: NAC_loc,PotVal_loc
 
 
 
-  CALL alloc_dnMatPot(Vec_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
+  CALL alloc_dnMatPot(NAC_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
   CALL alloc_dnMatPot(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
 
-  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,Vec=Vec_loc)
+  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc)
 
   V(:,:)     = PotVal_loc%d0
   G(:,:,:)   = PotVal_loc%d1
-  NAC(:,:,:) = Vec_loc%d1
+  NAC(:,:,:) = NAC_loc%d1
 
   CALL dealloc_dnMatPot(PotVal_loc)
-  CALL dealloc_dnMatPot(Vec_loc)
+  CALL dealloc_dnMatPot(NAC_loc)
 
 END SUBROUTINE sub_Qmodel_VG_NAC
 SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
@@ -231,7 +229,6 @@ SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
 !$OMP END CRITICAL (CRIT_sub_model_V)
 
   CALL calc_pot(V,QuantumModel,Q)
-
 
 END SUBROUTINE sub_model_V
 SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
@@ -352,7 +349,7 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
 
 
   logical, SAVE                    :: begin = .TRUE.
-  TYPE (dnMatPot)                  :: Vec_loc,PotVal_loc
+  TYPE (dnMatPot)                  :: NAC_loc,PotVal_loc
 
   IF (option < 0) THEN
     begin = .TRUE.
@@ -384,14 +381,14 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
 
   CALL alloc_dnMatPot(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
 
-  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,Vec=Vec_loc)
+  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc)
 
   V(:,:)     = PotVal_loc%d0
   G(:,:,:)   = PotVal_loc%d1
-  NAC(:,:,:) = Vec_loc%d1
+  NAC(:,:,:) = NAC_loc%d1
 
   CALL dealloc_dnMatPot(PotVal_loc)
-  CALL dealloc_dnMatPot(Vec_loc)
+  CALL dealloc_dnMatPot(NAC_loc)
 
 
 END SUBROUTINE sub_model1_VG_NAC

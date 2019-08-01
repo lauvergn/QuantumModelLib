@@ -50,7 +50,8 @@ MODULE mod_diago
 
       integer  :: type_diag_loc
 
-      real(kind=Rkind) :: trav(n),Mat_save(n,n)
+      !real(kind=Rkind) :: trav(n),Mat_save(n,n)
+      real(kind=Rkind), allocatable :: trav(:),Mat_save(:,:)
 
       integer          :: ierr
       integer          :: lwork
@@ -61,6 +62,7 @@ MODULE mod_diago
       logical, parameter :: debug = .FALSE.
 !      logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
+       allocate(Mat_save(n,n))
        Mat_save = Mat ! save mat
 
 
@@ -77,8 +79,10 @@ MODULE mod_diago
       CASE(1)
         CALL jacobi2(Mat_save,n,Eig,Vec)
       CASE(2)
+        allocate(trav(n))
         CALL tred2(n,n,Mat_save,Eig,trav,Vec)
         CALL tql2(n,n,Eig,trav,Vec,ierr)
+        deallocate(trav)
 !      CASE(3) ! lapack77
 !
 !#if __LAPACK == 1
@@ -94,8 +98,10 @@ MODULE mod_diago
 !        END IF
 !        CALL dealloc_NParray(work,'work',name_sub)
 !#else
+!        allocate(trav(n))
 !        CALL tred2(n,n,Mat_save,Eig,trav,Vec)
 !        CALL tql2(n,n,Eig,trav,Vec,ierr)
+!        deallocate(trav)
 !#endif
 !
 
@@ -125,6 +131,8 @@ MODULE mod_diago
   ELSE
     CALL Unique_phase(n,Vec,n)
   END IF
+
+  deallocate(Mat_save)
 
 
       END SUBROUTINE diagonalization

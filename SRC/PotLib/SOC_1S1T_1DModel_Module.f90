@@ -138,15 +138,14 @@ CONTAINS
 !> @brief Subroutine wich prints the 1D-SOC Model parameters.
 !!
 !> @author David Lauvergnat
-!! @date 15/04/2019
+!! @date 30/07/2019
 !!
-!! @param Para_1DSOC         TYPE(Param_1DSOC):  derived type in which the parameters are set-up.
 !! @param nio                integer:            file unit to print the parameters.
-  SUBROUTINE Write_1DSOC(Para_1DSOC,nio)
-    TYPE (Param_1DSOC), intent(in) :: Para_1DSOC
+  SUBROUTINE Write0_1DSOC(nio)
     integer,            intent(in) :: nio
 
     write(nio,*) '1DSOC_Model parameters, from reference:'
+    write(nio,*)
     write(nio,*) 'Granucci et al., J. Chem. Phys. V137, p22A501 (2012)'
     write(nio,*)
     write(nio,*) 'Remark: to avoid complex diabatic potential, ...'
@@ -166,7 +165,6 @@ CONTAINS
     write(nio,*) '                   [-0.000707107       0.041042499       0.000000000       0.000000000]'
     write(nio,*) '                   [ 0.000707107       0.000000000       0.041042499       0.000000000]'
     write(nio,*) '                   [ 0.001000000       0.000000000       0.000000000       0.041042499]'
-
     write(nio,*)
     write(nio,*) 'Adiabatic Potential, 1DSOC_Model (with Rsig=8.0)'
     write(nio,*) 'Value at: R=10. Bohr'
@@ -180,9 +178,24 @@ CONTAINS
     write(nio,*) '                   [-0.000000000       0.125000000       0.000000000       0.000000000]'
     write(nio,*) '                   [-1.749343292      -0.000000000      -0.000000000       0.000000000]'
     write(nio,*) 'WARNING: The NAC, associated to the 2 degenerated vectors, are numerically not well defined !!!!'
+    write(nio,*)
+    write(nio,*) 'end 1DSOC_Model parameters'
 
+  END SUBROUTINE Write0_1DSOC
 
-    write(nio,*) 'Current parameters:'
+!> @brief Subroutine wich prints the 1D-SOC Model parameters.
+!!
+!> @author David Lauvergnat
+!! @date 15/04/2019
+!!
+!! @param Para_1DSOC         TYPE(Param_1DSOC):  derived type in which the parameters are set-up.
+!! @param nio                integer:            file unit to print the parameters.
+  SUBROUTINE Write_1DSOC(Para_1DSOC,nio)
+    TYPE (Param_1DSOC), intent(in) :: Para_1DSOC
+    integer,            intent(in) :: nio
+
+    write(nio,*) '1DSOC_Model current parameters'
+    write(nio,*)
     write(nio,*) '  a1,a2:          ',Para_1DSOC%a1,Para_1DSOC%a2
     write(nio,*) '  alpha1,alpha2:  ',Para_1DSOC%alpha1,Para_1DSOC%alpha2
     write(nio,*) '  DE:             ',Para_1DSOC%DE
@@ -193,8 +206,8 @@ CONTAINS
     write(nio,*) '   Rsig:          ',Para_1DSOC%Rsig
     write(nio,*) '  DRsig:          ',Para_1DSOC%DRsig
     write(nio,*) ' option:          ',Para_1DSOC%option
-
-    write(nio,*) 'end 1DSOC_Model parameters'
+    write(nio,*)
+    write(nio,*) 'end 1DSOC_Model current parameters'
 
   END SUBROUTINE Write_1DSOC
 
@@ -208,21 +221,18 @@ CONTAINS
 !! @param Para_1DSOC   TYPE(Param_1DSOC):  derived type in which the parameters are set-up.
 !! @param nderiv       integer:            it enables to specify up to which derivatives the potential is calculated:
 !!                                         the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_1DSOC(PotVal,r,Para_1DSOC,nderiv)
-    USE mod_dnMatPot
+  SUBROUTINE eval_1DSOC(Mat_OF_PotDia,dnR,Para_1DSOC,nderiv)
     USE mod_dnSca
 
     TYPE (Param_1DSOC),       intent(in)     :: Para_1DSOC
-    real (kind=Rkind),        intent(in)     :: r
-    TYPE(dnMatPot),           intent(inout)  :: PotVal
+    TYPE(dnSca),              intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),              intent(in)     :: dnR
     integer,                  intent(in)     :: nderiv
 
     !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)     :: dnPot,dnR,dnSig,dnx
+    TYPE(dnSca)     :: dnSig,dnx
+    integer         :: i,j
 
-    PotVal = ZERO
-
-    dnR     = init_dnSca(r,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
 
     ! Sig(R) calculation
     IF (Para_1DSOC%option == 1) THEN ! as in the publication
@@ -241,34 +251,37 @@ CONTAINS
     END IF
 
     !singlet Energy
-    dnPot =  Para_1DSOC%a1 * exp(-Para_1DSOC%alpha1*dnR) + Para_1DSOC%DE
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=1)
+    Mat_OF_PotDia(1,1) = Para_1DSOC%a1 * exp(-Para_1DSOC%alpha1*dnR) + Para_1DSOC%DE
 
     !Triplet Energy
-    dnPot =  Para_1DSOC%a2 * exp(-Para_1DSOC%alpha2*dnR)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=2)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=3,j=3)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=4,j=4)
+    Mat_OF_PotDia(2,2) = Para_1DSOC%a2 * exp(-Para_1DSOC%alpha2*dnR)
+    Mat_OF_PotDia(3,3) = Mat_OF_PotDia(2,2)
+    Mat_OF_PotDia(4,4) = Mat_OF_PotDia(2,2)
+
 
     !Singley-triplet coupling
-    dnPot =  sqrt(TWO) * Para_1DSOC%RC1 * dnSig
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=2)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=2,j=1)
+    Mat_OF_PotDia(1,2) =  sqrt(TWO) * Para_1DSOC%RC1 * dnSig
+    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
-    dnPot =  -sqrt(TWO) * Para_1DSOC%IC1 * dnSig
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=3)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=3,j=1)
+    Mat_OF_PotDia(1,3) =  -sqrt(TWO) * Para_1DSOC%IC1 * dnSig
+    Mat_OF_PotDia(3,1) = Mat_OF_PotDia(1,3)
 
-    dnPot =  -Para_1DSOC%C0 * dnSig
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=4)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=4,j=1)
+    Mat_OF_PotDia(1,4) =  -Para_1DSOC%C0 * dnSig
+    Mat_OF_PotDia(4,1) = Mat_OF_PotDia(1,4)
 
 
+   ! triplet-triplet component couplings (ZERO)
+   DO i=2,4
+   DO j=2,4
+     IF (j == i) CYCLE
+     Mat_OF_PotDia(j,i) = ZERO
+   END DO
+   END DO
 
-    CALL dealloc_dnSca(dnR)
+
+
     CALL dealloc_dnSca(dnx)
     CALL dealloc_dnSca(dnSig)
-    CALL dealloc_dnSca(dnPot)
 
 
   END SUBROUTINE eval_1DSOC

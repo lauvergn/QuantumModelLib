@@ -1,0 +1,27 @@
+here=`pwd`
+
+cd ..
+ make > $here/comp.log 2>&1
+cd  $here
+
+
+
+echo "=========================================="
+echo " TESTING the internal potentials of ModLib"
+echo " ... with respect to old files"
+echo "=========================================="
+
+../ModLib.x < input.dat > res
+../bin/Compare_QML > Test_QML.log
+
+grep "PROBLEM" Test_QML.log
+nb_pb=`grep -c "PROBLEM(S)" Test_QML.log`
+
+if test $nb_pb -gt 0
+then
+   echo "Error(s) detected!!"
+else
+   echo "No error!"
+fi
+echo "=========================================="
+

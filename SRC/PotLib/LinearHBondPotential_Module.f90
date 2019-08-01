@@ -189,7 +189,53 @@ CONTAINS
     CALL Init_BuckPot(Para_LinearHBond%Buck,A=Abuck,B=Bbuck,C=Cbuck)
 
   END SUBROUTINE Read_LinearHBondPot
+!> @brief Subroutine wich prints the LinearHBond potential parameters from Beutier PhD thesis.
+!!
+!> @author David Lauvergnat
+!! @date 30/07/2019
+!!
+!! @param nio                integer:                   file unit to print the parameters.
+  SUBROUTINE Write0_LinearHBondPot(nio)
+    integer, intent(in) :: nio
 
+    write(nio,*) 'LinearHBond parameters:'
+    write(nio,*)
+    write(nio,*) ' Potential and parameters from J. Beutier PhD thesis (Eq 3.79)'
+    write(nio,*) '    Hydrogen motion between two atoms, A and B.'
+    write(nio,*)
+    write(nio,*) '    A--------------H-----X--------------------B'
+    write(nio,*) '     <--------------QQ----------------------->'
+    write(nio,*) '                    <-q->'
+    write(nio,*)
+    write(nio,*) '  V(Q,q) = Morse1(Q/2+q,param1)+Morse2(Q/2-q,param2)+Eref2+Buckingham(Q)'
+    write(nio,*) '    Units: QQ and q in Angstrom, energy in kcal.mol^-1'
+    write(nio,*)
+    write(nio,*) '  Morse1 (D1*(1-exp(-a1*(r-Req1))**2) parameters:'
+    write(nio,*) '    D1   = 60. kcal.mol^-1'
+    write(nio,*) '    a1   = 2.52 Angs^-2'
+    write(nio,*) '    Req1 = 0.95 Angs'
+    write(nio,*)
+    write(nio,*) '  Morse2 (D2*(1-exp(-a2*(r-Req2))**2) parameters:'
+    write(nio,*) '    D2   = D1*epsi^2'
+    write(nio,*) '    a2   = a1/epsi'
+    write(nio,*) '    Req2 = Req1'
+    write(nio,*) '       with espi=1'
+    write(nio,*)
+    write(nio,*) '  Buckingham (A.Exp(-B*r)-C/r^6) parameters:'
+    write(nio,*) '    A   = 2.32 10^5 kcal.mol^-1'
+    write(nio,*) '    B   = 3.15      Angs^-1'
+    write(nio,*) '    C   = 2.31 10^4 kcal.mol^-1.Angs^-6'
+    write(nio,*)
+    write(nio,*) '  Eref2 = -D1*epsi^2'
+    write(nio,*)
+    write(nio,*)
+    write(nio,*) 'Potential Value at: QQ=2.75 Angs and q=0.0 Angs'
+    write(nio,*) 'V = -21.433838 kcal.mol^-1'
+    write(nio,*) 'gradient (kcal.mol^-1 Angs^-1) = [ 58.250585, 0.000000]'
+    write(nio,*)
+    write(nio,*) 'END LinearHBond parameters'
+
+  END SUBROUTINE Write0_LinearHBondPot
 !> @brief Subroutine wich prints the LinearHBond potential parameters.
 !!
 !> @author David Lauvergnat
@@ -201,34 +247,18 @@ CONTAINS
     TYPE (Param_LinearHBond), intent(in) :: Para_LinearHBond
     integer, intent(in) :: nio
 
-    write(nio,*) 'LinearHBond parameters:'
-
-    write(nio,*) ' Potential and parameters from J. Beutier PhD thesis (Eq 3.79)'
-    write(nio,*) '    Hydrogen motion between two atoms, A and B.'
-    write(nio,*)
-    write(nio,*) '    A--------------H-----X--------------------B'
-    write(nio,*) '     <--------------QQ----------------------->'
-    write(nio,*) '                    <-q->'
-    write(nio,*)
-    write(nio,*) '    V(Q,q) = Morse1(Q/2+q,param1)+Morse2(Q/2-q,param2)+Eref2+Buckingham(Q)'
-    write(nio,*) '    Units: QQ and q in Angstrom, energy in kcal.mol^-1'
-    write(nio,*)
-    write(nio,*) 'Potential Value at: QQ=2.75 Angs and q=0.0 Angs'
-    write(nio,*) 'V = -21.433838 kcal.mol-1'
-    write(nio,*) 'gradient (kcal.mol-1 Angs-1) = [ 58.250585, 0.000000]'
+    write(nio,*) 'LinearHBond current parameters:'
     write(nio,*)
     write(nio,*) 'PubliUnit: ',Para_LinearHBond%PubliUnit
-
     write(nio,*)
-    write(nio,*) 'Current parameters:'
     write(nio,*) '   Morse parameters:   '
     CALL Write_MorsePot(Para_LinearHBond%Morse1,nio)
     CALL Write_MorsePot(Para_LinearHBond%Morse2,nio)
-
     write(nio,*) '   Buckingham parameters:   '
     CALL Write_BuckPot(Para_LinearHBond%Buck,nio)
+    write(nio,*) '  Eref2 = ',Para_LinearHBond%Eref2
 
-    write(nio,*) 'END LinearHBond parameters'
+    write(nio,*) 'END LinearHBond current parameters'
 
   END SUBROUTINE Write_LinearHBondPot
 
@@ -242,60 +272,65 @@ CONTAINS
 !! @param Para_LinearHBond   TYPE(Param_LinearHBond): derived type with the Morse parameters.
 !! @param nderiv             integer:                 it enables to specify up to which derivatives the potential is calculated:
 !!                                                    the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-   SUBROUTINE Eval_LinearHBondPot(PotVal,r,Para_LinearHBond,nderiv)
-    USE mod_dnMatPot
+   SUBROUTINE Eval_LinearHBondPot(Mat_OF_PotDia,dnQ,Para_LinearHBond,nderiv)
     USE mod_dnSca
 
-    TYPE (Param_LinearHBond),  intent(in)    :: Para_LinearHBond
-    TYPE(dnMatPot),            intent(inout) :: PotVal
-    real (kind=Rkind),         intent(in)    :: r(2) ! QQ and q
-    integer,                   intent(in)    :: nderiv
+    TYPE (Param_LinearHBond),  intent(in)     :: Para_LinearHBond
+    TYPE(dnSca),               intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),               intent(in)     :: dnQ(:) ! QQ and q
+    integer,                   intent(in)     :: nderiv
 
     !local variable
     TYPE(dnSca)          :: PotVal_m1,PotVal_m2,PotVal_Buck
-    TYPE(dnSca)          :: dnQQ,dnq,dnX,dnY
+    TYPE(dnSca)          :: dnQQ,dnsq,dnX,dnY
     real (kind=Rkind), parameter  :: a0      = 0.52917720835354106_Rkind
     real (kind=Rkind), parameter  :: auTOkcalmol_inv  = 627.51_Rkind
 
+    !logical, parameter :: debug=.TRUE.
     logical, parameter :: debug=.FALSE.
 
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING Eval_LinearHBondPot'
-      write(out_unitp,*) 'r(:) or QQ,q: ',r
+      write(out_unitp,*) 'r(:) or QQ,q: ',get_d0_FROM_dnSca(dnQ(1)),get_d0_FROM_dnSca(dnQ(2))
       write(out_unitp,*) 'nderiv',nderiv
       flush(out_unitp)
     END IF
 
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=2,nderiv=nderiv)
-    END IF
-
-    dnQQ    = init_dnSca(r(1),ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
-    dnq     = init_dnSca(r(2),ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
-
-
     IF (debug) THEN
       write(out_unitp,*) 'dnQQ'
-      CALL write_dnSca(dnQQ)
-      write(out_unitp,*) 'dnq'
-      CALL write_dnSca(dnq)
+      CALL write_dnSca(dnQ(1))
+      write(out_unitp,*) 'dnsq'
+      CALL write_dnSca(dnQ(2))
       flush(out_unitp)
     END IF
 
     IF (.NOT. Para_LinearHBond%PubliUnit) THEN
-      dnQQ = a0*dnQQ ! to convert the bhor into Angstrom
-      dnq  = a0*dnq  ! to convert the bhor into Angstrom
+      dnQQ = a0*dnQ(1) ! to convert the bhor into Angstrom
+      dnsq = a0*dnQ(2) ! to convert the bhor into Angstrom
+
+      IF (debug) THEN
+        write(out_unitp,*) 'dnQQ in Angs'
+        CALL write_dnSca(dnQ(1))
+        write(out_unitp,*) 'dnsq in Angs'
+        CALL write_dnSca(dnQ(2))
+        flush(out_unitp)
+      END IF
+    ELSE
+      dnQQ = dnQ(1)
+      dnsq = dnQ(2)
     END IF
 
 
     ! new variables for the Morse potentials
-    dnX = dnQQ/TWO + dnq
-    dnY = dnQQ/TWO - dnq
+    dnX = dnQQ/TWO + dnsq
+    dnY = dnQQ/TWO - dnsq
 
     IF (debug) THEN
       write(out_unitp,*) 'dnX'
+      flush(out_unitp)
       CALL write_dnSca(dnX)
       write(out_unitp,*) 'dnY'
+      flush(out_unitp)
       CALL write_dnSca(dnY)
       flush(out_unitp)
     END IF
@@ -316,27 +351,27 @@ CONTAINS
 
     PotVal_Buck = dnBuck(dnQQ,Para_LinearHBond%Buck)
     IF (debug) THEN
-      write(out_unitp,*) 'PotVal_Buck. QQ:',r(1)
+      write(out_unitp,*) 'PotVal_Buck. QQ:',get_d0_FROM_dnSca(dnQQ)
       CALL Write_dnSca(PotVal_Buck)
       flush(out_unitp)
     END IF
 
+    Mat_OF_PotDia(1,1) = PotVal_m1+PotVal_m2+PotVal_Buck
 
-    CALL sub_dnSca_TO_dnMatPot(PotVal_m1+PotVal_m2+PotVal_Buck,PotVal,i=1,j=1)
     IF (debug) THEN
-      write(out_unitp,*) 'PotVal:'
-      CALL Write_dnMatPot(PotVal)
+      write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
+      CALL write_dnSca(Mat_OF_PotDia(1,1))
       flush(out_unitp)
     END IF
 
     IF (.NOT. Para_LinearHBond%PubliUnit) THEN
-      PotVal = PotVal*(ONE/auTOkcalmol_inv) ! to convert the kcal/mol into Hartree
+      Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1)*(ONE/auTOkcalmol_inv) ! to convert the kcal/mol into Hartree
     END IF
 
-    CALL dealloc_dnSca(dnq)
-    CALL dealloc_dnSca(dnQQ)
     CALL dealloc_dnSca(dnX)
     CALL dealloc_dnSca(dnY)
+    CALL dealloc_dnSca(dnQQ)
+    CALL dealloc_dnSca(dnsq)
 
     CALL dealloc_dnSca(PotVal_m1)
     CALL dealloc_dnSca(PotVal_m2)
@@ -348,77 +383,5 @@ CONTAINS
     END IF
 
   END SUBROUTINE Eval_LinearHBondPot
-
-  SUBROUTINE Eval_LinearHBondPot_old(PotVal,r,Para_LinearHBond,nderiv)
-    USE mod_dnMatPot
-
-    TYPE (Param_LinearHBond), intent(in)    :: Para_LinearHBond
-    TYPE(dnMatPot), intent(inout)           :: PotVal
-    real (kind=Rkind),intent(in)            :: r(2) ! QQ and q
-    integer, intent(in)                     :: nderiv
-
-    !local variable
-    real (kind=Rkind)  :: x,y,Jac(2,2),g(2),h(2,2)
-    TYPE(dnMatPot)     :: PotVal_m1,PotVal_m2,PotVal_Buck
-
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=2,nderiv=nderiv)
-    END IF
-
-    !write(out_unitp,*) 'QQ,q',r
-    ! new variables for the Morse potentials
-    x        = r(1)/TWO + r(2)
-    y        = r(1)/TWO - r(2)
-    Jac(:,1) = (/HALF, ONE /)
-    Jac(:,2) = (/HALF,-ONE /)
-
-    CALL alloc_dnMatPot(PotVal_m1,nsurf=1,ndim=1,nderiv=nderiv)
-    CALL Eval_MorsePot(PotVal_m1,x,Para_LinearHBond%Morse1,nderiv)
-    !write(out_unitp,*) 'PotVal_m1. x:',x
-    !CALL Write_dnMatPot(PotVal_m1,6)
-
-    CALL alloc_dnMatPot(PotVal_m2,nsurf=1,ndim=1,nderiv=nderiv)
-    CALL Eval_MorsePot(PotVal_m2,y,Para_LinearHBond%Morse2,nderiv)
-    !write(out_unitp,*) 'PotVal_m2. y:',y
-    !CALL Write_dnMatPot(PotVal_m2,6)
-
-    CALL alloc_dnMatPot(PotVal_Buck,nsurf=1,ndim=1,nderiv=nderiv)
-    CALL Eval_BuckPot(PotVal_Buck,r(1),Para_LinearHBond%Buck,nderiv)
-    !write(out_unitp,*) 'PotVal_Buck. QQ:',r(1)
-    !CALL Write_dnMatPot(PotVal_Buck,6)
-
-
-    ! Potential calculation
-    PotVal%d0(1,1) = PotVal_m1%d0(1,1) + PotVal_m2%d0(1,1) + Para_LinearHBond%Eref2 + &
-                     PotVal_Buck%d0(1,1)
-                     !Para_LinearHBond%A*exp(-Para_LinearHBond%B*r(1)) - &
-                     !Para_LinearHBond%C/r(1)**6
-
-    ! gradient calculation
-    if (nderiv >= 1) then
-      g(:) = (/PotVal_m1%d1(1,1,1),PotVal_m2%d1(1,1,1) /)
-      PotVal%d1(1,1,:) = matmul(Jac,g)
-      PotVal%d1(1,1,1) = PotVal%d1(1,1,1) + PotVal_Buck%d1(1,1,1)
-        !-Para_LinearHBond%A*Para_LinearHBond%B*exp(-Para_LinearHBond%B*r(1)) + &
-        !6.d0*Para_LinearHBond%C/r(1)**7
-    endif
-
-    ! Hessian calculation
-    if (nderiv >= 2) then
-       h(:,:) = ZERO
-       h(1,1) = PotVal_m1%d2(1,1,1,1)
-       h(2,2) = PotVal_m2%d2(1,1,1,1)
-
-      PotVal%d2(1,1,:,:) = matmul(Jac,(matmul(h,transpose(Jac))))
-      PotVal%d2(1,1,1,1) = PotVal%d2(1,1,1,1) + PotVal_Buck%d2(1,1,1,1)
-    endif
-
-
-    CALL dealloc_dnMatPot(PotVal_m1)
-    CALL dealloc_dnMatPot(PotVal_m2)
-    CALL dealloc_dnMatPot(PotVal_Buck)
-
-
-  END SUBROUTINE Eval_LinearHBondPot_old
 
 END MODULE mod_LinearHBondPot

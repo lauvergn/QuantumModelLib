@@ -134,6 +134,33 @@ CONTAINS
 
 
   END SUBROUTINE Read_BuckPot
+!> @brief Subroutine wich prints the Buckingham parameters from his publication.
+!!
+!> @author David Lauvergnat
+!! @date 20/07/2019
+!!
+!! @param nio                integer:             file unit to print the parameters.
+  SUBROUTINE Write0_BuckPot(nio)
+    integer, intent(in) :: nio
+
+    write(nio,*) 'Buckingham parameters:'
+    write(nio,*) ' For Ar-Ar, eq 27 of reference:'
+    write(nio,*) '  R.A. Buckingham, Proc. R. Soc. A Math. Phys. Eng. Sci. 168 (1938) 264–283.'
+    write(nio,*)
+    write(nio,*) 'Buckingham(r) = A.Exp(-B*r)-C/r^6'
+    write(nio,*)
+    write(nio,*) '   A= 1.69 10^-8 erg      = 387.63744459726228783977 Hartree'
+    write(nio,*) '   B= 1/0.273 A^-1        = 1.93837805257707347985   bohr^-1'
+    write(nio,*) '   C= 102 10^-12 erg A^-6 = 106.54483566475760255666 Hartree bohr^-6'
+    write(nio,*)
+    write(nio,*) 'Value at: R=7.0 Bohr'
+    write(nio,*) 'V        = -0.000409 Hartree'
+    write(nio,*) 'gradient = -0.000186'
+    write(nio,*) 'hessian  =  0.001088'
+    write(nio,*)
+    write(nio,*) 'end Buckingham parameters'
+
+  END SUBROUTINE Write0_BuckPot
 !> @brief Subroutine wich prints the Buckingham parameters.
 !!
 !> @author David Lauvergnat
@@ -145,22 +172,14 @@ CONTAINS
     TYPE (Param_Buck), intent(in) :: Para_Buck
     integer, intent(in) :: nio
 
-    write(nio,*) 'Buckingham parameters:'
-    write(nio,*) ' For Ar-Ar, eq 27 of reference:'
-
-    write(nio,*) 'R.A. Buckingham, Proc. R. Soc. A Math. Phys. Eng. Sci. 168 (1938) 264–283.'
-    write(nio,*) 'Value at: R=7.0 Bohr'
-    write(nio,*) 'V        = -0.000409 Hartree'
-    write(nio,*) 'gradient = -0.000186'
-    write(nio,*) 'hessian  =  0.001088'
-
+    write(nio,*) 'Buckingham current parameters:'
     write(nio,*)
-    write(nio,*) 'Current parameters:'
     write(nio,*) '    V(R) = A.Exp(-B.r) - C/r^6'
     write(nio,*) '  A:   ',Para_Buck%A
     write(nio,*) '  B:   ',Para_Buck%B
     write(nio,*) '  B:   ',Para_Buck%C
-    write(nio,*) 'end Buckingham parameters'
+    write(nio,*)
+    write(nio,*) 'end Buckingham current parameters'
 
   END SUBROUTINE Write_BuckPot
 
@@ -169,73 +188,27 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
-!! @param r                  real:                value for which the potential is calculated
+!! @param PotVal             TYPE(dnSca):         Matrix of dnSca with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param dnR                TYPE(dnSca):         derived type wich contain the value for which the potential is calculated: dnR%d0
 !! @param Para_Buck          TYPE(Param_Buck):    derived type with the Buckingham parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_BuckPot(PotVal,r,Para_Buck,nderiv)
-    USE mod_dnMatPot
+  SUBROUTINE Eval_BuckPot(Mat_OF_PotDia,dnR,Para_Buck,nderiv)
     USE mod_dnSca
 
     TYPE (Param_Buck), intent(in)     :: Para_Buck
-    TYPE(dnMatPot),    intent(inout)  :: PotVal
-    real (kind=Rkind), intent(in)     :: r
+    TYPE(dnSca),       intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),       intent(in)     :: dnR
     integer,           intent(in)     :: nderiv
 
-    !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)     :: dnPot,dnR
-
     !write(out_unitp,*) 'BEGINNING in Eval_BuckPot'
-    !flush(out_unitp)
 
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=1,nderiv=nderiv)
-    END IF
+    Mat_OF_PotDia(1,1) = dnBuck(dnR,Para_Buck)
 
-    dnR     = init_dnSca(r,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
-
-    dnPot = dnBuck(dnR,Para_Buck)
-
-    !transfert the 1D-potential and its derivatives (dnPot) to the matrix form (PotVal)
-    CALL sub_dnSca_TO_dnMatPot(dnPot,PotVal,i=1,j=1)
-
-
-    CALL dealloc_dnSca(dnPot)
-    CALL dealloc_dnSca(dnR)
-
-    !write(out_unitp,*) 'Buckingham PotVal at',r
-    !CALL Write_dnMatPot(PotVal)
     !write(out_unitp,*) 'END in Eval_BuckPot'
     !flush(out_unitp)
 
   END SUBROUTINE Eval_BuckPot
-
-  SUBROUTINE Eval_BuckPot_old(PotVal,r,Para_Buck,nderiv)
-    USE mod_dnMatPot
-
-    TYPE (Param_Buck), intent(in)    :: Para_Buck
-    TYPE(dnMatPot), intent(inout)    :: PotVal
-    real (kind=Rkind),intent(in)     :: r
-    integer, intent(in)              :: nderiv
-
-
-    ! Potential calculation
-    PotVal%d0(1,1) = Para_Buck%A*exp(-Para_Buck%B*r)-Para_Buck%C/r**6
-
-    ! gradient calculation
-    if (nderiv >= 1) then
-      PotVal%d1(1,1,1) = -Para_Buck%A*Para_Buck%B*exp(-Para_Buck%B*r) + &
-                          SIX*Para_Buck%C/r**7
-    endif
-
-    ! Hessian calculation
-    if (nderiv >= 2) then
-      PotVal%d2(1,1,1,1) = Para_Buck%A*Para_Buck%B**2*exp(-Para_Buck%B*r) - &
-                          42_Rkind*Para_Buck%C/r**8
-    endif
-
-  END SUBROUTINE Eval_BuckPot_old
 
 !> @brief Function wich calculates the Buckingham potential with derivatives up to the 2d order is required.
 !> @brief V(R) = A.Exp(-B*r)-C/r^6

@@ -42,7 +42,7 @@ MODULE mod_TemplatePot
 
      ! V(1,1) term
      TYPE (Param_Morse)   :: morseXpY,morseZ
-     real(kind=Rkind)     :: k11=0.1_Rkind
+     real(kind=Rkind)     :: kXmY=0.1_Rkind
 
   END TYPE Param_Template
 
@@ -70,6 +70,44 @@ CONTAINS
 !> @brief Subroutine wich prints the potential parameters.
 !!
 !> @author David Lauvergnat
+!! @date 30/07/2019
+!!
+!! @param nio                integer:                file unit to print the parameters.
+  SUBROUTINE Write0_TemplatePot(nio)
+    integer, intent(in) :: nio
+
+    write(nio,*) 'TemplatePot default parameters'
+    write(nio,*)
+    write(nio,*) 'V(X,Y,Z) = morez(Z) + morsexpy(X+Y) + 1/2.kXmY.(X-Y)^2'
+    write(nio,*)
+    write(nio,*) '  Morsez (Dz*(1-exp(-az*(z-zeq)))**2) parameters:'
+    write(nio,*) '    Dz   = 0.08 Hartree'
+    write(nio,*) '    az   = 1.   Bohr^-2'
+    write(nio,*) '    zeq  = 2.   Bohr'
+    write(nio,*)
+    write(nio,*) '  morsexpy (Dxy*(1-exp(-axy*(xy-xyeq)))**2) parameters:'
+    write(nio,*) '    Dxy   = 0.10 Hartree'
+    write(nio,*) '    axy   = 1.   Bohr^-2'
+    write(nio,*) '    xyeq  = 2.   Bohr'
+    write(nio,*)
+    write(nio,*) '  kXmY = 0.1 Hartree.bohr^2'
+    write(nio,*)
+    write(nio,*) '  Potential Value at: Q:'
+    write(nio,*) '      2.0000000000       2.0000000000       2.0000000000'
+    write(nio,*) '    V = 0.0747645072'
+    write(nio,*) '    gradient = [0.0234039289       0.0234039289       0.0000000000]'
+    write(nio,*) '    hessian'
+    write(nio,*) '      1        0.080259199      -0.119740801       0.000000000'
+    write(nio,*) '      2       -0.119740801       0.080259199       0.000000000'
+    write(nio,*) '      3        0.000000000       0.000000000       0.160000000'
+    write(nio,*)
+    write(nio,*) 'end TemplatePot default parameters'
+
+  END SUBROUTINE Write0_TemplatePot
+
+!> @brief Subroutine wich prints the potential parameters.
+!!
+!> @author David Lauvergnat
 !! @date 03/08/2017
 !!
 !! @param Para_Pot           TYPE(Param_Template):   derived type with the potential parameters
@@ -78,19 +116,15 @@ CONTAINS
     TYPE (Param_Template), intent(in) :: Para_Pot
     integer, intent(in) :: nio
 
-    write(nio,*) 'TemplatePot parameters'
-
+    write(nio,*) 'TemplatePot current parameters'
     write(nio,*)
-    write(nio,*) 'Current parameters:'
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) ' V(1,1):'
     CALL Write_MorsePot(Para_Pot%morseXpY,nio)
+    write(nio,*)
     CALL Write_MorsePot(Para_Pot%morseZ,nio)
-
-    write(nio,*) ' k11:',Para_Pot%k11
-
-
-    write(nio,*) 'end TemplatePot parameters'
+    write(nio,*)
+    write(nio,*) ' kXmY:',Para_Pot%kXmY
+    write(nio,*)
+    write(nio,*) 'end TemplatePot current parameters'
 
   END SUBROUTINE Write_TemplatePot
 
@@ -104,61 +138,37 @@ CONTAINS
 !! @param Para_Pot           TYPE(Param_Pot):     Potential parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TemplatePot(PotVal,Q,Para_Pot,nderiv)
-    USE mod_dnMatPot
+  SUBROUTINE eval_TemplatePot(Mat_OF_PotDia,dnQ,Para_Pot,nderiv)
     USE mod_dnSca
 
     TYPE (Param_Template), intent(in)     :: Para_Pot
-    real (kind=Rkind),     intent(in)     :: Q(3)
-    TYPE(dnMatPot),        intent(inout)  :: PotVal
+    TYPE(dnSca),           intent(in)     :: dnQ(3)
+    TYPE(dnSca),           intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,               intent(in)     :: nderiv
 
-    TYPE(dnSca)  :: dnX,dnY,dnZ
-    !TYPE(dnSca)  :: dnXpY ! x+y
-    !TYPE(dnSca)  :: dnXmY ! x-y
-
     TYPE(dnSca)  :: mXpY,vXmY,mZ
-
-
-
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=2,nderiv=nderiv)
-    END IF
+    integer      :: i
 
    !write(out_unitp,*) 'TemplatePot in:'
-   PotVal = ZERO
-   !CALL Write_dnMatPot(PotVal)
 
-   dnX     = init_dnSca(Q(1),ndim=3,nderiv=nderiv,iQ=1) ! to set up the derivatives
-   dnY     = init_dnSca(Q(2),ndim=3,nderiv=nderiv,iQ=2) ! to set up the derivatives
-   dnZ     = init_dnSca(Q(3),ndim=3,nderiv=nderiv,iQ=3) ! to set up the derivatives
+   mXpY = dnMorse(dnQ(1)+dnQ(2),Para_Pot%morseXpY)
 
-   !dnXpY  = dnX+dnY ! x+y including the derivatives
-   !dnXmY  = dnX-dnY ! x-y including the derivatives
+   mZ   = dnMorse(dnQ(3),Para_Pot%morseZ)
 
-   ! for V(1,1): first diabatic state
-   !write(out_unitp,*) 'morse:'
-   mXpY = dnMorse(dnX+dnY,Para_Pot%morseXpY)
-   mZ   = dnMorse(dnZ,Para_Pot%morseZ)
+   vXmY = (Para_Pot%kXmY*HALF) * (dnQ(1)-dnQ(2))**2
 
-   vXmY = (Para_Pot%k11*HALF) * (dnX-dnY)**2
+   Mat_OF_PotDia(1,1) = mXpY+mZ+vXmY
 
-
-   CALL sub_dnSca_TO_dnMatPot(mXpY+mZ+vXmY,PotVal,i=1,j=1)
-
-   CALL dealloc_dnSca(dnX)
-   CALL dealloc_dnSca(dnY)
-   CALL dealloc_dnSca(dnZ)
    CALL dealloc_dnSca(mXpY)
    CALL dealloc_dnSca(mZ)
    CALL dealloc_dnSca(vXmY)
 
 
-   write(out_unitp,*) 'TemplatePot, nderiv:',nderiv
-   write(out_unitp,*) 'Q(:):',Q(:)
-   CALL Write_dnMatPot(PotVal,6)
-   write(out_unitp,*)
-   flush(out_unitp)
+   !write(out_unitp,*) 'TemplatePot, nderiv:',nderiv
+   !write(out_unitp,*) 'Q(:):',(get_d0_FROM_dnSca(dnQ(i)),i=1,size(dnQ))
+   !CALL Write_dnSca( Mat_OF_PotDia(1,1),6)
+   !write(out_unitp,*)
+   !flush(out_unitp)
 
   END SUBROUTINE eval_TemplatePot
 

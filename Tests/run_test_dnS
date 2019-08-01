@@ -1,16 +1,47 @@
-./clean
 here=`pwd`
 
 cd ..
- make dnS.x
+ make dnS.x > $here/comp.log 2>&1
 cd  $here
-
-
 
 echo "=========================================="
 echo " TESTING the dnS module"
 echo "=========================================="
 
 ../dnS.x > res_dnS
+
+echo "TESTING operators: == /= > >= < <= and .eq. ..."
+
+nb_pb1=`grep -c "F ? T" res_dnS`
+nb_pb2=`grep -c "T ? F" res_dnS`
+if test $nb_pb1 -gt 0 -o $nb_pb2 -gt 0
+then
+   echo "Error(s) detected!!"
+else
+   echo "No error!"
+fi
+
+echo "TESTING functions with or without analitical derivatives"
+
+nb_pb=`awk '/==0\?/ {print $3}' res_dnS | grep -c F`
+if test $nb_pb -gt 0
+then
+   echo "Error(s) detected!!"
+else
+   echo "No error!"
+fi
+
+echo "TESTING dnSca.txt with respect to old results"
+../bin/Compare_dnSca > Test_dnSca.log
+
+grep "PROBLEM" Test_dnSca.log
+nb_pb=`grep -c "PROBLEM(S)" Test_dnSca.log`
+
+if test $nb_pb -gt 0
+then
+   echo "Error(s) detected!!"
+else
+   echo "No error!"
+fi
 
 echo "=========================================="

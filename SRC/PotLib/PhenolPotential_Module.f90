@@ -142,16 +142,13 @@ CONTAINS
                          A=0.327204_Rkind,B=1.22594_Rkind,C=0.0700604_Rkind,e=-ONE)
 
   END SUBROUTINE Init_PhenolPot
-
 !> @brief Subroutine wich prints the Phenol potential parameters.
 !!
 !> @author David Lauvergnat
-!! @date 03/08/2017
+!! @date 30/07/2019
 !!
-!! @param Para_Phenol        TYPE(Param_Phenol):   derived type with the Phenol potential parameters.
 !! @param nio                integer:              file unit to print the parameters.
-  SUBROUTINE Write_PhenolPot(Para_Phenol,nio)
-    TYPE (Param_Phenol), intent(in) :: Para_Phenol
+  SUBROUTINE Write0_PhenolPot(nio)
     integer, intent(in) :: nio
 
     write(nio,*) 'Phenol parameters'
@@ -172,11 +169,27 @@ CONTAINS
     write(nio,*) '1        0.894730       0.000000       0.000000'
     write(nio,*) '2        0.000000       5.454506       0.000000'
     write(nio,*) '3        0.000000       0.000000       5.699040'
+    write(nio,*)
+    write(nio,*) 'end Phenol parameters'
+
+  END SUBROUTINE Write0_PhenolPot
+!> @brief Subroutine wich prints the Phenol potential parameters.
+!!
+!> @author David Lauvergnat
+!! @date 03/08/2017
+!!
+!! @param Para_Phenol        TYPE(Param_Phenol):   derived type with the Phenol potential parameters.
+!! @param nio                integer:              file unit to print the parameters.
+  SUBROUTINE Write_PhenolPot(Para_Phenol,nio)
+    TYPE (Param_Phenol), intent(in) :: Para_Phenol
+    integer, intent(in) :: nio
+
+    write(nio,*) 'Phenol current parameters'
+
 
     write(nio,*) 'PubliUnit: ',Para_Phenol%PubliUnit
-
     write(nio,*)
-    write(nio,*) 'Current parameters:'
+    write(nio,*)
     write(nio,*) '-----------------------------------------'
     write(nio,*) ' V(1,1):'
     CALL Write_MorsePot(Para_Phenol%v10,nio)
@@ -211,7 +224,7 @@ CONTAINS
     write(nio,*) ' V(1,3):'
     CALL Write_SigmoidPot(Para_Phenol%lambda13,nio)
 
-    write(nio,*) 'end Phenol parameters'
+    write(nio,*) 'end Phenol current parameters'
 
   END SUBROUTINE Write_PhenolPot
 
@@ -225,13 +238,12 @@ CONTAINS
 !! @param Para_Phenol        TYPE(Param_Phenol):  derived type with the Morse parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_PhenolPot(PotVal,Q,Para_Phenol,nderiv)
-    USE mod_dnMatPot
+  SUBROUTINE eval_PhenolPot(Mat_OF_PotDia,dnQ,Para_Phenol,nderiv)
     USE mod_dnSca
 
     TYPE (Param_Phenol), intent(in)     :: Para_Phenol
-    real (kind=Rkind),   intent(in)     :: Q(2)
-    TYPE(dnMatPot),      intent(inout)  :: PotVal
+    TYPE(dnSca),         intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnSca),         intent(in)     :: dnQ(:) ! R and th
     integer,             intent(in)     :: nderiv
 
     TYPE(dnSca)  :: dnR,dnth
@@ -244,22 +256,20 @@ CONTAINS
     TYPE(dnSca)  :: v22pR,v22mR,v221R,v222R
     TYPE(dnSca)  :: v20R,v21R,v22R,v21th,v22th
 
+    integer      :: i,j
+
     real (kind=Rkind) :: a0      = 0.52917720835354106_Rkind
     real (kind=Rkind) :: auTOeV  = 27.211384_Rkind
 
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=3,ndim=2,nderiv=nderiv)
-    END IF
 
    !write(out_unitp,*) 'phenol pot in:'
-   PotVal = ZERO
-   !CALL Write_dnMatPot(PotVal)
 
-   dnR     = init_dnSca(Q(1),ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
-   dnth    = init_dnSca(Q(2),ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
+   dnR     = dnQ(1)
+   dnth    = dnQ(2)
 
    IF (.NOT. Para_Phenol%PubliUnit) dnR = a0*dnR ! to convert the bhor into Angstrom
 
+   !--------------------------------------------------------------------
    ! for V(1,1): first diabatic state
    !write(out_unitp,*) 'morse:'
    v10R = dnMorse(dnR,Para_Phenol%v10)
@@ -272,15 +282,14 @@ CONTAINS
    v11th = ONE-cos(dnth+dnth)
    !CALL Write_dnSca(v11th,6)
 
-   CALL sub_dnSca_TO_dnMatPot(v10R+v11R*v11th,PotVal,i=1,j=1)
-
-   !write(out_unitp,*) 'phenol pot diabatic:',nderiv
-   !CALL Write_dnMatPot(PotVal,6)
+   Mat_OF_PotDia(1,1) = v10R+v11R*v11th
 
    CALL dealloc_dnSca(v10R)
    CALL dealloc_dnSca(v11R)
    CALL dealloc_dnSca(v11th)
+   !--------------------------------------------------------------------
 
+   !--------------------------------------------------------------------
    ! for V(2,2): 2d diabatic state
    v201R = dnMorse(dnR,Para_Phenol%v201) + Para_Phenol%B204
    v202R = Para_Phenol%B205*exp(-Para_Phenol%B206*(dnR-Para_Phenol%B207)) + Para_Phenol%B208
@@ -305,7 +314,7 @@ CONTAINS
    v21th = ONE-cos(dnth+dnth)
    v22th = v21th*v21th
 
-   CALL sub_dnSca_TO_dnMatPot(v20R+v21R*v21th+v22R*v22th,PotVal,i=2,j=2)
+   Mat_OF_PotDia(2,2) = v20R+v21R*v21th+v22R*v22th
 
 
    CALL dealloc_dnSca(v20R)
@@ -327,8 +336,9 @@ CONTAINS
    CALL dealloc_dnSca(v22mR)
    CALL dealloc_dnSca(v221R)
    CALL dealloc_dnSca(v222R)
+   !--------------------------------------------------------------------
 
-
+   !--------------------------------------------------------------------
    ! for V(3,3): 3d diabatic state
    !write(out_unitp,*) 'morse:'
    v30R = dnMorse(dnR,Para_Phenol%v30) + Para_Phenol%a30
@@ -341,7 +351,7 @@ CONTAINS
    v31th = ONE-cos(dnth+dnth)
    !CALL Write_dnSca(v11th,6)
 
-   CALL sub_dnSca_TO_dnMatPot(v30R+v31R*v31th,PotVal,i=3,j=3)
+   Mat_OF_PotDia(3,3) = v30R+v31R*v31th
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
    !CALL Write_dnMatPot(PotVal,6)
@@ -349,26 +359,42 @@ CONTAINS
    CALL dealloc_dnSca(v30R)
    CALL dealloc_dnSca(v31R)
    CALL dealloc_dnSca(v31th)
+   !--------------------------------------------------------------------
 
 
+   !--------------------------------------------------------------------
    lambda12R = dnScaigmoid(dnR,Para_Phenol%lambda12) * sin(dnth)
    !CALL Write_dnSca(lambda12R,6)
 
-   CALL sub_dnSca_TO_dnMatPot(lambda12R,PotVal,i=1,j=2)
-   CALL sub_dnSca_TO_dnMatPot(lambda12R,PotVal,i=2,j=1)
+   Mat_OF_PotDia(1,2) = lambda12R
+   Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
+
 
 
    lambda13R = dnScaigmoid(dnR,Para_Phenol%lambda13) * sin(dnth)
 
-   CALL sub_dnSca_TO_dnMatPot(lambda13R,PotVal,i=1,j=3)
-   CALL sub_dnSca_TO_dnMatPot(lambda13R,PotVal,i=3,j=1)
+   Mat_OF_PotDia(1,3) = lambda13R
+   Mat_OF_PotDia(3,1) = Mat_OF_PotDia(1,3)
+
+   Mat_OF_PotDia(2,3) = ZERO
+   Mat_OF_PotDia(3,2) = ZERO
 
 
    CALL dealloc_dnSca(lambda12R)
    CALL dealloc_dnSca(lambda13R)
+   !--------------------------------------------------------------------
 
 
-   IF (.NOT. Para_Phenol%PubliUnit) PotVal = PotVal*(ONE/auTOev) ! to convert the eV into Hartree
+   CALL dealloc_dnSca(dnth)
+   CALL dealloc_dnSca(dnR)
+
+   IF (.NOT. Para_Phenol%PubliUnit) THEN ! to convert the eV into Hartree
+     DO i=1,3
+     DO j=1,3
+       Mat_OF_PotDia(j,i) = Mat_OF_PotDia(j,i) * (ONE/auTOev)
+     END DO
+     END DO
+   END IF
 
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
@@ -377,270 +403,5 @@ CONTAINS
    !flush(out_unitp)
 
   END SUBROUTINE eval_PhenolPot
-
-!> @brief Subroutine wich calculates the Phenol potential with derivatives up to the 2d order if required.
-!> @brief This old subroutine is the same as the "eval_PhenolPot" subroutine. However, it does not use the "dnSca module".
-!!
-!> @author David Lauvergnat
-!! @date 03/08/2017
-!!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
-!! @param Q                  real:                table of two values for which the potential is calculated (R,theta)
-!! @param Para_Phenol        TYPE(Param_Phenol):  derived type with the Morse parameters.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
-!!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_PhenolPot_old(PotVal,Q,Para_Phenol,nderiv)
-    USE mod_dnMatPot
-
-    TYPE (Param_Phenol), intent(in)     :: Para_Phenol
-    real (kind=Rkind),       intent(in)     :: Q(2)
-    TYPE(dnMatPot),      intent(inout)  :: PotVal
-    integer,             intent(in)     :: nderiv
-
-    TYPE(dnMatPot)  :: v10R,v11R
-    TYPE(dnMatPot)  :: v30R,v31R
-    TYPE(dnMatPot)  :: lambda12R,lambda13R
-
-    TYPE(dnMatPot)  :: v20R,v20pR,v20mR,vsq20mR,v201R,v202R
-    TYPE(dnMatPot)  :: v21R,v21pR,v21mR,vsq21mR,v211R,v212R
-    TYPE(dnMatPot)  :: v22R,v22pR,v22mR,vsq22mR,v221R,v222R
-
-    real (kind=Rkind)   :: R,th
-    real (kind=Rkind)   :: d0vth,d1vth,d2vth
-    real (kind=Rkind)   :: d0v2th,d1v2th,d2v2th
-
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=2,nderiv=nderiv)
-    END IF
-
-   !write(out_unitp,*) 'phenol pot in:'
-   PotVal = ZERO
-   !CALL Write_dnMatPot(PotVal)
-
-   R  = Q(1)
-   th = Q(2)
-
-   ! for V(1,1): first diabatic state
-   !write(out_unitp,*) 'morse:'
-   CALL Eval_MorsePot(v10R,R,Para_Phenol%v10,nderiv)
-   !CALL Write_dnMatPot(v10R,6)
-
-   !write(out_unitp,*) 'sigmoid:'
-   CALL Eval_SigmoidPot(v11R,R,Para_Phenol%v11,nderiv)
-   !CALL Write_dnMatPot(v11R,6)
-
-   d0vth = ONE-cos(th+th)
-   d1vth = TWO*sin(th+th)
-   d2vth = FOUR*cos(th+th)
-   !write(out_unitp,*) 'f(th):',d0vth,d1vth,d2vth
-
-
-   PotVal%d0(1,1) = v10R%d0(1,1) + v11R%d0(1,1) * d0vth
-
-   IF (nderiv > 0) THEN
-     ! derivative with repspect to R:
-     PotVal%d1(1,1,1) = v10R%d1(1,1,1) + v11R%d1(1,1,1) * d0vth
-     ! derivative with repspect to th:
-     PotVal%d1(1,1,2) =                  v11R%d0(1,1)   * d1vth
-   END IF
-
-   IF (nderiv > 1) THEN
-     ! derivative with repspect to R,R:
-     PotVal%d2(1,1,1,1) = v10R%d2(1,1,1,1) + v11R%d2(1,1,1,1) * d0vth
-     ! derivative with repspect to th,th:
-     PotVal%d2(1,1,2,2) =                    v11R%d0(1,1)     * d2vth
-     ! derivative with repspect to R,th or th,R:
-     PotVal%d2(1,1,1,2) =                    v11R%d1(1,1,1)   * d1vth
-     PotVal%d2(1,1,2,1) = PotVal%d2(1,1,1,2)
-   END IF
-
-   CALL dealloc_dnMatPot(v10R)
-   CALL dealloc_dnMatPot(v11R)
-
-   ! for V(2,2): 2d diabatic state
-   !write(out_unitp,*) 'morse:'
-   CALL Eval_MorsePot(v201R,R,Para_Phenol%v201,nderiv)
-   v201R%d0 = v201R%d0 + Para_Phenol%B204
-   !CALL Write_dnMatPot(v201R,6)
-
-   CALL alloc_dnMatPot(v202R,nsurf=1,ndim=1,nderiv=nderiv,name_var='v202R',name_sub='eval_PhenolPot')
-   ! write(nio,*) ' v202=B205*exp(-B206*(r-B207)) + B208'
-   v202R%d0 =  Para_Phenol%B205*exp(-Para_Phenol%B206*(R-Para_Phenol%B207))
-   IF (nderiv > 0) v202R%d1 = -Para_Phenol%B206*v202R%d0(1,1)
-   IF (nderiv > 1) v202R%d2 = -Para_Phenol%B206*v202R%d1(1,1,1)
-   v202R%d0 =  v202R%d0 + Para_Phenol%B208
-
-   v20pR   = v201R + v202R
-   v20mR   = v201R - v202R
-   v20mR   = v20mR**TWO + Para_Phenol%X20
-
-   vsq20mR = v20mR**HALF
-   v20R    = HALF*(v20pR - vsq20mR)
-
-   !write(out_unitp,*) 'sigmoid:'
-   CALL Eval_SigmoidPot(v211R,R,Para_Phenol%v211,nderiv)
-   CALL Eval_SigmoidPot(v212R,R,Para_Phenol%v212,nderiv)
-   v212R%d0 = v212R%d0 + Para_Phenol%B217
-   v21pR   = v211R + v212R
-   v21mR   = v211R - v212R
-   v21mR   = v21mR**TWO + Para_Phenol%X21
-   vsq21mR = v21mR**HALF
-   v21R    = HALF*(v21pR + vsq21mR)
-
-   CALL Eval_SigmoidPot(v221R,R,Para_Phenol%v221,nderiv)
-   CALL Eval_SigmoidPot(v222R,R,Para_Phenol%v222,nderiv)
-   v22pR   = v221R + v222R
-   v22mR   = v221R - v222R
-   v22mR   = v22mR**TWO + Para_Phenol%X22
-   vsq22mR = v22mR**HALF
-   v22R    = HALF*(v22pR - vsq22mR)
-
-   d0vth = ONE-cos(th+th)
-   d1vth = TWO*sin(th+th)
-   d2vth = FOUR*cos(th+th)
-
-   d0v2th = d0vth**2
-   d1v2th = TWO*d1vth*d0vth
-   d2v2th = TWO*(d2vth*d0vth+d1vth**2)
-
-   PotVal%d0(2,2)    = v20R%d0(1,1)    + v21R%d0(1,1)   * d0vth + v22R%d0(1,1)   * d0v2th
-
-   IF (nderiv > 0) THEN
-     ! derivative with repspect to R:
-     PotVal%d1(2,2,1) = v20R%d1(1,1,1) + v21R%d1(1,1,1) * d0vth + v22R%d1(1,1,1) * d0v2th
-     ! derivative with repspect to th:
-     PotVal%d1(2,2,2) =                  v21R%d0(1,1)   * d1vth + v22R%d0(1,1)   * d1v2th
-   END IF
-
-   IF (nderiv > 1) THEN
-     ! derivative with repspect to R,R:
-     PotVal%d2(2,2,1,1) = v20R%d2(1,1,1,1) + v21R%d2(1,1,1,1) * d0vth + v22R%d2(1,1,1,1) * d0v2th
-     ! derivative with repspect to th,th:
-     PotVal%d2(2,2,2,2) =                    v21R%d0(1,1)     * d2vth + v22R%d0(1,1)     * d2v2th
-     ! derivative with repspect to R,th or th,R:
-     PotVal%d2(2,2,1,2) =                    v21R%d1(1,1,1)   * d1vth + v22R%d1(1,1,1)   * d1v2th
-     PotVal%d2(2,2,2,1) = PotVal%d2(2,2,1,2)
-   END IF
-
-   CALL dealloc_dnMatPot(v20R)
-   CALL dealloc_dnMatPot(v20pR)
-   CALL dealloc_dnMatPot(v20mR)
-   CALL dealloc_dnMatPot(vsq20mR)
-   CALL dealloc_dnMatPot(v201R)
-   CALL dealloc_dnMatPot(v202R)
-
-   CALL dealloc_dnMatPot(v21R)
-   CALL dealloc_dnMatPot(v21pR)
-   CALL dealloc_dnMatPot(v21mR)
-   CALL dealloc_dnMatPot(vsq21mR)
-   CALL dealloc_dnMatPot(v211R)
-   CALL dealloc_dnMatPot(v212R)
-
-   CALL dealloc_dnMatPot(v22R)
-   CALL dealloc_dnMatPot(v22pR)
-   CALL dealloc_dnMatPot(v22mR)
-   CALL dealloc_dnMatPot(vsq22mR)
-   CALL dealloc_dnMatPot(v221R)
-   CALL dealloc_dnMatPot(v222R)
-
-
-   ! for V(3,3): 3d diabatic state
-   !write(out_unitp,*) 'morse:'
-   CALL Eval_MorsePot(v30R,R,Para_Phenol%v30,nderiv)
-   !CALL Write_dnMatPot(v30R,6)
-   !write(out_unitp,*) 'sigmoid:'
-   CALL Eval_SigmoidPot(v31R,R,Para_Phenol%v31,nderiv)
-   !CALL Write_dnMatPot(v31R,6)
-
-   PotVal%d0(3,3) = v30R%d0(1,1) + v31R%d0(1,1) * d0vth + Para_Phenol%a30
-
-   IF (nderiv > 0) THEN
-     ! derivative with repspect to R:
-     PotVal%d1(3,3,1) = v30R%d1(1,1,1) + v31R%d1(1,1,1) * d0vth
-     ! derivative with repspect to th:
-     PotVal%d1(3,3,2) =                  v31R%d0(1,1)   * d1vth
-   END IF
-
-   IF (nderiv > 1) THEN
-     ! derivative with repspect to R,R:
-     PotVal%d2(3,3,1,1) = v30R%d2(1,1,1,1) + v31R%d2(1,1,1,1) * d0vth
-     ! derivative with repspect to th,th:
-     PotVal%d2(3,3,2,2) =                    v31R%d0(1,1)     * d2vth
-     ! derivative with repspect to R,th or th,R:
-     PotVal%d2(3,3,1,2) =                    v31R%d1(1,1,1)   * d1vth
-     PotVal%d2(3,3,2,1) = PotVal%d2(3,3,1,2)
-   END IF
-
-   CALL dealloc_dnMatPot(v30R)
-   CALL dealloc_dnMatPot(v31R)
-
-
-   CALL Eval_SigmoidPot(lambda12R,R,Para_Phenol%lambda12,nderiv)
-   CALL Eval_SigmoidPot(lambda13R,R,Para_Phenol%lambda13,nderiv)
-   !CALL Write_dnMatPot(lambda12R,6)
-   d0vth =  sin(th)
-   d1vth =  cos(th)
-   d2vth = -sin(th)
-
-   PotVal%d0(1,2) = lambda12R%d0(1,1) * d0vth
-   PotVal%d0(2,1) = PotVal%d0(1,2)
-
-   PotVal%d0(1,3) = lambda13R%d0(1,1) * d0vth
-   PotVal%d0(3,1) = PotVal%d0(1,3)
-
-   IF (nderiv > 0) THEN
-     ! derivative with repspect to R:
-     PotVal%d1(1,2,1) = lambda12R%d1(1,1,1) * d0vth
-     PotVal%d1(2,1,1) = PotVal%d1(1,2,1)
-
-     PotVal%d1(1,3,1) = lambda13R%d1(1,1,1) * d0vth
-     PotVal%d1(3,1,1) = PotVal%d1(1,3,1)
-
-     ! derivative with repspect to th:
-     PotVal%d1(1,2,2) = lambda12R%d0(1,1)   * d1vth
-     PotVal%d1(2,1,2) = PotVal%d1(1,2,2)
-
-     PotVal%d1(1,3,2) = lambda13R%d0(1,1)   * d1vth
-     PotVal%d1(3,1,2) = PotVal%d1(1,3,2)
-   END IF
-
-   IF (nderiv > 1) THEN
-     ! derivative with repspect to R,R:
-     PotVal%d2(1,2,1,1) = lambda12R%d2(1,1,1,1) * d0vth
-     PotVal%d2(2,1,1,1) = PotVal%d2(1,2,1,1)
-
-     PotVal%d2(1,3,1,1) = lambda13R%d2(1,1,1,1) * d0vth
-     PotVal%d2(3,1,1,1) = PotVal%d2(1,3,1,1)
-
-     ! derivative with repspect to th,th:
-     PotVal%d2(1,2,2,2) = lambda12R%d0(1,1)     * d2vth
-     PotVal%d2(2,1,2,2) = PotVal%d2(1,2,2,2)
-
-     PotVal%d2(1,3,2,2) = lambda13R%d0(1,1)     * d2vth
-     PotVal%d2(3,1,2,2) = PotVal%d2(1,3,2,2)
-
-     ! derivative with repspect to R,th or th,R:
-     PotVal%d2(1,2,1,2) = lambda12R%d1(1,1,1)   * d1vth
-     PotVal%d2(1,2,2,1) = PotVal%d2(1,2,1,2)
-     PotVal%d2(2,1,1,2) = PotVal%d2(1,2,1,2)
-     PotVal%d2(2,1,2,1) = PotVal%d2(1,2,1,2)
-
-     PotVal%d2(1,3,1,2) = lambda13R%d1(1,1,1)   * d1vth
-     PotVal%d2(1,3,2,1) = PotVal%d2(1,3,1,2)
-     PotVal%d2(3,1,1,2) = PotVal%d2(1,3,1,2)
-     PotVal%d2(3,1,2,1) = PotVal%d2(1,3,1,2)
-
-   END IF
-
-   CALL dealloc_dnMatPot(lambda12R)
-   CALL dealloc_dnMatPot(lambda13R)
-
-
-   !write(out_unitp,*) 'phenol pot diabatic:',nderiv
-   !CALL Write_dnMatPot(PotVal,6)
-   !write(out_unitp,*)
-   !flush(out_unitp)
-
-  END SUBROUTINE eval_PhenolPot_old
 
 END MODULE mod_PhenolPot

@@ -1,0 +1,17 @@
+TEST output: Morse_HF Adiabatic
+ Q
+           1
+   2.0000000000000000     
+ V
+           1
+   1.6304262638703583E-002
+ Grad
+           1
+  0.10393965194050944     
+ Hess
+           1
+  0.20927202387687954     
+ d0GGdef
+           1
+   5.7319563673905317E-004
+END_TEST output: Morse_HF Adiabatic
