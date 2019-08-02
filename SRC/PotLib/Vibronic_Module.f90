@@ -80,8 +80,8 @@ CONTAINS
      CALL alloc_dnMatPot(Para_Vibronic%V,nsurf,ndim,nderiv, &
              name_var='Para_Vibronic%V',name_sub='Init_Vibronic',IOerr)
      IF (IOerr /= 0 ) THEN
-       write(6,*) ' ERROR in Init_Vibronic'
-       write(6,*) '  Problem with allocate of Para_Vibronic%V'
+       write(out_unitp,*) ' ERROR in Init_Vibronic'
+       write(out_unitp,*) '  Problem with allocate of Para_Vibronic%V'
        STOP
      END IF
      Para_Vibronic%V = ZERO
@@ -89,10 +89,10 @@ CONTAINS
 
      allocate(Para_Vibronic%Q0(ndim,nsurf,nsurf),stat=IOerr)
      IF (IOerr /= 0 .OR. nsurf < 1 .OR. ndim < 1) THEN
-       write(6,*) ' ERROR in Init_Vibronic'
-       write(6,*) '  Problem with allocate of Para_Vibronic%Q0'
-       write(6,*) '  nsurf > 0?',nsurf
-       write(6,*) '  ndim > 0?',ndim
+       write(out_unitp,*) ' ERROR in Init_Vibronic'
+       write(out_unitp,*) '  Problem with allocate of Para_Vibronic%Q0'
+       write(out_unitp,*) '  nsurf > 0?',nsurf
+       write(out_unitp,*) '  ndim > 0?',ndim
        STOP
      END IF
      Para_Vibronic%Q0 = ZERO

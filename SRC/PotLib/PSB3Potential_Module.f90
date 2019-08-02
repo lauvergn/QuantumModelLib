@@ -193,6 +193,12 @@ MODULE mod_PSB3Pot
       END SELECT
     END IF
 
+    IF (Para_PSB3%PubliUnit) THEN
+      write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Angs,Rad,Rad], Energy: [kcal.mol^-1]'
+    ELSE
+      write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Rad,Rad], Energy: [Hartree]'
+    END IF
+
   END SUBROUTINE Init_PSB3Pot
 
 !> @brief Subroutine which makes the initialization of the PSB3 parameters from his paper.
@@ -520,7 +526,6 @@ MODULE mod_PSB3Pot
    IF(.NOT. Para_PSB3%PubliUnit) dnPot = dnPot/EnergyConv
 
    Mat_OF_PotDia(1,1) = dnPot
- 
 !-----------------------------------------------------------------------!
 ! V22 matrix element 
 
@@ -590,7 +595,8 @@ MODULE mod_PSB3Pot
     !If PubliUnit is False conversion must be done, the potential is expressed in Angstrom 
     !and it requires the proper conversion into Bhor  
     IF(.NOT. Para_PSB3%PubliUnit) THEN
-       BLA = BLA * LenghtConv
+       !BLA = BLA * LenghtConv             ! wrong derivative. Here with respect ot R
+       BLA = d0Sca_TIME_R(BLA,LenghtConv) ! to set up the correct derivatives with respect to (R*LenghtConv)
     END IF
 
 !-----------------------------------------------------------------------!

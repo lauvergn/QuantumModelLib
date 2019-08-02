@@ -141,6 +141,12 @@ CONTAINS
     CALL Init_SigmoidPot(Para_Phenol%lambda13,nio=5,read_param=.FALSE., &
                          A=0.327204_Rkind,B=1.22594_Rkind,C=0.0700604_Rkind,e=-ONE)
 
+    IF (Para_Phenol%PubliUnit) THEN
+      write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Angs,Rad], Energy: [eV]'
+    ELSE
+      write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Rad], Energy: [Hartree]'
+    END IF
+
   END SUBROUTINE Init_PhenolPot
 !> @brief Subroutine wich prints the Phenol potential parameters.
 !!
@@ -267,7 +273,9 @@ CONTAINS
    dnR     = dnQ(1)
    dnth    = dnQ(2)
 
-   IF (.NOT. Para_Phenol%PubliUnit) dnR = a0*dnR ! to convert the bhor into Angstrom
+   IF (.NOT. Para_Phenol%PubliUnit) THEN
+      dnR = a0*dnR ! to convert the bhor into Angstrom
+   END IF
 
    !--------------------------------------------------------------------
    ! for V(1,1): first diabatic state

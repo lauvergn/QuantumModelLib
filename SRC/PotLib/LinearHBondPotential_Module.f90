@@ -130,6 +130,12 @@ CONTAINS
       Para_LinearHBond%Eref2 = -D_loc*epsi_loc**2
     END IF
 
+    IF (Para_LinearHBond%PubliUnit) THEN
+      write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Angs,Angs], Energy: [kcal.mol^-1]'
+    ELSE
+      write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr], Energy: [Hartree]'
+    END IF
+
   END SUBROUTINE Init_LinearHBondPot
 !> @brief Subroutine wich reads the LinearHBond parameters with a namelist.
 !!   This can be called only from the "Init_LinearHBondPot" subroutine.
@@ -305,8 +311,8 @@ CONTAINS
     END IF
 
     IF (.NOT. Para_LinearHBond%PubliUnit) THEN
-      dnQQ = a0*dnQ(1) ! to convert the bhor into Angstrom
-      dnsq = a0*dnQ(2) ! to convert the bhor into Angstrom
+       dnQQ = a0*dnQ(1) ! to convert the bhor into Angstrom.
+       dnsq = a0*dnQ(2) ! to convert the bhor into Angstrom.
 
       IF (debug) THEN
         write(out_unitp,*) 'dnQQ in Angs'
@@ -365,7 +371,7 @@ CONTAINS
     END IF
 
     IF (.NOT. Para_LinearHBond%PubliUnit) THEN
-      Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1)*(ONE/auTOkcalmol_inv) ! to convert the kcal/mol into Hartree
+      Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1)/auTOkcalmol_inv ! to convert the kcal/mol into Hartree
     END IF
 
     CALL dealloc_dnSca(dnX)

@@ -237,7 +237,7 @@ MODULE mod_diago
           Z(IP)=ZERO
 23      CONTINUE
 24    CONTINUE
-      write(6,*) max_it,' iterations should never happen'
+      write(out_unitp,*) max_it,' iterations should never happen'
       STOP
 
       end subroutine JACOBI
@@ -353,7 +353,7 @@ MODULE mod_diago
 
       END DO ! end main loop
 
-      write(6,*) max_it,' iterations should never happen'
+      write(out_unitp,*) max_it,' iterations should never happen'
       STOP
 
       end subroutine JACOBI2
@@ -488,7 +488,7 @@ MODULE mod_diago
 !     MACHEP=16.**(-13)
 !      MACHEP=epsilon(ONE)
       MACHEP=tiny(ONE)
-      !write(6,*) 'MACHEP',epsilon(ONE),tiny(ONE),MACHEP
+      !write(out_unitp,*) 'MACHEP',epsilon(ONE),tiny(ONE),MACHEP
 !IBM  simple precision
 !     MACHEP=16.**(-5)
       IERR=0
@@ -881,7 +881,7 @@ MODULE mod_diago
       goto 1001
 !     ********** set error -- no convergence to an
 !                eigenvalue after Nbiter iterations **********
- 1000 write (6,1010) l
+ 1000 write (out_unitp,1010) l
  1010 format(//10x,'$$$ <Cmtql2> return code :',i5,' $$$')
       stop
  1001 Return

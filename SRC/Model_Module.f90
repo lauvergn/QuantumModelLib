@@ -52,9 +52,6 @@ MODULE mod_Model
   PUBLIC :: Check_analytical_numerical_derivatives
   PUBLIC :: Eval_pot_ON_Grid
 
-  real (kind=Rkind)                     :: step = ONETENTH**4
-  real (kind=Rkind)                     :: epsi = ONETENTH**10
-
   TYPE Param_Model
     integer :: nsurf       = 1
     integer :: ndim        = 1
@@ -87,8 +84,17 @@ MODULE mod_Model
 
   END TYPE Param_Model
 
-  TYPE(Param_Model), PUBLIC  :: QuantumModel
+  real (kind=Rkind)                     :: step = ONETENTH**4
+  real (kind=Rkind)                     :: epsi = ONETENTH**10
 
+#if defined(__QML_VER)
+      character (len=Name_len) :: QML_version = __QML_VER
+#else
+      character (len=Name_len) :: QML_version = "unknown: -D__QML_VER=?"
+#endif
+
+
+  TYPE(Param_Model), PUBLIC  :: QuantumModel
 
 CONTAINS
 
@@ -190,6 +196,12 @@ CONTAINS
     logical :: read_param_loc,adiabatic_loc
     character (len=:), allocatable :: param_file_name_loc
 
+    write(out_unitp,*) '================================================='
+    write(out_unitp,*) '================================================='
+    write(out_unitp,*) '== QML: Quantum Model Lib (E-CAM) ==============='
+    write(out_unitp,*) '== QML version: ',QML_version
+    write(out_unitp,*) '== Initialization of the Model =================='
+
 
     IF (present(adiabatic)) THEN
       adiabatic_loc = adiabatic
@@ -226,6 +238,7 @@ CONTAINS
 
     IF (present(pot_name)) THEN
       Para_Model%pot_name  = strdup(pot_name)
+      CALL string_uppercase_TO_lowercase(Para_Model%pot_name)
     ELSE
       IF (.NOT. read_param_loc) THEN
         write(out_unitp,*) 'ERROR in Init_Model'
@@ -233,6 +246,7 @@ CONTAINS
         STOP ' pot_name is not present and read_param=F'
       END IF
     END IF
+
 
     IF (present(ndim)) THEN
       Para_Model%ndim      = ndim
@@ -253,7 +267,7 @@ CONTAINS
 
     CALL dealloc_dnMatPot(Para_Model%Vec0)
 
-    IF (read_param_loc) THEN
+    IF (read_param_loc .OR.  Para_Model%pot_name == 'read_model') THEN
 
       IF (nio_loc /= in_unitp) THEN
         open(unit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
@@ -488,6 +502,9 @@ CONTAINS
     END IF
 
     !CALL Write_Model(Para_Model)
+    write(out_unitp,*) '================================================='
+    write(out_unitp,*) '================================================='
+
 
   END SUBROUTINE Init_Model
 
@@ -754,7 +771,7 @@ CONTAINS
     TYPE (dnMatPot)                    :: PotVal_loc0
     integer                            :: i,j
 
-    !write(6,*) 'coucou0 Eval_Pot_Numeric' ; flush(6)
+    !write(out_unitp,*) 'coucou0 Eval_Pot_Numeric' ; flush(out_unitp)
 
     IF (Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
       CALL alloc_dnMatPot(PotVal,nsurf=Para_Model%nsurf,ndim=Para_Model%ndim,&
@@ -852,7 +869,7 @@ CONTAINS
     integer                            :: i,j
     real (kind=Rkind), allocatable     :: tVec(:,:)
 
-    !write(6,*) 'coucou0 Eval_Pot_Numeric' ; flush(6)
+    !write(out_unitp,*) 'coucou0 Eval_Pot_Numeric' ; flush(out_unitp)
 
     IF (Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
       CALL alloc_dnMatPot(PotVal,nsurf=Para_Model%nsurf,ndim=Para_Model%ndim,&
@@ -1494,16 +1511,16 @@ CONTAINS
 
 
       Para_Model%numeric = .FALSE.
-      !write(6,*) 'coucou'
+      !write(out_unitp,*) 'coucou'
       CALL Eval_Pot(Para_Model,Q,PotVal_ana,nderiv)
       !write(out_unitp,*)   'PotVal_ana'
-      !CALL Write_dnMatPot(PotVal_ana,nio=6)
-      !flush(6)
+      !CALL Write_dnMatPot(PotVal_ana,nio=out_unitp)
+      !flush(out_unitp)
       Para_Model%numeric = .TRUE.
       CALL Eval_Pot(Para_Model,Q,PotVal_num,nderiv)
       !write(out_unitp,*)   'PotVal_num'
-      !CALL Write_dnMatPot(PotVal_num,nio=6)
-      !flush(6)
+      !CALL Write_dnMatPot(PotVal_num,nio=out_unitp)
+      !flush(out_unitp)
 
       MaxPot     = get_maxval_OF_dnMatPot(PotVal_ana)
 

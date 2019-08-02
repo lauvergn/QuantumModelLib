@@ -114,10 +114,10 @@ CONTAINS
 
     CALL dealloc_dnMatPot(Mat,err_dnMat_loc)
     IF (err_dnMat_loc /= 0) THEN
-      write(6,*) ' ERROR in alloc_dnMatPot'
-      write(6,*) ' Problem in dealloc_dnMatPot CALL in alloc_dnMatPot'
-      IF (present(name_var)) write(6,*) '  for the variable: ',name_var
-      IF (present(name_sub)) write(6,*) '  call from the subroutine: ',name_sub
+      write(out_unitp,*) ' ERROR in alloc_dnMatPot'
+      write(out_unitp,*) ' Problem in dealloc_dnMatPot CALL in alloc_dnMatPot'
+      IF (present(name_var)) write(out_unitp,*) '  for the variable: ',name_var
+      IF (present(name_sub)) write(out_unitp,*) '  call from the subroutine: ',name_sub
       IF (present(err_dnMatPot)) THEN
         RETURN
       ELSE
@@ -148,15 +148,15 @@ CONTAINS
     END IF
     Mat%nderiv = nderiv_loc
 
-    !write(6,*) 'Mat%nderiv in alloc_dnMatPot',Mat%nderiv
+    !write(out_unitp,*) 'Mat%nderiv in alloc_dnMatPot',Mat%nderiv
 
     allocate(Mat%d0(nsurf_loc,nsurf_loc),stat=err_dnMat_loc)
     IF (err_dnMat_loc /= 0 .OR. nsurf_loc < 1) THEN
-      write(6,*) ' ERROR in alloc_dnMatPot'
-      write(6,*) '  Problem with allocate of Mat%d0'
-      write(6,*) '  nsurf > 0?',nsurf_loc
-      IF (present(name_var)) write(6,*) '  for the variable: ',name_var
-      IF (present(name_sub)) write(6,*) '  call from the subroutine: ',name_sub
+      write(out_unitp,*) ' ERROR in alloc_dnMatPot'
+      write(out_unitp,*) '  Problem with allocate of Mat%d0'
+      write(out_unitp,*) '  nsurf > 0?',nsurf_loc
+      IF (present(name_var)) write(out_unitp,*) '  for the variable: ',name_var
+      IF (present(name_sub)) write(out_unitp,*) '  call from the subroutine: ',name_sub
       IF (present(err_dnMatPot)) THEN
         err_dnMatPot = err_dnMat_loc
         RETURN
@@ -168,12 +168,12 @@ CONTAINS
     IF (nderiv_loc >= 1) THEN
       allocate(Mat%d1(nsurf_loc,nsurf_loc,ndim_loc),stat=err_dnMat_loc)
       IF (err_dnMat_loc /= 0 .OR. nsurf_loc < 1 .OR. ndim_loc < 1) THEN
-        write(6,*) ' ERROR in alloc_dnMatPot'
-        write(6,*) '  Problem with allocate of Mat%d1'
-        write(6,*) '  nsurf > 0?',nsurf_loc
-        write(6,*) '  ndim > 0?',ndim_loc
-        IF (present(name_var)) write(6,*) '  for the variable: ',name_var
-        IF (present(name_sub)) write(6,*) '  call from the subroutine: ',name_sub
+        write(out_unitp,*) ' ERROR in alloc_dnMatPot'
+        write(out_unitp,*) '  Problem with allocate of Mat%d1'
+        write(out_unitp,*) '  nsurf > 0?',nsurf_loc
+        write(out_unitp,*) '  ndim > 0?',ndim_loc
+        IF (present(name_var)) write(out_unitp,*) '  for the variable: ',name_var
+        IF (present(name_sub)) write(out_unitp,*) '  call from the subroutine: ',name_sub
         IF (present(err_dnMatPot)) THEN
           err_dnMatPot = err_dnMat_loc
           RETURN
@@ -186,12 +186,12 @@ CONTAINS
     IF (nderiv_loc >= 2) THEN
       allocate(Mat%d2(nsurf_loc,nsurf_loc,ndim_loc,ndim_loc),stat=err_dnMat_loc)
       IF (err_dnMat_loc /= 0 .OR. nsurf_loc < 1 .OR. ndim_loc < 1) THEN
-        write(6,*) ' ERROR in alloc_dnMatPot'
-        write(6,*) '  Problem with allocate of Mat%d2'
-        write(6,*) '  nsurf > 0',nsurf_loc
-        write(6,*) '  ndim > 0',ndim_loc
-        IF (present(name_var)) write(6,*) '  for the variable: ',name_var
-        IF (present(name_sub)) write(6,*) '  call from the subroutine: ',name_sub
+        write(out_unitp,*) ' ERROR in alloc_dnMatPot'
+        write(out_unitp,*) '  Problem with allocate of Mat%d2'
+        write(out_unitp,*) '  nsurf > 0',nsurf_loc
+        write(out_unitp,*) '  ndim > 0',ndim_loc
+        IF (present(name_var)) write(out_unitp,*) '  for the variable: ',name_var
+        IF (present(name_sub)) write(out_unitp,*) '  call from the subroutine: ',name_sub
         IF (present(err_dnMatPot)) THEN
           err_dnMatPot = err_dnMat_loc
           RETURN
@@ -221,8 +221,8 @@ CONTAINS
     IF (allocated(Mat%d0)) THEN
       deallocate(Mat%d0,stat=err_dnMat_loc)
       IF (err_dnMat_loc /= 0) THEN
-        write(6,*) ' ERROR in dealloc_dnMatPot'
-        write(6,*) '  Problem with deallocate of Mat%d0'
+        write(out_unitp,*) ' ERROR in dealloc_dnMatPot'
+        write(out_unitp,*) '  Problem with deallocate of Mat%d0'
         IF (present(err_dnMatPot)) THEN
           err_dnMatPot = err_dnMat_loc
           RETURN
@@ -235,8 +235,8 @@ CONTAINS
     IF (allocated(Mat%d1)) THEN
       deallocate(Mat%d1,stat=err_dnMat_loc)
       IF (err_dnMat_loc /= 0) THEN
-        write(6,*) ' ERROR in dealloc_dnMatPot'
-        write(6,*) '  Problem with deallocate of Mat%d1'
+        write(out_unitp,*) ' ERROR in dealloc_dnMatPot'
+        write(out_unitp,*) '  Problem with deallocate of Mat%d1'
         IF (present(err_dnMatPot)) THEN
           err_dnMatPot = err_dnMat_loc
           RETURN
@@ -249,8 +249,8 @@ CONTAINS
     IF (allocated(Mat%d2)) THEN
       deallocate(Mat%d2,stat=err_dnMat_loc)
       IF (err_dnMat_loc /= 0) THEN
-        write(6,*) ' ERROR in dealloc_dnMatPot'
-        write(6,*) '  Problem with deallocate of Mat%d2'
+        write(out_unitp,*) ' ERROR in dealloc_dnMatPot'
+        write(out_unitp,*) '  Problem with deallocate of Mat%d2'
         IF (present(err_dnMatPot)) THEN
           err_dnMatPot = err_dnMat_loc
           RETURN
@@ -281,7 +281,7 @@ CONTAINS
     nsurf_loc  = get_nsurf_FROM_dnMatPot(dnMat2)
     ndim_loc   = get_ndim_FROM_dnMatPot(dnMat2)
 
-    !write(6,*) 'in ',name_sub,' ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
+    !write(out_unitp,*) 'in ',name_sub,' ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
 
 
     IF (nderiv_loc < 0 .OR. nsurf_loc < 1 .OR. (nderiv_loc > 0  .AND. ndim_loc < 1)) RETURN
@@ -300,9 +300,9 @@ CONTAINS
        dnMat1%d1 = dnMat2%d1
        dnMat1%d2 = dnMat2%d2
     ELSE
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' nderiv > 2 is NOT possible',nderiv_loc
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' nderiv > 2 is NOT possible',nderiv_loc
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
   END SUBROUTINE sub_dnMatPot2_TO_dnMatPot1
@@ -337,17 +337,17 @@ CONTAINS
     IF ( Check_NotAlloc_dnMatPot(Mat,nderiv_dnSca) .OR.                   &
          nderiv_dnSca /= nderiv_dnMat  .OR.  ndim_dnSca /= ndim_dnMat .OR.  &
          nsurf_dnMat < 1 ) THEN
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' dnMat is not allocated or ...'
-      write(6,*) '  ... nderiv from dnMat or dnSca are different or ...'
-      write(6,*) '  ... ndim from dnMat or dnSca are different or ...'
-      write(6,*) '  ... nsurf from dnMat is < 1'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' dnMat is not allocated or ...'
+      write(out_unitp,*) '  ... nderiv from dnMat or dnSca are different or ...'
+      write(out_unitp,*) '  ... ndim from dnMat or dnSca are different or ...'
+      write(out_unitp,*) '  ... nsurf from dnMat is < 1'
 
-      write(6,*) 'nderiv from dnMat and dnSca:',nderiv_dnMat,nderiv_dnSca
-      write(6,*) 'ndim   from dnMat and dnSca:',ndim_dnMat,ndim_dnSca
-      write(6,*) 'nsurf  from dnMat        :',nsurf_dnMat
+      write(out_unitp,*) 'nderiv from dnMat and dnSca:',nderiv_dnMat,nderiv_dnSca
+      write(out_unitp,*) 'ndim   from dnMat and dnSca:',ndim_dnMat,ndim_dnSca
+      write(out_unitp,*) 'nsurf  from dnMat        :',nsurf_dnMat
 
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
 
@@ -358,9 +358,9 @@ CONTAINS
 
 
     IF (i_loc < 1 .OR. i_loc > nsurf_dnMat .OR. j_loc < 1 .OR. j_loc > nsurf_dnMat) THEN
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' The matrix indexes, (',i_loc,j_loc,') are out of range [1...',nsurf_dnMat,']'
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' The matrix indexes, (',i_loc,j_loc,') are out of range [1...',nsurf_dnMat,']'
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
 
@@ -400,9 +400,9 @@ CONTAINS
 
     IF (lbound(Mat%d0,dim=1) /= lbound(MatOFS,dim=1) .OR. ubound(Mat%d0,dim=1) /= ubound(MatOFS,dim=1) .OR. &
         lbound(Mat%d0,dim=2) /= lbound(MatOFS,dim=2) .OR. ubound(Mat%d0,dim=2) /= ubound(MatOFS,dim=2) ) THEN
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) '  the matrices have not the same dimensions'
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) '  the matrices have not the same dimensions'
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
 
@@ -450,7 +450,7 @@ CONTAINS
 
     nderiv_loc = get_nderiv_FROM_dnMatPot(dnMat)
 
-    !write(6,*) 'nderiv',nderiv_loc
+    !write(out_unitp,*) 'nderiv',nderiv_loc
 
 
     IF (nderiv_loc == 0) THEN
@@ -463,9 +463,9 @@ CONTAINS
        dnMat%d1 = ZERO
        dnMat%d2 = ZERO
     ELSE
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' nderiv > 2 or nderiv < 0 is NOT possible',nderiv_loc
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' nderiv > 2 or nderiv < 0 is NOT possible',nderiv_loc
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
   END SUBROUTINE set_dnMatPot_TO_R
@@ -491,11 +491,11 @@ CONTAINS
     nsurf_loc  = get_nsurf_FROM_dnMatPot(dnMat)
     ndim_loc   = get_ndim_FROM_dnMatPot(dnMat)
 
-    !write(6,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
+    !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
 
     CALL alloc_dnMatPot(sub_dnMatPot_TIME_R,nsurf_loc,ndim_loc,nderiv_loc,name_var='sub_dnMatPot_TIME_R',name_sub=name_sub)
 
-    !write(6,*) 'nderiv',nderiv_loc
+    !write(out_unitp,*) 'nderiv',nderiv_loc
 
 
     IF (nderiv_loc == 0) THEN
@@ -511,9 +511,9 @@ CONTAINS
        sub_dnMatPot_TIME_R%d2 = dnMat%d2 * R
 
     ELSE
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' nderiv > 2 is NOT possible',nderiv_loc
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' nderiv > 2 is NOT possible',nderiv_loc
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
   END FUNCTION sub_dnMatPot_TIME_R
@@ -539,11 +539,11 @@ CONTAINS
     nsurf_loc  = get_nsurf_FROM_dnMatPot(dnMat)
     ndim_loc   = get_ndim_FROM_dnMatPot(dnMat)
 
-    !write(6,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
+    !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
 
     CALL alloc_dnMatPot(sub_R_TIME_dnMatPot,nsurf_loc,ndim_loc,nderiv_loc,name_var='sub_R_TIME_dnMatPot',name_sub=name_sub)
 
-    !write(6,*) 'nderiv',nderiv_loc
+    !write(out_unitp,*) 'nderiv',nderiv_loc
 
 
     IF (nderiv_loc == 0) THEN
@@ -559,9 +559,9 @@ CONTAINS
        sub_R_TIME_dnMatPot%d2 = dnMat%d2 * R
 
     ELSE
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' nderiv > 2 is NOT possible',nderiv_loc
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' nderiv > 2 is NOT possible',nderiv_loc
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
   END FUNCTION sub_R_TIME_dnMatPot
@@ -585,7 +585,7 @@ CONTAINS
     nsurf  = min(get_nsurf_FROM_dnMatPot(dnMat1), get_nsurf_FROM_dnMatPot(dnMat2))
     ndim   = min(get_ndim_FROM_dnMatPot(dnMat1),  get_ndim_FROM_dnMatPot(dnMat2))
 
-    !write(6,*) 'in ',name_sub,' nsurf,ndim,nderiv',nsurf,ndim,nderiv
+    !write(out_unitp,*) 'in ',name_sub,' nsurf,ndim,nderiv',nsurf,ndim,nderiv
 
     CALL dealloc_dnMatPot(dnMatPot2_PLUS_dnMatPot1)
 
@@ -603,9 +603,9 @@ CONTAINS
        dnMatPot2_PLUS_dnMatPot1%d1 = dnMat1%d1 + dnMat2%d1
        dnMatPot2_PLUS_dnMatPot1%d2 = dnMat1%d2 + dnMat2%d2
     ELSE
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' nderiv > 2 is NOT possible',nderiv
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' nderiv > 2 is NOT possible',nderiv
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
   END FUNCTION dnMatPot2_PLUS_dnMatPot1
@@ -698,9 +698,9 @@ CONTAINS
        dnMatPot2_MINUS_dnMatPot1%d1 = dnMat1%d1 - dnMat2%d1
        dnMatPot2_MINUS_dnMatPot1%d2 = dnMat1%d2 - dnMat2%d2
     ELSE
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' nderiv > 2 is NOT possible',nderiv
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' nderiv > 2 is NOT possible',nderiv
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
   END FUNCTION dnMatPot2_MINUS_dnMatPot1
@@ -752,11 +752,11 @@ CONTAINS
     nsurf_loc  = get_nsurf_FROM_dnMatPot(dnMat)
     ndim_loc   = get_ndim_FROM_dnMatPot(dnMat)
 
-    !write(6,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
+    !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
 
     CALL alloc_dnMatPot(sub_R_MINUS_dnMatPot,nsurf_loc,ndim_loc,nderiv_loc,name_var='sub_R_MINUS_dnMatPot',name_sub=name_sub)
 
-    !write(6,*) 'nderiv',nderiv_loc
+    !write(out_unitp,*) 'nderiv',nderiv_loc
     IF (nderiv_loc == 0) THEN
        sub_R_MINUS_dnMatPot%d0 = R - dnMat%d0
 
@@ -771,9 +771,9 @@ CONTAINS
        sub_R_MINUS_dnMatPot%d2 =   - dnMat%d2
 
     ELSE
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' nderiv > 2 is NOT possible',nderiv_loc
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' nderiv > 2 is NOT possible',nderiv_loc
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
 
@@ -800,11 +800,11 @@ CONTAINS
     nsurf_loc  = get_nsurf_FROM_dnMatPot(dnMat)
     ndim_loc   = get_ndim_FROM_dnMatPot(dnMat)
 
-    !write(6,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
+    !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
 
     CALL alloc_dnMatPot(sub_dnMatPot_EXP_R,nsurf_loc,ndim_loc,nderiv_loc,name_var='sub_dnMatPot_EXP_R',name_sub=name_sub)
 
-    !write(6,*) 'nderiv',nderiv_loc
+    !write(out_unitp,*) 'nderiv',nderiv_loc
 
 
     IF (nderiv_loc == 0) THEN
@@ -829,9 +829,9 @@ CONTAINS
        END DO
 
     ELSE
-      write(6,*) ' ERROR in ',name_sub
-      write(6,*) ' nderiv > 2 is NOT possible',nderiv_loc
-      write(6,*) 'It should never append! Check the source'
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' nderiv > 2 is NOT possible',nderiv_loc
+      write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
   END FUNCTION sub_dnMatPot_EXP_R
@@ -923,8 +923,8 @@ CONTAINS
     END IF
 
     IF (Mat%nderiv /= nderiv) THEN
-      write(6,*) ' ERROR in get_nderiv_FROM_dnMatPot'
-      write(6,*) '  Problem with nderiv in Mat'
+      write(out_unitp,*) ' ERROR in get_nderiv_FROM_dnMatPot'
+      write(out_unitp,*) '  Problem with nderiv in Mat'
       CALL Write_dnMatPot(Mat)
       STOP 'ERROR in get_nderiv_FROM_dnMatPot'
     END IF

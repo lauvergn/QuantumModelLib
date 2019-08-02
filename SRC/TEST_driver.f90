@@ -44,7 +44,68 @@ PROGRAM main_pot
 
   write(6,*) '============================================================'
   write(6,*) '============================================================'
+  pot_name = 'PSB3'
+  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  CALL time_perso('Test ' // pot_name)
 
+  ndim     = 3
+  nsurf    = 2
+  option   = 0
+  adiabatic = .FALSE.
+
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+
+
+  Q(:) = (/0.1d0,-3.14d0,0.d0/)
+
+  CALL sub_Qmodel_V(V,Q)
+  write(6,*) ' Diabatic potential as a 2x2 matrix:'
+  write(6,'(2f12.8)') V
+
+  CALL sub_Qmodel_Check_anaVSnum(Q,2)
+
+  deallocate(V)
+  deallocate(Q)
+
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+
+ write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  pot_name = 'HBond'
+  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  CALL time_perso('Test ' // pot_name)
+
+  ndim     = 2
+  nsurf    = 1
+  option   = 0
+  adiabatic = .FALSE.
+
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+
+
+  Q(:) = (/1.3d0,0.d0/)
+
+  CALL sub_Qmodel_V(V,Q)
+  write(6,*) V
+
+  CALL sub_Qmodel_Check_anaVSnum(Q,2)
+
+  deallocate(V)
+  deallocate(Q)
+
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
 
 
   nb_eval  = 10**7
@@ -59,7 +120,6 @@ PROGRAM main_pot
   nsurf    = 3
   option   = 0
   adiabatic = .FALSE.
-  pot_name = 'phenol'
 
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
@@ -81,12 +141,15 @@ PROGRAM main_pot
   write(6,*) ' Diabatic potential as a 3x3 matrix:'
   write(6,'(3f12.8)') V
 
-  deallocate(Q)
+  CALL sub_Qmodel_Check_anaVSnum(Q,2)
+
   deallocate(V)
   deallocate(GGdef)
+  deallocate(Q)
+
 
   CALL time_perso('Test ' // pot_name)
-
+STOP
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
 !$OMP   PRIVATE(i,Q,V) &
@@ -123,7 +186,6 @@ PROGRAM main_pot
   nsurf    = 3
   option   = 0
   adiabatic = .TRUE.
-  pot_name = 'phenol'
 
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))

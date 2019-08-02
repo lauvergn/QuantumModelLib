@@ -62,7 +62,10 @@ PROGRAM TEST_dnSca
     !intrinsic :: sqrt, abs, exp, log, log10, sin, asin, cos, acos, tan, atan, sinh, asinh, cosh, acosh, tanh, atanh
     intrinsic :: dsqrt, dabs, dexp, dlog, dlog10
     intrinsic :: dsin, dasin, dcos, dacos, dtan, datan
-    intrinsic :: dsinh, dasinh, dcosh, dacosh, dtanh, datanh
+    intrinsic :: dsinh, dcosh, dtanh
+#if __INVHYP == 1
+    intrinsic :: dasinh, dacosh, datanh
+#endif
     real (kind=Rkind), external  :: faplusx,faminusx,fatimex,faoverx
 
     character (len=*), parameter :: name_sub='TEST_dnSca'
@@ -267,7 +270,11 @@ PROGRAM TEST_dnSca
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='sinh(dnX)')
 
    Sana = asinh(dnX)
+#if __INVHYP == 1
    Snum = get_Num_dnSca_FROM_f_x(x,dasinh,nderiv=nderiv)
+#else
+   Snum = get_Num_dnSca_FROM_f_x(x,asinh_perso,nderiv=nderiv)
+#endif
    write(out_unitp,'(a,l2)') 'asinh: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on asinh')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='asinh(dnX)')
@@ -280,7 +287,11 @@ PROGRAM TEST_dnSca
 
    dnY = init_dnSca(FOUR*x  ,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
    Sana = acosh(dnY)
+#if __INVHYP == 1
    Snum = get_Num_dnSca_FROM_f_x(FOUR*x,dacosh,nderiv=nderiv)
+#else
+   Snum = get_Num_dnSca_FROM_f_x(FOUR*x,acosh_perso,nderiv=nderiv)
+#endif
    write(out_unitp,'(a,l2)') 'acosh: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on acosh')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='acosh(dn4X)')
@@ -292,7 +303,11 @@ PROGRAM TEST_dnSca
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='tanh(dnX)')
 
    Sana = atanh(dnX)
+#if __INVHYP == 1
    Snum = get_Num_dnSca_FROM_f_x(x,datanh,nderiv=nderiv)
+#else
+   Snum = get_Num_dnSca_FROM_f_x(x,atanh_perso,nderiv=nderiv)
+#endif
    write(out_unitp,'(a,l2)') 'atanh: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on atanh')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='atanh(dnX)')

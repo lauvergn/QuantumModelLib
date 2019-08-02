@@ -8,14 +8,27 @@
 F90 = gfortran
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
+## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
+# NVHYP  = 1 : with intrinsic inverse hyperbolic functions
+# NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic inverse hyperbolic functions)
+INVHYP  = 1
 #=================================================================================
 
 
 # Operating system, OS? automatic using uname: 
 OS=$(shell uname)
+
+
+#=================================================================================
+# for c++ preprocessing
+#=================================================================================
+ CPP    = -cpp
+#=================================================================================
+#=================================================================================
+
 #=================================================================================
 #=================================================================================
 # ifort compillation v12 with mkl
@@ -43,6 +56,8 @@ endif
 #=================================================================================
 ifeq ($(F90),pgf90)
 
+   # With pgf90 invers hyperbolic functions are not present => INVHYP = 0
+   INVHYP = 0
    # for c++ preprocessing
    CPP    = -Mpreprocess
 
@@ -101,6 +116,8 @@ endif
       #F90FLAGS = -O0 -fbounds-check -Wuninitialized
    endif
 endif
+
+QML_ver=$(shell awk '/QML/ {print $$3}' version-QML)
 #=================================================================================
 #=================================================================================
 $(info ***********************************************************************)
@@ -111,8 +128,14 @@ $(info ***********OpenMP:       $(OMPFLAG))
 $(info ***********Arpack:       $(ARPACK))
 $(info ***********F90FLAGS:     $(F90FLAGS))
 $(info ***********F90LIB:       $(F90LIB))
+$(info ***********INVHYP:       $(INVHYP))
+$(info ***********QML_ver:      $(QML_ver))
 $(info ***********************************************************************)
 
+
+CPPSHELL_QML_ver  = -D__QML_VER='"$(QML_ver)"'
+
+CPPSHELL_INVHYP  = -D__INVHYP="$(INVHYP)"
 
 F90_FLAGS = $(F90) $(F90FLAGS)
 LYNK90 = $(F90_FLAGS)
@@ -121,13 +144,6 @@ LYNK90 = $(F90_FLAGS)
  LYNKFLAGS = $(LIBS)
 
 
-
-#=================================================================================
-# for c++ preprocessing
-#=================================================================================
- CPP    = -cpp
-#=================================================================================
-#=================================================================================
 #
 GRIDEXE   = Grid.x
 MODEXE    = ModLib.x
@@ -295,7 +311,7 @@ $(DIROBJ)/HenonHeilesPotential_Module.o:$(DIRPot)/HenonHeilesPotential_Module.f9
 ### Model libraries
 #
 $(DIROBJ)/Model_Module.o:$(DIRSRC)/Model_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRSRC)/Model_Module.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_QML_ver)  -c $(DIRSRC)/Model_Module.f90
 
 $(DIROBJ)/TEST_driver.o:$(DIRSRC)/TEST_driver.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRSRC)/TEST_driver.f90
@@ -314,9 +330,9 @@ $(DIROBJ)/TEST_grid.o:$(DIRSRC)/TEST_grid.f90
 ### dnS libraries
 #
 $(DIROBJ)/dnS_Module.o:$(DIRdnS)/dnS_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRdnS)/dnS_Module.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/dnS_Module.f90
 $(DIROBJ)/TEST_dnS.o:$(DIRdnS)/TEST_dnS.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRdnS)/TEST_dnS.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/TEST_dnS.f90
 #
 ##################################################################################
 #
