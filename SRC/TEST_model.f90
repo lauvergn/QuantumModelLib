@@ -174,7 +174,7 @@ SUBROUTINE test_1DSOC_1S1T
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='1DSOC_1S1T')
+  CALL Init_Model(Para_Model,nsurf=4,pot_name='1DSOC_1S1T')
   CALL Write_Model(Para_Model)
 
   allocate(q(Para_Model%ndim))
@@ -241,7 +241,7 @@ SUBROUTINE test_1DSOC_1S1T
   write(out_unitp,*) ' You should get the 3 curves (left panels) of figure 1 of ... '
   write(out_unitp,*) '  ... Granucci et al. J. Chem. Phys. V137, p22A501 (2012)'
 
-  CALL Init_Model(Para_Model,pot_name='1DSOC_1S1T',option=1)
+  CALL Init_Model(Para_Model,nsurf=4,pot_name='1DSOC_1S1T',option=1)
   Para_Model%adiabatic = .TRUE.
   flush(out_unitp)
 

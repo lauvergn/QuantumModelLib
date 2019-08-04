@@ -120,6 +120,10 @@ PROGRAM Compare_QML
         max_diff = maxval(abs(tab_old-tab_new))
         IF (max_diff > 1.d-6) THEN
           write(6,*) name_old,n,'max_diff',max_diff,' large difference'
+          write(6,*) 'OLD values',n
+          write(6,*) tab_old
+          write(6,*) 'NEW values',n
+          write(6,*) tab_new
         ELSE
           write(6,*) name_old,n,'max_diff',max_diff
         END IF

@@ -152,9 +152,10 @@
       !! Spin Orbit coupling model
       !! pot_name  = '1DSOC_1S1T'
       !! ndim      = 1
-      !! nsurf     = 4
+      !! nsurf     = 4 or 2
       !! reduced mass      = 20000. au
-      !! remark: 1 singlet and 1 triplet (3 components) => nsurf     = 4
+      !! remarks: 1 singlet and 3 triplet components                           => nsurf     = 4
+      !!  or      1 singlet and 1 linear combibation of the triplet components => nsurf     = 2
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
 =========================================
 =========================================

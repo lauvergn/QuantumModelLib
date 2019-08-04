@@ -1,56 +1,51 @@
-#!/bin/bash -x
+#!/bin/bash
 
 
 a=$1
 name_rep=/Users/lauvergn/trav/QModLib-old
 
+#current version
+acur=`grep QML  version-QML | awk '{print $3}'`
+name_sd="QModLib-v"$acur
+name=$name_rep/$name_sd
+echo curent version $acur
+
+#new version
 if test $a = "+"
 then
   echo with +
-  aold=`grep QML  version-QML | awk '{print $3}' | awk -F. '{print $1 " " $2}'`
-  echo $aold
-
-  if test $a = "+"
-  then
-    a=`echo $aold | awk '{print $1 "." $2+1}'`
-  else
-    a=`echo $aold | awk '{print $1 "." $2}'`
-  fi
-
-  echo $a
-
+  a=`grep QML  version-QML | awk '{print $3}' | awk -F. '{print $1 "." $2+1}'`
 fi
-name_sd="QModLib-v"$a
+echo new version $a
 
 
-name=$name_rep/$name_sd
 
 if test -s $name  
 then
     echo The directory $name exists !!
+    exit
 else
-    echo le repertoire $name does not exist
-
-    #modify the version in versionQML
-    echo "QML =  "$a >  version-QML
-    
+    echo The repertoire $name does not exist
+    echo Copy the current QML version $acur
 
     mkdir $name
 
     cp -r * $name
 
+    #modify the version in versionQML. It has to be after the copy
+    echo Change the new version-QML $a
+    echo "QML =  "$a >  version-QML
+
     cd $name
     make clean
+    cd $name_rep
 
+    name_tar=QML.$acur
+    echo Tar file: $name_tar.tar
+    tar cvf $name_tar.tar $name_sd
+    gzip $name_tar.tar
+    echo scp on styx2
+    #scp $name_tar.tar.gz styx2:/u/lauvergn/trav/QModLib
+    scp $name_tar.tar.gz styx2:/userTMP/lauvergn/QModLib
 
 fi
-
-cd $name_rep
-
-name_tar=QML.$a
-echo $name_tar.tar
-tar cvf $name_tar.tar $name_sd
-gzip $name_tar.tar
-#scp $name_tar.tar.gz styx2:/u/lauvergn/trav/QModLib
- scp $name_tar.tar.gz styx2:/userTMP/lauvergn/QModLib
-

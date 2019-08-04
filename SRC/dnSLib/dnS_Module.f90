@@ -310,6 +310,9 @@ CONTAINS
     ! local variables
     integer :: err_dnSca_loc
 
+    err_dnSca_loc = 0 ! no error
+    IF (present(err_dnSca)) err_dnSca = 0 ! no error
+
     IF (allocated(S%d1)) THEN
       deallocate(S%d1,stat=err_dnSca_loc)
       IF (err_dnSca_loc /= 0) THEN

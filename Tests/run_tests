@@ -1,4 +1,24 @@
 ./clean
 
-./run_test_QML
-./run_test_dnS
+here=`pwd`
+
+for ExternalOPT in 0 1
+do
+  export ExternalOPT
+
+  for ExternalOMP in 0 1
+  do
+    export ExternalOMP
+
+    echo
+
+    cd ..
+      make clean > $here/comp.log 2>&1
+    cd  $here
+
+    ./run_test_QML
+    ./run_test_dnS
+
+
+  done
+done

@@ -76,6 +76,31 @@ SUBROUTINE sub_Qmodel_V(V,Q)
   CALL calc_pot(V,QuantumModel,Q)
 
 END SUBROUTINE sub_Qmodel_V
+SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
+  USE mod_Lib
+  USE mod_dnMatPot
+  USE mod_Model
+  IMPLICIT NONE
+
+  real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)     :: V(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     :: Vec(QuantumModel%nsurf,QuantumModel%nsurf)
+
+  TYPE (dnMatPot)                  :: Vec_loc,PotVal_loc
+
+
+  CALL alloc_dnMatPot(Vec_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=0)
+  CALL alloc_dnMatPot(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=0)
+
+  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=0,Vec=Vec_loc)
+
+  V(:,:)   = PotVal_loc%d0
+  Vec(:,:) = Vec_loc%d0
+
+  CALL dealloc_dnMatPot(PotVal_loc)
+  CALL dealloc_dnMatPot(Vec_loc)
+
+END SUBROUTINE sub_Qmodel_VVec
 SUBROUTINE sub_Qmodel_VG(V,G,Q)
   USE mod_Lib
   USE mod_Model

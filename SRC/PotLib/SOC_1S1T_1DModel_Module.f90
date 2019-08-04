@@ -72,13 +72,15 @@ CONTAINS
 !! @date 15/04/2019
 !!
 !! @param Para_1DSOC         TYPE(Param_1DSOC):  derived type in which the parameters are set-up.
-!! @param option             integer:            to be able to chose between the models (default 1, as in the pubication).
+!! @param option1            integer:            to be able to chose between the models (default 1, as in the pubication).
+!! @param nsurf              integer:            4 or 2 (see the publication).
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param Rsig               real (optional):    1DSOC_Model parameter (the only one, which can be changed).
-  SUBROUTINE Init_1DSOC(Para_1DSOC,option,nio,read_param,Rsig_in)
+  SUBROUTINE Init_1DSOC(Para_1DSOC,option,nsurf,nio,read_param,Rsig_in)
     TYPE (Param_1DSOC),          intent(inout)   :: Para_1DSOC
     integer,                     intent(in)      :: option
+    integer,                     intent(in)      :: nsurf
     integer,           optional, intent(in)      :: nio
     logical,           optional, intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: Rsig_in
@@ -89,14 +91,20 @@ CONTAINS
 
     namelist /OneD_SOC_Model/ Rsig
 
+    IF (nsurf /= 2 .AND. nsurf /= 4) THEN
+       write(out_unitp,*) ' ERROR in Init_1DSOC'
+       write(out_unitp,*) ' nsurf MUST equal to 4 or 2. nusrf: ',nsurf
+       STOP 'ERROR in Init_1DSOC: nsurf MUST equal to 4 or 2'
+    END IF
+
 
     read_param_loc = .FALSE.
     IF (present(read_param)) read_param_loc = read_param
     IF (read_param_loc .AND. .NOT. present(nio)) THEN
-       write(out_unitp,*) ' ERROR in Init_1DSOC_ModelPot'
+       write(out_unitp,*) ' ERROR in Init_1DSOC'
        write(out_unitp,*) ' read_param = t and The file unit (nio) is not present'
        write(out_unitp,*) ' => impossible to read the input file'
-       STOP 'STOP in Init_1DSOC_ModelPot: impossible to read the input file. The file unit (nio) is not present'
+       STOP 'ERROR in Init_1DSOC: impossible to read the input file. The file unit (nio) is not present'
     END IF
 
 
@@ -105,21 +113,22 @@ CONTAINS
       read(nio,OneD_SOC_Model,IOSTAT=err_read)
 
       IF (err_read < 0) THEN
-        write(out_unitp,*) ' ERROR in Init_1DSOC_Model'
+        write(out_unitp,*) ' ERROR in Init_1DSOC'
         write(out_unitp,*) ' End-of-file or End-of-record'
         write(out_unitp,*) ' The namelist "OneD_SOC_Model" is probably absent'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,*)
         STOP ' ERROR in Read_1DSOC_ModelPot'
       ELSE IF (err_read > 0) THEN
-        write(out_unitp,*) ' ERROR in Init_1DSOC_Model'
+        write(out_unitp,*) ' ERROR in Init_1DSOC'
         write(out_unitp,*) ' Some parameter names of the namelist "OneD_SOC_Model" are probaly wrong'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,nml=OneD_SOC_Model)
-        STOP ' ERROR in Init_1DSOC_Model'
+        STOP ' ERROR in Init_1DSOC'
       END IF
 
       Para_1DSOC%Rsig     = Rsig
+
     ELSE
       IF (present(Rsig_in)) THEN
         Para_1DSOC%Rsig     = Rsig_in
@@ -230,9 +239,13 @@ CONTAINS
     integer,                  intent(in)     :: nderiv
 
     !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)     :: dnSig,dnx
-    integer         :: i,j
+    TYPE(dnSca)      :: dnSig,dnx
+    integer          :: i,j,nsurf
+    real(kind=Rkind) :: RC01
 
+
+    ! get nsurf from the matrix: Mat_OF_PotDia
+    nsurf = size(Mat_OF_PotDia,dim=1)
 
     ! Sig(R) calculation
     IF (Para_1DSOC%option == 1) THEN ! as in the publication
@@ -250,34 +263,61 @@ CONTAINS
       dnSig = tanh(-FOUR*dnx)
     END IF
 
-    !singlet Energy
-    Mat_OF_PotDia(1,1) = Para_1DSOC%a1 * exp(-Para_1DSOC%alpha1*dnR) + Para_1DSOC%DE
+    IF (nsurf == 4) THEN
+      !singlet Energy
+      Mat_OF_PotDia(1,1) = Para_1DSOC%a1 * exp(-Para_1DSOC%alpha1*dnR) + Para_1DSOC%DE
 
-    !Triplet Energy
-    Mat_OF_PotDia(2,2) = Para_1DSOC%a2 * exp(-Para_1DSOC%alpha2*dnR)
-    Mat_OF_PotDia(3,3) = Mat_OF_PotDia(2,2)
-    Mat_OF_PotDia(4,4) = Mat_OF_PotDia(2,2)
-
-
-    !Singley-triplet coupling
-    Mat_OF_PotDia(1,2) =  sqrt(TWO) * Para_1DSOC%RC1 * dnSig
-    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
-
-    Mat_OF_PotDia(1,3) =  -sqrt(TWO) * Para_1DSOC%IC1 * dnSig
-    Mat_OF_PotDia(3,1) = Mat_OF_PotDia(1,3)
-
-    Mat_OF_PotDia(1,4) =  -Para_1DSOC%C0 * dnSig
-    Mat_OF_PotDia(4,1) = Mat_OF_PotDia(1,4)
+      !Triplet Energy
+      Mat_OF_PotDia(2,2) = Para_1DSOC%a2 * exp(-Para_1DSOC%alpha2*dnR)
+      Mat_OF_PotDia(3,3) = Mat_OF_PotDia(2,2)
+      Mat_OF_PotDia(4,4) = Mat_OF_PotDia(2,2)
 
 
-   ! triplet-triplet component couplings (ZERO)
-   DO i=2,4
-   DO j=2,4
-     IF (j == i) CYCLE
-     Mat_OF_PotDia(j,i) = ZERO
-   END DO
-   END DO
+      !Singley-triplet coupling
+      Mat_OF_PotDia(1,2) =  sqrt(TWO) * Para_1DSOC%RC1 * dnSig
+      Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
+      Mat_OF_PotDia(1,3) =  -sqrt(TWO) * Para_1DSOC%IC1 * dnSig
+      Mat_OF_PotDia(3,1) = Mat_OF_PotDia(1,3)
+
+      Mat_OF_PotDia(1,4) =  -Para_1DSOC%C0 * dnSig
+      Mat_OF_PotDia(4,1) = Mat_OF_PotDia(1,4)
+
+
+     ! triplet-triplet component couplings (ZERO)
+     DO i=2,4
+     DO j=2,4
+       IF (j == i) CYCLE
+       Mat_OF_PotDia(j,i) = ZERO
+     END DO
+     END DO
+
+   ELSE
+      !singlet Energy
+      Mat_OF_PotDia(1,1) = Para_1DSOC%a1 * exp(-Para_1DSOC%alpha1*dnR) + Para_1DSOC%DE
+
+      !Triplet Energy
+      Mat_OF_PotDia(2,2) = Para_1DSOC%a2 * exp(-Para_1DSOC%alpha2*dnR)
+
+      ! S-T coupling
+      ! V(S,T) = gamma.Exp[ i.theta]
+      ! V(T,S) = gamma.Exp[-i.theta]
+      ! gamma(R) = |sigma(R)|.sqrt(2abs(C1)^2+C0^2)
+      ! theta(R) = pi.h(R-Rsig) =>
+      !    if (R<Rsig) then
+      !      theta(R)=0    =>   Exp[ i.theta]=Exp[-i.theta]=  1
+      !      sigma(R) < 0  =>   |sigma(R)| = - sigma(R)
+      !      => V(S,T)=V(T,S) = - sigma(R) . sqrt(2abs(C1)^2+C0^2)
+      !
+      !    else
+      !      theta(R)=pi   =>   Exp[ i.theta]=Exp[-i.theta]= -1
+      !      sigma(R) > 0  =>   |sigma(R)| =   sigma(R)
+      !      => V(S,T)=V(T,S) = - sigma(R) . sqrt(2abs(C1)^2+C0^2)
+
+      RC01 = -sqrt(TWO*(Para_1DSOC%RC1**2+Para_1DSOC%IC1**2)+Para_1DSOC%C0**2)
+      Mat_OF_PotDia(1,2) = dnSig * RC01
+      Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
+   END IF
 
 
     CALL dealloc_dnSca(dnx)

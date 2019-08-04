@@ -98,21 +98,22 @@ MODULE mod_Model
 
 CONTAINS
 
-  SUBROUTINE Read_Model(Para_Model,nio,option1)
+  SUBROUTINE Read_Model(Para_Model,nio,option1,read_nml1)
   USE mod_Lib
   IMPLICIT NONE
 
     TYPE (Param_Model), intent(inout) :: Para_Model
     integer, intent(in)               :: nio
     integer, intent(inout)            :: option1
+    logical, intent(inout)            :: read_nml1
 
     integer :: ndim,nsurf,nderiv,option
-    logical :: adiabatic,numeric,PubliUnit
+    logical :: adiabatic,numeric,PubliUnit,read_nml
     character (len=20) :: pot_name
     integer :: err_read
 
     ! Namelists for input file
-    namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit
+    namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,read_nml
 
 
     ! Default values defined
@@ -122,6 +123,7 @@ CONTAINS
     pot_name  = 'morse'
     numeric   = .FALSE.
     PubliUnit = .FALSE.
+    read_nml  = .TRUE. ! if T, read the namelist in PotLib (HenonHeiles ....)
     option    = -1 ! no option
 
 
@@ -193,7 +195,7 @@ CONTAINS
     logical, intent(in), optional          :: PubliUnit
 
     integer ::i, option_loc,nio_loc
-    logical :: read_param_loc,adiabatic_loc
+    logical :: read_param_loc,adiabatic_loc,read_nml
     character (len=:), allocatable :: param_file_name_loc
 
     write(out_unitp,*) '================================================='
@@ -272,7 +274,7 @@ CONTAINS
       IF (nio_loc /= in_unitp) THEN
         open(unit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
       END IF
-      CALL Read_Model(Para_Model,nio_loc,option_loc)
+      CALL Read_Model(Para_Model,nio_loc,option_loc,read_nml)
 
       IF (allocated(param_file_name_loc)) deallocate(param_file_name_loc)
     END IF
@@ -285,6 +287,7 @@ CONTAINS
 
     IF (Para_Model%numeric) write(out_unitp,*) 'You have decided to perform a numeric checking of the analytic formulas.'
 
+    read_param_loc = (read_param_loc .AND. read_nml) ! this enables to not read the next namelist when read_param_loc=t
 
     CALL string_uppercase_TO_lowercase(Para_Model%pot_name)
     write(out_unitp,*) 'Para_Model%pot_name: ',Para_Model%pot_name
@@ -398,15 +401,16 @@ CONTAINS
       !! Spin Orbit coupling model
       !! pot_name  = '1DSOC_1S1T'
       !! ndim      = 1
-      !! nsurf     = 4
+      !! nsurf     = 4 or 2
       !! reduced mass      = 20000. au
-      !! remark: 1 singlet and 1 triplet (3 components) => nsurf     = 4
+      !! remarks: 1 singlet and 3 triplet components                           => nsurf     = 4
+      !!  or      1 singlet and 1 linear combibation of the triplet components => nsurf     = 2
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
       !! === END README ==
-      Para_Model%nsurf     = 4
+      IF (.NOT. present(nsurf)) Para_Model%nsurf = 4
       Para_Model%ndim      = 1
 
-      CALL Init_1DSOC(Para_Model%Para_1DSOC, option=option_loc,         &
+      CALL Init_1DSOC(Para_Model%Para_1DSOC,option=option_loc,nsurf=Para_Model%nsurf,  &
                         nio=nio_loc,read_param=read_param_loc)
       CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
       Para_Model%d0GGdef(1,1) = ONE/Para_Model%Para_1DSOC%mu

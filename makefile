@@ -1,7 +1,7 @@
 #=================================================================================
 #=================================================================================
 # Compiler? 
-#Possible values: 
+#Possible values: (Empty: gfortran)
 #                ifort (version: 14.0.2, 16.0.3, 17.0.1 linux)
 #                gfortran (version: 6.3.0 linux and osx)
 #                pgf90 (version: 17.10-0, linux): problems because datanh, dasinh, dacosh are not available with this compiler !!!
@@ -17,6 +17,35 @@ OMP = 1
 INVHYP  = 1
 #=================================================================================
 
+#=================================================================================
+# If ExternalF90 is empty, F90 is unchanged
+ifeq  ($(strip $(ExternalF90)),)
+else
+  F90 = $(ExternalF90)
+endif
+# If F90 is empty, F90=gfortran
+ifeq  ($(strip $(F90)),)
+  F90 = gfortran
+endif
+# If ExternalOPT is empty, OPT is unchanged
+ifeq  ($(strip $(ExternalOPT)),)
+else
+  OPT = $(ExternalOPT)
+endif
+# If OPT is empty, OPT=0
+ifeq  ($(strip $(OPT)),)
+  OPT = 0
+endif
+# If ExternalOMP is empty, OMP is unchanged
+ifeq  ($(strip $(ExternalOMP)),)
+else
+  OMP = $(ExternalOMP)
+endif
+# If OMP is empty, OMP=1
+ifeq  ($(strip $(OMP)),)
+  OMP = 1
+endif
+#=================================================================================
 
 # Operating system, OS? automatic using uname: 
 OS=$(shell uname)
@@ -112,7 +141,7 @@ endif
    ifeq ($(OPT),1)
       F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
    else
-      F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
+      F90FLAGS = -Og -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -finit-real=nan -finit-integer=nan
       #F90FLAGS = -O0 -fbounds-check -Wuninitialized
    endif
 endif

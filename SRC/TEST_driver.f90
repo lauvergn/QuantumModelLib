@@ -28,6 +28,7 @@ PROGRAM main_pot
   real (kind=8),      allocatable     :: Q(:)
   real (kind=8),      allocatable     :: GGdef(:,:)
   real (kind=8),      allocatable     :: V(:,:)
+  real (kind=8),      allocatable     :: Vec(:,:)
   real (kind=8),      allocatable     :: g(:,:,:)
   real (kind=8),      allocatable     :: h(:,:,:,:)
   real (kind=8),      allocatable     :: NAC(:,:,:)
@@ -42,6 +43,43 @@ PROGRAM main_pot
   !$ maxth           = omp_get_max_threads()
   write(6,*) 'NTEST_driver. number of threads:',maxth
 
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  pot_name = '1DSOC_1S1T'
+  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  CALL time_perso('Test ' // pot_name)
+
+  ndim      = 1
+  nsurf     = 4
+  option    = 0
+  adiabatic = .TRUE.
+
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+  allocate(Vec(nsurf,nsurf))
+
+
+  Q(:) = (/8.5_8 /)
+
+  CALL sub_Qmodel_VVec(V,Vec,Q)
+  write(6,*) ' Diabatic potential as a 4x4 matrix:'
+  write(6,'(4f12.8)') V
+  write(6,*) ' Adiabatic vectors (in column) as a 4x4 matrix:'
+  write(6,'(4f12.8)') transpose(Vec)
+
+  CALL sub_Qmodel_Check_anaVSnum(Q,2)
+
+  deallocate(V)
+  deallocate(Q)
+  deallocate(Vec)
+
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+STOP
   write(6,*) '============================================================'
   write(6,*) '============================================================'
   pot_name = 'PSB3'

@@ -6,6 +6,8 @@ cd  $here
 
 echo "=========================================="
 echo " TESTING the dnS module"
+echo "   OPT: " $ExternalOPT
+echo "   OMP: " $ExternalOMP
 echo "=========================================="
 
 ../dnS.x > res_dnS

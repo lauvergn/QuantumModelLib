@@ -31,216 +31,124 @@ MODULE mod_diago
    CONTAINS
 !============================================================
 !
-!   diagonalisation par jacobi
-!   le vecteur i est V(.,i)
-!
+!   Driver for the diagonalization
+!      Default: tred2+tql2 (type_diag=2)
+!            Other possibilities: Jacobi (type_diag=1) or Lapack (type_diag=3)
+!            Rk: Lapack diago is not possible
+!      Sort: the eigenvalues/eigenvectors:
+!            sort=1:  ascending (default)
+!            sort=-1: descending
+!            sort=2:  ascending on the absolute eigenvalues
+!     phase:
 !============================================================
 !
-      SUBROUTINE diagonalization(Mat,Eig,Vec,n,type_diag,sort,phase)
-      USE mod_NumParameters
-      IMPLICIT NONE
+  SUBROUTINE diagonalization(Mat,Eig,Vec,n,type_diag,sort,phase)
+    USE mod_NumParameters
+    IMPLICIT NONE
 
-      integer, intent(in)             :: n
-      real(kind=Rkind), intent(in)    :: Mat(n,n)
-      real(kind=Rkind), intent(inout) :: Eig(n),Vec(n,n)
+    integer, intent(in)             :: n
+    real(kind=Rkind), intent(in)    :: Mat(n,n)
+    real(kind=Rkind), intent(inout) :: Eig(n),Vec(n,n)
 
-      integer, intent(in), optional   :: type_diag,sort
-      logical, intent(in), optional   :: phase
-
-
-      integer  :: type_diag_loc
-
-      !real(kind=Rkind) :: trav(n),Mat_save(n,n)
-      real(kind=Rkind), allocatable :: trav(:),Mat_save(:,:)
-
-      integer          :: ierr
-      integer          :: lwork
-      real(kind=Rkind), allocatable :: work(:)
-
-!----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub='diagonalization'
-      logical, parameter :: debug = .FALSE.
-!      logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
-       allocate(Mat_save(n,n))
-       Mat_save = Mat ! save mat
+    integer, intent(in), optional   :: type_diag,sort
+    logical, intent(in), optional   :: phase
 
 
-      IF (present(type_diag)) THEN
-        type_diag_loc = type_diag
-      ELSE
-        type_diag_loc = 2
-      END IF
+    integer  :: type_diag_loc
 
-      !when lapack is used and Rkind/= 8 (not a double), it switch to type_diag=2
-      IF (Rkind /= 8 .AND. type_diag_loc == 3) type_diag_loc = 2
+    real(kind=Rkind), allocatable :: trav(:),Mat_save(:,:)
 
-      SELECT CASE (type_diag_loc)
-      CASE(1)
-        CALL jacobi2(Mat_save,n,Eig,Vec)
-      CASE(2)
-        allocate(trav(n))
-        CALL tred2(n,n,Mat_save,Eig,trav,Vec)
-        CALL tql2(n,n,Eig,trav,Vec,ierr)
-        deallocate(trav)
-!      CASE(3) ! lapack77
+    !for lapack
+    integer          :: ierr
+    integer          :: lwork
+    real(kind=Rkind), allocatable :: work(:)
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='diagonalization'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    !-----------------------------------------------------------
+
+    allocate(Mat_save(n,n))
+    Mat_save = Mat ! save mat
+
+
+    IF (present(type_diag)) THEN
+      type_diag_loc = type_diag
+    ELSE
+      type_diag_loc = 2
+    END IF
+
+    !when lapack is used and Rkind /= 8 (not a double), it switch to type_diag=2
+    IF (Rkind /= 8 .AND. type_diag_loc == 3) type_diag_loc = 2
+
+    SELECT CASE (type_diag_loc)
+    CASE(1)
+      CALL jacobi2(Mat_save,n,Eig,Vec)
+    CASE(2)
+      allocate(trav(n))
+      CALL tred2(n,n,Mat_save,Eig,trav,Vec)
+      CALL tql2(n,n,Eig,trav,Vec,ierr)
+      deallocate(trav)
+!    CASE(3) ! lapack77
 !
 !#if __LAPACK == 1
-!        lwork = 3*n-1
-!        CALL alloc_NParray(work,(/ lwork /),'work',name_sub)
-!        Vec(:,:) = Mat_save(:,:)
-!        CALL DSYEV('V','U',n,Vec,n,Eig,work,lwork,ierr)
-!        IF (debug) write(out_unitp,*)'ierr=',ierr
-!        IF (ierr /= 0) THEN
-!           write(out_unitp,*) ' ERROR in ',name_sub
-!           write(out_unitp,*) ' DSYEV lapack subroutine has FAILED!'
-!           STOP
-!        END IF
-!        CALL dealloc_NParray(work,'work',name_sub)
+!      lwork = 3*n-1
+!      CALL alloc_NParray(work,(/ lwork /),'work',name_sub)
+!      Vec(:,:) = Mat_save(:,:)
+!      CALL DSYEV('V','U',n,Vec,n,Eig,work,lwork,ierr)
+!      IF (debug) write(out_unitp,*)'ierr=',ierr
+!      IF (ierr /= 0) THEN
+!         write(out_unitp,*) ' ERROR in ',name_sub
+!         write(out_unitp,*) ' DSYEV lapack subroutine has FAILED!'
+!         STOP
+!      END IF
+!      CALL dealloc_NParray(work,'work',name_sub)
 !#else
-!        allocate(trav(n))
-!        CALL tred2(n,n,Mat_save,Eig,trav,Vec)
-!        CALL tql2(n,n,Eig,trav,Vec,ierr)
-!        deallocate(trav)
+!      allocate(trav(n))
+!      CALL tred2(n,n,Mat_save,Eig,trav,Vec)
+!      CALL tql2(n,n,Eig,trav,Vec,ierr)
+!      deallocate(trav)
 !#endif
 !
 
-      CASE DEFAULT
-        CALL jacobi2(Mat_save,n,Eig,Vec)
-      END SELECT
+    CASE DEFAULT
+      CALL jacobi2(Mat_save,n,Eig,Vec)
+    END SELECT
 
-  IF (present(sort)) THEN
-      SELECT CASE (sort)
-      CASE(1)
-        CALL trie(n,Eig,Vec,n)
-      CASE(-1)
-        Eig = -Eig
-        CALL trie(n,Eig,Vec,n)
-        Eig = -Eig
-      CASE(2)
-        CALL trie_abs(n,Eig,Vec,n)
-      CASE DEFAULT ! no sort
-        CONTINUE
-      END SELECT
-  ELSE
-    CALL trie(n,Eig,Vec,n)
-  END IF
+    IF (present(sort)) THEN
+        SELECT CASE (sort)
+        CASE(1)
+          CALL trie(n,Eig,Vec,n)
+          CALL rota_denerated(Eig,Vec,n)
+        CASE(-1)
+          Eig = -Eig
+          CALL trie(n,Eig,Vec,n)
+          Eig = -Eig
+          CALL rota_denerated(Eig,Vec,n)
+        CASE(2)
+          CALL trie_abs(n,Eig,Vec,n)
+        CASE DEFAULT ! no sort
+          CONTINUE
+        END SELECT
+    ELSE
+      CALL trie(n,Eig,Vec,n)
+      CALL rota_denerated(Eig,Vec,n)
+    END IF
 
-  IF (present(phase)) THEN
-      IF (phase) CALL Unique_phase(n,Vec,n)
-  ELSE
-    CALL Unique_phase(n,Vec,n)
-  END IF
+    IF (present(phase)) THEN
+        !IF (phase) CALL Unique_phase_old(n,Vec,n)
+        IF (phase) CALL Unique_phase(Vec)
 
-  deallocate(Mat_save)
+    ELSE
+      CALL Unique_phase(Vec)
+      !CALL Unique_phase_old(n,Vec,n)
+    END IF
 
-
-      END SUBROUTINE diagonalization
-
-      SUBROUTINE JACOBI(A,N,D,V,B,Z,max_N)
-      USE mod_NumParameters
-      IMPLICIT NONE
-
-      integer    max_it
-      parameter (max_it=500)
-
-      integer   N,max_N
-      real(kind=Rkind)    A(max_N,max_N),B(max_N),Z(max_N)
-      real(kind=Rkind)    V(max_N,max_N),D(max_N)
+    deallocate(Mat_save)
 
 
-      real(kind=Rkind) h,t,g,sm,tresh,tau,s,theta,c
-
-      integer i,j,iq,nrot,ip
-
-
-      DO 12 IP=1,N
-        DO 11 IQ=1,N
-          V(IP,IQ)=ZERO
-11      CONTINUE
-        V(IP,IP)=ONE
-12    CONTINUE
-      DO 13 IP=1,N
-        B(IP)=A(IP,IP)
-        D(IP)=B(IP)
-        Z(IP)=ZERO
-13    CONTINUE
-      NROT=0
-      DO 24 I=1,max_it
-        SM=ZERO
-        DO 15 IP=1,N-1
-          DO 14 IQ=IP+1,N
-            SM=SM+abs(A(IP,IQ))
-14        CONTINUE
-15      CONTINUE
-        IF(SM.EQ.ZERO)RETURN
-        IF(I.LT.4)THEN
-          TRESH=0.2_Rkind*SM/N**2
-        ELSE
-          TRESH=ZERO
-        ENDIF
-        DO 22 IP=1,N-1
-          DO 21 IQ=IP+1,N
-            G=HUNDRED*abs(A(IP,IQ))
-            IF((I.GT.4).AND.(ABS(D(IP))+G.EQ.ABS(D(IP)))                &
-               .AND.(ABS(D(IQ))+G.EQ.ABS(D(IQ))))THEN
-              A(IP,IQ)=ZERO
-            ELSE IF(ABS(A(IP,IQ)).GT.TRESH)THEN
-              H=D(IQ)-D(IP)
-              IF(ABS(H)+G.EQ.ABS(H))THEN
-                T=A(IP,IQ)/H
-              ELSE
-                THETA=HALF*H/A(IP,IQ)
-                T=ONE/(ABS(THETA)+sqrt(ONE+THETA**2))
-                IF(THETA.LT.ZERO)T=-T
-              ENDIF
-              C=ONE/sqrt(ONE+T**2)
-              S=T*C
-              TAU=S/(ONE+C)
-              H=T*A(IP,IQ)
-              Z(IP)=Z(IP)-H
-              Z(IQ)=Z(IQ)+H
-              D(IP)=D(IP)-H
-              D(IQ)=D(IQ)+H
-              A(IP,IQ)=ZERO
-              DO 16 J=1,IP-1
-                G=A(J,IP)
-                H=A(J,IQ)
-                A(J,IP)=G-S*(H+G*TAU)
-                A(J,IQ)=H+S*(G-H*TAU)
-16            CONTINUE
-              DO 17 J=IP+1,IQ-1
-                G=A(IP,J)
-                H=A(J,IQ)
-                A(IP,J)=G-S*(H+G*TAU)
-                A(J,IQ)=H+S*(G-H*TAU)
-17            CONTINUE
-              DO 18 J=IQ+1,N
-                G=A(IP,J)
-                H=A(IQ,J)
-                A(IP,J)=G-S*(H+G*TAU)
-                A(IQ,J)=H+S*(G-H*TAU)
-18            CONTINUE
-              DO 19 J=1,N
-                G=V(J,IP)
-                H=V(J,IQ)
-                V(J,IP)=G-S*(H+G*TAU)
-                V(J,IQ)=H+S*(G-H*TAU)
-19            CONTINUE
-              NROT=NROT+1
-            ENDIF
-21        CONTINUE
-22      CONTINUE
-        DO 23 IP=1,N
-          B(IP)=B(IP)+Z(IP)
-          D(IP)=B(IP)
-          Z(IP)=ZERO
-23      CONTINUE
-24    CONTINUE
-      write(out_unitp,*) max_it,' iterations should never happen'
-      STOP
-
-      end subroutine JACOBI
+  END SUBROUTINE diagonalization
 
       SUBROUTINE JACOBI2(A,N,D,V)
       USE mod_NumParameters
@@ -372,13 +280,13 @@ MODULE mod_diago
       USE mod_NumParameters
       IMPLICIT NONE
 
-      integer   N,NM
-      real(kind=Rkind)    A(NM,N),Z(NM,N),D(N),E(N)
+      integer          ::  N,NM
+      real(kind=Rkind) ::  A(NM,N),Z(NM,N),D(N),E(N)
 
 !     already in mod_NumParameters
 !     real(kind=Rkind)    h,scale,hh,f,g,one,zero
       real(kind=Rkind)    h,scale,hh,f,g
-      integer   ii,l,k,jp1,j,i
+      integer             ii,l,k,jp1,j,i
 
 !     write(*,*)
 !     do 2 i=1,n
@@ -556,25 +464,7 @@ MODULE mod_diago
       IF(ABS(E(L)).GT.B) GOTO 130
   220 D(L)=D(L)+F
   240 CONTINUE
-!     ORDER EIGENVALUES AND EIGENVECTORS
-!     DO 300 II=2,N
-!     I=II-1
-!     K=I
-!     PP=D(I)
-!     DO 260 J=II,N
-!     IF(D(J).GE.PP) GOTO 260
-!     K=J
-!     PP=D(J)
-! 260 CONTINUE
-!     IF(K.EQ.I) GOTO 300
-!     D(K)=D(I)
-!     D(I)=PP
-!     DO 280 J=1,N
-!     P=Z(J,I)
-!     Z(J,I)=Z(J,K)
-!     Z(J,K)=P
-! 280 CONTINUE
-! 300 CONTINUE
+
       GOTO 310
 !     SET ERROR -- NO CONVERGENCE TO AN
 !     EIGENVALUE AFTER 30 ITERATIONS
@@ -649,77 +539,6 @@ MODULE mod_diago
       END DO
 
       END SUBROUTINE trie
-!
-!============================================================
-!
-!   Change the phase of Vec(:,i) shuch its lmargest coef is positive
-!
-!============================================================
-!
-      SUBROUTINE Unique_phase(n,Vec,max_n)
-      USE mod_NumParameters
-      IMPLICIT NONE
-
-      integer          :: n,max_n
-      real(kind=Rkind) :: Vec(max_n,max_n)
-
-      real(kind=Rkind) :: max_val
-      integer          :: ind_max_val(max_n),nb_max_val
-
-      integer          :: i,j,max_j
-
-      DO i=1,n
-        max_val        = maxval(abs(Vec(:,i)))
-        DO j=1,n
-          IF ( abs(abs(Vec(j,i))-max_val) < ONETENTH**6 ) THEN
-            IF (Vec(j,i) < ZERO) THEN
-              Vec(:,i) = -Vec(:,i)
-              EXIT
-            END IF
-          END IF
-        END DO
-      END DO
-
-      END SUBROUTINE Unique_phase
-      SUBROUTINE Unique_phase2(n,Vec,max_n)
-      USE mod_NumParameters
-      IMPLICIT NONE
-
-      integer          :: n,max_n
-      real(kind=Rkind) :: Vec(max_n,max_n)
-
-
-      integer          :: i
-
-      DO i=1,n
-        IF (Vec(1,i) < ZERO) Vec(:,i) = -Vec(:,i)
-      END DO
-
-      END SUBROUTINE Unique_phase2
-
-      SUBROUTINE Unique_phase_old(n,Vec,max_n)
-      USE mod_NumParameters
-      IMPLICIT NONE
-
-      integer          :: n,max_n
-      real(kind=Rkind) :: Vec(max_n,max_n)
-
-      real(kind=Rkind) :: max_val
-      integer          :: i,j,max_j
-
-      DO i=1,n
-        max_val = abs(Vec(1,i))
-        max_j   = 1
-        DO j=1,n
-          IF ( abs(Vec(j,i)) > max_val ) THEN
-            max_val = abs(Vec(j,i))
-            max_j   = j
-          END IF
-        END DO
-        IF (Vec(max_j,i) < ZERO) Vec(:,i) = -Vec(:,i)
-      END DO
-
-      END SUBROUTINE Unique_phase_old
       SUBROUTINE trie_abs(nb_niv,ene,psi,max_niv)
       USE mod_NumParameters
       IMPLICIT NONE
@@ -746,9 +565,132 @@ MODULE mod_diago
           END DO
         END DO
 
-        RETURN
         end subroutine trie_abs
 !
+!============================================================
+!
+!   Change the phase of Vec(:,i) shuch its largest coeficient is positive
+!
+!============================================================
+!
+      SUBROUTINE Unique_phase(Vec)
+      USE mod_NumParameters
+      IMPLICIT NONE
+
+      real(kind=Rkind), intent(inout) :: Vec(:,:)
+
+      integer          :: i,jloc
+
+      DO i=lbound(Vec,dim=2),ubound(Vec,dim=2)
+        jloc           = maxloc(abs(Vec(:,i)),dim=1)
+        IF (abs(Vec(jloc,i)) < ONETENTH**6 ) CYCLE
+        IF (Vec(jloc,i) < ZERO) Vec(:,i) = -Vec(:,i)
+      END DO
+
+      END SUBROUTINE Unique_phase
+      SUBROUTINE Unique_phase_old(n,Vec,max_n)
+      USE mod_NumParameters
+      IMPLICIT NONE
+
+      integer          :: n,max_n
+      real(kind=Rkind) :: Vec(max_n,max_n)
+
+      real(kind=Rkind) :: max_val
+      integer          :: ind_max_val(max_n),nb_max_val
+
+      integer          :: i,j,max_j
+
+      DO i=1,n
+        max_val        = maxval(abs(Vec(:,i)))
+        DO j=1,n
+          IF ( abs(abs(Vec(j,i))-max_val) < ONETENTH**6 ) THEN
+            IF (Vec(j,i) < ZERO) THEN
+              Vec(:,i) = -Vec(:,i)
+              EXIT
+            END IF
+          END IF
+        END DO
+      END DO
+
+      END SUBROUTINE Unique_phase_old
+!=====================================================================
+!
+!   c_new(:,i) =  cos(th) c(:,i) + sin(th) c(:,j)
+!   c_new(:,j) = -sin(th) c(:,j) + cos(th) c(:,j)
+!
+!    the angle is obtained such ...
+!
+!      it is working only if 2 vectors are degenerated !!!!
+!
+!=====================================================================
+      SUBROUTINE rota_denerated(v,c,n)
+      USE mod_NumParameters
+      IMPLICIT NONE
+
+
+      integer       :: n
+      real (kind=Rkind), intent(in)    :: v(n)
+      real (kind=Rkind), intent(inout) :: c(n,n)
+
+
+
+
+      integer       :: i,j,k,kloc
+      real (kind=Rkind) :: ai,aj,norm,cc,ss
+
+      real (kind=Rkind), parameter :: epsi = ONETENTH**10
+
+!---------------------------------------------------------------------
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+!---------------------------------------------------------------------
+      IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING rota_denerated'
+      write(out_unitp,*) 'v',v
+      !write(out_unitp,*) 'c',c
+      END IF
+!---------------------------------------------------------------------
+      DO i=1,n-1
+
+        j = i+1
+        IF ( abs(v(i)-v(j)) < epsi) THEN
+          !write(6,*) 'i,j',i,j
+          !write(6,*) 'vec i',c(:,i)
+          !write(6,*) 'vec j',c(:,j)
+
+          kloc = maxloc(abs(c(:,i)),dim=1)
+
+          cc   =  c(kloc,i)
+          ss   = -c(kloc,j)
+          !write(6,*) i,j,'cos sin',kloc,cc,ss
+          norm = sqrt(cc*cc+ss*ss)
+          cc   = cc/norm
+          ss   = ss/norm
+          !write(6,*) i,j,'cos sin',cc,ss
+
+          DO k=1,n
+           ai = c(k,i)
+           aj = c(k,j)
+
+           c(k,i) =  cc * ai + ss * aj
+           c(k,j) = -ss * ai + cc * aj
+
+          END DO
+
+        END IF
+      END DO
+
+
+
+!---------------------------------------------------------------------
+      IF (debug) THEN
+      write(out_unitp,*) 'new c',c
+      write(out_unitp,*) 'END rota_denerated'
+      END IF
+!---------------------------------------------------------------------
+
+      end subroutine rota_denerated
+
 !============================================================
 !
 !      *******       Extension to complex symmetrical matrices of

@@ -119,6 +119,7 @@ CONTAINS
       IF (present(name_var)) write(out_unitp,*) '  for the variable: ',name_var
       IF (present(name_sub)) write(out_unitp,*) '  call from the subroutine: ',name_sub
       IF (present(err_dnMatPot)) THEN
+        err_dnMatPot = err_dnMat_loc
         RETURN
       ELSE
         STOP 'Problem in dealloc_dnMatPot CALL in alloc_dnMatPot'
@@ -217,6 +218,9 @@ CONTAINS
 
     ! local variables
     integer :: err_dnMat_loc
+
+    err_dnMat_loc = 0
+    IF (present(err_dnMatPot)) err_dnMatPot = 0
 
     IF (allocated(Mat%d0)) THEN
       deallocate(Mat%d0,stat=err_dnMat_loc)

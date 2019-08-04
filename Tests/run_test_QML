@@ -9,6 +9,8 @@ cd  $here
 echo "=========================================="
 echo " TESTING the internal potentials of ModLib"
 echo " ... with respect to old files"
+echo "   OPT: " $ExternalOPT
+echo "   OMP: " $ExternalOMP
 echo "=========================================="
 
 ../ModLib.x < input.dat > res
