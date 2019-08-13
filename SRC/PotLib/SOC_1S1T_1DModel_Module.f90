@@ -306,15 +306,15 @@ CONTAINS
       ! theta(R) = pi.h(R-Rsig) =>
       !    if (R<Rsig) then
       !      theta(R)=0    =>   Exp[ i.theta]=Exp[-i.theta]=  1
-      !      sigma(R) < 0  =>   |sigma(R)| = - sigma(R)
-      !      => V(S,T)=V(T,S) = - sigma(R) . sqrt(2abs(C1)^2+C0^2)
+      !      sigma(R) > 0  =>   |sigma(R)| =   sigma(R)
+      !      => V(S,T)=V(T,S) = sigma(R) . sqrt(2abs(C1)^2+C0^2)
       !
       !    else
       !      theta(R)=pi   =>   Exp[ i.theta]=Exp[-i.theta]= -1
-      !      sigma(R) > 0  =>   |sigma(R)| =   sigma(R)
-      !      => V(S,T)=V(T,S) = - sigma(R) . sqrt(2abs(C1)^2+C0^2)
+      !      sigma(R) < 0  =>   |sigma(R)| =  - sigma(R)
+      !      => V(S,T)=V(T,S) = sigma(R) . sqrt(2abs(C1)^2+C0^2)
 
-      RC01 = -sqrt(TWO*(Para_1DSOC%RC1**2+Para_1DSOC%IC1**2)+Para_1DSOC%C0**2)
+      RC01 = sqrt(TWO*(Para_1DSOC%RC1**2+Para_1DSOC%IC1**2)+Para_1DSOC%C0**2)
       Mat_OF_PotDia(1,2) = dnSig * RC01
       Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
    END IF

@@ -19,7 +19,7 @@ fi
 echo new version $a
 
 
-
+#save the current version
 if test -s $name  
 then
     echo The directory $name exists !!
@@ -32,7 +32,7 @@ else
 
     cp -r * $name
 
-    #modify the version in versionQML. It has to be after the copy
+    #modify the version in versionQML. It has to be done after the copy
     echo Change the new version-QML $a
     echo "QML =  "$a >  version-QML
 
