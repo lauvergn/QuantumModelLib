@@ -216,7 +216,7 @@ MODULE mod_PSB3Pot
     IF (Para_PSB3%option < 1 .OR. Para_PSB3%option > 2) Para_PSB3%option = 1
 
     SELECT CASE (Para_PSB3%option)
-    CASE (1) ! Not published model 
+    CASE (1) ! unpublished model
      
       IF (Para_PSB3%blamin   == huge(ONE)) Para_PSB3%blamin   = 0.0912615_Rkind
       IF (Para_PSB3%blaTSdir == huge(ONE)) Para_PSB3%blaTSdir = 0.025079167_Rkind
@@ -595,7 +595,7 @@ MODULE mod_PSB3Pot
     !If PubliUnit is False conversion must be done, the potential is expressed in Angstrom 
     !and it requires the proper conversion into Bhor  
     IF(.NOT. Para_PSB3%PubliUnit) THEN
-       !BLA = BLA * LenghtConv             ! wrong derivative. Here with respect ot R
+       !BLA = BLA * LenghtConv            ! wrong derivative. Here with respect ot BLA
        BLA = d0Sca_TIME_R(BLA,LenghtConv) ! to set up the correct derivatives with respect to (R*LenghtConv)
     END IF
 
@@ -611,7 +611,7 @@ MODULE mod_PSB3Pot
 !-----------------------------------------------------------------------!
 ! V11 matrix element 
 
-   dnPot =  Hdir2D + Para_PSB3%hd1 * Sin(HOOP/FOUR)**2 - Para_PSB3%hd2 * Sin(HOOP/FOUR) * Sin(Tors * TWO) 
+   dnPot =  Hdir2D + Para_PSB3%hd1 * sin(HOOP/FOUR)**2 - Para_PSB3%hd2 * Sin(HOOP/FOUR) * sin(Tors * TWO)
 
    IF(.NOT. Para_PSB3%PubliUnit) dnPot = dnPot/EnergyConv
 
@@ -620,7 +620,7 @@ MODULE mod_PSB3Pot
 !-----------------------------------------------------------------------!
 ! V22 matrix element 
 
-   dnPot =  Hct2D  + Para_PSB3%hc1 * Sin(HOOP/FOUR)**2 + Para_PSB3%hc2 * Sin(HOOP/FOUR) * Sin(Tors * TWO)
+   dnPot =  Hct2D  + Para_PSB3%hc1 * Sin(HOOP/FOUR)**2 + Para_PSB3%hc2 * Sin(HOOP/FOUR) * sin(Tors * TWO)
 
    IF(.NOT. Para_PSB3%PubliUnit) dnPot = dnPot/EnergyConv
 

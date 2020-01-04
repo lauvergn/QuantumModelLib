@@ -23,7 +23,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  !CALL test_Tully()
+  !CALL test_LinearHBond()
   !stop
 
   ! One electronic surface
@@ -758,8 +758,8 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) ' With units: Angs and kcal.mol^-1'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='HBond',PubliUnit=.TRUE.,             &
-                read_param=.TRUE.,param_file_name='Hbond.dat')
+  CALL Init_Model(Para_Model,pot_name='HBond',PubliUnit=.TRUE.,         &
+                  read_param=.TRUE.,param_file_name='Hbond.dat')
   CALL Write_Model(Para_Model)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -784,7 +784,6 @@ SUBROUTINE test_LinearHBond
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='Linear H-Bond (asymmetric one)')
-
 
   CALL dealloc_dnMatPot(PotVal)
 

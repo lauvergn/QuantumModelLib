@@ -97,6 +97,7 @@ CONTAINS
        STOP 'STOP in Init_LinearHBondPot: impossible to read the input file. The file unit (nio) is not present'
     END IF
 
+
     ! initalization of the default values
     D_loc     = 60._Rkind
     a_loc     = 2.52_Rkind
@@ -186,7 +187,7 @@ CONTAINS
       write(out_unitp,nml=LinearHBond)
       STOP ' ERROR in Read_LinearHBondPot'
     END IF
-    !write(out_unitp,nml=LinearHBond)
+    write(out_unitp,nml=LinearHBond)
 
     ! initalization with the read values
     CALL Init_MorsePot(Para_LinearHBond%Morse1,D=D,        a=a,     req=req)

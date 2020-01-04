@@ -202,7 +202,7 @@ CONTAINS
 !! @param err_dnSca            integer (optional):  to handle the errors errors (0: no error).
   SUBROUTINE alloc_dnSca(S,ndim,nderiv,err_dnSca)
     USE mod_NumParameters
-    TYPE(dnSca),   intent(inout)          :: S       !< derived type, which contains, matrix potential, its derivatives
+    TYPE(dnSca), intent(inout)          :: S         !< derived type, which contains, matrix potential, its derivatives
     integer,     intent(in),  optional  :: ndim      !< number of variables (coordiantes)
     integer,     intent(in),  optional  :: nderiv    !< order of the derivatives [0,1,3]
     integer,     intent(out), optional  :: err_dnSca !< to handle the errors
@@ -213,17 +213,7 @@ CONTAINS
     err_dnSca_loc = 0 ! no error
     IF (present(err_dnSca)) err_dnSca = 0
 
-    CALL dealloc_dnSca(S,err_dnSca_loc)
-    IF (err_dnSca_loc /= 0) THEN
-      write(out_unitp,*) ' ERROR in alloc_dnSca'
-      write(out_unitp,*) ' Problem in dealloc_dnSca CALL in alloc_dnSca'
-      IF (present(err_dnSca)) THEN
-        err_dnSca = err_dnSca_loc
-        RETURN
-      ELSE
-        STOP 'Problem in dealloc_dnSca CALL in alloc_dnSca'
-      END IF
-    END IF
+    CALL dealloc_dnSca(S)
 
     ! test ndim
     IF (present(ndim)) THEN
@@ -300,60 +290,14 @@ CONTAINS
 !! @date 03/08/2017
 !!
 !! @param S                  TYPE(dnSca):             derived type which deals with the derivatives of a scalar functions.
-!! @param err_dnSca            integer (optional):    to handle the errors errors (0: no error).
-  SUBROUTINE dealloc_dnSca(S,err_dnSca)
+  ELEMENTAL SUBROUTINE dealloc_dnSca(S)
     USE mod_NumParameters
 
     TYPE(dnSca), intent(inout)       :: S !< derived type, which contains, matrix potential, its derivatives
-    integer, intent(out), optional :: err_dnSca  !< to handle the errors
 
-    ! local variables
-    integer :: err_dnSca_loc
-
-    err_dnSca_loc = 0 ! no error
-    IF (present(err_dnSca)) err_dnSca = 0 ! no error
-
-    IF (allocated(S%d1)) THEN
-      deallocate(S%d1,stat=err_dnSca_loc)
-      IF (err_dnSca_loc /= 0) THEN
-        write(out_unitp,*) ' ERROR in dealloc_dnSca'
-        write(out_unitp,*) '  Problem with deallocate of S%d1'
-        IF (present(err_dnSca)) THEN
-          err_dnSca = err_dnSca_loc
-          RETURN
-        ELSE
-          STOP 'Problem with deallocate in dealloc_dnSca'
-        END IF
-      END IF
-    END IF
-
-    IF (allocated(S%d2)) THEN
-      deallocate(S%d2,stat=err_dnSca_loc)
-      IF (err_dnSca_loc /= 0) THEN
-        write(out_unitp,*) ' ERROR in dealloc_dnSca'
-        write(out_unitp,*) '  Problem with deallocate of S%d2'
-        IF (present(err_dnSca)) THEN
-          err_dnSca = err_dnSca_loc
-          RETURN
-        ELSE
-          STOP 'Problem with deallocate in dealloc_dnSca'
-        END IF
-      END IF
-    END IF
-
-    IF (allocated(S%d3)) THEN
-      deallocate(S%d3,stat=err_dnSca_loc)
-      IF (err_dnSca_loc /= 0) THEN
-        write(out_unitp,*) ' ERROR in dealloc_dnSca'
-        write(out_unitp,*) '  Problem with deallocate of S%d3'
-        IF (present(err_dnSca)) THEN
-          err_dnSca = err_dnSca_loc
-          RETURN
-        ELSE
-          STOP 'Problem with deallocate in dealloc_dnSca'
-        END IF
-      END IF
-    END IF
+    IF (allocated(S%d1)) deallocate(S%d1)
+    IF (allocated(S%d2)) deallocate(S%d2)
+    IF (allocated(S%d3)) deallocate(S%d3)
 
     S%nderiv = -1
 
@@ -365,12 +309,12 @@ CONTAINS
 !!
 !! @param S                  TYPE(dnSca):  derived type which deals with the derivatives of a scalar functions.
 !! @param nderiv             integer:    the derivative order.
-  FUNCTION Check_NotAlloc_dnSca(S,nderiv)
+  ELEMENTAL FUNCTION Check_NotAlloc_dnSca(S,nderiv)
     USE mod_NumParameters
 
     logical :: Check_NotAlloc_dnSca
     TYPE(dnSca), intent(in)    :: S
-    integer,   intent(in)    :: nderiv
+    integer,     intent(in)    :: nderiv
 
 
     logical :: NotAlloc
@@ -396,7 +340,7 @@ CONTAINS
   FUNCTION init_dnSca(R,ndim,nderiv,iQ) RESULT(Sres)
     USE mod_NumParameters
 
-    TYPE (dnSca)                       :: Sres
+    TYPE (dnSca)                     :: Sres
     real (kind=Rkind), intent(in)    :: R
     integer, optional, intent(in)    :: nderiv,ndim,iQ
 
@@ -513,11 +457,11 @@ CONTAINS
 !!
 !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
 !! @param d0                 real  (result):      d0=S%d0
-  FUNCTION get_d0_FROM_dnSca(S) RESULT(d0)
+  ELEMENTAL FUNCTION get_d0_FROM_dnSca(S) RESULT(d0)
     USE mod_NumParameters
 
     real (kind=Rkind)                :: d0
-    TYPE (dnSca),        intent(in)    :: S
+    TYPE (dnSca),        intent(in)  :: S
 
     character (len=*), parameter :: name_sub='get_d0_FROM_dnSca'
 
@@ -550,7 +494,7 @@ CONTAINS
   !!
   !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
   !! @param d1                 real       :           d1=S%d1, d1 is NOT allocatable
-    SUBROUTINE sub_get_d1_FROM_dnSca(d1,S)
+  SUBROUTINE sub_get_d1_FROM_dnSca(d1,S)
     USE mod_NumParameters
 
       real (kind=Rkind),   intent(inout) :: d1(:)
@@ -568,7 +512,7 @@ CONTAINS
   !!
   !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
   !! @param d2                 real  (result):        d2=S%d2, d2 is allocatable
-    FUNCTION get_d2_FROM_dnSca(S) RESULT(d2)
+  FUNCTION get_d2_FROM_dnSca(S) RESULT(d2)
     USE mod_NumParameters
 
       real (kind=Rkind), allocatable   :: d2(:,:)
@@ -587,7 +531,7 @@ CONTAINS
   !!
   !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
   !! @param d2                 real:                  d2=S%d2, d2 is NOT allocatable
-    SUBROUTINE sub_get_d2_FROM_dnSca(d2,S)
+  SUBROUTINE sub_get_d2_FROM_dnSca(d2,S)
     USE mod_NumParameters
 
       real (kind=Rkind),   intent(inout) :: d2(:,:)
@@ -605,7 +549,7 @@ CONTAINS
   !!
   !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
   !! @param d3                 real  (result):        d3=S%d3, d3 is allocatable
-    FUNCTION get_d3_FROM_dnSca(S) RESULT(d3)
+  FUNCTION get_d3_FROM_dnSca(S) RESULT(d3)
     USE mod_NumParameters
 
       real (kind=Rkind), allocatable   :: d3(:,:,:)
@@ -624,7 +568,7 @@ CONTAINS
   !!
   !! @param S                  TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
   !! @param d3                 real:                  d3=S%d3, d3 is NOT allocatable
-    SUBROUTINE sub_get_d3_FROM_dnSca(d3,S)
+  SUBROUTINE sub_get_d3_FROM_dnSca(d3,S)
     USE mod_NumParameters
 
       real (kind=Rkind),   intent(inout) :: d3(:,:,:)
@@ -799,41 +743,24 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param S                     TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
+!! @param S                       TYPE(dnSca):         derived type which deals with the derivatives of a scalar functions.
 !! @param get_nderiv_FROM_dnSca   integer  (result):   nderiv value, check against S%nederiv and the allocated d1,d2 or d3
-  FUNCTION get_nderiv_FROM_dnSca(S)
+  ELEMENTAL FUNCTION get_nderiv_FROM_dnSca(S)
     USE mod_NumParameters
 
     integer :: get_nderiv_FROM_dnSca
 
     TYPE(dnSca), intent(in)    :: S
-    integer :: nderiv
 
-   nderiv = S%nderiv
-    !IF (S%nderiv == -1) THEN
-    !  nderiv = S%nderiv
-    !ELSE IF (.NOT. allocated(S%d1)) THEN
     IF (.NOT. allocated(S%d1)) THEN
-      nderiv = 0
+      get_nderiv_FROM_dnSca = 0
     ELSE IF (.NOT. allocated(S%d2)) THEN
-      nderiv = 1
+      get_nderiv_FROM_dnSca = 1
     ELSE IF (.NOT. allocated(S%d3)) THEN
-      nderiv = 2
+      get_nderiv_FROM_dnSca = 2
     ELSE
-      nderiv = 3
+      get_nderiv_FROM_dnSca = 3
     END IF
-
-    IF (S%nderiv /= nderiv) THEN
-      write(out_unitp,*) ' ERROR in get_nderiv_FROM_dnSca'
-      write(out_unitp,*) '  Problem with nderiv in S'
-      write(out_unitp,*) '  nderiv from the allocation',nderiv
-      write(out_unitp,*) '  S%nderiv',S%nderiv
-
-      CALL WriteAll_dnSca(S)
-      STOP 'ERROR in get_nderiv_FROM_dnSca'
-    END IF
-
-    get_nderiv_FROM_dnSca = nderiv
 
     END FUNCTION get_nderiv_FROM_dnSca
 !> @brief Public function to get ndim from a derived type dnSca.
@@ -843,7 +770,7 @@ CONTAINS
 !!
 !! @param S                     TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
 !! @param get_ndim_FROM_dnSca     integer  (result):   ndim value from the size of S%d1.
-  FUNCTION get_ndim_FROM_dnSca(S)
+  ELEMENTAL FUNCTION get_ndim_FROM_dnSca(S)
     USE mod_NumParameters
 
     integer :: get_ndim_FROM_dnSca
@@ -862,14 +789,14 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Check_dnSca_IS_ZERO     logical  (result):   result of the comparison
+!! @param Check_dnSca_IS_ZERO   logical  (result):   result of the comparison
 !! @param S                     TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
 !! @param epsi                  real (optional):     when present zero limit, otherwise 10^-10
-  FUNCTION Check_dnSca_IS_ZERO(S,epsi)
+  ELEMENTAL FUNCTION Check_dnSca_IS_ZERO(S,epsi)
     USE mod_NumParameters
     logical :: Check_dnSca_IS_ZERO
 
-    TYPE(dnSca),          intent(in)           :: S
+    TYPE(dnSca),        intent(in)           :: S
     real(kind=Rkind),   intent(in), optional :: epsi
 
     real(kind=Rkind) :: epsi_loc
@@ -892,7 +819,7 @@ CONTAINS
 !!
 !! @param get_maxval_OF_dnSca     real  (result):      largest value
 !! @param S                     TYPE(dnSca):           derived type which deals with the derivatives of a scalar functions.
-  FUNCTION get_maxval_OF_dnSca(S)
+  ELEMENTAL FUNCTION get_maxval_OF_dnSca(S)
     USE mod_NumParameters
 
     real(kind=Rkind) :: get_maxval_OF_dnSca
@@ -997,7 +924,7 @@ CONTAINS
 !=========================================================
 ! operators ==,/=,>=,>,<=,<
 !=========================================================
-  FUNCTION dnSca_EQ_dnSca(S1,S2) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_EQ_dnSca(S1,S2) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca), intent(in)    :: S1,S2
@@ -1012,7 +939,7 @@ CONTAINS
     IF (allocated(S1%d3) .AND. allocated(S2%d3)) lres = lres .AND. all(S1%d3 == S2%d3)
 
   END FUNCTION dnSca_EQ_dnSca
-  FUNCTION dnSca_EQ_R(S1,R) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_EQ_R(S1,R) RESULT(lres)
     TYPE (dnSca),        intent(in)    :: S1
     real (kind=Rkind), intent(in)    :: R
     logical                   :: lres
@@ -1022,7 +949,7 @@ CONTAINS
     lres = (S1%d0 == R)
 
   END FUNCTION dnSca_EQ_R
-  FUNCTION R_EQ_dnSca(R,S1) RESULT(lres)
+  ELEMENTAL FUNCTION R_EQ_dnSca(R,S1) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
@@ -1035,7 +962,7 @@ CONTAINS
 
   END FUNCTION R_EQ_dnSca
 
-  FUNCTION dnSca_NEQ_dnSca(S1,S2) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_NEQ_dnSca(S1,S2) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca), intent(in)    :: S1,S2
@@ -1050,7 +977,7 @@ CONTAINS
     IF (allocated(S1%d3) .AND. allocated(S2%d3)) lres = lres .OR. all(S1%d3 /= S2%d3)
 
   END FUNCTION dnSca_NEQ_dnSca
-  FUNCTION dnSca_NEQ_R(S1,R) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_NEQ_R(S1,R) RESULT(lres)
     TYPE (dnSca),        intent(in)    :: S1
     real (kind=Rkind), intent(in)    :: R
     logical                   :: lres
@@ -1060,7 +987,7 @@ CONTAINS
     lres = (S1%d0 /= R)
 
   END FUNCTION dnSca_NEQ_R
-  FUNCTION R_NEQ_dnSca(R,S1) RESULT(lres)
+  ELEMENTAL FUNCTION R_NEQ_dnSca(R,S1) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
@@ -1073,7 +1000,7 @@ CONTAINS
 
   END FUNCTION R_NEQ_dnSca
 
-  FUNCTION dnSca_LE_dnSca(S1,S2) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_LE_dnSca(S1,S2) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca), intent(in)    :: S1,S2
@@ -1084,7 +1011,7 @@ CONTAINS
     lres = (S1%d0 <= S2%d0)
 
   END FUNCTION dnSca_LE_dnSca
-  FUNCTION dnSca_LE_R(S1,R) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_LE_R(S1,R) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
@@ -1096,7 +1023,7 @@ CONTAINS
     lres = (S1%d0 <= R)
 
   END FUNCTION dnSca_LE_R
-  FUNCTION R_LE_dnSca(R,S1) RESULT(lres)
+  ELEMENTAL FUNCTION R_LE_dnSca(R,S1) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
@@ -1109,7 +1036,7 @@ CONTAINS
 
   END FUNCTION R_LE_dnSca
 
-  FUNCTION dnSca_LT_dnSca(S1,S2) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_LT_dnSca(S1,S2) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca), intent(in)    :: S1,S2
@@ -1120,7 +1047,7 @@ CONTAINS
     lres = (S1%d0 < S2%d0)
 
   END FUNCTION dnSca_LT_dnSca
-  FUNCTION dnSca_LT_R(S1,R) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_LT_R(S1,R) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
@@ -1132,7 +1059,7 @@ CONTAINS
     lres = (S1%d0 < R)
 
   END FUNCTION dnSca_LT_R
-  FUNCTION R_LT_dnSca(R,S1) RESULT(lres)
+  ELEMENTAL FUNCTION R_LT_dnSca(R,S1) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
@@ -1145,7 +1072,7 @@ CONTAINS
 
   END FUNCTION R_LT_dnSca
 
-  FUNCTION dnSca_GE_dnSca(S1,S2) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_GE_dnSca(S1,S2) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca), intent(in)    :: S1,S2
@@ -1156,7 +1083,7 @@ CONTAINS
     lres = (S1%d0 >= S2%d0)
 
   END FUNCTION dnSca_GE_dnSca
-  FUNCTION dnSca_GE_R(S1,R) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_GE_R(S1,R) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
@@ -1168,7 +1095,7 @@ CONTAINS
     lres = (S1%d0 >= R)
 
   END FUNCTION dnSca_GE_R
-  FUNCTION R_GE_dnSca(R,S1) RESULT(lres)
+  ELEMENTAL FUNCTION R_GE_dnSca(R,S1) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
@@ -1181,7 +1108,7 @@ CONTAINS
 
   END FUNCTION R_GE_dnSca
 
-  FUNCTION dnSca_GT_dnSca(S1,S2) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_GT_dnSca(S1,S2) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca), intent(in)    :: S1,S2
@@ -1192,7 +1119,7 @@ CONTAINS
     lres = (S1%d0 > S2%d0)
 
   END FUNCTION dnSca_GT_dnSca
-  FUNCTION dnSca_GT_R(S1,R) RESULT(lres)
+  ELEMENTAL FUNCTION dnSca_GT_R(S1,R) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
@@ -1204,7 +1131,7 @@ CONTAINS
     lres = (S1%d0 > R)
 
   END FUNCTION dnSca_GT_R
-  FUNCTION R_GT_dnSca(R,S1) RESULT(lres)
+  ELEMENTAL FUNCTION R_GT_dnSca(R,S1) RESULT(lres)
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
@@ -1219,7 +1146,7 @@ CONTAINS
 !=========================================================
 ! operators =,+,-,*,/,**
 !=========================================================
-  SUBROUTINE sub_dnSca2_TO_dnSca1(S1,S2)
+  ELEMENTAL SUBROUTINE sub_dnSca2_TO_dnSca1(S1,S2)
     USE mod_NumParameters
     TYPE (dnSca), intent(inout) :: S1
     TYPE (dnSca), intent(in)    :: S2
@@ -1233,34 +1160,17 @@ CONTAINS
 
     !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nderiv_loc
 
-    CALL alloc_dnSca(S1,ndim_loc,nderiv_loc)
-
+    CALL dealloc_dnSca(S1)
     IF (nderiv_loc < 0 .OR. (nderiv_loc > 0 .AND. ndim_loc < 1)) RETURN
 
+    S1%d0 = S2%d0
+    IF (allocated(S2%d1)) S1%d1 = S2%d1
+    IF (allocated(S2%d2)) S1%d2 = S2%d2
+    IF (allocated(S2%d3)) S1%d3 = S2%d3
 
-    IF (nderiv_loc == 0) THEN
-       S1%d0 = S2%d0
-    ELSE IF (nderiv_loc == 1) THEN
-       S1%d0 = S2%d0
-       S1%d1 = S2%d1
-    ELSE IF (nderiv_loc == 2) THEN
-       S1%d0 = S2%d0
-       S1%d1 = S2%d1
-       S1%d2 = S2%d2
-    ELSE IF (nderiv_loc == 3) THEN
-       S1%d0 = S2%d0
-       S1%d1 = S2%d1
-       S1%d2 = S2%d2
-       S1%d3 = S2%d3
-    ELSE
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' nderiv > 3 is NOT possible',nderiv_loc
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
-    END IF
   END SUBROUTINE sub_dnSca2_TO_dnSca1
 
-  SUBROUTINE set_dnSca_TO_R(S,R)
+  ELEMENTAL SUBROUTINE set_dnSca_TO_R(S,R)
     USE mod_NumParameters
 
     TYPE (dnSca),      intent(inout) :: S
@@ -1288,35 +1198,26 @@ CONTAINS
        S%d1 = ZERO
        S%d2 = ZERO
        S%d3 = ZERO
-    ELSE
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' nderiv > 3 is NOT possible',nderiv_loc
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
     END IF
   END SUBROUTINE set_dnSca_TO_R
 !=========================================================
 
 
- FUNCTION dnSca2_PLUS_dnSca1(S1,S2) RESULT(Sres)
+  ELEMENTAL FUNCTION dnSca2_PLUS_dnSca1(S1,S2) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                :: Sres
     TYPE (dnSca), intent(in)    :: S1,S2
 
     integer :: nderiv,ndim
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='dnSca2_PLUS_dnSca1'
 
     nderiv = min(get_nderiv_FROM_dnSca(S1),get_nderiv_FROM_dnSca(S2))
     ndim   = min(get_ndim_FROM_dnSca(S1),  get_ndim_FROM_dnSca(S2))
 
-
     CALL dealloc_dnSca(Sres)
 
     IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
-
-    CALL alloc_dnSca(Sres,ndim,nderiv)
 
     IF (nderiv == 0) THEN
        Sres%d0 = S1%d0 + S2%d0
@@ -1332,60 +1233,50 @@ CONTAINS
        Sres%d1 = S1%d1 + S2%d1
        Sres%d2 = S1%d2 + S2%d2
        Sres%d3 = S1%d3 + S2%d3
-    ELSE
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' nderiv > 2 is NOT possible',nderiv
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
     END IF
   END FUNCTION dnSca2_PLUS_dnSca1
-  FUNCTION dnSca_PLUS_R(S,R) RESULT(Sres)
+  ELEMENTAL FUNCTION dnSca_PLUS_R(S,R) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
     TYPE (dnSca),        intent(in)    :: S
-    real (kind=Rkind), intent(in)    :: R
+    real (kind=Rkind),   intent(in)    :: R
 
 
     integer :: nderiv,ndim
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='dnSca_PLUS_R'
 
-    Sres = S
+    Sres    = S
     Sres%d0 = Sres%d0 + R
 
   END FUNCTION dnSca_PLUS_R
-  FUNCTION R_PLUS_dnSca(R,S) RESULT(Sres)
+  ELEMENTAL FUNCTION R_PLUS_dnSca(R,S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
     TYPE (dnSca),        intent(in)    :: S
-    real (kind=Rkind), intent(in)    :: R
+    real (kind=Rkind),   intent(in)    :: R
 
 
-    integer :: nderiv,ndim
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='R_PLUS_dnSca'
 
-    Sres = S
+    Sres    = S
     Sres%d0 = Sres%d0 + R
 
   END FUNCTION R_PLUS_dnSca
-  FUNCTION PLUS_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION PLUS_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
     TYPE (dnSca),        intent(in)    :: S
 
 
-    integer :: nderiv,ndim
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='PLUS_dnSca'
 
     Sres = S
 
   END FUNCTION PLUS_dnSca
-  FUNCTION dnSca2_MINUS_dnSca1(S1,S2) RESULT(Sres)
+  ELEMENTAL FUNCTION dnSca2_MINUS_dnSca1(S1,S2) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                :: Sres
@@ -1402,8 +1293,6 @@ CONTAINS
 
     IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
-    CALL alloc_dnSca(Sres,ndim,nderiv)
-
     IF (nderiv == 0) THEN
        Sres%d0 = S1%d0 - S2%d0
     ELSE IF (nderiv == 1) THEN
@@ -1418,50 +1307,39 @@ CONTAINS
        Sres%d1 = S1%d1 - S2%d1
        Sres%d2 = S1%d2 - S2%d2
        Sres%d3 = S1%d3 - S2%d3
-    ELSE
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' nderiv > 3 is NOT possible',nderiv
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
     END IF
   END FUNCTION dnSca2_MINUS_dnSca1
-  FUNCTION dnSca_MINUS_R(S,R) RESULT(Sres)
+  ELEMENTAL FUNCTION dnSca_MINUS_R(S,R) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
     TYPE (dnSca),        intent(in)    :: S
-    real (kind=Rkind), intent(in)    :: R
+    real (kind=Rkind),   intent(in)    :: R
 
 
-    integer :: nderiv,ndim
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='dnSca_MINUS_R'
 
-    Sres = S
+    Sres    = S
     Sres%d0 = Sres%d0 - R
 
   END FUNCTION dnSca_MINUS_R
-  FUNCTION R_MINUS_dnSca(R,S) RESULT(Sres)
+  ELEMENTAL FUNCTION R_MINUS_dnSca(R,S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
     TYPE (dnSca),        intent(in)    :: S
-    real (kind=Rkind), intent(in)    :: R
+    real (kind=Rkind),   intent(in)    :: R
 
 
     integer :: nderiv,ndim
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='R_MINUS_dnSca'
 
     nderiv = get_nderiv_FROM_dnSca(S)
     ndim   = get_ndim_FROM_dnSca(S)
 
-
     CALL dealloc_dnSca(Sres)
 
     IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
-
-    CALL alloc_dnSca(Sres,ndim,nderiv)
 
     IF (nderiv == 0) THEN
        Sres%d0 = R -S%d0
@@ -1477,15 +1355,10 @@ CONTAINS
        Sres%d1 =   -S%d1
        Sres%d2 =   -S%d2
        Sres%d3 =   -S%d3
-    ELSE
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' nderiv > 3 is NOT possible',nderiv
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
     END IF
 
   END FUNCTION R_MINUS_dnSca
-  FUNCTION MINUS_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION MINUS_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1493,7 +1366,6 @@ CONTAINS
 
 
     integer :: nderiv,ndim
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='MINUS_dnSca'
 
     nderiv = get_nderiv_FROM_dnSca(S)
@@ -1502,8 +1374,6 @@ CONTAINS
     CALL dealloc_dnSca(Sres)
 
     IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
-
-    CALL alloc_dnSca(Sres,ndim,nderiv)
 
     IF (nderiv == 0) THEN
        Sres%d0 = -S%d0
@@ -1519,23 +1389,17 @@ CONTAINS
        Sres%d1 = -S%d1
        Sres%d2 = -S%d2
        Sres%d3 = -S%d3
-    ELSE
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' nderiv > 3 is NOT possible',nderiv
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
     END IF
 
   END FUNCTION MINUS_dnSca
 
- FUNCTION dnSca2_TIME_dnSca1(S1,S2) RESULT(Sres)
+  ELEMENTAL FUNCTION dnSca2_TIME_dnSca1(S1,S2) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                :: Sres
     TYPE (dnSca), intent(in)    :: S1,S2
 
     integer :: nderiv,ndim,id,jd,kd
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='dnSca2_TIME_dnSca1'
 
     nderiv = min(get_nderiv_FROM_dnSca(S1),get_nderiv_FROM_dnSca(S2))
@@ -1545,8 +1409,6 @@ CONTAINS
     CALL dealloc_dnSca(Sres)
 
     IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
-
-    CALL alloc_dnSca(Sres,ndim,nderiv)
 
     IF (nderiv == 0) THEN
        Sres%d0 = S1%d0 * S2%d0
@@ -1587,14 +1449,9 @@ CONTAINS
        END DO
        END DO
        END DO
-    ELSE
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' nderiv > 3 is NOT possible',nderiv
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
     END IF
   END FUNCTION dnSca2_TIME_dnSca1
-  FUNCTION d0Sca_TIME_R(S,R) RESULT(Sres)
+  ELEMENTAL FUNCTION d0Sca_TIME_R(S,R) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1615,7 +1472,7 @@ CONTAINS
     Sres%d0 = R * S%d0
 
   END FUNCTION d0Sca_TIME_R
-  FUNCTION dnSca_TIME_R(S,R) RESULT(Sres)
+  ELEMENTAL FUNCTION dnSca_TIME_R(S,R) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1624,7 +1481,6 @@ CONTAINS
 
 
     integer :: nderiv,ndim
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='dnSca_TIME_R'
 
     nderiv = get_nderiv_FROM_dnSca(S)
@@ -1634,8 +1490,6 @@ CONTAINS
     CALL dealloc_dnSca(Sres)
 
     IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
-
-    CALL alloc_dnSca(Sres,ndim,nderiv)
 
     IF (nderiv == 0) THEN
        Sres%d0 = R * S%d0
@@ -1651,16 +1505,11 @@ CONTAINS
        Sres%d1 = R * S%d1
        Sres%d2 = R * S%d2
        Sres%d3 = R * S%d3
-    ELSE
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' nderiv > 3 is NOT possible',nderiv
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
     END IF
 
   END FUNCTION dnSca_TIME_R
 
-  FUNCTION R_TIME_dnSca(R,S) RESULT(Sres)
+  ELEMENTAL FUNCTION R_TIME_dnSca(R,S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1680,8 +1529,6 @@ CONTAINS
 
     IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
-    CALL alloc_dnSca(Sres,ndim,nderiv)
-
     IF (nderiv == 0) THEN
        Sres%d0 = R * S%d0
     ELSE IF (nderiv == 1) THEN
@@ -1696,22 +1543,16 @@ CONTAINS
        Sres%d1 = R * S%d1
        Sres%d2 = R * S%d2
        Sres%d3 = R * S%d3
-    ELSE
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' nderiv > 3 is NOT possible',nderiv
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
     END IF
 
   END FUNCTION R_TIME_dnSca
 
- FUNCTION dnSca2_OVER_dnSca1(S1,S2) RESULT(Sres)
+  ELEMENTAL FUNCTION dnSca2_OVER_dnSca1(S1,S2) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                :: Sres
     TYPE (dnSca), intent(in)    :: S1,S2
 
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='dnSca2_OVER_dnSca1'
 
 
@@ -1719,16 +1560,14 @@ CONTAINS
 
 
   END FUNCTION dnSca2_OVER_dnSca1
-  FUNCTION dnSca_OVER_R(S,R) RESULT(Sres)
+  ELEMENTAL FUNCTION dnSca_OVER_R(S,R) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
     TYPE (dnSca),        intent(in)    :: S
-    real (kind=Rkind), intent(in)    :: R
+    real (kind=Rkind),   intent(in)    :: R
 
 
-    integer :: nderiv,ndim
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='dnSca_OVER_R'
 
 
@@ -1736,16 +1575,14 @@ CONTAINS
 
   END FUNCTION dnSca_OVER_R
 
-  FUNCTION R_OVER_dnSca(R,S) RESULT(Sres)
+  ELEMENTAL FUNCTION R_OVER_dnSca(R,S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
     TYPE (dnSca),        intent(in)    :: S
-    real (kind=Rkind), intent(in)    :: R
+    real (kind=Rkind),   intent(in)    :: R
 
 
-    integer :: nderiv,ndim
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='R_OVER_dnSca'
 
 
@@ -1759,15 +1596,14 @@ CONTAINS
 ! All functions in the fortran norm except atan2 betause it has two arguments
 !=========================================================
 
-  FUNCTION get_F_dnSca(S,d0f,d1f,d2f,d3f) RESULT(Sres)
+  ELEMENTAL FUNCTION get_F_dnSca(S,d0f,d1f,d2f,d3f) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
     TYPE (dnSca),        intent(in)    :: S
-    real (kind=Rkind), intent(in)    :: d0f,d1f,d2f,d3f
+    real (kind=Rkind),   intent(in)    :: d0f,d1f,d2f,d3f
 
     integer :: nderiv,ndim,id,jd,kd
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='get_F_dnSca'
 
     nderiv = get_nderiv_FROM_dnSca(S)
@@ -1777,8 +1613,6 @@ CONTAINS
 
     IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
-    CALL alloc_dnSca(Sres,ndim,nderiv)
-
     IF (nderiv == 0) THEN
        Sres%d0 = d0f
     ELSE IF (nderiv == 1) THEN
@@ -1787,40 +1621,39 @@ CONTAINS
     ELSE IF (nderiv == 2) THEN
        Sres%d0 = d0f
        Sres%d1 = d1f * S%d1
+       Sres%d2 = d1f * S%d2
+
        DO id=1,ndim
        DO jd=1,ndim
-         Sres%d2(jd,id) = d1f * S%d2(jd,id) + d2f * S%d1(id)*S%d1(jd)
+         Sres%d2(jd,id) = Sres%d2(jd,id) + d2f * S%d1(id)*S%d1(jd)
        END DO
        END DO
     ELSE IF (nderiv == 3) THEN
        Sres%d0 = d0f
        Sres%d1 = d1f * S%d1
+       Sres%d2 = d1f * S%d2
+       Sres%d3 = d1f * S%d3
+
        DO id=1,ndim
        DO jd=1,ndim
-         Sres%d2(jd,id) = d1f * S%d2(jd,id) + d2f * S%d1(id)*S%d1(jd)
+         Sres%d2(jd,id) = Sres%d2(jd,id) + d2f * S%d1(id)*S%d1(jd)
        END DO
        END DO
 
        DO id=1,ndim
        DO jd=1,ndim
        DO kd=1,ndim
-         Sres%d3(kd,jd,id) = d1f * S%d3(kd,jd,id) + &
+         Sres%d3(kd,jd,id) = Sres%d3(kd,jd,id) + &
                              d2f * (S%d1(id)*S%d2(kd,jd) + S%d1(jd)*S%d2(kd,id) + S%d1(kd)*S%d2(jd,id)) + &
                              d3f * S%d1(id)*S%d1(jd)*S%d1(kd)
        END DO
        END DO
        END DO
-
-    ELSE
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' nderiv > 3 is NOT possible',nderiv
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
     END IF
 
   END FUNCTION get_F_dnSca
 
-  FUNCTION dnSca_EXP_R(S,R) RESULT(Sres)
+  ELEMENTAL FUNCTION dnSca_EXP_R(S,R) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1828,7 +1661,6 @@ CONTAINS
     real (kind=Rkind), intent(in)    :: R
 
     integer :: nderiv
-    integer :: err_dnSca_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='dnSca_EXP_R'
 
@@ -1843,7 +1675,7 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION dnSca_EXP_R
-  FUNCTION dnSca_EXP_I(S,I) RESULT(Sres)
+  ELEMENTAL FUNCTION dnSca_EXP_I(S,I) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1851,13 +1683,12 @@ CONTAINS
     integer,           intent(in)    :: I
 
 
-    integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='dnSca_EXP_I'
 
     Sres = S**real(I,kind=Rkind)
 
   END FUNCTION dnSca_EXP_I
-  FUNCTION get_SQRT_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_SQRT_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1871,7 +1702,7 @@ CONTAINS
 
   END FUNCTION get_SQRT_dnSca
 
-  FUNCTION get_ABS_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_ABS_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1885,7 +1716,7 @@ CONTAINS
 
   END FUNCTION get_ABS_dnSca
 
-  FUNCTION get_EXP_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_EXP_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1908,7 +1739,7 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION get_EXP_dnSca
-  FUNCTION get_LOG_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_LOG_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1931,7 +1762,7 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION get_LOG_dnSca
-  FUNCTION get_LOG10_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_LOG10_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1946,7 +1777,7 @@ CONTAINS
     Sres = log(S)/log(TEN)
 
   END FUNCTION get_LOG10_dnSca
-  FUNCTION get_COS_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_COS_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1969,7 +1800,7 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION get_COS_dnSca
-  FUNCTION get_ACOS_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_ACOS_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -1992,7 +1823,7 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION get_ACOS_dnSca
-  FUNCTION get_SIN_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_SIN_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -2014,7 +1845,7 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION get_SIN_dnSca
-  FUNCTION get_ASIN_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_ASIN_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -2036,7 +1867,7 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION get_ASIN_dnSca
-  FUNCTION get_TAN_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_TAN_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -2051,7 +1882,7 @@ CONTAINS
 
   END FUNCTION get_TAN_dnSca
 
-  FUNCTION get_ATAN_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_ATAN_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -2073,7 +1904,7 @@ CONTAINS
 
   END FUNCTION get_ATAN_dnSca
 
-  FUNCTION get_COSH_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_COSH_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -2096,7 +1927,7 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION get_COSH_dnSca
-  FUNCTION get_ACOSH_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_ACOSH_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -2122,7 +1953,7 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION get_ACOSH_dnSca
-  FUNCTION get_SINH_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_SINH_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -2144,7 +1975,7 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION get_SINH_dnSca
-  FUNCTION get_ASINH_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_ASINH_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -2170,7 +2001,7 @@ CONTAINS
 
   END FUNCTION get_ASINH_dnSca
 
-  FUNCTION get_TANH_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_TANH_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -2193,7 +2024,7 @@ CONTAINS
 
   END FUNCTION get_TANH_dnSca
 
-  FUNCTION get_ATANH_dnSca(S) RESULT(Sres)
+  ELEMENTAL FUNCTION get_ATANH_dnSca(S) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnSca)                       :: Sres
@@ -2219,7 +2050,7 @@ CONTAINS
 
   END FUNCTION get_ATANH_dnSca
 
-  FUNCTION atanh_perso(x)
+  ELEMENTAL FUNCTION atanh_perso(x)
     real (kind=Rkind)             :: atanh_perso
     real (kind=Rkind), intent(in) :: x
 
@@ -2230,7 +2061,7 @@ CONTAINS
 #endif
 
   END FUNCTION atanh_perso
-  FUNCTION asinh_perso(x)
+  ELEMENTAL FUNCTION asinh_perso(x)
     real (kind=Rkind)             :: asinh_perso
     real (kind=Rkind), intent(in) :: x
 
@@ -2241,7 +2072,7 @@ CONTAINS
 #endif
 
   END FUNCTION asinh_perso
-  FUNCTION acosh_perso(x)
+  ELEMENTAL FUNCTION acosh_perso(x)
     real (kind=Rkind)             :: acosh_perso
     real (kind=Rkind), intent(in) :: x
 

@@ -187,7 +187,7 @@ PROGRAM TEST_dnSca
 
    Sana =  dnX**0.5_Rkind - sqrt(dnX)
    write(out_unitp,'(a,l2)') 'dnX**0.5-sqrt(dnX)        ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnSca_FOR_test(Sana,nio_test,info='0.5 + dnX')
+   CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**0.5-sqrt(dnX)')
 
    Sana =  dnX**3 - dnX*dnX*dnX
    write(out_unitp,'(a,l2)') 'dnX**3-dnX*dnX*dnX      ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)

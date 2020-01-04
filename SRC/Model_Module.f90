@@ -149,6 +149,7 @@ CONTAINS
     !write(out_unitp,nml=potential)
 
     option1              = option
+    read_nml1            = read_nml
     Para_Model%ndim      = ndim
     Para_Model%nsurf     = nsurf
     Para_Model%adiabatic = adiabatic
@@ -183,17 +184,17 @@ CONTAINS
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE (Param_Model), intent(inout)      :: Para_Model
-    character (len=*), intent(in),optional :: pot_name
-    integer, intent(in), optional          :: ndim,nsurf
-    logical, intent(in), optional          :: adiabatic
+    TYPE (Param_Model),  intent(inout)        :: Para_Model
+    character (len=*),   intent(in), optional :: pot_name
+    integer,             intent(in), optional :: ndim,nsurf
+    logical,             intent(in), optional :: adiabatic
 
-    logical, intent(in), optional          :: read_param
-    integer, intent(in), optional          :: nio_param_file
-    character (len=*), intent(in),optional :: param_file_name
+    logical,             intent(in), optional :: read_param
+    integer,             intent(in), optional :: nio_param_file
+    character (len=*),   intent(in), optional :: param_file_name
 
-    integer, intent(in), optional          :: option
-    logical, intent(in), optional          :: PubliUnit
+    integer,             intent(in), optional :: option
+    logical,             intent(in), optional :: PubliUnit
 
     integer ::i, option_loc,nio_loc
     logical :: read_param_loc,adiabatic_loc,read_nml
@@ -223,6 +224,7 @@ CONTAINS
     ELSE
       read_param_loc = .FALSE.
     END IF
+
     IF (present(nio_param_file)) THEN
       nio_loc = nio_param_file
     ELSE
