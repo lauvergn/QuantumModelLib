@@ -23,8 +23,8 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  CALL test_HONO()
-  stop
+  !CALL test_HONO()
+  !stop
 
   ! One electronic surface
   CALL test_LinearHBond()
@@ -39,6 +39,8 @@ PROGRAM TEST_model
 
   CALL test_Phenol()
   CALL test_PSB3()
+
+  CALL test_HONO()
 
   ! A template with one electronic surface
   CALL test_template()
@@ -935,6 +937,24 @@ SUBROUTINE test_HONO
 
   CALL dealloc_dnMatPot(PotVal)
   deallocate(q)
+
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential on a 1D grid (as a function of q)'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential on a 1D grid (as a function of q(6), the torsion)'
+  write(out_unitp,*) '   file name: "grid_HONO"'
+
+  CALL Eval_pot_ON_Grid(Para_Model,                                      &
+                        Qmin=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
+                              2.23738_Rkind,1.975200_Rkind,ZERO],        &
+                        Qmax=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
+                              2.23738_Rkind,1.975200_Rkind,pi],          &
+                        nb_points=1001, grid_file='grid_HONO')
+
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -995,11 +1015,13 @@ SUBROUTINE test_template
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='Template')
 
+  CALL dealloc_dnMatPot(PotVal)
+  deallocate(q)
+
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL dealloc_dnMatPot(PotVal)
-  deallocate(q)
+
 
 END SUBROUTINE test_template
