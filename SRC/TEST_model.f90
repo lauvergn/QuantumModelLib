@@ -23,8 +23,8 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  !CALL test_LinearHBond()
-  !stop
+  CALL test_HONO()
+  stop
 
   ! One electronic surface
   CALL test_LinearHBond()
@@ -885,6 +885,61 @@ SUBROUTINE test_PSB3
   deallocate(q)
 
 END SUBROUTINE test_PSB3
+SUBROUTINE test_HONO
+  USE mod_Lib
+  USE mod_dnMatPot
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Param_Model)             :: Para_Model
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMatPot)                :: PotVal
+
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 6D-HONO ------------------------'
+  CALL Write0_Model(pot_name='HONO')
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(Para_Model,pot_name='HONO')
+  CALL Write_Model(Para_Model)
+
+  allocate(q(Para_Model%ndim))
+  q(:) = [2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,2.23738_Rkind,1.975200_Rkind,0._Rkind]
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+
+  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='4D-HenonHeiles')
+
+  CALL dealloc_dnMatPot(PotVal)
+  deallocate(q)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_HONO
 SUBROUTINE test_template
   USE mod_Lib
   USE mod_dnMatPot

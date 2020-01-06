@@ -32,6 +32,7 @@ MODULE mod_Model
   USE mod_TullyPot
 
   USE mod_PSB3Pot
+  USE mod_HONO
 
   USE mod_1DSOC_Model
   USE mod_1DSOC_2S1T_Model
@@ -79,6 +80,7 @@ MODULE mod_Model
     TYPE (Param_Phenol)      :: Para_Phenol
     TYPE (Param_TwoD)        :: Para_TwoD
     TYPE (Param_PSB3)        :: Para_PSB3
+    TYPE (Param_HONO)        :: Para_HONO
 
     TYPE (Param_Template)    :: Para_Template
 
@@ -479,7 +481,16 @@ CONTAINS
       Para_Model%d0GGdef(2,2) = ONE/Para_Model%Para_TwoD%muY
 
     CASE ('psb3')
-      !! Marsili et al.
+      !! === README ==
+      !! Model for the photo-isomerization of the penta-2,4-dieniminium (PSB3) cation.
+      !! pot_name  = 'PSB3'
+      !! ndim      = 3
+      !! nsurf     = 2
+      !! remarks: two options are possible (option = 1,2)
+      !! The default is option=1 (unpublished).
+      !! The parameters for option=2 come from the following reference.
+      !! ref: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019). https://doi.org/10.1021/acs.jpca.8b10010
+      !! === END README ==
       Para_Model%nsurf     = 2
       Para_Model%ndim      = 3
 
@@ -488,6 +499,14 @@ CONTAINS
 
       CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
 
+    CASE ('hono')
+      Para_Model%nsurf     = 1
+      Para_Model%ndim      = 6
+
+      CALL Init_HONO(Para_Model%Para_HONO,option=option_loc,            &
+                             nio=nio_loc,PubliUnit=Para_Model%PubliUnit)
+
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
 
     CASE ('template')
       !! 3D-potential with 1 surface
@@ -698,6 +717,9 @@ CONTAINS
 
     CASE ('psb3')
       CALL Eval_PSB3Pot(Mat_OF_PotDia,dnQ,Para_Model%Para_PSB3,nderiv_loc)
+
+    CASE ('hono')
+      CALL Eval_HONOPot(Mat_OF_PotDia,dnQ,Para_Model%Para_HONO,nderiv_loc)
 
     CASE ('template')
       CALL Eval_TemplatePot(Mat_OF_PotDia,dnQ,Para_Model%Para_Template,nderiv_loc)
@@ -1283,6 +1305,8 @@ CONTAINS
         CALL Write_PhenolPot(Para_Model%Para_Phenol,nio=nio_loc)
     CASE ('psb3')
         CALL Write_PSB3Pot(Para_Model%Para_PSB3,nio=nio_loc)
+    CASE ('hono')
+        CALL Write_HONO(Para_Model%Para_HONO,nio=nio_loc)
     CASE ('template')
         CALL  Write_TemplatePot(Para_Model%Para_Template,nio=nio_loc)
     CASE DEFAULT
@@ -1382,6 +1406,8 @@ CONTAINS
         CALL Write0_PhenolPot(nio=nio_loc)
     CASE ('psb3')
         CALL Write0_PSB3Pot(nio=nio_loc)
+    CASE ('hono')
+        CALL Write0_HONO(nio=nio_loc)
     CASE ('template')
         CALL  Write0_TemplatePot(nio=nio_loc)
     CASE DEFAULT

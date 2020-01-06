@@ -21,7 +21,7 @@
 !===========================================================================
 
 !> @brief Module which makes the initialization, calculation of the Hénon-Heiles potential (value, gradient and hessian).
-!!        Potential in nD (ndim) uses as defined in the following reference.
+!!        Potential in nD (ndim) uses a parameter as defined in the following reference.
 !> @brief Reference: M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
 !!
 !> @author David Lauvergnat
@@ -32,7 +32,7 @@ MODULE mod_HenonHeilesPot
   IMPLICIT NONE
 
 !> @brief Derived type in which the parameter of the Hénon-Heiles potential are set-up.
-!!        Potential in nD (ndim) uses as defined in the following reference.
+!!        Potential in nD (ndim) uses a parameter as defined in the following reference.
 !> @brief Reference: M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
 !!
 !> @author David Lauvergnat
