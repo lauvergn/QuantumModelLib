@@ -189,8 +189,20 @@ PROGRAM TEST_dnSca
    write(out_unitp,'(a,l2)') 'dnX**0.5-sqrt(dnX)        ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**0.5-sqrt(dnX)')
 
+   Sana =  dnX**0 - ONE
+   write(out_unitp,'(a,l2)') 'dnX**0-ONE                ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
+   CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**0 - ONE')
+
+   Sana =  dnX**1 - dnX
+   write(out_unitp,'(a,l2)') 'dnX**1-dnX                ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
+   CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**1 - dnX')
+
+   Sana =  dnX**2 - dnX*dnX
+   write(out_unitp,'(a,l2)') 'dnX**2-dnX*dnX            ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
+   CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**2 - dnX*dnX')
+
    Sana =  dnX**3 - dnX*dnX*dnX
-   write(out_unitp,'(a,l2)') 'dnX**3-dnX*dnX*dnX      ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
+   write(out_unitp,'(a,l2)') 'dnX**3-dnX*dnX*dnX        ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**3 - dnX*dnX*dnX')
 
    write(out_unitp,'(a)') "============================================"

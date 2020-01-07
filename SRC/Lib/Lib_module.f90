@@ -27,6 +27,9 @@ USE mod_NumParameters
 !$ USE omp_lib
 IMPLICIT NONE
 
+  character (len=Line_len), public :: File_path = ''
+
+
 CONTAINS
 
   !!@description: Change the case of a string (default lowercase)
@@ -480,6 +483,27 @@ CONTAINS
     END IF
 
   END FUNCTION err_file_name
+
+  FUNCTION make_FileName(FileName)
+    character(len=*), intent(in)    :: FileName
+
+    character (len=:), allocatable  :: make_FileName
+    integer :: ilast_char
+
+    ilast_char = len_trim(File_path)
+
+    IF (FileName(1:1) == "/" .OR. FileName(1:1) == "" .OR. ilast_char == 0) THEN
+      make_FileName = trim(adjustl(FileName))
+    ELSE
+      IF (File_path(ilast_char:ilast_char) == "/") THEN
+        make_FileName = trim(adjustl(File_path)) // trim(adjustl(FileName))
+      ELSE
+        make_FileName = trim(adjustl(File_path)) // '/' // trim(adjustl(FileName))
+      END IF
+    END IF
+    !write(666,*) 'make_FileName: ',make_FileName
+    !stop
+  END FUNCTION make_FileName
   SUBROUTINE file_open2(name_file,iunit,lformatted,append,old,err_file)
 
   character (len=*),   intent(in)              :: name_file

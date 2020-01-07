@@ -23,7 +23,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  !CALL test_HONO()
+  !CALL test_H2SiN()
   !stop
 
   ! One electronic surface
@@ -41,6 +41,7 @@ PROGRAM TEST_model
   CALL test_PSB3()
 
   CALL test_HONO()
+  CALL test_H2SiN()
 
   ! A template with one electronic surface
   CALL test_template()
@@ -973,6 +974,61 @@ SUBROUTINE test_HONO
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_HONO
+SUBROUTINE test_H2SiN
+  USE mod_Lib
+  USE mod_dnMatPot
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Param_Model)             :: Para_Model
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMatPot)                :: PotVal
+
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 6D-H2SiN -----------------------'
+  CALL Write0_Model(pot_name='H2SiN')
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(Para_Model,pot_name='H2SiN')
+  CALL Write_Model(Para_Model)
+
+  allocate(q(Para_Model%ndim))
+  q(:) = [3.1103305087_Rkind,2.7870835493_Rkind,2.1336938250_Rkind,2.7870835493_Rkind,2.1336938250_Rkind,pi]
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+
+  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='H2SiN')
+
+  CALL dealloc_dnMatPot(PotVal)
+  deallocate(q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_H2SiN
 SUBROUTINE test_template
   USE mod_Lib
   USE mod_dnMatPot

@@ -1658,7 +1658,7 @@ CONTAINS
 
     TYPE (dnSca)                       :: Sres
     TYPE (dnSca),        intent(in)    :: S
-    real (kind=Rkind), intent(in)    :: R
+    real (kind=Rkind),   intent(in)    :: R
 
     integer :: nderiv
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
@@ -1667,12 +1667,21 @@ CONTAINS
 
     nderiv = get_nderiv_FROM_dnSca(S)
 
-    IF (nderiv >= 0) d0f = S%d0**R
-    IF (nderiv >= 1) d1f = S%d0**(R-ONE)   * R
-    IF (nderiv >= 2) d2f = S%d0**(R-TWO)   * R*(R-ONE)
-    IF (nderiv >= 3) d3f = S%d0**(R-THREE) * R*(R-ONE)*(R-TWO)
+    IF (R == ZERO) THEN
+      Sres = S ! to have the right initialization
+      Sres = ONE
+    ELSE IF (R == ONE) THEN
+      Sres = S
+    ELSE IF (R == TWO) THEN
+      Sres = S*S
+    ELSE
+      IF (nderiv >= 0) d0f = S%d0**R
+      IF (nderiv >= 1) d1f = S%d0**(R-ONE)   * R
+      IF (nderiv >= 2) d2f = S%d0**(R-TWO)   * R*(R-ONE)
+      IF (nderiv >= 3) d3f = S%d0**(R-THREE) * R*(R-ONE)*(R-TWO)
+      Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
+    END IF
 
-    Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION dnSca_EXP_R
   ELEMENTAL FUNCTION dnSca_EXP_I(S,I) RESULT(Sres)
@@ -1685,7 +1694,16 @@ CONTAINS
 
     character (len=*), parameter :: name_sub='dnSca_EXP_I'
 
-    Sres = S**real(I,kind=Rkind)
+    IF (I == 0) THEN
+      Sres = S ! to have the right initialization
+      Sres = ONE
+    ELSE IF (I == 1) THEN
+      Sres = S
+    ELSE IF (I == 2) THEN
+      Sres = S*S
+    ELSE
+      Sres = S**real(I,kind=Rkind)
+    END IF
 
   END FUNCTION dnSca_EXP_I
   ELEMENTAL FUNCTION get_SQRT_dnSca(S) RESULT(Sres)

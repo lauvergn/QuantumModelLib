@@ -33,6 +33,7 @@ MODULE mod_Model
 
   USE mod_PSB3Pot
   USE mod_HONO
+  USE mod_H2SiN
 
   USE mod_1DSOC_Model
   USE mod_1DSOC_2S1T_Model
@@ -81,6 +82,7 @@ MODULE mod_Model
     TYPE (Param_TwoD)        :: Para_TwoD
     TYPE (Param_PSB3)        :: Para_PSB3
     TYPE (Param_HONO)        :: Para_HONO
+    TYPE (Param_H2SiN)       :: Para_H2SiN
 
     TYPE (Param_Template)    :: Para_Template
 
@@ -95,6 +97,12 @@ MODULE mod_Model
       character (len=Name_len) :: QML_version = "unknown: -D__QML_VER=?"
 #endif
 
+#if defined(__QMLPATH)
+      character (len=Line_len) :: QML_path   =                         &
+       __QMLPATH
+#else
+      character (len=Line_len) :: QML_path   = '~/QuantumModelLib'
+#endif
 
   TYPE(Param_Model), PUBLIC  :: QuantumModel
 
@@ -206,7 +214,11 @@ CONTAINS
     write(out_unitp,*) '================================================='
     write(out_unitp,*) '== QML: Quantum Model Lib (E-CAM) ==============='
     write(out_unitp,*) '== QML version: ',QML_version
+    write(out_unitp,*) '== QML path:    ',QML_path
     write(out_unitp,*) '== Initialization of the Model =================='
+
+    ! set the "File_path" in the Lib_module.f90
+    File_path = trim(adjustl(QML_path))
 
 
     IF (present(adiabatic)) THEN
@@ -508,6 +520,15 @@ CONTAINS
 
       CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
 
+    CASE ('h2sin')
+      Para_Model%nsurf     = 1
+      Para_Model%ndim      = 6
+
+      CALL Init_H2SiN(Para_Model%Para_H2SiN,Para_Model%ndim,option=option_loc,&
+                      nio=nio_loc,PubliUnit=Para_Model%PubliUnit)
+
+      CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
+
     CASE ('template')
       !! 3D-potential with 1 surface
       Para_Model%nsurf     = 1
@@ -720,6 +741,9 @@ CONTAINS
 
     CASE ('hono')
       CALL Eval_HONOPot(Mat_OF_PotDia,dnQ,Para_Model%Para_HONO,nderiv_loc)
+
+    CASE ('h2sin')
+      CALL Eval_H2SiNPot(Mat_OF_PotDia,dnQ,Para_Model%Para_H2SiN,nderiv_loc)
 
     CASE ('template')
       CALL Eval_TemplatePot(Mat_OF_PotDia,dnQ,Para_Model%Para_Template,nderiv_loc)
@@ -1307,6 +1331,8 @@ CONTAINS
         CALL Write_PSB3Pot(Para_Model%Para_PSB3,nio=nio_loc)
     CASE ('hono')
         CALL Write_HONO(Para_Model%Para_HONO,nio=nio_loc)
+    CASE ('h2sin')
+        CALL Write_H2SiN(Para_Model%Para_H2SiN,nio=nio_loc)
     CASE ('template')
         CALL  Write_TemplatePot(Para_Model%Para_Template,nio=nio_loc)
     CASE DEFAULT
@@ -1408,6 +1434,8 @@ CONTAINS
         CALL Write0_PSB3Pot(nio=nio_loc)
     CASE ('hono')
         CALL Write0_HONO(nio=nio_loc)
+    CASE ('h2sin')
+        CALL Write0_H2SiN(nio=nio_loc)
     CASE ('template')
         CALL  Write0_TemplatePot(nio=nio_loc)
     CASE DEFAULT
