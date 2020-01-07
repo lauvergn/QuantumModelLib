@@ -912,8 +912,7 @@ SUBROUTINE test_HONO
   CALL Write_Model(Para_Model)
 
   allocate(q(Para_Model%ndim))
-  q(:) = [2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,2.23738_Rkind,1.975200_Rkind,0._Rkind]
-
+  q(:) = [2.696732586_Rkind,1.822912197_Rkind,1.777642018_Rkind,2.213326419_Rkind,1.9315017_Rkind,pi]
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -925,7 +924,7 @@ SUBROUTINE test_HONO
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
-  write(out_unitp,*) ' Potential and derivatives'
+  write(out_unitp,*) ' Potential and derivatives at the trans minimum'
   write(out_unitp,*) 'Q:'
   CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
 
@@ -933,7 +932,21 @@ SUBROUTINE test_HONO
   CALL Write_dnMatPot(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='4D-HenonHeiles')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='HONO')
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the cis minimum'
+  q(:) = [2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,2.23738_Rkind,1.975200_Rkind,ZERO]
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+
+  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='HONO')
 
   CALL dealloc_dnMatPot(PotVal)
   deallocate(q)
