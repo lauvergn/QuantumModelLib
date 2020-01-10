@@ -10,7 +10,7 @@ F90 = gfortran
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP = 0
 ## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
 # NVHYP  = 1 : with intrinsic inverse hyperbolic functions
 # NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic inverse hyperbolic functions)
@@ -198,7 +198,8 @@ OBJ_lib        = $(DIROBJ)/dnMatPot_Module.o $(DIROBJ)/dnS_Module.o $(DIROBJ)/Li
 OBJ_Pot        = $(DIROBJ)/LinearHBondPotential_Module.o $(DIROBJ)/TullyPotential_Module.o \
                  $(DIROBJ)/PhenolPotential_Module.o $(DIROBJ)/PSB3Potential_Module.o \
                  $(DIROBJ)/SOC_1S1T_1DModel_Module.o $(DIROBJ)/SOC_2S1T_1DModel_Module.o \
-                 $(DIROBJ)/HONOPotential_Module.o $(DIROBJ)/H2SiN_Module.o \
+                 $(DIROBJ)/HONOPotential_Module.o $(DIROBJ)/HNNHp_Module.o \
+                 $(DIROBJ)/H2SiN_Module.o $(DIROBJ)/H2NSi_Module.o \
                  $(DIROBJ)/TemplatePotential_Module.o \
                  $(DIROBJ)/HenonHeilesPotential_Module.o \
                  $(DIROBJ)/TwoD_Potential_Module.o \
@@ -291,7 +292,9 @@ $(DIROBJ)/SOC_2S1T_1DModel_Module.o: $(OBJ_lib)
 $(DIROBJ)/TwoD_Potential_Module.o: $(OBJ_lib)
 $(DIROBJ)/PSB3Potential_Module.o: $(OBJ_lib)
 $(DIROBJ)/HONOPotential_Module.o: $(OBJ_lib)
+$(DIROBJ)/HNNHp_Module.o: $(OBJ_lib)
 $(DIROBJ)/H2SiN_Module.o: $(OBJ_lib)
+$(DIROBJ)/H2NSi_Module.o: $(OBJ_lib)
 $(DIROBJ)/LinearHBondPotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/BuckinghamPotential_Module.o
 $(DIROBJ)/PhenolPotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/SigmoidPotential_Module.o
 $(DIROBJ)/TemplatePotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o
@@ -320,8 +323,14 @@ $(DIROBJ)/PSB3Potential_Module.o:$(DIRPot)/PSB3Potential_Module.f90
 $(DIROBJ)/HONOPotential_Module.o:$(DIRPot)/HONOPotential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/HONOPotential_Module.f90
 
+$(DIROBJ)/HNNHp_Module.o:$(DIRPot)/HNNHp_Module.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/HNNHp_Module.f90
+
 $(DIROBJ)/H2SiN_Module.o:$(DIRPot)/H2SiN_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/H2SiN_Module.f90
+
+$(DIROBJ)/H2NSi_Module.o:$(DIRPot)/H2NSi_Module.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/H2NSi_Module.f90
 
 $(DIROBJ)/TwoD_Potential_Module.o:$(DIRPot)/TwoD_Potential_Module.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/TwoD_Potential_Module.f90

@@ -39,18 +39,18 @@ MODULE mod_H2SiN
 
      PRIVATE
 
-     real(kind=Rkind), allocatable :: Qref(:)
+     real(kind=Rkind), allocatable, public :: Qref(:)
 
      integer                       :: ndim,nb_func
      real(kind=Rkind), allocatable :: F(:)
      integer, allocatable          :: tab_func(:,:)
 
-     integer :: option    = 1
+     integer :: option    = -1
      logical :: PubliUnit = .FALSE.
  
   END TYPE Param_H2SiN
  
-  PRIVATE eval_H2SiNPot1
+  PRIVATE eval_H2SiNPot1,dealloc_H2SiN
  
   CONTAINS
 !> @brief Subroutine which makes the initialization of the H2SiN parameters.
@@ -60,6 +60,20 @@ MODULE mod_H2SiN
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 
+  SUBROUTINE dealloc_H2SiN(Para_H2SiN)
+    USE mod_Lib
+    IMPLICIT NONE
+
+    TYPE (Param_H2SiN),          intent(inout) :: Para_H2SiN
+
+    Para_H2SiN%option    = -1
+    Para_H2SiN%PubliUnit = .FALSE.
+
+    IF (allocated(Para_H2SiN%Qref))     deallocate(Para_H2SiN%Qref)
+    IF (allocated(Para_H2SiN%F))        deallocate(Para_H2SiN%F)
+    IF (allocated(Para_H2SiN%tab_func)) deallocate(Para_H2SiN%tab_func)
+
+  END SUBROUTINE dealloc_H2SiN
   SUBROUTINE Init_H2SiN(Para_H2SiN,ndim,option,nio,read_param,PubliUnit)
     USE mod_Lib
     IMPLICIT NONE
@@ -74,6 +88,9 @@ MODULE mod_H2SiN
 
 
     character (len=:), allocatable  :: FileName
+
+
+    CALL dealloc_H2SiN(Para_H2SiN)
 
     IF (present(PubliUnit)) Para_H2SiN%PubliUnit = PubliUnit
 
@@ -96,10 +113,9 @@ MODULE mod_H2SiN
     Para_H2SiN%ndim = 6
 
 
-    IF (Para_H2SiN%option < 1 .OR. Para_H2SiN%option > 2) Para_H2SiN%option = 1
+    IF (Para_H2SiN%option < 1 .OR. Para_H2SiN%option > 3) Para_H2SiN%option = 1
 
     IF (read_param_loc) THEN
-      !CALL Read_H2SiNPot(Para_H2SiN,nio)
       STOP 'Init_H2SiN: nothing to read'
 
     ELSE
@@ -121,6 +137,52 @@ MODULE mod_H2SiN
           IF (nb_columns == 0) EXIT
            read(nio_fit,11) (Para_H2SiN%tab_func(1:Para_H2SiN%ndim,j),Para_H2SiN%F(j),j=k+1,k+nb_columns)
  11        format(6i1,f15.8,5(2x,6i1,f15.8))
+           k = k + nb_columns
+         END DO
+         read(nio_fit,*) Para_H2SiN%Qref(:)
+         Para_H2SiN%Qref(6) = pi ! Qref(6) must be changed to be compatible with a z-matrix.
+         close(nio_fit)
+         deallocate(FileName)
+
+      CASE (2)
+
+        FileName = make_FileName('InternalData/H2SiN/h2sinf12b.pot')
+        CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
+        read(nio_fit,*) Para_H2SiN%nb_func
+        allocate(Para_H2SiN%Qref(Para_H2SiN%ndim))
+        allocate(Para_H2SiN%F(Para_H2SiN%nb_func))
+        allocate(Para_H2SiN%tab_func(Para_H2SiN%ndim,Para_H2SiN%nb_func))
+
+         k = 0
+         DO
+          nb_columns = min(6,Para_H2SiN%nb_func-k)
+          !write(6,*) k+1,k+nb_columns,nb_columns
+          IF (nb_columns == 0) EXIT
+           read(nio_fit,11) (Para_H2SiN%tab_func(1:Para_H2SiN%ndim,j),Para_H2SiN%F(j),j=k+1,k+nb_columns)
+ !11        format(6i1,f15.8,5(2x,6i1,f15.8))
+           k = k + nb_columns
+         END DO
+         read(nio_fit,*) Para_H2SiN%Qref(:)
+         Para_H2SiN%Qref(6) = pi ! Qref(6) must be changed to be compatible with a z-matrix.
+         close(nio_fit)
+         deallocate(FileName)
+
+      CASE (3)
+
+        FileName = make_FileName('InternalData/H2SiN/h2sincc.pot')
+        CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
+        read(nio_fit,*) Para_H2SiN%nb_func
+        allocate(Para_H2SiN%Qref(Para_H2SiN%ndim))
+        allocate(Para_H2SiN%F(Para_H2SiN%nb_func))
+        allocate(Para_H2SiN%tab_func(Para_H2SiN%ndim,Para_H2SiN%nb_func))
+
+         k = 0
+         DO
+          nb_columns = min(6,Para_H2SiN%nb_func-k)
+          !write(6,*) k+1,k+nb_columns,nb_columns
+          IF (nb_columns == 0) EXIT
+           read(nio_fit,11) (Para_H2SiN%tab_func(1:Para_H2SiN%ndim,j),Para_H2SiN%F(j),j=k+1,k+nb_columns)
+ !11        format(6i1,f15.8,5(2x,6i1,f15.8))
            k = k + nb_columns
          END DO
          read(nio_fit,*) Para_H2SiN%Qref(:)
@@ -170,17 +232,14 @@ MODULE mod_H2SiN
     write(nio,*) '                                       '
     write(nio,*) '                                       '
     write(nio,*) '  Minimum:                             '
-    write(nio,*) '  Q(1) = rSiN = 3.1103305087 (Bohr)    '
-    write(nio,*) '  Q(2) = rH1  = 2.7870835493 (Bohr)    '
-    write(nio,*) '  Q(3) = aH1  = 2.1336938250 (Radian)  '
-    write(nio,*) '  Q(4) = rH2  = 2.7870835493 (Bohr)    '
-    write(nio,*) '  Q(5) = aH3  = 2.1336938250 (Radian)  '
-    write(nio,*) '  Q(6) = phi  =  pi (Radian)           '
+    write(nio,*) '  Q(1) = rSiN (Bohr)                   '
+    write(nio,*) '  Q(2) = rH1  (Bohr)                   '
+    write(nio,*) '  Q(3) = aH1  (Radian)                 '
+    write(nio,*) '  Q(4) = rH2  (Bohr)                   '
+    write(nio,*) '  Q(5) = aH3  (Radian)                 '
+    write(nio,*) '  Q(6) = phi  (Radian)                 '
     write(nio,*) '                                       '
-    write(nio,*) '  V = -344.8478588900 Hartree          '
-    write(nio,*) ' grad(:) =[-0.0000000073,-0.0000000118,'
-    write(nio,*) '            0.0000000291,-0.0000000010,'
-    write(nio,*) '            0.0000000479,0.0000000000] '
+    write(nio,*) '  V           (Hartree)                '
     write(nio,*) '                                       '
     write(nio,*) 'Ref:'
     write(nio,*) '  D. Lauvergnat, M.L. Senent, L. Jutier, and M. Hochlaf, JCP 135, 074301 (2011).'
@@ -191,21 +250,76 @@ MODULE mod_H2SiN
     write(nio,*)
     write(nio,*) '  Option   :      ',Para_H2SiN%option
     write(nio,*)
+    write(nio,*) '---------------------------------------'
 
     SELECT CASE (Para_H2SiN%option)
 
     CASE (1)
+    write(nio,*) '                                       '
+    write(nio,*) '                                       '
+    write(nio,*) '  Level: RCCSD(T)-F12a/cc-pVTZ-F12     '
+    write(nio,*) '                                       '
+    write(nio,*) '  Minimum:                             '
+    write(nio,*) '  Q(1) = rSiN = 3.1103305087 (Bohr)    '
+    write(nio,*) '  Q(2) = rH1  = 2.7870835493 (Bohr)    '
+    write(nio,*) '  Q(3) = aH1  = 2.1336938250 (Radian)  '
+    write(nio,*) '  Q(4) = rH2  = 2.7870835493 (Bohr)    '
+    write(nio,*) '  Q(5) = aH3  = 2.1336938250 (Radian)  '
+    write(nio,*) '  Q(6) = phi  =  pi (Radian)           '
+    write(nio,*) '                                       '
+    write(nio,*) '  V = -344.84785889 Hartree            '
+    write(nio,*) ' grad(:) =[-0.0000000100,-0.0000000100,'
+    write(nio,*) '            0.0000000000,-0.0000000100,'
+    write(nio,*) '            0.0000000000, 0.0000000000]'
+    write(nio,*) '                                       '
 
+    CASE (2)
+    write(nio,*) '                                       '
+    write(nio,*) '                                       '
+    write(nio,*) '  Level: RCCSD(T)-F12b/cc-pVTZ-F12     '
+    write(nio,*) '                                       '
+    write(nio,*) '  Minimum:                             '
+    write(nio,*) '  Q(1) = rSiN = 3.1096943169 (Bohr)    '
+    write(nio,*) '  Q(2) = rH1  = 2.7871268895 (Bohr)    '
+    write(nio,*) '  Q(3) = aH1  = 2.1335577958 (Radian)  '
+    write(nio,*) '  Q(4) = rH2  = 2.7871268895 (Bohr)    '
+    write(nio,*) '  Q(5) = aH3  = 2.1335577958 (Radian)  '
+    write(nio,*) '  Q(6) = phi  =  pi (Radian)           '
+    write(nio,*) '                                       '
+    write(nio,*) '  V = -344.84209978 Hartree            '
+    write(nio,*) ' grad(:) =[ 0.0000000000, 0.0000000000,'
+    write(nio,*) '            0.0000000000, 0.0000000000,'
+    write(nio,*) '            0.0000000000, 0.0000000000]'
+    write(nio,*) '                                       '
+
+    CASE (3)
+    write(nio,*) '                                       '
+    write(nio,*) '                                       '
+    write(nio,*) '  Level: RCCSD(T)/Aug-cc-pV5Z          '
+    write(nio,*) '                                       '
+    write(nio,*) '  Reference geometry:                  '
+    write(nio,*) '  Q(1) = rSiN = 3.10         (Bohr)    '
+    write(nio,*) '  Q(2) = rH1  = 2.80         (Bohr)    '
+    write(nio,*) '  Q(3) = aH1  = 2.1816615395 (Radian)  '
+    write(nio,*) '  Q(4) = rH2  = 2.80         (Bohr)    '
+    write(nio,*) '  Q(5) = aH3  = 2.1816615395 (Radian)  '
+    write(nio,*) '  Q(6) = phi  =  pi          (Radian)  '
+    write(nio,*) '                                       '
+    write(nio,*) '  V = -344.84115204 Hartree            '
+    write(nio,*) ' grad(:) =[-0.0036112000, 0.0018618700,'
+    write(nio,*) '            0.0112321500, 0.0018618800,'
+    write(nio,*) '            0.0112320500,0.0000000000] '
+    write(nio,*) '                                       '
     CONTINUE
 
     CASE Default
         write(out_unitp,*) ' ERROR in write_H2SiNPot '
         write(out_unitp,*) ' This option is not possible. option: ',Para_H2SiN%option
-        write(out_unitp,*) ' Its value MUST be 1'
+        write(out_unitp,*) ' Its value MUST be 1,2,3'
 
         STOP
     END SELECT
-
+    write(nio,*) '---------------------------------------'
     write(nio,*)
     write(nio,*) 'end H2SiN current parameters'
 
@@ -240,13 +354,13 @@ MODULE mod_H2SiN
 
     SELECT CASE (Para_H2SiN%option)
 
-    CASE (1)
-      CALL eval_H2SiNPot1(Mat_OF_PotDia,dnQ,Para_H2SiN,nderiv)
+    CASE (1,2,3)
+      CALL eval_H2SiNPot1(Mat_OF_PotDia,dnQ,Para_H2SiN)
 
     CASE Default
         write(out_unitp,*) ' ERROR in eval_H2SiNPot '
         write(out_unitp,*) ' This option is not possible. option: ',Para_H2SiN%option
-        write(out_unitp,*) ' Its value MUST be 1'
+        write(out_unitp,*) ' Its value MUST be 1, 2 or 3'
 
         STOP
     END SELECT
@@ -261,14 +375,13 @@ MODULE mod_H2SiN
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
-  SUBROUTINE eval_H2SiNPot1(Mat_OF_PotDia,dnQ,Para_H2SiN,nderiv)
+  SUBROUTINE eval_H2SiNPot1(Mat_OF_PotDia,dnQ,Para_H2SiN)
     !Not Published model potential 
     USE mod_dnSca
 
     TYPE(dnSca),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE(dnSca),        intent(in)    :: dnQ(:)
     TYPE(Param_H2SiN) , intent(in)    :: Para_H2SiN
-    integer,            intent(in)    :: nderiv
 
 
     TYPE(dnSca)        :: DQ(6,4)
