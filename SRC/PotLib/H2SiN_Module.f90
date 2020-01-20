@@ -337,6 +337,30 @@ MODULE mod_H2SiN
     write(nio,*) 'end H2SiN default parameters'
 
   END SUBROUTINE Write0_H2SiN
+
+  SUBROUTINE get_Q0_H2SiN(Q0,Para_H2SiN,option)
+    IMPLICIT NONE
+
+    real (kind=Rkind),           intent(inout) :: Q0(:)
+    TYPE (Param_H2SiN),          intent(in)    :: Para_H2SiN
+    integer,                     intent(in)    :: option
+
+    IF (size(Q0) /= 6) THEN
+      write(out_unitp,*) ' ERROR in get_Q0_H2SiN '
+      write(out_unitp,*) ' The size of Q0 is not ndim=6: '
+      write(out_unitp,*) ' size(Q0)',size(Q0)
+      STOP
+    END IF
+
+    SELECT CASE (option)
+    CASE (0) ! ref
+      Q0(:) = Para_H2SiN%Qref
+    CASE Default ! ref
+      Q0(:) = Para_H2SiN%Qref
+    END SELECT
+
+  END SUBROUTINE get_Q0_H2SiN
+
 !> @brief Subroutine wich calculates the H2SiN potential (for the 3 models) with derivatives up to the 2d order is required.
 !!
 !! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).

@@ -35,7 +35,7 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
     !$ write(out_unitp,*) 'begining: max threads?',omp_get_max_threads()
     QuantumModel%adiabatic = adiabatic
     write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unitp,*) 'ndim,nsurf,    : ',ndim,nsurf
+    write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
     flush(out_unitp)
 
     CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
@@ -63,6 +63,17 @@ SUBROUTINE sub_Write_Qmodel(nio)
   CALL Write_Model(QuantumModel,nio)
 
 END SUBROUTINE sub_Write_Qmodel
+SUBROUTINE get_Qmodel_Q0(Q0,option)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
+
+  real (kind=Rkind),      intent(inout)     :: Q0(QuantumModel%ndim)
+  integer,                intent(in)        :: option
+
+  CALL get_Q0_Model(Q0,QuantumModel,option)
+
+END SUBROUTINE get_Qmodel_Q0
 SUBROUTINE sub_Qmodel_V(V,Q)
   USE mod_Lib
   USE mod_Model

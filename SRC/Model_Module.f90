@@ -54,7 +54,7 @@ MODULE mod_Model
   PUBLIC :: Param_Model,Init_Model,Eval_Pot,Write0_Model,Write_Model,Write_QdnV_FOR_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
-  PUBLIC :: Eval_pot_ON_Grid
+  PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model
 
   TYPE Param_Model
     integer :: nsurf       = 1
@@ -119,9 +119,9 @@ CONTAINS
   IMPLICIT NONE
 
     TYPE (Param_Model), intent(inout) :: Para_Model
-    integer, intent(in)               :: nio
-    integer, intent(inout)            :: option1
-    logical, intent(inout)            :: read_nml1
+    integer,            intent(in)    :: nio
+    integer,            intent(inout) :: option1
+    logical,            intent(inout) :: read_nml1
 
     integer :: ndim,nsurf,nderiv,option
     logical :: adiabatic,numeric,PubliUnit,read_nml
@@ -214,6 +214,7 @@ CONTAINS
     integer ::i, option_loc,nio_loc
     logical :: read_param_loc,adiabatic_loc,read_nml
     character (len=:), allocatable :: param_file_name_loc
+    real (kind=Rkind), allocatable :: Q0(:)
 
     write(out_unitp,*) '================================================='
     write(out_unitp,*) '================================================='
@@ -572,12 +573,115 @@ CONTAINS
        close(nio_loc)
     END IF
 
+    write(out_unitp,*) '================================================='
+    write(out_unitp,*) ' ref geometry or minimum (option=0)'
+    allocate(Q0(Para_Model%ndim))
+
+    CALL get_Q0_Model(Q0,Para_Model,option=0)
+    CALL Write_RVec(Q0,out_unitp,nbcol1=6,name_info='Q0: ')
+
+    deallocate(Q0)
+
     !CALL Write_Model(Para_Model)
     write(out_unitp,*) '================================================='
     write(out_unitp,*) '================================================='
 
 
   END SUBROUTINE Init_Model
+
+  SUBROUTINE get_Q0_Model(Q0,Para_Model,option)
+  USE mod_Lib
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(inout)            :: Q0(:)
+    TYPE (Param_Model), intent(in)               :: Para_Model
+    integer,            intent(in)               :: option
+
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='get_Q0_Model'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      flush(out_unitp)
+    END IF
+
+    IF (size(Q0) /= Para_Model%ndim) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' The size of Q0 is not Para_Model%ndim: '
+      write(out_unitp,*) ' size(Q0)',size(Q0)
+      write(out_unitp,*) ' ndim',Para_Model%ndim
+      STOP 'STOP in get_Q0_Model: Wrong Q0 size'
+    END IF
+
+    Q0(:) = ZERO
+
+    SELECT CASE (Para_Model%pot_name)
+    CASE ('morse')
+      CALL get_Q0_Morse(Q0(1),Para_Model%Para_Morse)
+
+    CASE ('buck')
+      CALL get_Q0_Buck(Q0(1),Para_Model%Para_Buck)
+
+    CASE ('sigmoid')
+      CALL get_Q0_Sigmoid(Q0(1),Para_Model%Para_Sigmoid)
+
+    CASE ('hbond')
+      CONTINUE
+
+    CASE ('henonheiles')
+      Q0(:) = ZERO
+
+    CASE ('tully')
+      CALL get_Q0_Tully(Q0(1),Para_Model%Para_Tully)
+
+    CASE ('1dsoc','1dsoc_1s1t')
+      CALL get_Q0_1DSOC(Q0(1),Para_Model%Para_1DSOC)
+
+    CASE ('1dsoc_2s1t')
+      CALL get_Q0_1DSOC_2S1T(Q0(1),Para_Model%Para_1DSOC_2S1T)
+
+    CASE ('phenol')
+      CONTINUE
+
+    CASE ('twod')
+      CALL get_Q0_TwoD(Q0,Para_Model%Para_TwoD,option)
+
+    CASE ('psb3')
+      CONTINUE
+
+    CASE ('hono')
+      CALL get_Q0_HONO(Q0,Para_Model%Para_HONO,option)
+
+    CASE ('hnnhp')
+      CALL get_Q0_HNNHp(Q0,Para_Model%Para_HNNHp,option)
+
+    CASE ('h2sin')
+      CALL get_Q0_H2SiN(Q0,Para_Model%Para_H2SiN,option)
+
+    CASE ('h2nsi')
+      CALL get_Q0_H2NSi(Q0,Para_Model%Para_H2NSi,option)
+
+    CASE ('template')
+      CONTINUE
+
+    CASE DEFAULT
+      write(out_unitp,*) ' ERROR in name_sub'
+      write(out_unitp,*) ' This model/potential is unknown. Para_Model%pot_name: ',Para_Model%pot_name
+      STOP 'STOP in get_Q0_Model: Other models have to be done'
+    END SELECT
+
+    IF (debug) THEN
+      CALL Write_RVec(Q0,out_unitp,nbcol1=5,name_info='Q0: ')
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    END IF
+
+  END SUBROUTINE get_Q0_Model
+
 
   SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,NAC,Vec,numeric)
   USE mod_dnSca
@@ -1086,8 +1190,8 @@ CONTAINS
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='dia_TO_adia'
-    logical, parameter :: debug = .FALSE.
-    !logical, parameter :: debug = .TRUE.
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
     IF (debug) THEN

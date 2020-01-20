@@ -124,7 +124,30 @@ CONTAINS
     write(nio,*) 'end TwoD parameters'
 
   END SUBROUTINE Write_TwoDPot
+  SUBROUTINE get_Q0_TwoD(Q0,Para_TwoD,option)
+    IMPLICIT NONE
 
+    real (kind=Rkind),           intent(inout) :: Q0(:)
+    TYPE (Param_TwoD),           intent(in)    :: Para_TwoD
+    integer,                     intent(in)    :: option ! diabatic state
+
+    IF (size(Q0) /= 2) THEN
+      write(out_unitp,*) ' ERROR in get_Q0_TwoD '
+      write(out_unitp,*) ' The size of Q0 is not ndim=2: '
+      write(out_unitp,*) ' size(Q0)',size(Q0)
+      STOP
+    END IF
+
+    SELECT CASE (option)
+    CASE (1) ! minimum of V(1,1)
+      Q0(:) = [Para_TwoD%X1,ZERO]
+    CASE (2)  ! minimum of V(2,2)
+      Q0(:) = [Para_TwoD%X2,ZERO]
+    CASE Default ! minimum of V(1,1)
+      Q0(:) = [Para_TwoD%X1,ZERO]
+    END SELECT
+
+  END SUBROUTINE get_Q0_TwoD
 !> @brief Subroutine wich calculates the TwoD potential with derivatives up to the 2d order if required.
 !!
 !> @author David Lauvergnat

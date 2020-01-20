@@ -42,6 +42,18 @@ MODULE mod_HONO
       integer :: option    = 1
       logical :: PubliUnit = .FALSE.
  
+      real(kind=Rkind) :: Qref(6)=[2.696732586_Rkind,1.822912197_Rkind,           &
+                                              1.777642018_Rkind,2.213326419_Rkind,&
+                                              1.9315017_Rkind,ZERO]
+
+      real(kind=Rkind) :: Qtrans(6)=[2.696732586_Rkind,1.822912197_Rkind,           &
+                                                1.777642018_Rkind,2.213326419_Rkind,&
+                                                1.9315017_Rkind,ZERO]
+
+      real(kind=Rkind) :: Qcis(6)=[2.696732586_Rkind,1.822912197_Rkind,           &
+                                              1.777642018_Rkind,2.213326419_Rkind,&
+                                              1.9315017_Rkind,ZERO]
+
   END TYPE Param_HONO
  
   PRIVATE eval_HONOPot1
@@ -198,6 +210,33 @@ MODULE mod_HONO
     write(nio,*) 'end HONO default parameters'
 
   END SUBROUTINE Write0_HONO
+  SUBROUTINE get_Q0_HONO(Q0,Para_HONO,option)
+    IMPLICIT NONE
+
+    real (kind=Rkind),           intent(inout) :: Q0(:)
+    TYPE (Param_HONO),           intent(in)    :: Para_HONO
+    integer,                     intent(in)    :: option
+
+    IF (size(Q0) /= 6) THEN
+      write(out_unitp,*) ' ERROR in get_Q0_HONO '
+      write(out_unitp,*) ' The size of Q0 is not ndim=6: '
+      write(out_unitp,*) ' size(Q0)',size(Q0)
+      STOP
+    END IF
+
+    SELECT CASE (option)
+    CASE (0) ! ref
+      Q0(:) = Para_HONO%Qref
+    CASE (1) ! trans
+      Q0(:) = Para_HONO%Qtrans
+    CASE (2) ! cis
+      Q0(:) = Para_HONO%Qcis
+    CASE Default ! ref
+      Q0(:) = Para_HONO%Qref
+    END SELECT
+
+  END SUBROUTINE get_Q0_HONO
+
 !> @brief Subroutine wich calculates the HONO potential (for the 3 models) with derivatives up to the 2d order is required.
 !!
 !! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).

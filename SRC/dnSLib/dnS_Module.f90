@@ -190,6 +190,12 @@ MODULE mod_dnSca
   INTERFACE atanh
      MODULE PROCEDURE get_ATANH_dnSca
   END INTERFACE
+
+
+  INTERFACE dot_product
+     MODULE PROCEDURE dot_product_VecOFdnSca
+  END INTERFACE
+
 CONTAINS
 !> @brief Public subroutine which allocates a derived type dnSca.
 !!
@@ -1135,8 +1141,8 @@ CONTAINS
     USE mod_NumParameters
 
     TYPE (dnSca),        intent(in)    :: S1
-    real (kind=Rkind), intent(in)    :: R
-    logical                   :: lres
+    real (kind=Rkind),   intent(in)    :: R
+    logical                            :: lres
     integer :: err_dnSca_loc
     character (len=*), parameter :: name_sub='R_GT_dnSca'
 
@@ -2101,5 +2107,32 @@ CONTAINS
 #endif
 
   END FUNCTION acosh_perso
+
+  FUNCTION dot_product_VecOFdnSca(VecA,VecB) RESULT(Sres)
+    USE mod_NumParameters
+
+    TYPE (dnSca)                       :: Sres
+    TYPE (dnSca),        intent(in)    :: VecA(:),VecB(:)
+
+    integer :: i
+    integer :: err_dnSca_loc
+    real(kind=Rkind) :: d0f,d1f,d2f,d3f
+    character (len=*), parameter :: name_sub='dot_product_VecOFdnSca'
+
+
+    IF (size(VecA) /= size(VecB)) THEN
+       write(out_unitp,*) ' ERROR in ',name_sub
+       write(out_unitp,*) '  size of both vectors are different'
+       write(out_unitp,*) '  size(VecA),size(VecB)',size(VecA),size(VecB)
+       STOP 'Problem in dot_product_VecOFdnSca'
+    END IF
+
+    Sres = VecA(lbound(VecA,dim=1)) ! for the initialization
+    Sres = ZERO
+    DO i=lbound(VecA,dim=1),ubound(VecA,dim=1)
+      Sres = Sres + VecA(i) * VecB(lbound(VecB,dim=1)+i-1)
+    END DO
+
+  END FUNCTION dot_product_VecOFdnSca
 
 END MODULE mod_dnSca

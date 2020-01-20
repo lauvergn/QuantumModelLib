@@ -183,6 +183,16 @@ CONTAINS
 
   END SUBROUTINE Write_MorsePot
 
+  SUBROUTINE get_Q0_Morse(R0,Para_Morse)
+    IMPLICIT NONE
+
+    real (kind=Rkind),           intent(inout) :: R0
+    TYPE (Param_Morse),          intent(in)    :: Para_Morse
+
+    R0 = Para_Morse%req
+
+  END SUBROUTINE get_Q0_Morse
+
 !> @brief Subroutine wich calculates the Morse potential with derivatives up to the 2d order if required.
 !!
 !> @author David Lauvergnat

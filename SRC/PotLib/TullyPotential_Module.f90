@@ -313,7 +313,15 @@ CONTAINS
     write(nio,*) 'end Tully parameters'
 
   END SUBROUTINE Write_TullyPot
+  SUBROUTINE get_Q0_Tully(R0,Para_Tully)
+    IMPLICIT NONE
 
+    real (kind=Rkind),           intent(inout) :: R0
+    TYPE (Param_Tully),          intent(in)    :: Para_Tully
+
+    R0 = ZERO
+
+  END SUBROUTINE get_Q0_Tully
 !> @brief Subroutine wich calculates the Tully potential (for the 3 models) with derivatives up to the 2d order is required.
 !!
 !> @author David Lauvergnat

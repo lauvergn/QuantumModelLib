@@ -259,6 +259,30 @@ MODULE mod_HNNHp
     write(nio,*) 'end HNNHp default parameters'
 
   END SUBROUTINE Write0_HNNHp
+  SUBROUTINE get_Q0_HNNHp(Q0,Para_HNNHp,option)
+    IMPLICIT NONE
+
+    real (kind=Rkind),           intent(inout) :: Q0(:)
+    TYPE (Param_HNNHp),          intent(in)    :: Para_HNNHp
+    integer,                     intent(in)    :: option
+
+    IF (size(Q0) /= 6) THEN
+      write(out_unitp,*) ' ERROR in get_Q0_HNNHp '
+      write(out_unitp,*) ' The size of Q0 is not ndim=6: '
+      write(out_unitp,*) ' size(Q0)',size(Q0)
+      STOP
+    END IF
+
+    SELECT CASE (option)
+    CASE (0) ! ref
+      Q0(:) = Para_HNNHp%Qref
+    CASE Default ! ref
+      Q0(:) = Para_HNNHp%Qref
+    END SELECT
+
+  END SUBROUTINE get_Q0_HNNHp
+
+
 !> @brief Subroutine wich calculates the HNNHp potential (for the 3 models) with derivatives up to the 2d order is required.
 !!
 !! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
@@ -327,7 +351,6 @@ MODULE mod_HNNHp
       DO j=1,Para_HNNHp%nb_func
         Vtemp = Para_HNNHp%F(j)
         DO i=1,Para_HNNHp%ndim
-          !Vtemp = Vtemp * DQ(i,1)**Para_HNNHp%tab_func(i,j)
           IF (Para_HNNHp%tab_func(i,j) == 0) CYCLE
           Vtemp = Vtemp * DQ(i,Para_HNNHp%tab_func(i,j))
         END DO
@@ -343,5 +366,35 @@ MODULE mod_HNNHp
    !write(6,*) ' end eval_HNNHpPot1' ; flush(6)
 
   END SUBROUTINE eval_HNNHpPot1
+
+  ! here we suppose that the atom ordering: N1-N2-H1-H2
+  ! the bounds are N1-N2, N1-H1, n2-H2
+  SUBROUTINE Cart_TO_Q_HNNHp(dnX,dnQ,Para_HNNHp,nderiv)
+    USE mod_dnSca
+
+    TYPE(dnSca),       intent(in)    :: dnX(:,:)
+    TYPE(dnSca),       intent(inout) :: dnQ(:)
+    TYPE(Param_HNNHp) , intent(in)   :: Para_HNNHp
+    integer          , intent(in)    :: nderiv
+
+
+    ! local vector
+    TYPE(dnSca)    :: VecNN(3),VecN1H1(3),VecN2H2(3)
+
+
+    VecNN(:)   = dnX(:,1)-dnX(:,2)
+    VecN1H1(:) = dnX(:,1)-dnX(:,3)
+    VecN2H2(:) = dnX(:,2)-dnX(:,4)
+
+    dnQ(1) = sqrt(dot_product(VecNN,VecNN))
+    dnQ(2) = sqrt(dot_product(VecN1H1,VecN1H1))
+    dnQ(4) = sqrt(dot_product(VecN2H2,VecN2H2))
+
+    dnQ(3) = acos(dot_product(VecNN,VecN1H1)/(dnQ(1)*dnQ(2)))
+    dnQ(5) = acos(dot_product(VecNN,VecN2H2)/(dnQ(1)*dnQ(4)))
+
+
+
+  END SUBROUTINE Cart_TO_Q_HNNHp
 
 END MODULE mod_HNNHp

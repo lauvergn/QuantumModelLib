@@ -177,11 +177,32 @@ CONTAINS
     write(nio,*) '    V(R) = A.Exp(-B.r) - C/r^6'
     write(nio,*) '  A:   ',Para_Buck%A
     write(nio,*) '  B:   ',Para_Buck%B
-    write(nio,*) '  B:   ',Para_Buck%C
+    write(nio,*) '  C:   ',Para_Buck%C
     write(nio,*)
     write(nio,*) 'end Buckingham current parameters'
 
   END SUBROUTINE Write_BuckPot
+
+  SUBROUTINE get_Q0_Buck(R0,Para_Buck)
+    IMPLICIT NONE
+
+    real (kind=Rkind),           intent(inout) :: R0
+    TYPE (Param_Buck),           intent(in)    :: Para_Buck
+
+    real (kind=Rkind) :: Rt1,Rt2
+    integer           :: i
+
+    Rt1 = TEN/Para_Buck%B
+    DO i=1,100
+      !Rt2 = (Para_Buck%B*Para_Buck%A/(SIX*Para_Buck%C)*exp(-Para_Buck%B*Rt1))**(-ONE/SEVEN)
+      Rt2 = -ONE/Para_Buck%B* log(SIX*Para_Buck%C/(Para_Buck%B*Para_Buck%A)*Rt1**(-7))
+      !write(6,*) i,RT2
+      IF (abs(Rt1-Rt2) < ONETENTH**10) EXIT
+      Rt1 = Rt2
+    END DO
+    R0 = Rt1
+
+  END SUBROUTINE get_Q0_Buck
 
 !> @brief Subroutine wich calculates the Buckingham potential with derivatives up to the 2d order is required.
 !!

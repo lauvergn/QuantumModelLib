@@ -8,9 +8,9 @@
 F90 = gfortran
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 ## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
 # NVHYP  = 1 : with intrinsic inverse hyperbolic functions
 # NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic inverse hyperbolic functions)

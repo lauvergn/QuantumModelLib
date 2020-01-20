@@ -155,6 +155,15 @@ CONTAINS
     write(nio,*) 'end Sigmoid curent parameters'
 
   END SUBROUTINE Write_SigmoidPot
+  SUBROUTINE get_Q0_Sigmoid(R0,Para_Sigmoid)
+    IMPLICIT NONE
+
+    real (kind=Rkind),           intent(inout) :: R0
+    TYPE (Param_Sigmoid),        intent(in)    :: Para_Sigmoid
+
+    R0 = Para_Sigmoid%B
+
+  END SUBROUTINE get_Q0_Sigmoid
 
 !> @brief Subroutine wich calculates the Sigmoid potential with derivatives up to the 2d order is required.
 !!

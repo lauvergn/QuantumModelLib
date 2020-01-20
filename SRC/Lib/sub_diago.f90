@@ -634,6 +634,75 @@ MODULE mod_diago
 
 
 
+      real (kind=Rkind) :: cd(n)
+      integer           :: i,j,k,kloc
+      real (kind=Rkind) :: ai,aj,norm,cc,ss
+
+      real (kind=Rkind), parameter :: epsi = ONETENTH**10
+
+!---------------------------------------------------------------------
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+!---------------------------------------------------------------------
+      IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING rota_denerated'
+      write(out_unitp,*) 'v',v
+      !write(out_unitp,*) 'c',c
+      END IF
+!---------------------------------------------------------------------
+      DO i=1,n-1
+
+        j = i+1
+        IF ( abs(v(i)-v(j)) < epsi) THEN
+          !write(6,*) 'i,j',i,j
+          !write(6,*) 'vec i',c(:,i)
+          !write(6,*) 'vec j',c(:,j)
+          cd(:) = c(:,i)**2+c(:,j)**2
+
+
+          kloc = maxloc(cd(:),dim=1)
+
+          cc   =  c(kloc,i)
+          ss   = -c(kloc,j)
+          !write(6,*) i,j,'cos sin',kloc,cc,ss
+          norm = sqrt(cc*cc+ss*ss)
+          cc   = cc/norm
+          ss   = ss/norm
+          !write(6,*) i,j,'cos sin',cc,ss
+
+          DO k=1,n
+           ai = c(k,i)
+           aj = c(k,j)
+
+           c(k,i) =  cc * ai + ss * aj
+           c(k,j) = -ss * ai + cc * aj
+
+          END DO
+
+        END IF
+      END DO
+
+
+
+!---------------------------------------------------------------------
+      IF (debug) THEN
+      write(out_unitp,*) 'new c',c
+      write(out_unitp,*) 'END rota_denerated'
+      END IF
+!---------------------------------------------------------------------
+
+      end subroutine rota_denerated
+      SUBROUTINE rota_denerated_old(v,c,n)
+      USE mod_NumParameters
+      IMPLICIT NONE
+
+
+      integer       :: n
+      real (kind=Rkind), intent(in)    :: v(n)
+      real (kind=Rkind), intent(inout) :: c(n,n)
+
+
+
 
       integer       :: i,j,k,kloc
       real (kind=Rkind) :: ai,aj,norm,cc,ss
@@ -645,7 +714,7 @@ MODULE mod_diago
       !logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
       IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING rota_denerated'
+      write(out_unitp,*) 'BEGINNING rota_denerated_old'
       write(out_unitp,*) 'v',v
       !write(out_unitp,*) 'c',c
       END IF
@@ -685,11 +754,11 @@ MODULE mod_diago
 !---------------------------------------------------------------------
       IF (debug) THEN
       write(out_unitp,*) 'new c',c
-      write(out_unitp,*) 'END rota_denerated'
+      write(out_unitp,*) 'END rota_denerated_old'
       END IF
 !---------------------------------------------------------------------
 
-      end subroutine rota_denerated
+      end subroutine rota_denerated_old
 
 !============================================================
 !

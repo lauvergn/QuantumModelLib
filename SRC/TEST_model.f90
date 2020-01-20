@@ -23,7 +23,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  !CALL test_HNNHp()
+  !CALL test_Buckingham()
   !stop
 
   ! One electronic surface
@@ -479,9 +479,9 @@ SUBROUTINE test_Buckingham
   CALL Init_Model(Para_Model,pot_name='Buck',read_param=.FALSE.)
   CALL Write_Model(Para_Model)
 
+
   allocate(q(Para_Model%ndim))
   q(:) = 7._Rkind
-
   nderiv=2
 
   write(out_unitp,*) '---------------------------------------------'

@@ -302,6 +302,28 @@ MODULE mod_H2NSi
     write(nio,*) 'end H2NSi default parameters'
 
   END SUBROUTINE Write0_H2NSi
+  SUBROUTINE get_Q0_H2NSi(Q0,Para_H2NSi,option)
+    IMPLICIT NONE
+
+    real (kind=Rkind),           intent(inout) :: Q0(:)
+    TYPE (Param_H2NSi),          intent(in)    :: Para_H2NSi
+    integer,                     intent(in)    :: option
+
+    IF (size(Q0) /= 6) THEN
+      write(out_unitp,*) ' ERROR in get_Q0_H2NSi '
+      write(out_unitp,*) ' The size of Q0 is not ndim=6: '
+      write(out_unitp,*) ' size(Q0)',size(Q0)
+      STOP
+    END IF
+
+    SELECT CASE (option)
+    CASE (0) ! ref
+      Q0(:) = Para_H2NSi%Qref
+    CASE Default ! ref
+      Q0(:) = Para_H2NSi%Qref
+    END SELECT
+
+  END SUBROUTINE get_Q0_H2NSi
 !> @brief Subroutine wich calculates the H2NSi potential (for the 3 models) with derivatives up to the 2d order is required.
 !!
 !! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).

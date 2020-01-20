@@ -220,6 +220,16 @@ CONTAINS
 
   END SUBROUTINE Write_1DSOC
 
+  SUBROUTINE get_Q0_1DSOC(R0,Para_1DSOC)
+    IMPLICIT NONE
+
+    real (kind=Rkind),           intent(inout) :: R0
+    TYPE (Param_1DSOC),          intent(in)    :: Para_1DSOC
+
+    R0 = Para_1DSOC%Rsig
+
+  END SUBROUTINE get_Q0_1DSOC
+
 !> @brief Subroutine wich calculates the 1D-SOC Model potential with derivatives up to the 2d order is required.
 !!
 !> @author David Lauvergnat
