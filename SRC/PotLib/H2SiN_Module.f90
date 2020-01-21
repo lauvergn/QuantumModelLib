@@ -354,9 +354,9 @@ MODULE mod_H2SiN
 
     SELECT CASE (option)
     CASE (0) ! ref
-      Q0(:) = Para_H2SiN%Qref
+      Q0(:) = Para_H2SiN%Qref([3,1,4,2,5,6])
     CASE Default ! ref
-      Q0(:) = Para_H2SiN%Qref
+      Q0(:) = Para_H2SiN%Qref([3,1,4,2,5,6])
     END SELECT
 
   END SUBROUTINE get_Q0_H2SiN

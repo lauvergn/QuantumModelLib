@@ -275,9 +275,9 @@ MODULE mod_HNNHp
 
     SELECT CASE (option)
     CASE (0) ! ref
-      Q0(:) = Para_HNNHp%Qref
+      Q0(:) = Para_HNNHp%Qref([2,1,4,3,5,6])
     CASE Default ! ref
-      Q0(:) = Para_HNNHp%Qref
+      Q0(:) = Para_HNNHp%Qref([2,1,4,3,5,6])
     END SELECT
 
   END SUBROUTINE get_Q0_HNNHp

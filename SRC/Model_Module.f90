@@ -292,6 +292,7 @@ CONTAINS
 
     CALL dealloc_dnMatPot(Para_Model%Vec0)
 
+    read_nml = .FALSE.
     IF (read_param_loc .OR.  Para_Model%pot_name == 'read_model') THEN
 
       IF (nio_loc /= in_unitp) THEN
