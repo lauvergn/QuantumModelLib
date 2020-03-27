@@ -237,8 +237,8 @@ dns:$(dnSEXE)
 dnS:$(dnSEXE)
 testdns:$(dnSEXE)
 testdnS:$(dnSEXE)
-$(dnSEXE): $(OBJ_testdnS) $(OBJ_all)
-	$(LYNK90)   -o $(dnSEXE) $(OBJ_testdnS) $(OBJ_all) $(LYNKFLAGS)
+$(dnSEXE): $(OBJ_testdnS) $(OBJ_lib)
+	$(LYNK90)   -o $(dnSEXE) $(OBJ_testdnS) $(OBJ_lib) $(LYNKFLAGS)
 #
 #driver
 driver:$(DriverEXE)
@@ -275,7 +275,7 @@ clean:
 #
 $(DIROBJ)/TEST_grid.o:   $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
 $(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
-$(DIROBJ)/TEST_dnS.o:    $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
+$(DIROBJ)/TEST_dnS.o:    $(OBJ_lib)
 $(DIROBJ)/TEST_driver.o: $(ModLib)
 
 $(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
