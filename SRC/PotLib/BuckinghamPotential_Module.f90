@@ -209,17 +209,17 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnSca):         Matrix of dnSca with the potential (pot),  the gradient (grad) and the hessian (hess).
-!! @param dnR                TYPE(dnSca):         derived type wich contain the value for which the potential is calculated: dnR%d0
+!! @param PotVal             TYPE(dnS):         Matrix of dnS with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param dnR                TYPE(dnS):         derived type wich contain the value for which the potential is calculated: dnR%d0
 !! @param Para_Buck          TYPE(Param_Buck):    derived type with the Buckingham parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE Eval_BuckPot(Mat_OF_PotDia,dnR,Para_Buck,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_Buck), intent(in)     :: Para_Buck
-    TYPE(dnSca),       intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),       intent(in)     :: dnR
+    TYPE(dnS),       intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),       intent(in)     :: dnR
     integer,           intent(in)     :: nderiv
 
     !write(out_unitp,*) 'BEGINNING in Eval_BuckPot'
@@ -237,28 +237,28 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @return dnBuck            TYPE(dnSca):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
-!! @param dnR                TYPE(dnSca):           derived type with the value of "r" and,if required, its derivatives.
+!! @return dnBuck            TYPE(dnS):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
+!! @param dnR                TYPE(dnS):           derived type with the value of "r" and,if required, its derivatives.
 !! @param Para_Buck          TYPE(Param_Buck):    derived type with the Buckingham parameters.
   FUNCTION dnBuck(dnR,Para_Buck)
     USE mod_dnMatPot
-    USE mod_dnSca
+    USE mod_dnS
 
 
-    TYPE(dnSca)                          :: dnBuck
-    TYPE(dnSca),          intent(in)     :: dnR
+    TYPE(dnS)                          :: dnBuck
+    TYPE(dnS),          intent(in)     :: dnR
 
     TYPE (Param_Buck),    intent(in)     :: Para_Buck
 
 
     !write(out_unitp,*) 'BEGINNING in dnBuck'
     !write(out_unitp,*) 'dnR'
-    !CALL write_dnSca(dnR)
+    !CALL write_dnS(dnR)
 
     dnBuck = Para_Buck%A * exp(-Para_Buck%B*dnR) - Para_Buck%C * dnR**(-6)
 
-    !write(out_unitp,*) 'Buckingham at',get_d0_FROM_dnSca(dnR)
-    !CALL Write_dnSca(dnBuck)
+    !write(out_unitp,*) 'Buckingham at',get_d0_FROM_dnS(dnR)
+    !CALL Write_dnS(dnBuck)
     !write(out_unitp,*) 'END in dnBuck'
     !flush(out_unitp)
 

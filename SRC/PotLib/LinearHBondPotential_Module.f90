@@ -280,16 +280,16 @@ CONTAINS
 !! @param nderiv             integer:                 it enables to specify up to which derivatives the potential is calculated:
 !!                                                    the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
    SUBROUTINE Eval_LinearHBondPot(Mat_OF_PotDia,dnQ,Para_LinearHBond,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_LinearHBond),  intent(in)     :: Para_LinearHBond
-    TYPE(dnSca),               intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),               intent(in)     :: dnQ(:) ! QQ and q
+    TYPE(dnS),               intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),               intent(in)     :: dnQ(:) ! QQ and q
     integer,                   intent(in)     :: nderiv
 
     !local variable
-    TYPE(dnSca)          :: PotVal_m1,PotVal_m2,PotVal_Buck
-    TYPE(dnSca)          :: dnQQ,dnsq,dnX,dnY
+    TYPE(dnS)          :: PotVal_m1,PotVal_m2,PotVal_Buck
+    TYPE(dnS)          :: dnQQ,dnsq,dnX,dnY
     real (kind=Rkind), parameter  :: a0      = 0.52917720835354106_Rkind
     real (kind=Rkind), parameter  :: auTOkcalmol_inv  = 627.51_Rkind
 
@@ -298,16 +298,16 @@ CONTAINS
 
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING Eval_LinearHBondPot'
-      write(out_unitp,*) 'r(:) or QQ,q: ',get_d0_FROM_dnSca(dnQ(1)),get_d0_FROM_dnSca(dnQ(2))
+      write(out_unitp,*) 'r(:) or QQ,q: ',get_d0_FROM_dnS(dnQ(1)),get_d0_FROM_dnS(dnQ(2))
       write(out_unitp,*) 'nderiv',nderiv
       flush(out_unitp)
     END IF
 
     IF (debug) THEN
       write(out_unitp,*) 'dnQQ'
-      CALL write_dnSca(dnQ(1))
+      CALL write_dnS(dnQ(1))
       write(out_unitp,*) 'dnsq'
-      CALL write_dnSca(dnQ(2))
+      CALL write_dnS(dnQ(2))
       flush(out_unitp)
     END IF
 
@@ -317,9 +317,9 @@ CONTAINS
 
       IF (debug) THEN
         write(out_unitp,*) 'dnQQ in Angs'
-        CALL write_dnSca(dnQ(1))
+        CALL write_dnS(dnQ(1))
         write(out_unitp,*) 'dnsq in Angs'
-        CALL write_dnSca(dnQ(2))
+        CALL write_dnS(dnQ(2))
         flush(out_unitp)
       END IF
     ELSE
@@ -335,31 +335,31 @@ CONTAINS
     IF (debug) THEN
       write(out_unitp,*) 'dnX'
       flush(out_unitp)
-      CALL write_dnSca(dnX)
+      CALL write_dnS(dnX)
       write(out_unitp,*) 'dnY'
       flush(out_unitp)
-      CALL write_dnSca(dnY)
+      CALL write_dnS(dnY)
       flush(out_unitp)
     END IF
 
     PotVal_m1 = dnMorse(dnX,Para_LinearHBond%Morse1)
     IF (debug) THEN
-      write(out_unitp,*) 'PotVal_m1. x:',get_d0_FROM_dnSca(dnX)
-      CALL Write_dnSca(PotVal_m1)
+      write(out_unitp,*) 'PotVal_m1. x:',get_d0_FROM_dnS(dnX)
+      CALL Write_dnS(PotVal_m1)
       flush(out_unitp)
     END IF
 
     PotVal_m2 = dnMorse(dnY,Para_LinearHBond%Morse2)+Para_LinearHBond%Eref2
     IF (debug) THEN
-      write(out_unitp,*) 'PotVal_m2. y:',get_d0_FROM_dnSca(dnY)
-      CALL Write_dnSca(PotVal_m2)
+      write(out_unitp,*) 'PotVal_m2. y:',get_d0_FROM_dnS(dnY)
+      CALL Write_dnS(PotVal_m2)
       flush(out_unitp)
     END IF
 
     PotVal_Buck = dnBuck(dnQQ,Para_LinearHBond%Buck)
     IF (debug) THEN
-      write(out_unitp,*) 'PotVal_Buck. QQ:',get_d0_FROM_dnSca(dnQQ)
-      CALL Write_dnSca(PotVal_Buck)
+      write(out_unitp,*) 'PotVal_Buck. QQ:',get_d0_FROM_dnS(dnQQ)
+      CALL Write_dnS(PotVal_Buck)
       flush(out_unitp)
     END IF
 
@@ -367,7 +367,7 @@ CONTAINS
 
     IF (debug) THEN
       write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
-      CALL write_dnSca(Mat_OF_PotDia(1,1))
+      CALL write_dnS(Mat_OF_PotDia(1,1))
       flush(out_unitp)
     END IF
 
@@ -375,14 +375,14 @@ CONTAINS
       Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1)/auTOkcalmol_inv ! to convert the kcal/mol into Hartree
     END IF
 
-    CALL dealloc_dnSca(dnX)
-    CALL dealloc_dnSca(dnY)
-    CALL dealloc_dnSca(dnQQ)
-    CALL dealloc_dnSca(dnsq)
+    CALL dealloc_dnS(dnX)
+    CALL dealloc_dnS(dnY)
+    CALL dealloc_dnS(dnQQ)
+    CALL dealloc_dnS(dnsq)
 
-    CALL dealloc_dnSca(PotVal_m1)
-    CALL dealloc_dnSca(PotVal_m2)
-    CALL dealloc_dnSca(PotVal_Buck)
+    CALL dealloc_dnS(PotVal_m1)
+    CALL dealloc_dnS(PotVal_m2)
+    CALL dealloc_dnS(PotVal_Buck)
 
     IF (debug) THEN
       write(out_unitp,*) 'END Eval_LinearHBondPot'

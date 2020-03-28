@@ -1,11 +1,22 @@
+#!/bin/bash
+
 here=`pwd`
 
 cd ..
- make dnS.x > $here/comp.log 2>&1
+ make dnS > $here/comp.log 2>&1
 cd  $here
+
+nbOK=`grep -c "dnS compilation: OK" comp.log`
 
 echo "=========================================="
 echo " TESTING the dnS module"
+
+if [ "$nbOK" = 0 ]
+then
+  echo " dnS compilation ERROR"
+  exit
+fi
+
 echo "   OPT: " $ExternalOPT
 echo "   OMP: " $ExternalOMP
 echo "=========================================="
@@ -22,6 +33,7 @@ then
 else
    echo "No error!"
 fi
+echo ""
 
 echo "TESTING functions with or without analitical derivatives"
 
@@ -32,9 +44,22 @@ then
 else
    echo "No error!"
 fi
+echo ""
 
 echo "TESTING dnSca.txt with respect to old results"
 ../bin/Compare_dnSca > Test_dnSca.log
+
+
+#grep "The structure of both files are different" Test_dnSca.log
+nb_e=`grep -c "The structure of both files are different" Test_dnSca.log`
+if test $nb_e -gt 0
+then
+   echo "  Warning: different dnSca.txt file structure!!"
+else
+   echo "  No Warning: identical dnSca.txt file structure!"
+fi
+echo ""
+
 
 grep "PROBLEM" Test_dnSca.log
 nb_pb=`grep -c "PROBLEM(S)" Test_dnSca.log`

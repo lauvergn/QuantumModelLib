@@ -1,20 +1,41 @@
+#!/bin/bash
+
 here=`pwd`
 
 cd ..
- make > $here/comp.log 2>&1
+  make model > $here/comp.log 2>&1
 cd  $here
+nbOK=`grep -c "model (QML) compilation: OK" comp.log`
 
 
 
 echo "=========================================="
 echo " TESTING the internal potentials of ModLib"
 echo " ... with respect to old files"
+
+if [ "$nbOK" = 0 ]
+then
+  echo " model (QML) compilation ERROR"
+  exit
+fi
+
 echo "   OPT: " $ExternalOPT
 echo "   OMP: " $ExternalOMP
 echo "=========================================="
 
 ../ModLib.x < input.dat > res
 ../bin/Compare_QML > Test_QML.log
+
+#grep "The structure of both files are different" Test_QML.log
+nb_e=`grep -c "The structure of both files are different" Test_QML.log`
+if test $nb_e -gt 0
+then
+   echo "  Warning: different xxxx.txt file structure!!"
+else
+   echo "  No Warning: identical xxxx.txt file structure!"
+fi
+echo ""
+
 
 grep "PROBLEM" Test_QML.log
 nb_pb=`grep -c "PROBLEM(S)" Test_QML.log`

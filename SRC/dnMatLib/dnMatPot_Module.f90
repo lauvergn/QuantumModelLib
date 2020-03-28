@@ -24,9 +24,9 @@
 !===========================================================================
 !> @brief Module which deals with derivatives of a matrix (as function of coordinates).
 !!
-!! This module deals with operations or functions of a scalar function and its derivatives, dnSca.
+!! This module deals with operations or functions of a scalar function and its derivatives, dnS.
 !!
-!! There is a mapping between the saclar function S, its derivatives and the dnSca derived type components:
+!! There is a mapping between the saclar function S, its derivatives and the dnS derived type components:
 !!
 !! @li M(:,:)                 => M%d0(:,:)
 !! @li dM(:,:)/dQ_i           => M%d1(:,:,i)
@@ -62,7 +62,7 @@ MODULE mod_dnMatPot
 
 
   INTERFACE assignment (=)
-     MODULE PROCEDURE sub_dnMatPot2_TO_dnMatPot1,set_dnMatPot_TO_R,set_dnMatPot_FROM_MatOFdnSca
+     MODULE PROCEDURE sub_dnMatPot2_TO_dnMatPot1,set_dnMatPot_TO_R,set_dnMatPot_FROM_MatOFdnS
   END INTERFACE
 
    INTERFACE operator (*)
@@ -310,45 +310,45 @@ CONTAINS
       STOP
     END IF
   END SUBROUTINE sub_dnMatPot2_TO_dnMatPot1
-!> @brief Public subroutine which copies a dnSca derived type to one element of dnMatPot derived type.
+!> @brief Public subroutine which copies a dnS derived type to one element of dnMatPot derived type.
 !!
 !> @author David Lauvergnat
 !! @date 25/06/2018
 !!
 !! @param Mat                   TYPE(dnMatPot):    derived type which deals with the derivatives of a matrix.
-!! @param S                     TYPE(dnSca):       derived type which deals with the derivatives of a scalar.
+!! @param S                     TYPE(dnS):       derived type which deals with the derivatives of a scalar.
 !! @param i,j                   integer (optional) indices of the matrix element. If not present i=j=1
-  SUBROUTINE sub_dnSca_TO_dnMatPot(S,Mat,i,j)
-    USE mod_dnSca
+  SUBROUTINE sub_dnS_TO_dnMatPot(S,Mat,i,j)
+    USE mod_dnS
     TYPE (dnMatPot),    intent(inout) :: Mat
-    TYPE (dnSca),       intent(in)    :: S
+    TYPE (dnS),       intent(in)    :: S
     integer, optional,  intent(in)    :: i,j
 
-    integer :: nderiv_dnMat,nsurf_dnMat,ndim_dnMat,nderiv_dnSca,ndim_dnSca
+    integer :: nderiv_dnMat,nsurf_dnMat,ndim_dnMat,nderiv_dnS,ndim_dnS
     integer :: i_loc,j_loc
 
     integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='sub_dnSca_TO_dnMatPot'
+    character (len=*), parameter :: name_sub='sub_dnS_TO_dnMatPot'
 
 
-    nderiv_dnSca = get_nderiv_FROM_dnSca(S)
-    ndim_dnSca   = get_ndim_FROM_dnSca(S)
+    nderiv_dnS = get_nderiv_FROM_dnS(S)
+    ndim_dnS   = get_ndim_FROM_dnS(S)
 
     nderiv_dnMat = get_nderiv_FROM_dnMatPot(Mat)
     nsurf_dnMat  = get_nsurf_FROM_dnMatPot(Mat)
     ndim_dnMat   = get_ndim_FROM_dnMatPot(Mat)
 
-    IF ( Check_NotAlloc_dnMatPot(Mat,nderiv_dnSca) .OR.                   &
-         nderiv_dnSca /= nderiv_dnMat  .OR.  ndim_dnSca /= ndim_dnMat .OR.  &
+    IF ( Check_NotAlloc_dnMatPot(Mat,nderiv_dnS) .OR.                   &
+         nderiv_dnS /= nderiv_dnMat  .OR.  ndim_dnS /= ndim_dnMat .OR.  &
          nsurf_dnMat < 1 ) THEN
       write(out_unitp,*) ' ERROR in ',name_sub
       write(out_unitp,*) ' dnMat is not allocated or ...'
-      write(out_unitp,*) '  ... nderiv from dnMat or dnSca are different or ...'
-      write(out_unitp,*) '  ... ndim from dnMat or dnSca are different or ...'
+      write(out_unitp,*) '  ... nderiv from dnMat or dnS are different or ...'
+      write(out_unitp,*) '  ... ndim from dnMat or dnS are different or ...'
       write(out_unitp,*) '  ... nsurf from dnMat is < 1'
 
-      write(out_unitp,*) 'nderiv from dnMat and dnSca:',nderiv_dnMat,nderiv_dnSca
-      write(out_unitp,*) 'ndim   from dnMat and dnSca:',ndim_dnMat,ndim_dnSca
+      write(out_unitp,*) 'nderiv from dnMat and dnS:',nderiv_dnMat,nderiv_dnS
+      write(out_unitp,*) 'ndim   from dnMat and dnS:',ndim_dnMat,ndim_dnS
       write(out_unitp,*) 'nsurf  from dnMat        :',nsurf_dnMat
 
       write(out_unitp,*) 'It should never append! Check the source'
@@ -370,37 +370,37 @@ CONTAINS
 
 
     ! Potential
-    Mat%d0(i_loc,j_loc) = get_d0_FROM_dnSca(S)
+    Mat%d0(i_loc,j_loc) = get_d0_FROM_dnS(S)
 
     ! gradient
-    IF (nderiv_dnSca >= 1) THEN
-      CALL sub_get_d1_FROM_dnSca(Mat%d1(i_loc,j_loc,:),S)
+    IF (nderiv_dnS >= 1) THEN
+      CALL sub_get_d1_FROM_dnS(Mat%d1(i_loc,j_loc,:),S)
     END IF
 
     ! Hessian
-    IF (nderiv_dnSca >= 2) then
-      CALL sub_get_d2_FROM_dnSca(Mat%d2(i_loc,j_loc,:,:),S)
+    IF (nderiv_dnS >= 2) then
+      CALL sub_get_d2_FROM_dnS(Mat%d2(i_loc,j_loc,:,:),S)
     END IF
 
 
-  END SUBROUTINE sub_dnSca_TO_dnMatPot
-!> @brief Public subroutine which copies a dnSca derived type to one element of dnMatPot derived type.
+  END SUBROUTINE sub_dnS_TO_dnMatPot
+!> @brief Public subroutine which copies a dnS derived type to one element of dnMatPot derived type.
 !!
 !> @author David Lauvergnat
 !! @date 30/07/2019
 !!
 !! @param Mat                   TYPE(dnMatPot):    derived type which deals with the derivatives of a matrix.
-!! @param MatOFS                TYPE(dnSca):       matrix of derived type which deals with the derivatives of a scalar.
-  SUBROUTINE set_dnMatPot_FROM_MatOFdnSca(Mat,MatOFS)
-    USE mod_dnSca
+!! @param MatOFS                TYPE(dnS):       matrix of derived type which deals with the derivatives of a scalar.
+  SUBROUTINE set_dnMatPot_FROM_MatOFdnS(Mat,MatOFS)
+    USE mod_dnS
     TYPE (dnMatPot),    intent(inout) :: Mat
-    TYPE (dnSca),       intent(in)    :: MatOFS(:,:)
+    TYPE (dnS),       intent(in)    :: MatOFS(:,:)
 
-    integer :: nderiv_dnMat,nsurf_dnMat,ndim_dnMat,nderiv_dnSca,ndim_dnSca
+    integer :: nderiv_dnMat,nsurf_dnMat,ndim_dnMat,nderiv_dnS,ndim_dnS
     integer :: i,j
 
     integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='set_dnMatPot_FROM_MatOFdnSca'
+    character (len=*), parameter :: name_sub='set_dnMatPot_FROM_MatOFdnS'
 
     IF (lbound(Mat%d0,dim=1) /= lbound(MatOFS,dim=1) .OR. ubound(Mat%d0,dim=1) /= ubound(MatOFS,dim=1) .OR. &
         lbound(Mat%d0,dim=2) /= lbound(MatOFS,dim=2) .OR. ubound(Mat%d0,dim=2) /= ubound(MatOFS,dim=2) ) THEN
@@ -412,11 +412,11 @@ CONTAINS
 
     DO i=lbound(MatOFS,dim=2),ubound(MatOFS,dim=2)
     DO j=lbound(MatOFS,dim=1),ubound(MatOFS,dim=1)
-      CALL sub_dnSca_TO_dnMatPot(MatOFS(i,j),Mat,i,j)
+      CALL sub_dnS_TO_dnMatPot(MatOFS(i,j),Mat,i,j)
     END DO
     END DO
 
-  END SUBROUTINE set_dnMatPot_FROM_MatOFdnSca
+  END SUBROUTINE set_dnMatPot_FROM_MatOFdnS
 !> @brief Public function which calculate set dnMatPot to zero (and derivatives).
 !!
 !> @author David Lauvergnat

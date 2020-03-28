@@ -245,11 +245,11 @@ MODULE mod_HONO
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_HONOPot(Mat_OF_PotDia,dnQ,Para_HONO,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE(Param_HONO) , intent(in)    :: Para_HONO
-    TYPE(dnSca),       intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),       intent(in)    :: dnQ(:) !
+    TYPE(dnS),       intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),       intent(in)    :: dnQ(:) !
     integer          , intent(in)    :: nderiv
 
     SELECT CASE (Para_HONO%option)
@@ -277,17 +277,17 @@ MODULE mod_HONO
 
   SUBROUTINE eval_HONOPot1(Mat_OF_PotDia,dnQ,Para_HONO,nderiv)
     !Not Published model potential 
-    USE mod_dnSca
+    USE mod_dnS
 
-    TYPE(dnSca),        intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),        intent(in)    :: dnQ(:)
+    TYPE(dnS),        intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),        intent(in)    :: dnQ(:)
     TYPE(Param_HONO) ,  intent(in)    :: Para_HONO
     integer,            intent(in)    :: nderiv
 
 
-    TYPE(dnSca)        :: Qw(6)
-    TYPE(dnSca)        :: d6(4),q1(4),q2(4),q3(6),t1(4),t2(4)
-    TYPE(dnSca)        :: Vtemp
+    TYPE(dnS)        :: Qw(6)
+    TYPE(dnS)        :: d6(4),q1(4),q2(4),q3(6),t1(4),t2(4)
+    TYPE(dnS)        :: Vtemp
     real(kind=Rkind), parameter :: Q0(6)=[2.696732586_Rkind,1.822912197_Rkind,&
                                           1.777642018_Rkind,2.213326419_Rkind,&
                                           1.9315017_Rkind,ZERO]
@@ -730,15 +730,15 @@ Vtemp = Vtemp - &
             0.25_Rkind*Qw(3)**2 - 0.25_Rkind*Qw(5)**2)* Vtemp
 !-----------------------------------------------------------------------!
 
-   CALL dealloc_dnSca(Vtemp)
+   CALL dealloc_dnS(Vtemp)
 
-   CALL dealloc_dnSca(d6)
-   CALL dealloc_dnSca(q1)
-   CALL dealloc_dnSca(q2)
-   CALL dealloc_dnSca(q3)
-   CALL dealloc_dnSca(t1)
-   CALL dealloc_dnSca(t2)
-   CALL dealloc_dnSca(Qw)
+   CALL dealloc_dnS(d6)
+   CALL dealloc_dnS(q1)
+   CALL dealloc_dnS(q2)
+   CALL dealloc_dnS(q3)
+   CALL dealloc_dnS(t1)
+   CALL dealloc_dnS(t2)
+   CALL dealloc_dnS(Qw)
 
   END SUBROUTINE eval_HONOPot1
 

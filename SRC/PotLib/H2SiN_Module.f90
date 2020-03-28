@@ -369,11 +369,11 @@ MODULE mod_H2SiN
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_H2SiNPot(Mat_OF_PotDia,dnQ,Para_H2SiN,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE(Param_H2SiN) , intent(in)   :: Para_H2SiN
-    TYPE(dnSca),       intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),       intent(in)    :: dnQ(:) !
+    TYPE(dnS),       intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),       intent(in)    :: dnQ(:) !
     integer          , intent(in)    :: nderiv
 
     SELECT CASE (Para_H2SiN%option)
@@ -401,15 +401,15 @@ MODULE mod_H2SiN
 
   SUBROUTINE eval_H2SiNPot1(Mat_OF_PotDia,dnQ,Para_H2SiN)
     !Not Published model potential 
-    USE mod_dnSca
+    USE mod_dnS
 
-    TYPE(dnSca),        intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),        intent(in)    :: dnQ(:)
+    TYPE(dnS),        intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),        intent(in)    :: dnQ(:)
     TYPE(Param_H2SiN) , intent(in)    :: Para_H2SiN
 
 
-    TYPE(dnSca)        :: DQ(6,4)
-    TYPE(dnSca)        :: Vtemp
+    TYPE(dnS)        :: DQ(6,4)
+    TYPE(dnS)        :: Vtemp
     integer            :: i,j
 
     !write(6,*) ' sub eval_H2SiNPot1' ; flush(6)
@@ -437,8 +437,8 @@ MODULE mod_H2SiN
 
 !-----------------------------------------------------------------------!
 
-   CALL dealloc_dnSca(Vtemp)
-   CALL dealloc_dnSca(DQ)
+   CALL dealloc_dnS(Vtemp)
+   CALL dealloc_dnS(DQ)
 
    !write(6,*) ' end eval_H2SiNPot1' ; flush(6)
 

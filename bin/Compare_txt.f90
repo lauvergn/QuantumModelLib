@@ -21,7 +21,7 @@
 !
 !===========================================================================
 !===========================================================================
-PROGRAM Compare_QML
+PROGRAM Compare_txt
   IMPLICIT NONE
 
   character(len=:), allocatable :: arg,arg2
@@ -30,7 +30,7 @@ PROGRAM Compare_QML
   character (len=:), allocatable  :: file_name_old,file_name_new
   character (len=20)               :: name_old,name_new
 
-  integer :: itest,nb_error,nio_old=10,nio_new=11,err_file_old,err_file_new
+  integer :: itest,nb_error,nio_old=10,nio_new=11,err_file_old,err_file_new,err_sub
 
 
 
@@ -99,16 +99,16 @@ PROGRAM Compare_QML
 
     read(nio_old,*,IOSTAT=err_file_old) name_old
     read(nio_new,*,IOSTAT=err_file_new) name_new
-    CALL compa_name(name_old,name_new,err_file_old,err_file_new)
-    IF (err_file_old /= 0) EXIT ! 'END OF FILE'
+    CALL compa_name(name_old,name_new,err_file_old,err_file_new,err_sub)
+    IF (err_sub /= 0 .OR. err_file_old /= 0) EXIT ! 'END OF FILE or ERROR'
 
     IF (name_old == 'TEST') THEN
       DO
         read(nio_old,*,IOSTAT=err_file_old) name_old
         read(nio_new,*,IOSTAT=err_file_new) name_new
         !write(6,*) 'name_old ',name_old
-        CALL compa_name(name_old,name_new,err_file_old,err_file_new)
-        IF (name_old == 'END_TEST') EXIT
+        CALL compa_name(name_old,name_new,err_file_old,err_file_new,err_sub)
+        IF (err_sub /= 0 .OR. name_old == 'END_TEST') EXIT
 
         read(nio_old,*) n
         read(nio_new,*) n
@@ -152,19 +152,20 @@ PROGRAM Compare_QML
   close(nio_old)
   close(nio_new)
 
-END PROGRAM Compare_QML
-SUBROUTINE compa_name(name_old,name_new,err_file_old,err_file_new)
+END PROGRAM Compare_txt
+SUBROUTINE compa_name(name_old,name_new,err_file_old,err_file_new,err_sub)
   IMPLICIT NONE
 
   character (len=*)               :: name_old,name_new
-  integer                         :: err_file_old,err_file_new
+  integer                         :: err_file_old,err_file_new,err_sub
 
+  err_sub = 0
   IF (name_old /= name_new .OR. err_file_old /= err_file_new) THEN
     write(6,*) ' The structure of both files are different!'
     write(6,*) 'name_old,err_file_old: ',name_old,err_file_old
     write(6,*) 'name_new,err_file_new: ',name_new,err_file_new
     write(6,*) ' ERROR'
-    STOP
+    err_sub = 1
   END IF
 
 END SUBROUTINE compa_name

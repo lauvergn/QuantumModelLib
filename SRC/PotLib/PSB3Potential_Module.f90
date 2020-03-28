@@ -441,11 +441,11 @@ MODULE mod_PSB3Pot
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_PSB3Pot(Mat_OF_PotDia,dnQ,Para_PSB3,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE(Param_PSB3) , intent(in)    :: Para_PSB3
-    TYPE(dnSca),       intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),       intent(in)    :: dnQ(:) ! BLA, Tors, HOOP
+    TYPE(dnS),       intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),       intent(in)    :: dnQ(:) ! BLA, Tors, HOOP
     integer          , intent(in)    :: nderiv
 
     SELECT CASE (Para_PSB3%option)
@@ -476,19 +476,19 @@ MODULE mod_PSB3Pot
 
   SUBROUTINE eval_PSB3Pot1(Mat_OF_PotDia,dnQ,Para_PSB3,nderiv)
     !Not Published model potential 
-    USE mod_dnSca
+    USE mod_dnS
 
     real (kind=Rkind),  parameter     :: EnergyConv = 627.509_Rkind,LenghtConv = 0.52917721067121_Rkind
-    TYPE(dnSca),        intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),        intent(in)    :: dnQ(:) ! BLA, Tors, HOOP
+    TYPE(dnS),        intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),        intent(in)    :: dnQ(:) ! BLA, Tors, HOOP
     TYPE(Param_PSB3) ,  intent(in)    :: Para_PSB3
     integer,            intent(in)    :: nderiv
 
 
     !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)        :: dnPot,BLA,Tors,HOOP
-    TYPE(dnSca)        :: MorseBLAP,Morsemin,Overlap
-    TYPE(dnSca)        :: Hdir2D,Hct2D
+    TYPE(dnS)        :: dnPot,BLA,Tors,HOOP
+    TYPE(dnS)        :: MorseBLAP,Morsemin,Overlap
+    TYPE(dnS)        :: Hdir2D,Hct2D
 
     real (kind=Rkind)  :: d1,d4
 
@@ -547,17 +547,17 @@ MODULE mod_PSB3Pot
 
 
 !-----------------------------------------------------------------------!
-   CALL dealloc_dnSca(BLA)
-   CALL dealloc_dnSca(Tors)
-   CALL dealloc_dnSca(HOOP)
+   CALL dealloc_dnS(BLA)
+   CALL dealloc_dnS(Tors)
+   CALL dealloc_dnS(HOOP)
 
-   CALL dealloc_dnSca(Overlap)
-   CALL dealloc_dnSca(MorseBLAP)
-   CALL dealloc_dnSca(Morsemin)
-   CALL dealloc_dnSca(Hdir2D)
-   CALL dealloc_dnSca(Hct2D)
+   CALL dealloc_dnS(Overlap)
+   CALL dealloc_dnS(MorseBLAP)
+   CALL dealloc_dnS(Morsemin)
+   CALL dealloc_dnS(Hdir2D)
+   CALL dealloc_dnS(Hct2D)
 
-   CALL dealloc_dnSca(dnPot)
+   CALL dealloc_dnS(dnPot)
 
   END SUBROUTINE eval_PSB3Pot1
 
@@ -571,19 +571,19 @@ MODULE mod_PSB3Pot
 
   SUBROUTINE eval_PSB3Pot2(Mat_OF_PotDia,dnQ,Para_PSB3,nderiv) !Second PSB3's potential
   ! Published potential 
-    USE mod_dnSca
+    USE mod_dnS
 
     real (kind=Rkind),  parameter      :: EnergyConv = 627.509_Rkind,LenghtConv = 0.52917721067121_Rkind 
     TYPE (Param_PSB3),  intent(in)     :: Para_PSB3
-    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),        intent(in)     :: dnQ(:) ! BLA, Tors, HOOP
+    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),        intent(in)     :: dnQ(:) ! BLA, Tors, HOOP
     integer, intent(in)                :: nderiv
     real (kind=Rkind)                  :: d1,d4
 
     !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)     :: dnPot,BLA,Tors,HOOP
-    TYPE(dnSca)     :: Overlap
-    TYPE(dnSca)     :: Hdir2D,Hct2D
+    TYPE(dnS)     :: dnPot,BLA,Tors,HOOP
+    TYPE(dnS)     :: Overlap
+    TYPE(dnS)     :: Hdir2D,Hct2D
 
 
 
@@ -596,7 +596,7 @@ MODULE mod_PSB3Pot
     !and it requires the proper conversion into Bhor  
     IF(.NOT. Para_PSB3%PubliUnit) THEN
        !BLA = BLA * LenghtConv            ! wrong derivative. Here with respect ot BLA
-       BLA = d0Sca_TIME_R(BLA,LenghtConv) ! to set up the correct derivatives with respect to (R*LenghtConv)
+       BLA = d0S_TIME_R(BLA,LenghtConv) ! to set up the correct derivatives with respect to (R*LenghtConv)
     END IF
 
 !-----------------------------------------------------------------------!
@@ -638,15 +638,15 @@ MODULE mod_PSB3Pot
 
 
 !-----------------------------------------------------------------------!
-   CALL dealloc_dnSca(BLA)
-   CALL dealloc_dnSca(Tors)
-   CALL dealloc_dnSca(HOOP)
+   CALL dealloc_dnS(BLA)
+   CALL dealloc_dnS(Tors)
+   CALL dealloc_dnS(HOOP)
 
-   CALL dealloc_dnSca(Overlap)
-   CALL dealloc_dnSca(Hdir2D)
-   CALL dealloc_dnSca(Hct2D)
+   CALL dealloc_dnS(Overlap)
+   CALL dealloc_dnS(Hdir2D)
+   CALL dealloc_dnS(Hct2D)
 
-   CALL dealloc_dnSca(dnPot)
+   CALL dealloc_dnS(dnPot)
 
   END SUBROUTINE eval_PSB3Pot2
 

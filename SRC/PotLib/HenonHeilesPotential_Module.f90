@@ -200,10 +200,10 @@ CONTAINS
 !! @param nderiv             integer:                 it enables to specify up to which derivatives the potential is calculated:
 !!                                                    the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE Eval_HenonHeilesPot(Mat_OF_PotDia,Q,Para_HenonHeiles,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_HenonHeiles), intent(in)     :: Para_HenonHeiles
-    TYPE(dnSca),              intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),              intent(inout)  :: Mat_OF_PotDia(:,:)
     real(kind=Rkind),         intent(in)     :: Q(:)
     integer, intent(in)                      :: nderiv
 
@@ -262,9 +262,9 @@ CONTAINS
       END DO
     END IF
 
-    IF (nderiv == 0) CALL set_dnSca(Mat_OF_PotDia(1,1),d0)
-    IF (nderiv == 1) CALL set_dnSca(Mat_OF_PotDia(1,1),d0,d1)
-    IF (nderiv == 2) CALL set_dnSca(Mat_OF_PotDia(1,1),d0,d1,d2)
+    IF (nderiv == 0) CALL set_dnS(Mat_OF_PotDia(1,1),d0)
+    IF (nderiv == 1) CALL set_dnS(Mat_OF_PotDia(1,1),d0,d1)
+    IF (nderiv == 2) CALL set_dnS(Mat_OF_PotDia(1,1),d0,d1,d2)
 
   END SUBROUTINE Eval_HenonHeilesPot
   SUBROUTINE Eval_HenonHeilesPot_old(PotVal,Q,Para_HenonHeiles,nderiv)

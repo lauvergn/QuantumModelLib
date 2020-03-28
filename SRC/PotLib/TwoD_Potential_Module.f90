@@ -159,11 +159,11 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TwoDPot(Mat_OF_PotDia,dnQ,Para_TwoD,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_TwoD),   intent(in)     :: Para_TwoD
-    TYPE(dnSca),         intent(in)     :: dnQ(2) ! X,Y
-    TYPE(dnSca),         intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),         intent(in)     :: dnQ(2) ! X,Y
+    TYPE(dnS),         intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,             intent(in)     :: nderiv
 
 
@@ -178,7 +178,7 @@ CONTAINS
    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
    !write(out_unitp,*) 'vTemp for V(1,2):'
-   !CALL Write_dnSca(vTemp,6)
+   !CALL Write_dnS(vTemp,6)
 
    !write(out_unitp,*) 'TwoD pot diabatic:',nderiv
    !CALL Write_dnMatPot(PotVal,6)

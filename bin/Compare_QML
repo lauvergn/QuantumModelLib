@@ -1,8 +1,10 @@
-gfortran -o Compare_QML.exe ../bin/Compare_QML.f90
+#!/bin/bash
+
+gfortran -o Compare_txt.exe ../bin/Compare_txt.f90
 
 for new_file in *txt
 do
-  ./Compare_QML.exe -o RES_old/$new_file -new $new_file
+  ./Compare_txt.exe -o RES_old/$new_file -new $new_file
 done
 
-rm Compare_QML.exe
+rm Compare_txt.exe

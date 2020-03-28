@@ -333,11 +333,11 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TullyPot(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_Tully), intent(in)     :: Para_Tully
-    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),        intent(in)     :: dnR
+    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
     SELECT CASE (Para_Tully%option)
@@ -367,11 +367,11 @@ CONTAINS
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TullyPot1(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
   ! A. Simple avoided crossing
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_Tully), intent(in)     :: Para_Tully
-    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),        intent(in)     :: dnR
+    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
 
@@ -401,11 +401,11 @@ CONTAINS
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TullyPot2(Mat_OF_PotDia,dnR,Para_Tully,nderiv) !2d Tully's potential
   !  B. Dual avoided crossing
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_Tully), intent(in)     :: Para_Tully
-    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),        intent(in)     :: dnR
+    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
 ! Potential calculation
@@ -430,11 +430,11 @@ CONTAINS
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TullyPot3(Mat_OF_PotDia,dnR,Para_Tully,nderiv) !3d Tully's potential
     !  C. Extended coupling with reflection
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_Tully), intent(in)     :: Para_Tully
-    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),        intent(in)     :: dnR
+    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
 

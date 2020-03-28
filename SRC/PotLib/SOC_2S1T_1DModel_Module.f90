@@ -210,11 +210,11 @@ CONTAINS
 !! @param nderiv            integer:            it enables to specify up to which derivatives the potential is calculated:
 !!                                              the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_1DSOC_2S1T(Mat_OF_PotDia,dnR,Para_1DSOC_2S1T,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_1DSOC_2S1T),  intent(in)     :: Para_1DSOC_2S1T
-    TYPE(dnSca),              intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),              intent(in)     :: dnR
+    TYPE(dnS),              intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),              intent(in)     :: dnR
     integer,                  intent(in)     :: nderiv
 
 

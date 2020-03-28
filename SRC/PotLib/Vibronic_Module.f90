@@ -229,22 +229,22 @@ CONTAINS
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_Vibronic(PotVal,Q,Para_Phenol,nderiv)
     USE mod_dnMatPot
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_Phenol), intent(in)     :: Para_Phenol
     real (kind=Rkind),   intent(in)     :: Q(2)
     TYPE(dnMatPot),      intent(inout)  :: PotVal
     integer,             intent(in)     :: nderiv
 
-    TYPE(dnSca)  :: dnR,dnth
-    TYPE(dnSca)  :: v10R,v11R,v11th
-    TYPE(dnSca)  :: v30R,v31R,v31th
-    TYPE(dnSca)  :: lambda12R,lambda13R
+    TYPE(dnS)  :: dnR,dnth
+    TYPE(dnS)  :: v10R,v11R,v11th
+    TYPE(dnS)  :: v30R,v31R,v31th
+    TYPE(dnS)  :: lambda12R,lambda13R
 
-    TYPE(dnSca)  :: v20pR,v20mR,v201R,v202R
-    TYPE(dnSca)  :: v21pR,v21mR,v211R,v212R
-    TYPE(dnSca)  :: v22pR,v22mR,v221R,v222R
-    TYPE(dnSca)  :: v20R,v21R,v22R,v21th,v22th
+    TYPE(dnS)  :: v20pR,v20mR,v201R,v202R
+    TYPE(dnS)  :: v21pR,v21mR,v211R,v212R
+    TYPE(dnS)  :: v22pR,v22mR,v221R,v222R
+    TYPE(dnS)  :: v20R,v21R,v22R,v21th,v22th
 
     real (kind=Rkind) :: a0      = 0.52917720835354106_Rkind
     real (kind=Rkind) :: auTOeV  = 27.211384_Rkind
@@ -257,31 +257,31 @@ CONTAINS
    PotVal = ZERO
    !CALL Write_dnMatPot(PotVal)
 
-   dnR     = init_dnSca(Q(1),ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
-   dnth    = init_dnSca(Q(2),ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
+   dnR     = init_dnS(Q(1),ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
+   dnth    = init_dnS(Q(2),ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
 
    IF (.NOT. Para_Phenol%PubliUnit) dnR = a0*dnR ! to convert the bhor into Angstrom
 
    ! for V(1,1): first diabatic state
    !write(out_unitp,*) 'morse:'
    v10R = dnMorse(dnR,Para_Phenol%v10)
-   !CALL Write_dnSca(v10R,6)
+   !CALL Write_dnS(v10R,6)
    !write(out_unitp,*) 'sigmoid:'
-   v11R = dnScaigmoid(dnR,Para_Phenol%v11)
-   !CALL Write_dnSca(v11R,6)
+   v11R = dnSigmoid(dnR,Para_Phenol%v11)
+   !CALL Write_dnS(v11R,6)
 
    !write(out_unitp,*) 'f(th):'
    v11th = ONE-cos(dnth+dnth)
-   !CALL Write_dnSca(v11th,6)
+   !CALL Write_dnS(v11th,6)
 
-   CALL sub_dnSca_TO_dnMatPot(v10R+v11R*v11th,PotVal,i=1,j=1)
+   CALL sub_dnS_TO_dnMatPot(v10R+v11R*v11th,PotVal,i=1,j=1)
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
    !CALL Write_dnMatPot(PotVal,6)
 
-   CALL dealloc_dnSca(v10R)
-   CALL dealloc_dnSca(v11R)
-   CALL dealloc_dnSca(v11th)
+   CALL dealloc_dnS(v10R)
+   CALL dealloc_dnS(v11R)
+   CALL dealloc_dnS(v11th)
 
    ! for V(2,2): 2d diabatic state
    v201R = dnMorse(dnR,Para_Phenol%v201) + Para_Phenol%B204
@@ -292,14 +292,14 @@ CONTAINS
 
 
    !write(out_unitp,*) 'sigmoid:'
-   v211R = dnScaigmoid(dnR,Para_Phenol%v211)
-   v212R = dnScaigmoid(dnR,Para_Phenol%v212) + Para_Phenol%B217
+   v211R = dnSigmoid(dnR,Para_Phenol%v211)
+   v212R = dnSigmoid(dnR,Para_Phenol%v212) + Para_Phenol%B217
    v21pR = v211R + v212R
    v21mR = v211R - v212R
    v21R  = HALF * (v21pR + (v21mR**TWO + Para_Phenol%X21)**HALF)
 
-   v221R = dnScaigmoid(dnR,Para_Phenol%v221)
-   v222R = dnScaigmoid(dnR,Para_Phenol%v222)
+   v221R = dnSigmoid(dnR,Para_Phenol%v221)
+   v222R = dnSigmoid(dnR,Para_Phenol%v222)
    v22pR = v221R + v222R
    v22mR = v221R - v222R
    v22R  = HALF * (v22pR - sqrt(v22mR**TWO + Para_Phenol%X22) )
@@ -307,28 +307,28 @@ CONTAINS
    v21th = ONE-cos(dnth+dnth)
    v22th = v21th*v21th
 
-   CALL sub_dnSca_TO_dnMatPot(v20R+v21R*v21th+v22R*v22th,PotVal,i=2,j=2)
+   CALL sub_dnS_TO_dnMatPot(v20R+v21R*v21th+v22R*v22th,PotVal,i=2,j=2)
 
 
-   CALL dealloc_dnSca(v20R)
-   CALL dealloc_dnSca(v20pR)
-   CALL dealloc_dnSca(v20mR)
-   CALL dealloc_dnSca(v201R)
-   CALL dealloc_dnSca(v202R)
+   CALL dealloc_dnS(v20R)
+   CALL dealloc_dnS(v20pR)
+   CALL dealloc_dnS(v20mR)
+   CALL dealloc_dnS(v201R)
+   CALL dealloc_dnS(v202R)
 
-   CALL dealloc_dnSca(v21R)
-   CALL dealloc_dnSca(v21th)
-   CALL dealloc_dnSca(v21pR)
-   CALL dealloc_dnSca(v21mR)
-   CALL dealloc_dnSca(v211R)
-   CALL dealloc_dnSca(v212R)
+   CALL dealloc_dnS(v21R)
+   CALL dealloc_dnS(v21th)
+   CALL dealloc_dnS(v21pR)
+   CALL dealloc_dnS(v21mR)
+   CALL dealloc_dnS(v211R)
+   CALL dealloc_dnS(v212R)
 
-   CALL dealloc_dnSca(v22R)
-   CALL dealloc_dnSca(v22th)
-   CALL dealloc_dnSca(v22pR)
-   CALL dealloc_dnSca(v22mR)
-   CALL dealloc_dnSca(v221R)
-   CALL dealloc_dnSca(v222R)
+   CALL dealloc_dnS(v22R)
+   CALL dealloc_dnS(v22th)
+   CALL dealloc_dnS(v22pR)
+   CALL dealloc_dnS(v22mR)
+   CALL dealloc_dnS(v221R)
+   CALL dealloc_dnS(v222R)
 
 
    ! for V(3,3): 3d diabatic state
@@ -336,38 +336,38 @@ CONTAINS
    v30R = dnMorse(dnR,Para_Phenol%v30) + Para_Phenol%a30
    !CALL Write_dnMatPot(v30R,6)
    !write(out_unitp,*) 'sigmoid:'
-   v31R = dnScaigmoid(dnR,Para_Phenol%v31)
+   v31R = dnSigmoid(dnR,Para_Phenol%v31)
    !CALL Write_dnMatPot(v31R,6)
 
    !write(out_unitp,*) 'f(th):'
    v31th = ONE-cos(dnth+dnth)
-   !CALL Write_dnSca(v11th,6)
+   !CALL Write_dnS(v11th,6)
 
-   CALL sub_dnSca_TO_dnMatPot(v30R+v31R*v31th,PotVal,i=3,j=3)
+   CALL sub_dnS_TO_dnMatPot(v30R+v31R*v31th,PotVal,i=3,j=3)
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
    !CALL Write_dnMatPot(PotVal,6)
 
-   CALL dealloc_dnSca(v30R)
-   CALL dealloc_dnSca(v31R)
-   CALL dealloc_dnSca(v31th)
+   CALL dealloc_dnS(v30R)
+   CALL dealloc_dnS(v31R)
+   CALL dealloc_dnS(v31th)
 
 
-   lambda12R = dnScaigmoid(dnR,Para_Phenol%lambda12) * sin(dnth)
-   !CALL Write_dnSca(lambda12R,6)
+   lambda12R = dnSigmoid(dnR,Para_Phenol%lambda12) * sin(dnth)
+   !CALL Write_dnS(lambda12R,6)
 
-   CALL sub_dnSca_TO_dnMatPot(lambda12R,PotVal,i=1,j=2)
-   CALL sub_dnSca_TO_dnMatPot(lambda12R,PotVal,i=2,j=1)
-
-
-   lambda13R = dnScaigmoid(dnR,Para_Phenol%lambda13) * sin(dnth)
-
-   CALL sub_dnSca_TO_dnMatPot(lambda13R,PotVal,i=1,j=3)
-   CALL sub_dnSca_TO_dnMatPot(lambda13R,PotVal,i=3,j=1)
+   CALL sub_dnS_TO_dnMatPot(lambda12R,PotVal,i=1,j=2)
+   CALL sub_dnS_TO_dnMatPot(lambda12R,PotVal,i=2,j=1)
 
 
-   CALL dealloc_dnSca(lambda12R)
-   CALL dealloc_dnSca(lambda13R)
+   lambda13R = dnSigmoid(dnR,Para_Phenol%lambda13) * sin(dnth)
+
+   CALL sub_dnS_TO_dnMatPot(lambda13R,PotVal,i=1,j=3)
+   CALL sub_dnS_TO_dnMatPot(lambda13R,PotVal,i=3,j=1)
+
+
+   CALL dealloc_dnS(lambda12R)
+   CALL dealloc_dnS(lambda13R)
 
 
    IF (.NOT. Para_Phenol%PubliUnit) PotVal = PotVal*(ONE/auTOev) ! to convert the eV into Hartree

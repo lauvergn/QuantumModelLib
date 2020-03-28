@@ -139,14 +139,14 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TemplatePot(Mat_OF_PotDia,dnQ,Para_Pot,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_Template), intent(in)     :: Para_Pot
-    TYPE(dnSca),           intent(in)     :: dnQ(3)
-    TYPE(dnSca),           intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),           intent(in)     :: dnQ(3)
+    TYPE(dnS),           intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,               intent(in)     :: nderiv
 
-    TYPE(dnSca)  :: mXpY,vXmY,mZ
+    TYPE(dnS)  :: mXpY,vXmY,mZ
     integer      :: i
 
    !write(out_unitp,*) 'TemplatePot in:'
@@ -159,14 +159,14 @@ CONTAINS
 
    Mat_OF_PotDia(1,1) = mXpY+mZ+vXmY
 
-   CALL dealloc_dnSca(mXpY)
-   CALL dealloc_dnSca(mZ)
-   CALL dealloc_dnSca(vXmY)
+   CALL dealloc_dnS(mXpY)
+   CALL dealloc_dnS(mZ)
+   CALL dealloc_dnS(vXmY)
 
 
    !write(out_unitp,*) 'TemplatePot, nderiv:',nderiv
-   !write(out_unitp,*) 'Q(:):',(get_d0_FROM_dnSca(dnQ(i)),i=1,size(dnQ))
-   !CALL Write_dnSca( Mat_OF_PotDia(1,1),6)
+   !write(out_unitp,*) 'Q(:):',(get_d0_FROM_dnS(dnQ(i)),i=1,size(dnQ))
+   !CALL Write_dnS( Mat_OF_PotDia(1,1),6)
    !write(out_unitp,*)
    !flush(out_unitp)
 

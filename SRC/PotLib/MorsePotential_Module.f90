@@ -204,11 +204,11 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE Eval_MorsePot(Mat_OF_PotDia,dnR,Para_Morse,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_Morse), intent(in)     :: Para_Morse
-    TYPE(dnSca),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),        intent(in)     :: dnR
+    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),        intent(in)     :: dnR
     integer,            intent(in)     :: nderiv
 
 
@@ -227,35 +227,35 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @return dnMorse           TYPE(dnSca):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
-!! @param dnR                TYPE(dnSca):           derived type with the value of "r" and,if required, its derivatives.
+!! @return dnMorse           TYPE(dnS):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
+!! @param dnR                TYPE(dnS):           derived type with the value of "r" and,if required, its derivatives.
 !! @param Para_Morse         TYPE(Param_Morse):   derived type with the Morse parameters.
   FUNCTION dnMorse(dnR,Para_Morse)
     USE mod_dnMatPot
-    USE mod_dnSca
+    USE mod_dnS
 
-    TYPE(dnSca)                          :: dnMorse
-    TYPE(dnSca),          intent(in)     :: dnR
+    TYPE(dnS)                          :: dnMorse
+    TYPE(dnS),          intent(in)     :: dnR
 
     TYPE (Param_Morse), intent(in)    :: Para_Morse
 
     !local variable
-    TYPE(dnSca)     :: dnbeta
+    TYPE(dnS)     :: dnbeta
 
     !write(out_unitp,*) 'BEGINNING in dnMorse'
     !write(out_unitp,*) 'dnR'
-    !CALL write_dnSca(dnR)
+    !CALL write_dnS(dnR)
 
     dnbeta  = exp(-Para_Morse%a*(dnR-Para_Morse%req))
     !write(out_unitp,*) 'dnbeta'
-    !CALL write_dnSca(dnbeta)
+    !CALL write_dnS(dnbeta)
 
     dnMorse = Para_Morse%D * (ONE-dnbeta)**2
 
-     CALL dealloc_dnSca(dnbeta)
+     CALL dealloc_dnS(dnbeta)
 
-    !write(out_unitp,*) 'Morse at',get_d0_FROM_dnSca(dnR)
-    !CALL Write_dnSca(dnMorse)
+    !write(out_unitp,*) 'Morse at',get_d0_FROM_dnS(dnR)
+    !CALL Write_dnS(dnMorse)
     !write(out_unitp,*) 'END in dnMorse'
     !flush(out_unitp)
 

@@ -26,7 +26,7 @@ MODULE mod_Model
   USE mod_dnMatPot,       ONLY: dnMatPot,alloc_dnMatPot,dealloc_dnMatPot,Check_NotAlloc_dnMatPot, &
                                 get_maxval_OF_dnMatPot,Write_dnMatPot,get_nsurf_FROM_dnMatPot,    &
                                 get_ndim_FROM_dnMatPot,dnmatpot2_minus_dnmatpot1,assignment (=),  &
-                                sub_dnSca_TO_dnMatPot
+                                sub_dnS_TO_dnMatPot
   USE mod_MorsePot
   USE mod_HenonHeilesPot
   USE mod_TullyPot
@@ -685,7 +685,7 @@ CONTAINS
 
 
   SUBROUTINE Eval_Pot(Para_Model,Q,PotVal,nderiv,NAC,Vec,numeric)
-  USE mod_dnSca
+  USE mod_dnS
   !USE mod_diago
   IMPLICIT NONE
 
@@ -782,7 +782,7 @@ CONTAINS
   END SUBROUTINE Eval_Pot
 
   SUBROUTINE Eval_Pot_ana(Para_Model,Q,PotVal,nderiv,NAC,Vec)
-  USE mod_dnSca
+  USE mod_dnS
   IMPLICIT NONE
 
     TYPE (Param_Model), intent(inout)            :: Para_Model
@@ -794,8 +794,8 @@ CONTAINS
     ! local variables
     integer                    :: i,j,id,nderiv_loc
     TYPE (dnMatPot)            :: PotVal_dia,Vec_loc,NAC_loc
-    TYPE(dnSca), allocatable   :: dnQ(:)
-    TYPE(dnSca), allocatable   :: Mat_OF_PotDia(:,:)
+    TYPE(dnS), allocatable   :: dnQ(:)
+    TYPE(dnS), allocatable   :: Mat_OF_PotDia(:,:)
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Eval_Pot_ana'
@@ -824,14 +824,14 @@ CONTAINS
     allocate(Mat_OF_PotDia(Para_Model%nsurf,Para_Model%nsurf))
     DO j=1,size(Mat_OF_PotDia(1,:))
     DO i=1,size(Mat_OF_PotDia(:,1))
-        CALL alloc_dnSca(Mat_OF_PotDia(i,j),Para_Model%ndim,nderiv_loc)
+        CALL alloc_dnS(Mat_OF_PotDia(i,j),Para_Model%ndim,nderiv_loc)
     END DO
     END DO
 
     ! intialization of the dnQ(:)
     allocate(dnQ(Para_Model%ndim))
     DO i=1,Para_Model%ndim
-      dnQ(i) = init_dnSca(Q(i),ndim=Para_Model%ndim,nderiv=nderiv_loc,iQ=i) ! to set up the derivatives
+      dnQ(i) = init_dnS(Q(i),ndim=Para_Model%ndim,nderiv=nderiv_loc,iQ=i) ! to set up the derivatives
     END DO
 
     SELECT CASE (Para_Model%pot_name)
@@ -893,13 +893,13 @@ CONTAINS
 
     ! deallocation
     DO i=1,size(dnQ)
-      CALL dealloc_dnSca(dnQ(i))
+      CALL dealloc_dnS(dnQ(i))
     END DO
     deallocate(dnQ)
 
     DO j=1,size(Mat_OF_PotDia(1,:))
     DO i=1,size(Mat_OF_PotDia(:,1))
-      CALL dealloc_dnSca(Mat_OF_PotDia(i,j))
+      CALL dealloc_dnS(Mat_OF_PotDia(i,j))
     END DO
     END DO
     deallocate(Mat_OF_PotDia)

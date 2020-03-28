@@ -219,39 +219,46 @@ OBJ_all        = $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
 #===============================================
 #============= Main program ====================
 #
+.PHONY: all
 all: dnS lib model grid driver readme
 # model tests
-model:$(MODEXE)
-testmodel:$(MODEXE)
+
+.PHONY: model testmodel
+model testmodel:$(MODEXE)
+	echo "model (QML) compilation: OK"
 $(MODEXE): $(OBJ_testmod) $(OBJ_all)
 	$(LYNK90)   -o $(MODEXE) $(OBJ_testmod) $(OBJ_all) $(LYNKFLAGS)
 #
 # grid
-grid:$(GRIDEXE)
-testgrid:$(GRIDEXE)
+.PHONY: grid testgrid
+grid testgrid:$(GRIDEXE)
 $(GRIDEXE): $(OBJ_grid) $(OBJ_all)
 	$(LYNK90)   -o $(GRIDEXE) $(OBJ_grid) $(OBJ_all) $(LYNKFLAGS)
 #
 # dnS
-dns:$(dnSEXE)
-dnS:$(dnSEXE)
-testdns:$(dnSEXE)
-testdnS:$(dnSEXE)
+.PHONY: dns dnS testdns testdnS
+dns dnS testdns testdnS:$(dnSEXE)
+		echo "dnS compilation: OK"
+
 $(dnSEXE): $(OBJ_testdnS) $(OBJ_lib)
 	$(LYNK90)   -o $(dnSEXE) $(OBJ_testdnS) $(OBJ_lib) $(LYNKFLAGS)
+	echo "dnS compilation: OK"
 #
 #driver
+.PHONY: driver
 driver:$(DriverEXE)
 $(DriverEXE): $(OBJ_testdriver) $(ModLib)
 	$(LYNK90)   -o $(DriverEXE) $(OBJ_testdriver) $(LYNKFLAGS) -L$(DIR0) -lpot
 #
 #readme
+.PHONY: readme
 readme:
 	bin/extractReadMe
 
 #===============================================
 #============= Model Lib =======================
 #
+.PHONY: lib
 lib: $(ModLib) readme
 	echo "create the library: ",$(ModLib)
 $(ModLib): $(OBJ_driver) $(OBJ_all)
@@ -262,9 +269,10 @@ $(ModLib): $(OBJ_driver) $(OBJ_all)
 #
 #===============================================
 #===============================================
+.PHONY: clean
 clean: 
 	rm -f  $(MODEXE) $(GRIDEXE) $(dnSEXE) $(DriverEXE) $(ModLib) libQMLib.a
-	rm -fr *.dSYM
+	rm -fr *.dSYM comp.log
 	cd $(DIROBJ) ; rm -f *.o *.mod *.MOD
 	@cd Tests && ./clean
 	@echo "  done cleaning up the example directories"

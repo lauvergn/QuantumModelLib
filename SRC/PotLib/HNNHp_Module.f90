@@ -291,11 +291,11 @@ MODULE mod_HNNHp
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_HNNHpPot(Mat_OF_PotDia,dnQ,Para_HNNHp,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE(Param_HNNHp) , intent(in)   :: Para_HNNHp
-    TYPE(dnSca),       intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),       intent(in)    :: dnQ(:) !
+    TYPE(dnS),       intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),       intent(in)    :: dnQ(:) !
     integer          , intent(in)    :: nderiv
 
     SELECT CASE (Para_HNNHp%option)
@@ -322,15 +322,15 @@ MODULE mod_HNNHp
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
   SUBROUTINE eval_HNNHpPot1(Mat_OF_PotDia,dnQ,Para_HNNHp)
-    USE mod_dnSca
+    USE mod_dnS
 
-    TYPE(dnSca),        intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),        intent(in)    :: dnQ(:)
+    TYPE(dnS),        intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),        intent(in)    :: dnQ(:)
     TYPE(Param_HNNHp) , intent(in)    :: Para_HNNHp
 
 
-    TYPE(dnSca)        :: DQ(6,6)
-    TYPE(dnSca)        :: Vtemp
+    TYPE(dnS)        :: DQ(6,6)
+    TYPE(dnS)        :: Vtemp
     integer            :: i,j
 
     !write(6,*) ' sub eval_HNNHpPot1' ; flush(6)
@@ -360,8 +360,8 @@ MODULE mod_HNNHp
 
 !-----------------------------------------------------------------------!
 
-   CALL dealloc_dnSca(Vtemp)
-   CALL dealloc_dnSca(DQ)
+   CALL dealloc_dnS(Vtemp)
+   CALL dealloc_dnS(DQ)
 
    !write(6,*) ' end eval_HNNHpPot1' ; flush(6)
 
@@ -370,16 +370,16 @@ MODULE mod_HNNHp
   ! here we suppose that the atom ordering: N1-N2-H1-H2
   ! the bounds are N1-N2, N1-H1, n2-H2
   SUBROUTINE Cart_TO_Q_HNNHp(dnX,dnQ,Para_HNNHp,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
-    TYPE(dnSca),       intent(in)    :: dnX(:,:)
-    TYPE(dnSca),       intent(inout) :: dnQ(:)
+    TYPE(dnS),       intent(in)    :: dnX(:,:)
+    TYPE(dnS),       intent(inout) :: dnQ(:)
     TYPE(Param_HNNHp) , intent(in)   :: Para_HNNHp
     integer          , intent(in)    :: nderiv
 
 
     ! local vector
-    TYPE(dnSca)    :: VecNN(3),VecN1H1(3),VecN2H2(3)
+    TYPE(dnS)    :: VecNN(3),VecN1H1(3),VecN2H2(3)
 
 
     VecNN(:)   = dnX(:,1)-dnX(:,2)

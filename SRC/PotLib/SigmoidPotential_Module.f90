@@ -176,11 +176,11 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE Eval_SigmoidPot(Mat_OF_PotDia,dnR,Para_Sigmoid,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_Sigmoid), intent(in)     :: Para_Sigmoid
-    TYPE(dnSca),          intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),          intent(in)     :: dnR
+    TYPE(dnS),          intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),          intent(in)     :: dnR
     integer, intent(in)                  :: nderiv
 
 
@@ -188,7 +188,7 @@ CONTAINS
     !flush(out_unitp)
 
 
-    Mat_OF_PotDia(1,1) = dnScaigmoid(dnR,Para_Sigmoid)
+    Mat_OF_PotDia(1,1) = dnSigmoid(dnR,Para_Sigmoid)
 
 
     !write(out_unitp,*) 'END in Eval_SigmoidPot'
@@ -201,36 +201,36 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @return dnScaigmoid         TYPE(dnSca):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
-!! @param dnR                TYPE(dnSca):           derived type with the value of "r" and,if required, its derivatives.
+!! @return dnSigmoid         TYPE(dnS):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
+!! @param dnR                TYPE(dnS):           derived type with the value of "r" and,if required, its derivatives.
 !! @param Para_Sigmoid       TYPE(Param_Sigmoid): derived type with the Sigmoid parameters.
-  FUNCTION dnScaigmoid(dnR,Para_Sigmoid) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
+  FUNCTION dnSigmoid(dnR,Para_Sigmoid) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
     USE mod_dnMatPot
-    USE mod_dnSca
+    USE mod_dnS
 
-    TYPE(dnSca)                          :: dnScaigmoid
-    TYPE(dnSca),          intent(in)     :: dnR
+    TYPE(dnS)                          :: dnSigmoid
+    TYPE(dnS),          intent(in)     :: dnR
 
     TYPE (Param_Sigmoid), intent(in)   :: Para_Sigmoid
 
     !local variable
-    TYPE(dnSca)     :: dnbeta
+    TYPE(dnS)     :: dnbeta
 
     !write(out_unitp,*) 'BEGINNING in Sigmoid'
     !write(out_unitp,*) 'dnR'
-    !CALL write_dnSca(dnR)
+    !CALL write_dnS(dnR)
 
     dnbeta  = tanh((dnR-Para_Sigmoid%B)/Para_Sigmoid%C)
     !write(out_unitp,*) 'dnbeta'
-    !CALL write_dnSca(dnbeta)
-    dnScaigmoid = (HALF*Para_Sigmoid%A) * (ONE+Para_Sigmoid%e*dnbeta)
+    !CALL write_dnS(dnbeta)
+    dnSigmoid = (HALF*Para_Sigmoid%A) * (ONE+Para_Sigmoid%e*dnbeta)
 
-     CALL dealloc_dnSca(dnbeta)
+     CALL dealloc_dnS(dnbeta)
 
-    !write(out_unitp,*) 'Sigmoid at',get_d0_FROM_dnSca(dnR)
-    !CALL Write_dnSca(dnScaigmoid)
+    !write(out_unitp,*) 'Sigmoid at',get_d0_FROM_dnS(dnR)
+    !CALL Write_dnS(dnSigmoid)
     !write(out_unitp,*) 'END in Sigmoid'
     !flush(out_unitp)
 
-  END FUNCTION dnScaigmoid
+  END FUNCTION dnSigmoid
 END MODULE mod_SigmoidPot

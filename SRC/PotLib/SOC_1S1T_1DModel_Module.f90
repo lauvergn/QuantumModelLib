@@ -241,15 +241,15 @@ CONTAINS
 !! @param nderiv       integer:            it enables to specify up to which derivatives the potential is calculated:
 !!                                         the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_1DSOC(Mat_OF_PotDia,dnR,Para_1DSOC,nderiv)
-    USE mod_dnSca
+    USE mod_dnS
 
     TYPE (Param_1DSOC),       intent(in)     :: Para_1DSOC
-    TYPE(dnSca),              intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnSca),              intent(in)     :: dnR
+    TYPE(dnS),              intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE(dnS),              intent(in)     :: dnR
     integer,                  intent(in)     :: nderiv
 
     !local variables (derived type). They have to be deallocated
-    TYPE(dnSca)      :: dnSig,dnx
+    TYPE(dnS)      :: dnSig,dnx
     integer          :: i,j,nsurf
     real(kind=Rkind) :: RC01
 
@@ -330,8 +330,8 @@ CONTAINS
    END IF
 
 
-    CALL dealloc_dnSca(dnx)
-    CALL dealloc_dnSca(dnSig)
+    CALL dealloc_dnS(dnx)
+    CALL dealloc_dnS(dnSig)
 
 
   END SUBROUTINE eval_1DSOC
