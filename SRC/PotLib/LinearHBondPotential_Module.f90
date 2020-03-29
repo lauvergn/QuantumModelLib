@@ -75,7 +75,7 @@ CONTAINS
   SUBROUTINE Init_LinearHBondPot(LinearHBondPot,nio,read_param,PubliUnit, &
                                  D,a,req,epsi,Abuck,Bbuck,Cbuck)
 
-    TYPE (LinearHBondPot_t),    intent(inout)   :: LinearHBondPot
+    TYPE (LinearHBondPot_t),     intent(inout)   :: LinearHBondPot
     integer,           optional, intent(in)      :: nio
     logical,           optional, intent(in)      :: read_param
     logical,           optional, intent(in)      :: PubliUnit
@@ -153,7 +153,7 @@ CONTAINS
                                  Dsub,asub,reqsub,epsisub,              &
                                  Abucksub,Bbucksub,Cbucksub)
 
-    TYPE (LinearHBondPot_t), intent(inout) :: LinearHBondPot
+    TYPE (LinearHBondPot_t),  intent(inout) :: LinearHBondPot
     real (kind=Rkind),        intent(inout) :: Dsub,asub,reqsub,epsisub
     real (kind=Rkind),        intent(inout) :: Abucksub,Bbucksub,Cbucksub
     integer,                  intent(in)    :: nio
@@ -252,7 +252,7 @@ CONTAINS
 !! @param nio                integer:                   file unit to print the parameters.
   SUBROUTINE Write_LinearHBondPot(LinearHBondPot,nio)
     TYPE (LinearHBondPot_t), intent(in) :: LinearHBondPot
-    integer, intent(in) :: nio
+    integer,                 intent(in) :: nio
 
     write(nio,*) 'LinearHBond current parameters:'
     write(nio,*)
@@ -305,9 +305,9 @@ CONTAINS
 
     IF (debug) THEN
       write(out_unitp,*) 'dnQQ'
-      CALL write_dnS(dnQ(1))
+      CALL QML_Write_dnS(dnQ(1))
       write(out_unitp,*) 'dnsq'
-      CALL write_dnS(dnQ(2))
+      CALL QML_Write_dnS(dnQ(2))
       flush(out_unitp)
     END IF
 
@@ -317,9 +317,9 @@ CONTAINS
 
       IF (debug) THEN
         write(out_unitp,*) 'dnQQ in Angs'
-        CALL write_dnS(dnQ(1))
+        CALL QML_Write_dnS(dnQ(1))
         write(out_unitp,*) 'dnsq in Angs'
-        CALL write_dnS(dnQ(2))
+        CALL QML_Write_dnS(dnQ(2))
         flush(out_unitp)
       END IF
     ELSE
@@ -335,31 +335,31 @@ CONTAINS
     IF (debug) THEN
       write(out_unitp,*) 'dnX'
       flush(out_unitp)
-      CALL write_dnS(dnX)
+      CALL QML_Write_dnS(dnX)
       write(out_unitp,*) 'dnY'
       flush(out_unitp)
-      CALL write_dnS(dnY)
+      CALL QML_Write_dnS(dnY)
       flush(out_unitp)
     END IF
 
     PotVal_m1 = dnMorse(dnX,LinearHBondPot%Morse1)
     IF (debug) THEN
       write(out_unitp,*) 'PotVal_m1. x:',QML_get_d0_FROM_dnS(dnX)
-      CALL Write_dnS(PotVal_m1)
+      CALL QML_Write_dnS(PotVal_m1)
       flush(out_unitp)
     END IF
 
     PotVal_m2 = dnMorse(dnY,LinearHBondPot%Morse2)+LinearHBondPot%Eref2
     IF (debug) THEN
       write(out_unitp,*) 'PotVal_m2. y:',QML_get_d0_FROM_dnS(dnY)
-      CALL Write_dnS(PotVal_m2)
+      CALL QML_Write_dnS(PotVal_m2)
       flush(out_unitp)
     END IF
 
     PotVal_Buck = dnBuck(dnQQ,LinearHBondPot%Buck)
     IF (debug) THEN
       write(out_unitp,*) 'PotVal_Buck. QQ:',QML_get_d0_FROM_dnS(dnQQ)
-      CALL Write_dnS(PotVal_Buck)
+      CALL QML_Write_dnS(PotVal_Buck)
       flush(out_unitp)
     END IF
 
@@ -367,7 +367,7 @@ CONTAINS
 
     IF (debug) THEN
       write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
-      CALL write_dnS(Mat_OF_PotDia(1,1))
+      CALL QML_Write_dnS(Mat_OF_PotDia(1,1))
       flush(out_unitp)
     END IF
 

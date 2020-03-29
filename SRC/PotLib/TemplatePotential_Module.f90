@@ -166,7 +166,7 @@ CONTAINS
 
    !write(out_unitp,*) 'TemplatePot, nderiv:',nderiv
    !write(out_unitp,*) 'Q(:):',(get_d0_FROM_dnS(dnQ(i)),i=1,size(dnQ))
-   !CALL Write_dnS( Mat_OF_PotDia(1,1),6)
+   !CALL QML_Write_dnS( Mat_OF_PotDia(1,1),6)
    !write(out_unitp,*)
    !flush(out_unitp)
 

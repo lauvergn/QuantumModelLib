@@ -2,8 +2,8 @@
 #=================================================================================
 # Compiler? 
 #Possible values: (Empty: gfortran)
-#                ifort (version: 14.0.2, 16.0.3, 17.0.1 linux)
-#                gfortran (version: 6.3.0 linux and osx)
+#                ifort (version: 17, 19 linux)
+#                gfortran (version: 8.3, 9.1 linux and 9.2 osx)
 #                pgf90 (version: 17.10-0, linux): problems because datanh, dasinh, dacosh are not available with this compiler !!!
 F90 = gfortran
 #

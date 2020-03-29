@@ -244,18 +244,18 @@ CONTAINS
 
     !write(out_unitp,*) 'BEGINNING in dnMorse'
     !write(out_unitp,*) 'dnR'
-    !CALL write_dnS(dnR)
+    !CALL QML_Write_dnS(dnR)
 
     dnbeta  = exp(-MorsePot%a*(dnR-MorsePot%req))
     !write(out_unitp,*) 'dnbeta'
-    !CALL write_dnS(dnbeta)
+    !CALL QML_Write_dnS(dnbeta)
 
     dnMorse = MorsePot%D * (ONE-dnbeta)**2
 
      CALL QML_dealloc_dnS(dnbeta)
 
     !write(out_unitp,*) 'Morse at',get_d0_FROM_dnS(dnR)
-    !CALL Write_dnS(dnMorse)
+    !CALL QML_Write_dnS(dnMorse)
     !write(out_unitp,*) 'END in dnMorse'
     !flush(out_unitp)
 

@@ -253,12 +253,12 @@ CONTAINS
 
     !write(out_unitp,*) 'BEGINNING in dnBuck'
     !write(out_unitp,*) 'dnR'
-    !CALL write_dnS(dnR)
+    !CALL QML_Write_dnS(dnR)
 
     dnBuck = BuckPot%A * exp(-BuckPot%B*dnR) - BuckPot%C * dnR**(-6)
 
     !write(out_unitp,*) 'Buckingham at',get_d0_FROM_dnS(dnR)
-    !CALL Write_dnS(dnBuck)
+    !CALL QML_Write_dnS(dnBuck)
     !write(out_unitp,*) 'END in dnBuck'
     !flush(out_unitp)
 

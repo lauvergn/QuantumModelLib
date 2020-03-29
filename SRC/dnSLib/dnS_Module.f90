@@ -107,6 +107,7 @@ MODULE mod_dnS
   PUBLIC :: QML_get_d0_FROM_dnS,QML_get_d1_FROM_dnS,QML_get_d2_FROM_dnS,QML_get_d3_FROM_dnS
 
   PUBLIC :: QML_get_Num_dnS_FROM_f_x,QML_Check_dnS_IS_ZERO,QML_d0S_TIME_R
+  PUBLIC :: QML_asinh_perso,QML_acosh_perso,QML_atanh_perso
 
   INTERFACE operator (+)
      MODULE PROCEDURE QML_dnS2_PLUS_dnS1,QML_dnS_PLUS_R,QML_R_PLUS_dnS,QML_PLUS_dnS
@@ -1911,7 +1912,7 @@ CONTAINS
 #if __INVHYP == 1
     IF (nderiv >= 0) d0f =   acosh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  acosh_perso(S%d0)
+    IF (nderiv >= 0) d0f =  QML_acosh_perso(S%d0)
 #endif
     IF (nderiv >= 1) d1f = ONE/sqrt(-ONE+S%d0**2)
     IF (nderiv >= 2) d2f = -S%d0*d1f**3
@@ -1958,7 +1959,7 @@ CONTAINS
 #if __INVHYP == 1
     IF (nderiv >= 0) d0f =  asinh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  asinh_perso(S%d0)
+    IF (nderiv >= 0) d0f =  QML_asinh_perso(S%d0)
 #endif
     IF (nderiv >= 1) d1f = ONE/sqrt(ONE+S%d0**2)
     IF (nderiv >= 2) d2f = -S%d0*d1f**3
@@ -2007,7 +2008,7 @@ CONTAINS
 #if __INVHYP == 1
     IF (nderiv >= 0) d0f =  atanh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  atanh_perso(S%d0)
+    IF (nderiv >= 0) d0f =  QML_atanh_perso(S%d0)
 #endif
     IF (nderiv >= 1) d1f =  ONE/(ONE-S%d0**2)
     IF (nderiv >= 2) d2f =  TWO*S%d0 * d1f**2
@@ -2017,7 +2018,7 @@ CONTAINS
 
   END FUNCTION QML_get_ATANH_dnS
 
-  ELEMENTAL FUNCTION QML_atanh_perso(x) RESULT(atanh_perso)
+  PURE FUNCTION QML_atanh_perso(x) RESULT(atanh_perso)
     real (kind=Rkind)             :: atanh_perso
     real (kind=Rkind), intent(in) :: x
 
@@ -2028,7 +2029,7 @@ CONTAINS
 #endif
 
   END FUNCTION QML_atanh_perso
-  ELEMENTAL FUNCTION QML_asinh_perso(x) RESULT(asinh_perso)
+  PURE FUNCTION QML_asinh_perso(x) RESULT(asinh_perso)
     real (kind=Rkind)             :: asinh_perso
     real (kind=Rkind), intent(in) :: x
 
@@ -2039,7 +2040,7 @@ CONTAINS
 #endif
 
   END FUNCTION QML_asinh_perso
-  ELEMENTAL FUNCTION QML_acosh_perso(x) RESULT(acosh_perso)
+  PURE FUNCTION QML_acosh_perso(x) RESULT(acosh_perso)
     real (kind=Rkind)             :: acosh_perso
     real (kind=Rkind), intent(in) :: x
 

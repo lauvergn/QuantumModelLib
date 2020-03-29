@@ -70,7 +70,7 @@ CONTAINS
 !! @param PubliUnit          logical (optional):   when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
   SUBROUTINE Init_TwoDPot(Para_TwoD,PubliUnit)
     TYPE (TwoDPot_t),        intent(inout)   :: Para_TwoD
-     logical, optional,       intent(in)      :: PubliUnit
+    logical, optional,       intent(in)      :: PubliUnit
 
      IF (present(PubliUnit)) Para_TwoD%PubliUnit = PubliUnit
 
@@ -87,7 +87,7 @@ CONTAINS
 !! @param nio              integer:              file unit to print the parameters.
   SUBROUTINE Write_TwoDPot(Para_TwoD,nio)
     TYPE (TwoDPot_t), intent(in) :: Para_TwoD
-    integer, intent(in) :: nio
+    integer,          intent(in) :: nio
 
     write(nio,*) 'TwoD parameters'
     write(nio,*) '-----------------------------------------'
@@ -128,7 +128,7 @@ CONTAINS
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: Q0(:)
-    TYPE (TwoDPot_t),           intent(in)    :: Para_TwoD
+    TYPE (TwoDPot_t),            intent(in)    :: Para_TwoD
     integer,                     intent(in)    :: option ! diabatic state
 
     IF (size(Q0) /= 2) THEN
@@ -162,9 +162,9 @@ CONTAINS
     USE mod_dnS
 
     TYPE (TwoDPot_t),   intent(in)     :: Para_TwoD
-    TYPE (dnS_t),         intent(in)     :: dnQ(2) ! X,Y
-    TYPE (dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)
-    integer,             intent(in)     :: nderiv
+    TYPE (dnS_t),       intent(in)     :: dnQ(2) ! X,Y
+    TYPE (dnS_t),       intent(inout)  :: Mat_OF_PotDia(:,:)
+    integer,            intent(in)     :: nderiv
 
 
    !Hel(1,1,x,y)=0.5d0*KX*(R(1,x)-X1)**2 + 0.5d0*KY*(R(2,y))**2
@@ -178,10 +178,10 @@ CONTAINS
    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
    !write(out_unitp,*) 'vTemp for V(1,2):'
-   !CALL Write_dnS(vTemp,6)
+   !CALL QML_Write_dnS(vTemp,6)
 
    !write(out_unitp,*) 'TwoD pot diabatic:',nderiv
-   !CALL Write_dnMat(PotVal,6)
+   !CALL QML_Write_dnMat(PotVal,6)
    !write(out_unitp,*)
    !flush(out_unitp)
 

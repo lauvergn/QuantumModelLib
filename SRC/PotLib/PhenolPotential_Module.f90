@@ -281,14 +281,14 @@ CONTAINS
    ! for V(1,1): first diabatic state
    !write(out_unitp,*) 'morse:'
    v10R = dnMorse(dnR,PhenolPot%v10)
-   !CALL Write_dnS(v10R,6)
+   !CALL QML_Write_dnS(v10R,6)
    !write(out_unitp,*) 'sigmoid:'
    v11R = dnSigmoid(dnR,PhenolPot%v11)
-   !CALL Write_dnS(v11R,6)
+   !CALL QML_Write_dnS(v11R,6)
 
    !write(out_unitp,*) 'f(th):'
    v11th = ONE-cos(dnth+dnth)
-   !CALL Write_dnS(v11th,6)
+   !CALL QML_Write_dnS(v11th,6)
 
    Mat_OF_PotDia(1,1) = v10R+v11R*v11th
 
@@ -350,19 +350,19 @@ CONTAINS
    ! for V(3,3): 3d diabatic state
    !write(out_unitp,*) 'morse:'
    v30R = dnMorse(dnR,PhenolPot%v30) + PhenolPot%a30
-   !CALL Write_dnMat(v30R,6)
+   !CALL QML_Write_dnMat(v30R,6)
    !write(out_unitp,*) 'sigmoid:'
    v31R = dnSigmoid(dnR,PhenolPot%v31)
-   !CALL Write_dnMat(v31R,6)
+   !CALL QML_Write_dnMat(v31R,6)
 
    !write(out_unitp,*) 'f(th):'
    v31th = ONE-cos(dnth+dnth)
-   !CALL Write_dnS(v11th,6)
+   !CALL QML_Write_dnS(v11th,6)
 
    Mat_OF_PotDia(3,3) = v30R+v31R*v31th
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
-   !CALL Write_dnMat(PotVal,6)
+   !CALL QML_Write_dnMat(PotVal,6)
 
    CALL QML_dealloc_dnS(v30R)
    CALL QML_dealloc_dnS(v31R)
@@ -372,7 +372,7 @@ CONTAINS
 
    !--------------------------------------------------------------------
    lambda12R = dnSigmoid(dnR,PhenolPot%lambda12) * sin(dnth)
-   !CALL Write_dnS(lambda12R,6)
+   !CALL QML_Write_dnS(lambda12R,6)
 
    Mat_OF_PotDia(1,2) = lambda12R
    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
@@ -406,7 +406,7 @@ CONTAINS
 
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
-   !CALL Write_dnMat(PotVal,6)
+   !CALL QML_Write_dnMat(PotVal,6)
    !write(out_unitp,*)
    !flush(out_unitp)
 

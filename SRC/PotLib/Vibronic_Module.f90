@@ -77,7 +77,7 @@ CONTAINS
 
      IF (present(PubliUnit)) VibronicPot%PubliUnit = PubliUnit
 
-     CALL alloc_dnMat(VibronicPot%V,nsurf,ndim,nderiv, &
+     CALL QML_alloc_dnMat(VibronicPot%V,nsurf,ndim,nderiv, &
              name_var='VibronicPot%V',name_sub='Init_Vibronic',IOerr)
      IF (IOerr /= 0 ) THEN
        write(out_unitp,*) ' ERROR in Init_Vibronic'
@@ -255,7 +255,7 @@ CONTAINS
 
    !write(out_unitp,*) 'phenol pot in:'
    PotVal = ZERO
-   !CALL Write_dnMat(PotVal)
+   !CALL QML_Write_dnMat(PotVal)
 
    dnR     = init_dnS(Q(1),ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
    dnth    = init_dnS(Q(2),ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
@@ -265,19 +265,19 @@ CONTAINS
    ! for V(1,1): first diabatic state
    !write(out_unitp,*) 'morse:'
    v10R = dnMorse(dnR,Para_Phenol%v10)
-   !CALL Write_dnS(v10R,6)
+   !CALL QML_Write_dnS(v10R,6)
    !write(out_unitp,*) 'sigmoid:'
    v11R = dnSigmoid(dnR,Para_Phenol%v11)
-   !CALL Write_dnS(v11R,6)
+   !CALL QML_Write_dnS(v11R,6)
 
    !write(out_unitp,*) 'f(th):'
    v11th = ONE-cos(dnth+dnth)
-   !CALL Write_dnS(v11th,6)
+   !CALL QML_Write_dnS(v11th,6)
 
    CALL sub_dnS_TO_dnMat(v10R+v11R*v11th,PotVal,i=1,j=1)
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
-   !CALL Write_dnMat(PotVal,6)
+   !CALL QML_Write_dnMat(PotVal,6)
 
    CALL dealloc_dnS(v10R)
    CALL dealloc_dnS(v11R)
@@ -334,19 +334,19 @@ CONTAINS
    ! for V(3,3): 3d diabatic state
    !write(out_unitp,*) 'morse:'
    v30R = dnMorse(dnR,Para_Phenol%v30) + Para_Phenol%a30
-   !CALL Write_dnMat(v30R,6)
+   !CALL QML_Write_dnMat(v30R,6)
    !write(out_unitp,*) 'sigmoid:'
    v31R = dnSigmoid(dnR,Para_Phenol%v31)
-   !CALL Write_dnMat(v31R,6)
+   !CALL QML_Write_dnMat(v31R,6)
 
    !write(out_unitp,*) 'f(th):'
    v31th = ONE-cos(dnth+dnth)
-   !CALL Write_dnS(v11th,6)
+   !CALL QML_Write_dnS(v11th,6)
 
    CALL sub_dnS_TO_dnMat(v30R+v31R*v31th,PotVal,i=3,j=3)
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
-   !CALL Write_dnMat(PotVal,6)
+   !CALL QML_Write_dnMat(PotVal,6)
 
    CALL dealloc_dnS(v30R)
    CALL dealloc_dnS(v31R)
@@ -354,7 +354,7 @@ CONTAINS
 
 
    lambda12R = dnSigmoid(dnR,Para_Phenol%lambda12) * sin(dnth)
-   !CALL Write_dnS(lambda12R,6)
+   !CALL QML_Write_dnS(lambda12R,6)
 
    CALL sub_dnS_TO_dnMat(lambda12R,PotVal,i=1,j=2)
    CALL sub_dnS_TO_dnMat(lambda12R,PotVal,i=2,j=1)
@@ -374,7 +374,7 @@ CONTAINS
 
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
-   !CALL Write_dnMat(PotVal,6)
+   !CALL QML_Write_dnMat(PotVal,6)
    !write(out_unitp,*)
    !flush(out_unitp)
 

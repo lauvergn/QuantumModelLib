@@ -4,23 +4,35 @@
 
 here=`pwd`
 
-for ExternalOPT in 0 1
+
+#for ExternalF90 in gfortran ifort pgf90
+for ExternalF90 in gfortran
 do
-  export ExternalOPT
-
-  for ExternalOMP in 0 1
+  export ExternalF90
+  echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  echo $ExternalF90
+  echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  for ExternalOPT in 0 1
   do
-    export ExternalOMP
-
-    echo
-
-    cd ..
-      make clean > $here/comp.log 2>&1
-    cd  $here
-
-    ./run_test_QML
-    ./run_test_dnS
-
-
+    export ExternalOPT
+  
+    for ExternalOMP in 0 1
+    do
+      export ExternalOMP
+  
+      echo
+  
+      cd ..
+        make clean > $here/comp.log 2>&1
+      cd  $here
+  
+      ./run_test_QML
+      ./run_test_dnS
+  
+  
+    done
   done
+
 done

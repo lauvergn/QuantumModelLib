@@ -1,10 +1,15 @@
 =========================================
 =========================================
  QuantumModelLib use
+ date: 29/03/2020
 =========================================
  1) Installation
    From the QuantumModelLib directory, execute make
    the "libpot.a" must be created
+   This version works with:
+       gfortran 8.3, 9.1, 9.2 (macOS)
+       ifort    17, 18
+       pgf90    17.10-0
 
  2) Link "libpot.a" to your code
 

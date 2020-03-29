@@ -275,7 +275,7 @@ PROGRAM TEST_dnS
 #if __INVHYP == 1
    Snum = QML_get_Num_dnS_FROM_f_x(x,dasinh,nderiv=nderiv)
 #else
-   Snum = QML_get_Num_dnS_FROM_f_x(x,asinh_perso,nderiv=nderiv)
+   Snum = QML_get_Num_dnS_FROM_f_x(x,QML_asinh_perso,nderiv=nderiv)
 #endif
    write(out_unitp,'(a,l2)') 'asinh: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL QML_write_dnS(Sana,info='test on asinh')
@@ -292,7 +292,7 @@ PROGRAM TEST_dnS
 #if __INVHYP == 1
    Snum = QML_get_Num_dnS_FROM_f_x(FOUR*x,dacosh,nderiv=nderiv)
 #else
-   Snum = QML_get_Num_dnS_FROM_f_x(FOUR*x,acosh_perso,nderiv=nderiv)
+   Snum = QML_get_Num_dnS_FROM_f_x(FOUR*x,QML_acosh_perso,nderiv=nderiv)
 #endif
    write(out_unitp,'(a,l2)') 'acosh: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL QML_write_dnS(Sana,info='test on acosh')
@@ -308,7 +308,7 @@ PROGRAM TEST_dnS
 #if __INVHYP == 1
    Snum = QML_get_Num_dnS_FROM_f_x(x,datanh,nderiv=nderiv)
 #else
-   Snum = QML_get_Num_dnS_FROM_f_x(x,atanh_perso,nderiv=nderiv)
+   Snum = QML_get_Num_dnS_FROM_f_x(x,QML_atanh_perso,nderiv=nderiv)
 #endif
    write(out_unitp,'(a,l2)') 'atanh: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL QML_write_dnS(Sana,info='test on atanh')

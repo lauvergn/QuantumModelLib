@@ -218,17 +218,17 @@ CONTAINS
 
     !write(out_unitp,*) 'BEGINNING in Sigmoid'
     !write(out_unitp,*) 'dnR'
-    !CALL write_dnS(dnR)
+    !CALL QML_Write_dnS(dnR)
 
     dnbeta  = tanh((dnR-SigmoidPot%B)/SigmoidPot%C)
     !write(out_unitp,*) 'dnbeta'
-    !CALL write_dnS(dnbeta)
+    !CALL QML_Write_dnS(dnbeta)
     dnSigmoid = (HALF*SigmoidPot%A) * (ONE+SigmoidPot%e*dnbeta)
 
      CALL QML_dealloc_dnS(dnbeta)
 
     !write(out_unitp,*) 'Sigmoid at',get_d0_FROM_dnS(dnR)
-    !CALL Write_dnS(dnSigmoid)
+    !CALL QML_Write_dnS(dnSigmoid)
     !write(out_unitp,*) 'END in Sigmoid'
     !flush(out_unitp)
 
