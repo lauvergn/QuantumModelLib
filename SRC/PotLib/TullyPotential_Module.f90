@@ -40,7 +40,7 @@ MODULE mod_TullyPot
 !! @param mu                      real:   mass used in Tully paper
 
 !! @param option                  integer: it enables to chose between the 3 models (default 1, Simple avoided crossing)
-  TYPE Param_Tully
+  TYPE TullyPot_t
      PRIVATE
      real (kind=Rkind) :: A      = 0.01_Rkind
      real (kind=Rkind) :: B      = 1.6_Rkind
@@ -53,7 +53,7 @@ MODULE mod_TullyPot
 
      integer           :: option = 1
      
-  END TYPE Param_Tully
+  END TYPE TullyPot_t
 
   PRIVATE Read_TullyPot,Init0_TullyPot,eval_TullyPot1,eval_TullyPot2,eval_TullyPot3
 
@@ -63,13 +63,13 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Tully         TYPE(Param_Tully):  derived type in which the parameters are set-up.
+!! @param TullyPot         TYPE(TullyPot_t):  derived type in which the parameters are set-up.
 !! @param option             integer:            to be able to chose between the 3 models (default 1, Simple avoided crossing).
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param A,B,C,D,E0         real (optional):    Tully parameters.
-  SUBROUTINE Init_TullyPot(Para_Tully,option,nio,read_param,A,B,C,D,E0)
-    TYPE (Param_Tully),          intent(inout)   :: Para_Tully
+  SUBROUTINE Init_TullyPot(TullyPot,option,nio,read_param,A,B,C,D,E0)
+    TYPE (TullyPot_t),          intent(inout)   :: TullyPot
     integer,                     intent(in)      :: option
     integer,           optional, intent(in)      :: nio
     logical,           optional, intent(in)      :: read_param
@@ -86,52 +86,52 @@ CONTAINS
        STOP 'STOP in Init_TullyPot: impossible to read the input file. The file unit (nio) is not present'
     END IF
 
-    Para_Tully%option = option
+    TullyPot%option = option
 
-    IF (Para_Tully%option < 1 .OR. Para_Tully%option > 3) Para_Tully%option = 1
+    IF (TullyPot%option < 1 .OR. TullyPot%option > 3) TullyPot%option = 1
 
     !write(out_unitp,*) 'option',option
     !write(out_unitp,*) 'read_param',read_param,nio
 
 
     IF (read_param_loc) THEN
-      CALL Read_TullyPot(Para_Tully,nio)
-      CALL Init0_TullyPot(Para_Tully)
+      CALL Read_TullyPot(TullyPot,nio)
+      CALL Init0_TullyPot(TullyPot)
     ELSE
 
-      Para_Tully%A      = Huge(ONE)
-      Para_Tully%B      = Huge(ONE)
-      Para_Tully%C      = Huge(ONE)
-      Para_Tully%D      = Huge(ONE)
-      Para_Tully%E0     = Huge(ONE)
+      TullyPot%A      = Huge(ONE)
+      TullyPot%B      = Huge(ONE)
+      TullyPot%C      = Huge(ONE)
+      TullyPot%D      = Huge(ONE)
+      TullyPot%E0     = Huge(ONE)
 
-      CALL Init0_TullyPot(Para_Tully)
+      CALL Init0_TullyPot(TullyPot)
 
-      SELECT CASE (Para_Tully%option)
+      SELECT CASE (TullyPot%option)
       CASE (1) ! A. Simple avoided crossing
 
-        IF (present(A)) Para_Tully%A = A
-        IF (present(B)) Para_Tully%B = B
-        IF (present(C)) Para_Tully%C = C
-        IF (present(D)) Para_Tully%D = D
+        IF (present(A)) TullyPot%A = A
+        IF (present(B)) TullyPot%B = B
+        IF (present(C)) TullyPot%C = C
+        IF (present(D)) TullyPot%D = D
 
       CASE (2) ! B. Dual avoided crossing
 
-        IF (present(A))  Para_Tully%A  = A
-        IF (present(B))  Para_Tully%B  = B
-        IF (present(E0)) Para_Tully%E0 = E0
-        IF (present(C))  Para_Tully%C  = C
-        IF (present(D))  Para_Tully%D  = D
+        IF (present(A))  TullyPot%A  = A
+        IF (present(B))  TullyPot%B  = B
+        IF (present(E0)) TullyPot%E0 = E0
+        IF (present(C))  TullyPot%C  = C
+        IF (present(D))  TullyPot%D  = D
 
       CASE (3) !C. Extended coupling with reflection
 
-        IF (present(A)) Para_Tully%A = A
-        IF (present(B)) Para_Tully%B = B
-        IF (present(C)) Para_Tully%C = C
+        IF (present(A)) TullyPot%A = A
+        IF (present(B)) TullyPot%B = B
+        IF (present(C)) TullyPot%C = C
 
       CASE Default
           write(out_unitp,*) 'ERROR in Init_TullyPot'
-          write(out_unitp,*) ' This option is not possible. option:',Para_Tully%option
+          write(out_unitp,*) ' This option is not possible. option:',TullyPot%option
           write(out_unitp,*) ' Its value MUST be 1 or 2 or 3'
           STOP
       END SELECT
@@ -144,44 +144,44 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Tully         TYPE(Param_Tully):  derived type in which the parameters are set-up.
-  SUBROUTINE Init0_TullyPot(Para_Tully)
-    TYPE (Param_Tully),      intent(inout)   :: Para_Tully
+!! @param TullyPot         TYPE(TullyPot_t):  derived type in which the parameters are set-up.
+  SUBROUTINE Init0_TullyPot(TullyPot)
+    TYPE (TullyPot_t),      intent(inout)   :: TullyPot
 
     character (len=*), parameter :: name_sub='Init0_TullyPot'
 
     !write(out_unitp,*) 'BEGINNING ',name_sub
-    !write(out_unitp,*) 'Para_Tully%option',Para_Tully%option
+    !write(out_unitp,*) 'TullyPot%option',TullyPot%option
 
-    IF (Para_Tully%option < 1 .OR. Para_Tully%option > 3) Para_Tully%option = 1
+    IF (TullyPot%option < 1 .OR. TullyPot%option > 3) TullyPot%option = 1
 
-    SELECT CASE (Para_Tully%option)
+    SELECT CASE (TullyPot%option)
     CASE (1) ! A. Simple avoided crossing
-      IF (Para_Tully%A == huge(ONE)) Para_Tully%A = 0.01_Rkind
-      IF (Para_Tully%B == huge(ONE)) Para_Tully%B = 1.6_Rkind
-      IF (Para_Tully%C == huge(ONE)) Para_Tully%C = 0.005_Rkind
-      IF (Para_Tully%D == huge(ONE)) Para_Tully%D = 1.0_Rkind
+      IF (TullyPot%A == huge(ONE)) TullyPot%A = 0.01_Rkind
+      IF (TullyPot%B == huge(ONE)) TullyPot%B = 1.6_Rkind
+      IF (TullyPot%C == huge(ONE)) TullyPot%C = 0.005_Rkind
+      IF (TullyPot%D == huge(ONE)) TullyPot%D = 1.0_Rkind
 
     CASE (2) ! B. Dual avoided crossing
-      IF (Para_Tully%A  == huge(ONE)) Para_Tully%A  = 0.1_Rkind
-      IF (Para_Tully%B  == huge(ONE)) Para_Tully%B  = 0.28_Rkind
-      IF (Para_Tully%E0 == huge(ONE)) Para_Tully%E0 = 0.05_Rkind
-      IF (Para_Tully%C  == huge(ONE)) Para_Tully%C  = 0.015_Rkind
-      IF (Para_Tully%D  == huge(ONE)) Para_Tully%D  = 0.06_Rkind
+      IF (TullyPot%A  == huge(ONE)) TullyPot%A  = 0.1_Rkind
+      IF (TullyPot%B  == huge(ONE)) TullyPot%B  = 0.28_Rkind
+      IF (TullyPot%E0 == huge(ONE)) TullyPot%E0 = 0.05_Rkind
+      IF (TullyPot%C  == huge(ONE)) TullyPot%C  = 0.015_Rkind
+      IF (TullyPot%D  == huge(ONE)) TullyPot%D  = 0.06_Rkind
 
     CASE (3) !C. Extended coupling with reflection
-      IF (Para_Tully%A == huge(ONE)) Para_Tully%A = 0.0006_Rkind
-      IF (Para_Tully%B == huge(ONE)) Para_Tully%B = 0.1_Rkind
-      IF (Para_Tully%C == huge(ONE)) Para_Tully%C = 0.90_Rkind
+      IF (TullyPot%A == huge(ONE)) TullyPot%A = 0.0006_Rkind
+      IF (TullyPot%B == huge(ONE)) TullyPot%B = 0.1_Rkind
+      IF (TullyPot%C == huge(ONE)) TullyPot%C = 0.90_Rkind
 
     CASE Default
         write(out_unitp,*) 'ERROR in Init0_TullyPot'
-        write(out_unitp,*) ' This option is not possible. option:',Para_Tully%option
+        write(out_unitp,*) ' This option is not possible. option:',TullyPot%option
         write(out_unitp,*) ' Its value MUST be 1 or 2 or 3'
         STOP
     END SELECT
 
-    !CALL Write_TullyPot(Para_Tully,out_unitp)
+    !CALL Write_TullyPot(TullyPot,out_unitp)
     !write(out_unitp,*) 'END ',name_sub
 
 
@@ -193,10 +193,10 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
+!! @param TullyPot         TYPE(TullyPot_t):   derived type in which the parameters are set-up.
 !! @param nio                integer:             file unit to read the parameters.
-  SUBROUTINE Read_TullyPot(Para_Tully,nio)
-    TYPE (Param_Tully),      intent(inout)   :: Para_Tully
+  SUBROUTINE Read_TullyPot(TullyPot,nio)
+    TYPE (TullyPot_t),      intent(inout)   :: TullyPot
     integer,                 intent(in)      :: nio
 
     real (kind=Rkind)      :: A,B,C,D,E0
@@ -227,11 +227,11 @@ CONTAINS
       STOP ' ERROR in Read_TullyPot'
     END IF
 
-    Para_Tully%A       = A
-    Para_Tully%B       = B
-    Para_Tully%E0      = E0
-    Para_Tully%C       = C
-    Para_Tully%D       = D
+    TullyPot%A       = A
+    TullyPot%B       = B
+    TullyPot%E0      = E0
+    TullyPot%C       = C
+    TullyPot%D       = D
 
   END SUBROUTINE Read_TullyPot
 
@@ -295,29 +295,29 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
+!! @param TullyPot         TYPE(TullyPot_t):   derived type in which the parameters are set-up.
 !! @param nio                integer:             file unit to print the parameters.
-  SUBROUTINE Write_TullyPot(Para_Tully,nio)
-    TYPE (Param_Tully), intent(in) :: Para_Tully
+  SUBROUTINE Write_TullyPot(TullyPot,nio)
+    TYPE (TullyPot_t), intent(in) :: TullyPot
     integer, intent(in) :: nio
 
     write(nio,*) 'Tully current parameters:'
     write(nio,*)
-    write(nio,*) '  A:      ',Para_Tully%A
-    write(nio,*) '  B:      ',Para_Tully%B
-    write(nio,*) '  C:      ',Para_Tully%C
-    write(nio,*) '  D:      ',Para_Tully%D
-    write(nio,*) '  E0:     ',Para_Tully%E0
-    write(nio,*) '  option: ',Para_Tully%option
+    write(nio,*) '  A:      ',TullyPot%A
+    write(nio,*) '  B:      ',TullyPot%B
+    write(nio,*) '  C:      ',TullyPot%C
+    write(nio,*) '  D:      ',TullyPot%D
+    write(nio,*) '  E0:     ',TullyPot%E0
+    write(nio,*) '  option: ',TullyPot%option
     write(nio,*)
     write(nio,*) 'end Tully parameters'
 
   END SUBROUTINE Write_TullyPot
-  SUBROUTINE get_Q0_Tully(R0,Para_Tully)
+  SUBROUTINE get_Q0_Tully(R0,TullyPot)
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: R0
-    TYPE (Param_Tully),          intent(in)    :: Para_Tully
+    TYPE (TullyPot_t),          intent(in)    :: TullyPot
 
     R0 = ZERO
 
@@ -327,29 +327,29 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
+!! @param TullyPot         TYPE(TullyPot_t):   derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
+  SUBROUTINE eval_TullyPot(Mat_OF_PotDia,dnR,TullyPot,nderiv)
     USE mod_dnS
 
-    TYPE (Param_Tully), intent(in)     :: Para_Tully
-    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),        intent(in)     :: dnR
+    TYPE (TullyPot_t), intent(in)     :: TullyPot
+    TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
-    SELECT CASE (Para_Tully%option)
+    SELECT CASE (TullyPot%option)
     CASE (1)
-      CALL eval_TullyPot1(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
+      CALL eval_TullyPot1(Mat_OF_PotDia,dnR,TullyPot,nderiv)
     CASE (2)
-      CALL eval_TullyPot2(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
+      CALL eval_TullyPot2(Mat_OF_PotDia,dnR,TullyPot,nderiv)
     CASE (3)
-      CALL eval_TullyPot3(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
+      CALL eval_TullyPot3(Mat_OF_PotDia,dnR,TullyPot,nderiv)
     CASE Default
         write(out_unitp,*) 'ERROR in eval_TullyPot'
-        write(out_unitp,*) ' This option is not possible. option:',Para_Tully%option
+        write(out_unitp,*) ' This option is not possible. option:',TullyPot%option
         write(out_unitp,*) ' Its value MUST be 1 or 3 or 3'
         STOP
     END SELECT
@@ -360,31 +360,31 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
+!! @param TullyPot         TYPE(TullyPot_t):   derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot1(Mat_OF_PotDia,dnR,Para_Tully,nderiv)
+  SUBROUTINE eval_TullyPot1(Mat_OF_PotDia,dnR,TullyPot,nderiv)
   ! A. Simple avoided crossing
     USE mod_dnS
 
-    TYPE (Param_Tully), intent(in)     :: Para_Tully
-    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),        intent(in)     :: dnR
+    TYPE (TullyPot_t), intent(in)     :: TullyPot
+    TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
 
     ! Potential calculation
     IF (dnR >= ZERO) THEN
-      Mat_OF_PotDia(1,1) =  Para_Tully%A*(ONE-exp(-Para_Tully%B*dnR))
+      Mat_OF_PotDia(1,1) =  TullyPot%A*(ONE-exp(-TullyPot%B*dnR))
     ELSE
-      Mat_OF_PotDia(1,1) = -Para_Tully%A*(ONE-exp( Para_Tully%B*dnR))
+      Mat_OF_PotDia(1,1) = -TullyPot%A*(ONE-exp( TullyPot%B*dnR))
     END IF
     Mat_OF_PotDia(2,2)   = -Mat_OF_PotDia(1,1)
 
 
-    Mat_OF_PotDia(1,2) = Para_Tully%C*exp(-Para_Tully%D*dnR**2)
+    Mat_OF_PotDia(1,2) = TullyPot%C*exp(-TullyPot%D*dnR**2)
     Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
 
@@ -394,26 +394,26 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
+!! @param TullyPot         TYPE(TullyPot_t):   derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot2(Mat_OF_PotDia,dnR,Para_Tully,nderiv) !2d Tully's potential
+  SUBROUTINE eval_TullyPot2(Mat_OF_PotDia,dnR,TullyPot,nderiv) !2d Tully's potential
   !  B. Dual avoided crossing
     USE mod_dnS
 
-    TYPE (Param_Tully), intent(in)     :: Para_Tully
-    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),        intent(in)     :: dnR
+    TYPE (TullyPot_t), intent(in)     :: TullyPot
+    TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
 ! Potential calculation
     Mat_OF_PotDia(1,1)  = ZERO ! to initialized the PotVal%d0(1,1) and its derivatives
 
-    Mat_OF_PotDia(2,2)  = -Para_Tully%A*exp(-Para_Tully%B*dnR**2)+Para_Tully%E0
+    Mat_OF_PotDia(2,2)  = -TullyPot%A*exp(-TullyPot%B*dnR**2)+TullyPot%E0
 
-    Mat_OF_PotDia(1,2) = Para_Tully%C*exp(-Para_Tully%D*dnR**2)
+    Mat_OF_PotDia(1,2) = TullyPot%C*exp(-TullyPot%D*dnR**2)
     Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
 
@@ -423,29 +423,29 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param Para_Tully         TYPE(Param_Tully):   derived type in which the parameters are set-up.
+!! @param TullyPot         TYPE(TullyPot_t):   derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot3(Mat_OF_PotDia,dnR,Para_Tully,nderiv) !3d Tully's potential
+  SUBROUTINE eval_TullyPot3(Mat_OF_PotDia,dnR,TullyPot,nderiv) !3d Tully's potential
     !  C. Extended coupling with reflection
     USE mod_dnS
 
-    TYPE (Param_Tully), intent(in)     :: Para_Tully
-    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),        intent(in)     :: dnR
+    TYPE (TullyPot_t), intent(in)     :: TullyPot
+    TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),        intent(in)     :: dnR
     integer, intent(in)                :: nderiv
 
 
 ! Potential calculation
-    Mat_OF_PotDia(1,1) =  Para_Tully%A
-    Mat_OF_PotDia(2,2) = -Para_Tully%A
+    Mat_OF_PotDia(1,1) =  TullyPot%A
+    Mat_OF_PotDia(2,2) = -TullyPot%A
 
     IF (dnR >= ZERO) THEN
-      Mat_OF_PotDia(1,2) = Para_Tully%B*(TWO-exp(-Para_Tully%C*dnR))
+      Mat_OF_PotDia(1,2) = TullyPot%B*(TWO-exp(-TullyPot%C*dnR))
     ELSE
-      Mat_OF_PotDia(1,2) = Para_Tully%B*exp(Para_Tully%C*dnR)
+      Mat_OF_PotDia(1,2) = TullyPot%B*exp(TullyPot%C*dnR)
     END IF
     Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 

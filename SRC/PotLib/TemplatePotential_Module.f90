@@ -37,14 +37,14 @@ MODULE mod_TemplatePot
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
-  TYPE Param_Template
+  TYPE TemplatePot_t
      PRIVATE
 
      ! V(1,1) term
-     TYPE (Param_Morse)   :: morseXpY,morseZ
+     TYPE (MorsePot_t)   :: morseXpY,morseZ
      real(kind=Rkind)     :: kXmY=0.1_Rkind
 
-  END TYPE Param_Template
+  END TYPE TemplatePot_t
 
 
 CONTAINS
@@ -54,9 +54,9 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Pot        TYPE(Param_Template):   derived type in which the parameters are set-up.
+!! @param Para_Pot        TYPE(TemplatePot_t):   derived type in which the parameters are set-up.
   SUBROUTINE Init_TemplatePot(Para_Pot)
-    TYPE (Param_Template),      intent(inout)   :: Para_Pot
+    TYPE (TemplatePot_t),      intent(inout)   :: Para_Pot
 
 
     ! V(1,1) term, all parameters in atomic unit (Hartree, bohr)
@@ -110,10 +110,10 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Pot           TYPE(Param_Template):   derived type with the potential parameters
+!! @param Para_Pot           TYPE(TemplatePot_t):   derived type with the potential parameters
 !! @param nio                integer:                file unit to print the parameters.
   SUBROUTINE Write_TemplatePot(Para_Pot,nio)
-    TYPE (Param_Template), intent(in) :: Para_Pot
+    TYPE (TemplatePot_t), intent(in) :: Para_Pot
     integer, intent(in) :: nio
 
     write(nio,*) 'TemplatePot current parameters'
@@ -133,7 +133,7 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param Q                  real:                table of two values for which the potential is calculated (R,theta)
 !! @param Para_Pot           TYPE(Param_Pot):     Potential parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
@@ -141,12 +141,12 @@ CONTAINS
   SUBROUTINE eval_TemplatePot(Mat_OF_PotDia,dnQ,Para_Pot,nderiv)
     USE mod_dnS
 
-    TYPE (Param_Template), intent(in)     :: Para_Pot
-    TYPE(dnS),           intent(in)     :: dnQ(3)
-    TYPE(dnS),           intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (TemplatePot_t), intent(in)     :: Para_Pot
+    TYPE (dnS_t),           intent(in)     :: dnQ(3)
+    TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,               intent(in)     :: nderiv
 
-    TYPE(dnS)  :: mXpY,vXmY,mZ
+    TYPE (dnS_t)  :: mXpY,vXmY,mZ
     integer      :: i
 
    !write(out_unitp,*) 'TemplatePot in:'
@@ -159,9 +159,9 @@ CONTAINS
 
    Mat_OF_PotDia(1,1) = mXpY+mZ+vXmY
 
-   CALL dealloc_dnS(mXpY)
-   CALL dealloc_dnS(mZ)
-   CALL dealloc_dnS(vXmY)
+   CALL QML_dealloc_dnS(mXpY)
+   CALL QML_dealloc_dnS(mZ)
+   CALL QML_dealloc_dnS(vXmY)
 
 
    !write(out_unitp,*) 'TemplatePot, nderiv:',nderiv

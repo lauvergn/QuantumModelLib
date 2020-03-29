@@ -29,7 +29,7 @@
 !!
 MODULE mod_Vibronic
   USE mod_NumParameters
-  USE mod_dnMatPot
+  USE mod_dnMat
   IMPLICIT NONE
 
 !> @brief Derived type in which the parameters of the Phenol potential are set-up.
@@ -38,7 +38,7 @@ MODULE mod_Vibronic
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
-  TYPE Param_Vibronic
+  TYPE VibronicPot_t
      PRIVATE
      ! Vij, the diabatic potentials (i=j) or couplings (i/=j), are
      !   expanded as a taylor expension at second order
@@ -49,12 +49,12 @@ MODULE mod_Vibronic
      ! V%dO(i,j) is Vij0
      ! V%d1(i,j,k) is g_ijk
      ! V%d2(i,j,k,l) is h_ijkl
-     TYPE (dnMatPot)   :: V
+     TYPE (dnMat_t)   :: V
 
      !Q0(:,i,j) is the reference geometry for the diabatic (j=i) or compling (i/=j) terms
      real (kind=Rkind), allocatable     :: Q0(:,:,:)
 
-  END TYPE Param_Vibronic
+  END TYPE VibronicPot_t
 
 
 CONTAINS
@@ -66,8 +66,8 @@ CONTAINS
 !!
 !! @param Para_Phenol        TYPE(Param_Phenol):   derived type in which the parameters are set-up.
 !! @param PubliUnit          logical (optional):   when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
-  SUBROUTINE Init_Vibronic(Para_Vibronic,ndim,nsurf,nio,PubliUnit)
-    TYPE (Param_Vibronic),      intent(inout)   :: Para_Vibronic
+  SUBROUTINE Init_Vibronic(VibronicPot,ndim,nsurf,nio,PubliUnit)
+    TYPE (VibronicPot_t),      intent(inout)   :: VibronicPot
      logical, optional,         intent(in)      :: PubliUnit
 
      integer :: i,j,IOerr,order,nbcol
@@ -75,27 +75,27 @@ CONTAINS
 
      namelist /VibronicSurf/ order,nbcol,V0
 
-     IF (present(PubliUnit)) Para_Vibronic%PubliUnit = PubliUnit
+     IF (present(PubliUnit)) VibronicPot%PubliUnit = PubliUnit
 
-     CALL alloc_dnMatPot(Para_Vibronic%V,nsurf,ndim,nderiv, &
-             name_var='Para_Vibronic%V',name_sub='Init_Vibronic',IOerr)
+     CALL alloc_dnMat(VibronicPot%V,nsurf,ndim,nderiv, &
+             name_var='VibronicPot%V',name_sub='Init_Vibronic',IOerr)
      IF (IOerr /= 0 ) THEN
        write(out_unitp,*) ' ERROR in Init_Vibronic'
-       write(out_unitp,*) '  Problem with allocate of Para_Vibronic%V'
+       write(out_unitp,*) '  Problem with allocate of VibronicPot%V'
        STOP
      END IF
-     Para_Vibronic%V = ZERO
+     VibronicPot%V = ZERO
 
 
-     allocate(Para_Vibronic%Q0(ndim,nsurf,nsurf),stat=IOerr)
+     allocate(VibronicPot%Q0(ndim,nsurf,nsurf),stat=IOerr)
      IF (IOerr /= 0 .OR. nsurf < 1 .OR. ndim < 1) THEN
        write(out_unitp,*) ' ERROR in Init_Vibronic'
-       write(out_unitp,*) '  Problem with allocate of Para_Vibronic%Q0'
+       write(out_unitp,*) '  Problem with allocate of VibronicPot%Q0'
        write(out_unitp,*) '  nsurf > 0?',nsurf
        write(out_unitp,*) '  ndim > 0?',ndim
        STOP
      END IF
-     Para_Vibronic%Q0 = ZERO
+     VibronicPot%Q0 = ZERO
 
 
      DO i=1,nsurf
@@ -104,18 +104,18 @@ CONTAINS
        order      = -1
        nbcol      = 5
        read(VibronicSurf,nio)
-       Para_Vibronic%VOrder(i,i) = order
+       VibronicPot%VOrder(i,i) = order
 
        IF (order < 0) CYCLE
 
-       CALL Read_RVec(Para_Vibronic%Q0(:,i,i),nio,nbcol,IOerr)
+       CALL Read_RVec(VibronicPot%Q0(:,i,i),nio,nbcol,IOerr)
 
-       Para_Vibronic%V%d0(i,i) = V0coupling
+       VibronicPot%V%d0(i,i) = V0coupling
        IF (order > 0) THEN
-         CALL Read_RVec(Para_Vibronic%V%d1(:,i,i),nio,nbcol,IOerr)
+         CALL Read_RVec(VibronicPot%V%d1(:,i,i),nio,nbcol,IOerr)
        END IF
        IF (order > 1) THEN
-         CALL Read_RMat(Para_Vibronic%V%d2(:,:,i,i),nio,nbcol,IOerr)
+         CALL Read_RMat(VibronicPot%V%d2(:,:,i,i),nio,nbcol,IOerr)
        END IF
 
      END DO
@@ -127,17 +127,17 @@ CONTAINS
        order      = -1
        nbcol      = 5
        read(VibronicSurf,nio)
-       Para_Vibronic%VOrder(i,j) = order
+       VibronicPot%VOrder(i,j) = order
        IF (order < 0) CYCLE
 
-       CALL Read_RVec(Para_Vibronic%Q0(:,i,j),nio,nbcol,IOerr)
+       CALL Read_RVec(VibronicPot%Q0(:,i,j),nio,nbcol,IOerr)
 
-       Para_Vibronic%V%d0(i,i) = V0
+       VibronicPot%V%d0(i,i) = V0
        IF (order > 0) THEN
-         CALL Read_RVec(Para_Vibronic%V%d1(:,i,j),nio,nbcol,IOerr)
+         CALL Read_RVec(VibronicPot%V%d1(:,i,j),nio,nbcol,IOerr)
        END IF
        IF (order > 1) THEN
-         CALL Read_RMat(Para_Vibronic%V%d2(:,:,i,j),nio,nbcol,IOerr)
+         CALL Read_RMat(VibronicPot%V%d2(:,:,i,j),nio,nbcol,IOerr)
        END IF
 
      END DO
@@ -222,40 +222,40 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param Q                  real:                table of two values for which the potential is calculated (R,theta)
 !! @param Para_Phenol        TYPE(Param_Phenol):  derived type with the Morse parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_Vibronic(PotVal,Q,Para_Phenol,nderiv)
-    USE mod_dnMatPot
+    USE mod_dnMat
     USE mod_dnS
 
     TYPE (Param_Phenol), intent(in)     :: Para_Phenol
     real (kind=Rkind),   intent(in)     :: Q(2)
-    TYPE(dnMatPot),      intent(inout)  :: PotVal
+    TYPE (dnMat_t),      intent(inout)  :: PotVal
     integer,             intent(in)     :: nderiv
 
-    TYPE(dnS)  :: dnR,dnth
-    TYPE(dnS)  :: v10R,v11R,v11th
-    TYPE(dnS)  :: v30R,v31R,v31th
-    TYPE(dnS)  :: lambda12R,lambda13R
+    TYPE (dnS_t)  :: dnR,dnth
+    TYPE (dnS_t)  :: v10R,v11R,v11th
+    TYPE (dnS_t)  :: v30R,v31R,v31th
+    TYPE (dnS_t)  :: lambda12R,lambda13R
 
-    TYPE(dnS)  :: v20pR,v20mR,v201R,v202R
-    TYPE(dnS)  :: v21pR,v21mR,v211R,v212R
-    TYPE(dnS)  :: v22pR,v22mR,v221R,v222R
-    TYPE(dnS)  :: v20R,v21R,v22R,v21th,v22th
+    TYPE (dnS_t)  :: v20pR,v20mR,v201R,v202R
+    TYPE (dnS_t)  :: v21pR,v21mR,v211R,v212R
+    TYPE (dnS_t)  :: v22pR,v22mR,v221R,v222R
+    TYPE (dnS_t)  :: v20R,v21R,v22R,v21th,v22th
 
     real (kind=Rkind) :: a0      = 0.52917720835354106_Rkind
     real (kind=Rkind) :: auTOeV  = 27.211384_Rkind
 
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=2,nderiv=nderiv)
+    IF ( Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
+      CALL alloc_dnMat(PotVal,nsurf=1,ndim=2,nderiv=nderiv)
     END IF
 
    !write(out_unitp,*) 'phenol pot in:'
    PotVal = ZERO
-   !CALL Write_dnMatPot(PotVal)
+   !CALL Write_dnMat(PotVal)
 
    dnR     = init_dnS(Q(1),ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
    dnth    = init_dnS(Q(2),ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
@@ -274,10 +274,10 @@ CONTAINS
    v11th = ONE-cos(dnth+dnth)
    !CALL Write_dnS(v11th,6)
 
-   CALL sub_dnS_TO_dnMatPot(v10R+v11R*v11th,PotVal,i=1,j=1)
+   CALL sub_dnS_TO_dnMat(v10R+v11R*v11th,PotVal,i=1,j=1)
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
-   !CALL Write_dnMatPot(PotVal,6)
+   !CALL Write_dnMat(PotVal,6)
 
    CALL dealloc_dnS(v10R)
    CALL dealloc_dnS(v11R)
@@ -307,7 +307,7 @@ CONTAINS
    v21th = ONE-cos(dnth+dnth)
    v22th = v21th*v21th
 
-   CALL sub_dnS_TO_dnMatPot(v20R+v21R*v21th+v22R*v22th,PotVal,i=2,j=2)
+   CALL sub_dnS_TO_dnMat(v20R+v21R*v21th+v22R*v22th,PotVal,i=2,j=2)
 
 
    CALL dealloc_dnS(v20R)
@@ -334,19 +334,19 @@ CONTAINS
    ! for V(3,3): 3d diabatic state
    !write(out_unitp,*) 'morse:'
    v30R = dnMorse(dnR,Para_Phenol%v30) + Para_Phenol%a30
-   !CALL Write_dnMatPot(v30R,6)
+   !CALL Write_dnMat(v30R,6)
    !write(out_unitp,*) 'sigmoid:'
    v31R = dnSigmoid(dnR,Para_Phenol%v31)
-   !CALL Write_dnMatPot(v31R,6)
+   !CALL Write_dnMat(v31R,6)
 
    !write(out_unitp,*) 'f(th):'
    v31th = ONE-cos(dnth+dnth)
    !CALL Write_dnS(v11th,6)
 
-   CALL sub_dnS_TO_dnMatPot(v30R+v31R*v31th,PotVal,i=3,j=3)
+   CALL sub_dnS_TO_dnMat(v30R+v31R*v31th,PotVal,i=3,j=3)
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
-   !CALL Write_dnMatPot(PotVal,6)
+   !CALL Write_dnMat(PotVal,6)
 
    CALL dealloc_dnS(v30R)
    CALL dealloc_dnS(v31R)
@@ -356,14 +356,14 @@ CONTAINS
    lambda12R = dnSigmoid(dnR,Para_Phenol%lambda12) * sin(dnth)
    !CALL Write_dnS(lambda12R,6)
 
-   CALL sub_dnS_TO_dnMatPot(lambda12R,PotVal,i=1,j=2)
-   CALL sub_dnS_TO_dnMatPot(lambda12R,PotVal,i=2,j=1)
+   CALL sub_dnS_TO_dnMat(lambda12R,PotVal,i=1,j=2)
+   CALL sub_dnS_TO_dnMat(lambda12R,PotVal,i=2,j=1)
 
 
    lambda13R = dnSigmoid(dnR,Para_Phenol%lambda13) * sin(dnth)
 
-   CALL sub_dnS_TO_dnMatPot(lambda13R,PotVal,i=1,j=3)
-   CALL sub_dnS_TO_dnMatPot(lambda13R,PotVal,i=3,j=1)
+   CALL sub_dnS_TO_dnMat(lambda13R,PotVal,i=1,j=3)
+   CALL sub_dnS_TO_dnMat(lambda13R,PotVal,i=3,j=1)
 
 
    CALL dealloc_dnS(lambda12R)
@@ -374,7 +374,7 @@ CONTAINS
 
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
-   !CALL Write_dnMatPot(PotVal,6)
+   !CALL Write_dnMat(PotVal,6)
    !write(out_unitp,*)
    !flush(out_unitp)
 

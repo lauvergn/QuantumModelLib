@@ -53,14 +53,14 @@ END PROGRAM TEST_model
 
 SUBROUTINE test_Tully
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMat_t)                :: PotVal
 
 
   nderiv = 2
@@ -75,9 +75,9 @@ SUBROUTINE test_Tully
   write(out_unitp,*) '---------------------------------------------'
 
   DO option=1,3
-    CALL Init_Model(Para_Model,pot_name='Tully',option=option)
-    CALL Write_Model(Para_Model)
-    allocate(q(Para_Model%ndim))
+    CALL Init_Model(QModel,pot_name='Tully',option=option)
+    CALL Write_Model(QModel)
+    allocate(q(QModel%ndim))
     write(out_unitp,*) '---------------------------------------------'
     write(out_unitp,*) '----- CHECK POT -----------------------------'
     write(out_unitp,*) '---------------------------------------------'
@@ -87,28 +87,28 @@ SUBROUTINE test_Tully
 
     q(:) = 1.1_Rkind
     write(out_unitp,'(a,f12.6)') ' R (Bohr)',q(:)
-    CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+    CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
     q(:) = -1.1_Rkind
     write(out_unitp,'(a,f12.6)') ' R (Bohr)',q(:)
-    CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+    CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
 
     write(out_unitp,*) '---------------------------------------------'
     write(out_unitp,*) ' Potential and derivatives'
 
-    CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+    CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
     write(out_unitp,'(a,f12.6)') 'R (Bohr)',q(:)
     write(out_unitp,*) 'Energy (Hartree)'
-    CALL Write_dnMatPot(PotVal,nio=out_unitp)
+    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
     ! For testing the model
-    CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='TULLY ' // int_TO_char(option))
+    CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='TULLY ' // int_TO_char(option))
 
     write(out_unitp,*) '---------------------------------------------'
     write(out_unitp,*) '- END CHECK POT -----------------------------'
     write(out_unitp,*) '---------------------------------------------'
 
-    CALL dealloc_dnMatPot(PotVal)
+    CALL QML_dealloc_dnMat(PotVal)
     deallocate(q)
 
   END DO
@@ -122,8 +122,8 @@ SUBROUTINE test_Tully
   write(out_unitp,*) ' You should get the curves (columns: 2,3 5) of the panel (a) of figure 3 of ... '
   write(out_unitp,*) '   Tully, J. Chem. Phys. V93, pp15, 1990.'
   write(out_unitp,*) ' Be carrefull, the non-adiabatic coupling is scaled by -1/50.'
-  CALL Init_Model(Para_Model,pot_name='Tully',option=1)
-  CALL Eval_pot_ON_Grid(Para_Model,Qmin=(/-TEN/),Qmax=(/TEN/),nb_points=1001, &
+  CALL Init_Model(QModel,pot_name='Tully',option=1)
+  CALL Eval_pot_ON_Grid(QModel,Qmin=(/-TEN/),Qmax=(/TEN/),nb_points=1001, &
                         grid_file='grid_Tully1')
 
   write(out_unitp,*) '---------------------------------------------'
@@ -134,8 +134,8 @@ SUBROUTINE test_Tully
   write(out_unitp,*) '   Tully, J. Chem. Phys. V93, pp15, 1990.'
   write(out_unitp,*) ' Be carrefull, the non-adiabatic coupling is scaled by -1/12.'
 
-  CALL Init_Model(Para_Model,pot_name='Tully',option=2)
-  CALL Eval_pot_ON_Grid(Para_Model,Qmin=(/-TEN/),Qmax=(/TEN/),nb_points=1001, &
+  CALL Init_Model(QModel,pot_name='Tully',option=2)
+  CALL Eval_pot_ON_Grid(QModel,Qmin=(/-TEN/),Qmax=(/TEN/),nb_points=1001, &
                         grid_file='grid_Tully2')
 
   write(out_unitp,*) '---------------------------------------------'
@@ -146,8 +146,8 @@ SUBROUTINE test_Tully
   write(out_unitp,*) '   Tully, J. Chem. Phys. V93, pp15, 1990.'
   write(out_unitp,*) ' Be carrefull, the sign of non-adiabatic coupling is changed.'
 
-  CALL Init_Model(Para_Model,pot_name='Tully',option=3)
-  CALL Eval_pot_ON_Grid(Para_Model,Qmin=(/-TEN/),Qmax=(/TEN/),nb_points=1001, &
+  CALL Init_Model(QModel,pot_name='Tully',option=3)
+  CALL Eval_pot_ON_Grid(QModel,Qmin=(/-TEN/),Qmax=(/TEN/),nb_points=1001, &
                         grid_file='grid_Tully3')
 
   write(out_unitp,*) '---------------------------------------------'
@@ -159,15 +159,15 @@ END SUBROUTINE test_Tully
 
 SUBROUTINE test_1DSOC_1S1T
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
-  TYPE (dnMatPot)                :: NAC ! for non adiabatic couplings
+  TYPE (dnMat_t)                :: PotVal
+  TYPE (dnMat_t)                :: NAC ! for non adiabatic couplings
 
   nderiv = 2
   write(out_unitp,*) '---------------------------------------------'
@@ -180,18 +180,18 @@ SUBROUTINE test_1DSOC_1S1T
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,nsurf=4,pot_name='1DSOC_1S1T')
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,nsurf=4,pot_name='1DSOC_1S1T')
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
+  allocate(q(QModel%ndim))
   q(:) = (/ 9.5_Rkind /) ! one evaluation to get vec0%d0(:,:)
   write(out_unitp,*) ' ref Eigenvectors at Q:',Q
-  CALL Eval_Pot(Para_Model,Q,PotVal,NAC=NAC,nderiv=0)
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=0)
   ! ref Eigenvectors
-  CALL Write_dnMatPot(Para_Model%vec0,nio=out_unitp)
+  CALL QML_Write_dnMat(QModel%vec0,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,Vec=Para_Model%vec0,info='1DSOC_1S1T')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec=QModel%vec0,info='1DSOC_1S1T')
 
 
 
@@ -204,33 +204,33 @@ SUBROUTINE test_1DSOC_1S1T
 
   write(out_unitp,*) 'ADIABATIC potential'
   write(out_unitp,*) 'Q (Bohr):'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) 'Non adiatic couplings:'
-  CALL Write_dnMatPot(NAC,nio=out_unitp)
+  CALL QML_Write_dnMat(NAC,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,NAC=NAC,info='1DSOC_1S1T')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='1DSOC_1S1T')
 
   write(out_unitp,*) 'DIABATIC potential'
-  Para_Model%adiabatic = .FALSE.
+  QModel%adiabatic = .FALSE.
   write(out_unitp,*) 'Q (Bohr):'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='1DSOC_1S1T')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='1DSOC_1S1T')
 
-  CALL dealloc_dnMatPot(PotVal)
-  CALL dealloc_dnMatPot(NAC)
+  CALL QML_dealloc_dnMat(PotVal)
+  CALL QML_dealloc_dnMat(NAC)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -247,19 +247,19 @@ SUBROUTINE test_1DSOC_1S1T
   write(out_unitp,*) ' You should get the 3 curves (left panels) of figure 1 of ... '
   write(out_unitp,*) '  ... Granucci et al. J. Chem. Phys. V137, p22A501 (2012)'
 
-  CALL Init_Model(Para_Model,nsurf=4,pot_name='1DSOC_1S1T',option=1)
-  Para_Model%adiabatic = .TRUE.
+  CALL Init_Model(QModel,nsurf=4,pot_name='1DSOC_1S1T',option=1)
+  QModel%adiabatic = .TRUE.
   flush(out_unitp)
 
   q(:) = (/ 9.5_Rkind /) ! one evaluation to get vec0%d0(:,:)
-  CALL Eval_Pot(Para_Model,Q,PotVal,NAC=NAC,nderiv=1)
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=1)
 
   ! ref Eigenvectors
   write(out_unitp,*) ' ref Eigenvectors at Q:',Q
-  CALL Write_dnMatPot(Para_Model%vec0,nio=out_unitp)
+  CALL QML_Write_dnMat(QModel%vec0,nio=out_unitp)
 
 
-  CALL Eval_pot_ON_Grid(Para_Model,Qmin=(/3._Rkind/),Qmax=(/20._Rkind/), &
+  CALL Eval_pot_ON_Grid(QModel,Qmin=(/3._Rkind/),Qmax=(/20._Rkind/), &
                         nb_points=1001,nderiv=0,grid_file='grid_1DSOC_1S1T')
 
   write(out_unitp,*) '---------------------------------------------'
@@ -267,20 +267,20 @@ SUBROUTINE test_1DSOC_1S1T
   write(out_unitp,*) '---------------------------------------------'
 
   deallocate(q)
-  CALL dealloc_dnMatPot(PotVal)
-  CALL dealloc_dnMatPot(NAC)
+  CALL QML_dealloc_dnMat(PotVal)
+  CALL QML_dealloc_dnMat(NAC)
 END SUBROUTINE test_1DSOC_1S1T
 SUBROUTINE test_1DSOC_2S1T
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
-  TYPE (dnMatPot)                :: NAC ! for non adiabatic couplings
+  TYPE (dnMat_t)                :: PotVal
+  TYPE (dnMat_t)                :: NAC ! for non adiabatic couplings
 
   nderiv = 2
   write(out_unitp,*) '---------------------------------------------'
@@ -293,18 +293,18 @@ SUBROUTINE test_1DSOC_2S1T
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='1DSOC_2S1T')
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='1DSOC_2S1T')
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
+  allocate(q(QModel%ndim))
   q(:) = (/ 9.5_Rkind /) ! one evaluation to get vec0%d0(:,:)
   write(out_unitp,*) ' ref Eigenvectors at Q:',Q
-  CALL Eval_Pot(Para_Model,Q,PotVal,NAC=NAC,nderiv=0)
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=0)
   ! ref Eigenvectors
-  CALL Write_dnMatPot(Para_Model%vec0,nio=out_unitp)
+  CALL QML_Write_dnMat(QModel%vec0,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,Vec=Para_Model%vec0,info='1DSOC_2S1T')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec=QModel%vec0,info='1DSOC_2S1T')
 
 
 
@@ -317,33 +317,33 @@ SUBROUTINE test_1DSOC_2S1T
 
   write(out_unitp,*) 'ADIABATIC potential'
   write(out_unitp,*) 'Q (Bohr):'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) 'Non adiatic couplings:'
-  CALL Write_dnMatPot(NAC,nio=out_unitp)
+  CALL QML_Write_dnMat(NAC,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,NAC=NAC,info='1DSOC_2S1T')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='1DSOC_2S1T')
 
   write(out_unitp,*) 'DIABATIC potential'
-  Para_Model%adiabatic = .FALSE.
+  QModel%adiabatic = .FALSE.
   write(out_unitp,*) 'Q (Bohr):'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='1DSOC_2S1T')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='1DSOC_2S1T')
 
-  CALL dealloc_dnMatPot(PotVal)
-  CALL dealloc_dnMatPot(NAC)
+  CALL QML_dealloc_dnMat(PotVal)
+  CALL QML_dealloc_dnMat(NAC)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -358,19 +358,19 @@ SUBROUTINE test_1DSOC_2S1T
   write(out_unitp,*) ' Potential on a 1D grid (as a function of R in Bohr)'
   write(out_unitp,*) '   file name: "grid_1DSOC_2S1T"'
 
-  CALL Init_Model(Para_Model,pot_name='1DSOC_2S1T')
-  Para_Model%adiabatic = .TRUE.
+  CALL Init_Model(QModel,pot_name='1DSOC_2S1T')
+  QModel%adiabatic = .TRUE.
   flush(out_unitp)
 
   q(:) = (/ 9.5_Rkind /) ! one evaluation to get vec0%d0(:,:)
-  CALL Eval_Pot(Para_Model,Q,PotVal,NAC=NAC,nderiv=1)
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=1)
 
   ! ref Eigenvectors
   write(out_unitp,*) ' ref Eigenvectors at Q:',Q
-  CALL Write_dnMatPot(Para_Model%vec0,nio=out_unitp)
+  CALL QML_Write_dnMat(QModel%vec0,nio=out_unitp)
 
 
-  CALL Eval_pot_ON_Grid(Para_Model,Qmin=(/3._Rkind/),Qmax=(/20._Rkind/), &
+  CALL Eval_pot_ON_Grid(QModel,Qmin=(/3._Rkind/),Qmax=(/20._Rkind/), &
                         nb_points=1001,nderiv=0,grid_file='grid_1DSOC_2S1T')
 
   write(out_unitp,*) '---------------------------------------------'
@@ -378,18 +378,18 @@ SUBROUTINE test_1DSOC_2S1T
   write(out_unitp,*) '---------------------------------------------'
 
   deallocate(q)
-  CALL dealloc_dnMatPot(PotVal)
-  CALL dealloc_dnMatPot(NAC)
+  CALL QML_dealloc_dnMat(PotVal)
+  CALL QML_dealloc_dnMat(NAC)
 END SUBROUTINE test_1DSOC_2S1T
 SUBROUTINE test_Morse
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMat_t)                :: PotVal
 
 
   nderiv = 2
@@ -403,10 +403,10 @@ SUBROUTINE test_Morse
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='Morse',read_param=.FALSE.)
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='Morse',read_param=.FALSE.)
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
+  allocate(q(QModel%ndim))
   q(:) = 2._Rkind
 
   nderiv=2
@@ -417,25 +417,25 @@ SUBROUTINE test_Morse
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,'(a,f12.6)') 'R (Bohr)',q(:)
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   write(out_unitp,'(a,f12.6)') 'R (Bohr)',q(:)
   write(out_unitp,*) 'Energy (Hartree)'
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='Morse_HF')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Morse_HF')
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL dealloc_dnMatPot(PotVal)
+  CALL QML_dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -445,7 +445,7 @@ SUBROUTINE test_Morse
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '   file name: "grid_Morse"'
 
-  CALL Eval_pot_ON_Grid(Para_Model,Qmin=(/1._Rkind/),Qmax=(/5._Rkind/),nb_points=1001,&
+  CALL Eval_pot_ON_Grid(QModel,Qmin=(/1._Rkind/),Qmax=(/5._Rkind/),nb_points=1001,&
                         grid_file='grid_Morse')
 
   write(out_unitp,*) '---------------------------------------------'
@@ -455,14 +455,14 @@ SUBROUTINE test_Morse
 END SUBROUTINE test_Morse
 
 SUBROUTINE test_Buckingham
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMat_t)                :: PotVal
 
 
   nderiv = 2
@@ -476,11 +476,11 @@ SUBROUTINE test_Buckingham
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='Buck',read_param=.FALSE.)
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='Buck',read_param=.FALSE.)
+  CALL Write_Model(QModel)
 
 
-  allocate(q(Para_Model%ndim))
+  allocate(q(QModel%ndim))
   q(:) = 7._Rkind
   nderiv=2
 
@@ -490,25 +490,25 @@ SUBROUTINE test_Buckingham
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,'(a,f12.6)') 'R (Bohr)',q(:)
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   write(out_unitp,'(a,f12.6)') 'R (Bohr)',q(:)
   write(out_unitp,*) 'Energy (Hartree)'
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='Buckingham_Ar-Ar')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Buckingham_Ar-Ar')
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL dealloc_dnMatPot(PotVal)
+  CALL QML_dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -518,7 +518,7 @@ SUBROUTINE test_Buckingham
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '   file name: "grid_Buck"'
 
-  CALL Eval_pot_ON_Grid(Para_Model,Qmin=(/6._Rkind/),Qmax=(/20._Rkind/),nb_points=1001,&
+  CALL Eval_pot_ON_Grid(QModel,Qmin=(/6._Rkind/),Qmax=(/20._Rkind/),nb_points=1001,&
                         grid_file='grid_Buck')
 
   write(out_unitp,*) '---------------------------------------------'
@@ -529,15 +529,15 @@ END SUBROUTINE test_Buckingham
 
 SUBROUTINE test_Phenol
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
-  TYPE (dnMatPot)                :: NAC ! for non adiabatic couplings
+  TYPE (dnMat_t)                :: PotVal
+  TYPE (dnMat_t)                :: NAC ! for non adiabatic couplings
 
 
   nderiv = 2
@@ -551,10 +551,10 @@ SUBROUTINE test_Phenol
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='Phenol',PubliUnit=.TRUE.)
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='Phenol',PubliUnit=.TRUE.)
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
+  allocate(q(QModel%ndim))
 
   q(:) = (/ 1.2_Rkind,0.2_Rkind /)
   nderiv=2
@@ -565,8 +565,8 @@ SUBROUTINE test_Phenol
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q (Angs, radian):'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -575,37 +575,37 @@ SUBROUTINE test_Phenol
 
   write(out_unitp,*) 'ADIABATIC potential'
   write(out_unitp,*) 'Q (Angs, radian):'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) 'Non adiatic couplings:'
-  CALL Write_dnMatPot(NAC,nio=out_unitp)
+  CALL QML_Write_dnMat(NAC,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,NAC=NAC,info='Phenol')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='Phenol')
 
   write(out_unitp,*) 'DIABATIC potential'
-  Para_Model%adiabatic = .FALSE.
+  QModel%adiabatic = .FALSE.
   write(out_unitp,*) 'Q (Angs, radian):'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='Phenol')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Phenol')
 
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL dealloc_dnMatPot(PotVal)
-  CALL dealloc_dnMatPot(NAC)
+  CALL QML_dealloc_dnMat(PotVal)
+  CALL QML_dealloc_dnMat(NAC)
   deallocate(q)
 
 
@@ -620,10 +620,10 @@ SUBROUTINE test_Phenol
   write(out_unitp,*) '   Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, ...'
   write(out_unitp,*) '  .... J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218)'
 
-  CALL Init_Model(Para_Model,pot_name='phenol',PubliUnit=.TRUE.)
-  Para_Model%adiabatic = .FALSE.
+  CALL Init_Model(QModel,pot_name='phenol',PubliUnit=.TRUE.)
+  QModel%adiabatic = .FALSE.
 
-  CALL Eval_pot_ON_Grid(Para_Model,Qmin=(/0.5_Rkind,ZERO/),Qmax=(/5._Rkind,ZERO/), &
+  CALL Eval_pot_ON_Grid(QModel,Qmin=(/0.5_Rkind,ZERO/),Qmax=(/5._Rkind,ZERO/), &
                         nb_points=1001,grid_file='grid_Phenol')
 
   write(out_unitp,*) '---------------------------------------------'
@@ -633,14 +633,14 @@ SUBROUTINE test_Phenol
 END SUBROUTINE test_Phenol
 SUBROUTINE test_HenonHeiles
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMat_t)                :: PotVal
 
 
   nderiv = 2
@@ -652,11 +652,11 @@ SUBROUTINE test_HenonHeiles
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='HenonHeiles',ndim=4)
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=4)
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
-  q(:) = (/ (0.1_Rkind*real(i,kind=Rkind),i=1,Para_Model%ndim) /)
+  allocate(q(QModel%ndim))
+  q(:) = (/ (0.1_Rkind*real(i,kind=Rkind),i=1,QModel%ndim) /)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -664,22 +664,22 @@ SUBROUTINE test_HenonHeiles
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='4D-HenonHeiles')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='4D-HenonHeiles')
 
-  CALL dealloc_dnMatPot(PotVal)
+  CALL QML_dealloc_dnMat(PotVal)
   deallocate(q)
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -687,14 +687,14 @@ SUBROUTINE test_HenonHeiles
 
 END SUBROUTINE test_HenonHeiles
 SUBROUTINE test_LinearHBond
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMat_t)                :: PotVal
 
 
   nderiv = 2
@@ -708,10 +708,10 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='HBond',PubliUnit=.TRUE.)
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='HBond',PubliUnit=.TRUE.)
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
+  allocate(q(QModel%ndim))
 
   q(:) = (/ 2.75_Rkind,0._Rkind /)
   nderiv=2
@@ -722,24 +722,24 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,'(a,2f12.6)') 'QQ,q (Angs)',q(:)
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   write(out_unitp,'(a,2f12.6)') 'QQ,q (Angs)',q(:)
   write(out_unitp,*) 'Energy (kcal.mol^-1)'
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='Linear H-Bond (symmetric one)')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Linear H-Bond (symmetric one)')
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
-  CALL dealloc_dnMatPot(PotVal)
+  CALL QML_dealloc_dnMat(PotVal)
 
   deallocate(q)
 
@@ -753,7 +753,7 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) ' You should get the green curve (QQ=2.75 Angs) of ... '
   write(out_unitp,*) '...the bottom left panel of figure 3.8 (Julien Beutier thesis)'
 
-  CALL Eval_pot_ON_Grid(Para_Model, &
+  CALL Eval_pot_ON_Grid(QModel, &
                         Qmin=(/2.75_Rkind,-0.6_Rkind/),Qmax=(/2.75_Rkind,0.6_Rkind/),nb_points=1001,&
                         grid_file='grid_Hbond-sym')
 
@@ -764,34 +764,34 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) ' With units: Angs and kcal.mol^-1'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='HBond',PubliUnit=.TRUE.,         &
+  CALL Init_Model(QModel,pot_name='HBond',PubliUnit=.TRUE.,         &
                   read_param=.TRUE.,param_file_name='Hbond.dat')
-  CALL Write_Model(Para_Model)
+  CALL Write_Model(QModel)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
-  allocate(q(Para_Model%ndim))
+  allocate(q(QModel%ndim))
 
   q(:) = (/ 3._Rkind,0._Rkind /)
   nderiv=2
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   write(out_unitp,'(a,2f12.6)') 'QQ,q (Angs)',q(:)
   write(out_unitp,*) 'Energy (kcal.mol^-1)'
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='Linear H-Bond (asymmetric one)')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Linear H-Bond (asymmetric one)')
 
-  CALL dealloc_dnMatPot(PotVal)
+  CALL QML_dealloc_dnMat(PotVal)
 
   deallocate(q)
 
@@ -806,7 +806,7 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) ' You should get the green curve (QQ=3. Angs) of ... '
   write(out_unitp,*) '...the bottom right panel of figure 3.8 (Julien Beutier thesis)'
 
-  CALL Eval_pot_ON_Grid(Para_Model, &
+  CALL Eval_pot_ON_Grid(QModel, &
                         Qmin=(/3._Rkind,-0.8_Rkind/),Qmax=(/3._Rkind,0.7_Rkind/),nb_points=1001,&
                         grid_file='grid_Hbond-asym')
 
@@ -818,16 +818,16 @@ END SUBROUTINE test_LinearHBond
 SUBROUTINE test_PSB3
 
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
 
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
-  TYPE (dnMatPot)                :: NAC ! for non adiabatic couplings
+  TYPE (dnMat_t)                :: PotVal
+  TYPE (dnMat_t)                :: NAC ! for non adiabatic couplings
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' PSB3 potential'
@@ -837,10 +837,10 @@ SUBROUTINE test_PSB3
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='PSB3',PubliUnit=.FALSE.)
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='PSB3',PubliUnit=.FALSE.)
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
+  allocate(q(QModel%ndim))
 
   q(:) = (/0.172459_Rkind,-3.14_Rkind,0._Rkind/)
   nderiv=2
@@ -851,56 +851,56 @@ SUBROUTINE test_PSB3
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Evaluated in', q
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
   write(out_unitp,*) '---------------------------------------------'
 
-  Para_Model%adiabatic = .FALSE.
+  QModel%adiabatic = .FALSE.
   write(out_unitp,*) 'DIABATIC potential'
   write(out_unitp,*) 'Evaluated in', q
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
 
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='PSB3')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='PSB3')
 
-  Para_Model%adiabatic = .TRUE.
+  QModel%adiabatic = .TRUE.
   write(out_unitp,*) 'ADIABATIC potential'
   write(out_unitp,*) 'Evaluated in', q
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) 'Non adiatic couplings:'
-  CALL Write_dnMatPot(NAC,nio=out_unitp)
+  CALL QML_Write_dnMat(NAC,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,NAC=NAC,info='PSB3')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='PSB3')
 
 
   write(out_unitp,*) '---------- END CHECK POT --------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL dealloc_dnMatPot(PotVal)
+  CALL QML_dealloc_dnMat(PotVal)
 
   deallocate(q)
 
 END SUBROUTINE test_PSB3
 SUBROUTINE test_HONO
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMat_t)                :: PotVal
 
 
   nderiv = 2
@@ -912,10 +912,10 @@ SUBROUTINE test_HONO
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='HONO')
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='HONO')
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
+  allocate(q(QModel%ndim))
   q(:) = [2.696732586_Rkind,1.822912197_Rkind,1.777642018_Rkind,2.213326419_Rkind,1.9315017_Rkind,pi]
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -923,20 +923,20 @@ SUBROUTINE test_HONO
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the trans minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='HONO')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='HONO')
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -944,15 +944,15 @@ SUBROUTINE test_HONO
   q(:) = [2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,2.23738_Rkind,1.975200_Rkind,ZERO]
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='HONO')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='HONO')
 
-  CALL dealloc_dnMatPot(PotVal)
+  CALL QML_dealloc_dnMat(PotVal)
   deallocate(q)
 
 
@@ -965,7 +965,7 @@ SUBROUTINE test_HONO
   write(out_unitp,*) ' Potential on a 1D grid (as a function of q(6), the torsion)'
   write(out_unitp,*) '   file name: "grid_HONO"'
 
-  CALL Eval_pot_ON_Grid(Para_Model,                                      &
+  CALL Eval_pot_ON_Grid(QModel,                                      &
                         Qmin=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
                               2.23738_Rkind,1.975200_Rkind,ZERO],        &
                         Qmax=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
@@ -979,14 +979,14 @@ SUBROUTINE test_HONO
 END SUBROUTINE test_HONO
 SUBROUTINE test_HNNHp
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMat_t)                :: PotVal
 
 
   nderiv = 2
@@ -998,31 +998,31 @@ SUBROUTINE test_HNNHp
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(Para_Model,pot_name='HNNHp')
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='HNNHp')
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
-  q(:) = Para_Model%Para_HNNHp%Qref([2,1,4,3,5,6])
+  allocate(q(QModel%ndim))
+  q(:) = QModel%HNNHpPot%Qref([2,1,4,3,5,6])
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the trans minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='HNNHp')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='HNNHp')
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -1031,14 +1031,14 @@ SUBROUTINE test_HNNHp
 END SUBROUTINE test_HNNHp
 SUBROUTINE test_H2SiN
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMat_t)                :: PotVal
 
 
   nderiv = 2
@@ -1051,33 +1051,33 @@ SUBROUTINE test_H2SiN
   write(out_unitp,*) '---------------------------------------------'
 DO option=1,3
 
-  CALL Init_Model(Para_Model,pot_name='H2SiN',option=option)
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='H2SiN',option=option)
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
-  q(:) = Para_Model%Para_H2SiN%Qref([3,1,4,2,5,6])
+  allocate(q(QModel%ndim))
+  q(:) = QModel%H2SiNPot%Qref([3,1,4,2,5,6])
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at:'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='H2SiN')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='H2SiN')
 
-  CALL dealloc_dnMatPot(PotVal)
+  CALL QML_dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -1088,14 +1088,14 @@ END DO
 END SUBROUTINE test_H2SiN
 SUBROUTINE test_H2NSi
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)             :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMat_t)                :: PotVal
 
 
   nderiv = 2
@@ -1108,33 +1108,33 @@ SUBROUTINE test_H2NSi
   write(out_unitp,*) '---------------------------------------------'
 DO option=1,2
 
-  CALL Init_Model(Para_Model,pot_name='H2NSi',option=option)
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='H2NSi',option=option)
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
-  q(:) = Para_Model%Para_H2NSi%Qref([3,1,4,2,5,6])
+  allocate(q(QModel%ndim))
+  q(:) = QModel%H2NSiPot%Qref([3,1,4,2,5,6])
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at:'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='H2NSi')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='H2NSi')
 
-  CALL dealloc_dnMatPot(PotVal)
+  CALL QML_dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -1145,14 +1145,14 @@ END DO
 END SUBROUTINE test_H2NSi
 SUBROUTINE test_template
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)                :: QModel
   real (kind=Rkind), allocatable :: Q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMatPot)                :: PotVal
+  TYPE (dnMat_t)                 :: PotVal
 
 
   nderiv = 2
@@ -1167,10 +1167,10 @@ SUBROUTINE test_template
   write(out_unitp,*) '---------------------------------------------'
   flush(out_unitp)
 
-  CALL Init_Model(Para_Model,pot_name='template')
-  CALL Write_Model(Para_Model)
+  CALL Init_Model(QModel,pot_name='template')
+  CALL Write_Model(QModel)
 
-  allocate(q(Para_Model%ndim))
+  allocate(q(QModel%ndim))
   Q(:) = 2._Rkind
 
   nderiv=2
@@ -1181,24 +1181,24 @@ SUBROUTINE test_template
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
-  CALL Check_analytical_numerical_derivatives(Para_Model,Q,nderiv)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
 
-  CALL Eval_Pot(Para_Model,Q,PotVal,nderiv=nderiv)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,Para_Model%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
   write(out_unitp,*) 'Energy (Hartree)'
-  CALL Write_dnMatPot(PotVal,nio=out_unitp)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,Para_Model,info='Template')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Template')
 
-  CALL dealloc_dnMatPot(PotVal)
+  CALL QML_dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'

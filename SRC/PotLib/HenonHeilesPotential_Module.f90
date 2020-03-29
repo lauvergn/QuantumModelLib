@@ -40,18 +40,18 @@ MODULE mod_HenonHeilesPot
 !!
 !! @param lambda             real:    parameter of the Hénon-Heiles potential
 !! @param ndim               integer: number of coordinates
-  TYPE Param_HenonHeiles
+  TYPE HenonHeilesPot_t
      PRIVATE
      real (kind=Rkind) :: lambda
      integer           :: ndim
-  END TYPE Param_HenonHeiles
+  END TYPE HenonHeilesPot_t
 
   PRIVATE Read_HenonHeilesPot
 
 CONTAINS
   SUBROUTINE Init_HenonHeilesPot(Para_HenonHeiles,ndim,nio,read_param,lambda)
 
-    TYPE (Param_HenonHeiles),    intent(inout)   :: Para_HenonHeiles
+    TYPE (HenonHeilesPot_t),    intent(inout)   :: Para_HenonHeiles
     integer,                     intent(in)      :: ndim
     integer,           optional, intent(in)      :: nio
     logical,           optional, intent(in)      :: read_param
@@ -80,7 +80,7 @@ CONTAINS
 
       IF (present(lambda))       lambda_loc     = lambda
 
-      Para_HenonHeiles = Param_HenonHeiles(lambda=lambda_loc,ndim=ndim)
+      Para_HenonHeiles = HenonHeilesPot_t(lambda=lambda_loc,ndim=ndim)
 
     END IF
 
@@ -92,11 +92,11 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_HenonHeiles            TYPE(Param_HenonHeiles):    derived type in which the parameters are set-up.
+!! @param Para_HenonHeiles            TYPE(HenonHeilesPot_t):    derived type in which the parameters are set-up.
 !! @param nio                         integer:                    file unit to read the parameters.
 !! @param lambdasub                   real (optional):            lambda parameters (default value for the namelist)
   SUBROUTINE Read_HenonHeilesPot(Para_HenonHeiles,ndim,nio,lambdasub)
-    TYPE (Param_HenonHeiles), intent(inout)  :: Para_HenonHeiles
+    TYPE (HenonHeilesPot_t), intent(inout)  :: Para_HenonHeiles
     integer,                  intent(in)     :: nio,ndim
     real (kind=Rkind),        intent(in)     :: lambdasub
 
@@ -126,7 +126,7 @@ CONTAINS
 
     !write(out_unitp,nml=HenonHeiles)
 
-    Para_HenonHeiles = Param_HenonHeiles(lambda=lambda,ndim=ndim)
+    Para_HenonHeiles = HenonHeilesPot_t(lambda=lambda,ndim=ndim)
 
 
   END SUBROUTINE Read_HenonHeilesPot
@@ -173,10 +173,10 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_HenonHeiles   TYPE(Param_HenonHeiles):   derived type with the Phenol potential parameters.
+!! @param Para_HenonHeiles   TYPE(HenonHeilesPot_t):   derived type with the Phenol potential parameters.
 !! @param nio                integer:                   file unit to print the parameters.
   SUBROUTINE Write_HenonHeilesPot(Para_HenonHeiles,nio)
-    TYPE (Param_HenonHeiles), intent(in) :: Para_HenonHeiles
+    TYPE (HenonHeilesPot_t), intent(in) :: Para_HenonHeiles
     integer,                  intent(in) :: nio
 
 
@@ -194,16 +194,16 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnMatPot):          derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):          derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param Q                  real:                    table of two values for which the potential is calculated (R,theta)
-!! @param Para_HenonHeiles   TYPE(Param_HenonHeiles): derived type with the Hénon-Heiles parameters.
+!! @param Para_HenonHeiles   TYPE(HenonHeilesPot_t): derived type with the Hénon-Heiles parameters.
 !! @param nderiv             integer:                 it enables to specify up to which derivatives the potential is calculated:
 !!                                                    the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE Eval_HenonHeilesPot(Mat_OF_PotDia,Q,Para_HenonHeiles,nderiv)
     USE mod_dnS
 
-    TYPE (Param_HenonHeiles), intent(in)     :: Para_HenonHeiles
-    TYPE(dnS),              intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (HenonHeilesPot_t), intent(in)     :: Para_HenonHeiles
+    TYPE (dnS_t),              intent(inout)  :: Mat_OF_PotDia(:,:)
     real(kind=Rkind),         intent(in)     :: Q(:)
     integer, intent(in)                      :: nderiv
 
@@ -262,23 +262,23 @@ CONTAINS
       END DO
     END IF
 
-    IF (nderiv == 0) CALL set_dnS(Mat_OF_PotDia(1,1),d0)
-    IF (nderiv == 1) CALL set_dnS(Mat_OF_PotDia(1,1),d0,d1)
-    IF (nderiv == 2) CALL set_dnS(Mat_OF_PotDia(1,1),d0,d1,d2)
+    IF (nderiv == 0) CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0)
+    IF (nderiv == 1) CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0,d1)
+    IF (nderiv == 2) CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0,d1,d2)
 
   END SUBROUTINE Eval_HenonHeilesPot
   SUBROUTINE Eval_HenonHeilesPot_old(PotVal,Q,Para_HenonHeiles,nderiv)
-    USE mod_dnMatPot
+    USE mod_dnMat
 
-    TYPE (Param_HenonHeiles), intent(in)     :: Para_HenonHeiles
-    TYPE(dnMatPot),           intent(inout)  :: PotVal
+    TYPE (HenonHeilesPot_t),  intent(in)     :: Para_HenonHeiles
+    TYPE (dnMat_t),           intent(inout)  :: PotVal
     real(kind=Rkind),         intent(in)     :: Q(:)
     integer, intent(in)                      :: nderiv
 
     integer :: i
 
-    IF ( Check_NotAlloc_dnMatPot(PotVal,nderiv) ) THEN
-      CALL alloc_dnMatPot(PotVal,nsurf=1,ndim=Para_HenonHeiles%ndim,nderiv=nderiv)
+    IF ( QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
+      CALL QML_alloc_dnMat(PotVal,nsurf=1,ndim=Para_HenonHeiles%ndim,nderiv=nderiv)
     END IF
 
     ! Potential calculation

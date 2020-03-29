@@ -38,13 +38,13 @@ MODULE mod_SigmoidPot
 !! @date 03/08/2017
 !!
 !! @param A,B,C,e        real: sigmoid parameters
-  TYPE Param_Sigmoid
+  TYPE SigmoidPot_t
      PRIVATE
      real (kind=Rkind) :: A   = ONE
      real (kind=Rkind) :: B   = ZERO
      real (kind=Rkind) :: C   = ONE
      real (kind=Rkind) :: e   = ONE
-  END TYPE Param_Sigmoid
+  END TYPE SigmoidPot_t
 
   PRIVATE  Read_SigmoidPot
 CONTAINS
@@ -54,12 +54,12 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Sigmoid       TYPE(Param_Sigmoid):   derived type in which the parameters are set-up.
+!! @param SigmoidPot       TYPE(SigmoidPot_t):   derived type in which the parameters are set-up.
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param A,B,C,e            real (optional):    sigmoid parameters
-  SUBROUTINE Init_SigmoidPot(Para_Sigmoid,nio,read_param,A,B,C,e)
-    TYPE (Param_Sigmoid),        intent(inout)   :: Para_Sigmoid
+  SUBROUTINE Init_SigmoidPot(SigmoidPot,nio,read_param,A,B,C,e)
+    TYPE (SigmoidPot_t),        intent(inout)   :: SigmoidPot
     real (kind=Rkind), optional, intent(in)      :: A,B,C,e
     integer,           optional, intent(in)      :: nio
     logical,           optional, intent(in)      :: read_param
@@ -76,16 +76,16 @@ CONTAINS
        STOP 'STOP in Init_SigmoidPot: impossible to read the input file. The file unit (nio) is not present'
     END IF
 
-    Para_Sigmoid = Param_Sigmoid(ONE,ZERO,ONE,ONE)
+    SigmoidPot = SigmoidPot_t(ONE,ZERO,ONE,ONE)
 
     IF (read_param) THEN
-      CALL Read_SigmoidPot(Para_Sigmoid,nio)
+      CALL Read_SigmoidPot(SigmoidPot,nio)
     ELSE
 
-      IF (present(A)) Para_Sigmoid%A = A
-      IF (present(B)) Para_Sigmoid%B = B
-      IF (present(C)) Para_Sigmoid%C = C
-      IF (present(e)) Para_Sigmoid%e = e
+      IF (present(A)) SigmoidPot%A = A
+      IF (present(B)) SigmoidPot%B = B
+      IF (present(C)) SigmoidPot%C = C
+      IF (present(e)) SigmoidPot%e = e
 
     END IF
 
@@ -97,10 +97,10 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Sigmoid       TYPE(Param_Sigmoid):   derived type in which the parameters are set-up.
+!! @param SigmoidPot       TYPE(SigmoidPot_t):   derived type in which the parameters are set-up.
 !! @param nio                integer            :   file unit to read the parameters.
-  SUBROUTINE Read_SigmoidPot(Para_Sigmoid,nio)
-    TYPE (Param_Sigmoid), intent(inout) :: Para_Sigmoid
+  SUBROUTINE Read_SigmoidPot(SigmoidPot,nio)
+    TYPE (SigmoidPot_t), intent(inout) :: SigmoidPot
     integer, intent(in) :: nio
 
     real (kind=Rkind) :: A,B,C,e
@@ -109,10 +109,10 @@ CONTAINS
 
     namelist /Sigmoid/ A,B,C,e
 
-    A = Para_Sigmoid%A
-    B = Para_Sigmoid%B
-    C = Para_Sigmoid%C
-    e = Para_Sigmoid%e
+    A = SigmoidPot%A
+    B = SigmoidPot%B
+    C = SigmoidPot%C
+    e = SigmoidPot%e
 
     read(nio,nml=Sigmoid,IOSTAT=err_read)
     IF (err_read < 0) THEN
@@ -131,7 +131,7 @@ CONTAINS
     END IF
     !write(out_unitp,nml=Sigmoid)
 
-    Para_Sigmoid = Param_Sigmoid(A,B,C,e)
+    SigmoidPot = SigmoidPot_t(A,B,C,e)
 
   END SUBROUTINE Read_SigmoidPot
 
@@ -140,28 +140,28 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Sigmoid       TYPE(Param_Sigmoid):   derived type with the Sigmoid parameters.
+!! @param SigmoidPot       TYPE(SigmoidPot_t):   derived type with the Sigmoid parameters.
 !! @param nio                integer            :   file unit to print the parameters.
-  SUBROUTINE Write_SigmoidPot(Para_Sigmoid,nio)
-    TYPE (Param_Sigmoid), intent(in) :: Para_Sigmoid
+  SUBROUTINE Write_SigmoidPot(SigmoidPot,nio)
+    TYPE (SigmoidPot_t), intent(in) :: SigmoidPot
     integer, intent(in) :: nio
 
     write(nio,*) 'Sigmoid curent parameters'
     write(nio,*) '  s(x) = A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)'
-    write(nio,*) '  A:   ',Para_Sigmoid%A
-    write(nio,*) '  B:   ',Para_Sigmoid%B
-    write(nio,*) '  C:   ',Para_Sigmoid%C
-    write(nio,*) '  e:   ',Para_Sigmoid%e
+    write(nio,*) '  A:   ',SigmoidPot%A
+    write(nio,*) '  B:   ',SigmoidPot%B
+    write(nio,*) '  C:   ',SigmoidPot%C
+    write(nio,*) '  e:   ',SigmoidPot%e
     write(nio,*) 'end Sigmoid curent parameters'
 
   END SUBROUTINE Write_SigmoidPot
-  SUBROUTINE get_Q0_Sigmoid(R0,Para_Sigmoid)
+  SUBROUTINE get_Q0_Sigmoid(R0,SigmoidPot)
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: R0
-    TYPE (Param_Sigmoid),        intent(in)    :: Para_Sigmoid
+    TYPE (SigmoidPot_t),        intent(in)    :: SigmoidPot
 
-    R0 = Para_Sigmoid%B
+    R0 = SigmoidPot%B
 
   END SUBROUTINE get_Q0_Sigmoid
 
@@ -170,17 +170,17 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param Para_Sigmoid       TYPE(Param_Sigmoid): derived type with the Sigmoid parameters.
+!! @param SigmoidPot       TYPE(SigmoidPot_t): derived type with the Sigmoid parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_SigmoidPot(Mat_OF_PotDia,dnR,Para_Sigmoid,nderiv)
+  SUBROUTINE Eval_SigmoidPot(Mat_OF_PotDia,dnR,SigmoidPot,nderiv)
     USE mod_dnS
 
-    TYPE (Param_Sigmoid), intent(in)     :: Para_Sigmoid
-    TYPE(dnS),          intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),          intent(in)     :: dnR
+    TYPE (SigmoidPot_t), intent(in)     :: SigmoidPot
+    TYPE (dnS_t),          intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),          intent(in)     :: dnR
     integer, intent(in)                  :: nderiv
 
 
@@ -188,7 +188,7 @@ CONTAINS
     !flush(out_unitp)
 
 
-    Mat_OF_PotDia(1,1) = dnSigmoid(dnR,Para_Sigmoid)
+    Mat_OF_PotDia(1,1) = dnSigmoid(dnR,SigmoidPot)
 
 
     !write(out_unitp,*) 'END in Eval_SigmoidPot'
@@ -201,31 +201,31 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @return dnSigmoid         TYPE(dnS):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
-!! @param dnR                TYPE(dnS):           derived type with the value of "r" and,if required, its derivatives.
-!! @param Para_Sigmoid       TYPE(Param_Sigmoid): derived type with the Sigmoid parameters.
-  FUNCTION dnSigmoid(dnR,Para_Sigmoid) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
-    USE mod_dnMatPot
+!! @return dnSigmoid         TYPE (dnS_t):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
+!! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
+!! @param SigmoidPot       TYPE(SigmoidPot_t): derived type with the Sigmoid parameters.
+  FUNCTION dnSigmoid(dnR,SigmoidPot) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
+    USE mod_dnMat
     USE mod_dnS
 
-    TYPE(dnS)                          :: dnSigmoid
-    TYPE(dnS),          intent(in)     :: dnR
+    TYPE (dnS_t)                          :: dnSigmoid
+    TYPE (dnS_t),          intent(in)     :: dnR
 
-    TYPE (Param_Sigmoid), intent(in)   :: Para_Sigmoid
+    TYPE (SigmoidPot_t), intent(in)   :: SigmoidPot
 
     !local variable
-    TYPE(dnS)     :: dnbeta
+    TYPE (dnS_t)     :: dnbeta
 
     !write(out_unitp,*) 'BEGINNING in Sigmoid'
     !write(out_unitp,*) 'dnR'
     !CALL write_dnS(dnR)
 
-    dnbeta  = tanh((dnR-Para_Sigmoid%B)/Para_Sigmoid%C)
+    dnbeta  = tanh((dnR-SigmoidPot%B)/SigmoidPot%C)
     !write(out_unitp,*) 'dnbeta'
     !CALL write_dnS(dnbeta)
-    dnSigmoid = (HALF*Para_Sigmoid%A) * (ONE+Para_Sigmoid%e*dnbeta)
+    dnSigmoid = (HALF*SigmoidPot%A) * (ONE+SigmoidPot%e*dnbeta)
 
-     CALL dealloc_dnS(dnbeta)
+     CALL QML_dealloc_dnS(dnbeta)
 
     !write(out_unitp,*) 'Sigmoid at',get_d0_FROM_dnS(dnR)
     !CALL Write_dnS(dnSigmoid)

@@ -38,7 +38,7 @@ MODULE mod_TwoDPot
 !!
 !> @author David Lauvergnat
 !! @date 12/07/2019
-  TYPE Param_TwoD
+  TYPE TwoDPot_t
      PRIVATE
      logical              :: PubliUnit = .FALSE. ! when PubliUnit=.TRUE., the units (Angstrom and Ev) are used. Default (atomic unit)
 
@@ -56,7 +56,7 @@ MODULE mod_TwoDPot
      real (kind=Rkind), PUBLIC :: muY  = 6667._Rkind
 
 
-  END TYPE Param_TwoD
+  END TYPE TwoDPot_t
 
 
 CONTAINS
@@ -66,10 +66,10 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 12/07/2019
 !!
-!! @param Para_TwoD          TYPE(Param_TwoD):     derived type in which the parameters are set-up.
+!! @param Para_TwoD          TYPE(TwoDPot_t):     derived type in which the parameters are set-up.
 !! @param PubliUnit          logical (optional):   when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
   SUBROUTINE Init_TwoDPot(Para_TwoD,PubliUnit)
-    TYPE (Param_TwoD),        intent(inout)   :: Para_TwoD
+    TYPE (TwoDPot_t),        intent(inout)   :: Para_TwoD
      logical, optional,       intent(in)      :: PubliUnit
 
      IF (present(PubliUnit)) Para_TwoD%PubliUnit = PubliUnit
@@ -83,10 +83,10 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 12/07/2019
 !!
-!! @param Para_TwoD        TYPE(Param_TwoD):     derived type with the TwoD potential parameters.
+!! @param Para_TwoD        TYPE(TwoDPot_t):     derived type with the TwoD potential parameters.
 !! @param nio              integer:              file unit to print the parameters.
   SUBROUTINE Write_TwoDPot(Para_TwoD,nio)
-    TYPE (Param_TwoD), intent(in) :: Para_TwoD
+    TYPE (TwoDPot_t), intent(in) :: Para_TwoD
     integer, intent(in) :: nio
 
     write(nio,*) 'TwoD parameters'
@@ -128,7 +128,7 @@ CONTAINS
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: Q0(:)
-    TYPE (Param_TwoD),           intent(in)    :: Para_TwoD
+    TYPE (TwoDPot_t),           intent(in)    :: Para_TwoD
     integer,                     intent(in)    :: option ! diabatic state
 
     IF (size(Q0) /= 2) THEN
@@ -153,17 +153,17 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 12/07/2019
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param Q                  real:                table of two values for which the potential is calculated (R,theta)
-!! @param Para_TwoD          TYPE(Param_TwoD):    derived type with the Morse parameters.
+!! @param Para_TwoD          TYPE(TwoDPot_t):    derived type with the Morse parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TwoDPot(Mat_OF_PotDia,dnQ,Para_TwoD,nderiv)
     USE mod_dnS
 
-    TYPE (Param_TwoD),   intent(in)     :: Para_TwoD
-    TYPE(dnS),         intent(in)     :: dnQ(2) ! X,Y
-    TYPE(dnS),         intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (TwoDPot_t),   intent(in)     :: Para_TwoD
+    TYPE (dnS_t),         intent(in)     :: dnQ(2) ! X,Y
+    TYPE (dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,             intent(in)     :: nderiv
 
 
@@ -181,7 +181,7 @@ CONTAINS
    !CALL Write_dnS(vTemp,6)
 
    !write(out_unitp,*) 'TwoD pot diabatic:',nderiv
-   !CALL Write_dnMatPot(PotVal,6)
+   !CALL Write_dnMat(PotVal,6)
    !write(out_unitp,*)
    !flush(out_unitp)
 

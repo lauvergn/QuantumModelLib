@@ -38,7 +38,7 @@ MODULE mod_BuckPot
 !! @date 03/08/2017
 !!
 !! @param A,B,C              real: Buckingham parameters
-  TYPE Param_Buck
+  TYPE BuckPot_t
      private
      real (kind=Rkind) :: A   = 387.63744459726228783977_Rkind  ! for Ar2 (eq 27)
      real (kind=Rkind) :: B   =   1.93837805257707347985_Rkind  ! for Ar2 (eq 27)
@@ -46,7 +46,7 @@ MODULE mod_BuckPot
      ! A= 1.69 10^-8 erg      = 387.63744459726228783977 Hartree
      ! B= 1/0.273 A^-1        = 1.93837805257707347985 bohr^-1
      ! C= 102 10^-12 erg A^-6 = 106.54483566475760255666 Hartree bohr^-6
-  END TYPE Param_Buck
+  END TYPE BuckPot_t
 
   PRIVATE  Read_BuckPot
 
@@ -56,12 +56,12 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Buck          TYPE(Param_Buck):   derived type in which the parameters are set-up.
+!! @param BuckPot          TYPE(BuckPot_t):   derived type in which the parameters are set-up.
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param A,B,C              real (optional):    parameters
-  SUBROUTINE Init_BuckPot(Para_Buck,read_param,nio,A,B,C)
-    TYPE (Param_Buck),           intent(inout)   :: Para_Buck
+  SUBROUTINE Init_BuckPot(BuckPot,read_param,nio,A,B,C)
+    TYPE (BuckPot_t),           intent(inout)   :: BuckPot
     real (kind=Rkind), optional, intent(in)      :: A,B,C
 
     integer,           optional, intent(in)      :: nio
@@ -80,14 +80,14 @@ CONTAINS
     END IF
 
     !Default for Ar-Ar
-    Para_Buck = Param_Buck(387.63744459726228783977_Rkind,1.93837805257707347985_Rkind,106.54483566475760255666_Rkind)
+    BuckPot = BuckPot_t(387.63744459726228783977_Rkind,1.93837805257707347985_Rkind,106.54483566475760255666_Rkind)
 
     IF (read_param_loc) THEN
-      CALL Read_BuckPot(Para_Buck,nio)
+      CALL Read_BuckPot(BuckPot,nio)
     ELSE
-      IF (present(A))   Para_Buck%A = A
-      IF (present(B))   Para_Buck%B = B
-      IF (present(C))   Para_Buck%C = C
+      IF (present(A))   BuckPot%A = A
+      IF (present(B))   BuckPot%B = B
+      IF (present(C))   BuckPot%C = C
     END IF
 
   END SUBROUTINE Init_BuckPot
@@ -98,19 +98,19 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Buck          TYPE(Param_Buck):    derived type in which the parameters are set-up.
+!! @param BuckPot          TYPE(BuckPot_t):    derived type in which the parameters are set-up.
 !! @param nio                integer:             file unit to read the parameters.
-  SUBROUTINE Read_BuckPot(Para_Buck,nio)
-    TYPE (Param_Buck), intent(inout) :: Para_Buck
+  SUBROUTINE Read_BuckPot(BuckPot,nio)
+    TYPE (BuckPot_t), intent(inout) :: BuckPot
     integer, intent(in) :: nio
 
     real (kind=Rkind) :: A,B,C
     integer           :: err_read
     namelist /Buck/ A,B,C
 
-    A = Para_Buck%A
-    B = Para_Buck%B
-    C = Para_Buck%C
+    A = BuckPot%A
+    B = BuckPot%B
+    C = BuckPot%C
 
     read(nio,nml=Buck,IOSTAT=err_read)
     IF (err_read < 0) THEN
@@ -130,7 +130,7 @@ CONTAINS
 
     !write(out_unitp,nml=Buck)
 
-    Para_Buck = Param_Buck(A,B,C)
+    BuckPot = BuckPot_t(A,B,C)
 
 
   END SUBROUTINE Read_BuckPot
@@ -166,36 +166,36 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Buck          TYPE(Param_Buck):    derived type with the Buckingham parameters.
+!! @param BuckPot          TYPE(BuckPot_t):    derived type with the Buckingham parameters.
 !! @param nio                integer:             file unit to print the parameters.
-  SUBROUTINE Write_BuckPot(Para_Buck,nio)
-    TYPE (Param_Buck), intent(in) :: Para_Buck
+  SUBROUTINE Write_BuckPot(BuckPot,nio)
+    TYPE (BuckPot_t), intent(in) :: BuckPot
     integer, intent(in) :: nio
 
     write(nio,*) 'Buckingham current parameters:'
     write(nio,*)
     write(nio,*) '    V(R) = A.Exp(-B.r) - C/r^6'
-    write(nio,*) '  A:   ',Para_Buck%A
-    write(nio,*) '  B:   ',Para_Buck%B
-    write(nio,*) '  C:   ',Para_Buck%C
+    write(nio,*) '  A:   ',BuckPot%A
+    write(nio,*) '  B:   ',BuckPot%B
+    write(nio,*) '  C:   ',BuckPot%C
     write(nio,*)
     write(nio,*) 'end Buckingham current parameters'
 
   END SUBROUTINE Write_BuckPot
 
-  SUBROUTINE get_Q0_Buck(R0,Para_Buck)
+  SUBROUTINE get_Q0_Buck(R0,BuckPot)
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: R0
-    TYPE (Param_Buck),           intent(in)    :: Para_Buck
+    TYPE (BuckPot_t),           intent(in)    :: BuckPot
 
     real (kind=Rkind) :: Rt1,Rt2
     integer           :: i
 
-    Rt1 = TEN/Para_Buck%B
+    Rt1 = TEN/BuckPot%B
     DO i=1,100
-      !Rt2 = (Para_Buck%B*Para_Buck%A/(SIX*Para_Buck%C)*exp(-Para_Buck%B*Rt1))**(-ONE/SEVEN)
-      Rt2 = -ONE/Para_Buck%B* log(SIX*Para_Buck%C/(Para_Buck%B*Para_Buck%A)*Rt1**(-7))
+      !Rt2 = (BuckPot%B*BuckPot%A/(SIX*BuckPot%C)*exp(-BuckPot%B*Rt1))**(-ONE/SEVEN)
+      Rt2 = -ONE/BuckPot%B* log(SIX*BuckPot%C/(BuckPot%B*BuckPot%A)*Rt1**(-7))
       !write(6,*) i,RT2
       IF (abs(Rt1-Rt2) < ONETENTH**10) EXIT
       Rt1 = Rt2
@@ -209,22 +209,22 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnS):         Matrix of dnS with the potential (pot),  the gradient (grad) and the hessian (hess).
-!! @param dnR                TYPE(dnS):         derived type wich contain the value for which the potential is calculated: dnR%d0
-!! @param Para_Buck          TYPE(Param_Buck):    derived type with the Buckingham parameters.
+!! @param PotVal             TYPE (dnS_t):         Matrix of dnS with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param dnR                TYPE (dnS_t):         derived type wich contain the value for which the potential is calculated: dnR%d0
+!! @param BuckPot          TYPE(BuckPot_t):    derived type with the Buckingham parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_BuckPot(Mat_OF_PotDia,dnR,Para_Buck,nderiv)
+  SUBROUTINE Eval_BuckPot(Mat_OF_PotDia,dnR,BuckPot,nderiv)
     USE mod_dnS
 
-    TYPE (Param_Buck), intent(in)     :: Para_Buck
-    TYPE(dnS),       intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),       intent(in)     :: dnR
-    integer,           intent(in)     :: nderiv
+    TYPE (BuckPot_t), intent(in)     :: BuckPot
+    TYPE (dnS_t),     intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),     intent(in)     :: dnR
+    integer,          intent(in)     :: nderiv
 
     !write(out_unitp,*) 'BEGINNING in Eval_BuckPot'
 
-    Mat_OF_PotDia(1,1) = dnBuck(dnR,Para_Buck)
+    Mat_OF_PotDia(1,1) = dnBuck(dnR,BuckPot)
 
     !write(out_unitp,*) 'END in Eval_BuckPot'
     !flush(out_unitp)
@@ -237,25 +237,25 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @return dnBuck            TYPE(dnS):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
-!! @param dnR                TYPE(dnS):           derived type with the value of "r" and,if required, its derivatives.
-!! @param Para_Buck          TYPE(Param_Buck):    derived type with the Buckingham parameters.
-  FUNCTION dnBuck(dnR,Para_Buck)
-    USE mod_dnMatPot
+!! @return dnBuck            TYPE (dnS_t):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
+!! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
+!! @param BuckPot          TYPE(BuckPot_t):    derived type with the Buckingham parameters.
+  FUNCTION dnBuck(dnR,BuckPot)
+    USE mod_dnMat
     USE mod_dnS
 
 
-    TYPE(dnS)                          :: dnBuck
-    TYPE(dnS),          intent(in)     :: dnR
+    TYPE (dnS_t)                          :: dnBuck
+    TYPE (dnS_t),          intent(in)     :: dnR
 
-    TYPE (Param_Buck),    intent(in)     :: Para_Buck
+    TYPE (BuckPot_t),    intent(in)     :: BuckPot
 
 
     !write(out_unitp,*) 'BEGINNING in dnBuck'
     !write(out_unitp,*) 'dnR'
     !CALL write_dnS(dnR)
 
-    dnBuck = Para_Buck%A * exp(-Para_Buck%B*dnR) - Para_Buck%C * dnR**(-6)
+    dnBuck = BuckPot%A * exp(-BuckPot%B*dnR) - BuckPot%C * dnR**(-6)
 
     !write(out_unitp,*) 'Buckingham at',get_d0_FROM_dnS(dnR)
     !CALL Write_dnS(dnBuck)

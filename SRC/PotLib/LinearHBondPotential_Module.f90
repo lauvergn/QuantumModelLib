@@ -40,14 +40,14 @@ MODULE mod_LinearHBondPot
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
-  TYPE Param_LinearHBond
+  TYPE LinearHBondPot_t
      PRIVATE
 
-     TYPE (Param_Morse) :: Morse1
-     TYPE (Param_Morse) :: Morse2
+     TYPE (MorsePot_t) :: Morse1
+     TYPE (MorsePot_t) :: Morse2
      real (kind=Rkind)  :: Eref2  ! energy reference for the second morse (-D*epsi^2)
 
-     TYPE (Param_Buck)  :: Buck
+     TYPE (BuckPot_t)  :: Buck
 
      logical            :: PubliUnit = .FALSE.
 
@@ -55,7 +55,7 @@ MODULE mod_LinearHBondPot
      real (kind=Rkind), PUBLIC  :: muq = 1837.1526464003414_Rkind      ! reduced mass associated to q (H atom)
 
 
-  END TYPE Param_LinearHBond
+  END TYPE LinearHBondPot_t
   PRIVATE Read_LinearHBondPot
 
 CONTAINS
@@ -65,17 +65,17 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_LinearHBond   TYPE(Para_LinearHBond):   derived type in which the parameters are set-up.
+!! @param LinearHBondPot   TYPE(LinearHBondPot):   derived type in which the parameters are set-up.
 !! @param nio                integer (optional):       file unit to read the parameters.
 !! @param read_param         logical (optional):       when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param D,a,req            real (optional):          parameters for the first Morse
 !! @param epsi               real (optional):          scaling parameters for the 2d Morse (using parameters of the first Morse)
 !! @param Abuck,Bbuck,Cbuck  real (optional):          parameters for the Buckingham potential
 !! @param PubliUnit          logical (optional):       when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
-  SUBROUTINE Init_LinearHBondPot(Para_LinearHBond,nio,read_param,PubliUnit, &
+  SUBROUTINE Init_LinearHBondPot(LinearHBondPot,nio,read_param,PubliUnit, &
                                  D,a,req,epsi,Abuck,Bbuck,Cbuck)
 
-    TYPE (Param_LinearHBond),    intent(inout)   :: Para_LinearHBond
+    TYPE (LinearHBondPot_t),    intent(inout)   :: LinearHBondPot
     integer,           optional, intent(in)      :: nio
     logical,           optional, intent(in)      :: read_param
     logical,           optional, intent(in)      :: PubliUnit
@@ -86,7 +86,7 @@ CONTAINS
     real (kind=Rkind) :: D_loc,a_loc,req_loc,Abuck_loc,Bbuck_loc,Cbuck_loc,epsi_loc
 
 
-    IF (present(PubliUnit)) Para_LinearHBond%PubliUnit = PubliUnit
+    IF (present(PubliUnit)) LinearHBondPot%PubliUnit = PubliUnit
 
     read_param_loc = .FALSE.
     IF (present(read_param)) read_param_loc = read_param
@@ -110,7 +110,7 @@ CONTAINS
     Cbuck_loc = 2.31e4_Rkind
 
     IF (read_param_loc) THEN
-      CALL Read_LinearHBondPot(Para_LinearHBond,nio,                    &
+      CALL Read_LinearHBondPot(LinearHBondPot,nio,                    &
                                D_loc,a_loc,req_loc,epsi_loc,            &
                                Abuck_loc,Bbuck_loc,Cbuck_loc)
     ELSE
@@ -125,13 +125,13 @@ CONTAINS
       IF (present(Bbuck))   Bbuck_loc = Bbuck
       IF (present(Cbuck))   Cbuck_loc = Cbuck
 
-      CALL Init_MorsePot(Para_LinearHBond%Morse1,D=D_loc,            a=a_loc,         req=req_loc)
-      CALL Init_MorsePot(Para_LinearHBond%Morse2,D=D_loc*epsi_loc**2,a=a_loc/epsi_loc,req=req_loc)
-      CALL Init_BuckPot(Para_LinearHBond%Buck,A=Abuck_loc,B=Bbuck_loc,C=Cbuck_loc)
-      Para_LinearHBond%Eref2 = -D_loc*epsi_loc**2
+      CALL Init_MorsePot(LinearHBondPot%Morse1,D=D_loc,            a=a_loc,         req=req_loc)
+      CALL Init_MorsePot(LinearHBondPot%Morse2,D=D_loc*epsi_loc**2,a=a_loc/epsi_loc,req=req_loc)
+      CALL Init_BuckPot(LinearHBondPot%Buck,A=Abuck_loc,B=Bbuck_loc,C=Cbuck_loc)
+      LinearHBondPot%Eref2 = -D_loc*epsi_loc**2
     END IF
 
-    IF (Para_LinearHBond%PubliUnit) THEN
+    IF (LinearHBondPot%PubliUnit) THEN
       write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Angs,Angs], Energy: [kcal.mol^-1]'
     ELSE
       write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr], Energy: [Hartree]'
@@ -144,16 +144,16 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_LinearHBond            TYPE(Param_LinearHBond):    derived type in which the parameters are set-up.
+!! @param LinearHBondPot            TYPE(LinearHBondPot_t):    derived type in which the parameters are set-up.
 !! @param nio                         integer:                    file unit to read the parameters.
 !! @param Dsub,asub,reqsub            real (optional):            parameters for the first Morse
 !! @param epsisub                     real (optional):            scaling parameters for the 2d Morse (using parameters of the first Morse)
 !! @param Abucksub,Bbucksub,Cbucksub  real (optional):            parameters for the Buckingham potential
-  SUBROUTINE Read_LinearHBondPot(Para_LinearHBond,nio,                  &
+  SUBROUTINE Read_LinearHBondPot(LinearHBondPot,nio,                  &
                                  Dsub,asub,reqsub,epsisub,              &
                                  Abucksub,Bbucksub,Cbucksub)
 
-    TYPE (Param_LinearHBond), intent(inout) :: Para_LinearHBond
+    TYPE (LinearHBondPot_t), intent(inout) :: LinearHBondPot
     real (kind=Rkind),        intent(inout) :: Dsub,asub,reqsub,epsisub
     real (kind=Rkind),        intent(inout) :: Abucksub,Bbucksub,Cbucksub
     integer,                  intent(in)    :: nio
@@ -190,10 +190,10 @@ CONTAINS
     write(out_unitp,nml=LinearHBond)
 
     ! initalization with the read values
-    CALL Init_MorsePot(Para_LinearHBond%Morse1,D=D,        a=a,     req=req)
-    CALL Init_MorsePot(Para_LinearHBond%Morse2,D=D*epsi**2,a=a/epsi,req=req)
-    Para_LinearHBond%Eref2 = -D*epsi**2
-    CALL Init_BuckPot(Para_LinearHBond%Buck,A=Abuck,B=Bbuck,C=Cbuck)
+    CALL Init_MorsePot(LinearHBondPot%Morse1,D=D,        a=a,     req=req)
+    CALL Init_MorsePot(LinearHBondPot%Morse2,D=D*epsi**2,a=a/epsi,req=req)
+    LinearHBondPot%Eref2 = -D*epsi**2
+    CALL Init_BuckPot(LinearHBondPot%Buck,A=Abuck,B=Bbuck,C=Cbuck)
 
   END SUBROUTINE Read_LinearHBondPot
 !> @brief Subroutine wich prints the LinearHBond potential parameters from Beutier PhD thesis.
@@ -248,22 +248,22 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_LinearHBond   TYPE(Param_LinearHBond):   derived type with the Phenol potential parameters.
+!! @param LinearHBondPot   TYPE(LinearHBondPot_t):   derived type with the Phenol potential parameters.
 !! @param nio                integer:                   file unit to print the parameters.
-  SUBROUTINE Write_LinearHBondPot(Para_LinearHBond,nio)
-    TYPE (Param_LinearHBond), intent(in) :: Para_LinearHBond
+  SUBROUTINE Write_LinearHBondPot(LinearHBondPot,nio)
+    TYPE (LinearHBondPot_t), intent(in) :: LinearHBondPot
     integer, intent(in) :: nio
 
     write(nio,*) 'LinearHBond current parameters:'
     write(nio,*)
-    write(nio,*) 'PubliUnit: ',Para_LinearHBond%PubliUnit
+    write(nio,*) 'PubliUnit: ',LinearHBondPot%PubliUnit
     write(nio,*)
     write(nio,*) '   Morse parameters:   '
-    CALL Write_MorsePot(Para_LinearHBond%Morse1,nio)
-    CALL Write_MorsePot(Para_LinearHBond%Morse2,nio)
+    CALL Write_MorsePot(LinearHBondPot%Morse1,nio)
+    CALL Write_MorsePot(LinearHBondPot%Morse2,nio)
     write(nio,*) '   Buckingham parameters:   '
-    CALL Write_BuckPot(Para_LinearHBond%Buck,nio)
-    write(nio,*) '  Eref2 = ',Para_LinearHBond%Eref2
+    CALL Write_BuckPot(LinearHBondPot%Buck,nio)
+    write(nio,*) '  Eref2 = ',LinearHBondPot%Eref2
 
     write(nio,*) 'END LinearHBond current parameters'
 
@@ -274,22 +274,22 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 25/05/2018
 !!
-!! @param PotVal             TYPE(dnMatPot):          derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):          derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param Q                  real:                    table of two values for which the potential is calculated (R,theta)
-!! @param Para_LinearHBond   TYPE(Param_LinearHBond): derived type with the Morse parameters.
+!! @param LinearHBondPot   TYPE(LinearHBondPot_t): derived type with the Morse parameters.
 !! @param nderiv             integer:                 it enables to specify up to which derivatives the potential is calculated:
 !!                                                    the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-   SUBROUTINE Eval_LinearHBondPot(Mat_OF_PotDia,dnQ,Para_LinearHBond,nderiv)
+   SUBROUTINE Eval_LinearHBondPot(Mat_OF_PotDia,dnQ,LinearHBondPot,nderiv)
     USE mod_dnS
 
-    TYPE (Param_LinearHBond),  intent(in)     :: Para_LinearHBond
-    TYPE(dnS),               intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),               intent(in)     :: dnQ(:) ! QQ and q
-    integer,                   intent(in)     :: nderiv
+    TYPE (LinearHBondPot_t),    intent(in)     :: LinearHBondPot
+    TYPE (dnS_t),               intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),               intent(in)     :: dnQ(:) ! QQ and q
+    integer,                    intent(in)     :: nderiv
 
     !local variable
-    TYPE(dnS)          :: PotVal_m1,PotVal_m2,PotVal_Buck
-    TYPE(dnS)          :: dnQQ,dnsq,dnX,dnY
+    TYPE (dnS_t)          :: PotVal_m1,PotVal_m2,PotVal_Buck
+    TYPE (dnS_t)          :: dnQQ,dnsq,dnX,dnY
     real (kind=Rkind), parameter  :: a0      = 0.52917720835354106_Rkind
     real (kind=Rkind), parameter  :: auTOkcalmol_inv  = 627.51_Rkind
 
@@ -298,7 +298,7 @@ CONTAINS
 
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING Eval_LinearHBondPot'
-      write(out_unitp,*) 'r(:) or QQ,q: ',get_d0_FROM_dnS(dnQ(1)),get_d0_FROM_dnS(dnQ(2))
+      write(out_unitp,*) 'r(:) or QQ,q: ',QML_get_d0_FROM_dnS(dnQ(:))
       write(out_unitp,*) 'nderiv',nderiv
       flush(out_unitp)
     END IF
@@ -311,7 +311,7 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-    IF (.NOT. Para_LinearHBond%PubliUnit) THEN
+    IF (.NOT. LinearHBondPot%PubliUnit) THEN
        dnQQ = a0*dnQ(1) ! to convert the bhor into Angstrom.
        dnsq = a0*dnQ(2) ! to convert the bhor into Angstrom.
 
@@ -342,23 +342,23 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-    PotVal_m1 = dnMorse(dnX,Para_LinearHBond%Morse1)
+    PotVal_m1 = dnMorse(dnX,LinearHBondPot%Morse1)
     IF (debug) THEN
-      write(out_unitp,*) 'PotVal_m1. x:',get_d0_FROM_dnS(dnX)
+      write(out_unitp,*) 'PotVal_m1. x:',QML_get_d0_FROM_dnS(dnX)
       CALL Write_dnS(PotVal_m1)
       flush(out_unitp)
     END IF
 
-    PotVal_m2 = dnMorse(dnY,Para_LinearHBond%Morse2)+Para_LinearHBond%Eref2
+    PotVal_m2 = dnMorse(dnY,LinearHBondPot%Morse2)+LinearHBondPot%Eref2
     IF (debug) THEN
-      write(out_unitp,*) 'PotVal_m2. y:',get_d0_FROM_dnS(dnY)
+      write(out_unitp,*) 'PotVal_m2. y:',QML_get_d0_FROM_dnS(dnY)
       CALL Write_dnS(PotVal_m2)
       flush(out_unitp)
     END IF
 
-    PotVal_Buck = dnBuck(dnQQ,Para_LinearHBond%Buck)
+    PotVal_Buck = dnBuck(dnQQ,LinearHBondPot%Buck)
     IF (debug) THEN
-      write(out_unitp,*) 'PotVal_Buck. QQ:',get_d0_FROM_dnS(dnQQ)
+      write(out_unitp,*) 'PotVal_Buck. QQ:',QML_get_d0_FROM_dnS(dnQQ)
       CALL Write_dnS(PotVal_Buck)
       flush(out_unitp)
     END IF
@@ -371,18 +371,18 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-    IF (.NOT. Para_LinearHBond%PubliUnit) THEN
+    IF (.NOT. LinearHBondPot%PubliUnit) THEN
       Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1)/auTOkcalmol_inv ! to convert the kcal/mol into Hartree
     END IF
 
-    CALL dealloc_dnS(dnX)
-    CALL dealloc_dnS(dnY)
-    CALL dealloc_dnS(dnQQ)
-    CALL dealloc_dnS(dnsq)
+    CALL QML_dealloc_dnS(dnX)
+    CALL QML_dealloc_dnS(dnY)
+    CALL QML_dealloc_dnS(dnQQ)
+    CALL QML_dealloc_dnS(dnsq)
 
-    CALL dealloc_dnS(PotVal_m1)
-    CALL dealloc_dnS(PotVal_m2)
-    CALL dealloc_dnS(PotVal_Buck)
+    CALL QML_dealloc_dnS(PotVal_m1)
+    CALL QML_dealloc_dnS(PotVal_m2)
+    CALL QML_dealloc_dnS(PotVal_Buck)
 
     IF (debug) THEN
       write(out_unitp,*) 'END Eval_LinearHBondPot'

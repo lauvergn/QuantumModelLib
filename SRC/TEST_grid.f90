@@ -26,7 +26,7 @@ PROGRAM TEST_grid
   USE mod_Model
   IMPLICIT NONE
 
-  TYPE (Param_Model)             :: Para_Model
+  TYPE (QModel_t)                :: QModel
   real (kind=Rkind)              :: a
   real (kind=Rkind), allocatable :: Qmin(:),Qmax(:)
   character (len=:), allocatable :: grid_file
@@ -34,24 +34,24 @@ PROGRAM TEST_grid
 
   a=SIX
 
-  CALL Init_Model(Para_Model,pot_name='HenonHeiles',ndim=6)
+  CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=6)
 
-  allocate(Qmin(Para_Model%ndim))
-  allocate(Qmax(Para_Model%ndim))
+  allocate(Qmin(QModel%ndim))
+  allocate(Qmax(QModel%ndim))
 
-  DO i=1,Para_Model%ndim
+  DO i=1,QModel%ndim
     Qmax = ZERO
     Qmax(i) = a
     Qmin = -Qmax
     grid_file = strdup('grid1D_' // int_TO_char(i) )
-    CALL Eval_pot_ON_Grid(Para_Model,Qmin=Qmin,Qmax=Qmax,       &
+    CALL Eval_pot_ON_Grid(QModel,Qmin=Qmin,Qmax=Qmax,       &
                           nb_points=101,nderiv=0,grid_file=grid_file)
   END DO
 
-  IF (Para_Model%ndim == 1) STOP '1D'
+  IF (QModel%ndim == 1) STOP '1D'
 
-  DO i=1,Para_Model%ndim
-  DO j=i+1,Para_Model%ndim
+  DO i=1,QModel%ndim
+  DO j=i+1,QModel%ndim
     Qmax = ZERO
     Qmax(i) = a
     Qmax(j) = a
@@ -60,7 +60,7 @@ PROGRAM TEST_grid
 
     grid_file = strdup('grid2D_' // int_TO_char(i) // '-' // int_TO_char(j))
 
-    CALL Eval_pot_ON_Grid(Para_Model,Qmin=Qmin,Qmax=Qmax,       &
+    CALL Eval_pot_ON_Grid(QModel,Qmin=Qmin,Qmax=Qmax,       &
                           nb_points=101,nderiv=0,grid_file=grid_file)
   END DO
   END DO

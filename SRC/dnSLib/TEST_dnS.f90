@@ -54,8 +54,8 @@ PROGRAM TEST_dnS
   USE mod_dnS
   IMPLICIT NONE
 
-    TYPE (dnS)                       :: dnX,dn2X,dnY,dnZ,Sana,Snum,dnXZ
-    TYPE (dnS), allocatable          :: Vec_dnS(:)
+    TYPE (dnS_t)                       :: dnX,dn2X,dnY,dnZ,Sana,Snum,dnXZ
+    TYPE (dnS_t), allocatable          :: Vec_dnS(:)
 
     real (kind=Rkind)                :: x,y,z,err,maxdiff,maxdnS
     integer                          :: nderiv,nio_test
@@ -80,14 +80,14 @@ PROGRAM TEST_dnS
 
 
     x       = 0.5_Rkind
-    dnX     = init_dnS(x  ,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
-    dn2X    = init_dnS(x+x,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
+    dnX     = QML_init_dnS(x  ,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
+    dn2X    = QML_init_dnS(x+x,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
    write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a)') "TEST with dnX=0.5"
-   CALL Write_dnS(dnX,out_unitp,info='dnX')
-   CALL Write_dnS_FOR_test(dnX,nio_test,info='dnX')
-   CALL Write_dnS(dn2X,out_unitp,info='dn2X')
-   CALL Write_dnS_FOR_test(dn2X,nio_test,info='dn2X')
+   CALL QML_write_dnS(dnX,out_unitp,info='dnX')
+   CALL QML_write_dnS(dnX,nio_test,info='dnX',FOR_test=.TRUE.)
+   CALL QML_write_dnS(dn2X,out_unitp,info='dn2X')
+   CALL QML_write_dnS(dn2X,nio_test,info='dn2X',FOR_test=.TRUE.)
    write(out_unitp,'(a)') "============================================"
 
    write(out_unitp,'(a)') "============================================"
@@ -132,211 +132,211 @@ PROGRAM TEST_dnS
    write(out_unitp,'(a)') "============================================"
 
    Sana = 0.5_Rkind + dnX
-   Snum = get_Num_dnS_FROM_f_x(x,faplusx,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'a+dnX:         (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='0.5 + dnX')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,faplusx,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'a+dnX:         (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='0.5 + dnX',FOR_test=.TRUE.)
 
    Sana = dnX + 0.5_Rkind
-   Snum = get_Num_dnS_FROM_f_x(x,faplusx,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'dnX+a:         (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX + 0.5')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,faplusx,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'dnX+a:         (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX + 0.5',FOR_test=.TRUE.)
 
    Sana = dnX + dnX
-   Snum = get_Num_dnS_FROM_f_x(x,fatimex,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'dnX+dnX=2*dnX: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX + dnX')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,fatimex,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'dnX+dnX=2*dnX: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX + dnX',FOR_test=.TRUE.)
 
    Sana = +(0.5_Rkind - dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,faminusx,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') '+(a-dnX):      (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='+(0.5 - dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,faminusx,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') '+(a-dnX):      (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='+(0.5 - dnX)',FOR_test=.TRUE.)
 
    Sana = -(dnX - 0.5_Rkind)
-   Snum = get_Num_dnS_FROM_f_x(x,faminusx,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') '-(dnX-a):      (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='-(dnX - 0.5)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,faminusx,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') '-(dnX-a):      (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='-(dnX - 0.5)',FOR_test=.TRUE.)
 
    Sana = dnX - dnX
-   write(out_unitp,'(a,l2)') 'dnX-dnX                   ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX - dnX')
+   write(out_unitp,'(a,l2)') 'dnX-dnX                   ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX - dnX',FOR_test=.TRUE.)
 
    Sana = 2._Rkind * dnX
-   Snum = get_Num_dnS_FROM_f_x(x,fatimex,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'a*dnX:         (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='2. * dnX')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,fatimex,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'a*dnX:         (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='2. * dnX',FOR_test=.TRUE.)
 
    Sana =  dnX * 2._Rkind
-   Snum = get_Num_dnS_FROM_f_x(x,fatimex,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'dnX*a:         (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX * 2.')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,fatimex,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'dnX*a:         (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX * 2.',FOR_test=.TRUE.)
 
    Sana =  dnX * dnX - dnX**(2._Rkind)
-   write(out_unitp,'(a,l2)') 'dnX*dnX-dnX**2.           ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX * dnX - dnX**(2.)')
+   write(out_unitp,'(a,l2)') 'dnX*dnX-dnX**2.           ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX * dnX - dnX**(2.)',FOR_test=.TRUE.)
 
    Sana =  dnX / 0.5_Rkind -dnX*2._Rkind
-   write(out_unitp,'(a,l2)') 'dnX/0.5-dnX*2             ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   !CALL Write_dnS(Sana,out_unitp,info='dnX/0.5-dnX*2')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX/0.5 -dnX*2.')
+   write(out_unitp,'(a,l2)') 'dnX/0.5-dnX*2             ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   !CALL QML_write_dnS(Sana,out_unitp,info='dnX/0.5-dnX*2')
+   CALL QML_write_dnS(Sana,nio_test,info='dnX/0.5 -dnX*2.',FOR_test=.TRUE.)
 
    Sana =  0.5_Rkind / dnX - 0.5_Rkind*dnX**(-1)
-   write(out_unitp,'(a,l2)') '0.5/dnX-0.5.dnX*^-1       ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='0.5 / dnX - 0.5*dnX**(-1)')
+   write(out_unitp,'(a,l2)') '0.5/dnX-0.5.dnX*^-1       ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='0.5 / dnX - 0.5*dnX**(-1)',FOR_test=.TRUE.)
 
    Sana =  dnX / dnX - 1._Rkind
-   write(out_unitp,'(a,l2)') 'dnX/dnX-1.                ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX / dnX - 1.')
+   write(out_unitp,'(a,l2)') 'dnX/dnX-1.                ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX / dnX - 1.',FOR_test=.TRUE.)
 
    Sana =  dnX**0.5_Rkind - sqrt(dnX)
-   write(out_unitp,'(a,l2)') 'dnX**0.5-sqrt(dnX)        ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX**0.5-sqrt(dnX)')
+   write(out_unitp,'(a,l2)') 'dnX**0.5-sqrt(dnX)        ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX**0.5-sqrt(dnX)',FOR_test=.TRUE.)
 
    Sana =  dnX**3 - dnX*dnX*dnX
-   write(out_unitp,'(a,l2)') 'dnX**3-dnX*dnX*dnX        ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX**3 - dnX*dnX*dnX')
+   write(out_unitp,'(a,l2)') 'dnX**3-dnX*dnX*dnX        ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX**3 - dnX*dnX*dnX',FOR_test=.TRUE.)
 
    write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a)') "functions: sqrt, exp, log, ... sin, asin, ... acosh ..."
    write(out_unitp,'(a)') "============================================"
 
    Sana = sqrt(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dsqrt,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'sqrt: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on sqrt')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='sqrt(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dsqrt,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'sqrt: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on sqrt')
+   CALL QML_write_dnS(Sana,nio_test,info='sqrt(dnX)',FOR_test=.TRUE.)
 
    Sana = abs(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dabs,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'abs:  (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on abs')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='abs(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dabs,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'abs:  (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on abs')
+   CALL QML_write_dnS(Sana,nio_test,info='abs(dnX)',FOR_test=.TRUE.)
 
    Sana = exp(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dexp,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'exp:  (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on exp')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='exp(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dexp,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'exp:  (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on exp')
+   CALL QML_write_dnS(Sana,nio_test,info='exp(dnX)',FOR_test=.TRUE.)
 
    Sana = log(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dlog,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'log:  (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on log')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='log(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dlog,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'log:  (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on log')
+   CALL QML_write_dnS(Sana,nio_test,info='log(dnX)',FOR_test=.TRUE.)
 
    Sana = log10(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dlog10,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'log10: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on log10')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='log10(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dlog10,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'log10: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on log10')
+   CALL QML_write_dnS(Sana,nio_test,info='log10(dnX)',FOR_test=.TRUE.)
 
    Sana = sin(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dsin,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'sin:  (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on sin')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='sin(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dsin,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'sin:  (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on sin')
+   CALL QML_write_dnS(Sana,nio_test,info='sin(dnX)',FOR_test=.TRUE.)
 
    Sana = asin(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dasin,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'asin: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on asin')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='asin(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dasin,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'asin: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on asin')
+   CALL QML_write_dnS(Sana,nio_test,info='asin(dnX)',FOR_test=.TRUE.)
 
    Sana = cos(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dcos,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'cos:  (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on cos')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='cos(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dcos,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'cos:  (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on cos')
+   CALL QML_write_dnS(Sana,nio_test,info='cos(dnX)',FOR_test=.TRUE.)
 
    Sana = acos(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dacos,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'acos: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on acos')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='acos(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dacos,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'acos: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on acos')
+   CALL QML_write_dnS(Sana,nio_test,info='acos(dnX)',FOR_test=.TRUE.)
 
    Sana = tan(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dtan,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'tan:  (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on tan')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='tan(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dtan,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'tan:  (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on tan')
+   CALL QML_write_dnS(Sana,nio_test,info='tan(dnX)',FOR_test=.TRUE.)
 
    Sana = atan(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,datan,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'atan: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on atan')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='atan(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,datan,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'atan: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on atan')
+   CALL QML_write_dnS(Sana,nio_test,info='atan(dnX)',FOR_test=.TRUE.)
 
    Sana = sinh(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dsinh,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'sinh: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on sinh')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='sinh(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dsinh,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'sinh: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on sinh')
+   CALL QML_write_dnS(Sana,nio_test,info='sinh(dnX)',FOR_test=.TRUE.)
 
    Sana = asinh(dnX)
 #if __INVHYP == 1
-   Snum = get_Num_dnS_FROM_f_x(x,dasinh,nderiv=nderiv)
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dasinh,nderiv=nderiv)
 #else
-   Snum = get_Num_dnS_FROM_f_x(x,asinh_perso,nderiv=nderiv)
+   Snum = QML_get_Num_dnS_FROM_f_x(x,asinh_perso,nderiv=nderiv)
 #endif
-   write(out_unitp,'(a,l2)') 'asinh: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on asinh')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='asinh(dnX)')
+   write(out_unitp,'(a,l2)') 'asinh: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on asinh')
+   CALL QML_write_dnS(Sana,nio_test,info='asinh(dnX)',FOR_test=.TRUE.)
 
    Sana = cosh(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dcosh,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'cosh: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on cosh')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='cosh(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dcosh,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'cosh: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on cosh')
+   CALL QML_write_dnS(Sana,nio_test,info='cosh(dnX)',FOR_test=.TRUE.)
 
-   dnY = init_dnS(FOUR*x  ,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
+   dnY = QML_init_dnS(FOUR*x  ,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
    Sana = acosh(dnY)
 #if __INVHYP == 1
-   Snum = get_Num_dnS_FROM_f_x(FOUR*x,dacosh,nderiv=nderiv)
+   Snum = QML_get_Num_dnS_FROM_f_x(FOUR*x,dacosh,nderiv=nderiv)
 #else
-   Snum = get_Num_dnS_FROM_f_x(FOUR*x,acosh_perso,nderiv=nderiv)
+   Snum = QML_get_Num_dnS_FROM_f_x(FOUR*x,acosh_perso,nderiv=nderiv)
 #endif
-   write(out_unitp,'(a,l2)') 'acosh: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on acosh')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='acosh(dn4X)')
+   write(out_unitp,'(a,l2)') 'acosh: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on acosh')
+   CALL QML_write_dnS(Sana,nio_test,info='acosh(dn4X)',FOR_test=.TRUE.)
 
    Sana = tanh(dnX)
-   Snum = get_Num_dnS_FROM_f_x(x,dtanh,nderiv=nderiv)
-   write(out_unitp,'(a,l2)') 'tanh: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on tanh')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='tanh(dnX)')
+   Snum = QML_get_Num_dnS_FROM_f_x(x,dtanh,nderiv=nderiv)
+   write(out_unitp,'(a,l2)') 'tanh: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on tanh')
+   CALL QML_write_dnS(Sana,nio_test,info='tanh(dnX)',FOR_test=.TRUE.)
 
    Sana = atanh(dnX)
 #if __INVHYP == 1
-   Snum = get_Num_dnS_FROM_f_x(x,datanh,nderiv=nderiv)
+   Snum = QML_get_Num_dnS_FROM_f_x(x,datanh,nderiv=nderiv)
 #else
-   Snum = get_Num_dnS_FROM_f_x(x,atanh_perso,nderiv=nderiv)
+   Snum = QML_get_Num_dnS_FROM_f_x(x,atanh_perso,nderiv=nderiv)
 #endif
-   write(out_unitp,'(a,l2)') 'atanh: (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
-   CALL write_dnS(Sana,info='test on atanh')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='atanh(dnX)')
+   write(out_unitp,'(a,l2)') 'atanh: (Sana-Snum)==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+   CALL QML_write_dnS(Sana,info='test on atanh')
+   CALL QML_write_dnS(Sana,nio_test,info='atanh(dnX)',FOR_test=.TRUE.)
 
    write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a)') "new tests: **, composition"
    write(out_unitp,'(a)') "============================================"
 
    Sana =  dnX**0 - ONE
-   write(out_unitp,'(a,l2)') 'dnX**0-ONE                ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX**0 - ONE')
+   write(out_unitp,'(a,l2)') 'dnX**0-ONE                ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX**0 - ONE',FOR_test=.TRUE.)
 
    Sana =  dnX**1 - dnX
-   write(out_unitp,'(a,l2)') 'dnX**1-dnX                ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX**1 - dnX')
+   write(out_unitp,'(a,l2)') 'dnX**1-dnX                ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX**1 - dnX',FOR_test=.TRUE.)
 
    Sana =  dnX**2 - dnX*dnX
-   write(out_unitp,'(a,l2)') 'dnX**2-dnX*dnX            ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX**2 - dnX*dnX')
+   write(out_unitp,'(a,l2)') 'dnX**2-dnX*dnX            ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX**2 - dnX*dnX',FOR_test=.TRUE.)
 
    Sana =  dnX**3 - dnX*dnX*dnX
-   write(out_unitp,'(a,l2)') 'dnX**3-dnX*dnX*dnX        ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX**3 - dnX*dnX*dnX')
+   write(out_unitp,'(a,l2)') 'dnX**3-dnX*dnX*dnX        ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='dnX**3 - dnX*dnX*dnX',FOR_test=.TRUE.)
 
    Sana =  sqrt(dnX**2) - dnX
-   write(out_unitp,'(a,l2)') 'sqrt(dnX**2) - dnX        ==0?',Check_dnS_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='sqrt(dnX**2) - dnX')
+   write(out_unitp,'(a,l2)') 'sqrt(dnX**2) - dnX        ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+   CALL QML_write_dnS(Sana,nio_test,info='sqrt(dnX**2) - dnX',FOR_test=.TRUE.)
 
    write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a)') "new tests: 3D, nderiv=2"
@@ -345,19 +345,19 @@ PROGRAM TEST_dnS
    x=0.5_Rkind
    z=2.0_Rkind
 
-   dnX     = init_dnS(x  ,ndim=3,nderiv=nderiv,iQ=1) ! to set up the derivatives
-   !CALL Write_dnS(dnX,out_unitp,info='dnX')
-   dnZ     = init_dnS(z  ,ndim=3,nderiv=nderiv,iQ=3) ! to set up the derivatives
-   !CALL Write_dnS(dnZ,out_unitp,info='dnZ')
+   dnX     = QML_init_dnS(x  ,ndim=3,nderiv=nderiv,iQ=1) ! to set up the derivatives
+   !CALL QML_write_dnS(dnX,out_unitp,info='dnX')
+   dnZ     = QML_init_dnS(z  ,ndim=3,nderiv=nderiv,iQ=3) ! to set up the derivatives
+   !CALL QML_write_dnS(dnZ,out_unitp,info='dnZ')
    Sana    = dnX*dnZ ! It is equivalent to 3D function f(x,y,z) = x*z
-   CALL set_dnS(dnXZ,d0=         x*z,                         &
+   CALL QML_set_dnS(dnXZ,d0=     x*z,                         &
                      d1=        [z,   ZERO,x],                &
                      d2=reshape([ZERO,ZERO,ONE,               &
                                  ZERO,ZERO,ZERO,              &
                                  ONE, ZERO,ZERO],shape=[3,3]))
-   write(out_unitp,'(a,l2)') 'dnX*dnZ -dnS_Result       ==0?',Check_dnS_IS_ZERO(Sana-dnXZ,dnSerr_test)
-   !CALL write_dnS(Sana,info='test on dnX*dnZ (3D)')
-   !CALL Write_dnS_FOR_test(Sana,nio_test,info='dnX*dnZ (3D)')
+   write(out_unitp,'(a,l2)') 'dnX*dnZ -dnS_Result       ==0?',QML_Check_dnS_IS_ZERO(Sana-dnXZ,dnSerr_test)
+   !CALL QML_write_dnS(Sana,info='test on dnX*dnZ (3D)')
+   !CALL QML_write_dnS(Sana,nio_test,info='dnX*dnZ (3D)',FOR_test=.TRUE.)
 
    write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a)') "new tests : Vec_OF_dnS(1:3), 2D, nderiv=1"
@@ -365,16 +365,16 @@ PROGRAM TEST_dnS
    nderiv = 2
    x=0.5_Rkind
    y=1.0_Rkind
-   dnX     = init_dnS(x  ,ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
-   dnY     = init_dnS(y  ,ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
+   dnX     = QML_init_dnS(x  ,ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
+   dnY     = QML_init_dnS(y  ,ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
 
    allocate(Vec_dnS(3))
    Vec_dnS(:) = [dnX,dnY,dnX+dnY]
    Sana = dot_product(Vec_dnS,Vec_dnS) ! 2*(dnX**2+dnY**2+dnX*dnY)
-   CALL write_dnS(Sana,info='test on dot_product (2D)')
-   CALL Write_dnS_FOR_test(Sana,nio_test,info='dot_product (2D)')
+   CALL QML_write_dnS(Sana,info='test on dot_product (2D)')
+   CALL QML_write_dnS(Sana,nio_test,info='dot_product (2D)',FOR_test=.TRUE.)
    dnXZ = TWO*(dnX**2+dnY**2+dnX*dnY)
-   write(out_unitp,'(a,l2)') 'dot_product - dnS_Result  ==0?',Check_dnS_IS_ZERO(Sana-dnXZ,dnSerr_test)
+   write(out_unitp,'(a,l2)') 'dot_product - dnS_Result  ==0?',QML_Check_dnS_IS_ZERO(Sana-dnXZ,dnSerr_test)
 
 
    close(unit=nio_test)

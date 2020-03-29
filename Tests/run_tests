@@ -18,7 +18,7 @@ do
       make clean > $here/comp.log 2>&1
     cd  $here
 
-#   ./run_test_QML
+    ./run_test_QML
     ./run_test_dnS
 
 

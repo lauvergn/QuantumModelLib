@@ -41,13 +41,13 @@ MODULE mod_MorsePot
 !! @param a              real: Scaling parameter (in bohr^-1)
 !! @param req            real: Equilibrium distance (in bohr)
 !! @param mu             real: Reduced mass of HF (in au)
-  TYPE Param_Morse ! V(R) = D*(1-exp(-a*(r-Req))**2
+  TYPE MorsePot_t ! V(R) = D*(1-exp(-a*(r-Req))**2
      private
      real (kind=Rkind) :: D   = 0.225_Rkind  !< Dissociation energy for HF (in Hartree)
      real (kind=Rkind) :: a   = 1.1741_Rkind !< Scaling parameter for HF (in bohr^-1)
      real (kind=Rkind) :: req = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
      real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
-  END TYPE Param_Morse
+  END TYPE MorsePot_t
 
   PRIVATE Read_MorsePot
 
@@ -58,14 +58,14 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Morse         TYPE(Param_Morse):   derived type in which the parameters are set-up.
+!! @param MorsePot         TYPE(MorsePot_t):   derived type in which the parameters are set-up.
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param D                  real (optional):    Dissociation energy (in Hartree)
 !! @param a                  real (optional):    Scaling parameter (in bohr^-1)
 !! @param req                real (optional):    Equilibrium distance (in bohr)
-  SUBROUTINE Init_MorsePot(Para_Morse,nio,read_param,D,a,req)
-    TYPE (Param_Morse),          intent(inout)   :: Para_Morse
+  SUBROUTINE Init_MorsePot(MorsePot,nio,read_param,D,a,req)
+    TYPE (MorsePot_t),          intent(inout)   :: MorsePot
     real (kind=Rkind), optional, intent(in)      :: D,a,req
     integer,           optional, intent(in)      :: nio
     logical,           optional, intent(in)      :: read_param
@@ -82,14 +82,14 @@ CONTAINS
        STOP 'ERROR in Init_MorsePot: impossible to read the input file. The file unit (nio) is not present'
     END IF
 
-    Para_Morse = Param_Morse(D=0.225_Rkind,a=1.1741_Rkind,Req=1.7329_Rkind) ! default values (HF)
+    MorsePot = MorsePot_t(D=0.225_Rkind,a=1.1741_Rkind,Req=1.7329_Rkind) ! default values (HF)
 
     IF (read_param_loc) THEN
-      CALL Read_MorsePot(Para_Morse,nio)
+      CALL Read_MorsePot(MorsePot,nio)
     ELSE
-      IF (present(D))   Para_Morse%D = D
-      IF (present(a))   Para_Morse%a = a
-      IF (present(req)) Para_Morse%req = req
+      IF (present(D))   MorsePot%D = D
+      IF (present(a))   MorsePot%a = a
+      IF (present(req)) MorsePot%req = req
     END IF
 
   END SUBROUTINE Init_MorsePot
@@ -100,10 +100,10 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Morse         TYPE(Param_Morse):   derived type in which the parameters are set-up.
+!! @param MorsePot         TYPE(MorsePot_t):   derived type in which the parameters are set-up.
 !! @param nio                integer          :   file unit to read the parameters.
-  SUBROUTINE Read_MorsePot(Para_Morse,nio)
-    TYPE (Param_Morse), intent(inout) :: Para_Morse
+  SUBROUTINE Read_MorsePot(MorsePot,nio)
+    TYPE (MorsePot_t), intent(inout) :: MorsePot
     integer, intent(in) :: nio
 
     real (kind=Rkind) :: D,a,req
@@ -111,9 +111,9 @@ CONTAINS
 
     namelist /Morse/ D,a,req
 
-    D   = Para_Morse%D
-    a   = Para_Morse%a
-    req = Para_Morse%req
+    D   = MorsePot%D
+    a   = MorsePot%a
+    req = MorsePot%req
 
     read(nio,nml=Morse,IOSTAT=err_read)
     IF (err_read < 0) THEN
@@ -132,7 +132,7 @@ CONTAINS
     END IF
     !write(out_unitp,nml=Morse)
 
-    Para_Morse = Param_Morse(D,a,req)
+    MorsePot = MorsePot_t(D,a,req)
 
   END SUBROUTINE Read_MorsePot
 !> @brief Subroutine wich prints the Morse parameters.
@@ -166,30 +166,30 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Para_Morse         TYPE(Param_Morse):   derived type with the Morse parameters.
+!! @param MorsePot         TYPE(MorsePot_t):   derived type with the Morse parameters.
 !! @param nio                integer          :   file unit to print the parameters.
-  SUBROUTINE Write_MorsePot(Para_Morse,nio)
-    TYPE (Param_Morse), intent(in) :: Para_Morse
+  SUBROUTINE Write_MorsePot(MorsePot,nio)
+    TYPE (MorsePot_t), intent(in) :: MorsePot
     integer, intent(in) :: nio
 
     write(nio,*) 'Morse current parameters:'
     write(nio,*)
     write(nio,*) '    V(R) = D.( 1 - exp(-a.(r-req)) )^2'
-    write(nio,*) '  D:   ',Para_Morse%D
-    write(nio,*) '  a:   ',Para_Morse%a
-    write(nio,*) '  req: ',Para_Morse%req
+    write(nio,*) '  D:   ',MorsePot%D
+    write(nio,*) '  a:   ',MorsePot%a
+    write(nio,*) '  req: ',MorsePot%req
     write(nio,*)
     write(nio,*) 'end Morse current parameters'
 
   END SUBROUTINE Write_MorsePot
 
-  SUBROUTINE get_Q0_Morse(R0,Para_Morse)
+  SUBROUTINE get_Q0_Morse(R0,MorsePot)
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: R0
-    TYPE (Param_Morse),          intent(in)    :: Para_Morse
+    TYPE (MorsePot_t),          intent(in)    :: MorsePot
 
-    R0 = Para_Morse%req
+    R0 = MorsePot%req
 
   END SUBROUTINE get_Q0_Morse
 
@@ -198,24 +198,24 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param Para_Morse         TYPE(Param_Morse):   derived type with the Morse parameters.
+!! @param MorsePot         TYPE(MorsePot_t):   derived type with the Morse parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_MorsePot(Mat_OF_PotDia,dnR,Para_Morse,nderiv)
+  SUBROUTINE Eval_MorsePot(Mat_OF_PotDia,dnR,MorsePot,nderiv)
     USE mod_dnS
 
-    TYPE (Param_Morse), intent(in)     :: Para_Morse
-    TYPE(dnS),        intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),        intent(in)     :: dnR
+    TYPE (MorsePot_t), intent(in)     :: MorsePot
+    TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),        intent(in)     :: dnR
     integer,            intent(in)     :: nderiv
 
 
     !write(out_unitp,*) 'BEGINNING in Eval_MorsePot'
     !flush(out_unitp)
 
-    Mat_OF_PotDia(1,1) = dnMorse(dnR,Para_Morse)
+    Mat_OF_PotDia(1,1) = dnMorse(dnR,MorsePot)
 
     !write(out_unitp,*) 'END in Eval_MorsePot'
     !flush(out_unitp)
@@ -227,32 +227,32 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @return dnMorse           TYPE(dnS):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
-!! @param dnR                TYPE(dnS):           derived type with the value of "r" and,if required, its derivatives.
-!! @param Para_Morse         TYPE(Param_Morse):   derived type with the Morse parameters.
-  FUNCTION dnMorse(dnR,Para_Morse)
-    USE mod_dnMatPot
+!! @return dnMorse           TYPE (dnS_t):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
+!! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
+!! @param MorsePot         TYPE(MorsePot_t):   derived type with the Morse parameters.
+  FUNCTION dnMorse(dnR,MorsePot)
+    USE mod_dnMat
     USE mod_dnS
 
-    TYPE(dnS)                          :: dnMorse
-    TYPE(dnS),          intent(in)     :: dnR
+    TYPE (dnS_t)                          :: dnMorse
+    TYPE (dnS_t),          intent(in)     :: dnR
 
-    TYPE (Param_Morse), intent(in)    :: Para_Morse
+    TYPE (MorsePot_t), intent(in)    :: MorsePot
 
     !local variable
-    TYPE(dnS)     :: dnbeta
+    TYPE (dnS_t)     :: dnbeta
 
     !write(out_unitp,*) 'BEGINNING in dnMorse'
     !write(out_unitp,*) 'dnR'
     !CALL write_dnS(dnR)
 
-    dnbeta  = exp(-Para_Morse%a*(dnR-Para_Morse%req))
+    dnbeta  = exp(-MorsePot%a*(dnR-MorsePot%req))
     !write(out_unitp,*) 'dnbeta'
     !CALL write_dnS(dnbeta)
 
-    dnMorse = Para_Morse%D * (ONE-dnbeta)**2
+    dnMorse = MorsePot%D * (ONE-dnbeta)**2
 
-     CALL dealloc_dnS(dnbeta)
+     CALL QML_dealloc_dnS(dnbeta)
 
     !write(out_unitp,*) 'Morse at',get_d0_FROM_dnS(dnR)
     !CALL Write_dnS(dnMorse)

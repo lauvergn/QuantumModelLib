@@ -33,12 +33,12 @@
 !! @li d^2M(:,:)/dQ_idQ_j     => M%d2(:,:,i,j)
 !!
 !! with M defined as:
-!!  TYPE(dnMatPot) :: M
+!!  TYPE (dnMat_t) :: M
 !!
 !!
 !! Some standard fortran operators (= + - * **) are overloaded (!!! not /):
 !!
-!! For instance the sum (+) of two dnMatPot variables, M1 and M2 correspond to:
+!! For instance the sum (+) of two dnMat variables, M1 and M2 correspond to:
 !! @li (M1+M2)                 => M1%d0    + M2%d0
 !! @li d(M1+M2)/dQ_i           => M1%d1(:,:,i) + M2%d1(:,:,i)
 !! @li ....
@@ -47,63 +47,66 @@
 !! @author David Lauvergnat
 !! @date 09/08/2017
 !!
-MODULE mod_dnMatPot
+MODULE mod_dnMat
   USE mod_NumParameters
   IMPLICIT NONE
 
-  TYPE dnMatPot
+  TYPE dnMat_t
      integer                    :: nderiv = -1
 
      real (kind=Rkind), allocatable :: d0(:,:)
      real (kind=Rkind), allocatable :: d1(:,:,:)
      real (kind=Rkind), allocatable :: d2(:,:,:,:)
 
-  END TYPE dnMatPot
+  CONTAINS
+    PROCEDURE, PRIVATE :: QML_sub_dnMat2_TO_dnMat1
+    PROCEDURE, PRIVATE :: QML_set_dnMat_TO_R
+    PROCEDURE, PRIVATE :: QML_set_dnMat_FROM_MatOFdnS
+    GENERIC,   PUBLIC  :: assignment(=) => QML_sub_dnMat2_TO_dnMat1,    &
+                          QML_set_dnMat_TO_R,QML_set_dnMat_FROM_MatOFdnS
+  END TYPE dnMat_t
 
-
-  INTERFACE assignment (=)
-     MODULE PROCEDURE sub_dnMatPot2_TO_dnMatPot1,set_dnMatPot_TO_R,set_dnMatPot_FROM_MatOFdnS
-  END INTERFACE
+  PRIVATE :: QML_sub_dnMat2_TO_dnMat1,QML_set_dnMat_TO_R,QML_set_dnMat_FROM_MatOFdnS
 
    INTERFACE operator (*)
-      MODULE PROCEDURE sub_dnMatPot_TIME_R,sub_R_TIME_dnMatPot
+      MODULE PROCEDURE QML_sub_dnMat_TIME_R,QML_sub_R_TIME_dnMat
    END INTERFACE
 
    INTERFACE operator (**)
-      MODULE PROCEDURE sub_dnMatPot_EXP_R
+      MODULE PROCEDURE QML_sub_dnMat_EXP_R
    END INTERFACE
 
    INTERFACE operator (+)
-      MODULE PROCEDURE dnMatPot2_PLUS_dnMatPot1,sub_dnMatPot_PLUS_R,sub_R_PLUS_dnMatPot
+      MODULE PROCEDURE QML_dnMat2_PLUS_dnMat1,QML_sub_dnMat_PLUS_R,QML_sub_R_PLUS_dnMat
    END INTERFACE
 
    INTERFACE operator (-)
-      MODULE PROCEDURE dnMatPot2_MINUS_dnMatPot1,sub_dnMatPot_MINUS_R,sub_R_MINUS_dnMatPot
+      MODULE PROCEDURE QML_dnMat2_MINUS_dnMat1,QML_sub_dnMat_MINUS_R,QML_sub_R_MINUS_dnMat
    END INTERFACE
 
 CONTAINS
-!> @brief Public subroutine which allocates a derived type dnMatPot.
+!> @brief Public subroutine which allocates a derived type dnMat.
 !!
 !> @author David Lauvergnat
 !! @date 21/06/2018
 !!
-!! @param Mat                TYPE(dnMatPot):        derived type which deals with the derivatives of a matrix (as function of coordinates).
+!! @param Mat                TYPE (dnMat_t):        derived type which deals with the derivatives of a matrix (as function of coordinates).
 !! @param nsurf              integer (optional):    number of electronic surfaces.
 !! @param ndim               integer (optional):    number of coordinates (for the derivatives).
 !! @param nderiv             integer (optional):    it enables to chose the derivative order (from 0 to 2).
-!! @param err_dnMatPot       integer (optional):    to handle the errors errors (0: no error).
+!! @param err_dnMat          integer (optional):    to handle the errors errors (0: no error).
 !! @param name_var           character (optional):  Name of the variable from the calling subroutine (debuging purpose).
 !! @param name_sub           character (optional):  Name of the calling subroutine (debuging purpose).
-  SUBROUTINE alloc_dnMatPot(Mat,nsurf,ndim,nderiv,name_var,name_sub,err_dnMatPot)
+  SUBROUTINE QML_alloc_dnMat(Mat,nsurf,ndim,nderiv,name_var,name_sub,err_dnMat)
   IMPLICIT NONE
 
-    TYPE(dnMatPot), intent(inout)  :: Mat   !< derived type, which contains, matrix potential, its derivatives
+    TYPE (dnMat_t), intent(inout)  :: Mat   !< derived type, which contains, matrix potential, its derivatives
     integer, intent(in), optional  :: nsurf !< number of electronic surfaces
     integer, intent(in), optional  :: ndim  !< number of coordinates (for the derivatives)
     integer, intent(in), optional  :: nderiv  !< order of the derivatives [0,1,2]
     character (len=*), intent(in), optional  :: name_var,name_sub
 
-    integer, intent(out), optional :: err_dnMatPot  !< to handle the errors
+    integer, intent(out), optional :: err_dnMat  !< to handle the errors
 
     ! local variables
     integer :: nsurf_loc,ndim_loc,err_dnMat_loc,nderiv_loc
@@ -112,17 +115,17 @@ CONTAINS
 
     err_dnMat_loc = 0 ! no error
 
-    CALL dealloc_dnMatPot(Mat,err_dnMat_loc)
+    CALL QML_dealloc_dnMat(Mat,err_dnMat_loc)
     IF (err_dnMat_loc /= 0) THEN
-      write(out_unitp,*) ' ERROR in alloc_dnMatPot'
-      write(out_unitp,*) ' Problem in dealloc_dnMatPot CALL in alloc_dnMatPot'
+      write(out_unitp,*) ' ERROR in QML_alloc_dnMat'
+      write(out_unitp,*) ' Problem in QML_dealloc_dnMat CALL in QML_alloc_dnMat'
       IF (present(name_var)) write(out_unitp,*) '  for the variable: ',name_var
       IF (present(name_sub)) write(out_unitp,*) '  call from the subroutine: ',name_sub
-      IF (present(err_dnMatPot)) THEN
-        err_dnMatPot = err_dnMat_loc
+      IF (present(err_dnMat)) THEN
+        err_dnMat = err_dnMat_loc
         RETURN
       ELSE
-        STOP 'Problem in dealloc_dnMatPot CALL in alloc_dnMatPot'
+        STOP 'Problem in QML_dealloc_dnMat CALL in QML_alloc_dnMat'
       END IF
     END IF
 
@@ -149,37 +152,37 @@ CONTAINS
     END IF
     Mat%nderiv = nderiv_loc
 
-    !write(out_unitp,*) 'Mat%nderiv in alloc_dnMatPot',Mat%nderiv
+    !write(out_unitp,*) 'Mat%nderiv in alloc_dnMat',Mat%nderiv
 
     allocate(Mat%d0(nsurf_loc,nsurf_loc),stat=err_dnMat_loc)
     IF (err_dnMat_loc /= 0 .OR. nsurf_loc < 1) THEN
-      write(out_unitp,*) ' ERROR in alloc_dnMatPot'
+      write(out_unitp,*) ' ERROR in QML_alloc_dnMat'
       write(out_unitp,*) '  Problem with allocate of Mat%d0'
       write(out_unitp,*) '  nsurf > 0?',nsurf_loc
       IF (present(name_var)) write(out_unitp,*) '  for the variable: ',name_var
       IF (present(name_sub)) write(out_unitp,*) '  call from the subroutine: ',name_sub
-      IF (present(err_dnMatPot)) THEN
-        err_dnMatPot = err_dnMat_loc
+      IF (present(err_dnMat)) THEN
+        err_dnMat = err_dnMat_loc
         RETURN
       ELSE
-        STOP 'Problem with allocate in alloc_dnMatPot'
+        STOP 'Problem with allocate in QML_alloc_dnMat'
       END IF
     END IF
 
     IF (nderiv_loc >= 1) THEN
       allocate(Mat%d1(nsurf_loc,nsurf_loc,ndim_loc),stat=err_dnMat_loc)
       IF (err_dnMat_loc /= 0 .OR. nsurf_loc < 1 .OR. ndim_loc < 1) THEN
-        write(out_unitp,*) ' ERROR in alloc_dnMatPot'
+        write(out_unitp,*) ' ERROR in QML_alloc_dnMat'
         write(out_unitp,*) '  Problem with allocate of Mat%d1'
         write(out_unitp,*) '  nsurf > 0?',nsurf_loc
         write(out_unitp,*) '  ndim > 0?',ndim_loc
         IF (present(name_var)) write(out_unitp,*) '  for the variable: ',name_var
         IF (present(name_sub)) write(out_unitp,*) '  call from the subroutine: ',name_sub
-        IF (present(err_dnMatPot)) THEN
-          err_dnMatPot = err_dnMat_loc
+        IF (present(err_dnMat)) THEN
+          err_dnMat = err_dnMat_loc
           RETURN
         ELSE
-          STOP 'Problem with allocate in alloc_dnMatPot'
+          STOP 'Problem with allocate in QML_alloc_dnMat'
         END IF
       END IF
     END IF
@@ -187,51 +190,51 @@ CONTAINS
     IF (nderiv_loc >= 2) THEN
       allocate(Mat%d2(nsurf_loc,nsurf_loc,ndim_loc,ndim_loc),stat=err_dnMat_loc)
       IF (err_dnMat_loc /= 0 .OR. nsurf_loc < 1 .OR. ndim_loc < 1) THEN
-        write(out_unitp,*) ' ERROR in alloc_dnMatPot'
+        write(out_unitp,*) ' ERROR in QML_alloc_dnMat'
         write(out_unitp,*) '  Problem with allocate of Mat%d2'
         write(out_unitp,*) '  nsurf > 0',nsurf_loc
         write(out_unitp,*) '  ndim > 0',ndim_loc
         IF (present(name_var)) write(out_unitp,*) '  for the variable: ',name_var
         IF (present(name_sub)) write(out_unitp,*) '  call from the subroutine: ',name_sub
-        IF (present(err_dnMatPot)) THEN
-          err_dnMatPot = err_dnMat_loc
+        IF (present(err_dnMat)) THEN
+          err_dnMat = err_dnMat_loc
           RETURN
         ELSE
-          STOP 'Problem with allocate in alloc_dnMatPot'
+          STOP 'Problem with allocate in QML_alloc_dnMat'
         END IF
       END IF
     END IF
 
-  END SUBROUTINE alloc_dnMatPot
-!> @brief Public subroutine which deallocates a derived type dnMatPot.
+  END SUBROUTINE QML_alloc_dnMat
+!> @brief Public subroutine which deallocates a derived type dnMat.
 !!
 !> @author David Lauvergnat
 !! @date 21/06/2018
 !!
-!! @param Mat                TYPE(dnMatPot):        derived type which deals with the derivatives of a matrix (as function of coordinates).
-!! @param err_dnMatPot       integer (optional):    to handle the errors errors (0: no error).
-  SUBROUTINE dealloc_dnMatPot(Mat,err_dnMatPot)
+!! @param Mat                TYPE (dnMat_t):        derived type which deals with the derivatives of a matrix (as function of coordinates).
+!! @param err_dnMat       integer (optional):    to handle the errors errors (0: no error).
+  SUBROUTINE QML_dealloc_dnMat(Mat,err_dnMat)
   IMPLICIT NONE
 
-    TYPE(dnMatPot), intent(inout)     :: Mat !< derived type, which contains, matrix potential, its derivatives
-    integer, intent(out), optional :: err_dnMatPot  !< to handle the errors
+    TYPE (dnMat_t), intent(inout)     :: Mat !< derived type, which contains, matrix potential, its derivatives
+    integer, intent(out), optional :: err_dnMat  !< to handle the errors
 
     ! local variables
     integer :: err_dnMat_loc
 
     err_dnMat_loc = 0
-    IF (present(err_dnMatPot)) err_dnMatPot = 0
+    IF (present(err_dnMat)) err_dnMat = 0
 
     IF (allocated(Mat%d0)) THEN
       deallocate(Mat%d0,stat=err_dnMat_loc)
       IF (err_dnMat_loc /= 0) THEN
-        write(out_unitp,*) ' ERROR in dealloc_dnMatPot'
+        write(out_unitp,*) ' ERROR in dealloc_dnMat'
         write(out_unitp,*) '  Problem with deallocate of Mat%d0'
-        IF (present(err_dnMatPot)) THEN
-          err_dnMatPot = err_dnMat_loc
+        IF (present(err_dnMat)) THEN
+          err_dnMat = err_dnMat_loc
           RETURN
         ELSE
-          STOP 'Problem with deallocate in dealloc_dnMatPot'
+          STOP 'Problem with deallocate in dealloc_dnMat'
         END IF
       END IF
     END IF
@@ -239,13 +242,13 @@ CONTAINS
     IF (allocated(Mat%d1)) THEN
       deallocate(Mat%d1,stat=err_dnMat_loc)
       IF (err_dnMat_loc /= 0) THEN
-        write(out_unitp,*) ' ERROR in dealloc_dnMatPot'
+        write(out_unitp,*) ' ERROR in dealloc_dnMat'
         write(out_unitp,*) '  Problem with deallocate of Mat%d1'
-        IF (present(err_dnMatPot)) THEN
-          err_dnMatPot = err_dnMat_loc
+        IF (present(err_dnMat)) THEN
+          err_dnMat = err_dnMat_loc
           RETURN
         ELSE
-          STOP 'Problem with deallocate in dealloc_dnMatPot'
+          STOP 'Problem with deallocate in dealloc_dnMat'
         END IF
       END IF
     END IF
@@ -253,37 +256,37 @@ CONTAINS
     IF (allocated(Mat%d2)) THEN
       deallocate(Mat%d2,stat=err_dnMat_loc)
       IF (err_dnMat_loc /= 0) THEN
-        write(out_unitp,*) ' ERROR in dealloc_dnMatPot'
+        write(out_unitp,*) ' ERROR in dealloc_dnMat'
         write(out_unitp,*) '  Problem with deallocate of Mat%d2'
-        IF (present(err_dnMatPot)) THEN
-          err_dnMatPot = err_dnMat_loc
+        IF (present(err_dnMat)) THEN
+          err_dnMat = err_dnMat_loc
           RETURN
         ELSE
-          STOP 'Problem with deallocate in dealloc_dnMatPot'
+          STOP 'Problem with deallocate in dealloc_dnMat'
         END IF
       END IF
     END IF
     Mat%nderiv = -1
 
-  END SUBROUTINE dealloc_dnMatPot
-!> @brief Public subroutine which copies two "dnMatPot" derived types.
+  END SUBROUTINE QML_dealloc_dnMat
+!> @brief Public subroutine which copies two "dnMat" derived types.
 !!
 !> @author David Lauvergnat
 !! @date 21/06/2018
 !!
-!! @param dnMat1                TYPE(dnMatPot):     derived type which deals with the derivatives of a matrix (as function of coordinates).
-!! @param dnMat2                TYPE(dnMatPot):     derived type which deals with the derivatives of a matrix (as function of coordinates).
-  SUBROUTINE sub_dnMatPot2_TO_dnMatPot1(dnMat1,dnMat2)
-    TYPE (dnMatPot), intent(inout) :: dnMat1
-    TYPE (dnMatPot), intent(in)    :: dnMat2
+!! @param dnMat1                TYPE (dnMat_t):     derived type which deals with the derivatives of a matrix (as function of coordinates).
+!! @param dnMat2                TYPE (dnMat_t):     derived type which deals with the derivatives of a matrix (as function of coordinates).
+  SUBROUTINE QML_sub_dnMat2_TO_dnMat1(dnMat1,dnMat2)
+    CLASS (dnMat_t), intent(inout) :: dnMat1
+    CLASS (dnMat_t), intent(in)    :: dnMat2
 
     integer :: nderiv_loc,nsurf_loc,ndim_loc
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='sub_dnMatPot2_TO_dnMatPot1'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_dnMat2_TO_dnMat1'
 
-    nderiv_loc = get_nderiv_FROM_dnMatPot(dnMat2)
-    nsurf_loc  = get_nsurf_FROM_dnMatPot(dnMat2)
-    ndim_loc   = get_ndim_FROM_dnMatPot(dnMat2)
+    nderiv_loc = QML_get_nderiv_FROM_dnMat(dnMat2)
+    nsurf_loc  = QML_get_nsurf_FROM_dnMat(dnMat2)
+    ndim_loc   = QML_get_ndim_FROM_dnMat(dnMat2)
 
     !write(out_unitp,*) 'in ',name_sub,' ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
 
@@ -291,7 +294,7 @@ CONTAINS
     IF (nderiv_loc < 0 .OR. nsurf_loc < 1 .OR. (nderiv_loc > 0  .AND. ndim_loc < 1)) RETURN
 
 
-    CALL alloc_dnMatPot(dnMat1,nsurf_loc,ndim_loc,nderiv_loc,name_var='dnMat1',name_sub=name_sub)
+    CALL QML_alloc_dnMat(dnMat1,nsurf_loc,ndim_loc,nderiv_loc,name_var='dnMat1',name_sub=name_sub)
 
 
     IF (nderiv_loc == 0) THEN
@@ -309,36 +312,36 @@ CONTAINS
       write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
-  END SUBROUTINE sub_dnMatPot2_TO_dnMatPot1
-!> @brief Public subroutine which copies a dnS derived type to one element of dnMatPot derived type.
+  END SUBROUTINE QML_sub_dnMat2_TO_dnMat1
+!> @brief Public subroutine which copies a dnS derived type to one element of dnMat derived type.
 !!
 !> @author David Lauvergnat
 !! @date 25/06/2018
 !!
-!! @param Mat                   TYPE(dnMatPot):    derived type which deals with the derivatives of a matrix.
+!! @param Mat                   TYPE (dnMat_t):    derived type which deals with the derivatives of a matrix.
 !! @param S                     TYPE(dnS):       derived type which deals with the derivatives of a scalar.
 !! @param i,j                   integer (optional) indices of the matrix element. If not present i=j=1
-  SUBROUTINE sub_dnS_TO_dnMatPot(S,Mat,i,j)
+  SUBROUTINE QML_sub_dnS_TO_dnMat(S,Mat,i,j)
     USE mod_dnS
-    TYPE (dnMatPot),    intent(inout) :: Mat
-    TYPE (dnS),       intent(in)    :: S
+    TYPE (dnMat_t),    intent(inout) :: Mat
+    TYPE (dnS_t),       intent(in)    :: S
     integer, optional,  intent(in)    :: i,j
 
     integer :: nderiv_dnMat,nsurf_dnMat,ndim_dnMat,nderiv_dnS,ndim_dnS
     integer :: i_loc,j_loc
 
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='sub_dnS_TO_dnMatPot'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_dnS_TO_dnMat'
 
 
-    nderiv_dnS = get_nderiv_FROM_dnS(S)
-    ndim_dnS   = get_ndim_FROM_dnS(S)
+    nderiv_dnS = QML_get_nderiv_FROM_dnS(S)
+    ndim_dnS   = QML_get_ndim_FROM_dnS(S)
 
-    nderiv_dnMat = get_nderiv_FROM_dnMatPot(Mat)
-    nsurf_dnMat  = get_nsurf_FROM_dnMatPot(Mat)
-    ndim_dnMat   = get_ndim_FROM_dnMatPot(Mat)
+    nderiv_dnMat = QML_get_nderiv_FROM_dnMat(Mat)
+    nsurf_dnMat  = QML_get_nsurf_FROM_dnMat(Mat)
+    ndim_dnMat   = QML_get_ndim_FROM_dnMat(Mat)
 
-    IF ( Check_NotAlloc_dnMatPot(Mat,nderiv_dnS) .OR.                   &
+    IF ( QML_check_notalloc_dnmat(Mat,nderiv_dnS) .OR.                  &
          nderiv_dnS /= nderiv_dnMat  .OR.  ndim_dnS /= ndim_dnMat .OR.  &
          nsurf_dnMat < 1 ) THEN
       write(out_unitp,*) ' ERROR in ',name_sub
@@ -370,37 +373,37 @@ CONTAINS
 
 
     ! Potential
-    Mat%d0(i_loc,j_loc) = get_d0_FROM_dnS(S)
+    Mat%d0(i_loc,j_loc) = QML_get_d0_FROM_dnS(S)
 
     ! gradient
     IF (nderiv_dnS >= 1) THEN
-      CALL sub_get_d1_FROM_dnS(Mat%d1(i_loc,j_loc,:),S)
+      CALL QML_sub_get_dn_FROM_dnS(S,d1=Mat%d1(i_loc,j_loc,:))
     END IF
 
     ! Hessian
     IF (nderiv_dnS >= 2) then
-      CALL sub_get_d2_FROM_dnS(Mat%d2(i_loc,j_loc,:,:),S)
+      CALL QML_sub_get_dn_FROM_dnS(S,d2=Mat%d2(i_loc,j_loc,:,:))
     END IF
 
 
-  END SUBROUTINE sub_dnS_TO_dnMatPot
-!> @brief Public subroutine which copies a dnS derived type to one element of dnMatPot derived type.
+  END SUBROUTINE QML_sub_dnS_TO_dnMat
+!> @brief Public subroutine which copies a dnS derived type to one element of dnMat derived type.
 !!
 !> @author David Lauvergnat
 !! @date 30/07/2019
 !!
-!! @param Mat                   TYPE(dnMatPot):    derived type which deals with the derivatives of a matrix.
+!! @param Mat                   TYPE (dnMat_t):    derived type which deals with the derivatives of a matrix.
 !! @param MatOFS                TYPE(dnS):       matrix of derived type which deals with the derivatives of a scalar.
-  SUBROUTINE set_dnMatPot_FROM_MatOFdnS(Mat,MatOFS)
+  SUBROUTINE QML_set_dnMat_FROM_MatOFdnS(Mat,MatOFS)
     USE mod_dnS
-    TYPE (dnMatPot),    intent(inout) :: Mat
-    TYPE (dnS),       intent(in)    :: MatOFS(:,:)
+    CLASS (dnMat_t),   intent(inout) :: Mat
+    TYPE (dnS_t),      intent(in)    :: MatOFS(:,:)
 
     integer :: nderiv_dnMat,nsurf_dnMat,ndim_dnMat,nderiv_dnS,ndim_dnS
     integer :: i,j
 
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='set_dnMatPot_FROM_MatOFdnS'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_set_dnMat_FROM_MatOFdnS'
 
     IF (lbound(Mat%d0,dim=1) /= lbound(MatOFS,dim=1) .OR. ubound(Mat%d0,dim=1) /= ubound(MatOFS,dim=1) .OR. &
         lbound(Mat%d0,dim=2) /= lbound(MatOFS,dim=2) .OR. ubound(Mat%d0,dim=2) /= ubound(MatOFS,dim=2) ) THEN
@@ -412,47 +415,47 @@ CONTAINS
 
     DO i=lbound(MatOFS,dim=2),ubound(MatOFS,dim=2)
     DO j=lbound(MatOFS,dim=1),ubound(MatOFS,dim=1)
-      CALL sub_dnS_TO_dnMatPot(MatOFS(i,j),Mat,i,j)
+      CALL QML_sub_dnS_TO_dnMat(MatOFS(i,j),Mat,i,j)
     END DO
     END DO
 
-  END SUBROUTINE set_dnMatPot_FROM_MatOFdnS
-!> @brief Public function which calculate set dnMatPot to zero (and derivatives).
+  END SUBROUTINE QML_set_dnMat_FROM_MatOFdnS
+!> @brief Public function which calculate set dnMat to zero (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Mat                   TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
-!! @param set_dnMatPot_TO_zero  TYPE(dnMatPot) (result):  dnMatPot derived type
-  SUBROUTINE set_dnMatPot_TO_zero(dnMat)
-    TYPE (dnMatPot), intent(inout) :: dnMat
+!! @param Mat                   TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
+!! @param set_dnMat_TO_zero  TYPE (dnMat_t) (result):  dnMat derived type
+  SUBROUTINE QML_set_dnMat_TO_zero(dnMat)
+    TYPE (dnMat_t), intent(inout) :: dnMat
 
     integer :: nderiv_loc,nsurf_loc,ndim_loc
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='set_dnMatPot_TO_zero'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_set_dnMat_TO_zero'
 
 
-    CALL set_dnMatPot_TO_R(dnMat,ZERO)
+    CALL QML_set_dnMat_TO_R(dnMat,ZERO)
 
-  END SUBROUTINE set_dnMatPot_TO_zero
-!> @brief Public function which calculate set dnMatPot to R (and derivatives).
+  END SUBROUTINE QML_set_dnMat_TO_zero
+!> @brief Public function which calculate set dnMat to R (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param Mat                TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
 !! @param R                  real:                     some real number
-!! @param set_dnMatPot_TO_R  TYPE(dnMatPot) (result):  dnMatPot derived type
-  SUBROUTINE set_dnMatPot_TO_R(dnMat,R)
+!! @param set_dnMat_TO_R  TYPE (dnMat_t) (result):  dnMat derived type
+  SUBROUTINE QML_set_dnMat_TO_R(dnMat,R)
 
-    TYPE (dnMatPot), intent(inout) :: dnMat
+    CLASS (dnMat_t), intent(inout) :: dnMat
     real (kind=Rkind), intent(in)  :: R
 
     integer :: nderiv_loc,nsurf_loc,ndim_loc
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='set_dnMatPot_TO_R'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_set_dnMat_TO_R'
 
-    nderiv_loc = get_nderiv_FROM_dnMatPot(dnMat)
+    nderiv_loc = QML_get_nderiv_FROM_dnMat(dnMat)
 
     !write(out_unitp,*) 'nderiv',nderiv_loc
 
@@ -472,47 +475,48 @@ CONTAINS
       write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
-  END SUBROUTINE set_dnMatPot_TO_R
-!> @brief Public function which calculate dnMatPot*R (and derivatives).
+  END SUBROUTINE QML_set_dnMat_TO_R
+!> @brief Public function which calculate dnMat*R (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param Mat                TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
 !! @param R                  real:                     some real number
-!! @param sub_dnMatPot_TIME_R TYPE(dnMatPot) (result):  dnMatPot derived type
-  FUNCTION sub_dnMatPot_TIME_R(dnMat,R)
+!! @param sub_dnMat_TIME_R TYPE (dnMat_t) (result):  dnMat derived type
+  FUNCTION QML_sub_dnMat_TIME_R(dnMat,R) RESULT (sub_dnMat_TIME_R)
 
-    TYPE (dnMatPot)                :: sub_dnMatPot_TIME_R
-    TYPE (dnMatPot),   intent(in)  :: dnMat
+    TYPE (dnMat_t)                 :: sub_dnMat_TIME_R
+    TYPE (dnMat_t),    intent(in)  :: dnMat
     real (kind=Rkind), intent(in)  :: R
 
     integer :: nderiv_loc,nsurf_loc,ndim_loc
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='sub_dnMatPot_TIME_R'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_dnMat_TIME_R'
 
-    nderiv_loc = get_nderiv_FROM_dnMatPot(dnMat)
-    nsurf_loc  = get_nsurf_FROM_dnMatPot(dnMat)
-    ndim_loc   = get_ndim_FROM_dnMatPot(dnMat)
+    nderiv_loc = QML_get_nderiv_FROM_dnMat(dnMat)
+    nsurf_loc  = QML_get_nsurf_FROM_dnMat(dnMat)
+    ndim_loc   = QML_get_ndim_FROM_dnMat(dnMat)
 
     !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
 
-    CALL alloc_dnMatPot(sub_dnMatPot_TIME_R,nsurf_loc,ndim_loc,nderiv_loc,name_var='sub_dnMatPot_TIME_R',name_sub=name_sub)
+    CALL QML_alloc_dnMat(sub_dnMat_TIME_R,nsurf_loc,ndim_loc,nderiv_loc,&
+                         name_var='sub_dnMat_TIME_R',name_sub=name_sub)
 
     !write(out_unitp,*) 'nderiv',nderiv_loc
 
 
     IF (nderiv_loc == 0) THEN
-       sub_dnMatPot_TIME_R%d0 = dnMat%d0 * R
+       sub_dnMat_TIME_R%d0 = dnMat%d0 * R
 
     ELSE IF (nderiv_loc == 1) THEN
-       sub_dnMatPot_TIME_R%d0 = dnMat%d0 * R
-       sub_dnMatPot_TIME_R%d1 = dnMat%d1 * R
+       sub_dnMat_TIME_R%d0 = dnMat%d0 * R
+       sub_dnMat_TIME_R%d1 = dnMat%d1 * R
 
     ELSE IF (nderiv_loc == 2) THEN
-       sub_dnMatPot_TIME_R%d0 = dnMat%d0 * R
-       sub_dnMatPot_TIME_R%d1 = dnMat%d1 * R
-       sub_dnMatPot_TIME_R%d2 = dnMat%d2 * R
+       sub_dnMat_TIME_R%d0 = dnMat%d0 * R
+       sub_dnMat_TIME_R%d1 = dnMat%d1 * R
+       sub_dnMat_TIME_R%d2 = dnMat%d2 * R
 
     ELSE
       write(out_unitp,*) ' ERROR in ',name_sub
@@ -520,47 +524,48 @@ CONTAINS
       write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
-  END FUNCTION sub_dnMatPot_TIME_R
-!> @brief Public function which calculate R*dnMatPot (and derivatives).
+  END FUNCTION QML_sub_dnMat_TIME_R
+!> @brief Public function which calculate R*dnMat (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param Mat                TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
 !! @param R                  real:                     some real number
-!! @param sub_R_TIME_dnMatPot TYPE(dnMatPot) (result):  dnMatPot derived type
-  FUNCTION sub_R_TIME_dnMatPot(R,dnMat)
+!! @param sub_R_TIME_dnMat TYPE (dnMat_t) (result):  dnMat derived type
+  FUNCTION QML_sub_R_TIME_dnMat(R,dnMat)  RESULT(sub_R_TIME_dnMat)
 
-    TYPE (dnMatPot)                :: sub_R_TIME_dnMatPot
-    TYPE (dnMatPot),   intent(in)  :: dnMat
+    TYPE (dnMat_t)                :: sub_R_TIME_dnMat
+    TYPE (dnMat_t),   intent(in)  :: dnMat
     real (kind=Rkind), intent(in)  :: R
 
     integer :: nderiv_loc,nsurf_loc,ndim_loc
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='sub_R_TIME_dnMatPot'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_R_TIME_dnMat'
 
-    nderiv_loc = get_nderiv_FROM_dnMatPot(dnMat)
-    nsurf_loc  = get_nsurf_FROM_dnMatPot(dnMat)
-    ndim_loc   = get_ndim_FROM_dnMatPot(dnMat)
+    nderiv_loc = QML_get_nderiv_FROM_dnMat(dnMat)
+    nsurf_loc  = QML_get_nsurf_FROM_dnMat(dnMat)
+    ndim_loc   = QML_get_ndim_FROM_dnMat(dnMat)
 
     !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
 
-    CALL alloc_dnMatPot(sub_R_TIME_dnMatPot,nsurf_loc,ndim_loc,nderiv_loc,name_var='sub_R_TIME_dnMatPot',name_sub=name_sub)
+    CALL QML_alloc_dnMat(sub_R_TIME_dnMat,nsurf_loc,ndim_loc,nderiv_loc,&
+                         name_var='sub_R_TIME_dnMat',name_sub=name_sub)
 
     !write(out_unitp,*) 'nderiv',nderiv_loc
 
 
     IF (nderiv_loc == 0) THEN
-       sub_R_TIME_dnMatPot%d0 = dnMat%d0 * R
+       sub_R_TIME_dnMat%d0 = dnMat%d0 * R
 
     ELSE IF (nderiv_loc == 1) THEN
-       sub_R_TIME_dnMatPot%d0 = dnMat%d0 * R
-       sub_R_TIME_dnMatPot%d1 = dnMat%d1 * R
+       sub_R_TIME_dnMat%d0 = dnMat%d0 * R
+       sub_R_TIME_dnMat%d1 = dnMat%d1 * R
 
     ELSE IF (nderiv_loc == 2) THEN
-       sub_R_TIME_dnMatPot%d0 = dnMat%d0 * R
-       sub_R_TIME_dnMatPot%d1 = dnMat%d1 * R
-       sub_R_TIME_dnMatPot%d2 = dnMat%d2 * R
+       sub_R_TIME_dnMat%d0 = dnMat%d0 * R
+       sub_R_TIME_dnMat%d1 = dnMat%d1 * R
+       sub_R_TIME_dnMat%d2 = dnMat%d2 * R
 
     ELSE
       write(out_unitp,*) ' ERROR in ',name_sub
@@ -568,211 +573,214 @@ CONTAINS
       write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
-  END FUNCTION sub_R_TIME_dnMatPot
+  END FUNCTION QML_sub_R_TIME_dnMat
 !> @brief Public function which calculate dnMat1+dnMat2 (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param dnMat1                    TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
-!! @param dnMat2                    TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
-!! @param dnMatPot2_PLUS_dnMatPot1 TYPE(dnMatPot) (result):  dnMatPot derived type
-  FUNCTION dnMatPot2_PLUS_dnMatPot1(dnMat1,dnMat2)
-    TYPE (dnMatPot)                :: dnMatPot2_PLUS_dnMatPot1
-    TYPE (dnMatPot), intent(in)    :: dnMat1,dnMat2
+!! @param dnMat1                    TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
+!! @param dnMat2                    TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
+!! @param dnMat2_PLUS_dnMat1 TYPE (dnMat_t) (result):  dnMat derived type
+  FUNCTION QML_dnMat2_PLUS_dnMat1(dnMat1,dnMat2)  RESULT(dnMat2_PLUS_dnMat1)
+    TYPE (dnMat_t)                :: dnMat2_PLUS_dnMat1
+    TYPE (dnMat_t), intent(in)    :: dnMat1,dnMat2
 
     integer :: nderiv,nsurf,ndim
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='dnMatPot2_PLUS_dnMatPot1'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_dnMat2_PLUS_dnMat1'
 
-    nderiv = min(get_nderiv_FROM_dnMatPot(dnMat1),get_nderiv_FROM_dnMatPot(dnMat2))
-    nsurf  = min(get_nsurf_FROM_dnMatPot(dnMat1), get_nsurf_FROM_dnMatPot(dnMat2))
-    ndim   = min(get_ndim_FROM_dnMatPot(dnMat1),  get_ndim_FROM_dnMatPot(dnMat2))
+    nderiv = min(QML_get_nderiv_FROM_dnMat(dnMat1),QML_get_nderiv_FROM_dnMat(dnMat2))
+    nsurf  = min(QML_get_nsurf_FROM_dnMat(dnMat1), QML_get_nsurf_FROM_dnMat(dnMat2))
+    ndim   = min(QML_get_ndim_FROM_dnMat(dnMat1),  QML_get_ndim_FROM_dnMat(dnMat2))
 
     !write(out_unitp,*) 'in ',name_sub,' nsurf,ndim,nderiv',nsurf,ndim,nderiv
 
-    CALL dealloc_dnMatPot(dnMatPot2_PLUS_dnMatPot1)
+    CALL QML_dealloc_dnMat(dnMat2_PLUS_dnMat1)
 
     IF (nderiv < 0 .OR. nsurf < 1 .OR. (nderiv > 0  .AND. ndim < 1)) RETURN
 
-    CALL alloc_dnMatPot(dnMatPot2_PLUS_dnMatPot1,nsurf,ndim,nderiv,name_var='dnMatPot2_PLUS_dnMatPot1',name_sub=name_sub)
+    CALL QML_alloc_dnMat(dnMat2_PLUS_dnMat1,nsurf,ndim,nderiv,          &
+                         name_var='dnMat2_PLUS_dnMat1',name_sub=name_sub)
 
     IF (nderiv == 0) THEN
-       dnMatPot2_PLUS_dnMatPot1%d0 = dnMat1%d0 + dnMat2%d0
+       dnMat2_PLUS_dnMat1%d0 = dnMat1%d0 + dnMat2%d0
     ELSE IF (nderiv == 1) THEN
-       dnMatPot2_PLUS_dnMatPot1%d0 = dnMat1%d0 + dnMat2%d0
-       dnMatPot2_PLUS_dnMatPot1%d1 = dnMat1%d1 + dnMat2%d1
+       dnMat2_PLUS_dnMat1%d0 = dnMat1%d0 + dnMat2%d0
+       dnMat2_PLUS_dnMat1%d1 = dnMat1%d1 + dnMat2%d1
     ELSE IF (nderiv == 2) THEN
-       dnMatPot2_PLUS_dnMatPot1%d0 = dnMat1%d0 + dnMat2%d0
-       dnMatPot2_PLUS_dnMatPot1%d1 = dnMat1%d1 + dnMat2%d1
-       dnMatPot2_PLUS_dnMatPot1%d2 = dnMat1%d2 + dnMat2%d2
+       dnMat2_PLUS_dnMat1%d0 = dnMat1%d0 + dnMat2%d0
+       dnMat2_PLUS_dnMat1%d1 = dnMat1%d1 + dnMat2%d1
+       dnMat2_PLUS_dnMat1%d2 = dnMat1%d2 + dnMat2%d2
     ELSE
       write(out_unitp,*) ' ERROR in ',name_sub
       write(out_unitp,*) ' nderiv > 2 is NOT possible',nderiv
       write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
-  END FUNCTION dnMatPot2_PLUS_dnMatPot1
-!> @brief Public function which calculate dnMatPot+R (and derivatives).
+  END FUNCTION QML_dnMat2_PLUS_dnMat1
+!> @brief Public function which calculate dnMat+R (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param Mat                TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
 !! @param R                  real:                     some real number
-!! @param sub_dnMatPot_EXP_R TYPE(dnMatPot) (result):  dnMatPot derived type
-  FUNCTION sub_dnMatPot_PLUS_R(dnMat,R)
+!! @param sub_dnMat_EXP_R TYPE (dnMat_t) (result):  dnMat derived type
+  FUNCTION QML_sub_dnMat_PLUS_R(dnMat,R)  RESULT (sub_dnMat_PLUS_R)
 
-    TYPE (dnMatPot)                :: sub_dnMatPot_PLUS_R
-    TYPE (dnMatPot),   intent(in)  :: dnMat
+    TYPE (dnMat_t)                :: sub_dnMat_PLUS_R
+    TYPE (dnMat_t),   intent(in)  :: dnMat
     real (kind=Rkind), intent(in)  :: R
 
     integer :: nderiv_loc,nsurf_loc,ndim_loc
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='sub_dnMatPot_PLUS_R'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_dnMat_PLUS_R'
 
 
-    sub_dnMatPot_PLUS_R    = dnMat
+    sub_dnMat_PLUS_R    = dnMat
 
-    sub_dnMatPot_PLUS_R%d0 = sub_dnMatPot_PLUS_R%d0 + R
+    sub_dnMat_PLUS_R%d0 = sub_dnMat_PLUS_R%d0 + R
 
     ! the derivatives of R are zero => nothing to be add to %d1 and %d2
 
-  END FUNCTION sub_dnMatPot_PLUS_R
-!> @brief Public function which calculate R+dnMatPot (and derivatives).
+  END FUNCTION QML_sub_dnMat_PLUS_R
+!> @brief Public function which calculate R+dnMat (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param Mat                TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
 !! @param R                  real:                     some real number
-!! @param sub_R_PLUS_dnMatPot TYPE(dnMatPot) (result):  dnMatPot derived type
-  FUNCTION sub_R_PLUS_dnMatPot(R,dnMat)
+!! @param sub_R_PLUS_dnMat TYPE (dnMat_t) (result):  dnMat derived type
+  FUNCTION QML_sub_R_PLUS_dnMat(R,dnMat) RESULT (sub_R_PLUS_dnMat)
 
-    TYPE (dnMatPot)                :: sub_R_PLUS_dnMatPot
-    TYPE (dnMatPot),   intent(in)  :: dnMat
+    TYPE (dnMat_t)                :: sub_R_PLUS_dnMat
+    TYPE (dnMat_t),   intent(in)  :: dnMat
     real (kind=Rkind), intent(in)  :: R
 
     integer :: nderiv_loc,nsurf_loc,ndim_loc
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='sub_R_PLUS_dnMatPot'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_R_PLUS_dnMat'
 
 
-    sub_R_PLUS_dnMatPot    = dnMat
+    sub_R_PLUS_dnMat    = dnMat
 
-    sub_R_PLUS_dnMatPot%d0 = sub_R_PLUS_dnMatPot%d0 + R
+    sub_R_PLUS_dnMat%d0 = sub_R_PLUS_dnMat%d0 + R
 
     ! the derivatives of R are zero
 
-  END FUNCTION sub_R_PLUS_dnMatPot
+  END FUNCTION QML_sub_R_PLUS_dnMat
 !> @brief Public function which calculate dnMat1-dnMat2 (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param dnMat1                    TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
-!! @param dnMat2                    TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
-!! @param dnMatPot2_MINUS_dnMatPot1 TYPE(dnMatPot) (result):  dnMatPot derived type
-  FUNCTION dnMatPot2_MINUS_dnMatPot1(dnMat1,dnMat2)
-    TYPE (dnMatPot)                :: dnMatPot2_MINUS_dnMatPot1
-    TYPE (dnMatPot), intent(in)    :: dnMat1,dnMat2
+!! @param dnMat1                    TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
+!! @param dnMat2                    TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
+!! @param dnMat2_MINUS_dnMat1 TYPE (dnMat_t) (result):  dnMat derived type
+  FUNCTION QML_dnMat2_MINUS_dnMat1(dnMat1,dnMat2) RESULT (dnMat2_MINUS_dnMat1)
+    TYPE (dnMat_t)                :: dnMat2_MINUS_dnMat1
+    TYPE (dnMat_t), intent(in)    :: dnMat1,dnMat2
 
     integer :: nderiv,nsurf,ndim
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='dnMatPot2_MINUS_dnMatPot1'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_dnMat2_MINUS_dnMat1'
 
-    nderiv = min(get_nderiv_FROM_dnMatPot(dnMat1),get_nderiv_FROM_dnMatPot(dnMat2))
-    nsurf  = min(get_nsurf_FROM_dnMatPot(dnMat1), get_nsurf_FROM_dnMatPot(dnMat2))
-    ndim   = min(get_ndim_FROM_dnMatPot(dnMat1),  get_ndim_FROM_dnMatPot(dnMat2))
+    nderiv = min(QML_get_nderiv_FROM_dnMat(dnMat1),QML_get_nderiv_FROM_dnMat(dnMat2))
+    nsurf  = min(QML_get_nsurf_FROM_dnMat(dnMat1), QML_get_nsurf_FROM_dnMat(dnMat2))
+    ndim   = min(QML_get_ndim_FROM_dnMat(dnMat1),  QML_get_ndim_FROM_dnMat(dnMat2))
 
 
-    CALL dealloc_dnMatPot(dnMatPot2_MINUS_dnMatPot1)
+    CALL QML_dealloc_dnMat(dnMat2_MINUS_dnMat1)
 
     IF (nderiv < 0 .OR. nsurf < 1 .OR. (nderiv > 0  .AND. ndim < 1)) RETURN
 
-    CALL alloc_dnMatPot(dnMatPot2_MINUS_dnMatPot1,nsurf,ndim,nderiv,name_var='dnMatPot2_MINUS_dnMatPot1',name_sub=name_sub)
+    CALL QML_alloc_dnMat(dnMat2_MINUS_dnMat1,nsurf,ndim,nderiv,         &
+                         name_var='dnMat2_MINUS_dnMat1',name_sub=name_sub)
 
     IF (nderiv == 0) THEN
-       dnMatPot2_MINUS_dnMatPot1%d0 = dnMat1%d0 - dnMat2%d0
+       dnMat2_MINUS_dnMat1%d0 = dnMat1%d0 - dnMat2%d0
     ELSE IF (nderiv == 1) THEN
-       dnMatPot2_MINUS_dnMatPot1%d0 = dnMat1%d0 - dnMat2%d0
-       dnMatPot2_MINUS_dnMatPot1%d1 = dnMat1%d1 - dnMat2%d1
+       dnMat2_MINUS_dnMat1%d0 = dnMat1%d0 - dnMat2%d0
+       dnMat2_MINUS_dnMat1%d1 = dnMat1%d1 - dnMat2%d1
     ELSE IF (nderiv == 2) THEN
-       dnMatPot2_MINUS_dnMatPot1%d0 = dnMat1%d0 - dnMat2%d0
-       dnMatPot2_MINUS_dnMatPot1%d1 = dnMat1%d1 - dnMat2%d1
-       dnMatPot2_MINUS_dnMatPot1%d2 = dnMat1%d2 - dnMat2%d2
+       dnMat2_MINUS_dnMat1%d0 = dnMat1%d0 - dnMat2%d0
+       dnMat2_MINUS_dnMat1%d1 = dnMat1%d1 - dnMat2%d1
+       dnMat2_MINUS_dnMat1%d2 = dnMat1%d2 - dnMat2%d2
     ELSE
       write(out_unitp,*) ' ERROR in ',name_sub
       write(out_unitp,*) ' nderiv > 2 is NOT possible',nderiv
       write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
-  END FUNCTION dnMatPot2_MINUS_dnMatPot1
-!> @brief Public function which calculate dnMatPot-R (and derivatives).
+  END FUNCTION QML_dnMat2_MINUS_dnMat1
+!> @brief Public function which calculate dnMat-R (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Mat                  TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param Mat                  TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
 !! @param R                    real:                     some real number
-!! @param sub_dnMatPot_MINUS_R TYPE(dnMatPot) (result):  dnMatPot derived type
-  FUNCTION sub_dnMatPot_MINUS_R(dnMat,R)
+!! @param sub_dnMat_MINUS_R TYPE (dnMat_t) (result):  dnMat derived type
+  FUNCTION QML_sub_dnMat_MINUS_R(dnMat,R) RESULT (sub_dnMat_MINUS_R)
 
-    TYPE (dnMatPot)                :: sub_dnMatPot_MINUS_R
-    TYPE (dnMatPot),   intent(in)  :: dnMat
+    TYPE (dnMat_t)                :: sub_dnMat_MINUS_R
+    TYPE (dnMat_t),   intent(in)  :: dnMat
     real (kind=Rkind), intent(in)  :: R
 
     integer :: nderiv_loc,nsurf_loc,ndim_loc
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='sub_dnMatPot_MINUS_R'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_dnMat_MINUS_R'
 
 
-    sub_dnMatPot_MINUS_R = dnMat
+    sub_dnMat_MINUS_R = dnMat
 
-    sub_dnMatPot_MINUS_R%d0 = dnMat%d0 - R
+    sub_dnMat_MINUS_R%d0 = dnMat%d0 - R
 
     ! the derivatives of R are zero
 
-  END FUNCTION sub_dnMatPot_MINUS_R
-!> @brief Public function which calculate R-dnMatPot (and derivatives).
+  END FUNCTION QML_sub_dnMat_MINUS_R
+!> @brief Public function which calculate R-dnMat (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Mat                  TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param Mat                  TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
 !! @param R                    real:                     some real number
-!! @param sub_R_MINUS_dnMatPot TYPE(dnMatPot) (result):  dnMatPot derived type
-  FUNCTION sub_R_MINUS_dnMatPot(R,dnMat)
+!! @param sub_R_MINUS_dnMat TYPE (dnMat_t) (result):  dnMat derived type
+  FUNCTION QML_sub_R_MINUS_dnMat(R,dnMat) RESULT (sub_R_MINUS_dnMat)
 
-    TYPE (dnMatPot)                :: sub_R_MINUS_dnMatPot
-    TYPE (dnMatPot),   intent(in)  :: dnMat
+    TYPE (dnMat_t)                :: sub_R_MINUS_dnMat
+    TYPE (dnMat_t),   intent(in)  :: dnMat
     real (kind=Rkind), intent(in)  :: R
 
     integer :: nderiv_loc,nsurf_loc,ndim_loc
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='sub_R_MINUS_dnMatPot'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_R_MINUS_dnMat'
 
-    nderiv_loc = get_nderiv_FROM_dnMatPot(dnMat)
-    nsurf_loc  = get_nsurf_FROM_dnMatPot(dnMat)
-    ndim_loc   = get_ndim_FROM_dnMatPot(dnMat)
+    nderiv_loc = QML_get_nderiv_FROM_dnMat(dnMat)
+    nsurf_loc  = QML_get_nsurf_FROM_dnMat(dnMat)
+    ndim_loc   = QML_get_ndim_FROM_dnMat(dnMat)
 
     !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
 
-    CALL alloc_dnMatPot(sub_R_MINUS_dnMatPot,nsurf_loc,ndim_loc,nderiv_loc,name_var='sub_R_MINUS_dnMatPot',name_sub=name_sub)
+    CALL QML_alloc_dnMat(sub_R_MINUS_dnMat,nsurf_loc,ndim_loc,nderiv_loc,&
+                         name_var='sub_R_MINUS_dnMat',name_sub=name_sub)
 
     !write(out_unitp,*) 'nderiv',nderiv_loc
     IF (nderiv_loc == 0) THEN
-       sub_R_MINUS_dnMatPot%d0 = R - dnMat%d0
+       sub_R_MINUS_dnMat%d0 = R - dnMat%d0
 
     ELSE IF (nderiv_loc == 1) THEN
-       sub_R_MINUS_dnMatPot%d0 = R - dnMat%d0
-       sub_R_MINUS_dnMatPot%d1 =   - dnMat%d1
+       sub_R_MINUS_dnMat%d0 = R - dnMat%d0
+       sub_R_MINUS_dnMat%d1 =   - dnMat%d1
 
 
     ELSE IF (nderiv_loc == 2) THEN
-       sub_R_MINUS_dnMatPot%d0 = R - dnMat%d0
-       sub_R_MINUS_dnMatPot%d1 =   - dnMat%d1
-       sub_R_MINUS_dnMatPot%d2 =   - dnMat%d2
+       sub_R_MINUS_dnMat%d0 = R - dnMat%d0
+       sub_R_MINUS_dnMat%d1 =   - dnMat%d1
+       sub_R_MINUS_dnMat%d2 =   - dnMat%d2
 
     ELSE
       write(out_unitp,*) ' ERROR in ',name_sub
@@ -781,53 +789,54 @@ CONTAINS
       STOP
     END IF
 
-  END FUNCTION sub_R_MINUS_dnMatPot
-!> @brief Public function which calculate dnMatPot**R (and derivatives).
+  END FUNCTION QML_sub_R_MINUS_dnMat
+!> @brief Public function which calculate dnMat**R (and derivatives).
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Mat                TYPE(dnMatPot):           derived type which deals with the derivatives of a matrix.
+!! @param Mat                TYPE (dnMat_t):           derived type which deals with the derivatives of a matrix.
 !! @param R                  real:                     exponent
-!! @param sub_dnMatPot_EXP_R TYPE(dnMatPot) (result):  dnMatPot derived type
-  FUNCTION sub_dnMatPot_EXP_R(dnMat,R)
+!! @param sub_dnMat_EXP_R TYPE (dnMat_t) (result):  dnMat derived type
+  FUNCTION QML_sub_dnMat_EXP_R(dnMat,R) RESULT (sub_dnMat_EXP_R)
 
-    TYPE (dnMatPot)                :: sub_dnMatPot_EXP_R
-    TYPE (dnMatPot),   intent(in)  :: dnMat
+    TYPE (dnMat_t)                 :: sub_dnMat_EXP_R
+    TYPE (dnMat_t),    intent(in)  :: dnMat
     real (kind=Rkind), intent(in)  :: R
 
     integer :: nderiv_loc,nsurf_loc,ndim_loc,id,jd
-    integer :: err_dnMatPot_loc
-    character (len=*), parameter :: name_sub='sub_dnMatPot_EXP_R'
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_dnMat_EXP_R'
 
-    nderiv_loc = get_nderiv_FROM_dnMatPot(dnMat)
-    nsurf_loc  = get_nsurf_FROM_dnMatPot(dnMat)
-    ndim_loc   = get_ndim_FROM_dnMatPot(dnMat)
+    nderiv_loc = QML_get_nderiv_FROM_dnMat(dnMat)
+    nsurf_loc  = QML_get_nsurf_FROM_dnMat(dnMat)
+    ndim_loc   = QML_get_ndim_FROM_dnMat(dnMat)
 
     !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
 
-    CALL alloc_dnMatPot(sub_dnMatPot_EXP_R,nsurf_loc,ndim_loc,nderiv_loc,name_var='sub_dnMatPot_EXP_R',name_sub=name_sub)
+    CALL QML_alloc_dnMat(sub_dnMat_EXP_R,nsurf_loc,ndim_loc,            &
+                nderiv_loc,name_var='sub_dnMat_EXP_R',name_sub=name_sub)
 
     !write(out_unitp,*) 'nderiv',nderiv_loc
 
 
     IF (nderiv_loc == 0) THEN
-       sub_dnMatPot_EXP_R%d0 = dnMat%d0 ** R
+       sub_dnMat_EXP_R%d0 = dnMat%d0 ** R
 
     ELSE IF (nderiv_loc == 1) THEN
-       sub_dnMatPot_EXP_R%d0 = dnMat%d0 ** R
+       sub_dnMat_EXP_R%d0 = dnMat%d0 ** R
        DO id=1,ndim_loc
-         sub_dnMatPot_EXP_R%d1(:,:,id) = R * dnMat%d0 ** (R-ONE) * dnMat%d1(:,:,id)
+         sub_dnMat_EXP_R%d1(:,:,id) = R * dnMat%d0 ** (R-ONE) * dnMat%d1(:,:,id)
        END DO
 
     ELSE IF (nderiv_loc == 2) THEN
-       sub_dnMatPot_EXP_R%d0 = dnMat%d0 ** R
+       sub_dnMat_EXP_R%d0 = dnMat%d0 ** R
        DO id=1,ndim_loc
-         sub_dnMatPot_EXP_R%d1(:,:,id) = R * dnMat%d0 ** (R-ONE) * dnMat%d1(:,:,id)
+         sub_dnMat_EXP_R%d1(:,:,id) = R * dnMat%d0 ** (R-ONE) * dnMat%d1(:,:,id)
        END DO
        DO jd=1,ndim_loc
        DO id=1,ndim_loc
-         sub_dnMatPot_EXP_R%d2(:,:,jd,id) = R*(R-ONE) * dnMat%d0 ** (R-TWO) * dnMat%d1(:,:,id) * dnMat%d1(:,:,jd) + &
+         sub_dnMat_EXP_R%d2(:,:,jd,id) = R*(R-ONE) * dnMat%d0 ** (R-TWO) * dnMat%d1(:,:,id) * dnMat%d1(:,:,jd) + &
                                             R * dnMat%d0 ** (R-ONE) * dnMat%d2(:,:,jd,id)
        END DO
        END DO
@@ -838,18 +847,18 @@ CONTAINS
       write(out_unitp,*) 'It should never append! Check the source'
       STOP
     END IF
-  END FUNCTION sub_dnMatPot_EXP_R
-!> @brief Public subroutine which prints a derived type dnMatPot.
+  END FUNCTION QML_sub_dnMat_EXP_R
+!> @brief Public subroutine which prints a derived type dnMat.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param Mat                TYPE(dnMatPot):      derived type which deals with the derivatives of a matrix.
+!! @param Mat                TYPE (dnMat_t):      derived type which deals with the derivatives of a matrix.
 !! @param nio                integer (optional):  when present unit to print S, otherwise it is the default unit:out_unitp
-  SUBROUTINE Write_dnMatPot(Mat,nio)
+  SUBROUTINE QML_Write_dnMat(Mat,nio)
     USE mod_Lib
 
-    TYPE(dnMatPot), intent(in)    :: Mat
+    TYPE (dnMat_t), intent(in)    :: Mat
     integer, intent(in), optional :: nio
 
     integer :: i,j,nio_loc,nsurf_loc,ndim_loc
@@ -860,8 +869,8 @@ CONTAINS
       nio_loc = 6
     END IF
 
-    nsurf_loc  = get_nsurf_FROM_dnMatPot(Mat)
-    ndim_loc   = get_ndim_FROM_dnMatPot(Mat)
+    nsurf_loc  = QML_get_nsurf_FROM_dnMat(Mat)
+    ndim_loc   = QML_get_ndim_FROM_dnMat(Mat)
 
     IF (nsurf_loc == 1 .AND. ndim_loc > 1) THEN
       IF (allocated(Mat%d0)) THEN
@@ -900,19 +909,18 @@ CONTAINS
       END IF
     END IF
 
-  END SUBROUTINE Write_dnMatPot
-!> @brief Public function to get nderiv from a derived type dnMatPot.
+  END SUBROUTINE QML_Write_dnMat
+!> @brief Public function to get nderiv from a derived type dnMat.
 !!
 !> @author David Lauvergnat
 !! @date 25/06/2018
 !!
-!! @param Mat                         TYPE(dnMatPot):     derived type which deals with the derivatives of a matrix (as function of coordinates).
-!! @param get_nderiv_FROM_dnMatPot    integer  (result):  nderiv value, check against Mat%nederiv
-  FUNCTION get_nderiv_FROM_dnMatPot(Mat)
-    integer :: get_nderiv_FROM_dnMatPot
+!! @param Mat                         TYPE (dnMat_t):     derived type which deals with the derivatives of a matrix (as function of coordinates).
+!! @param get_nderiv_FROM_dnMat    integer  (result):  nderiv value, check against Mat%nederiv
+  FUNCTION QML_get_nderiv_FROM_dnMat(Mat) RESULT(nderiv)
 
-    TYPE(dnMatPot), intent(in)    :: Mat
-    integer :: nderiv
+    integer                       :: nderiv
+    TYPE (dnMat_t), intent(in)    :: Mat
 
     nderiv = Mat%nderiv
 
@@ -927,70 +935,66 @@ CONTAINS
     END IF
 
     IF (Mat%nderiv /= nderiv) THEN
-      write(out_unitp,*) ' ERROR in get_nderiv_FROM_dnMatPot'
+      write(out_unitp,*) ' ERROR in QML_get_nderiv_FROM_dnMat'
       write(out_unitp,*) '  Problem with nderiv in Mat'
-      CALL Write_dnMatPot(Mat)
-      STOP 'ERROR in get_nderiv_FROM_dnMatPot'
+      CALL QML_Write_dnMat(Mat)
+      STOP 'ERROR in QML_get_nderiv_FROM_dnMat'
     END IF
 
-    get_nderiv_FROM_dnMatPot = nderiv
+    END FUNCTION QML_get_nderiv_FROM_dnMat
 
-    END FUNCTION get_nderiv_FROM_dnMatPot
-
-!> @brief Public function to get nsurf (the number of electronic surfaces, dimension of the matrix) from a derived type dnMatPot.
+!> @brief Public function to get nsurf (the number of electronic surfaces, dimension of the matrix) from a derived type dnMat.
 !!
 !> @author David Lauvergnat
 !! @date 25/06/2018
 !!
-!! @param Mat                         TYPE(dnMatPot):     derived type which deals with the derivatives of a matrix (as function of coordinates).
-!! @param get_nderiv_FROM_dnMatPot    integer  (result):  nderiv value
-  FUNCTION get_nsurf_FROM_dnMatPot(Mat)
-    integer :: get_nsurf_FROM_dnMatPot
+!! @param Mat                         TYPE (dnMat_t):     derived type which deals with the derivatives of a matrix (as function of coordinates).
+!! @param get_nderiv_FROM_dnMat    integer  (result):  nderiv value
+  FUNCTION QML_get_nsurf_FROM_dnMat(Mat) RESULT(nsurf)
 
-    TYPE(dnMatPot), intent(in)    :: Mat
-    integer :: nsurf
+    integer                       :: nsurf
+    TYPE (dnMat_t), intent(in)    :: Mat
 
     IF (.NOT. allocated(Mat%d0)) THEN
-      get_nsurf_FROM_dnMatPot = 0
+      nsurf = 0
     ELSE
-      get_nsurf_FROM_dnMatPot = size(Mat%d0(:,1))
+      nsurf = size(Mat%d0(:,1))
     END IF
 
-    END FUNCTION get_nsurf_FROM_dnMatPot
+    END FUNCTION QML_get_nsurf_FROM_dnMat
 
-!> @brief Public function to get ndim (number of coordinates) from a derived type dnMatPot.
+!> @brief Public function to get ndim (number of coordinates) from a derived type dnMat.
 !!
 !> @author David Lauvergnat
 !! @date 25/06/2018
 !!
-!! @param Mat                       TYPE(dnMatPot):      derived type which deals with the derivatives of a scalar functions.
-!! @param get_ndim_FROM_dnMatPot    integer  (result):   ndim value from the size of Mat%d1.
-  FUNCTION get_ndim_FROM_dnMatPot(Mat)
-    integer :: get_ndim_FROM_dnMatPot
+!! @param Mat                       TYPE (dnMat_t):      derived type which deals with the derivatives of a scalar functions.
+!! @param get_ndim_FROM_dnMat    integer  (result):   ndim value from the size of Mat%d1.
+  FUNCTION QML_get_ndim_FROM_dnMat(Mat) RESULT(ndim)
 
-    TYPE(dnMatPot), intent(in)    :: Mat
-    integer :: nsurf
+    integer                       :: ndim
+    TYPE (dnMat_t), intent(in)    :: Mat
 
     IF (.NOT. allocated(Mat%d1)) THEN
-      get_ndim_FROM_dnMatPot = 0
+      ndim = 0
     ELSE
-      get_ndim_FROM_dnMatPot = size(Mat%d1(1,1,:))
+      ndim = size(Mat%d1(1,1,:))
     END IF
 
-    END FUNCTION get_ndim_FROM_dnMatPot
-!> @brief Public function which ckecks a derived type dnMatPot is zero (all components).
+    END FUNCTION QML_get_ndim_FROM_dnMat
+!> @brief Public function which ckecks a derived type dnMat is zero (all components).
 !!
 !> @author David Lauvergnat
 !! @date 25/06/2018
 !!
-!! @param Check_dnMatPot_IS_ZERO   logical  (result):   result of the comparison
-!! @param Mat                      TYPE(dnMatPot):      derived type which deals with the derivatives of a matrix.
+!! @param Check_dnMat_IS_ZERO   logical  (result):   result of the comparison
+!! @param Mat                      TYPE (dnMat_t):      derived type which deals with the derivatives of a matrix.
 !! @param epsi                     real (optional):     when present zero limit, otherwise 10^-10
-  FUNCTION Check_dnMatPot_IS_ZERO(Mat,epsi)
+  FUNCTION QML_Check_dnMat_IS_ZERO(Mat,epsi) RESULT(Check_dnMat_IS_ZERO)
     USE mod_NumParameters
-    logical :: Check_dnMatPot_IS_ZERO
 
-    TYPE(dnMatPot),     intent(in)           :: Mat
+    logical                                  :: Check_dnMat_IS_ZERO
+    TYPE (dnMat_t),     intent(in)           :: Mat
     real(kind=Rkind),   intent(in), optional :: epsi
 
     real(kind=Rkind) :: epsi_loc,e0,e1,e2
@@ -1004,77 +1008,74 @@ CONTAINS
 
 
    IF (.NOT. allocated(Mat%d0)) THEN
-      Check_dnMatPot_IS_ZERO = .TRUE.
+      Check_dnMat_IS_ZERO = .TRUE.
     ELSE IF (.NOT. allocated(Mat%d1)) THEN
       e0 = maxval(abs(Mat%d0))
-      Check_dnMatPot_IS_ZERO = e0 <= epsi_loc
+      Check_dnMat_IS_ZERO = e0 <= epsi_loc
     ELSE IF (.NOT. allocated(Mat%d2)) THEN
       e0 = maxval(abs(Mat%d0))
       e1 = maxval(abs(Mat%d1))
-      Check_dnMatPot_IS_ZERO = max(e0,e1) <= epsi_loc
+      Check_dnMat_IS_ZERO = max(e0,e1) <= epsi_loc
     ELSE
       e0 = maxval(abs(Mat%d0))
       e1 = maxval(abs(Mat%d1))
       e2 = maxval(abs(Mat%d2))
-      Check_dnMatPot_IS_ZERO = max(e0,e1,e2) <= epsi_loc
+      Check_dnMat_IS_ZERO = max(e0,e1,e2) <= epsi_loc
     END IF
 
-    END FUNCTION Check_dnMatPot_IS_ZERO
-!> @brief Public function which gets the largest value of a derived type get_maxval_OF_dnMatPot (all components).
+    END FUNCTION QML_Check_dnMat_IS_ZERO
+!> @brief Public function which gets the largest value of a derived type get_maxval_OF_dnMat (all components).
 !!
 !> @author David Lauvergnat
 !! @date 25/06/2018
 !!
-!! @param get_maxval_OF_dnMatPot   real  (result):      largest value (all components)
-!! @param Mat                      TYPE(dnMatPot):      derived type which deals with the derivatives of a matrix.
-  FUNCTION get_maxval_OF_dnMatPot(Mat)
+!! @param get_maxval_OF_dnMat   real  (result):      largest value (all components)
+!! @param Mat                      TYPE (dnMat_t):      derived type which deals with the derivatives of a matrix.
+  FUNCTION QML_get_maxval_OF_dnMat(Mat) RESULT(get_maxval_OF_dnMat)
     USE mod_NumParameters
 
-    real(kind=Rkind) :: get_maxval_OF_dnMatPot
-
-    TYPE(dnMatPot), intent(in)    :: Mat
+    real(kind=Rkind)              :: get_maxval_OF_dnMat
+    TYPE (dnMat_t), intent(in)    :: Mat
 
     real(kind=Rkind) :: e0,e1,e2
 
    IF (.NOT. allocated(Mat%d0)) THEN
-      get_maxval_OF_dnMatPot = ZERO
+      get_maxval_OF_dnMat = ZERO
     ELSE IF (.NOT. allocated(Mat%d1)) THEN
       e0 = maxval(abs(Mat%d0))
-      get_maxval_OF_dnMatPot = e0
+      get_maxval_OF_dnMat = e0
     ELSE IF (.NOT. allocated(Mat%d2)) THEN
       e0 = maxval(abs(Mat%d0))
       e1 = maxval(abs(Mat%d1))
-      get_maxval_OF_dnMatPot = max(e0,e1)
+      get_maxval_OF_dnMat = max(e0,e1)
     ELSE
       e0 = maxval(abs(Mat%d0))
       e1 = maxval(abs(Mat%d1))
       e2 = maxval(abs(Mat%d2))
-      get_maxval_OF_dnMatPot = max(e0,e1,e2)
+      get_maxval_OF_dnMat = max(e0,e1,e2)
     END IF
 
-    END FUNCTION get_maxval_OF_dnMatPot
-!! @brief Public subroutine which checks if the derived type dnMatPot is (correctly) allocated.
+    END FUNCTION QML_get_maxval_OF_dnMat
+!! @brief Public subroutine which checks if the derived type dnMat is (correctly) allocated.
 !!
 !> @author David Lauvergnat
 !! @date 25/06/2018
 !!
-!! @param Mat                TYPE(dnMatPot):  derived type which deals with the derivatives of a matrix.
+!! @param Mat                TYPE (dnMat_t):  derived type which deals with the derivatives of a matrix.
 !! @param nderiv             integer:         the derivative order.
-  FUNCTION Check_NotAlloc_dnMatPot(Mat,nderiv)
+  FUNCTION QML_Check_NotAlloc_dnMat(Mat,nderiv) RESULT(NotAlloc)
 
-    TYPE(dnMatPot), intent(in)    :: Mat
-    integer, intent(in) :: nderiv
-    logical :: Check_NotAlloc_dnMatPot
+    logical                       :: NotAlloc
+    TYPE (dnMat_t), intent(in)    :: Mat
+    integer,        intent(in)    :: nderiv
 
 
-    logical :: NotAlloc
 
     NotAlloc = (nderiv >= 0 .AND. .NOT. allocated(Mat%d0))
     NotAlloc = NotAlloc .OR. (nderiv >= 1 .AND. .NOT. allocated(Mat%d1))
     NotAlloc = NotAlloc .OR. (nderiv >= 2 .AND. .NOT. allocated(Mat%d2))
 
-    Check_NotAlloc_dnMatPot = NotAlloc
 
-    END FUNCTION Check_NotAlloc_dnMatPot
+    END FUNCTION QML_Check_NotAlloc_dnMat
 
-END MODULE mod_dnMatPot
+END MODULE mod_dnMat

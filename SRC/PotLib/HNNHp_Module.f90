@@ -35,7 +35,7 @@ MODULE mod_HNNHp
 !!
 !! @param option                  integer: it enables to chose between the 1 model(s) (default 1)
 
-  TYPE Param_HNNHp
+  TYPE HNNHpPot_t
 
      PRIVATE
 
@@ -48,37 +48,37 @@ MODULE mod_HNNHp
      integer :: option    = -1
      logical :: PubliUnit = .FALSE.
  
-  END TYPE Param_HNNHp
+  END TYPE HNNHpPot_t
  
   PRIVATE eval_HNNHpPot1,dealloc_HNNHp
  
   CONTAINS
 !> @brief Subroutine which makes the initialization of the HNNHp parameters.
 !!
-!! @param Para_HNNHp          TYPE(Param_HNNHp):   derived type in which the parameters are set-up.
+!! @param HNNHpPot          TYPE(HNNHpPot_t):   derived type in which the parameters are set-up.
 !! @param option             integer:            to be able to chose between the 3 models (default 1, Simple avoided crossing).
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 
-  SUBROUTINE dealloc_HNNHp(Para_HNNHp)
+  SUBROUTINE dealloc_HNNHp(HNNHpPot)
     USE mod_Lib
     IMPLICIT NONE
 
-    TYPE (Param_HNNHp),          intent(inout) :: Para_HNNHp
+    TYPE (HNNHpPot_t),          intent(inout) :: HNNHpPot
 
-    Para_HNNHp%option    = -1
-    Para_HNNHp%PubliUnit = .FALSE.
+    HNNHpPot%option    = -1
+    HNNHpPot%PubliUnit = .FALSE.
 
-    IF (allocated(Para_HNNHp%Qref))     deallocate(Para_HNNHp%Qref)
-    IF (allocated(Para_HNNHp%F))        deallocate(Para_HNNHp%F)
-    IF (allocated(Para_HNNHp%tab_func)) deallocate(Para_HNNHp%tab_func)
+    IF (allocated(HNNHpPot%Qref))     deallocate(HNNHpPot%Qref)
+    IF (allocated(HNNHpPot%F))        deallocate(HNNHpPot%F)
+    IF (allocated(HNNHpPot%tab_func)) deallocate(HNNHpPot%tab_func)
 
   END SUBROUTINE dealloc_HNNHp
-  SUBROUTINE Init_HNNHp(Para_HNNHp,ndim,option,nio,read_param,PubliUnit)
+  SUBROUTINE Init_HNNHp(HNNHpPot,ndim,option,nio,read_param,PubliUnit)
     USE mod_Lib
     IMPLICIT NONE
 
-    TYPE (Param_HNNHp),          intent(inout) :: Para_HNNHp
+    TYPE (HNNHpPot_t),          intent(inout) :: HNNHpPot
     integer,                     intent(in)    :: option,ndim
     integer,           optional, intent(in)    :: nio
     logical,           optional, intent(in)    :: read_param,PubliUnit
@@ -91,9 +91,9 @@ MODULE mod_HNNHp
     character (len=:), allocatable  :: FileName
 
 
-    CALL dealloc_HNNHp(Para_HNNHp)
+    CALL dealloc_HNNHp(HNNHpPot)
 
-    IF (present(PubliUnit)) Para_HNNHp%PubliUnit = PubliUnit
+    IF (present(PubliUnit)) HNNHpPot%PubliUnit = PubliUnit
 
     read_param_loc = .FALSE.
     IF (present(read_param)) read_param_loc = read_param
@@ -104,46 +104,46 @@ MODULE mod_HNNHp
        STOP 'STOP in Init_HNNHpPot: impossible to read the input file. The file unit (nio) is not present'
     END IF
 
-    Para_HNNHp%option = option
+    HNNHpPot%option = option
 
     IF (ndim /= 6) THEN
        write(out_unitp,*) ' ERROR in Init_HNNHpPot '
        write(out_unitp,*) ' ndim /= 6. it is not possible for this potential'
        STOP 'STOP in Init_HNNHpPot: ndim MUST equal to 6'
     END IF
-    Para_HNNHp%ndim = 6
+    HNNHpPot%ndim = 6
 
 
-    IF (Para_HNNHp%option < 1 .OR. Para_HNNHp%option > 1) Para_HNNHp%option = 1
+    IF (HNNHpPot%option < 1 .OR. HNNHpPot%option > 1) HNNHpPot%option = 1
 
     IF (read_param_loc) THEN
       STOP 'Init_HNNHp: nothing to read'
 
     ELSE
 
-      SELECT CASE (Para_HNNHp%option)
+      SELECT CASE (HNNHpPot%option)
       CASE (1)
 
         FileName = make_FileName('InternalData/HNNHp/n2h2pcc5.txt')
         CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
-        read(nio_fit,*) Para_HNNHp%nb_func
-        !write(6,*) 'nb_func',Para_HNNHp%nb_func
+        read(nio_fit,*) HNNHpPot%nb_func
+        !write(6,*) 'nb_func',HNNHpPot%nb_func
 
-        allocate(Para_HNNHp%Qref(Para_HNNHp%ndim))
-        allocate(Para_HNNHp%F(Para_HNNHp%nb_func))
-        allocate(Para_HNNHp%tab_func(Para_HNNHp%ndim,Para_HNNHp%nb_func))
+        allocate(HNNHpPot%Qref(HNNHpPot%ndim))
+        allocate(HNNHpPot%F(HNNHpPot%nb_func))
+        allocate(HNNHpPot%tab_func(HNNHpPot%ndim,HNNHpPot%nb_func))
 
          k = 0
          DO
-          nb_columns = min(6,Para_HNNHp%nb_func-k)
+          nb_columns = min(6,HNNHpPot%nb_func-k)
           !write(6,*) k+1,k+nb_columns,nb_columns
           IF (nb_columns == 0) EXIT
-           read(nio_fit,11) (Para_HNNHp%tab_func(1:Para_HNNHp%ndim,j),Para_HNNHp%F(j),j=k+1,k+nb_columns)
+           read(nio_fit,11) (HNNHpPot%tab_func(1:HNNHpPot%ndim,j),HNNHpPot%F(j),j=k+1,k+nb_columns)
  11        format(6i1,f15.8,5(2x,6i1,f15.8))
            k = k + nb_columns
          END DO
-         read(nio_fit,*) Para_HNNHp%Qref(:)
-         !write(6,*) 'Qref',Para_HNNHp%Qref
+         read(nio_fit,*) HNNHpPot%Qref(:)
+         !write(6,*) 'Qref',HNNHpPot%Qref
 
          close(nio_fit)
          deallocate(FileName)
@@ -152,7 +152,7 @@ MODULE mod_HNNHp
       CASE Default
 
           write(out_unitp,*) ' ERROR in Init_HNNHp '
-          write(out_unitp,*) ' This option is not possible. option: ',Para_HNNHp%option
+          write(out_unitp,*) ' This option is not possible. option: ',HNNHpPot%option
           write(out_unitp,*) ' Its value MUST be 1'
 
           STOP
@@ -160,7 +160,7 @@ MODULE mod_HNNHp
       END SELECT
     END IF
 
-    IF (Para_HNNHp%PubliUnit) THEN
+    IF (HNNHpPot%PubliUnit) THEN
       write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
     ELSE
       write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
@@ -169,11 +169,11 @@ MODULE mod_HNNHp
   END SUBROUTINE Init_HNNHp
 !> @brief Subroutine wich prints the HNNHp parameters.
 !!
-!! @param Para_HNNHp         TYPE(Param_HNNHp):   derived type in which the parameters are set-up.
+!! @param HNNHpPot         TYPE(HNNHpPot_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:            file unit to print the parameters.
-  SUBROUTINE Write_HNNHp(Para_HNNHp,nio)
+  SUBROUTINE Write_HNNHp(HNNHpPot,nio)
     
-    TYPE(Param_HNNHp), intent(in) :: Para_HNNHp
+    TYPE(HNNHpPot_t), intent(in) :: HNNHpPot
     integer         , intent(in) :: nio
 
     write(nio,*) 'trans-HNNH+ current parameters'
@@ -204,13 +204,13 @@ MODULE mod_HNNHp
     write(nio,*) '      https://doi.org/10.1063/1.3154141'
     write(nio,*) '---------------------------------------'
 
-    write(nio,*) '  PubliUnit:      ',Para_HNNHp%PubliUnit
+    write(nio,*) '  PubliUnit:      ',HNNHpPot%PubliUnit
     write(nio,*)
-    write(nio,*) '  Option   :      ',Para_HNNHp%option
+    write(nio,*) '  Option   :      ',HNNHpPot%option
     write(nio,*)
     write(nio,*) '---------------------------------------'
 
-    SELECT CASE (Para_HNNHp%option)
+    SELECT CASE (HNNHpPot%option)
 
     CASE (1)
     write(nio,*) '                                       '
@@ -236,7 +236,7 @@ MODULE mod_HNNHp
 
     CASE Default
         write(out_unitp,*) ' ERROR in write_HNNHpPot '
-        write(out_unitp,*) ' This option is not possible. option: ',Para_HNNHp%option
+        write(out_unitp,*) ' This option is not possible. option: ',HNNHpPot%option
         write(out_unitp,*) ' Its value MUST be 1'
 
         STOP
@@ -259,11 +259,11 @@ MODULE mod_HNNHp
     write(nio,*) 'end HNNHp default parameters'
 
   END SUBROUTINE Write0_HNNHp
-  SUBROUTINE get_Q0_HNNHp(Q0,Para_HNNHp,option)
+  SUBROUTINE get_Q0_HNNHp(Q0,HNNHpPot,option)
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: Q0(:)
-    TYPE (Param_HNNHp),          intent(in)    :: Para_HNNHp
+    TYPE (HNNHpPot_t),          intent(in)    :: HNNHpPot
     integer,                     intent(in)    :: option
 
     IF (size(Q0) /= 6) THEN
@@ -275,9 +275,9 @@ MODULE mod_HNNHp
 
     SELECT CASE (option)
     CASE (0) ! ref
-      Q0(:) = Para_HNNHp%Qref([2,1,4,3,5,6])
+      Q0(:) = HNNHpPot%Qref([2,1,4,3,5,6])
     CASE Default ! ref
-      Q0(:) = Para_HNNHp%Qref([2,1,4,3,5,6])
+      Q0(:) = HNNHpPot%Qref([2,1,4,3,5,6])
     END SELECT
 
   END SUBROUTINE get_Q0_HNNHp
@@ -285,27 +285,27 @@ MODULE mod_HNNHp
 
 !> @brief Subroutine wich calculates the HNNHp potential (for the 3 models) with derivatives up to the 2d order is required.
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param Para_HNNHp         TYPE(Param_HNNHp):    derived type in which the parameters are set-up.
+!! @param HNNHpPot         TYPE(HNNHpPot_t):    derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_HNNHpPot(Mat_OF_PotDia,dnQ,Para_HNNHp,nderiv)
+  SUBROUTINE eval_HNNHpPot(Mat_OF_PotDia,dnQ,HNNHpPot,nderiv)
     USE mod_dnS
 
-    TYPE(Param_HNNHp) , intent(in)   :: Para_HNNHp
-    TYPE(dnS),       intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),       intent(in)    :: dnQ(:) !
+    TYPE(HNNHpPot_t) , intent(in)   :: HNNHpPot
+    TYPE (dnS_t),       intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),       intent(in)    :: dnQ(:) !
     integer          , intent(in)    :: nderiv
 
-    SELECT CASE (Para_HNNHp%option)
+    SELECT CASE (HNNHpPot%option)
 
     CASE (1)
-      CALL eval_HNNHpPot1(Mat_OF_PotDia,dnQ,Para_HNNHp)
+      CALL eval_HNNHpPot1(Mat_OF_PotDia,dnQ,HNNHpPot)
 
     CASE Default
         write(out_unitp,*) ' ERROR in eval_HNNHpPot '
-        write(out_unitp,*) ' This option is not possible. option: ',Para_HNNHp%option
+        write(out_unitp,*) ' This option is not possible. option: ',HNNHpPot%option
         write(out_unitp,*) ' Its value MUST be 1'
 
         STOP
@@ -315,28 +315,28 @@ MODULE mod_HNNHp
 
 !> @brief Subroutine wich calculates the HNNHp potential (Not published model) with derivatives up to the 2d order is required.
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param Para_HNNHp         TYPE(Param_HNNHp):    derived type in which the parameters are set-up.
+!! @param HNNHpPot         TYPE(HNNHpPot_t):    derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
-  SUBROUTINE eval_HNNHpPot1(Mat_OF_PotDia,dnQ,Para_HNNHp)
+  SUBROUTINE eval_HNNHpPot1(Mat_OF_PotDia,dnQ,HNNHpPot)
     USE mod_dnS
 
-    TYPE(dnS),        intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),        intent(in)    :: dnQ(:)
-    TYPE(Param_HNNHp) , intent(in)    :: Para_HNNHp
+    TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),        intent(in)    :: dnQ(:)
+    TYPE(HNNHpPot_t) , intent(in)    :: HNNHpPot
 
 
-    TYPE(dnS)        :: DQ(6,6)
-    TYPE(dnS)        :: Vtemp
+    TYPE (dnS_t)        :: DQ(6,6)
+    TYPE (dnS_t)        :: Vtemp
     integer            :: i,j
 
     !write(6,*) ' sub eval_HNNHpPot1' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
-      DQ(:,1) = dnQ([2,1,4,3,5,6]) - Para_HNNHp%Qref(:)
+      DQ(:,1) = dnQ([2,1,4,3,5,6]) - HNNHpPot%Qref(:)
       DO j=2,size(DQ,dim=2)
         DQ(1:5,j) = DQ(1:5,j-1) * DQ(1:5,1)
       END DO
@@ -348,11 +348,11 @@ MODULE mod_HNNHp
       Mat_OF_PotDia(1,1) = ZERO
       Vtemp = Mat_OF_PotDia(1,1) ! to have a correct initialization
 
-      DO j=1,Para_HNNHp%nb_func
-        Vtemp = Para_HNNHp%F(j)
-        DO i=1,Para_HNNHp%ndim
-          IF (Para_HNNHp%tab_func(i,j) == 0) CYCLE
-          Vtemp = Vtemp * DQ(i,Para_HNNHp%tab_func(i,j))
+      DO j=1,HNNHpPot%nb_func
+        Vtemp = HNNHpPot%F(j)
+        DO i=1,HNNHpPot%ndim
+          IF (HNNHpPot%tab_func(i,j) == 0) CYCLE
+          Vtemp = Vtemp * DQ(i,HNNHpPot%tab_func(i,j))
         END DO
         Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1) + Vtemp
       END DO
@@ -360,8 +360,8 @@ MODULE mod_HNNHp
 
 !-----------------------------------------------------------------------!
 
-   CALL dealloc_dnS(Vtemp)
-   CALL dealloc_dnS(DQ)
+   CALL QML_dealloc_dnS(Vtemp)
+   CALL QML_dealloc_dnS(DQ)
 
    !write(6,*) ' end eval_HNNHpPot1' ; flush(6)
 
@@ -369,17 +369,17 @@ MODULE mod_HNNHp
 
   ! here we suppose that the atom ordering: N1-N2-H1-H2
   ! the bounds are N1-N2, N1-H1, n2-H2
-  SUBROUTINE Cart_TO_Q_HNNHp(dnX,dnQ,Para_HNNHp,nderiv)
+  SUBROUTINE Cart_TO_Q_HNNHp(dnX,dnQ,HNNHpPot,nderiv)
     USE mod_dnS
 
-    TYPE(dnS),       intent(in)    :: dnX(:,:)
-    TYPE(dnS),       intent(inout) :: dnQ(:)
-    TYPE(Param_HNNHp) , intent(in)   :: Para_HNNHp
-    integer          , intent(in)    :: nderiv
+    TYPE (dnS_t),       intent(in)    :: dnX(:,:)
+    TYPE (dnS_t),       intent(inout) :: dnQ(:)
+    TYPE(HNNHpPot_t),   intent(in)    :: HNNHpPot
+    integer,            intent(in)    :: nderiv
 
 
     ! local vector
-    TYPE(dnS)    :: VecNN(3),VecN1H1(3),VecN2H2(3)
+    TYPE (dnS_t)    :: VecNN(3),VecN1H1(3),VecN2H2(3)
 
 
     VecNN(:)   = dnX(:,1)-dnX(:,2)

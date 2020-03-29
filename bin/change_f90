@@ -1,0 +1,19 @@
+#list_f90="SRC/*f90 SRC/*/*f90"
+list_f90=" SRC/dnSLib/*f90"
+
+for f in $list_f90
+do
+
+  echo ===============================
+  echo file: $f
+  for sub in alloc_dnS
+  do
+    echo --------------------------------------
+    echo $f   $sub
+    sed "s/"$sub"/"$sub"_QML/g" $f > $f.i
+    #cp $f.i $f
+
+    echo ""
+  done
+
+done

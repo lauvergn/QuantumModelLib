@@ -35,7 +35,7 @@ MODULE mod_HONO
 !!
 !! @param option                  integer: it enables to chose between the 1 model(s) (default 1)
 
-  TYPE Param_HONO
+  TYPE HONOPot_t
 
      PRIVATE
 
@@ -54,29 +54,29 @@ MODULE mod_HONO
                                               1.777642018_Rkind,2.213326419_Rkind,&
                                               1.9315017_Rkind,ZERO]
 
-  END TYPE Param_HONO
+  END TYPE HONOPot_t
  
   PRIVATE eval_HONOPot1
  
   CONTAINS
 !> @brief Subroutine which makes the initialization of the HONO parameters.
 !!
-!! @param Para_HONO          TYPE(Param_HONO):   derived type in which the parameters are set-up.
+!! @param HONOPot          TYPE(HONOPot_t):   derived type in which the parameters are set-up.
 !! @param option             integer:            to be able to chose between the 3 models (default 1, Simple avoided crossing).
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 
-  SUBROUTINE Init_HONO(Para_HONO,option,nio,read_param,PubliUnit)
+  SUBROUTINE Init_HONO(HONOPot,option,nio,read_param,PubliUnit)
     IMPLICIT NONE
 
-    TYPE (Param_HONO),           intent(inout) :: Para_HONO
+    TYPE (HONOPot_t),           intent(inout) :: HONOPot
     integer,                     intent(in)    :: option
     integer,           optional, intent(in)    :: nio
     logical,           optional, intent(in)    :: read_param,PubliUnit
 
     logical :: read_param_loc
 
-    IF (present(PubliUnit)) Para_HONO%PubliUnit = PubliUnit
+    IF (present(PubliUnit)) HONOPot%PubliUnit = PubliUnit
 
     read_param_loc = .FALSE.
     IF (present(read_param)) read_param_loc = read_param
@@ -87,17 +87,17 @@ MODULE mod_HONO
        STOP 'STOP in Init_HONOPot: impossible to read the input file. The file unit (nio) is not present'
     END IF
 
-    Para_HONO%option = option
+    HONOPot%option = option
 
-    IF (Para_HONO%option < 1 .OR. Para_HONO%option > 2) Para_HONO%option = 1
+    IF (HONOPot%option < 1 .OR. HONOPot%option > 2) HONOPot%option = 1
 
     IF (read_param_loc) THEN
-      !CALL Read_HONOPot(Para_HONO,nio)
+      !CALL Read_HONOPot(HONOPot,nio)
       STOP 'Init_HONO: nothing to read'
 
     ELSE
 
-      SELECT CASE (Para_HONO%option)
+      SELECT CASE (HONOPot%option)
       CASE (1)
 
         CONTINUE
@@ -105,14 +105,14 @@ MODULE mod_HONO
       CASE Default
 
           write(out_unitp,*) ' ERROR in Init_HONO '
-          write(out_unitp,*) ' This option is not possible. option: ',Para_HONO%option
+          write(out_unitp,*) ' This option is not possible. option: ',HONOPot%option
           write(out_unitp,*) ' Its value MUST be 1'
 
           STOP
       END SELECT
     END IF
 
-    IF (Para_HONO%PubliUnit) THEN
+    IF (HONOPot%PubliUnit) THEN
       write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
     ELSE
       write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
@@ -121,11 +121,11 @@ MODULE mod_HONO
   END SUBROUTINE Init_HONO
 !> @brief Subroutine wich prints the HONO parameters.
 !!
-!! @param Para_HONO         TYPE(Param_HONO):   derived type in which the parameters are set-up.
+!! @param HONOPot         TYPE(HONOPot_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:            file unit to print the parameters.
-  SUBROUTINE Write_HONO(Para_HONO,nio)
+  SUBROUTINE Write_HONO(HONOPot,nio)
     
-    TYPE(Param_HONO), intent(in) :: Para_HONO
+    TYPE(HONOPot_t), intent(in) :: HONOPot
     integer         , intent(in) :: nio
 
     write(nio,*) 'HONO current parameters'
@@ -172,12 +172,12 @@ MODULE mod_HONO
     write(nio,*) '     https://doi.org/10.1063/1.2784553'
     write(nio,*) '---------------------------------------'
 
-    write(nio,*) '  PubliUnit:      ',Para_HONO%PubliUnit
+    write(nio,*) '  PubliUnit:      ',HONOPot%PubliUnit
     write(nio,*)
-    write(nio,*) '  Option   :      ',Para_HONO%option
+    write(nio,*) '  Option   :      ',HONOPot%option
     write(nio,*)
 
-    SELECT CASE (Para_HONO%option)
+    SELECT CASE (HONOPot%option)
 
     CASE (1)
 
@@ -185,7 +185,7 @@ MODULE mod_HONO
 
     CASE Default
         write(out_unitp,*) ' ERROR in write_HONOPot '
-        write(out_unitp,*) ' This option is not possible. option: ',Para_HONO%option
+        write(out_unitp,*) ' This option is not possible. option: ',HONOPot%option
         write(out_unitp,*) ' Its value MUST be 1'
 
         STOP
@@ -210,11 +210,11 @@ MODULE mod_HONO
     write(nio,*) 'end HONO default parameters'
 
   END SUBROUTINE Write0_HONO
-  SUBROUTINE get_Q0_HONO(Q0,Para_HONO,option)
+  SUBROUTINE get_Q0_HONO(Q0,HONOPot,option)
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: Q0(:)
-    TYPE (Param_HONO),           intent(in)    :: Para_HONO
+    TYPE (HONOPot_t),           intent(in)    :: HONOPot
     integer,                     intent(in)    :: option
 
     IF (size(Q0) /= 6) THEN
@@ -226,40 +226,40 @@ MODULE mod_HONO
 
     SELECT CASE (option)
     CASE (0) ! ref
-      Q0(:) = Para_HONO%Qref
+      Q0(:) = HONOPot%Qref
     CASE (1) ! trans
-      Q0(:) = Para_HONO%Qtrans
+      Q0(:) = HONOPot%Qtrans
     CASE (2) ! cis
-      Q0(:) = Para_HONO%Qcis
+      Q0(:) = HONOPot%Qcis
     CASE Default ! ref
-      Q0(:) = Para_HONO%Qref
+      Q0(:) = HONOPot%Qref
     END SELECT
 
   END SUBROUTINE get_Q0_HONO
 
 !> @brief Subroutine wich calculates the HONO potential (for the 3 models) with derivatives up to the 2d order is required.
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param Para_HONO          TYPE(Param_HONO):    derived type in which the parameters are set-up.
+!! @param HONOPot          TYPE(HONOPot_t):    derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_HONOPot(Mat_OF_PotDia,dnQ,Para_HONO,nderiv)
+  SUBROUTINE eval_HONOPot(Mat_OF_PotDia,dnQ,HONOPot,nderiv)
     USE mod_dnS
 
-    TYPE(Param_HONO) , intent(in)    :: Para_HONO
-    TYPE(dnS),       intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),       intent(in)    :: dnQ(:) !
+    TYPE(HONOPot_t) , intent(in)    :: HONOPot
+    TYPE (dnS_t),       intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),       intent(in)    :: dnQ(:) !
     integer          , intent(in)    :: nderiv
 
-    SELECT CASE (Para_HONO%option)
+    SELECT CASE (HONOPot%option)
 
     CASE (1)
-      CALL eval_HONOPot1(Mat_OF_PotDia,dnQ,Para_HONO,nderiv)
+      CALL eval_HONOPot1(Mat_OF_PotDia,dnQ,HONOPot,nderiv)
 
     CASE Default
         write(out_unitp,*) ' ERROR in eval_HONOPot '
-        write(out_unitp,*) ' This option is not possible. option: ',Para_HONO%option
+        write(out_unitp,*) ' This option is not possible. option: ',HONOPot%option
         write(out_unitp,*) ' Its value MUST be 1'
 
         STOP
@@ -269,25 +269,25 @@ MODULE mod_HONO
 
 !> @brief Subroutine wich calculates the HONO potential (Not published model) with derivatives up to the 2d order is required.
 !!
-!! @param PotVal             TYPE(dnMatPot):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param Para_HONO          TYPE(Param_HONO):    derived type in which the parameters are set-up.
+!! @param HONOPot          TYPE(HONOPot_t):    derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
-  SUBROUTINE eval_HONOPot1(Mat_OF_PotDia,dnQ,Para_HONO,nderiv)
+  SUBROUTINE eval_HONOPot1(Mat_OF_PotDia,dnQ,HONOPot,nderiv)
     !Not Published model potential 
     USE mod_dnS
 
-    TYPE(dnS),        intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),        intent(in)    :: dnQ(:)
-    TYPE(Param_HONO) ,  intent(in)    :: Para_HONO
+    TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),        intent(in)    :: dnQ(:)
+    TYPE(HONOPot_t) ,  intent(in)    :: HONOPot
     integer,            intent(in)    :: nderiv
 
 
-    TYPE(dnS)        :: Qw(6)
-    TYPE(dnS)        :: d6(4),q1(4),q2(4),q3(6),t1(4),t2(4)
-    TYPE(dnS)        :: Vtemp
+    TYPE (dnS_t)        :: Qw(6)
+    TYPE (dnS_t)        :: d6(4),q1(4),q2(4),q3(6),t1(4),t2(4)
+    TYPE (dnS_t)        :: Vtemp
     real(kind=Rkind), parameter :: Q0(6)=[2.696732586_Rkind,1.822912197_Rkind,&
                                           1.777642018_Rkind,2.213326419_Rkind,&
                                           1.9315017_Rkind,ZERO]
@@ -730,15 +730,15 @@ Vtemp = Vtemp - &
             0.25_Rkind*Qw(3)**2 - 0.25_Rkind*Qw(5)**2)* Vtemp
 !-----------------------------------------------------------------------!
 
-   CALL dealloc_dnS(Vtemp)
+   CALL QML_dealloc_dnS(Vtemp)
 
-   CALL dealloc_dnS(d6)
-   CALL dealloc_dnS(q1)
-   CALL dealloc_dnS(q2)
-   CALL dealloc_dnS(q3)
-   CALL dealloc_dnS(t1)
-   CALL dealloc_dnS(t2)
-   CALL dealloc_dnS(Qw)
+   CALL QML_dealloc_dnS(d6)
+   CALL QML_dealloc_dnS(q1)
+   CALL QML_dealloc_dnS(q2)
+   CALL QML_dealloc_dnS(q3)
+   CALL QML_dealloc_dnS(t1)
+   CALL QML_dealloc_dnS(t2)
+   CALL QML_dealloc_dnS(Qw)
 
   END SUBROUTINE eval_HONOPot1
 

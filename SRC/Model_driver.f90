@@ -89,7 +89,7 @@ SUBROUTINE sub_Qmodel_V(V,Q)
 END SUBROUTINE sub_Qmodel_V
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   USE mod_Lib
-  USE mod_dnMatPot
+  USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
 
@@ -97,19 +97,19 @@ SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   real (kind=Rkind),      intent(inout)     :: V(QuantumModel%nsurf,QuantumModel%nsurf)
   real (kind=Rkind),      intent(inout)     :: Vec(QuantumModel%nsurf,QuantumModel%nsurf)
 
-  TYPE (dnMatPot)                  :: Vec_loc,PotVal_loc
+  TYPE (dnMat_t)                  :: Vec_loc,PotVal_loc
 
 
-  CALL alloc_dnMatPot(Vec_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=0)
-  CALL alloc_dnMatPot(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=0)
+  CALL QML_alloc_dnMat(Vec_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=0)
+  CALL QML_alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=0)
 
   CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=0,Vec=Vec_loc)
 
   V(:,:)   = PotVal_loc%d0
   Vec(:,:) = Vec_loc%d0
 
-  CALL dealloc_dnMatPot(PotVal_loc)
-  CALL dealloc_dnMatPot(Vec_loc)
+  CALL QML_dealloc_dnMat(PotVal_loc)
+  CALL QML_dealloc_dnMat(Vec_loc)
 
 END SUBROUTINE sub_Qmodel_VVec
 SUBROUTINE sub_Qmodel_VG(V,G,Q)
@@ -128,7 +128,7 @@ END SUBROUTINE sub_Qmodel_VG
 SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   USE mod_Lib
   USE mod_Model
-  USE mod_dnMatPot
+  USE mod_dnMat
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
@@ -138,12 +138,12 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   real (kind=Rkind),      intent(inout)     :: NAC(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
 
 
-  TYPE (dnMatPot)                  :: NAC_loc,PotVal_loc
+  TYPE (dnMat_t)                  :: NAC_loc,PotVal_loc
 
 
 
-  CALL alloc_dnMatPot(NAC_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
-  CALL alloc_dnMatPot(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
+  CALL QML_alloc_dnMat(NAC_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
+  CALL QML_alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
 
   CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc)
 
@@ -151,8 +151,8 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   G(:,:,:)   = PotVal_loc%d1
   NAC(:,:,:) = NAC_loc%d1
 
-  CALL dealloc_dnMatPot(PotVal_loc)
-  CALL dealloc_dnMatPot(NAC_loc)
+  CALL QML_dealloc_dnMat(PotVal_loc)
+  CALL QML_dealloc_dnMat(NAC_loc)
 
 END SUBROUTINE sub_Qmodel_VG_NAC
 SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
@@ -352,7 +352,7 @@ END SUBROUTINE sub_model1_VG
 SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
   USE mod_Lib
   USE mod_Model
-  USE mod_dnMatPot
+  USE mod_dnMat
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -366,7 +366,7 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
 
 
   logical, SAVE                    :: begin = .TRUE.
-  TYPE (dnMatPot)                  :: NAC_loc,PotVal_loc
+  TYPE (dnMat_t)                  :: NAC_loc,PotVal_loc
 
   IF (option < 0) THEN
     begin = .TRUE.
@@ -396,7 +396,7 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
   END IF
 !$OMP END CRITICAL (CRIT_sub_model1_VG)
 
-  CALL alloc_dnMatPot(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
+  CALL QML_alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
 
   CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc)
 
@@ -404,8 +404,8 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
   G(:,:,:)   = PotVal_loc%d1
   NAC(:,:,:) = NAC_loc%d1
 
-  CALL dealloc_dnMatPot(PotVal_loc)
-  CALL dealloc_dnMatPot(NAC_loc)
+  CALL QML_dealloc_dnMat(PotVal_loc)
+  CALL QML_dealloc_dnMat(NAC_loc)
 
 
 END SUBROUTINE sub_model1_VG_NAC

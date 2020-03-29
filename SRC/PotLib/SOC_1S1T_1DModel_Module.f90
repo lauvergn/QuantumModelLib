@@ -20,12 +20,12 @@
 !===========================================================================
 !===========================================================================
 
-!> @brief Module which makes the initialization, calculation of the 1DSOC_Model potentials (value, gradient and hessian).
+!> @brief Module which makes the initialization, calculation of the OneDSOC_Model potentials (value, gradient and hessian).
 !!
 !> @author David Lauvergnat
 !! @date 15/04/2019
 !!
-MODULE mod_1DSOC_Model
+MODULE mod_OneDSOC_Model
   USE mod_NumParameters
   IMPLICIT NONE
 
@@ -39,7 +39,7 @@ MODULE mod_1DSOC_Model
 !! @param C0,RC1,IC1              real:    Publication parameters (true fortran parameters)
 !! @param DRsig                   real:    Publication parameters (true fortran parameters)
 !! @param Rsig                    real:    Publication parameters (this parameter can be changed)
-  TYPE Param_1DSOC
+  TYPE OneDSOCPot_t
      PRIVATE
       real (kind=Rkind) :: a1     = 0.03452_Rkind
       real (kind=Rkind) :: a2     = 0.5_Rkind
@@ -60,10 +60,10 @@ MODULE mod_1DSOC_Model
      real (kind=Rkind), PUBLIC :: mu  = 20000._Rkind !< Reduced mass from Granucci et al. paper (in au)
 
 
-  END TYPE Param_1DSOC
+  END TYPE OneDSOCPot_t
 
-!  PRIVATE Read_1DSOC_ModelPot,Init0_1DSOC_ModelPot,eval_1DSOC_ModelPot1,eval_1DSOC_ModelPot2,eval_1DSOC_ModelPot3
-!  PRIVATE eval_1DSOC_ModelPot1_old,eval_1DSOC_ModelPot2_old,eval_1DSOC_ModelPot3_old
+!  PRIVATE Read_OneDSOC_ModelPot,Init0_OneDSOC_ModelPot,eval_OneDSOC_ModelPot1,eval_OneDSOC_ModelPot2,eval_OneDSOC_ModelPot3
+!  PRIVATE eval_OneDSOC_ModelPot1_old,eval_OneDSOC_ModelPot2_old,eval_OneDSOC_ModelPot3_old
 
 CONTAINS
 !> @brief Subroutine which makes the initialization of the 1D-SOC Model parameters.
@@ -71,14 +71,14 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 15/04/2019
 !!
-!! @param Para_1DSOC         TYPE(Param_1DSOC):  derived type in which the parameters are set-up.
+!! @param OneDSOCPot         TYPE(OneDSOCPot_t):  derived type in which the parameters are set-up.
 !! @param option1            integer:            to be able to chose between the models (default 1, as in the pubication).
 !! @param nsurf              integer:            4 or 2 (see the publication).
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-!! @param Rsig               real (optional):    1DSOC_Model parameter (the only one, which can be changed).
-  SUBROUTINE Init_1DSOC(Para_1DSOC,option,nsurf,nio,read_param,Rsig_in)
-    TYPE (Param_1DSOC),          intent(inout)   :: Para_1DSOC
+!! @param Rsig               real (optional):    OneDSOC_Model parameter (the only one, which can be changed).
+  SUBROUTINE Init_OneDSOC(OneDSOCPot,option,nsurf,nio,read_param,Rsig_in)
+    TYPE (OneDSOCPot_t),          intent(inout)   :: OneDSOCPot
     integer,                     intent(in)      :: option
     integer,                     intent(in)      :: nsurf
     integer,           optional, intent(in)      :: nio
@@ -92,19 +92,19 @@ CONTAINS
     namelist /OneD_SOC_Model/ Rsig
 
     IF (nsurf /= 2 .AND. nsurf /= 4) THEN
-       write(out_unitp,*) ' ERROR in Init_1DSOC'
+       write(out_unitp,*) ' ERROR in Init_OneDSOC'
        write(out_unitp,*) ' nsurf MUST equal to 4 or 2. nusrf: ',nsurf
-       STOP 'ERROR in Init_1DSOC: nsurf MUST equal to 4 or 2'
+       STOP 'ERROR in Init_OneDSOC: nsurf MUST equal to 4 or 2'
     END IF
 
 
     read_param_loc = .FALSE.
     IF (present(read_param)) read_param_loc = read_param
     IF (read_param_loc .AND. .NOT. present(nio)) THEN
-       write(out_unitp,*) ' ERROR in Init_1DSOC'
+       write(out_unitp,*) ' ERROR in Init_OneDSOC'
        write(out_unitp,*) ' read_param = t and The file unit (nio) is not present'
        write(out_unitp,*) ' => impossible to read the input file'
-       STOP 'ERROR in Init_1DSOC: impossible to read the input file. The file unit (nio) is not present'
+       STOP 'ERROR in Init_OneDSOC: impossible to read the input file. The file unit (nio) is not present'
     END IF
 
 
@@ -113,47 +113,47 @@ CONTAINS
       read(nio,OneD_SOC_Model,IOSTAT=err_read)
 
       IF (err_read < 0) THEN
-        write(out_unitp,*) ' ERROR in Init_1DSOC'
+        write(out_unitp,*) ' ERROR in Init_OneDSOC'
         write(out_unitp,*) ' End-of-file or End-of-record'
         write(out_unitp,*) ' The namelist "OneD_SOC_Model" is probably absent'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,*)
-        STOP ' ERROR in Read_1DSOC_ModelPot'
+        STOP ' ERROR in Read_OneDSOC_ModelPot'
       ELSE IF (err_read > 0) THEN
-        write(out_unitp,*) ' ERROR in Init_1DSOC'
+        write(out_unitp,*) ' ERROR in Init_OneDSOC'
         write(out_unitp,*) ' Some parameter names of the namelist "OneD_SOC_Model" are probaly wrong'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,nml=OneD_SOC_Model)
-        STOP ' ERROR in Init_1DSOC'
+        STOP ' ERROR in Init_OneDSOC'
       END IF
 
-      Para_1DSOC%Rsig     = Rsig
+      OneDSOCPot%Rsig     = Rsig
 
     ELSE
       IF (present(Rsig_in)) THEN
-        Para_1DSOC%Rsig     = Rsig_in
+        OneDSOCPot%Rsig     = Rsig_in
       ELSE
-        Para_1DSOC%Rsig     = 8._Rkind
+        OneDSOCPot%Rsig     = 8._Rkind
       END IF
     END IF
 
-    Para_1DSOC%option   = option
-    IF (Para_1DSOC%option < 1 .OR. Para_1DSOC%option > 2) Para_1DSOC%option = 1
+    OneDSOCPot%option   = option
+    IF (OneDSOCPot%option < 1 .OR. OneDSOCPot%option > 2) OneDSOCPot%option = 1
 
-    !CALL Write_1DSOC(Para_1DSOC,nio=out_unitp)
+    !CALL Write_OneDSOC(OneDSOCPot,nio=out_unitp)
 
 
-  END SUBROUTINE Init_1DSOC
+  END SUBROUTINE Init_OneDSOC
 !> @brief Subroutine wich prints the 1D-SOC Model parameters.
 !!
 !> @author David Lauvergnat
 !! @date 30/07/2019
 !!
 !! @param nio                integer:            file unit to print the parameters.
-  SUBROUTINE Write0_1DSOC(nio)
+  SUBROUTINE Write0_OneDSOC(nio)
     integer,            intent(in) :: nio
 
-    write(nio,*) '1DSOC_Model parameters, from reference:'
+    write(nio,*) 'OneDSOC_Model parameters, from reference:'
     write(nio,*)
     write(nio,*) 'Granucci et al., J. Chem. Phys. V137, p22A501 (2012)'
     write(nio,*)
@@ -168,14 +168,14 @@ CONTAINS
     write(nio,*) '     -The second one, the function sigma(R) is defined as tanh(-4*(R-Rsig)/DRsig).'
     write(nio,*)
     write(nio,*) 'Values for the first option:'
-    write(nio,*) 'Diabatic Potential, 1DSOC_Model (with Rsig=8.0)'
+    write(nio,*) 'Diabatic Potential, OneDSOC_Model (with Rsig=8.0)'
     write(nio,*) 'Value at: R=10. Bohr'
     write(nio,*) 'Vdia (Hartree)   = [ 0.041042414      -0.000707107       0.000707107       0.001000000]'
     write(nio,*) '                   [-0.000707107       0.041042499       0.000000000       0.000000000]'
     write(nio,*) '                   [ 0.000707107       0.000000000       0.041042499       0.000000000]'
     write(nio,*) '                   [ 0.001000000       0.000000000       0.000000000       0.041042499]'
     write(nio,*)
-    write(nio,*) 'Adiabatic Potential, 1DSOC_Model (with Rsig=8.0)'
+    write(nio,*) 'Adiabatic Potential, OneDSOC_Model (with Rsig=8.0)'
     write(nio,*) 'Value at: R=10. Bohr'
     write(nio,*) 'Vadia (Hartree)   = [ 0.039628243      0.041042499       0.041042499       0.042456670]'
 
@@ -188,68 +188,68 @@ CONTAINS
     write(nio,*) '                   [-1.749343292      -0.000000000      -0.000000000       0.000000000]'
     write(nio,*) 'WARNING: The NAC, associated to the 2 degenerated vectors, are numerically not well defined !!!!'
     write(nio,*)
-    write(nio,*) 'end 1DSOC_Model parameters'
+    write(nio,*) 'end OneDSOC_Model parameters'
 
-  END SUBROUTINE Write0_1DSOC
+  END SUBROUTINE Write0_OneDSOC
 
 !> @brief Subroutine wich prints the 1D-SOC Model parameters.
 !!
 !> @author David Lauvergnat
 !! @date 15/04/2019
 !!
-!! @param Para_1DSOC         TYPE(Param_1DSOC):  derived type in which the parameters are set-up.
+!! @param OneDSOCPot         TYPE(OneDSOCPot_t):  derived type in which the parameters are set-up.
 !! @param nio                integer:            file unit to print the parameters.
-  SUBROUTINE Write_1DSOC(Para_1DSOC,nio)
-    TYPE (Param_1DSOC), intent(in) :: Para_1DSOC
+  SUBROUTINE Write_OneDSOC(OneDSOCPot,nio)
+    TYPE (OneDSOCPot_t), intent(in) :: OneDSOCPot
     integer,            intent(in) :: nio
 
-    write(nio,*) '1DSOC_Model current parameters'
+    write(nio,*) 'OneDSOC_Model current parameters'
     write(nio,*)
-    write(nio,*) '  a1,a2:          ',Para_1DSOC%a1,Para_1DSOC%a2
-    write(nio,*) '  alpha1,alpha2:  ',Para_1DSOC%alpha1,Para_1DSOC%alpha2
-    write(nio,*) '  DE:             ',Para_1DSOC%DE
+    write(nio,*) '  a1,a2:          ',OneDSOCPot%a1,OneDSOCPot%a2
+    write(nio,*) '  alpha1,alpha2:  ',OneDSOCPot%alpha1,OneDSOCPot%alpha2
+    write(nio,*) '  DE:             ',OneDSOCPot%DE
 
-    write(nio,*) '  C0:             ',Para_1DSOC%C0
-    write(nio,*) '  C1=RC1 + i IC1: ',Para_1DSOC%RC1,Para_1DSOC%IC1
+    write(nio,*) '  C0:             ',OneDSOCPot%C0
+    write(nio,*) '  C1=RC1 + i IC1: ',OneDSOCPot%RC1,OneDSOCPot%IC1
 
-    write(nio,*) '   Rsig:          ',Para_1DSOC%Rsig
-    write(nio,*) '  DRsig:          ',Para_1DSOC%DRsig
-    write(nio,*) ' option:          ',Para_1DSOC%option
+    write(nio,*) '   Rsig:          ',OneDSOCPot%Rsig
+    write(nio,*) '  DRsig:          ',OneDSOCPot%DRsig
+    write(nio,*) ' option:          ',OneDSOCPot%option
     write(nio,*)
-    write(nio,*) 'end 1DSOC_Model current parameters'
+    write(nio,*) 'end OneDSOC_Model current parameters'
 
-  END SUBROUTINE Write_1DSOC
+  END SUBROUTINE Write_OneDSOC
 
-  SUBROUTINE get_Q0_1DSOC(R0,Para_1DSOC)
+  SUBROUTINE get_Q0_OneDSOC(R0,OneDSOCPot)
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: R0
-    TYPE (Param_1DSOC),          intent(in)    :: Para_1DSOC
+    TYPE (OneDSOCPot_t),          intent(in)    :: OneDSOCPot
 
-    R0 = Para_1DSOC%Rsig
+    R0 = OneDSOCPot%Rsig
 
-  END SUBROUTINE get_Q0_1DSOC
+  END SUBROUTINE get_Q0_OneDSOC
 
 !> @brief Subroutine wich calculates the 1D-SOC Model potential with derivatives up to the 2d order is required.
 !!
 !> @author David Lauvergnat
 !! @date 15/04/2019
 !!
-!! @param PotVal       TYPE(dnMatPot):     derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal       TYPE (dnMat_t):     derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r            real:               value for which the potential is calculated
-!! @param Para_1DSOC   TYPE(Param_1DSOC):  derived type in which the parameters are set-up.
+!! @param OneDSOCPot   TYPE(OneDSOCPot_t):  derived type in which the parameters are set-up.
 !! @param nderiv       integer:            it enables to specify up to which derivatives the potential is calculated:
 !!                                         the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_1DSOC(Mat_OF_PotDia,dnR,Para_1DSOC,nderiv)
+  SUBROUTINE eval_OneDSOC(Mat_OF_PotDia,dnR,OneDSOCPot,nderiv)
     USE mod_dnS
 
-    TYPE (Param_1DSOC),       intent(in)     :: Para_1DSOC
-    TYPE(dnS),              intent(inout)  :: Mat_OF_PotDia(:,:)
-    TYPE(dnS),              intent(in)     :: dnR
+    TYPE (OneDSOCPot_t),       intent(in)     :: OneDSOCPot
+    TYPE (dnS_t),              intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),              intent(in)     :: dnR
     integer,                  intent(in)     :: nderiv
 
     !local variables (derived type). They have to be deallocated
-    TYPE(dnS)      :: dnSig,dnx
+    TYPE (dnS_t)      :: dnSig,dnx
     integer          :: i,j,nsurf
     real(kind=Rkind) :: RC01
 
@@ -258,39 +258,39 @@ CONTAINS
     nsurf = size(Mat_OF_PotDia,dim=1)
 
     ! Sig(R) calculation
-    IF (Para_1DSOC%option == 1) THEN ! as in the publication
+    IF (OneDSOCPot%option == 1) THEN ! as in the publication
       dnSig = dnR ! to have the correct initialization for dnSig = +/- ONE
-      IF (dnR <= Para_1DSOC%Rsig-HALF*Para_1DSOC%DRsig) THEN
+      IF (dnR <= OneDSOCPot%Rsig-HALF*OneDSOCPot%DRsig) THEN
         dnSig = ONE
-      ELSE IF (dnR >= Para_1DSOC%Rsig+HALF*Para_1DSOC%DRsig) THEN
+      ELSE IF (dnR >= OneDSOCPot%Rsig+HALF*OneDSOCPot%DRsig) THEN
         dnSig = -ONE
       ELSE
-        dnx   = (dnR - Para_1DSOC%Rsig) / Para_1DSOC%DRsig
+        dnx   = (dnR - OneDSOCPot%Rsig) / OneDSOCPot%DRsig
         dnSig = dnx*(FOUR*dnx**2 -THREE)
       END IF
     ELSE
-      dnx   = (dnR - Para_1DSOC%Rsig) / Para_1DSOC%DRsig
+      dnx   = (dnR - OneDSOCPot%Rsig) / OneDSOCPot%DRsig
       dnSig = tanh(-FOUR*dnx)
     END IF
 
     IF (nsurf == 4) THEN
       !singlet Energy
-      Mat_OF_PotDia(1,1) = Para_1DSOC%a1 * exp(-Para_1DSOC%alpha1*dnR) + Para_1DSOC%DE
+      Mat_OF_PotDia(1,1) = OneDSOCPot%a1 * exp(-OneDSOCPot%alpha1*dnR) + OneDSOCPot%DE
 
       !Triplet Energy
-      Mat_OF_PotDia(2,2) = Para_1DSOC%a2 * exp(-Para_1DSOC%alpha2*dnR)
+      Mat_OF_PotDia(2,2) = OneDSOCPot%a2 * exp(-OneDSOCPot%alpha2*dnR)
       Mat_OF_PotDia(3,3) = Mat_OF_PotDia(2,2)
       Mat_OF_PotDia(4,4) = Mat_OF_PotDia(2,2)
 
 
       !Singley-triplet coupling
-      Mat_OF_PotDia(1,2) =  sqrt(TWO) * Para_1DSOC%RC1 * dnSig
+      Mat_OF_PotDia(1,2) =  sqrt(TWO) * OneDSOCPot%RC1 * dnSig
       Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
-      Mat_OF_PotDia(1,3) =  -sqrt(TWO) * Para_1DSOC%IC1 * dnSig
+      Mat_OF_PotDia(1,3) =  -sqrt(TWO) * OneDSOCPot%IC1 * dnSig
       Mat_OF_PotDia(3,1) = Mat_OF_PotDia(1,3)
 
-      Mat_OF_PotDia(1,4) =  -Para_1DSOC%C0 * dnSig
+      Mat_OF_PotDia(1,4) =  -OneDSOCPot%C0 * dnSig
       Mat_OF_PotDia(4,1) = Mat_OF_PotDia(1,4)
 
 
@@ -304,10 +304,10 @@ CONTAINS
 
    ELSE
       !singlet Energy
-      Mat_OF_PotDia(1,1) = Para_1DSOC%a1 * exp(-Para_1DSOC%alpha1*dnR) + Para_1DSOC%DE
+      Mat_OF_PotDia(1,1) = OneDSOCPot%a1 * exp(-OneDSOCPot%alpha1*dnR) + OneDSOCPot%DE
 
       !Triplet Energy
-      Mat_OF_PotDia(2,2) = Para_1DSOC%a2 * exp(-Para_1DSOC%alpha2*dnR)
+      Mat_OF_PotDia(2,2) = OneDSOCPot%a2 * exp(-OneDSOCPot%alpha2*dnR)
 
       ! S-T coupling
       ! V(S,T) = gamma.Exp[ i.theta]
@@ -324,16 +324,16 @@ CONTAINS
       !      sigma(R) < 0  =>   |sigma(R)| =  - sigma(R)
       !      => V(S,T)=V(T,S) = sigma(R) . sqrt(2abs(C1)^2+C0^2)
 
-      RC01 = sqrt(TWO*(Para_1DSOC%RC1**2+Para_1DSOC%IC1**2)+Para_1DSOC%C0**2)
+      RC01 = sqrt(TWO*(OneDSOCPot%RC1**2+OneDSOCPot%IC1**2)+OneDSOCPot%C0**2)
       Mat_OF_PotDia(1,2) = dnSig * RC01
       Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
    END IF
 
 
-    CALL dealloc_dnS(dnx)
-    CALL dealloc_dnS(dnSig)
+    CALL QML_dealloc_dnS(dnx)
+    CALL QML_dealloc_dnS(dnSig)
 
 
-  END SUBROUTINE eval_1DSOC
+  END SUBROUTINE eval_OneDSOC
 
-END MODULE mod_1DSOC_Model
+END MODULE mod_OneDSOC_Model
