@@ -4,17 +4,17 @@
 #Possible values: (Empty: gfortran)
 #                ifort (version: 14.0.2, 16.0.3, 17.0.1 linux)
 #                gfortran (version: 6.3.0 linux and osx)
-#                pgf90 (version: 17.10-0, linux): problems because datanh, dasinh, dacosh are not available with this compiler !!!
-#F90 = gfortran
-F90 = nagfor
+#                pgf90 (version: 17.10-0, linux)
+#                nagfor (version 7.0, osx)
+F90 = gfortran
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 ## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
 # NVHYP  = 1 : with intrinsic inverse hyperbolic functions
-# NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic inverse hyperbolic functions)
+# NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic ones)
 INVHYP  = 1
 #=================================================================================
 
