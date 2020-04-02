@@ -59,14 +59,11 @@ PROGRAM TEST_dnSca
     integer                          :: nderiv,nio_test
     real (kind=Rkind)                :: dnSerr_test = FIVE*ONETENTH**4
 
-    !intrinsic :: sqrt, abs, exp, log, log10, sin, asin, cos, acos, tan, atan, sinh, asinh, cosh, acosh, tanh, atanh
-    intrinsic :: dsqrt, dabs, dexp, dlog, dlog10
-    intrinsic :: dsin, dasin, dcos, dacos, dtan, datan
-    intrinsic :: dsinh, dcosh, dtanh
-#if __INVHYP == 1
-    intrinsic :: dasinh, dacosh, datanh
-#endif
+
     real (kind=Rkind), external  :: faplusx,faminusx,fatimex,faoverx
+    real (kind=Rkind), external  :: SQRT_perso,ABS_perso,EXP_perso,LOG_perso,LOG10_perso
+    real (kind=Rkind), external  :: SIN_perso,ASIN_perso,COS_perso,ACOS_perso,TAN_perso,ATAN_perso
+    real (kind=Rkind), external  :: SINH_perso,ASINH_perso,COSH_perso,ACOSH_perso,TANH_perso,ATANH_perso
 
     character (len=*), parameter :: name_sub='TEST_dnSca'
 
@@ -128,7 +125,7 @@ PROGRAM TEST_dnSca
    write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a)') "operators: + - * / **"
    write(out_unitp,'(a)') "============================================"
-
+   ! test 2+1=3
    Sana = 0.5_Rkind + dnX
    Snum = get_Num_dnSca_FROM_f_x(x,faplusx,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'a+dnX:         (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
@@ -184,23 +181,23 @@ PROGRAM TEST_dnSca
    Sana =  dnX / dnX - 1._Rkind
    write(out_unitp,'(a,l2)') 'dnX/dnX-1.                ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX / dnX - 1.')
-
+   !test 13
    Sana =  dnX**0.5_Rkind - sqrt(dnX)
    write(out_unitp,'(a,l2)') 'dnX**0.5-sqrt(dnX)        ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**0.5-sqrt(dnX)')
 
-   Sana =  dnX**0 - ONE
-   write(out_unitp,'(a,l2)') 'dnX**0-ONE                ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**0 - ONE')
-
-   Sana =  dnX**1 - dnX
-   write(out_unitp,'(a,l2)') 'dnX**1-dnX                ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**1 - dnX')
-
-   Sana =  dnX**2 - dnX*dnX
-   write(out_unitp,'(a,l2)') 'dnX**2-dnX*dnX            ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
-   CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**2 - dnX*dnX')
-
+!   Sana =  dnX**0 - ONE
+!   write(out_unitp,'(a,l2)') 'dnX**0-ONE                ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
+!   CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**0 - ONE')
+!
+!   Sana =  dnX**1 - dnX
+!   write(out_unitp,'(a,l2)') 'dnX**1-dnX                ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
+!   CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**1 - dnX')
+!
+!   Sana =  dnX**2 - dnX*dnX
+!   write(out_unitp,'(a,l2)') 'dnX**2-dnX*dnX            ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
+!   CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**2 - dnX*dnX')
+   !test 14+2
    Sana =  dnX**3 - dnX*dnX*dnX
    write(out_unitp,'(a,l2)') 'dnX**3-dnX*dnX*dnX        ==0?',Check_dnSca_IS_ZERO(Sana,dnSerr_test)
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='dnX**3 - dnX*dnX*dnX')
@@ -208,118 +205,106 @@ PROGRAM TEST_dnSca
    write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a)') "functions: sqrt, exp, log, ... sin, asin, ... acosh ..."
    write(out_unitp,'(a)') "============================================"
-
+   !test 17
    Sana = sqrt(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dsqrt,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,SQRT_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'sqrt: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on sqrt')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='sqrt(dnX)')
 
    Sana = abs(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dabs,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,ABS_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'abs:  (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on abs')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='abs(dnX)')
 
    Sana = exp(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dexp,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,EXP_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'exp:  (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on exp')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='exp(dnX)')
 
    Sana = log(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dlog,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,log_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'log:  (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on log')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='log(dnX)')
 
    Sana = log10(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dlog10,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,log10_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'log10: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on log10')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='log10(dnX)')
 
    Sana = sin(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dsin,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,sin_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'sin:  (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on sin')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='sin(dnX)')
 
    Sana = asin(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dasin,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,asin_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'asin: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on asin')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='asin(dnX)')
 
    Sana = cos(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dcos,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,cos_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'cos:  (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on cos')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='cos(dnX)')
 
    Sana = acos(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dacos,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,acos_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'acos: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on acos')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='acos(dnX)')
 
    Sana = tan(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dtan,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,tan_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'tan:  (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on tan')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='tan(dnX)')
 
    Sana = atan(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,datan,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,atan_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'atan: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on atan')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='atan(dnX)')
 
    Sana = sinh(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dsinh,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,sinh_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'sinh: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on sinh')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='sinh(dnX)')
 
    Sana = asinh(dnX)
-#if __INVHYP == 1
-   Snum = get_Num_dnSca_FROM_f_x(x,dasinh,nderiv=nderiv)
-#else
    Snum = get_Num_dnSca_FROM_f_x(x,asinh_perso,nderiv=nderiv)
-#endif
    write(out_unitp,'(a,l2)') 'asinh: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on asinh')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='asinh(dnX)')
 
    Sana = cosh(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dcosh,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,cosh_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'cosh: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on cosh')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='cosh(dnX)')
 
    dnY = init_dnSca(FOUR*x  ,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
    Sana = acosh(dnY)
-#if __INVHYP == 1
-   Snum = get_Num_dnSca_FROM_f_x(FOUR*x,dacosh,nderiv=nderiv)
-#else
    Snum = get_Num_dnSca_FROM_f_x(FOUR*x,acosh_perso,nderiv=nderiv)
-#endif
    write(out_unitp,'(a,l2)') 'acosh: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on acosh')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='acosh(dn4X)')
 
    Sana = tanh(dnX)
-   Snum = get_Num_dnSca_FROM_f_x(x,dtanh,nderiv=nderiv)
+   Snum = get_Num_dnSca_FROM_f_x(x,tanh_perso,nderiv=nderiv)
    write(out_unitp,'(a,l2)') 'tanh: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on tanh')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='tanh(dnX)')
-
+   !test 33
    Sana = atanh(dnX)
-#if __INVHYP == 1
-   Snum = get_Num_dnSca_FROM_f_x(x,datanh,nderiv=nderiv)
-#else
    Snum = get_Num_dnSca_FROM_f_x(x,atanh_perso,nderiv=nderiv)
-#endif
    write(out_unitp,'(a,l2)') 'atanh: (Sana-Snum)==0?',Check_dnSca_IS_ZERO(Sana-Snum,dnSerr_test)
    CALL write_dnSca(Sana,info='test on atanh')
    CALL Write_dnSca_FOR_test(Sana,nio_test,info='atanh(dnX)')
@@ -368,3 +353,168 @@ FUNCTION faoverx(x)
   faoverx = 0.5_Rkind / x
 
 END FUNCTION faoverx
+FUNCTION SQRT_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = sqrt(x)
+
+END FUNCTION SQRT_perso
+FUNCTION ABS_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = ABS(x)
+
+END FUNCTION ABS_perso
+FUNCTION EXP_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = EXP(x)
+
+END FUNCTION EXP_perso
+FUNCTION LOG_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = LOG(x)
+
+END FUNCTION LOG_perso
+FUNCTION LOG10_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = LOG10(x)
+
+END FUNCTION LOG10_perso
+FUNCTION SIN_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = SIN(x)
+
+END FUNCTION SIN_perso
+FUNCTION ASIN_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = ASIN(x)
+
+END FUNCTION ASIN_perso
+FUNCTION COS_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = COS(x)
+
+END FUNCTION COS_perso
+FUNCTION ACOS_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = ACOS(x)
+
+END FUNCTION ACOS_perso
+FUNCTION TAN_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = TAN(x)
+
+END FUNCTION TAN_perso
+FUNCTION ATAN_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = ATAN(x)
+
+END FUNCTION ATAN_perso
+FUNCTION SINH_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = SINH(x)
+
+END FUNCTION SINH_perso
+FUNCTION ASINH_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+#if __INVHYP == 1
+    f = asinh(x)
+#else
+    f = log(x+sqrt(x*x+ONE))
+#endif
+
+END FUNCTION ASINH_perso
+FUNCTION COSH_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = COSH(x)
+
+END FUNCTION COSH_perso
+FUNCTION ACOSH_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+#if __INVHYP == 1
+    f = acosh(x)
+#else
+    f = log(x+sqrt(x*x-ONE))
+#endif
+
+END FUNCTION ACOSH_perso
+FUNCTION TANH_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = TANH(x)
+
+END FUNCTION TANH_perso
+FUNCTION ATANH_perso(x) RESULT(f)
+  USE mod_NumParameters
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+#if __INVHYP == 1
+    f = atanh(x)
+#else
+    f = HALF*log((ONE+x)/(ONE-x))
+#endif
+
+END FUNCTION ATANH_perso

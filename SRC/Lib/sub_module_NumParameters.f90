@@ -24,12 +24,15 @@
 !===========================================================================
   MODULE mod_NumParameters
 !$ USE omp_lib
-      USE ISO_FORTRAN_ENV, only : INPUT_UNIT,OUTPUT_UNIT
+      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : INPUT_UNIT,OUTPUT_UNIT,real64,real128,int32,int64
       IMPLICIT NONE
 
-      integer, parameter :: Rkind        = 8
-      integer, parameter :: Ikind        = 4
-      integer, parameter :: ILkind       = 8
+      PUBLIC
+      PRIVATE :: INPUT_UNIT,OUTPUT_UNIT,real64,real128,int32,int64
+
+      integer, parameter :: Rkind        = real64
+      integer, parameter :: Ikind        = int32
+      integer, parameter :: ILkind       = int64
       integer, parameter :: Name_len     = 20
       integer, parameter :: Name_longlen = 50
       integer, parameter :: Line_len     = 255

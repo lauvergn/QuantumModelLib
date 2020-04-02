@@ -420,7 +420,7 @@ CONTAINS
      hours   = mod(hours,24)
 
 
-     t_real = real(count_work,kind=8)/real(freq,kind=8)
+     t_real = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
      write(out_unitp,31) t_real,name
  31  format('        real (s): ',f18.3,' in ',a)
      write(out_unitp,32) days,hours,minutes,seconds,name
@@ -443,7 +443,7 @@ CONTAINS
      days    = hours/24
      hours   = mod(hours,24)
 
-     t_real = real(count_work,kind=8)/real(freq,kind=8)
+     t_real = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
      write(out_unitp,41) t_real
  41  format('  Total real (s): ',f18.3)
      write(out_unitp,42) days,hours,minutes,seconds

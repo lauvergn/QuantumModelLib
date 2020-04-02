@@ -613,13 +613,13 @@ CONTAINS
     ndim = 0
     IF (allocated(S%d1)) ndim = size(S%d1)
 
-    write(nio_loc,'(a,3(3x),x,sp,e12.3)') ' 0   derivative',S%d0
+    write(nio_loc,'(a,3(3x),1x,sp,e12.3)') ' 0   derivative',S%d0
 
     IF (allocated(S%d1)) THEN
       IF (ndim > 99) THEN
-        fformat = '(a,(x,i0),x,sp,e12.3)'
+        fformat = '(a,(1x,i0),1x,sp,e12.3)'
       ELSE
-        fformat = '(a,(x,i2),2(3x),x,sp,e12.3)'
+        fformat = '(a,(1x,i2),2(3x),1x,sp,e12.3)'
       END IF
       DO i=1,ubound(S%d1,dim=1)
         write(nio_loc,fformat) ' 1st derivative',i,S%d1(i)
@@ -628,9 +628,9 @@ CONTAINS
 
     IF (allocated(S%d2)) THEN
       IF (ndim > 99) THEN
-        fformat = '(a,2(x,i0),x,sp,e12.3)'
+        fformat = '(a,2(1x,i0),1x,sp,e12.3)'
       ELSE
-        fformat = '(a,2(x,i2),1(3x),x,sp,e12.3)'
+        fformat = '(a,2(1x,i2),1(3x),1x,sp,e12.3)'
       END IF
       DO i=1,ubound(S%d2,dim=2)
       DO j=1,ubound(S%d2,dim=1)
@@ -641,9 +641,9 @@ CONTAINS
 
     IF (allocated(S%d3)) THEN
       IF (ndim > 99) THEN
-        fformat = '(a,3(x,i0),x,sp,e12.3)'
+        fformat = '(a,3(1x,i0),1x,sp,e12.3)'
       ELSE
-        fformat = '(a,3(x,i2),x,sp,e12.3)'
+        fformat = '(a,3(1x,i2),1x,sp,e12.3)'
       END IF
       DO i=1,ubound(S%d3,dim=3)
       DO j=1,ubound(S%d3,dim=2)
@@ -1966,9 +1966,9 @@ CONTAINS
 
     nderiv = get_nderiv_FROM_dnSca(S)
 #if __INVHYP == 1
-    IF (nderiv >= 0) d0f =   acosh(S%d0)
+    IF (nderiv >= 0) d0f = acosh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  acosh_perso(S%d0)
+    IF (nderiv >= 0) d0f = log(S%d0+sqrt(S%d0*S%d0-ONE))
 #endif
     IF (nderiv >= 1) d1f = ONE/sqrt(-ONE+S%d0**2)
     IF (nderiv >= 2) d2f = -S%d0*d1f**3
@@ -2015,7 +2015,7 @@ CONTAINS
 #if __INVHYP == 1
     IF (nderiv >= 0) d0f =  asinh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  asinh_perso(S%d0)
+    IF (nderiv >= 0) d0f =  log(S%d0+sqrt(S%d0*S%d0+ONE))
 #endif
     IF (nderiv >= 1) d1f = ONE/sqrt(ONE+S%d0**2)
     IF (nderiv >= 2) d2f = -S%d0*d1f**3
@@ -2064,7 +2064,7 @@ CONTAINS
 #if __INVHYP == 1
     IF (nderiv >= 0) d0f =  atanh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  atanh_perso(S%d0)
+    IF (nderiv >= 0) d0f =  HALF*log((ONE+S%d0)/(ONE-S%d0))
 #endif
     IF (nderiv >= 1) d1f =  ONE/(ONE-S%d0**2)
     IF (nderiv >= 2) d2f =  TWO*S%d0 * d1f**2
@@ -2073,40 +2073,6 @@ CONTAINS
     Sres = get_F_dnSca(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION get_ATANH_dnSca
-
-  ELEMENTAL FUNCTION atanh_perso(x)
-    real (kind=Rkind)             :: atanh_perso
-    real (kind=Rkind), intent(in) :: x
-
-#if __INVHYP == 1
-    atanh_perso = atanh(x)
-#else
-    atanh_perso = HALF*log((ONE+x)/(ONE-x))
-#endif
-
-  END FUNCTION atanh_perso
-  ELEMENTAL FUNCTION asinh_perso(x)
-    real (kind=Rkind)             :: asinh_perso
-    real (kind=Rkind), intent(in) :: x
-
-#if __INVHYP == 1
-    asinh_perso = asinh(x)
-#else
-    asinh_perso = log(x+sqrt(x*x+ONE))
-#endif
-
-  END FUNCTION asinh_perso
-  ELEMENTAL FUNCTION acosh_perso(x)
-    real (kind=Rkind)             :: acosh_perso
-    real (kind=Rkind), intent(in) :: x
-
-#if __INVHYP == 1
-    acosh_perso = acosh(x)
-#else
-    acosh_perso = log(x+sqrt(x*x-ONE))
-#endif
-
-  END FUNCTION acosh_perso
 
   FUNCTION dot_product_VecOFdnSca(VecA,VecB) RESULT(Sres)
     USE mod_NumParameters

@@ -5,10 +5,11 @@
 #                ifort (version: 14.0.2, 16.0.3, 17.0.1 linux)
 #                gfortran (version: 6.3.0 linux and osx)
 #                pgf90 (version: 17.10-0, linux): problems because datanh, dasinh, dacosh are not available with this compiler !!!
-F90 = gfortran
+#F90 = gfortran
+F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 ## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
@@ -57,6 +58,44 @@ OS=$(shell uname)
  CPP    = -cpp
 #=================================================================================
 #=================================================================================
+
+#=================================================================================
+# nag compillation (nagfor)
+#=================================================================================
+ifeq ($(F90),nagfor)
+   # for c++ preprocessing
+   CPP = -fpp
+   # omp management
+   ifeq ($(OMP),0)
+      OMPFLAG =
+   else
+      OMPFLAG = -openmp
+   endif
+   # opt management
+   ifeq ($(OPT),1)
+      F90FLAGS = -O4  $(OMPFLAG) −compatible -Ounroll=4 -s -v
+   else
+      #F90FLAGS = -O0 $(OMPFLAG) -g -C=all -mtrace=all
+      #  -C=undefined is not compatible with -framework Accelerate
+      # −kind=byte and −dcfuns is not working
+      #with -mtrace=all add information on the memmory allocation/deallocation.
+      ifeq ($(OMP),0)
+        F90FLAGS = -O0 $(OMPFLAG) -g -compatible  -gline -C -C=alias -C=intovf
+      else
+        F90FLAGS = -O0 $(OMPFLAG) -g -C=all
+      endif
+   endif
+
+   ifeq ($(LAPACK),1)
+     F90LIB = -framework Accelerate
+   else
+     F90LIB = 
+   endif
+
+   F90_VER = $(shell $(F90) -V 3>&1 1>&2 2>&3 | head -1 )
+
+endif
+
 
 #=================================================================================
 #=================================================================================
@@ -153,6 +192,7 @@ QML_path=$(shell pwd)
 $(info ***********************************************************************)
 $(info ***********OS:           $(OS))
 $(info ***********COMPILER:     $(F90))
+$(info ***********COMPILER_VER: $(F90_VER))
 $(info ***********OPTIMIZATION: $(OPT))
 $(info ***********OpenMP:       $(OMPFLAG))
 $(info ***********Arpack:       $(ARPACK))
