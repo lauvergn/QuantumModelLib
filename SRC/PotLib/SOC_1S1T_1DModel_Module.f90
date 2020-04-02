@@ -333,7 +333,7 @@ CONTAINS
     CALL dealloc_dnSca(dnx)
     CALL dealloc_dnSca(dnSig)
 
-
+    !write(6,*) 'end eval_1DSOC' ; flush(6)
   END SUBROUTINE eval_1DSOC
 
 END MODULE mod_1DSOC_Model

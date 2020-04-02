@@ -9,9 +9,9 @@
 F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP = 0
 ## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
 # NVHYP  = 1 : with intrinsic inverse hyperbolic functions
 # NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic inverse hyperbolic functions)
@@ -73,14 +73,14 @@ ifeq ($(F90),nagfor)
    endif
    # opt management
    ifeq ($(OPT),1)
-      F90FLAGS = -O4  $(OMPFLAG) −compatible -Ounroll=4 -s -v
+      F90FLAGS = -O4  $(OMPFLAG) -Ounroll=4 -v
    else
       #F90FLAGS = -O0 $(OMPFLAG) -g -C=all -mtrace=all
       #  -C=undefined is not compatible with -framework Accelerate
       # −kind=byte and −dcfuns is not working
       #with -mtrace=all add information on the memmory allocation/deallocation.
       ifeq ($(OMP),0)
-        F90FLAGS = -O0 $(OMPFLAG) -g -compatible  -gline -C -C=alias -C=intovf
+        F90FLAGS = -O0 $(OMPFLAG) -g -gline -C -C=alias -C=intovf
       else
         F90FLAGS = -O0 $(OMPFLAG) -g -C=all
       endif

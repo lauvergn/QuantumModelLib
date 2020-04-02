@@ -216,9 +216,9 @@ CONTAINS
        wformat = strdup( '(' )
      END IF
      IF (present(Rformat)) THEN
-       wformat = strdup( wformat // 'i0,x,10' // trim(Rformat) // ')' )
+       wformat = strdup( wformat // 'i0,1x,10' // trim(Rformat) // ')' )
      ELSE
-       wformat = strdup( wformat // 'i0,x,10f18.9)' )
+       wformat = strdup( wformat // 'i0,1x,10f18.9)' )
      END IF
 
      DO nb=0,nbblocs-1
@@ -231,6 +231,7 @@ CONTAINS
        nfin=nc-nbcol*nbblocs
        write(nio,wformat) j,(f(j,i+nbcol*nbblocs),i=1,nfin)
      END DO
+     flush(nio)
 
   END SUBROUTINE Write_RMat
   SUBROUTINE Write_RVec(l,nio,nbcol1,Rformat,name_info)
@@ -274,6 +275,7 @@ CONTAINS
      END DO
      nfin=n-nbcol*nbblocs
      write(nio,wformat) (l(i+nbcol*nbblocs),i=1,nfin)
+     flush(nio)
 
   END SUBROUTINE Write_RVec
 

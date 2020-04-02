@@ -1184,15 +1184,15 @@ CONTAINS
 
     ! local variable
     integer                        :: i,j,k,id,jd,nderiv_loc,ndim,nsurf
-    real (kind=Rkind)              :: ai,aj,aii,aij,aji,ajj,th,cc,ss
+    real (kind=Rkind)              :: ai,aj,aii,aij,aji,ajj,th,cc,ss,DEne
     real (kind=Rkind), allocatable :: Eig(:),tVec(:,:),Vdum(:),Vi(:)
 
     TYPE (dnMatPot)                :: PotVal_dia_onadia
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='dia_TO_adia'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
     IF (debug) THEN
@@ -1355,9 +1355,9 @@ CONTAINS
       DO id=1,ndim
       DO i=1,nsurf ! I Psi_i' >
       DO j=1,nsurf ! projection on < Psi_j I
-        IF (j /= i) THEN
-          NAC%d1(j,i,id) = - PotVal_dia_onadia%d1(j,i,id)/              &
-                            ( PotVal_adia%d0(j,j) - PotVal_adia%d0(i,i) )
+        DEne = PotVal_adia%d0(j,j) - PotVal_adia%d0(i,i)
+        IF (j /= i .AND. abs(DEne) > ONETENTH**10) THEN
+          NAC%d1(j,i,id) = - PotVal_dia_onadia%d1(j,i,id) / DEne
         ELSE
           NAC%d1(j,i,id) = ZERO
         END IF
@@ -1702,6 +1702,17 @@ CONTAINS
     logical                   :: numeric_save
     real (kind=Rkind)         :: MaxPot,MaxDiffPot
 
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Check_analytical_numerical_derivatives'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      write(out_unitp,*) '   nderiv    ',nderiv
+      flush(out_unitp)
+    END IF
 
       CALL alloc_dnMatPot(PotVal_ana,nsurf=Para_Model%nsurf,ndim=Para_Model%ndim,&
                           nderiv=nderiv)
@@ -1713,16 +1724,21 @@ CONTAINS
 
 
       Para_Model%numeric = .FALSE.
-      !write(out_unitp,*) 'coucou'
+
       CALL Eval_Pot(Para_Model,Q,PotVal_ana,nderiv)
-      !write(out_unitp,*)   'PotVal_ana'
-      !CALL Write_dnMatPot(PotVal_ana,nio=out_unitp)
-      !flush(out_unitp)
+      IF (debug) THEN
+        write(out_unitp,*)   'PotVal_ana'
+        CALL Write_dnMatPot(PotVal_ana,nio=out_unitp)
+        flush(out_unitp)
+      END IF
+
       Para_Model%numeric = .TRUE.
       CALL Eval_Pot(Para_Model,Q,PotVal_num,nderiv)
-      !write(out_unitp,*)   'PotVal_num'
-      !CALL Write_dnMatPot(PotVal_num,nio=out_unitp)
-      !flush(out_unitp)
+      IF (debug) THEN
+        write(out_unitp,*)   'PotVal_num'
+        CALL Write_dnMatPot(PotVal_num,nio=out_unitp)
+        flush(out_unitp)
+      END IF
 
       MaxPot     = get_maxval_OF_dnMatPot(PotVal_ana)
 
@@ -1743,6 +1759,11 @@ CONTAINS
       CALL dealloc_dnMatPot(PotVal_diff)
 
       Para_Model%numeric = numeric_save
+
+    IF (debug) THEN
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    END IF
 
   END SUBROUTINE Check_analytical_numerical_derivatives
 
