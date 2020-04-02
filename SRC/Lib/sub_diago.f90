@@ -43,6 +43,7 @@ MODULE mod_diago
 !============================================================
 !
   SUBROUTINE diagonalization(Mat,Eig,Vec,n,type_diag,sort,phase)
+    USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
     USE mod_NumParameters
     IMPLICIT NONE
 
@@ -76,11 +77,11 @@ MODULE mod_diago
     IF (present(type_diag)) THEN
       type_diag_loc = type_diag
     ELSE
-      type_diag_loc = 2
+      type_diag_loc = 1
     END IF
 
-    !when lapack is used and Rkind /= 8 (not a double), it switch to type_diag=2
-    IF (Rkind /= 8 .AND. type_diag_loc == 3) type_diag_loc = 2
+    !when lapack is used and Rkind /= 8 (not a double), it switch to type_diag=1
+    IF (Rkind /= real64 .AND. type_diag_loc == 3) type_diag_loc = 1
 
     SELECT CASE (type_diag_loc)
     CASE(1)

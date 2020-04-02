@@ -107,7 +107,6 @@ MODULE mod_dnS
   PUBLIC :: QML_get_d0_FROM_dnS,QML_get_d1_FROM_dnS,QML_get_d2_FROM_dnS,QML_get_d3_FROM_dnS
 
   PUBLIC :: QML_get_Num_dnS_FROM_f_x,QML_Check_dnS_IS_ZERO,QML_d0S_TIME_R
-  PUBLIC :: QML_asinh_perso,QML_acosh_perso,QML_atanh_perso
 
   INTERFACE operator (+)
      MODULE PROCEDURE QML_dnS2_PLUS_dnS1,QML_dnS_PLUS_R,QML_R_PLUS_dnS,QML_PLUS_dnS
@@ -646,12 +645,12 @@ CONTAINS
       ndim = 0
       IF (allocated(S%d1)) ndim = size(S%d1)
 
-      write(nio_loc,'(a,3(3x),x,sp,e12.3)') ' 0   derivative',S%d0
+      write(nio_loc,'(a,3(3x),1x,sp,e12.3)') ' 0   derivative',S%d0
       IF (allocated(S%d1)) THEN
         IF (ndim > 99) THEN
-          fformat = '(a,(x,i0),x,sp,e12.3)'
+          fformat = '(a,(1x,i0),1x,sp,e12.3)'
         ELSE
-          fformat = '(a,(x,i2),2(3x),x,sp,e12.3)'
+          fformat = '(a,(1x,i2),2(3x),1x,sp,e12.3)'
         END IF
         DO i=1,ubound(S%d1,dim=1)
           write(nio_loc,fformat) ' 1st derivative',i,S%d1(i)
@@ -659,9 +658,9 @@ CONTAINS
       END IF
       IF (allocated(S%d2)) THEN
         IF (ndim > 99) THEN
-          fformat = '(a,2(x,i0),x,sp,e12.3)'
+          fformat = '(a,2(1x,i0),1x,sp,e12.3)'
         ELSE
-          fformat = '(a,2(x,i2),1(3x),x,sp,e12.3)'
+          fformat = '(a,2(1x,i2),1(3x),1x,sp,e12.3)'
         END IF
         DO i=1,ubound(S%d2,dim=2)
         DO j=1,ubound(S%d2,dim=1)
@@ -671,9 +670,9 @@ CONTAINS
       END IF
       IF (allocated(S%d3)) THEN
         IF (ndim > 99) THEN
-          fformat = '(a,3(x,i0),x,sp,e12.3)'
+          fformat = '(a,3(1x,i0),1x,sp,e12.3)'
         ELSE
-          fformat = '(a,3(x,i2),x,sp,e12.3)'
+          fformat = '(a,3(1x,i2),1x,sp,e12.3)'
         END IF
         DO i=1,ubound(S%d3,dim=3)
         DO j=1,ubound(S%d3,dim=2)
@@ -1910,9 +1909,9 @@ CONTAINS
 
     nderiv = QML_get_nderiv_FROM_dnS(S)
 #if __INVHYP == 1
-    IF (nderiv >= 0) d0f =   acosh(S%d0)
+    IF (nderiv >= 0) d0f = acosh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  QML_acosh_perso(S%d0)
+    IF (nderiv >= 0) d0f = log(S%d0+sqrt(S%d0*S%d0-ONE))
 #endif
     IF (nderiv >= 1) d1f = ONE/sqrt(-ONE+S%d0**2)
     IF (nderiv >= 2) d2f = -S%d0*d1f**3
@@ -1959,7 +1958,7 @@ CONTAINS
 #if __INVHYP == 1
     IF (nderiv >= 0) d0f =  asinh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  QML_asinh_perso(S%d0)
+    IF (nderiv >= 0) d0f =  log(S%d0+sqrt(S%d0*S%d0+ONE))
 #endif
     IF (nderiv >= 1) d1f = ONE/sqrt(ONE+S%d0**2)
     IF (nderiv >= 2) d2f = -S%d0*d1f**3
@@ -2008,7 +2007,7 @@ CONTAINS
 #if __INVHYP == 1
     IF (nderiv >= 0) d0f =  atanh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  QML_atanh_perso(S%d0)
+    IF (nderiv >= 0) d0f =  HALF*log((ONE+S%d0)/(ONE-S%d0))
 #endif
     IF (nderiv >= 1) d1f =  ONE/(ONE-S%d0**2)
     IF (nderiv >= 2) d2f =  TWO*S%d0 * d1f**2
@@ -2017,40 +2016,6 @@ CONTAINS
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
   END FUNCTION QML_get_ATANH_dnS
-
-  PURE FUNCTION QML_atanh_perso(x) RESULT(atanh_perso)
-    real (kind=Rkind)             :: atanh_perso
-    real (kind=Rkind), intent(in) :: x
-
-#if __INVHYP == 1
-    atanh_perso = atanh(x)
-#else
-    atanh_perso = HALF*log((ONE+x)/(ONE-x))
-#endif
-
-  END FUNCTION QML_atanh_perso
-  PURE FUNCTION QML_asinh_perso(x) RESULT(asinh_perso)
-    real (kind=Rkind)             :: asinh_perso
-    real (kind=Rkind), intent(in) :: x
-
-#if __INVHYP == 1
-    asinh_perso = asinh(x)
-#else
-    asinh_perso = log(x+sqrt(x*x+ONE))
-#endif
-
-  END FUNCTION QML_asinh_perso
-  PURE FUNCTION QML_acosh_perso(x) RESULT(acosh_perso)
-    real (kind=Rkind)             :: acosh_perso
-    real (kind=Rkind), intent(in) :: x
-
-#if __INVHYP == 1
-    acosh_perso = acosh(x)
-#else
-    acosh_perso = log(x+sqrt(x*x-ONE))
-#endif
-
-  END FUNCTION QML_acosh_perso
 
   FUNCTION QML_dot_product_VecOFdnS(VecA,VecB) RESULT(Sres)
     USE mod_NumParameters

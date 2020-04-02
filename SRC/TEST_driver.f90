@@ -22,16 +22,17 @@
 !===========================================================================
 !===========================================================================
 PROGRAM main_pot
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
 !$ USE omp_lib
   IMPLICIT NONE
 
-  real (kind=8),      allocatable     :: Q(:)
-  real (kind=8),      allocatable     :: GGdef(:,:)
-  real (kind=8),      allocatable     :: V(:,:)
-  real (kind=8),      allocatable     :: Vec(:,:)
-  real (kind=8),      allocatable     :: g(:,:,:)
-  real (kind=8),      allocatable     :: h(:,:,:,:)
-  real (kind=8),      allocatable     :: NAC(:,:,:)
+  real (kind=real64),      allocatable     :: Q(:)
+  real (kind=real64),      allocatable     :: GGdef(:,:)
+  real (kind=real64),      allocatable     :: V(:,:)
+  real (kind=real64),      allocatable     :: Vec(:,:)
+  real (kind=real64),      allocatable     :: g(:,:,:)
+  real (kind=real64),      allocatable     :: h(:,:,:,:)
+  real (kind=real64),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
@@ -62,7 +63,7 @@ PROGRAM main_pot
   allocate(Vec(nsurf,nsurf))
 
 
-  Q(:) = (/8.5_8 /)
+  Q(:) = (/8.5_real64 /)
 
   CALL sub_Qmodel_VVec(V,Vec,Q)
   write(6,*) ' Diabatic potential as a 4x4 matrix:'
@@ -98,7 +99,7 @@ STOP
   allocate(V(nsurf,nsurf))
 
 
-  Q(:) = (/0.1d0,-3.14d0,0.d0/)
+  Q(:) = (/0.1_real64,-3.14_real64,0.0_real64/)
 
   CALL sub_Qmodel_V(V,Q)
   write(6,*) ' Diabatic potential as a 2x2 matrix:'
@@ -131,7 +132,7 @@ STOP
   allocate(V(nsurf,nsurf))
 
 
-  Q(:) = (/1.3d0,0.d0/)
+  Q(:) = (/1.3_real64,0._real64/)
 
   CALL sub_Qmodel_V(V,Q)
   write(6,*) V
@@ -174,7 +175,7 @@ STOP
   END DO
 
 
-  Q = (/1._8,-0.5_8 /)
+  Q = (/1.0_real64,-0.5_real64 /)
   CALL sub_Qmodel_V(V,Q)
   write(6,*) ' Diabatic potential as a 3x3 matrix:'
   write(6,'(3f12.8)') V
@@ -199,7 +200,7 @@ STOP
 !$OMP   DO SCHEDULE(STATIC)
   DO i=1,nb_eval
     CALL  random_number(Q)
-    Q = Q + (/1._8,-0.5_8 /)
+    Q = Q + (/1.0_real64,-0.5_real64 /)
     CALL sub_Qmodel_V(V,Q)
   END DO
 !$OMP   END DO
@@ -233,7 +234,7 @@ STOP
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
 
 
-  Q = (/1._8,-0.5_8 /)
+  Q = (/1._real64,-0.5_real64 /)
   CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
 
   write(6,*) ' Adiabatic potential as a 3x3 matrix:'
@@ -303,20 +304,21 @@ STOP
 
 END PROGRAM main_pot
   SUBROUTINE time_perso(name)
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
   IMPLICIT NONE
 
     character (len=*) :: name
 
 
-    integer           :: tab_time(8) = 0
-    real (kind=8)     :: t_real
-    integer           :: count,count_work,freq
-    real              :: t_cpu
-    integer           :: seconds,minutes,hours,days
+    integer             :: tab_time(8) = 0
+    real (kind=real64)  :: t_real
+    integer             :: count,count_work,freq
+    real                :: t_cpu
+    integer             :: seconds,minutes,hours,days
 
-    integer, save     :: count_old,count_ini
-    real,    save     :: t_cpu_old,t_cpu_ini
-    logical, save     :: begin = .TRUE.
+    integer, save       :: count_old,count_ini
+    real,    save       :: t_cpu_old,t_cpu_ini
+    logical, save       :: begin = .TRUE.
 
 
 !$OMP    CRITICAL (time_perso_CRIT)
@@ -352,7 +354,7 @@ END PROGRAM main_pot
      hours   = mod(hours,24)
 
 
-     t_real = real(count_work,kind=8)/real(freq,kind=8)
+     t_real = real(count_work,kind=real64)/real(freq,kind=real64)
      write(6,31) t_real,name
  31  format('        real (s): ',f18.3,' in ',a)
      write(6,32) days,hours,minutes,seconds,name
@@ -375,7 +377,7 @@ END PROGRAM main_pot
      days    = hours/24
      hours   = mod(hours,24)
 
-     t_real = real(count_work,kind=8)/real(freq,kind=8)
+     t_real = real(count_work,kind=real64)/real(freq,kind=real64)
      write(6,41) t_real
  41  format('  Total real (s): ',f18.3)
      write(6,42) days,hours,minutes,seconds

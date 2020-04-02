@@ -254,6 +254,7 @@ CONTAINS
     real(kind=Rkind) :: RC01
 
 
+
     ! get nsurf from the matrix: Mat_OF_PotDia
     nsurf = size(Mat_OF_PotDia,dim=1)
 

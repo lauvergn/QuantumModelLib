@@ -1185,15 +1185,15 @@ CONTAINS
 
     ! local variable
     integer                        :: i,j,k,id,jd,nderiv_loc,ndim,nsurf
-    real (kind=Rkind)              :: ai,aj,aii,aij,aji,ajj,th,cc,ss
+    real (kind=Rkind)              :: ai,aj,aii,aij,aji,ajj,th,cc,ss,DEne
     real (kind=Rkind), allocatable :: Eig(:),tVec(:,:),Vdum(:),Vi(:)
 
     TYPE (dnMat_t)                :: PotVal_dia_onadia
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='dia_TO_adia'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
     IF (debug) THEN
@@ -1356,9 +1356,9 @@ CONTAINS
       DO id=1,ndim
       DO i=1,nsurf ! I Psi_i' >
       DO j=1,nsurf ! projection on < Psi_j I
-        IF (j /= i) THEN
-          NAC%d1(j,i,id) = - PotVal_dia_onadia%d1(j,i,id)/              &
-                            ( PotVal_adia%d0(j,j) - PotVal_adia%d0(i,i) )
+        DEne = PotVal_adia%d0(j,j) - PotVal_adia%d0(i,i)
+        IF (j /= i .AND. abs(DEne) > ONETENTH**10) THEN
+          NAC%d1(j,i,id) = - PotVal_dia_onadia%d1(j,i,id) / DEne
         ELSE
           NAC%d1(j,i,id) = ZERO
         END IF
@@ -1420,10 +1420,10 @@ CONTAINS
     IF (present(nio)) THEN
       nio_loc = nio
     ELSE
-      nio_loc = 6
+      nio_loc = out_unitp
     END IF
 
-    IF (nio_loc /= 6) THEN
+    IF (nio_loc /= out_unitp) THEN
       open(nio_loc,file=trim(adjustl(QModel%pot_name))//'.out',form='formatted')
     END IF
 
@@ -1479,7 +1479,7 @@ CONTAINS
         write(nio_loc,*) 'WARNING in Write_Model: Other potentials have to be done'
     END SELECT
  
-     IF (nio_loc /= 6) THEN
+     IF (nio_loc /= out_unitp) THEN
       close(nio_loc)
     END IF
     write(nio_loc,*) '-----------------------------------------------'
@@ -1521,10 +1521,10 @@ CONTAINS
     IF (present(nio)) THEN
       nio_loc = nio
     ELSE
-      nio_loc = 6
+      nio_loc = out_unitp
     END IF
 
-    IF (nio_loc /= 6) THEN
+    IF (nio_loc /= out_unitp) THEN
       open(nio_loc,file=trim(adjustl(QModel%pot_name))//'.out',form='formatted')
     END IF
 
@@ -1584,7 +1584,7 @@ CONTAINS
         write(nio_loc,*) 'WARNING in Write0_Model: Other potentials have to be done'
     END SELECT
 
-     IF (nio_loc /= 6) THEN
+     IF (nio_loc /= out_unitp) THEN
       close(nio_loc)
     END IF
 
@@ -1703,6 +1703,17 @@ CONTAINS
     logical                   :: numeric_save
     real (kind=Rkind)         :: MaxPot,MaxDiffPot
 
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Check_analytical_numerical_derivatives'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      write(out_unitp,*) '   nderiv    ',nderiv
+      flush(out_unitp)
+    END IF
 
       CALL QML_alloc_dnMat(PotVal_ana,nsurf=QModel%nsurf,ndim=QModel%ndim,&
                           nderiv=nderiv)
@@ -1714,16 +1725,20 @@ CONTAINS
 
 
       QModel%numeric = .FALSE.
-      !write(out_unitp,*) 'coucou'
       CALL Eval_Pot(QModel,Q,PotVal_ana,nderiv)
-      !write(out_unitp,*)   'PotVal_ana'
-      !CALL QML_Write_dnMat(PotVal_ana,nio=out_unitp)
-      !flush(out_unitp)
+      IF (debug) THEN
+        write(out_unitp,*)   'PotVal_ana'
+        CALL QML_Write_dnMat(PotVal_ana,nio=out_unitp)
+        flush(out_unitp)
+      END IF
+
       QModel%numeric = .TRUE.
       CALL Eval_Pot(QModel,Q,PotVal_num,nderiv)
-      !write(out_unitp,*)   'PotVal_num'
-      !CALL QML_Write_dnMat(PotVal_num,nio=out_unitp)
-      !flush(out_unitp)
+      IF (debug) THEN
+        write(out_unitp,*)   'PotVal_num'
+        CALL QML_Write_dnMat(PotVal_num,nio=out_unitp)
+        flush(out_unitp)
+      END IF
 
       MaxPot     = QML_get_maxval_OF_dnMat(PotVal_ana)
 
@@ -1744,6 +1759,11 @@ CONTAINS
       CALL QML_dealloc_dnMat(PotVal_diff)
 
       QModel%numeric = numeric_save
+
+    IF (debug) THEN
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    END IF
 
   END SUBROUTINE Check_analytical_numerical_derivatives
 
@@ -1772,13 +1792,13 @@ CONTAINS
 
     IF (present(grid_file)) THEN
       IF (len_trim(grid_file) == 0) THEN
-        unit_grid_file = 6
+        unit_grid_file = out_unitp
       ELSE
         unit_grid_file = 99
         open(unit=unit_grid_file,file=trim(grid_file) )
       END IF
     ELSE
-      unit_grid_file = 6
+      unit_grid_file = out_unitp
     END IF
 
     nb_points_loc = 100
@@ -1873,7 +1893,7 @@ CONTAINS
     deallocate(Q)
     deallocate(i_Q)
 
-    IF (unit_grid_file /= 6) THEN
+    IF (unit_grid_file /= out_unitp) THEN
       close(unit_grid_file)
     END IF
 
