@@ -75,10 +75,10 @@ MODULE mod_Model
     TYPE (BuckPot_t)        :: BuckPot
     TYPE (SigmoidPot_t)     :: SigmoidPot
 
-    TYPE (LinearHBondPot_t) :: LinearHBondPot
-    TYPE (HenonHeilesPot_t) :: HenonHeilesPot
-    TYPE (TullyPot_t)       :: TullyPot
-    TYPE (OneDSOCPot_t)       :: OneDSOCPot
+    TYPE (LinearHBondPot_t)    :: LinearHBondPot
+    TYPE (HenonHeilesPot_t)    :: HenonHeilesPot
+    TYPE (TullyPot_t)          :: TullyPot
+    TYPE (OneDSOCPot_t)        :: OneDSOCPot
     TYPE (OneDSOC_2S1T_Pot_t)  :: OneDSOC_2S1T_Pot
 
     TYPE (PhenolPot_t)      :: PhenolPot
@@ -109,6 +109,42 @@ MODULE mod_Model
 #else
       character (len=Line_len) :: QML_path   = '~/QuantumModelLib'
 #endif
+
+#if defined(__COMPILE_DATE)
+      character (len=Line_len) :: compile_date = __COMPILE_DATE
+#else
+      character (len=Line_len) :: compile_date = "unknown: -D__COMPILE_DATE=?"
+#endif
+
+#if defined(__COMPILE_HOST)
+      character (len=Line_len) :: compile_host = __COMPILE_HOST
+#else
+      character (len=Line_len) :: compile_host = "unknown: -D__COMPILE_HOST=?"
+#endif
+#if defined(__COMPILER)
+      character (len=Line_len) :: compiler = __COMPILER
+#else
+      character (len=Line_len) :: compiler = "unknown: -D__COMPILER=?"
+#endif
+#if defined(__COMPILER_VER)
+      character (len=Line_len) :: compiler_ver = __COMPILER_VER
+#else
+      character (len=Line_len) :: compiler_ver = "unknown: -D__COMPILER_VER=?"
+#endif
+#if defined(__COMPILER_OPT)
+      character (len=Line_len) :: compiler_opt = &
+      __COMPILER_OPT
+#else
+      character (len=Line_len) :: compiler_opt = "unknown: -D__COMPILER_OPT=?"
+#endif
+#if defined(__COMPILER_LIBS)
+      character (len=Line_len) :: compiler_libs = __COMPILER_LIBS
+#else
+      character (len=Line_len) :: compiler_libs = "unknown: -D__COMPILER_LIBS=?"
+#endif
+
+
+
 
   TYPE(QModel_t), PUBLIC  :: QuantumModel
 
@@ -164,8 +200,8 @@ CONTAINS
 
     !write(out_unitp,nml=potential)
 
-    option1              = option
-    read_nml1            = read_nml
+    option1          = option
+    read_nml1        = read_nml
     QModel%ndim      = ndim
     QModel%nsurf     = nsurf
     QModel%adiabatic = adiabatic
@@ -220,9 +256,28 @@ CONTAINS
     write(out_unitp,*) '================================================='
     write(out_unitp,*) '================================================='
     write(out_unitp,*) '== QML: Quantum Model Lib (E-CAM) ==============='
-    write(out_unitp,*) '== QML version: ',QML_version
-    write(out_unitp,*) '== QML path:    ',trim(adjustl(QML_path))
+    write(out_unitp,*) '== QML version:       ',QML_version
+    write(out_unitp,*) '== QML path:          ',trim(adjustl(QML_path))
+    write(out_unitp,*) '-------------------------------------------------'
+    write(out_unitp,*) '== Compiled on       "',trim(compile_host), '" the ',trim(compile_date)
+    write(out_unitp,*) '== Compiler:         ',trim(compiler)
+    write(out_unitp,*) '== Compiler version: ',trim(compiler_ver)
+    write(out_unitp,*) '== Compiler options: ',trim(compiler_opt)
+    write(out_unitp,*) '== Compiler libs:     ',trim(compiler_libs)
+    write(out_unitp,*) '-------------------------------------------------'
+    write(out_unitp,*) 'QML is under GNU LGPL3 license and '
+    write(out_unitp,*) '  is written by David Lauvergnat [1]'
+    write(out_unitp,*) '  with contributions of'
+    write(out_unitp,*) '     Félix MOUHAT [2]'
+    write(out_unitp,*) '     Liang LIANG [3]'
+    write(out_unitp,*)
+    write(out_unitp,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
+    write(out_unitp,*) '[2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France'
+    write(out_unitp,*) '[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France'
+    write(out_unitp,*) '================================================='
+    write(out_unitp,*) '================================================='
     write(out_unitp,*) '== Initialization of the Model =================='
+
 
     ! set the "File_path" in the Lib_module.f90
     File_path = trim(adjustl(QML_path))

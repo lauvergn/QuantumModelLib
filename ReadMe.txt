@@ -1,15 +1,20 @@
 =========================================
 =========================================
- QuantumModelLib use
- date: 29/03/2020
+ QuantumModelLib is a free software under LGPL.
+  date: 01/04/2020
+
+    Copyright 2016 David Lauvergnat
+      with contributions of Félix MOUHAT and Liang LIANG
 =========================================
  1) Installation
    From the QuantumModelLib directory, execute make
    the "libpot.a" must be created
+
    This version works with:
        gfortran 8.3, 9.1, 9.2 (macOS)
        ifort    17, 18
        pgf90    17.10-0
+       nagfor   7.0
 
  2) Link "libpot.a" to your code
 

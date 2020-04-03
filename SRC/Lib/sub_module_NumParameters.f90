@@ -30,9 +30,9 @@
       PUBLIC
       PRIVATE :: INPUT_UNIT,OUTPUT_UNIT,real64,real128,int32,int64
 
-      integer, parameter :: Rkind        = real64
-      integer, parameter :: Ikind        = int32
-      integer, parameter :: ILkind       = int64
+      integer, parameter :: Rkind        = real64 ! 8
+      integer, parameter :: Ikind        = int32  ! 4
+      integer, parameter :: ILkind       = int64  ! 8
       integer, parameter :: Name_len     = 20
       integer, parameter :: Name_longlen = 50
       integer, parameter :: Line_len     = 255

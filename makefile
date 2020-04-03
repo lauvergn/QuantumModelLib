@@ -99,7 +99,7 @@ endif
 
 #=================================================================================
 #=================================================================================
-# ifort compillation v12 with mkl
+# ifort compillation v17 v18 with mkl
 #=================================================================================
 ifeq ($(F90),ifort)
    # omp management
@@ -115,6 +115,9 @@ ifeq ($(F90),ifort)
       F90FLAGS = -O0 $(OMPFLAG) -check all -g -traceback
    endif
    F90LIB = -mkl -lpthread
+
+   F90_VER = $(shell $(F90) --version | head -1 )
+
 endif
 #=================================================================================
 #=================================================================================
@@ -148,6 +151,8 @@ ifeq ($(F90),pgf90)
    else
      F90LIB +=
    endif
+
+   F90_VER = $(shell $(F90) --version | head -2 | tail -1 )
 
 endif
 
@@ -183,6 +188,9 @@ endif
       F90FLAGS = -Og -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -finit-real=nan -finit-integer=nan
       #F90FLAGS = -O0 -fbounds-check -Wuninitialized
    endif
+
+   F90_VER = $(shell $(F90) --version | head -1 )
+
 endif
 
 QML_ver=$(shell awk '/QML/ {print $$3}' version-QML)
@@ -204,9 +212,14 @@ $(info ***********QML_path:     $(QML_path))
 $(info ***********************************************************************)
 
 
-CPPSHELL_QML_ver_Path  = -D__QML_VER='"$(QML_ver)"' \
-                         -D__QMLPATH="'$(QML_path)'"
-
+CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
+               -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
+               -D__COMPILER="'$(F90)'" \
+               -D__COMPILER_VER="'$(F90_VER)'" \
+               -D__COMPILER_OPT="'$(F90FLAGS)'" \
+               -D__COMPILER_LIBS="'$(F90LIB)'" \
+               -D__QMLPATH="'$(QML_path)'" \
+               -D__QML_VER='"$(QML_ver)"'
 
 CPPSHELL_INVHYP  = -D__INVHYP="$(INVHYP)"
 
@@ -410,7 +423,7 @@ $(DIROBJ)/HenonHeilesPotential_Module.o:$(DIRPot)/HenonHeilesPotential_Module.f9
 ### Model libraries
 #
 $(DIROBJ)/Model_Module.o:$(DIRSRC)/Model_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_QML_ver_Path)  -c $(DIRSRC)/Model_Module.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_QML)  -c $(DIRSRC)/Model_Module.f90
 
 $(DIROBJ)/TEST_driver.o:$(DIRSRC)/TEST_driver.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRSRC)/TEST_driver.f90
