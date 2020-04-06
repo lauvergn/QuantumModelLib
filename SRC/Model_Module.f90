@@ -787,7 +787,7 @@ CONTAINS
     adia_loc = (QModel%adiabatic .AND. QModel%nsurf > 1)
 
     IF (numeric_loc) THEN  ! numerical
-      IF (adia_loc) THEN
+      IF (.NOT. adia_loc) THEN
          CALL Eval_Pot_Numeric_dia(QModel,Q,PotVal,nderiv_loc)
       ELSE
         IF (present(Vec)) THEN
