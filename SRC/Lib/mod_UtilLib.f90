@@ -72,7 +72,7 @@ CONTAINS
 
   END SUBROUTINE string_uppercase_TO_lowercase
 
-  FUNCTION strdup(string)
+  PURE FUNCTION strdup(string)
   IMPLICIT NONE
 
    character (len=*), intent(in)   :: string
@@ -82,7 +82,7 @@ CONTAINS
    strdup = trim(string)
 
   END FUNCTION strdup
-  FUNCTION int_TO_char(i)
+  PURE FUNCTION int_TO_char(i)
   USE mod_NumParameters
 
     character (len=:), allocatable  :: int_TO_char
@@ -371,6 +371,25 @@ CONTAINS
 !$OMP    END CRITICAL (Read_RVec_CRIT)
 
   END SUBROUTINE Read_RVec
+
+  SUBROUTINE Init_IdMat(Mat,ndim)
+  IMPLICIT NONE
+
+  integer,                        intent(in)    :: ndim
+  real (kind=Rkind), allocatable, intent(inout) :: mat(:,:)
+
+  integer :: i
+
+    IF (allocated(mat)) deallocate(mat)
+
+    allocate(mat(ndim,ndim))
+    mat(:,:) = ZERO
+    DO i=1,ndim
+      mat(i,i) = ONE
+    END DO
+
+  END SUBROUTINE Init_IdMat
+
 
   SUBROUTINE time_perso(name)
   IMPLICIT NONE

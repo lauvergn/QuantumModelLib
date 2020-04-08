@@ -7,12 +7,12 @@
 #                pgf90 (version: 17.10-0, linux)
 #                nagfor (version 7.0, osx)
 #F90 = gfortran
-F90 = nagfor
+ F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 0
 ## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
@@ -237,6 +237,7 @@ LYNK90 = $(F90_FLAGS)
 GRIDEXE   = Grid.x
 MODEXE    = ModLib.x
 dnSEXE    = dnS.x
+TESTEXE   = testOOP.x
 DriverEXE = Driver.x
 ModLib    = libpot.a
 QMLib     = libQMLib.a
@@ -247,22 +248,22 @@ DIRSRC    = $(DIR0)/SRC
 DIRLib    = $(DIRSRC)/Lib
 DIRdnS    = $(DIRSRC)/dnSLib
 DIRdnMat  = $(DIRSRC)/dnMatLib
-DIRPot    = $(DIRSRC)/PotLib
+DIRModel    = $(DIRSRC)/PotLib
 
 #
-OBJ_lib        = $(DIROBJ)/dnMatPot_Module.o $(DIROBJ)/dnS_Module.o $(DIROBJ)/Lib_module.o $(DIROBJ)/sub_diago.o $(DIROBJ)/sub_module_NumParameters.o
-OBJ_Pot        = $(DIROBJ)/LinearHBondPotential_Module.o $(DIROBJ)/TullyPotential_Module.o \
-                 $(DIROBJ)/PhenolPotential_Module.o $(DIROBJ)/PSB3Potential_Module.o \
-                 $(DIROBJ)/SOC_1S1T_1DModel_Module.o $(DIROBJ)/SOC_2S1T_1DModel_Module.o \
-                 $(DIROBJ)/HONOPotential_Module.o $(DIROBJ)/HNNHp_Module.o \
-                 $(DIROBJ)/H2SiN_Module.o $(DIROBJ)/H2NSi_Module.o \
-                 $(DIROBJ)/TemplatePotential_Module.o \
-                 $(DIROBJ)/HenonHeilesPotential_Module.o \
-                 $(DIROBJ)/TwoD_Potential_Module.o \
-                 $(DIROBJ)/BuckinghamPotential_Module.o $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/SigmoidPotential_Module.o
+OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
+                 $(DIROBJ)/mod_SigmoidModel.o $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_BuckModel.o \
+                 $(DIROBJ)/mod_TemplateModel.o \
+                 $(DIROBJ)/mod_H2NSi_Model.o $(DIROBJ)/mod_H2SiN_Model.o \
+                 $(DIROBJ)/mod_HNNHp_Model.o $(DIROBJ)/mod_HONO_Model.o \
+                 $(DIROBJ)/mod_HenonHeilesModel.o $(DIROBJ)/mod_LinearHBondModel.o \
+                 $(DIROBJ)/mod_PhenolModel.o $(DIROBJ)/mod_PSB3_Model.o $(DIROBJ)/mod_TwoD_Model.o \
+                 $(DIROBJ)/mod_OneDSOC_1S1T_Model.o $(DIROBJ)/mod_OneDSOC_2S1T_Model.o \
+                 $(DIROBJ)/mod_TullyModel.o
 
-OBJ_Model      = $(DIROBJ)/Model_Module.o
+OBJ_Model      = $(DIROBJ)/mod_QModel.o
 
+OBJ_test       = $(DIROBJ)/TEST_OOP.o
 OBJ_driver     = $(DIROBJ)/Model_driver.o
 OBJ_grid       = $(DIROBJ)/TEST_grid.o
 OBJ_testmod    = $(DIROBJ)/TEST_model.o
@@ -270,7 +271,11 @@ OBJ_testdnS    = $(DIROBJ)/TEST_dnS.o
 OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 
-OBJ_all        = $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
+OBJ_lib        = $(DIROBJ)/mod_dnMat.o $(DIROBJ)/mod_dnS.o \
+                 $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_diago.o \
+                 $(DIROBJ)/mod_NumParameters.o
+
+OBJ_all        = $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
 
 #===============================================
 #============= Main program ====================
@@ -278,6 +283,13 @@ OBJ_all        = $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
 .PHONY: all
 all: dnS lib model grid driver readme
 # model tests
+
+# test_OOP
+.PHONY: test
+test:$(TESTEXE)
+
+$(TESTEXE): $(OBJ_test) $(OBJ_all)
+	$(LYNK90)   -o $(TESTEXE) $(OBJ_test) $(OBJ_all) $(LYNKFLAGS)
 
 .PHONY: model testmodel
 model testmodel:$(MODEXE)
@@ -327,7 +339,8 @@ $(ModLib): $(OBJ_driver) $(OBJ_all)
 #===============================================
 .PHONY: clean
 clean: 
-	rm -f  $(MODEXE) $(GRIDEXE) $(dnSEXE) $(DriverEXE) $(ModLib) libQMLib.a
+	rm -f  $(MODEXE) $(GRIDEXE) $(dnSEXE) $(DriverEXE) $(TESTEXE
+	rm -f  $(ModLib) libQMLib.a
 	rm -fr *.dSYM comp.log
 	cd $(DIROBJ) ; rm -f *.o *.mod *.MOD
 	@cd Tests && ./clean
@@ -337,97 +350,74 @@ clean:
 #===============================================
 #===============================================
 #
-$(DIROBJ)/TEST_grid.o:   $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
-$(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
-$(DIROBJ)/TEST_dnS.o:    $(OBJ_lib)
-$(DIROBJ)/TEST_driver.o: $(ModLib)
-
-$(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Pot) $(OBJ_Model)
-
-$(DIROBJ)/Model_Module.o: $(OBJ_lib) $(OBJ_Pot)
-
-$(DIROBJ)/BuckinghamPotential_Module.o: $(OBJ_lib)
-$(DIROBJ)/MorsePotential_Module.o: $(OBJ_lib)
-$(DIROBJ)/SigmoidPotential_Module.o: $(OBJ_lib)
-$(DIROBJ)/HenonHeilesPotential_Module.o: $(OBJ_lib)
-$(DIROBJ)/TullyPotential_Module.o: $(OBJ_lib)
-$(DIROBJ)/SOC_1S1T_1DModel_Module.o: $(OBJ_lib)
-$(DIROBJ)/SOC_2S1T_1DModel_Module.o: $(OBJ_lib)
-$(DIROBJ)/TwoD_Potential_Module.o: $(OBJ_lib)
-$(DIROBJ)/PSB3Potential_Module.o: $(OBJ_lib)
-$(DIROBJ)/HONOPotential_Module.o: $(OBJ_lib)
-$(DIROBJ)/HNNHp_Module.o: $(OBJ_lib)
-$(DIROBJ)/H2SiN_Module.o: $(OBJ_lib)
-$(DIROBJ)/H2NSi_Module.o: $(OBJ_lib)
-$(DIROBJ)/LinearHBondPotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/BuckinghamPotential_Module.o
-$(DIROBJ)/PhenolPotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o $(DIROBJ)/SigmoidPotential_Module.o
-$(DIROBJ)/TemplatePotential_Module.o: $(OBJ_lib) $(DIROBJ)/MorsePotential_Module.o
-
-
-$(DIROBJ)/Lib_module.o: $(DIROBJ)/sub_module_NumParameters.o
-$(DIROBJ)/dnS_Module.o: $(DIROBJ)/Lib_module.o $(DIROBJ)/sub_module_NumParameters.o
-$(DIROBJ)/dnMatPot_Module.o: $(DIROBJ)/dnS_Module.o $(DIROBJ)/Lib_module.o $(DIROBJ)/sub_module_NumParameters.o
-$(DIROBJ)/sub_diago.o: $(DIROBJ)/sub_module_NumParameters.o
-
-##################################################################################
-### Potential libraries
-#
-$(DIROBJ)/TemplatePotential_Module.o:$(DIRPot)/TemplatePotential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/TemplatePotential_Module.f90
-
-$(DIROBJ)/LinearHBondPotential_Module.o:$(DIRPot)/LinearHBondPotential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/LinearHBondPotential_Module.f90
-
-$(DIROBJ)/PhenolPotential_Module.o:$(DIRPot)/PhenolPotential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/PhenolPotential_Module.f90
-
-$(DIROBJ)/PSB3Potential_Module.o:$(DIRPot)/PSB3Potential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/PSB3Potential_Module.f90
-
-$(DIROBJ)/HONOPotential_Module.o:$(DIRPot)/HONOPotential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/HONOPotential_Module.f90
-
-$(DIROBJ)/HNNHp_Module.o:$(DIRPot)/HNNHp_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/HNNHp_Module.f90
-
-$(DIROBJ)/H2SiN_Module.o:$(DIRPot)/H2SiN_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/H2SiN_Module.f90
-
-$(DIROBJ)/H2NSi_Module.o:$(DIRPot)/H2NSi_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/H2NSi_Module.f90
-
-$(DIROBJ)/TwoD_Potential_Module.o:$(DIRPot)/TwoD_Potential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/TwoD_Potential_Module.f90
-
-$(DIROBJ)/TullyPotential_Module.o:$(DIRPot)/TullyPotential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/TullyPotential_Module.f90
-
-$(DIROBJ)/SOC_1S1T_1DModel_Module.o:$(DIRPot)/SOC_1S1T_1DModel_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/SOC_1S1T_1DModel_Module.f90
-$(DIROBJ)/SOC_2S1T_1DModel_Module.o:$(DIRPot)/SOC_2S1T_1DModel_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/SOC_2S1T_1DModel_Module.f90
-$(DIROBJ)/MorsePotential_Module.o:$(DIRPot)/MorsePotential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/MorsePotential_Module.f90
-
-$(DIROBJ)/BuckinghamPotential_Module.o:$(DIRPot)/BuckinghamPotential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/BuckinghamPotential_Module.f90
-
-$(DIROBJ)/SigmoidPotential_Module.o:$(DIRPot)/SigmoidPotential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/SigmoidPotential_Module.f90
-
-$(DIROBJ)/HenonHeilesPotential_Module.o:$(DIRPot)/HenonHeilesPotential_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRPot)/HenonHeilesPotential_Module.f90
-#
-##################################################################################
-#
-#
-#
 ##################################################################################
 ### Model libraries
 #
-$(DIROBJ)/Model_Module.o:$(DIRSRC)/Model_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_QML)  -c $(DIRSRC)/Model_Module.f90
+$(DIROBJ)/mod_EmptyModel.o:$(DIRModel)/mod_EmptyModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_EmptyModel.f90
 
+$(DIROBJ)/mod_MorseModel.o:$(DIRModel)/mod_MorseModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_MorseModel.f90
+
+$(DIROBJ)/mod_TemplateModel.o:$(DIRModel)/mod_TemplateModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_TemplateModel.f90
+
+
+
+$(DIROBJ)/mod_LinearHBondModel.o:$(DIRModel)/mod_LinearHBondModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_LinearHBondModel.f90
+
+$(DIROBJ)/mod_PhenolModel.o:$(DIRModel)/mod_PhenolModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_PhenolModel.f90
+
+$(DIROBJ)/mod_PSB3_Model.o:$(DIRModel)/mod_PSB3_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_PSB3_Model.f90
+
+$(DIROBJ)/mod_HONO_Model.o:$(DIRModel)/mod_HONO_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HONO_Model.f90
+
+$(DIROBJ)/mod_HNNHp_Model.o:$(DIRModel)/mod_HNNHp_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HNNHp_Model.f90
+
+$(DIROBJ)/mod_H2SiN_Model.o:$(DIRModel)/mod_H2SiN_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_H2SiN_Model.f90
+
+$(DIROBJ)/mod_H2NSi_Model.o:$(DIRModel)/mod_H2NSi_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_H2NSi_Model.f90
+
+$(DIROBJ)/mod_TwoD_Model.o:$(DIRModel)/mod_TwoD_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_TwoD_Model.f90
+
+$(DIROBJ)/mod_TullyModel.o:$(DIRModel)/mod_TullyModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_TullyModel.f90
+
+$(DIROBJ)/mod_OneDSOC_1S1T_Model.o:$(DIRModel)/mod_OneDSOC_1S1T_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_OneDSOC_1S1T_Model.f90
+$(DIROBJ)/mod_OneDSOC_2S1T_Model.o:$(DIRModel)/mod_OneDSOC_2S1T_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_OneDSOC_2S1T_Model.f90
+
+$(DIROBJ)/mod_BuckModel.o:$(DIRModel)/mod_BuckModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_BuckModel.f90
+
+$(DIROBJ)/mod_SigmoidModel.o:$(DIRModel)/mod_SigmoidModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_SigmoidModel.f90
+
+$(DIROBJ)/mod_HenonHeilesModel.o:$(DIRModel)/mod_HenonHeilesModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HenonHeilesModel.f90
+#
+##################################################################################
+### QModel
+#
+$(DIROBJ)/mod_QModel.o:$(DIRSRC)/mod_QModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_QML)  -c $(DIRSRC)/mod_QModel.f90
+#
+##################################################################################
+#
+#
+#
+##################################################################################
+### Main + driver + tests
+#
 $(DIROBJ)/TEST_driver.o:$(DIRSRC)/TEST_driver.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRSRC)/TEST_driver.f90
 $(DIROBJ)/Model_driver.o:$(DIRSRC)/Model_driver.f90
@@ -436,6 +426,8 @@ $(DIROBJ)/TEST_model.o:$(DIRSRC)/TEST_model.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRSRC)/TEST_model.f90
 $(DIROBJ)/TEST_grid.o:$(DIRSRC)/TEST_grid.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRSRC)/TEST_grid.f90
+$(DIROBJ)/TEST_OOP.o:$(DIRSRC)/TEST_OOP.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRSRC)/TEST_OOP.f90
 #
 ##################################################################################
 #
@@ -444,8 +436,8 @@ $(DIROBJ)/TEST_grid.o:$(DIRSRC)/TEST_grid.f90
 ##################################################################################
 ### dnS libraries
 #
-$(DIROBJ)/dnS_Module.o:$(DIRdnS)/dnS_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/dnS_Module.f90
+$(DIROBJ)/mod_dnS.o:$(DIRdnS)/mod_dnS.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/mod_dnS.f90
 $(DIROBJ)/TEST_dnS.o:$(DIRdnS)/TEST_dnS.f90
 	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/TEST_dnS.f90
 #
@@ -456,8 +448,8 @@ $(DIROBJ)/TEST_dnS.o:$(DIRdnS)/TEST_dnS.f90
 ##################################################################################
 ### dnMat libraries
 #
-$(DIROBJ)/dnMatPot_Module.o:$(DIRdnMat)/dnMatPot_Module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRdnMat)/dnMatPot_Module.f90
+$(DIROBJ)/mod_dnMat.o:$(DIRdnMat)/mod_dnMat.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRdnMat)/mod_dnMat.f90
 #
 ##################################################################################
 #
@@ -466,16 +458,55 @@ $(DIROBJ)/dnMatPot_Module.o:$(DIRdnMat)/dnMatPot_Module.f90
 ##################################################################################
 ### libraries
 #
-$(DIROBJ)/Lib_module.o:$(DIRLib)/Lib_module.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/Lib_module.f90
-$(DIROBJ)/sub_diago.o:$(DIRLib)/sub_diago.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/sub_diago.f90
-$(DIROBJ)/sub_module_NumParameters.o:$(DIRLib)/sub_module_NumParameters.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/sub_module_NumParameters.f90
+$(DIROBJ)/mod_UtilLib.o:$(DIRLib)/mod_UtilLib.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_UtilLib.f90
+$(DIROBJ)/mod_diago.o:$(DIRLib)/mod_diago.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_diago.f90
+$(DIROBJ)/mod_NumParameters.o:$(DIRLib)/mod_NumParameters.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_NumParameters.f90
 #
 ##################################################################################
 #
 #
+##################################################################################
+### dependencies
+#
+$(DIROBJ)/TEST_OOP.o:    $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
+$(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
+$(DIROBJ)/TEST_dnS.o:    $(OBJ_lib)
+$(DIROBJ)/TEST_driver.o: $(ModLib)
+
+$(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
+
+$(DIROBJ)/mod_QModel.o: $(OBJ_lib) $(OBJ_ModelLib)
+
+$(DIROBJ)/mod_EmptyModel.o: $(OBJ_lib)
+$(DIROBJ)/mod_MorseModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_BuckModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_SigmoidModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+
+$(DIROBJ)/mod_TemplateModel.o: $(OBJ_lib) $(DIROBJ)/mod_EmptyModel.o $(DIROBJ)/mod_MorseModel.o
+
+$(DIROBJ)/mod_HenonHeilesModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_TullyModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_OneDSOC_1S1T_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_OneDSOC_2S1T_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_TwoD_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_PSB3_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HONO_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HNNHp_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_H2SiN_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_H2NSi_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_LinearHBondModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
+                                  $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_BuckModel.o
+$(DIROBJ)/mod_PhenolModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
+             $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_SigmoidModel.o
+
+
+$(DIROBJ)/mod_UtilLib.o: $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnS.o: $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnMat.o: $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_diago.o: $(DIROBJ)/mod_NumParameters.o
 #
 ############################################################################
 ### Documentation with doxygen

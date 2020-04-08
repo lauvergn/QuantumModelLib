@@ -396,6 +396,9 @@ CONTAINS
     Sres%d0 = R
     IF (nderiv_loc > 0) Sres%d1(iQ_loc) = ONE
 
+    !CALL QML_Write_dnS(Sres,all_type=.TRUE.,info='coucou in QML_init_dnS: Sres')
+
+
   END FUNCTION QML_init_dnS
 !> @brief Public subroutine which initializes a derived type dnS.
 !!
@@ -714,8 +717,8 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param S                     TYPE (dnS_t):           derived type which deals with the derivatives of a scalar functions.
-!! @param get_ndim_FROM_dnS     integer  (result):   ndim value from the size of S%d1.
+!! @param S                     TYPE (dnS_t):        derived type which deals with the derivatives of a scalar functions.
+!! @param ndim                  integer  (result):   ndim value from the size of S%d1.
   ELEMENTAL FUNCTION QML_get_ndim_FROM_dnS(S) RESULT(ndim)
     USE mod_NumParameters
 
@@ -1110,7 +1113,9 @@ CONTAINS
     !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nderiv_loc
 
     CALL QML_dealloc_dnS(S1)
-    IF (nderiv_loc < 0 .OR. (nderiv_loc > 0 .AND. ndim_loc < 1)) RETURN
+    !IF (nderiv_loc < 0 .OR. (nderiv_loc > 0 .AND. ndim_loc < 1)) RETURN
+
+    S1%nderiv = nderiv_loc
 
     S1%d0 = S2%d0
     IF (allocated(S2%d1)) S1%d1 = S2%d1
@@ -1132,6 +1137,9 @@ CONTAINS
     nderiv_loc = QML_get_nderiv_FROM_dnS(S)
 
     !write(out_unitp,*) 'nderiv',nderiv_loc
+
+    S%nderiv = nderiv_loc
+
 
     IF (nderiv_loc == 0) THEN
        S%d0 = R
@@ -1166,7 +1174,7 @@ CONTAINS
 
     CALL QML_dealloc_dnS(Sres)
 
-    IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
     IF (nderiv == 0) THEN
        Sres%d0 = S1%d0 + S2%d0
@@ -1240,7 +1248,7 @@ CONTAINS
 
     CALL QML_dealloc_dnS(Sres)
 
-    IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
     IF (nderiv == 0) THEN
        Sres%d0 = S1%d0 - S2%d0
@@ -1288,7 +1296,7 @@ CONTAINS
 
     CALL QML_dealloc_dnS(Sres)
 
-    IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
     IF (nderiv == 0) THEN
        Sres%d0 = R -S%d0
@@ -1322,7 +1330,7 @@ CONTAINS
 
     CALL QML_dealloc_dnS(Sres)
 
-    IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
     IF (nderiv == 0) THEN
        Sres%d0 = -S%d0
@@ -1357,7 +1365,7 @@ CONTAINS
 
     CALL QML_dealloc_dnS(Sres)
 
-    IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
     IF (nderiv == 0) THEN
        Sres%d0 = S1%d0 * S2%d0
@@ -1400,12 +1408,13 @@ CONTAINS
        END DO
     END IF
   END FUNCTION QML_dnS2_TIME_dnS1
-  ELEMENTAL FUNCTION QML_d0S_TIME_R(S,R) RESULT(Sres)
+  !ELEMENTAL FUNCTION QML_d0S_TIME_R(S,R) RESULT(Sres)
+   FUNCTION QML_d0S_TIME_R(S,R) RESULT(Sres)
     USE mod_NumParameters
 
     TYPE (dnS_t)                         :: Sres
     TYPE (dnS_t),          intent(in)    :: S
-    real (kind=Rkind),   intent(in)    :: R
+    real (kind=Rkind),     intent(in)    :: R
 
 
     integer :: nderiv,ndim
@@ -1417,16 +1426,17 @@ CONTAINS
 
     Sres = S
 
-    IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
     Sres%d0 = R * S%d0
 
   END FUNCTION QML_d0S_TIME_R
   ELEMENTAL FUNCTION QML_dnS_TIME_R(S,R) RESULT(Sres)
     USE mod_NumParameters
+    USE mod_Lib
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
-    real (kind=Rkind), intent(in)    :: R
+    real (kind=Rkind),   intent(in)    :: R
 
 
     integer :: nderiv,ndim
@@ -1438,7 +1448,7 @@ CONTAINS
 
     CALL QML_dealloc_dnS(Sres)
 
-    IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
     IF (nderiv == 0) THEN
        Sres%d0 = R * S%d0
@@ -1458,8 +1468,9 @@ CONTAINS
 
   END FUNCTION QML_dnS_TIME_R
 
-  ELEMENTAL FUNCTION QML_R_TIME_dnS(R,S) RESULT(Sres)
+   ELEMENTAL FUNCTION QML_R_TIME_dnS(R,S) RESULT(Sres)
     USE mod_NumParameters
+    USE mod_Lib
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1476,7 +1487,7 @@ CONTAINS
 
     CALL QML_dealloc_dnS(Sres)
 
-    IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
     IF (nderiv == 0) THEN
        Sres%d0 = R * S%d0
@@ -1560,7 +1571,7 @@ CONTAINS
 
     CALL QML_dealloc_dnS(Sres)
 
-    IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
     IF (nderiv == 0) THEN
        Sres%d0 = d0f

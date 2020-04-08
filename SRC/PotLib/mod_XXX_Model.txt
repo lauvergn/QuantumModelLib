@@ -1,0 +1,144 @@
+!===========================================================================
+!===========================================================================
+!This file is part of ModelLib.
+!
+!    ModelLib is a free software: you can redistribute it and/or modify
+!    it under the terms of the GNU Lesser General Public License as published by
+!    the Free Software Foundation, either version 3 of the License, or
+!    (at your option) any later version.
+!
+!    ModelLib is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU Lesser General Public License for more details.
+!
+!    You should have received a copy of the GNU Lesser General Public License
+!    along with ModelLib.  If not, see <http://www.gnu.org/licenses/>.
+!
+!    Copyright 2016  David LAUVERGNAT, Félix MOUHAT and Liang LIANG
+!
+!===========================================================================
+!===========================================================================
+
+!> @brief Module which makes the initialization, calculation of the XXX potentials (value, gradient and hessian).
+!!
+!> @author David Lauvergnat
+!! @date 07/01/2020
+!!
+MODULE mod_XXX_Model
+  USE mod_NumParameters
+  USE mod_EmptyModel
+  IMPLICIT NONE
+
+  PRIVATE
+
+!> @brief Derived type in which the XXX parameters are set-up.
+  TYPE, EXTENDS (EmptyModel_t) ::  XXX_Model_t
+
+   PRIVATE
+
+   CONTAINS
+    PROCEDURE :: Eval_QModel_Pot => eval_XXX_Pot
+    PROCEDURE :: Write_QModel    => Write_XXX_Model
+    PROCEDURE :: Write0_QModel   => Write0_XXX_Model
+  END TYPE XXX_Model_t
+ 
+  PUBLIC :: XXX_Model_t,Init_XXX_Model
+ 
+  CONTAINS
+!> @brief Function which makes the initialization of the XXX parameters.
+!!
+!! @param QModel             TYPE(XXX_Model_t):   result derived type in which the parameters are set-up.
+!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param nio_param_file     integer:             file unit to read the parameters.
+!! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
+  FUNCTION Init_XXX_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  IMPLICIT NONE
+
+    TYPE (XXX_Model_t)                           :: QModel ! RESULT
+
+    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    integer,                     intent(in)      :: nio_param_file
+    logical,                     intent(in)      :: read_param
+
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Init_XXX_Model'
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
+    !-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      flush(out_unitp)
+    END IF
+
+    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+
+    QModel%nsurf    = x
+    QModel%ndim     = x
+    QModel%pot_name = 'xxx'
+
+
+    IF (debug) write(out_unitp,*) 'init Q0 of XXX'
+    QModel%Q0 = ....
+
+    IF (debug) write(out_unitp,*) 'init d0GGdef of XXX'
+    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+
+
+    IF (debug) THEN
+      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unitp,*) 'END ',name_sub
+      flush(out_unitp)
+    END IF
+
+  END FUNCTION Init_XXX_Model
+!> @brief Subroutine wich prints the current XXX_Model parameters.
+!!
+!! @param QModel            CLASS(XXX_Model_t):   derived type in which the parameters are set-up.
+!! @param nio               integer:              file unit to print the parameters.
+  SUBROUTINE Write_XXX_Model(QModel,nio)
+  IMPLICIT NONE
+
+    CLASS(XXX_Model_t),   intent(in) :: QModel
+    integer,              intent(in) :: nio
+
+  END SUBROUTINE Write_XXX_Model
+!> @brief Subroutine wich prints the default XXX_Model parameters.
+!!
+!! @param QModel            CLASS(XXX_Model_t):   derived type in which the parameters are set-up.
+!! @param nio               integer:              file unit to print the parameters.
+  SUBROUTINE Write0_XXX_Model(QModel,nio)
+  IMPLICIT NONE
+
+    CLASS(XXX_Model_t),   intent(in) :: QModel
+    integer,              intent(in) :: nio
+
+    write(nio,*) 'XXX default parameters'
+    write(nio,*)
+    write(nio,*)
+    write(nio,*) 'end XXX default parameters'
+
+
+  END SUBROUTINE Write0_XXX_Model
+
+!> @brief Subroutine wich calculates the XXX potential with derivatives up to the 2d order.
+!!
+!! @param QModel             CLASS(XXX_Model_t):   derived type in which the parameters are set-up.
+!! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
+!! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
+!!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
+  SUBROUTINE eval_XXX_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  USE mod_dnS
+  IMPLICIT NONE
+
+    CLASS(XXX_Model_t),   intent(in)    :: QModel
+    TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),         intent(in)    :: dnQ(:)
+    integer,              intent(in)    :: nderiv
+
+
+  END SUBROUTINE eval_XXX_Pot
+
+END MODULE mod_XXX_Model

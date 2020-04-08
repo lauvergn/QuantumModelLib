@@ -13,5 +13,5 @@ TEST output: Buckingham_Ar-Ar Adiabatic
    1.0880517621509414E-003
  d0GGdef
            1
-   1.0000000000000000     
+   2.7454814573212161E-005
 END_TEST output: Buckingham_Ar-Ar Adiabatic

@@ -1075,7 +1075,6 @@ CONTAINS
     NotAlloc = NotAlloc .OR. (nderiv >= 1 .AND. .NOT. allocated(Mat%d1))
     NotAlloc = NotAlloc .OR. (nderiv >= 2 .AND. .NOT. allocated(Mat%d2))
 
-
-    END FUNCTION QML_Check_NotAlloc_dnMat
+  END FUNCTION QML_Check_NotAlloc_dnMat
 
 END MODULE mod_dnMat

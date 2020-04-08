@@ -23,7 +23,7 @@
 PROGRAM TEST_grid
   USE mod_NumParameters
   USE mod_Lib
-  USE mod_Model
+  USE mod_QModel
   IMPLICIT NONE
 
   TYPE (QModel_t)                :: QModel
@@ -36,10 +36,10 @@ PROGRAM TEST_grid
 
   CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=6)
 
-  allocate(Qmin(QModel%ndim))
-  allocate(Qmax(QModel%ndim))
+  allocate(Qmin(QModel%QM%ndim))
+  allocate(Qmax(QModel%QM%ndim))
 
-  DO i=1,QModel%ndim
+  DO i=1,QModel%QM%ndim
     Qmax = ZERO
     Qmax(i) = a
     Qmin = -Qmax
@@ -48,10 +48,10 @@ PROGRAM TEST_grid
                           nb_points=101,nderiv=0,grid_file=grid_file)
   END DO
 
-  IF (QModel%ndim == 1) STOP '1D'
+  IF (QModel%QM%ndim == 1) STOP '1D'
 
-  DO i=1,QModel%ndim
-  DO j=i+1,QModel%ndim
+  DO i=1,QModel%QM%ndim
+  DO j=i+1,QModel%QM%ndim
     Qmax = ZERO
     Qmax(i) = a
     Qmax(j) = a

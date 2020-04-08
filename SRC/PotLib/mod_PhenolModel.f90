@@ -27,12 +27,15 @@
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-MODULE mod_PhenolPot
+MODULE mod_PhenolModel
   USE mod_NumParameters
-  USE mod_MorsePot
-  USE mod_SigmoidPot
-
+  USE mod_EmptyModel
+  USE mod_MorseModel
+  USE mod_SigmoidModel
   IMPLICIT NONE
+
+  PRIVATE
+
 
 !> @brief Derived type in which the parameters of the Phenol potential are set-up.
 !> @brief Reference: Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218
@@ -40,48 +43,49 @@ MODULE mod_PhenolPot
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
-  TYPE PhenolPot_t
+  TYPE, EXTENDS (EmptyModel_t) :: PhenolModel_t
      PRIVATE
-     logical              :: PubliUnit = .FALSE. ! when PubliUnit=.TRUE., the units (Angstrom and Ev) are used. Default (atomic unit)
-
-     ! Warning the parameters are given as in the publication.
-     !   Therefore, the OH distance R(=Q(1)) is in Angstrom and the energy is in eV.
 
      ! V(1,1) term
-     TYPE (MorsePot_t)   :: v10
-     TYPE (SigmoidPot_t) :: v11
+     TYPE (MorseModel_t)   :: v10
+     TYPE (SigmoidModel_t) :: v11
 
      ! V(3,3) term
-     TYPE (MorsePot_t)   :: v30
-     TYPE (SigmoidPot_t) :: v31
-     real(kind=Rkind)     :: a30=4.85842_Rkind ! eV
+     TYPE (MorseModel_t)   :: v30
+     TYPE (SigmoidModel_t) :: v31
+     real(kind=Rkind)      :: a30=4.85842_Rkind ! eV
 
      ! V(2,2) term
-     TYPE (MorsePot_t)   :: v201
-     real(kind=Rkind)     :: b204=5.50696_Rkind ! eV
+     TYPE (MorseModel_t)   :: v201
+     real(kind=Rkind)      :: b204=5.50696_Rkind ! eV
 
-     real(kind=Rkind)     :: b205=4.70601_Rkind ! eV
-     real(kind=Rkind)     :: b206=2.49826_Rkind ! A^-1
-     real(kind=Rkind)     :: b207=0.988188_Rkind ! A
-     real(kind=Rkind)     :: b208=3.3257_Rkind ! eV
+     real(kind=Rkind)      :: b205=4.70601_Rkind ! eV
+     real(kind=Rkind)      :: b206=2.49826_Rkind ! Angs^-1
+     real(kind=Rkind)      :: b207=0.988188_Rkind ! Angs
+     real(kind=Rkind)      :: b208=3.3257_Rkind ! eV
 
-     TYPE (SigmoidPot_t) :: v211,v212,v221,v222
-     real(kind=Rkind)     :: b217=-0.00055_Rkind ! eV
+     TYPE (SigmoidModel_t) :: v211,v212,v221,v222
+     real(kind=Rkind)      :: b217=-0.00055_Rkind ! eV
 
-     real(kind=Rkind)     :: X20=0.326432_Rkind ! eV^2
-     real(kind=Rkind)     :: X21=0.021105_Rkind ! eV^2
-     real(kind=Rkind)     :: X22=0._Rkind ! eV^2
+     real(kind=Rkind)      :: X20=0.326432_Rkind ! eV^2
+     real(kind=Rkind)      :: X21=0.021105_Rkind ! eV^2
+     real(kind=Rkind)      :: X22=0._Rkind ! eV^2
 
 
      ! V(1,3), and V(1,2) terms
-     TYPE (SigmoidPot_t) :: lambda12,lambda13
+     TYPE (SigmoidModel_t) :: lambda12,lambda13
 
 
       ! The metric tensor of Tnum with rigid_type=100 from B3LYP/6-31G** of the ground state (in au)
      real (kind=Rkind), PUBLIC :: G_RR    = 0.0005786177_Rkind
      real (kind=Rkind), PUBLIC :: G_ThTh  = 0.0002550307_Rkind
+  CONTAINS
+    PROCEDURE :: Eval_QModel_Pot => eval_PhenolPot
+    PROCEDURE :: Write_QModel    => Write_PhenolModel
+    PROCEDURE :: Write0_QModel   => Write0_PhenolModel
+  END TYPE PhenolModel_t
 
-  END TYPE PhenolPot_t
+  PUBLIC :: PhenolModel_t,Init_PhenolModel
 
 
 CONTAINS
@@ -91,71 +95,124 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PhenolPot        TYPE(PhenolPot_t):   derived type in which the parameters are set-up.
-!! @param PubliUnit          logical (optional):   when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
-  SUBROUTINE Init_PhenolPot(PhenolPot,PubliUnit)
-    TYPE (PhenolPot_t),      intent(inout)   :: PhenolPot
-     logical, optional,       intent(in)      :: PubliUnit
+!! @param PhenolPot          TYPE(PhenolPot_t):   derived type in which the parameters are set-up.
+  FUNCTION Init_PhenolModel(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  USE mod_Lib
+  IMPLICIT NONE
 
-     IF (present(PubliUnit)) PhenolPot%PubliUnit = PubliUnit
+    TYPE (PhenolModel_t)               :: QModel
+
+    TYPE(EmptyModel_t),   intent(in)   :: QModel_in ! variable to transfer info to the init
+    logical,              intent(in)   :: read_param
+    integer,              intent(in)   :: nio_param_file
+
+    real (kind=Rkind) :: Req
+    real (kind=Rkind) :: a0      = 0.52917720835354106_Rkind
+    real (kind=Rkind) :: auTOeV  = 27.211384_Rkind
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Init_PhenolModel'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) '  read_param:     ',read_param
+      write(out_unitp,*) '  nio_param_file: ',nio_param_file
+      flush(out_unitp)
+    END IF
+
+    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    QModel%pot_name = 'phenol'
+    QModel%ndim     = 2
+    QModel%nsurf    = 3
+    flush(out_unitp)
+
+    ! Warning the parameters are given as in the publication.
+    !   Therefore, the OH distance R(=Q(1)) is in Angstrom and the energy is in eV.
 
     ! V(1,1) term
     !De1=4.26302 eV r1=0.96994 Å a1=2.66021 Å−1
-    CALL Init_MorsePot(PhenolPot%v10,D=4.26302_Rkind,a=2.66021_Rkind,req=0.96994_Rkind)
+    Req = 0.96994_Rkind
+    CALL Init0_MorseModel(QModel%v10,D=4.26302_Rkind,a=2.66021_Rkind,    &
+                          req=0.96994_Rkind,model_name='morse-v10')
     !A1=0.27037 eV A2=1.96606 Å A3=0.685264 Å
-    CALL Init_SigmoidPot(PhenolPot%v11,nio=5,read_param=.FALSE.,      &
-                         A=0.27037_Rkind,B=1.96606_Rkind,C=0.685264_Rkind,e=-ONE)
-
-
+    CALL Init0_SigmoidModel(QModel%v11,A=0.27037_Rkind,B=1.96606_Rkind,  &
+                            C=0.685264_Rkind,e=-ONE,model_name='sigmoid-v11')
 
     ! V(2,2) term
     !B201=0.192205 eV B202=5.67356 Å−1 B203=1.03171 Å
-    CALL Init_MorsePot(PhenolPot%v201,D=0.192205_Rkind,a=5.67356_Rkind,req=1.03171_Rkind)
+    CALL Init0_MorseModel(QModel%v201,D=0.192205_Rkind,a=5.67356_Rkind,  &
+                          req=1.03171_Rkind,model_name='morse-v201')
     !the exp term is given with the coef's: a205,a206,a207,a208
 
     !B211=−0.2902 eV B212=2.05715 Å B213=1.01574 Å
-    CALL Init_SigmoidPot(PhenolPot%v211,nio=5,read_param=.FALSE.,     &
-                         A=-0.2902_Rkind,B=2.05715_Rkind,C=1.01574_Rkind,e=-ONE)
+    CALL Init0_SigmoidModel(QModel%v211,A=-0.2902_Rkind,B=2.05715_Rkind, &
+                            C=1.01574_Rkind,e=-ONE,model_name='sigmoid-v211')
     !B214=−73.329 eV B215=1.48285 Å B216=−0.1111 Å
-    CALL Init_SigmoidPot(PhenolPot%v212,nio=5,read_param=.FALSE.,     &
-                         A=-73.329_Rkind,B=1.48285_Rkind,C=-0.1111_Rkind,e=-ONE)
+    CALL Init0_SigmoidModel(QModel%v212,A=-73.329_Rkind,B=1.48285_Rkind, &
+                            C=-0.1111_Rkind,e=-ONE,model_name='sigmoid-v212')
     !B221=27.3756 eV B222=1.66881 Å B223=0.20557 Å
-    CALL Init_SigmoidPot(PhenolPot%v221,nio=5,read_param=.FALSE.,     &
-                         A=27.3756_Rkind,B=1.66881_Rkind,C=0.20557_Rkind,e=ONE)
+    CALL Init0_SigmoidModel(QModel%v221,A=27.3756_Rkind,B=1.66881_Rkind, &
+                            C=0.20557_Rkind,e=ONE,model_name='sigmoid-v221')
     !B224=0.35567 Å B225=1.43492 eV B226=0.56968 Å (unit problem between B224 and B225)
-    CALL Init_SigmoidPot(PhenolPot%v222,nio=5,read_param=.FALSE.,     &
-                         A=0.35567_Rkind,B=1.43492_Rkind,C=0.56968_Rkind,e=-ONE)
+    CALL Init0_SigmoidModel(QModel%v222,A=0.35567_Rkind,B=1.43492_Rkind, &
+                            C=0.56968_Rkind,e=-ONE,model_name='sigmoid-v222')
 
     ! V(3,3) term
     !De3=4.47382 eV r3=0.96304 Å a3=2.38671 Å−1 a30=4.85842 eV
-    CALL Init_MorsePot(PhenolPot%v30,D=4.47382_Rkind,a=2.38671_Rkind,req=0.96304_Rkind)
+    CALL Init0_MorseModel(QModel%v30,D=4.47382_Rkind,a=2.38671_Rkind,    &
+                          req=0.96304_Rkind,model_name='morse-v30')
     !C1=0.110336 eV C2=1.21724 Å C3=0.06778 Å̊
-    CALL Init_SigmoidPot(PhenolPot%v31,nio=5,read_param=.FALSE.,      &
-                         A=0.110336_Rkind,B=1.21724_Rkind,C=0.06778_Rkind,e=-ONE)
+    CALL Init0_SigmoidModel(QModel%v31,A=0.110336_Rkind,B=1.21724_Rkind, &
+                            C=0.06778_Rkind,e=-ONE,model_name='sigmoid-v31')
 
     ! V(1,3), and V(1,2) terms
     !l12,max=1.47613 eV d12=1.96984 Å l12=0.494373 Å
-    CALL Init_SigmoidPot(PhenolPot%lambda12,nio=5,read_param=.FALSE., &
-                         A=1.47613_Rkind,B=1.96984_Rkind,C=0.494373_Rkind,e=-ONE)
+    CALL Init0_SigmoidModel(QModel%lambda12,A=1.47613_Rkind,B=1.96984_Rkind,&
+                            C=0.494373_Rkind,e=-ONE,model_name='sigmoid-lambda12')
     !l23,max=0.327204 eV d23=1.22594 Å l23=0.0700604 Å
-    CALL Init_SigmoidPot(PhenolPot%lambda13,nio=5,read_param=.FALSE., &
-                         A=0.327204_Rkind,B=1.22594_Rkind,C=0.0700604_Rkind,e=-ONE)
+    CALL Init0_SigmoidModel(QModel%lambda13,A=0.327204_Rkind,B=1.22594_Rkind,&
+                            C=0.0700604_Rkind,e=-ONE,model_name='sigmoid-lambda13')
 
-    IF (PhenolPot%PubliUnit) THEN
+    IF (debug) THEN
+      IF (QModel%PubliUnit) THEN
+        write(out_unitp,*) 'init Q0 of Phenol [Angs,Rad]'
+      ELSE
+        write(out_unitp,*) 'init Q0 of Phenol [Bhor,Rad]'
+      END IF
+    END IF
+    QModel%Q0 = [Req,ZERO]
+    IF (.NOT. QModel%PubliUnit) QModel%Q0(1) = QModel%Q0(1) /a0
+
+
+    IF (debug) write(out_unitp,*) 'init d0GGdef of Phenol [au]'
+    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef(1,1) = QModel%G_RR
+    QModel%d0GGdef(2,2) = QModel%G_ThTh
+
+
+    IF (QModel%PubliUnit) THEN
       write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Angs,Rad], Energy: [eV]'
     ELSE
       write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Rad], Energy: [Hartree]'
     END IF
 
-  END SUBROUTINE Init_PhenolPot
+    IF (debug) THEN
+      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unitp,*) 'END ',name_sub
+      flush(out_unitp)
+    END IF
+
+  END FUNCTION Init_PhenolModel
 !> @brief Subroutine wich prints the Phenol potential parameters.
 !!
 !> @author David Lauvergnat
 !! @date 30/07/2019
 !!
 !! @param nio                integer:              file unit to print the parameters.
-  SUBROUTINE Write0_PhenolPot(nio)
-    integer, intent(in) :: nio
+  SUBROUTINE Write0_PhenolModel(QModel,nio)
+    CLASS(PhenolModel_t),    intent(in) :: QModel
+    integer,                 intent(in) :: nio
 
     write(nio,*) 'Phenol parameters'
     write(nio,*) '-----------------------------------------'
@@ -178,61 +235,60 @@ CONTAINS
     write(nio,*)
     write(nio,*) 'end Phenol parameters'
 
-  END SUBROUTINE Write0_PhenolPot
+  END SUBROUTINE Write0_PhenolModel
 !> @brief Subroutine wich prints the Phenol potential parameters.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PhenolPot        TYPE(PhenolPot_t):   derived type with the Phenol potential parameters.
-!! @param nio                integer:              file unit to print the parameters.
-  SUBROUTINE Write_PhenolPot(PhenolPot,nio)
-    TYPE (PhenolPot_t), intent(in) :: PhenolPot
-    integer, intent(in) :: nio
+!! @param QModel        CLASS(PhenolPot_t):   derived type with the Phenol potential parameters.
+!! @param nio           integer:              file unit to print the parameters.
+  SUBROUTINE Write_PhenolModel(QModel,nio)
+    CLASS(PhenolModel_t),    intent(in) :: QModel
+    integer,                 intent(in) :: nio
 
     write(nio,*) 'Phenol current parameters'
 
-
-    write(nio,*) 'PubliUnit: ',PhenolPot%PubliUnit
+    write(nio,*) 'PubliUnit: ',QModel%PubliUnit
     write(nio,*)
     write(nio,*)
     write(nio,*) '-----------------------------------------'
     write(nio,*) ' V(1,1):'
-    CALL Write_MorsePot(PhenolPot%v10,nio)
-    CALL Write_SigmoidPot(PhenolPot%v11,nio)
+    CALL Write_MorseModel(QModel%v10,nio)
+    CALL Write_SigmoidModel(QModel%v11,nio)
 
     write(nio,*) '-----------------------------------------'
     write(nio,*) ' V(2,2):'
-    CALL Write_MorsePot(PhenolPot%v201,nio)
-    write(nio,*) ' b204:',PhenolPot%b204
+    CALL Write_MorseModel(QModel%v201,nio)
+    write(nio,*) ' b204:',QModel%b204
     write(nio,*) ' v202=B205*exp(-B206*(R-B207)) + B208'
-    write(nio,*) ' b205...b208:',PhenolPot%b205,PhenolPot%b206,PhenolPot%b207,PhenolPot%b208
-    CALL Write_SigmoidPot(PhenolPot%v211,nio)
-    write(nio,*) ' b217:',PhenolPot%b217
-    CALL Write_SigmoidPot(PhenolPot%v212,nio)
-    CALL Write_SigmoidPot(PhenolPot%v221,nio)
-    CALL Write_SigmoidPot(PhenolPot%v222,nio)
+    write(nio,*) ' b205...b208:',QModel%b205,QModel%b206,QModel%b207,QModel%b208
+    CALL Write_SigmoidModel(QModel%v211,nio)
+    write(nio,*) ' b217:',QModel%b217
+    CALL Write_SigmoidModel(QModel%v212,nio)
+    CALL Write_SigmoidModel(QModel%v221,nio)
+    CALL Write_SigmoidModel(QModel%v222,nio)
 
-    write(nio,*) ' X20,X21,X22:',PhenolPot%X20,PhenolPot%X21,PhenolPot%X22
+    write(nio,*) ' X20,X21,X22:',QModel%X20,QModel%X21,QModel%X22
 
 
     write(nio,*) '-----------------------------------------'
     write(nio,*) ' V(3,3):'
-    write(nio,*) ' a30:',PhenolPot%a30
+    write(nio,*) ' a30:',QModel%a30
 
-    CALL Write_MorsePot(PhenolPot%v30,nio)
-    CALL Write_SigmoidPot(PhenolPot%v31,nio)
+    CALL Write_MorseModel(QModel%v30,nio)
+    CALL Write_SigmoidModel(QModel%v31,nio)
 
     write(nio,*) '-----------------------------------------'
     write(nio,*) ' V(1,2):'
-    CALL Write_SigmoidPot(PhenolPot%lambda12,nio)
+    CALL Write_SigmoidModel(QModel%lambda12,nio)
     write(nio,*) '-----------------------------------------'
     write(nio,*) ' V(1,3):'
-    CALL Write_SigmoidPot(PhenolPot%lambda13,nio)
+    CALL Write_SigmoidModel(QModel%lambda13,nio)
 
     write(nio,*) 'end Phenol current parameters'
 
-  END SUBROUTINE Write_PhenolPot
+  END SUBROUTINE Write_PhenolModel
 
 !> @brief Subroutine wich calculates the Phenol potential with derivatives up to the 2d order if required.
 !!
@@ -241,13 +297,13 @@ CONTAINS
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param Q                  real:                table of two values for which the potential is calculated (R,theta)
-!! @param PhenolPot        TYPE(PhenolPot_t):  derived type with the Morse parameters.
+!! @param QModel        TYPE(PhenolPot_t):  derived type with the Morse parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_PhenolPot(Mat_OF_PotDia,dnQ,PhenolPot,nderiv)
+  SUBROUTINE eval_PhenolPot(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE mod_dnS
+    CLASS(PhenolModel_t),    intent(in) :: QModel
 
-    TYPE (PhenolPot_t), intent(in)     :: PhenolPot
     TYPE (dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)     :: dnQ(:) ! R and th
     integer,             intent(in)     :: nderiv
@@ -273,17 +329,17 @@ CONTAINS
    dnR     = dnQ(1)
    dnth    = dnQ(2)
 
-   IF (.NOT. PhenolPot%PubliUnit) THEN
+   IF (.NOT. QModel%PubliUnit) THEN
       dnR = a0*dnR ! to convert the bhor into Angstrom
    END IF
 
    !--------------------------------------------------------------------
    ! for V(1,1): first diabatic state
    !write(out_unitp,*) 'morse:'
-   v10R = dnMorse(dnR,PhenolPot%v10)
+   v10R = dnMorse(dnR,QModel%v10)
    !CALL QML_Write_dnS(v10R,6)
    !write(out_unitp,*) 'sigmoid:'
-   v11R = dnSigmoid(dnR,PhenolPot%v11)
+   v11R = dnSigmoid(dnR,QModel%v11)
    !CALL QML_Write_dnS(v11R,6)
 
    !write(out_unitp,*) 'f(th):'
@@ -299,25 +355,25 @@ CONTAINS
 
    !--------------------------------------------------------------------
    ! for V(2,2): 2d diabatic state
-   v201R = dnMorse(dnR,PhenolPot%v201) + PhenolPot%B204
-   v202R = PhenolPot%B205*exp(-PhenolPot%B206*(dnR-PhenolPot%B207)) + PhenolPot%B208
+   v201R = dnMorse(dnR,QModel%v201) + QModel%B204
+   v202R = QModel%B205*exp(-QModel%B206*(dnR-QModel%B207)) + QModel%B208
    v20pR = v201R + v202R
    v20mR = v201R - v202R
-   v20R  = HALF*(v20pR - (v20mR**TWO + PhenolPot%X20)**HALF)
+   v20R  = HALF*(v20pR - (v20mR**TWO + QModel%X20)**HALF)
 
 
    !write(out_unitp,*) 'sigmoid:'
-   v211R = dnSigmoid(dnR,PhenolPot%v211)
-   v212R = dnSigmoid(dnR,PhenolPot%v212) + PhenolPot%B217
+   v211R = dnSigmoid(dnR,QModel%v211)
+   v212R = dnSigmoid(dnR,QModel%v212) + QModel%B217
    v21pR = v211R + v212R
    v21mR = v211R - v212R
-   v21R  = HALF * (v21pR + (v21mR**TWO + PhenolPot%X21)**HALF)
+   v21R  = HALF * (v21pR + (v21mR**TWO + QModel%X21)**HALF)
 
-   v221R = dnSigmoid(dnR,PhenolPot%v221)
-   v222R = dnSigmoid(dnR,PhenolPot%v222)
+   v221R = dnSigmoid(dnR,QModel%v221)
+   v222R = dnSigmoid(dnR,QModel%v222)
    v22pR = v221R + v222R
    v22mR = v221R - v222R
-   v22R  = HALF * (v22pR - sqrt(v22mR**TWO + PhenolPot%X22) )
+   v22R  = HALF * (v22pR - sqrt(v22mR**TWO + QModel%X22) )
 
    v21th = ONE-cos(dnth+dnth)
    v22th = v21th*v21th
@@ -349,10 +405,10 @@ CONTAINS
    !--------------------------------------------------------------------
    ! for V(3,3): 3d diabatic state
    !write(out_unitp,*) 'morse:'
-   v30R = dnMorse(dnR,PhenolPot%v30) + PhenolPot%a30
+   v30R = dnMorse(dnR,QModel%v30) + QModel%a30
    !CALL QML_Write_dnMat(v30R,6)
    !write(out_unitp,*) 'sigmoid:'
-   v31R = dnSigmoid(dnR,PhenolPot%v31)
+   v31R = dnSigmoid(dnR,QModel%v31)
    !CALL QML_Write_dnMat(v31R,6)
 
    !write(out_unitp,*) 'f(th):'
@@ -371,7 +427,7 @@ CONTAINS
 
 
    !--------------------------------------------------------------------
-   lambda12R = dnSigmoid(dnR,PhenolPot%lambda12) * sin(dnth)
+   lambda12R = dnSigmoid(dnR,QModel%lambda12) * sin(dnth)
    !CALL QML_Write_dnS(lambda12R,6)
 
    Mat_OF_PotDia(1,2) = lambda12R
@@ -379,7 +435,7 @@ CONTAINS
 
 
 
-   lambda13R = dnSigmoid(dnR,PhenolPot%lambda13) * sin(dnth)
+   lambda13R = dnSigmoid(dnR,QModel%lambda13) * sin(dnth)
 
    Mat_OF_PotDia(1,3) = lambda13R
    Mat_OF_PotDia(3,1) = Mat_OF_PotDia(1,3)
@@ -396,7 +452,7 @@ CONTAINS
    CALL QML_dealloc_dnS(dnth)
    CALL QML_dealloc_dnS(dnR)
 
-   IF (.NOT. PhenolPot%PubliUnit) THEN ! to convert the eV into Hartree
+   IF (.NOT. QModel%PubliUnit) THEN ! to convert the eV into Hartree
      DO i=1,3
      DO j=1,3
        Mat_OF_PotDia(j,i) = Mat_OF_PotDia(j,i) * (ONE/auTOev)
@@ -412,4 +468,4 @@ CONTAINS
 
   END SUBROUTINE eval_PhenolPot
 
-END MODULE mod_PhenolPot
+END MODULE mod_PhenolModel

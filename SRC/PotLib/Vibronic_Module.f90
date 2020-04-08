@@ -30,6 +30,7 @@
 MODULE mod_Vibronic
   USE mod_NumParameters
   USE mod_dnMat
+  USE mod_EmptyModel
   IMPLICIT NONE
 
 !> @brief Derived type in which the parameters of the Phenol potential are set-up.
@@ -38,7 +39,7 @@ MODULE mod_Vibronic
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
-  TYPE VibronicPot_t
+  TYPE, EXTENDS (EmptyModel_t) ::  VibronicPot_t
      PRIVATE
      ! Vij, the diabatic potentials (i=j) or couplings (i/=j), are
      !   expanded as a taylor expension at second order
@@ -53,7 +54,10 @@ MODULE mod_Vibronic
 
      !Q0(:,i,j) is the reference geometry for the diabatic (j=i) or compling (i/=j) terms
      real (kind=Rkind), allocatable     :: Q0(:,:,:)
-
+  CONTAINS
+    PROCEDURE :: Eval_QModel_Pot => eval_VibronicPot
+    PROCEDURE :: Write_QModel    => Write_VibronicModel
+    PROCEDURE :: Write0_QModel   => Write0_VibronicModel
   END TYPE VibronicPot_t
 
 

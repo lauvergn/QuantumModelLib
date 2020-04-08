@@ -1,0 +1,5 @@
+ &potential pot_name='phenol' adiabatic=t read_nml=t /
+
+
+
+   &morse a=2. req=2.4 /

@@ -20,34 +20,33 @@
 !
 !===========================================================================
 !===========================================================================
-MODULE mod_Model
+MODULE mod_QModel
 !$ USE omp_lib
   USE mod_NumParameters
-  USE mod_dnMat, ONLY: dnMat_t,QML_alloc_dnMat,QML_dealloc_dnMat,       &
-                       QML_Check_NotAlloc_dnMat,QML_get_maxval_OF_dnMat,&
-                       QML_Write_dnMat,QML_get_nsurf_FROM_dnMat,        &
-                       QML_get_ndim_FROM_dnMat,QML_dnMat2_minus_dnMat1, &
-                       QML_sub_dnS_TO_dnMat
-  USE mod_MorsePot
-  USE mod_HenonHeilesPot
-  USE mod_TullyPot
+  USE mod_dnMat
 
-  USE mod_PSB3Pot
-  USE mod_HONO
-  USE mod_HNNHp
-  USE mod_H2SiN
-  USE mod_H2NSi
+  USE mod_EmptyModel
 
-  USE mod_OneDSOC_Model
+  USE mod_TemplateModel
+  USE mod_MorseModel
+
+  USE mod_HenonHeilesModel
+  USE mod_TullyModel
+
+  USE mod_PSB3_Model
+  USE mod_HONO_Model
+  USE mod_HNNHp_Model
+  USE mod_H2SiN_Model
+  USE mod_H2NSi_Model
+
+  USE mod_OneDSOC_1S1T_Model
   USE mod_OneDSOC_2S1T_Model
 
-  USE mod_LinearHBondPot
-  USE mod_BuckPot
-  USE mod_PhenolPot
-  USE mod_SigmoidPot
-  USE mod_TwoDPot
-
-  USE mod_TemplatePot
+  USE mod_LinearHBondModel
+  USE mod_BuckModel
+  USE mod_PhenolModel
+  USE mod_SigmoidModel
+  USE mod_TwoD_Model
 
   IMPLICIT NONE
 
@@ -57,41 +56,8 @@ MODULE mod_Model
   PUBLIC :: Check_analytical_numerical_derivatives
   PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model
 
-  TYPE QModel_t
-    integer :: nsurf       = 1
-    integer :: ndim        = 1
-    logical :: numeric     = .FALSE.
-    logical :: adiabatic   = .TRUE.
-    logical :: PubliUnit   = .FALSE. ! when PubliUnit=.TRUE., the units of a reference (publi ...) are used. Default (atomic unit)
-
-    character (len=:), allocatable :: pot_name
-
-    real (kind=Rkind), allocatable :: d0GGdef(:,:)
-
-    TYPE (dnMat_t)          :: Vec0 ! to get the correct phase of the adiatic couplings
-
-    ! list of potentials ....
-    TYPE (MorsePot_t)       :: MorsePot
-    TYPE (BuckPot_t)        :: BuckPot
-    TYPE (SigmoidPot_t)     :: SigmoidPot
-
-    TYPE (LinearHBondPot_t)    :: LinearHBondPot
-    TYPE (HenonHeilesPot_t)    :: HenonHeilesPot
-    TYPE (TullyPot_t)          :: TullyPot
-    TYPE (OneDSOCPot_t)        :: OneDSOCPot
-    TYPE (OneDSOC_2S1T_Pot_t)  :: OneDSOC_2S1T_Pot
-
-    TYPE (PhenolPot_t)      :: PhenolPot
-    TYPE (TwoDPot_t)        :: Para_TwoD
-    TYPE (PSB3Pot_t)        :: PSB3Pot
-
-    TYPE (HONOPot_t)        :: HONOPot
-    TYPE (HNNHpPot_t)       :: HNNHpPot
-    TYPE (H2SiNPot_t)       :: H2SiNPot
-    TYPE (H2NSiPot_t)       :: H2NSiPot
-
-    TYPE (TemplatePot_t)    :: TemplatePot
-
+  TYPE :: QModel_t
+    CLASS (EmptyModel_t), allocatable :: QM
   END TYPE QModel_t
 
   real (kind=Rkind)                     :: step = ONETENTH**4
@@ -151,15 +117,15 @@ MODULE mod_Model
 CONTAINS
 
 
-  SUBROUTINE Read_Model(QModel,nio,option1,read_nml1)
+  SUBROUTINE Read_Model(QModel_inout,nio,read_nml1)
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE (QModel_t), intent(inout) :: QModel
-    integer,            intent(in)    :: nio
-    integer,            intent(inout) :: option1
-    logical,            intent(inout) :: read_nml1
+    TYPE (EmptyModel_t), intent(inout) :: QModel_inout ! variable to transfer info to the init
+    integer,             intent(in)    :: nio
+    logical,             intent(inout) :: read_nml1
 
+    ! local variable
     integer :: ndim,nsurf,nderiv,option
     logical :: adiabatic,numeric,PubliUnit,read_nml
     character (len=20) :: pot_name
@@ -168,11 +134,10 @@ CONTAINS
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,read_nml
 
-
-    ! Default values defined
-    ndim      = QModel%ndim
-    nsurf     = QModel%nsurf
-    adiabatic = QModel%adiabatic
+!    ! Default values defined
+    ndim      = QModel_inout%ndim
+    nsurf     = QModel_inout%nsurf
+    adiabatic = QModel_inout%adiabatic
     pot_name  = 'morse'
     numeric   = .FALSE.
     PubliUnit = .FALSE.
@@ -200,43 +165,27 @@ CONTAINS
 
     !write(out_unitp,nml=potential)
 
-    option1          = option
-    read_nml1        = read_nml
-    QModel%ndim      = ndim
-    QModel%nsurf     = nsurf
-    QModel%adiabatic = adiabatic
-    QModel%numeric   = numeric
-    QModel%pot_name  = strdup(pot_name)
-    QModel%PubliUnit = PubliUnit
+    read_nml1              = read_nml
+
+    QModel_inout%option    = option
+    QModel_inout%ndim      = ndim
+    QModel_inout%nsurf     = nsurf
+    QModel_inout%adiabatic = adiabatic
+    QModel_inout%numeric   = numeric
+    QModel_inout%pot_name  = trim(pot_name)
+    !QModel_inout%pot_name  = strdup(pot_name) ! panic with nagfor !!!
+    QModel_inout%PubliUnit = PubliUnit
 
   END SUBROUTINE Read_Model
- 
-  SUBROUTINE Init_IdMat(Mat,ndim)
-  IMPLICIT NONE
-
-  integer,                        intent(in)    :: ndim
-  real (kind=Rkind), allocatable, intent(inout) :: mat(:,:)
-
-  integer :: i
-
-    IF (allocated(mat)) deallocate(mat)
-
-    allocate(mat(ndim,ndim))
-    mat(:,:) = ZERO
-    DO i=1,ndim
-      mat(i,i) = ONE
-    END DO
-
-  END SUBROUTINE Init_IdMat
-
 
   SUBROUTINE Init_Model(QModel,pot_name,ndim,nsurf,adiabatic,       &
                         read_param,param_file_name,nio_param_file,      &
-                        option,PubliUnit)
+                        option,PubliUnit,Print_init)
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE (QModel_t),  intent(inout)        :: QModel
+    TYPE (QModel_t),     intent(inout)        :: QModel
+
     character (len=*),   intent(in), optional :: pot_name
     integer,             intent(in), optional :: ndim,nsurf
     logical,             intent(in), optional :: adiabatic
@@ -247,53 +196,79 @@ CONTAINS
 
     integer,             intent(in), optional :: option
     logical,             intent(in), optional :: PubliUnit
+    logical,             intent(in), optional :: Print_init
 
-    integer ::i, option_loc,nio_loc
-    logical :: read_param_loc,adiabatic_loc,read_nml
-    character (len=:), allocatable :: param_file_name_loc
+    ! local variables
+    TYPE(EmptyModel_t)             :: QModel_in ! variable to transfer info to the init
+    integer                        :: i,nio_loc
+    logical                        :: read_param_loc,read_nml,Print_init_loc
+    character (len=:), allocatable :: param_file_name_loc,pot_name_loc
     real (kind=Rkind), allocatable :: Q0(:)
 
-    write(out_unitp,*) '================================================='
-    write(out_unitp,*) '================================================='
-    write(out_unitp,*) '== QML: Quantum Model Lib (E-CAM) ==============='
-    write(out_unitp,*) '== QML version:       ',QML_version
-    write(out_unitp,*) '== QML path:          ',trim(adjustl(QML_path))
-    write(out_unitp,*) '-------------------------------------------------'
-    write(out_unitp,*) '== Compiled on       "',trim(compile_host), '" the ',trim(compile_date)
-    write(out_unitp,*) '== Compiler:         ',trim(compiler)
-    write(out_unitp,*) '== Compiler version: ',trim(compiler_ver)
-    write(out_unitp,*) '== Compiler options: ',trim(compiler_opt)
-    write(out_unitp,*) '== Compiler libs:     ',trim(compiler_libs)
-    write(out_unitp,*) '-------------------------------------------------'
-    write(out_unitp,*) 'QML is under GNU LGPL3 license and '
-    write(out_unitp,*) '  is written by David Lauvergnat [1]'
-    write(out_unitp,*) '  with contributions of'
-    write(out_unitp,*) '     Félix MOUHAT [2]'
-    write(out_unitp,*) '     Liang LIANG [3]'
-    write(out_unitp,*)
-    write(out_unitp,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
-    write(out_unitp,*) '[2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France'
-    write(out_unitp,*) '[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France'
-    write(out_unitp,*) '================================================='
-    write(out_unitp,*) '================================================='
-    write(out_unitp,*) '== Initialization of the Model =================='
+    Print_init_loc = .TRUE.
+    IF (present(Print_init)) Print_init_loc = Print_init
 
+    IF (Print_init_loc) THEN
+      write(out_unitp,*) '================================================='
+      write(out_unitp,*) '================================================='
+      write(out_unitp,*) '== QML: Quantum Model Lib (E-CAM) ==============='
+      write(out_unitp,*) '== QML version:       ',QML_version
+      write(out_unitp,*) '== QML path:          ',trim(adjustl(QML_path))
+      write(out_unitp,*) '-------------------------------------------------'
+      write(out_unitp,*) '== Compiled on       "',trim(compile_host), '" the ',trim(compile_date)
+      write(out_unitp,*) '== Compiler:         ',trim(compiler)
+      write(out_unitp,*) '== Compiler version: ',trim(compiler_ver)
+      write(out_unitp,*) '== Compiler options: ',trim(compiler_opt)
+      write(out_unitp,*) '== Compiler libs:     ',trim(compiler_libs)
+      write(out_unitp,*) '-------------------------------------------------'
+      write(out_unitp,*) 'QML is under GNU LGPL3 license and '
+      write(out_unitp,*) '  is written by David Lauvergnat [1]'
+      write(out_unitp,*) '  with contributions of'
+      write(out_unitp,*) '     Félix MOUHAT [2]'
+      write(out_unitp,*) '     Liang LIANG [3]'
+      write(out_unitp,*)
+      write(out_unitp,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
+      write(out_unitp,*) '[2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France'
+      write(out_unitp,*) '[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France'
+      write(out_unitp,*) '================================================='
+      write(out_unitp,*) '================================================='
+      write(out_unitp,*) '== Initialization of the Model =================='
+    END IF
+
+    IF (allocated(QModel%QM)) deallocate(QModel%QM)
 
     ! set the "File_path" in the Lib_module.f90
     File_path = trim(adjustl(QML_path))
 
+    IF (present(ndim)) THEN
+      QModel_in%ndim      = ndim
+    ELSE
+      QModel_in%ndim      = 1
+    END IF
+    IF (present(nsurf)) THEN
+      QModel_in%nsurf     = nsurf
+    ELSE
+      QModel_in%nsurf     = 1
+    END IF
 
     IF (present(adiabatic)) THEN
-      adiabatic_loc = adiabatic
+      QModel_in%adiabatic = adiabatic
     ELSE
-      adiabatic_loc = .TRUE.
+      QModel_in%adiabatic = .TRUE.
     END IF
 
     IF (present(option)) THEN
-      option_loc = option
+      QModel_in%option = option
     ELSE
-      option_loc = -1
+      QModel_in%option = -1
     END IF
+
+    IF (present(PubliUnit)) THEN
+      QModel_in%PubliUnit      = PubliUnit
+    ELSE
+      QModel_in%PubliUnit      = .FALSE.
+    END IF
+
 
     IF (present(read_param)) THEN
       read_param_loc = read_param
@@ -318,8 +293,8 @@ CONTAINS
     END IF
 
     IF (present(pot_name)) THEN
-      QModel%pot_name  = strdup(pot_name)
-      CALL string_uppercase_TO_lowercase(QModel%pot_name)
+      pot_name_loc  = strdup(pot_name)
+      CALL string_uppercase_TO_lowercase(pot_name_loc)
     ELSE
       IF (.NOT. read_param_loc) THEN
         write(out_unitp,*) 'ERROR in Init_Model'
@@ -328,51 +303,35 @@ CONTAINS
       END IF
     END IF
 
-
-    IF (present(ndim)) THEN
-      QModel%ndim      = ndim
-    ELSE
-      QModel%ndim      = 1
-    END IF
-    IF (present(nsurf)) THEN
-      QModel%nsurf     = nsurf
-    ELSE
-      QModel%nsurf     = 1
-    END IF
-
-    IF (present(PubliUnit)) THEN
-      QModel%PubliUnit      = PubliUnit
-    ELSE
-      QModel%PubliUnit      = .FALSE.
-    END IF
-
-    CALL QML_dealloc_dnMat(QModel%Vec0)
-
-    read_nml = .FALSE.
-    IF (read_param_loc .OR.  QModel%pot_name == 'read_model') THEN
-
+    read_nml       = .FALSE.
+    read_param_loc = (read_param_loc .OR.  pot_name_loc == 'read_model')
+    IF (read_param_loc) THEN
       IF (nio_loc /= in_unitp) THEN
         open(unit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
       END IF
-      CALL Read_Model(QModel,nio_loc,option_loc,read_nml)
+      CALL Read_Model(QModel_in,nio_loc,read_nml)
+      pot_name_loc = QModel_in%pot_name
 
       IF (allocated(param_file_name_loc)) deallocate(param_file_name_loc)
     END IF
 
-    IF (QModel%adiabatic) THEN
-      write(out_unitp,*) 'Adiabatic potential . . .'
+
+    IF (QModel_in%adiabatic) THEN
+      IF (Print_init_loc) write(out_unitp,*) 'Adiabatic potential . . .'
     ELSE
-      write(out_unitp,*) 'Non-adiabatic potential . . .'
+      IF (Print_init_loc) write(out_unitp,*) 'Non-adiabatic potential . . .'
     END IF
 
-    IF (QModel%numeric) write(out_unitp,*) 'You have decided to perform a numeric checking of the analytic formulas.'
+    IF (QModel_in%numeric .AND. Print_init_loc) THEN
+      write(out_unitp,*) 'You have decided to perform a numeric checking of the analytic formulas.'
+    END IF
 
     read_param_loc = (read_param_loc .AND. read_nml) ! this enables to not read the next namelist when read_param_loc=t
 
-    CALL string_uppercase_TO_lowercase(QModel%pot_name)
-    write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
+    CALL string_uppercase_TO_lowercase(pot_name_loc)
+    IF (Print_init_loc) write(out_unitp,*) 'pot_name_loc: ',pot_name_loc
 
-    SELECT CASE (QModel%pot_name)
+    SELECT CASE (pot_name_loc)
     CASE ('morse')
       !! === README ==
       !! Morse potential: V(R) = D*(1-exp(-a*(r-Req))**2
@@ -382,21 +341,14 @@ CONTAINS
       !! reduced mass      = 1744.60504565084306291455 au
       !! remark: Default parameters for H-F
       !! === END README ==
-      QModel%ndim      = 1
-      QModel%nsurf     = 1
 
-      CALL Init_MorsePot(QModel%MorsePot,nio=nio_loc,read_param=read_param_loc)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-      QModel%d0GGdef(1,1) = ONE/QModel%MorsePot%mu
+      allocate(MorseModel_t :: QModel%QM)
+      QModel%QM = Init_MorseModel(QModel_in,read_param=read_param_loc,nio_param_file=nio_loc)
 
     CASE ('sigmoid')
       !! sigmoid function: A * 1/2(1+e*tanh((x-B)/C))  remark: e=+/-1
-      QModel%nsurf     = 1
-      QModel%ndim      = 1
-
-      CALL Init_SigmoidPot(QModel%SigmoidPot,nio=nio_loc,read_param=read_param_loc)
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+      allocate(SigmoidModel_t :: QModel%QM)
+      QModel%QM = Init_SigmoidModel(QModel_in,read_param=read_param_loc,nio_param_file=nio_loc)
 
     CASE ('buck')
       !! === README ==
@@ -408,13 +360,10 @@ CONTAINS
       !! remark: default parameters for Ar2
       !! ref:  R.A. Buckingham, Proc. R. Soc. A Math. Phys. Eng. Sci. 168 (1938) 264–283. doi:10.1098/rspa.1938.0173
       !! === END README ==
-      QModel%ndim      = 1
-      QModel%nsurf     = 1
+      allocate(BuckModel_t :: QModel%QM)
+      QModel%QM = Init_BuckModel(QModel_in,read_param=read_param_loc,nio_param_file=nio_loc)
 
-      CALL Init_BuckPot(QModel%BuckPot,nio=nio_loc,read_param=read_param_loc)
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-
-    CASE ('hbond')
+    CASE ('hbond','linearhbond ')
       !! === README ==
       !! LinearHBond potential: Morse1(QQ/2+q,param1)+Morse2(QQ/2-q,param2)+Eref2+Buckingham(QQ)
       !! pot_name  = 'HBond'
@@ -427,16 +376,9 @@ CONTAINS
       !!                    <-q->
       !! ref:  Eq 3.79 of J. Beutier, thesis.
       !! === END README ==
-      QModel%ndim      = 2
-      QModel%nsurf     = 1
-
-      CALL Init_LinearHBondPot(QModel%LinearHBondPot,             &
-                               nio=nio_loc,read_param=read_param_loc,   &
-                               PubliUnit=QModel%PubliUnit)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-      QModel%d0GGdef(1,1) = ONE/QModel%LinearHBondPot%muQQ
-      QModel%d0GGdef(2,2) = ONE/QModel%LinearHBondPot%muq
+      allocate(LinearHBondModel_t :: QModel%QM)
+      QModel%QM = Init_LinearHBondModel(QModel_in,read_param=read_param_loc,   &
+                                 nio_param_file=nio_loc)
 
     CASE ('henonheiles')
       !! === README ==
@@ -447,13 +389,9 @@ CONTAINS
       !! reduced masses(:)      = ONE au
       !! ref:  parameters taken from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
       !! === END README ==
-      QModel%nsurf     = 1
-
-      CALL Init_HenonHeilesPot(QModel%HenonHeilesPot,ndim=QModel%ndim, &
-                                 nio=nio_loc,read_param=read_param_loc)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-
+      allocate(HenonHeilesModel_t :: QModel%QM)
+      QModel%QM = Init_HenonHeilesModel(QModel_in,                      &
+                        read_param=read_param_loc,nio_param_file=nio_loc)
 
     CASE ('tully')
       !! === README ==
@@ -465,16 +403,9 @@ CONTAINS
       !! remark: three options are possible (option = 1,2,3)
       !! ref:  Tully, J. Chem. Phys. V93, pp15, 1990
       !! === END README ==
-      QModel%nsurf     = 2
-      QModel%ndim      = 1
-
-      write(out_unitp,*) 'option_loc',option_loc
-      CALL Init_TullyPot(QModel%TullyPot, option=option_loc,      &
-                           nio=nio_loc,read_param=read_param_loc)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-      QModel%d0GGdef(1,1) = ONE/QModel%TullyPot%mu
-
+      allocate(TullyModel_t :: QModel%QM)
+      QModel%QM = Init_TullyModel(QModel_in,read_param=read_param_loc,  &
+                                  nio_param_file=nio_loc)
 
     CASE ('1dsoc','1dsoc_1s1t')
       !! === README ==
@@ -487,13 +418,10 @@ CONTAINS
       !!  or      1 singlet and 1 linear combibation of the triplet components => nsurf     = 2
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
       !! === END README ==
-      IF (.NOT. present(nsurf)) QModel%nsurf = 4
-      QModel%ndim      = 1
-
-      CALL Init_OneDSOC(QModel%OneDSOCPot,option=option_loc,nsurf=QModel%nsurf,  &
-                        nio=nio_loc,read_param=read_param_loc)
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-      QModel%d0GGdef(1,1) = ONE/QModel%OneDSOCPot%mu
+      allocate(OneDSOC_1S1T_Model_t :: QModel%QM)
+      IF (.NOT. present(nsurf)) QModel_in%nsurf = 4
+      QModel%QM = Init_OneDSOC_1S1T_Model(QModel_in,                    &
+                       read_param=read_param_loc,nio_param_file=nio_loc)
 
     CASE ('1dsoc_2s1t')
       !! === README ==
@@ -505,14 +433,9 @@ CONTAINS
       !! remark: 2 singlets and 1 triplet (2 linear combinations of the triplet components are not included) => nsurf     = 4
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
       !! === END README ==
-      QModel%nsurf     = 4
-      QModel%ndim      = 1
-
-      CALL Init_OneDSOC_2S1T(QModel%OneDSOC_2S1T_Pot,option=option_loc,&
-                             nio=nio_loc,read_param=read_param_loc)
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-      QModel%d0GGdef(1,1) = ONE/QModel%OneDSOC_2S1T_Pot%mu
-
+      allocate(OneDSOC_2S1T_Model_t :: QModel%QM)
+      QModel%QM = Init_OneDSOC_2S1T_Model(QModel_in,                    &
+                       read_param=read_param_loc,nio_param_file=nio_loc)
 
     CASE ('phenol')
       !! === README ==
@@ -524,15 +447,9 @@ CONTAINS
       !! remark:
       !! ref: Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
       !! === END README ==
-      QModel%nsurf     = 3
-      QModel%ndim      = 2
 
-      CALL Init_PhenolPot(QModel%PhenolPot,PubliUnit=QModel%PubliUnit)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-      ! The metric tensor of Tnum with rigid_type=100 from B3LYP/6-31G** of the ground stat
-      QModel%d0GGdef(1,1) = QModel%PhenolPot%G_RR
-      QModel%d0GGdef(2,2) = QModel%PhenolPot%G_ThTh
+      allocate(PhenolModel_t :: QModel%QM)
+      QModel%QM = Init_PhenolModel(QModel_in,read_param=read_param_loc,nio_param_file=nio_loc)
 
 
     CASE ('twod')
@@ -545,15 +462,9 @@ CONTAINS
       !! remark: The parameter values have been modified
       !! ref: A. Ferretti, G. Granucci, A. Lami, M. Persico, G. Villani, J. Chem. Phys. 104, 5517 (1996); https://doi.org/10.1063/1.471791
       !! === END README ==
-      QModel%nsurf     = 2
-      QModel%ndim      = 2
-
-      CALL Init_TwoDPot(QModel%Para_TwoD,PubliUnit=QModel%PubliUnit)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-      ! The metric tensor from the publication
-      QModel%d0GGdef(1,1) = ONE/QModel%Para_TwoD%muX
-      QModel%d0GGdef(2,2) = ONE/QModel%Para_TwoD%muY
+      allocate(TwoD_Model_t :: QModel%QM)
+      QModel%QM = Init_TwoD_Model(QModel_in,read_param=read_param_loc,  &
+                                  nio_param_file=nio_loc)
 
     CASE ('psb3')
       !! === README ==
@@ -566,63 +477,39 @@ CONTAINS
       !! The parameters for option=2 come from the following reference.
       !! ref: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019). https://doi.org/10.1021/acs.jpca.8b10010
       !! === END README ==
-      QModel%nsurf     = 2
-      QModel%ndim      = 3
-
-      CALL Init_PSB3Pot(QModel%PSB3Pot,option=option_loc,      &
-                           nio=nio_loc,PubliUnit=QModel%PubliUnit)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+      allocate(PSB3_Model_t :: QModel%QM)
+      QModel%QM = Init_PSB3_Model(QModel_in,read_param=read_param_loc,  &
+                                  nio_param_file=nio_loc)
 
     CASE ('hono')
-      QModel%nsurf     = 1
-      QModel%ndim      = 6
-
-      CALL Init_HONO(QModel%HONOPot,option=option_loc,            &
-                             nio=nio_loc,PubliUnit=QModel%PubliUnit)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+      allocate(HONO_Model_t :: QModel%QM)
+      QModel%QM = Init_HONO_Model(QModel_in,read_param=read_param_loc,  &
+                                  nio_param_file=nio_loc)
 
     CASE ('hnnhp')
-      QModel%nsurf     = 1
-      QModel%ndim      = 6
-
-      CALL Init_HNNHp(QModel%HNNHpPot,QModel%ndim,option=option_loc,&
-                             nio=nio_loc,PubliUnit=QModel%PubliUnit)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+      allocate(HNNHp_Model_t :: QModel%QM)
+      QModel%QM = Init_HNNHp_Model(QModel_in,read_param=read_param_loc, &
+                                   nio_param_file=nio_loc)
 
     CASE ('h2sin')
-      QModel%nsurf     = 1
-      QModel%ndim      = 6
-
-      CALL Init_H2SiN(QModel%H2SiNPot,QModel%ndim,option=option_loc,&
-                      nio=nio_loc,PubliUnit=QModel%PubliUnit)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+      allocate(H2SiN_Model_t :: QModel%QM)
+      QModel%QM = Init_H2SiN_Model(QModel_in,read_param=read_param_loc, &
+                                   nio_param_file=nio_loc)
 
     CASE ('h2nsi')
-      QModel%nsurf     = 1
-      QModel%ndim      = 6
-
-      CALL Init_H2NSi(QModel%H2NSiPot,QModel%ndim,option=option_loc,&
-                      nio=nio_loc,PubliUnit=QModel%PubliUnit)
-
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-
+      allocate(H2NSi_Model_t :: QModel%QM)
+      QModel%QM = Init_H2NSi_Model(QModel_in,read_param=read_param_loc, &
+                                   nio_param_file=nio_loc)
 
     CASE ('template')
       !! 3D-potential with 1 surface
-      QModel%nsurf     = 1
-      QModel%ndim      = 3
-
-      CALL Init_TemplatePot(QModel%TemplatePot)
-      CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-      QModel%d0GGdef = QModel%d0GGdef * 2000._Rkind
+      allocate(TemplateModel_t :: QModel%QM)
+      QModel%QM = Init_TemplateModel(QModel_in,                         &
+                        read_param=read_param_loc,nio_param_file=nio_loc)
 
     CASE DEFAULT
         write(out_unitp,*) ' ERROR in Init_Model'
-        write(out_unitp,*) ' This model/potential is unknown. QModel%pot_name: ',QModel%pot_name
+        write(out_unitp,*) ' This model/potential is unknown. pot_name: ',pot_name_loc
         STOP 'STOP in Init_Model: Other potentials have to be done'
     END SELECT
 
@@ -630,18 +517,34 @@ CONTAINS
        close(nio_loc)
     END IF
 
-    write(out_unitp,*) '================================================='
-    write(out_unitp,*) ' ref geometry or minimum (option=0)'
-    allocate(Q0(QModel%ndim))
+    IF (present(ndim)) THEN
+    IF (ndim /= QModel%QM%ndim) THEN
+        write(out_unitp,*) ' ERROR in Init_Model'
+        write(out_unitp,*) ' ndim is present and ...'
+        write(out_unitp,*) ' its value is not equal to QModel%QM%ndim'
+        write(out_unitp,*) ' ndim,QModel%QM%ndim',ndim,QModel%QM%ndim
+        write(out_unitp,*) ' check your data!'
+        STOP 'STOP in Init_Model: wrong ndim'
+    END IF
+    END IF
+    IF (present(nsurf)) THEN
+    IF (nsurf /= QModel%QM%nsurf) THEN
+        write(out_unitp,*) ' ERROR in Init_Model'
+        write(out_unitp,*) ' nsurf is present and ...'
+        write(out_unitp,*) ' its value is not equal to QModel%QM%nsurf'
+        write(out_unitp,*) ' nsurf,QModel%QM%nsurf',nsurf,QModel%QM%nsurf
+        write(out_unitp,*) ' check your data!'
+        STOP 'STOP in Init_Model: wrong nsurf'
+    END IF
+    END IF
 
-    CALL get_Q0_Model(Q0,QModel,option=0)
-    CALL Write_RVec(Q0,out_unitp,nbcol1=6,name_info='Q0: ')
-
-    deallocate(Q0)
-
-    !CALL Write_Model(QModel)
-    write(out_unitp,*) '================================================='
-    write(out_unitp,*) '================================================='
+    IF (Print_init_loc) THEN
+      write(out_unitp,*) '================================================='
+      write(out_unitp,*) ' Quantum Model'
+      CALL Write_Model(QModel,nio=out_unitp)
+      write(out_unitp,*) '================================================='
+      write(out_unitp,*) '================================================='
+    END IF
 
 
   END SUBROUTINE Init_Model
@@ -651,10 +554,11 @@ CONTAINS
   IMPLICIT NONE
 
     real (kind=Rkind),  intent(inout)            :: Q0(:)
-    TYPE (QModel_t), intent(in)               :: QModel
+    TYPE (QModel_t),    intent(in)               :: QModel
     integer,            intent(in)               :: option
 
 
+    integer :: err_Q0
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='get_Q0_Model'
     logical, parameter :: debug = .FALSE.
@@ -666,70 +570,25 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-    IF (size(Q0) /= QModel%ndim) THEN
+    CALL check_alloc_QM(QModel,name_sub)
+
+    IF (size(Q0) /= QModel%QM%ndim) THEN
       write(out_unitp,*) ' ERROR in ',name_sub
       write(out_unitp,*) ' The size of Q0 is not QModel%ndim: '
       write(out_unitp,*) ' size(Q0)',size(Q0)
-      write(out_unitp,*) ' ndim',QModel%ndim
+      write(out_unitp,*) ' ndim',QModel%QM%ndim
       STOP 'STOP in get_Q0_Model: Wrong Q0 size'
     END IF
 
     Q0(:) = ZERO
 
-    SELECT CASE (QModel%pot_name)
-    CASE ('morse')
-      CALL get_Q0_Morse(Q0(1),QModel%MorsePot)
-
-    CASE ('buck')
-      CALL get_Q0_Buck(Q0(1),QModel%BuckPot)
-
-    CASE ('sigmoid')
-      CALL get_Q0_Sigmoid(Q0(1),QModel%SigmoidPot)
-
-    CASE ('hbond')
-      CONTINUE
-
-    CASE ('henonheiles')
-      Q0(:) = ZERO
-
-    CASE ('tully')
-      CALL get_Q0_Tully(Q0(1),QModel%TullyPot)
-
-    CASE ('1dsoc','1dsoc_1s1t')
-      CALL get_Q0_OneDSOC(Q0(1),QModel%OneDSOCPot)
-
-    CASE ('1dsoc_2s1t')
-      CALL get_Q0_OneDSOC_2S1T(Q0(1),QModel%OneDSOC_2S1T_Pot)
-
-    CASE ('phenol')
-      CONTINUE
-
-    CASE ('twod')
-      CALL get_Q0_TwoD(Q0,QModel%Para_TwoD,option)
-
-    CASE ('psb3')
-      CONTINUE
-
-    CASE ('hono')
-      CALL get_Q0_HONO(Q0,QModel%HONOPot,option)
-
-    CASE ('hnnhp')
-      CALL get_Q0_HNNHp(Q0,QModel%HNNHpPot,option)
-
-    CASE ('h2sin')
-      CALL get_Q0_H2SiN(Q0,QModel%H2SiNPot,option)
-
-    CASE ('h2nsi')
-      CALL get_Q0_H2NSi(Q0,QModel%H2NSiPot,option)
-
-    CASE ('template')
-      CONTINUE
-
-    CASE DEFAULT
-      write(out_unitp,*) ' ERROR in name_sub'
-      write(out_unitp,*) ' This model/potential is unknown. QModel%pot_name: ',QModel%pot_name
-      STOP 'STOP in get_Q0_Model: Other models have to be done'
-    END SELECT
+    CALL get_Q0_QModel(QModel%QM,Q0,err_Q0)
+    IF (err_Q0 /= 0) THEN
+      CALL Write_Model(QModel,out_unitp)
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' Q0 is not set-up in the model'
+      STOP 'STOP Q0 is not set-up in the model'
+    END IF
 
     IF (debug) THEN
       CALL Write_RVec(Q0,out_unitp,nbcol1=5,name_info='Q0: ')
@@ -739,22 +598,38 @@ CONTAINS
 
   END SUBROUTINE get_Q0_Model
 
+  ! check if the QM [CLASS(EmptyModel_t)] is allocated
+  SUBROUTINE check_alloc_QM(QModel,name_sub_in)
+  USE mod_Lib
+  IMPLICIT NONE
+
+    TYPE (QModel_t),    intent(in)     :: QModel
+    character (len=*),  intent(in)     :: name_sub_in
+
+    IF ( .NOT. allocated(QModel%QM)) THEN
+      write(out_unitp,*) ' ERROR in check_alloc_QM'
+      write(out_unitp,*) ' QM is not allocated in QModel.'
+      write(out_unitp,*) '  check_alloc_QM is called from ',name_sub_in
+      STOP 'STOP in check_alloc_QM: QM is not allocated in QModel.'
+    END IF
+
+  END SUBROUTINE check_alloc_QM
+
 
   SUBROUTINE Eval_Pot(QModel,Q,PotVal,nderiv,NAC,Vec,numeric)
   USE mod_dnS
-  !USE mod_diago
   IMPLICIT NONE
 
-    TYPE (QModel_t),  intent(inout)            :: QModel
+    TYPE (QModel_t),    intent(inout)            :: QModel
     TYPE (dnMat_t),     intent(inout)            :: PotVal
-    real (kind=Rkind),   intent(in)               :: Q(:)
-    integer,             intent(in),    optional  :: nderiv
+    real (kind=Rkind),  intent(in)               :: Q(:)
+    integer,            intent(in),    optional  :: nderiv
     TYPE (dnMat_t),     intent(inout), optional  :: NAC,Vec
-    logical,             intent(in),    optional  :: numeric
+    logical,            intent(in),    optional  :: numeric
 
     ! local variables
     integer                    :: nderiv_loc
-    TYPE (dnMat_t)            :: Vec_loc,NAC_loc
+    TYPE (dnMat_t)             :: Vec_loc,NAC_loc
     logical                    :: numeric_loc,adia_loc
 
 !----- for debuging --------------------------------------------------
@@ -766,8 +641,14 @@ CONTAINS
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING ',name_sub
       IF (present(nderiv)) write(out_unitp,*) '   nderiv',nderiv
-      write(out_unitp,*) '  numeric   ',QModel%numeric
-      write(out_unitp,*) '  adiabatic ',QModel%adiabatic
+      flush(out_unitp)
+    END IF
+
+    CALL check_alloc_QM(QModel,name_sub)
+
+    IF (debug) THEN
+      write(out_unitp,*) '  QModel%QM%numeric   ',QModel%QM%numeric
+      write(out_unitp,*) '  QModel%QM%adiabatic ',QModel%QM%adiabatic
       flush(out_unitp)
     END IF
 
@@ -781,10 +662,10 @@ CONTAINS
     IF (present(numeric)) THEN
       numeric_loc = (numeric .AND. nderiv_loc > 0)
     ELSE
-      numeric_loc = (QModel%numeric .AND. nderiv_loc > 0)
+      numeric_loc = (QModel%QM%numeric .AND. nderiv_loc > 0)
     END IF
 
-    adia_loc = (QModel%adiabatic .AND. QModel%nsurf > 1)
+    adia_loc = (QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1)
 
     IF (numeric_loc) THEN  ! numerical
       IF (.NOT. adia_loc) THEN
@@ -825,15 +706,16 @@ CONTAINS
     END IF
 
 
-
     IF (debug) THEN
-      IF ( QModel%adiabatic) write(out_unitp,*) 'PotVal (adia)'
-      IF ( .NOT. QModel%adiabatic) write(out_unitp,*) 'PotVal (dia)'
+      IF ( QModel%QM%adiabatic) THEN
+        write(out_unitp,*) 'PotVal (adia)'
+      ELSE
+        write(out_unitp,*) 'PotVal (dia)'
+      END IF
       CALL QML_Write_dnMat(PotVal,6)
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)
     END IF
-
 
   END SUBROUTINE Eval_Pot
 
@@ -841,15 +723,16 @@ CONTAINS
   USE mod_dnS
   IMPLICIT NONE
 
-    TYPE (QModel_t), intent(inout)            :: QModel
-    TYPE (dnMat_t),    intent(inout)            :: PotVal
-    real (kind=Rkind),  intent(in)               :: Q(:)
-    integer,            intent(in)               :: nderiv
-    TYPE (dnMat_t),    intent(inout), optional  :: NAC,Vec
+    TYPE (QModel_t),       intent(inout)            :: QModel
+
+    TYPE (dnMat_t),        intent(inout)            :: PotVal
+    real (kind=Rkind),     intent(in)               :: Q(:)
+    integer,               intent(in)               :: nderiv
+    TYPE (dnMat_t),        intent(inout), optional  :: NAC,Vec
 
     ! local variables
-    integer                    :: i,j,id,nderiv_loc
-    TYPE (dnMat_t)            :: PotVal_dia,Vec_loc,NAC_loc
+    integer                     :: i,j,id
+    TYPE (dnMat_t)              :: PotVal_dia,Vec_loc,NAC_loc
     TYPE (dnS_t), allocatable   :: dnQ(:)
     TYPE (dnS_t), allocatable   :: Mat_OF_PotDia(:,:)
 
@@ -858,92 +741,41 @@ CONTAINS
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
-
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING ',name_sub
       write(out_unitp,*) '   nderiv    ',nderiv
-      write(out_unitp,*) '   adiabatic ',QModel%adiabatic
       flush(out_unitp)
     END IF
 
-    nderiv_loc = nderiv
+    CALL check_alloc_QM(QModel,name_sub)
+
+    IF (debug) write(out_unitp,*) '   adiabatic ',QModel%QM%adiabatic
 
 
-    IF ( QML_Check_NotAlloc_dnMat(PotVal,nderiv_loc) ) THEN
-      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%nsurf,ndim=QModel%ndim,&
-                          nderiv=nderiv_loc)
+    IF ( QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
+      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+                          nderiv=nderiv)
     END IF
     PotVal = ZERO
 
 
     ! allocate Mat_OF_PotDia
-    allocate(Mat_OF_PotDia(QModel%nsurf,QModel%nsurf))
+    allocate(Mat_OF_PotDia(QModel%QM%nsurf,QModel%QM%nsurf))
     DO j=1,size(Mat_OF_PotDia(1,:))
     DO i=1,size(Mat_OF_PotDia(:,1))
-        CALL QML_alloc_dnS(Mat_OF_PotDia(i,j),QModel%ndim,nderiv_loc)
+        CALL QML_alloc_dnS(Mat_OF_PotDia(i,j),QModel%QM%ndim,nderiv)
     END DO
     END DO
 
     ! intialization of the dnQ(:)
-    allocate(dnQ(QModel%ndim))
-    DO i=1,QModel%ndim
-      dnQ(i) = QML_init_dnS(Q(i),ndim=QModel%ndim,nderiv=nderiv_loc,iQ=i) ! to set up the derivatives
+    allocate(dnQ(QModel%QM%ndim))
+    DO i=1,QModel%QM%ndim
+      dnQ(i) = QML_init_dnS(Q(i),ndim=QModel%QM%ndim,nderiv=nderiv,iQ=i) ! to set up the derivatives
     END DO
 
-    SELECT CASE (QModel%pot_name)
-    CASE ('morse')
-      CALL Eval_MorsePot(Mat_OF_PotDia,dnQ(1),QModel%MorsePot,nderiv_loc)
 
-    CASE ('buck')
-      CALL Eval_BuckPot(Mat_OF_PotDia,dnQ(1),QModel%BuckPot,nderiv_loc)
+    CALL QModel%QM%Eval_QModel_Pot(Mat_OF_PotDia,dnQ,nderiv=nderiv)
 
-    CASE ('sigmoid')
-      CALL Eval_SigmoidPot(Mat_OF_PotDia,dnQ(1),QModel%SigmoidPot,nderiv_loc)
-
-    CASE ('hbond')
-      CALL Eval_LinearHBondPot(Mat_OF_PotDia,dnQ,QModel%LinearHBondPot,nderiv_loc)
-
-    CASE ('henonheiles') ! Q(:) is used insted of dnQ(:)
-      CALL Eval_HenonHeilesPot(Mat_OF_PotDia,Q,QModel%HenonHeilesPot,nderiv_loc)
-
-    CASE ('tully')
-      CALL Eval_TullyPot(Mat_OF_PotDia,dnQ(1),QModel%TullyPot,nderiv_loc)
-
-    CASE ('1dsoc','1dsoc_1s1t')
-      CALL Eval_OneDSOC(Mat_OF_PotDia,dnQ(1),QModel%OneDSOCPot,nderiv_loc)
-
-    CASE ('1dsoc_2s1t')
-      CALL Eval_OneDSOC_2S1T(Mat_OF_PotDia,dnQ(1),QModel%OneDSOC_2S1T_Pot,nderiv_loc)
-
-    CASE ('phenol')
-      CALL Eval_PhenolPot(Mat_OF_PotDia,dnQ,QModel%PhenolPot,nderiv_loc)
-
-    CASE ('twod')
-      CALL Eval_TwoDPot(Mat_OF_PotDia,dnQ,QModel%Para_TwoD,nderiv_loc)
-
-    CASE ('psb3')
-      CALL Eval_PSB3Pot(Mat_OF_PotDia,dnQ,QModel%PSB3Pot,nderiv_loc)
-
-    CASE ('hono')
-      CALL Eval_HONOPot(Mat_OF_PotDia,dnQ,QModel%HONOPot,nderiv_loc)
-
-    CASE ('hnnhp')
-      CALL Eval_HNNHpPot(Mat_OF_PotDia,dnQ,QModel%HNNHpPot,nderiv_loc)
-
-    CASE ('h2sin')
-      CALL Eval_H2SiNPot(Mat_OF_PotDia,dnQ,QModel%H2SiNPot,nderiv_loc)
-
-    CASE ('h2nsi')
-      CALL Eval_H2NSiPot(Mat_OF_PotDia,dnQ,QModel%H2NSiPot,nderiv_loc)
-
-    CASE ('template')
-      CALL Eval_TemplatePot(Mat_OF_PotDia,dnQ,QModel%TemplatePot,nderiv_loc)
-
-    CASE DEFAULT
-      write(out_unitp,*) ' ERROR in Eval_Pot'
-      write(out_unitp,*) ' This model/potential is unknown. QModel%pot_name: ',QModel%pot_name
-      STOP 'STOP in Eval_Pot: Other potentials have to be done'
-    END SELECT
 
     PotVal = Mat_OF_PotDia ! transfert the potential and its derivatives to the matrix form (PotVal)
 
@@ -961,27 +793,28 @@ CONTAINS
     deallocate(Mat_OF_PotDia)
     ! end deallocation
 
-    IF ( QModel%adiabatic .AND. QModel%nsurf > 1) THEN
+    IF ( QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1) THEN
       IF (debug) THEN
         write(out_unitp,*) 'PotVal (dia)'
         CALL QML_Write_dnMat(PotVal,6)
         flush(out_unitp)
       END IF
+      IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
 
       PotVal_dia = PotVal
 
       IF (present(Vec)) THEN
         IF (present(NAC)) THEN
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%Vec0,NAC,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,nderiv)
         ELSE
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%Vec0,NAC_loc,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC_loc,nderiv)
           CALL QML_dealloc_dnMat(NAC_loc)
         END IF
       ELSE
         IF (present(NAC)) THEN
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%Vec0,NAC,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC,nderiv)
         ELSE
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%Vec0,NAC_loc,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC_loc,nderiv)
           CALL QML_dealloc_dnMat(NAC_loc)
         END IF
         CALL QML_dealloc_dnMat(Vec_loc)
@@ -992,8 +825,11 @@ CONTAINS
 
 
     IF (debug) THEN
-      IF ( QModel%adiabatic) write(out_unitp,*) 'PotVal (adia)'
-      IF ( .NOT. QModel%adiabatic) write(out_unitp,*) 'PotVal (dia)'
+      IF ( QModel%QM%adiabatic) THEN
+        write(out_unitp,*) 'PotVal (adia)'
+      ELSE
+        write(out_unitp,*) 'PotVal (dia)'
+      END IF
       CALL QML_Write_dnMat(PotVal,6)
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)
@@ -1005,10 +841,10 @@ CONTAINS
   SUBROUTINE Eval_Pot_Numeric_dia(QModel,Q,PotVal,nderiv)
   IMPLICIT NONE
 
-    TYPE (QModel_t), intent(inout)  :: QModel
+    TYPE (QModel_t),   intent(inout)  :: QModel
     TYPE (dnMat_t),    intent(inout)  :: PotVal
-    real (kind=Rkind) , intent(in)     :: Q(:)
-    integer,            intent(in)     :: nderiv
+    real (kind=Rkind), intent(in)     :: Q(:)
+    integer,           intent(in)     :: nderiv
 
     ! local variable
     real (kind=Rkind), allocatable     :: Q_loc(:)
@@ -1017,15 +853,18 @@ CONTAINS
 
     !write(out_unitp,*) 'coucou0 Eval_Pot_Numeric' ; flush(out_unitp)
 
+    CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_dia')
+
+
     IF (QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
-      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%nsurf,ndim=QModel%ndim,&
+      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     PotVal = ZERO
 
-    allocate(Q_loc(QModel%ndim))
+    allocate(Q_loc(QModel%QM%ndim))
     Q_loc(:) = Q
-    CALL QML_alloc_dnMat(PotVal_loc0,QModel%nsurf,QModel%ndim,nderiv=0)
+    CALL QML_alloc_dnMat(PotVal_loc0,QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0)
@@ -1035,7 +874,7 @@ CONTAINS
     IF (nderiv >= 1) THEN ! 1st derivatives
 
       ! Numeric evaluation of forces
-      DO i=1,QModel%ndim
+      DO i=1,QModel%QM%ndim
 
         Q_loc(i) = Q(i) + step        ! q+dq
         CALL Eval_Pot_ana(QModel,Q_loc,PotVal_loc0,nderiv=0) ! Ep(q+dq)
@@ -1062,8 +901,8 @@ CONTAINS
 
     IF (nderiv >= 2) THEN ! 2d derivatives
 
-      DO i=1,QModel%ndim
-      DO j=i+1,QModel%ndim
+      DO i=1,QModel%QM%ndim
+      DO j=i+1,QModel%QM%ndim
 
         Q_loc(i) = Q(i) + step        ! qi+dq
         Q_loc(j) = Q(j) + step        ! qj+dq
@@ -1101,58 +940,60 @@ CONTAINS
   SUBROUTINE Eval_Pot_Numeric_adia(QModel,Q,PotVal,nderiv,Vec,NAC)
   IMPLICIT NONE
 
-    TYPE (QModel_t), intent(inout)  :: QModel
+    TYPE (QModel_t),   intent(inout)  :: QModel
     TYPE (dnMat_t),    intent(inout)  :: PotVal
-    real (kind=Rkind) , intent(in)     :: Q(:)
-    integer,            intent(in)     :: nderiv
+    real (kind=Rkind), intent(in)     :: Q(:)
+    integer,           intent(in)     :: nderiv
     TYPE (dnMat_t),    intent(inout)  :: Vec,NAC
 
     ! local variable
     real (kind=Rkind), allocatable     :: Q_loc(:)
-    TYPE (dnMat_t)                    :: PotVal_loc0,Vec_loc0
+    TYPE (dnMat_t)                     :: PotVal_loc0,Vec_loc0
     integer                            :: i,j
     real (kind=Rkind), allocatable     :: tVec(:,:)
 
     !write(out_unitp,*) 'coucou0 Eval_Pot_Numeric' ; flush(out_unitp)
+    CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_adia')
+
 
     IF (QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
-      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%nsurf,ndim=QModel%ndim,&
+      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     PotVal = ZERO
 
     IF (QML_Check_NotAlloc_dnMat(Vec,nderiv) ) THEN
-      CALL QML_alloc_dnMat(Vec,nsurf=QModel%nsurf,ndim=QModel%ndim,&
+      CALL QML_alloc_dnMat(Vec,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     Vec = ZERO
 
     IF (QML_Check_NotAlloc_dnMat(NAC,nderiv) ) THEN
-      CALL QML_alloc_dnMat(NAC,nsurf=QModel%nsurf,ndim=QModel%ndim,&
+      CALL QML_alloc_dnMat(NAC,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     NAC = ZERO
 
-    allocate(Q_loc(QModel%ndim))
+    allocate(Q_loc(QModel%QM%ndim))
     Q_loc(:) = Q
-    CALL QML_alloc_dnMat(PotVal_loc0,QModel%nsurf,QModel%ndim,nderiv=0)
-    CALL QML_alloc_dnMat(Vec_loc0,   QModel%nsurf,QModel%ndim,nderiv=0)
+    CALL QML_alloc_dnMat(PotVal_loc0,QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
+    CALL QML_alloc_dnMat(Vec_loc0,   QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0,vec=Vec_loc0)
 
     PotVal%d0 = PotVal_loc0%d0
     Vec%d0    = Vec_loc0%d0
-    CALL Init_IdMat(NAC%d0,QModel%nsurf)
+    CALL Init_IdMat(NAC%d0,QModel%QM%nsurf)
 
-    allocate(tVec(QModel%nsurf,QModel%nsurf))
+    allocate(tVec(QModel%QM%nsurf,QModel%QM%nsurf))
     tVec(:,:)      = transpose(Vec%d0)
 
 
     IF (nderiv >= 1) THEN ! 1st derivatives
 
       ! Numeric evaluation of forces
-      DO i=1,QModel%ndim
+      DO i=1,QModel%QM%ndim
 
         Q_loc(i) = Q(i) + step        ! q+dq
         CALL Eval_Pot_ana(QModel,Q_loc,PotVal_loc0,nderiv=0,vec=Vec_loc0) ! Ep(q+dq)
@@ -1185,8 +1026,8 @@ CONTAINS
 
     IF (nderiv >= 2) THEN ! 2d derivatives
 
-      DO i=1,QModel%ndim
-      DO j=i+1,QModel%ndim
+      DO i=1,QModel%QM%ndim
+      DO j=i+1,QModel%QM%ndim
 
         Q_loc(i) = Q(i) + step        ! qi+dq
         Q_loc(j) = Q(j) + step        ! qj+dq
@@ -1236,7 +1077,7 @@ CONTAINS
     TYPE (dnMat_t), intent(in)               :: PotVal_dia
     TYPE (dnMat_t), intent(inout)            :: PotVal_adia,Vec,Vec0,NAC
 
-    integer, intent(in), optional             :: nderiv
+    integer, intent(in), optional            :: nderiv
 
     ! local variable
     integer                        :: i,j,k,id,jd,nderiv_loc,ndim,nsurf
@@ -1467,7 +1308,7 @@ CONTAINS
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE (QModel_t), intent(in)              :: QModel
+    TYPE(QModel_t),     intent(in)              :: QModel
     integer,            intent(in), optional    :: nio
 
     integer :: nio_loc
@@ -1478,99 +1319,31 @@ CONTAINS
       nio_loc = out_unitp
     END IF
 
+    CALL check_alloc_QM(QModel,'Write_Model')
+
     IF (nio_loc /= out_unitp) THEN
-      open(nio_loc,file=trim(adjustl(QModel%pot_name))//'.out',form='formatted')
+      open(nio_loc,file=trim(adjustl(QModel%QM%pot_name))//'.out',form='formatted')
     END IF
 
 
     write(nio_loc,*) '-----------------------------------------------'
     write(nio_loc,*) 'Output file for potential library'
-    write(nio_loc,*)
-    write(nio_loc,*) 'Potential parameters are written just below'
-    write(nio_loc,*)
-    write(nio_loc,*) 'nsurf:     ',QModel%nsurf
-    write(nio_loc,*) 'ndim:      ',QModel%ndim
-    write(nio_loc,*) 'numeric:   ',QModel%numeric
-    write(nio_loc,*) 'adiabatic: ',QModel%adiabatic
-    write(nio_loc,*)
 
-    IF (allocated(QModel%d0GGdef)) THEN
-      write(nio_loc,*) 'Deformation metric tensor (~ 1/Mii)'
-      CALL Write_RMat(QModel%d0GGdef,nio_loc,nbcol1=5)
-    END IF
+    CALL QModel%QM%Write_QModel(nio=nio_loc)
 
-    SELECT CASE (QModel%pot_name)
-    CASE ('morse')
-      CALL Write_MorsePot(QModel%MorsePot,nio=nio_loc)
-    CASE ('sigmoid')
-      CALL Write_SigmoidPot(QModel%SigmoidPot,nio=nio_loc)
-    CASE ('buck')
-      CALL Write_BuckPot(QModel%BuckPot,nio=nio_loc)
-   CASE ('hbond')
-      CALL Write_LinearHBondPot(QModel%LinearHBondPot,nio=nio_loc)
-    CASE ('henonheiles')
-        CALL Write_HenonHeilesPot(QModel%HenonHeilesPot,nio=nio_loc)
-    CASE ('tully')
-        CALL Write_TullyPot(QModel%TullyPot,nio=nio_loc)
-    CASE ('1dsoc','1dsoc_1s1t')
-        CALL Write_OneDSOC(QModel%OneDSOCPot,nio=nio_loc)
-    CASE ('1dsoc_2s1t')
-        CALL Write_OneDSOC_2S1T(QModel%OneDSOC_2S1T_Pot,nio=nio_loc)
-    CASE ('phenol')
-        CALL Write_PhenolPot(QModel%PhenolPot,nio=nio_loc)
-    CASE ('psb3')
-        CALL Write_PSB3Pot(QModel%PSB3Pot,nio=nio_loc)
-    CASE ('hono')
-        CALL Write_HONO(QModel%HONOPot,nio=nio_loc)
-    CASE ('hnnhp')
-        CALL Write_HNNHp(QModel%HNNHpPot,nio=nio_loc)
-    CASE ('h2sin')
-        CALL Write_H2SiN(QModel%H2SiNPot,nio=nio_loc)
-    CASE ('h2nsi')
-        CALL Write_H2NSi(QModel%H2NSiPot,nio=nio_loc)
-    CASE ('template')
-        CALL  Write_TemplatePot(QModel%TemplatePot,nio=nio_loc)
-    CASE DEFAULT
-        write(nio_loc,*) 'WARNING in Write_Model: Other potentials have to be done'
-    END SELECT
- 
-     IF (nio_loc /= out_unitp) THEN
-      close(nio_loc)
-    END IF
     write(nio_loc,*) '-----------------------------------------------'
     flush(nio_loc)
 
 
   END SUBROUTINE Write_Model
-  SUBROUTINE Write0_Model(QModel,pot_name,nio)
+  SUBROUTINE Write0_Model(QModel,nio)
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE (QModel_t), intent(in), optional    :: QModel
-    character (len=*),  intent(in), optional    :: pot_name
-    integer,            intent(in), optional    :: nio
+    TYPE(QModel_t),   intent(in)              :: QModel
+    integer,          intent(in), optional    :: nio
 
-    character (len=:), allocatable :: pot_name_loc
     integer :: nio_loc
-
-    IF (present(pot_name) .AND. present(QModel)) THEN
-      write(out_unitp,*) 'ERROR in Write0_Model'
-      write(out_unitp,*) ' pot_name and QModel are both present'
-      write(out_unitp,*) ' ONE only MUST be present! CHECK the source'
-      STOP 'pot_name and QModel are both present'
-    END IF
-    IF (.NOT. present(pot_name) .AND. .NOT. present(QModel)) THEN
-      write(out_unitp,*) 'ERROR in Write0_Model'
-      write(out_unitp,*) ' pot_name and QModel are both absent'
-      write(out_unitp,*) ' ONE only MUST be present! CHECK the source'
-      STOP ' pot_name and QModel are both absent'
-    END IF
-
-    IF (present(pot_name)) THEN
-      pot_name_loc = strdup(pot_name)
-    ELSE
-      pot_name_loc = strdup(QModel%pot_name)
-    END IF
 
 
     IF (present(nio)) THEN
@@ -1579,74 +1352,19 @@ CONTAINS
       nio_loc = out_unitp
     END IF
 
+    CALL check_alloc_QM(QModel,'Write0_Model')
+
     IF (nio_loc /= out_unitp) THEN
-      open(nio_loc,file=trim(adjustl(QModel%pot_name))//'.out',form='formatted')
+      open(nio_loc,file=trim(adjustl(QModel%QM%pot_name))//'.out',form='formatted')
     END IF
 
 
+    CALL QModel%QM%Write0_QModel(nio=nio_loc)
 
-    write(nio_loc,*) 'QUANTUM MODEL default parameters'
-    flush(nio_loc)
-
-
-    write(nio_loc,*)
-    write(nio_loc,*) 'Potential parameters are written just below'
-    write(nio_loc,*)
-    IF (present(QModel)) THEN
-      write(nio_loc,*) 'nsurf:     ',QModel%nsurf
-      write(nio_loc,*) 'ndim:      ',QModel%ndim
-      write(nio_loc,*) 'numeric:   ',QModel%numeric
-      write(nio_loc,*) 'adiabatic: ',QModel%adiabatic
-      write(nio_loc,*)
-
-      IF (allocated(QModel%d0GGdef)) THEN
-        write(nio_loc,*) 'Deformation metric tensor (~ 1/Mii)'
-        CALL Write_RMat(QModel%d0GGdef,nio_loc,nbcol1=5)
-      END IF
-    END IF
-
-    CALL string_uppercase_TO_lowercase(pot_name_loc)
-    SELECT CASE (pot_name_loc)
-    CASE ('morse')
-      CALL Write0_MorsePot(nio=nio_loc)
-    CASE ('sigmoid')
-      CONTINUE
-    CASE ('buck')
-      CALL Write0_BuckPot(nio=nio_loc)
-   CASE ('hbond')
-      CALL Write0_LinearHBondPot(nio=nio_loc)
-    CASE ('henonheiles')
-        CALL Write0_HenonHeilesPot(nio=nio_loc)
-    CASE ('tully')
-        CALL Write0_TullyPot(nio=nio_loc)
-    CASE ('1dsoc','1dsoc_1s1t')
-        CALL Write0_OneDSOC(nio=nio_loc)
-    CASE ('1dsoc_2s1t')
-        CALL Write0_OneDSOC_2S1T(nio=nio_loc)
-    CASE ('phenol')
-        CALL Write0_PhenolPot(nio=nio_loc)
-    CASE ('psb3')
-        CALL Write0_PSB3Pot(nio=nio_loc)
-    CASE ('hono')
-        CALL Write0_HONO(nio=nio_loc)
-    CASE ('h2sin')
-        CALL Write0_H2SiN(nio=nio_loc)
-    CASE ('h2nsi')
-        CALL Write0_H2NSi(nio=nio_loc)
-    CASE ('template')
-        CALL  Write0_TemplatePot(nio=nio_loc)
-    CASE DEFAULT
-        write(nio_loc,*) 'WARNING in Write0_Model: Other potentials have to be done'
-    END SELECT
 
      IF (nio_loc /= out_unitp) THEN
       close(nio_loc)
     END IF
-
-    write(nio_loc,*) 'END QUANTUM MODEL default parameters'
-    flush(nio_loc)
-
-    IF (allocated(pot_name_loc)) deallocate(pot_name_loc)
 
 
   END SUBROUTINE Write0_Model
@@ -1654,37 +1372,36 @@ CONTAINS
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE (QModel_t), intent(in)           :: QModel
+    TYPE (QModel_t),   intent(in)           :: QModel
     TYPE (dnMat_t),    intent(in)           :: PotVal
-    real (kind=Rkind),  intent(in)           :: Q(:)
+    real (kind=Rkind), intent(in)           :: Q(:)
     TYPE (dnMat_t),    intent(in), optional :: Vec ! for non adiabatic couplings
     TYPE (dnMat_t),    intent(in), optional :: NAC ! for non adiabatic couplings
-    character(len=*),   intent(in), optional :: info
+    character(len=*),  intent(in), optional :: info
 
     integer :: nio_loc,err_io
 
-    CALL file_open2(trim(adjustl(QModel%pot_name))//'.txt',nio_loc,lformatted=.TRUE.,append=.TRUE.,err_file=err_io)
+    CALL file_open2(trim(adjustl(QModel%QM%pot_name))//'.txt',nio_loc,lformatted=.TRUE.,append=.TRUE.,err_file=err_io)
     IF (err_io /= 0) THEN
       write(out_unitp,*) 'ERROR in Write_QdnV_FOR_Model'
-      write(out_unitp,*) ' Impossible to open the file "',trim(adjustl(QModel%pot_name))//'.txt','"'
+      write(out_unitp,*) ' Impossible to open the file "',trim(adjustl(QModel%QM%pot_name))//'.txt','"'
       STOP 'Impossible to open the file'
     END IF
-    !nio_loc = 99
-    !open(nio_loc,file=trim(adjustl(QModel%pot_name))//'.xyz',form='formatted',POSITION='append')
+
 
     write(nio_loc,'(a)',advance='no') 'TEST output: '
     IF (present(info)) THEN
       write(nio_loc,'(a)',advance='no') info
     END IF
-    IF (QModel%adiabatic) THEN
+    IF (QModel%QM%adiabatic) THEN
       write(nio_loc,'(a)') ' Adiabatic'
     ELSE
       write(nio_loc,'(a)') ' Diabatic'
     END IF
 
-      write(nio_loc,*) 'Q'
-      write(nio_loc,*) size(Q)
-      write(nio_loc,*) Q
+    write(nio_loc,*) 'Q'
+    write(nio_loc,*) size(Q)
+    write(nio_loc,*) Q
 
     IF (allocated(PotVal%d0)) THEN
       write(nio_loc,*) 'V'
@@ -1728,17 +1445,17 @@ CONTAINS
     END IF
     END IF
 
-    IF (allocated(QModel%d0GGdef)) THEN
+    IF (allocated(QModel%QM%d0GGdef)) THEN
       write(nio_loc,*) 'd0GGdef'
-      write(nio_loc,*) size(QModel%d0GGdef)
-      write(nio_loc,*) QModel%d0GGdef
+      write(nio_loc,*) size(QModel%QM%d0GGdef)
+      write(nio_loc,*) QModel%QM%d0GGdef
     END IF
 
     write(nio_loc,'(a)',advance='no') 'END_TEST output: '
     IF (present(info)) THEN
       write(nio_loc,'(a)',advance='no') info
     END IF
-    IF (QModel%adiabatic) THEN
+    IF (QModel%QM%adiabatic) THEN
       write(nio_loc,'(a)') ' Adiabatic'
     ELSE
       write(nio_loc,'(a)') ' Diabatic'
@@ -1750,11 +1467,12 @@ CONTAINS
   SUBROUTINE Check_analytical_numerical_derivatives(QModel,Q,nderiv)
   IMPLICIT NONE
 
-    TYPE (QModel_t), intent(inout)            :: QModel
-    real (kind=Rkind),dimension(:),intent(in)    :: Q
-    integer, intent(in)                          :: nderiv
+    TYPE (QModel_t),      intent(inout)   :: QModel
+    real (kind=Rkind),    intent(in)      :: Q(:)
+    integer, intent(in)                   :: nderiv
 
-    TYPE (dnMat_t)           :: PotVal_ana,PotVal_num,PotVal_diff
+    ! local variables
+    TYPE (dnMat_t)            :: PotVal_ana,PotVal_num,PotVal_diff
     logical                   :: numeric_save
     real (kind=Rkind)         :: MaxPot,MaxDiffPot
 
@@ -1770,50 +1488,55 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-      CALL QML_alloc_dnMat(PotVal_ana,nsurf=QModel%nsurf,ndim=QModel%ndim,&
-                          nderiv=nderiv)
-
-      CALL QML_alloc_dnMat(PotVal_num,nsurf=QModel%nsurf,ndim=QModel%ndim,&
-                          nderiv=nderiv)
-
-      numeric_save = QModel%numeric
+    CALL check_alloc_QM(QModel,name_sub)
 
 
-      QModel%numeric = .FALSE.
-      CALL Eval_Pot(QModel,Q,PotVal_ana,nderiv)
-      IF (debug) THEN
-        write(out_unitp,*)   'PotVal_ana'
-        CALL QML_Write_dnMat(PotVal_ana,nio=out_unitp)
-        flush(out_unitp)
-      END IF
+    CALL QML_alloc_dnMat(PotVal_ana,nsurf=QModel%QM%nsurf,              &
+                         ndim=QModel%QM%ndim,nderiv=nderiv)
 
-      QModel%numeric = .TRUE.
-      CALL Eval_Pot(QModel,Q,PotVal_num,nderiv)
-      IF (debug) THEN
-        write(out_unitp,*)   'PotVal_num'
-        CALL QML_Write_dnMat(PotVal_num,nio=out_unitp)
-        flush(out_unitp)
-      END IF
+    CALL QML_alloc_dnMat(PotVal_num,nsurf=QModel%QM%nsurf,              &
+                         ndim=QModel%QM%ndim,nderiv=nderiv)
 
-      MaxPot     = QML_get_maxval_OF_dnMat(PotVal_ana)
+    numeric_save = QModel%QM%numeric
 
 
-      PotVal_diff = QML_dnMat2_MINUS_dnMat1(PotVal_num,PotVal_ana)
-      MaxDiffPot  = QML_get_maxval_OF_dnMat(PotVal_diff)
+    QModel%QM%numeric = .FALSE.
+    CALL Eval_Pot(QModel,Q,PotVal_ana,nderiv)
+    IF (debug) THEN
+      write(out_unitp,*)   'PotVal_ana'
+      CALL QML_Write_dnMat(PotVal_ana,nio=out_unitp)
+      flush(out_unitp)
+    END IF
 
-      write(out_unitp,'(a,e9.2)') 'max of the relative Potential diff:',MaxDiffPot/MaxPot
-      write(out_unitp,'(a,l9)')   'Potential diff (numer-ana), ZERO?  ',(MaxDiffPot/MaxPot <= step)
+    QModel%QM%numeric = .TRUE.
+    CALL Eval_Pot(QModel,Q,PotVal_num,nderiv)
+    IF (debug) THEN
+      write(out_unitp,*)   'PotVal_num'
+      CALL QML_Write_dnMat(PotVal_num,nio=out_unitp)
+      flush(out_unitp)
+    END IF
 
-      IF (MaxDiffPot/MaxPot > step) THEN
-        write(out_unitp,*)   'Potential diff (ana-numer)'
-        CALL QML_Write_dnMat(PotVal_diff,nio=6)
-      END IF
+    MaxPot     = QML_get_maxval_OF_dnMat(PotVal_ana)
 
-      CALL QML_dealloc_dnMat(PotVal_ana)
-      CALL QML_dealloc_dnMat(PotVal_num)
-      CALL QML_dealloc_dnMat(PotVal_diff)
 
-      QModel%numeric = numeric_save
+    PotVal_diff = QML_dnMat2_MINUS_dnMat1(PotVal_num,PotVal_ana)
+    MaxDiffPot  = QML_get_maxval_OF_dnMat(PotVal_diff)
+
+    write(out_unitp,'(3a,e9.2)') 'With ',QModel%QM%pot_name,            &
+               ': max of the relative Potential diff:',MaxDiffPot/MaxPot
+    write(out_unitp,'(3a,l9)')   'With ',QModel%QM%pot_name,            &
+     ': Potential diff (numer-ana), ZERO?  ',(MaxDiffPot/MaxPot <= step)
+
+    IF (MaxDiffPot/MaxPot > step) THEN
+      write(out_unitp,*)   'Potential diff (ana-numer)'
+      CALL QML_Write_dnMat(PotVal_diff,nio=6)
+    END IF
+
+    CALL QML_dealloc_dnMat(PotVal_ana)
+    CALL QML_dealloc_dnMat(PotVal_num)
+    CALL QML_dealloc_dnMat(PotVal_diff)
+
+    QModel%QM%numeric = numeric_save
 
     IF (debug) THEN
       write(out_unitp,*) ' END ',name_sub
@@ -1825,24 +1548,31 @@ CONTAINS
   SUBROUTINE Eval_pot_ON_Grid(QModel,Qmin,Qmax,nb_points,nderiv,grid_file)
   IMPLICIT NONE
 
-    TYPE (QModel_t),           intent(inout)   :: QModel
+    TYPE (QModel_t),              intent(inout)   :: QModel
     real (kind=Rkind),            intent(in)      :: Qmin(:),Qmax(:)
     integer, optional,            intent(in)      :: nb_points,nderiv
     character (len=*), optional,  intent(in)      :: grid_file
 
-    integer           :: unit_grid_file
 
+    ! local variables
+    integer                        :: unit_grid_file
     integer                        :: i,iq,jq,i1,i2,nb_points_loc,nderiv_loc,ndim_loc
-    integer, allocatable           :: i_Q(:)
+    integer,           allocatable :: i_Q(:)
     real (kind=Rkind), allocatable :: dQ(:),Q(:)
-    TYPE (dnMat_t)                :: PotVal,NAC
+    TYPE (dnMat_t)                 :: PotVal,NAC
 
 
-    IF (size(Qmin) /= QModel%ndim .OR. size(Qmax) /= QModel%ndim) THEN
+    CALL check_alloc_QM(QModel,'Eval_pot_ON_Grid')
+
+
+    IF (size(Qmin) /= QModel%QM%ndim .OR. size(Qmax) /= QModel%QM%ndim) THEN
        write(out_unitp,*) ' ERROR in Eval_pot_ON_Grid'
-       write(out_unitp,*) ' The size of Qmin or Qmax are different from QModel%ndim',size(Qmin),size(Qmax),QModel%ndim
+       write(out_unitp,*) ' The size of Qmin or Qmax are different from QModel%QM%ndim'
+       write(out_unitp,*) '  size(Qmin)    ',size(Qmin)
+       write(out_unitp,*) '  size(Qmax)    ',size(Qmax)
+       write(out_unitp,*) '  QModel%QM%ndim',QModel%QM%ndim
        write(out_unitp,*) ' => Check the fortran'
-       STOP 'ERROR in Eval_pot_ON_Grid: problem with QModel%ndim'
+       STOP 'ERROR in Eval_pot_ON_Grid: problem with QModel%QM%ndim'
     END IF
 
     IF (present(grid_file)) THEN
@@ -1866,21 +1596,21 @@ CONTAINS
       nderiv_loc = 0
     END IF
 
-    allocate(dQ(QModel%ndim))
-    allocate(Q(QModel%ndim))
-    allocate(i_Q(QModel%ndim))
+    allocate(dQ(QModel%QM%ndim))
+    allocate(Q(QModel%QM%ndim))
+    allocate(i_Q(QModel%QM%ndim))
 
     dQ(:)       = (Qmax-Qmin) / real(nb_points_loc-1,kind=Rkind)
     ndim_loc    = 0
     i_Q(:)      = 0
-    DO i=1,QModel%ndim
+    DO i=1,QModel%QM%ndim
       IF (dQ(i) /= ZERO) THEN
         ndim_loc = ndim_loc + 1
         i_Q(ndim_loc) = i
       END IF
     END DO
-    write(out_unitp,*) 'QModel%ndim',QModel%ndim
-    write(out_unitp,*) 'QModel%numeric',QModel%numeric
+    write(out_unitp,*) 'QModel%QM%ndim',QModel%QM%ndim
+    write(out_unitp,*) 'QModel%QM%numeric',QModel%QM%numeric
     write(out_unitp,*) 'ndim for the grid',ndim_loc
     write(out_unitp,*) 'i_Q',i_Q(1:ndim_loc)
 
@@ -1891,16 +1621,16 @@ CONTAINS
       i1 = i_Q(1)
       DO iq=0,nb_points_loc-1
         Q(i1) = Qmin(i1) + dQ(i1)*real(iq,kind=Rkind)
-        IF (QModel%nsurf > 1 .AND. QModel%adiabatic) THEN
+        IF (QModel%QM%nsurf > 1 .AND. QModel%QM%adiabatic) THEN
           CALL Eval_Pot(QModel,Q,PotVal,nderiv=max(1,nderiv_loc),NAC=NAC)
 
           IF (nderiv_loc == 0) THEN
-            write(unit_grid_file,*) Q(i1),(PotVal%d0(i,i),i=1,QModel%nsurf),NAC%d1
+            write(unit_grid_file,*) Q(i1),(PotVal%d0(i,i),i=1,QModel%QM%nsurf),NAC%d1
           ELSE IF (nderiv_loc == 1) THEN
-            write(unit_grid_file,*) Q(i1),(PotVal%d0(i,i),i=1,QModel%nsurf),(PotVal%d1(i,i,:),i=1,QModel%nsurf)
+            write(unit_grid_file,*) Q(i1),(PotVal%d0(i,i),i=1,QModel%QM%nsurf),(PotVal%d1(i,i,:),i=1,QModel%QM%nsurf)
           ELSE
-            write(unit_grid_file,*) Q(i1),(PotVal%d0(i,i),i=1,QModel%nsurf),(PotVal%d1(i,i,:),i=1,QModel%nsurf), &
-                            (PotVal%d2(i,i,:,:),i=1,QModel%nsurf)
+            write(unit_grid_file,*) Q(i1),(PotVal%d0(i,i),i=1,QModel%QM%nsurf),(PotVal%d1(i,i,:),i=1,QModel%QM%nsurf), &
+                            (PotVal%d2(i,i,:,:),i=1,QModel%QM%nsurf)
           END IF
           flush(unit_grid_file)
 
@@ -1926,9 +1656,9 @@ CONTAINS
         Q(i1) = Qmin(i1) + dQ(i1)*real(iq,kind=Rkind)
         Q(i2) = Qmin(i2) + dQ(i2)*real(jq,kind=Rkind)
 
-        IF (QModel%nsurf > 1 .AND. QModel%adiabatic) THEN
+        IF (QModel%QM%nsurf > 1 .AND. QModel%QM%adiabatic) THEN
           CALL Eval_Pot(QModel,Q,PotVal,nderiv=0,NAC=NAC)
-          write(unit_grid_file,*) Q(i1),Q(i2),(PotVal%d0(i,i),i=1,QModel%nsurf)
+          write(unit_grid_file,*) Q(i1),Q(i2),(PotVal%d0(i,i),i=1,QModel%QM%nsurf)
         ELSE
           CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv_loc)
           write(unit_grid_file,*) Q(i1),Q(i2),PotVal%d0
@@ -1959,15 +1689,16 @@ CONTAINS
   SUBROUTINE calc_pot(V,QModel,Q)
   IMPLICIT NONE
 
-    TYPE (QModel_t),       intent(inout) :: QModel
+    TYPE (QModel_t),        intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
     real (kind=Rkind),      intent(inout)   :: V(:,:) ! it has to be allocated
 
     TYPE (dnMat_t)                         :: PotVal
 
+    CALL check_alloc_QM(QModel,'calc_pot')
 
 
-    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%nsurf,ndim=QModel%ndim,nderiv=0)
+    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,nderiv=0)
 
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=0)
 
@@ -1980,16 +1711,17 @@ CONTAINS
   SUBROUTINE calc_pot_grad(V,g,QModel,Q)
   IMPLICIT NONE
 
-    TYPE (QModel_t),   intent(inout)     :: QModel
+    TYPE (QModel_t),        intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
     real (kind=Rkind),      intent(inout)   :: V(:,:) ! it has to be allocated
     real (kind=Rkind),      intent(inout)   :: g(:,:,:) ! it has to be allocated
 
     TYPE (dnMat_t)           :: PotVal
 
+    CALL check_alloc_QM(QModel,'calc_pot_grad')
 
 
-    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%nsurf,ndim=QModel%ndim,nderiv=1)
+    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,nderiv=1)
 
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=1)
 
@@ -2003,15 +1735,16 @@ CONTAINS
   SUBROUTINE calc_grad(g,QModel,Q)
   IMPLICIT NONE
 
-    TYPE (QModel_t),   intent(inout)     :: QModel
+    TYPE (QModel_t),        intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
     real (kind=Rkind),      intent(inout)   :: g(:,:,:) ! it has to be allocated
 
     TYPE (dnMat_t)           :: PotVal
 
+    CALL check_alloc_QM(QModel,'calc_grad')
 
 
-    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%nsurf,ndim=QModel%ndim,nderiv=1)
+    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,nderiv=1)
 
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=1)
 
@@ -2024,7 +1757,7 @@ CONTAINS
   SUBROUTINE calc_pot_grad_hess(V,g,h,QModel,Q)
   IMPLICIT NONE
 
-    TYPE (QModel_t),   intent(inout)     :: QModel
+    TYPE (QModel_t),        intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
     real (kind=Rkind),      intent(inout)   :: V(:,:) ! it has to be allocated
     real (kind=Rkind),      intent(inout)   :: g(:,:,:) ! it has to be allocated
@@ -2033,9 +1766,10 @@ CONTAINS
 
     TYPE (dnMat_t)           :: PotVal
 
+    CALL check_alloc_QM(QModel,'calc_pot_grad_hess')
 
 
-    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%nsurf,ndim=QModel%ndim,nderiv=2)
+    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,nderiv=2)
 
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
 
@@ -2050,16 +1784,17 @@ CONTAINS
   SUBROUTINE calc_hess(h,QModel,Q)
   IMPLICIT NONE
 
-    TYPE (QModel_t),   intent(inout)   :: QModel
+    TYPE (QModel_t),    intent(inout)     :: QModel
     real (kind=Rkind),  intent(in)        :: Q(:)
     real (kind=Rkind),  intent(inout)     :: h(:,:,:,:) ! it has to be allocated
 
 
     TYPE (dnMat_t)           :: PotVal
 
+    CALL check_alloc_QM(QModel,'calc_hess')
 
 
-    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%nsurf,ndim=QModel%ndim,nderiv=2)
+    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,nderiv=2)
 
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
 
@@ -2069,4 +1804,4 @@ CONTAINS
 
 
   END SUBROUTINE calc_hess
-END MODULE mod_Model
+END MODULE mod_QModel
