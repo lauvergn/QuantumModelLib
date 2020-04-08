@@ -595,8 +595,7 @@ MODULE mod_PSB3Pot
     !If PubliUnit is False conversion must be done, the potential is expressed in Angstrom 
     !and it requires the proper conversion into Bhor  
     IF(.NOT. Para_PSB3%PubliUnit) THEN
-       !BLA = BLA * LenghtConv            ! wrong derivative. Here with respect ot BLA
-       BLA = d0Sca_TIME_R(BLA,LenghtConv) ! to set up the correct derivatives with respect to (R*LenghtConv)
+       BLA = BLA * LenghtConv            ! to set up the correct derivatives with respect to (R*LenghtConv)
     END IF
 
 !-----------------------------------------------------------------------!

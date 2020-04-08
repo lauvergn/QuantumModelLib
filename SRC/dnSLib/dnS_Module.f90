@@ -1169,6 +1169,8 @@ CONTAINS
     CALL dealloc_dnSca(S1)
     IF (nderiv_loc < 0 .OR. (nderiv_loc > 0 .AND. ndim_loc < 1)) RETURN
 
+    S1%nderiv = nderiv_loc
+
     S1%d0 = S2%d0
     IF (allocated(S2%d1)) S1%d1 = S2%d1
     IF (allocated(S2%d2)) S1%d2 = S2%d2

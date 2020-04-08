@@ -562,7 +562,7 @@ CONTAINS
 
       CALL Init_TemplatePot(Para_Model%Para_Template)
       CALL Init_IdMat(Para_Model%d0GGdef,Para_Model%ndim)
-      Para_Model%d0GGdef = Para_Model%d0GGdef * 2000._Rkind
+      Para_Model%d0GGdef = Para_Model%d0GGdef / 2000._Rkind
 
     CASE DEFAULT
         write(out_unitp,*) ' ERROR in Init_Model'
