@@ -6,15 +6,15 @@
 #                gfortran (version: 6.3.0 linux and osx)
 #                pgf90 (version: 17.10-0, linux)
 #                nagfor (version 7.0, osx)
-#F90 = gfortran
- F90 = nagfor
+ F90 = gfortran
+#F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 0
+LAPACK = 1
 ## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
 # NVHYP  = 1 : with intrinsic inverse hyperbolic functions
 # NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic ones)
@@ -339,7 +339,7 @@ $(ModLib): $(OBJ_driver) $(OBJ_all)
 #===============================================
 .PHONY: clean
 clean: 
-	rm -f  $(MODEXE) $(GRIDEXE) $(dnSEXE) $(DriverEXE) $(TESTEXE
+	rm -f  $(MODEXE) $(GRIDEXE) $(dnSEXE) $(DriverEXE) $(TESTEXE)
 	rm -f  $(ModLib) libQMLib.a
 	rm -fr *.dSYM comp.log
 	cd $(DIROBJ) ; rm -f *.o *.mod *.MOD

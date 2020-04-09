@@ -51,12 +51,17 @@ MODULE mod_QModel
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: QModel_t,Init_Model,Eval_Pot,Write0_Model,Write_Model,Write_QdnV_FOR_Model
+  PUBLIC :: QModel_t,Init_Model,Eval_Pot,check_alloc_QM
+  PUBLIC :: Write0_Model,Write_Model,Write_QdnV_FOR_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
   PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model
 
   TYPE :: QModel_t
+    ! add nsurf and ndim to avoid crash when using the driver without initialization
+    ! at the intialization, the variables are set-up to the correct values
+    integer :: nsurf       = 0
+    integer :: ndim        = 0
     CLASS (EmptyModel_t), allocatable :: QM
   END TYPE QModel_t
 
@@ -538,6 +543,8 @@ CONTAINS
     END IF
     END IF
 
+    QModel%ndim  = QModel%QM%ndim
+    QModel%nsurf = QModel%QM%nsurf
     IF (Print_init_loc) THEN
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' Quantum Model'
@@ -610,6 +617,10 @@ CONTAINS
       write(out_unitp,*) ' ERROR in check_alloc_QM'
       write(out_unitp,*) ' QM is not allocated in QModel.'
       write(out_unitp,*) '  check_alloc_QM is called from ',name_sub_in
+      write(out_unitp,*) '  You MUST initialize the model with:'
+      write(out_unitp,*) '    CALL init_Model(...) in mod_Qmodel.f90'
+      write(out_unitp,*) ' or'
+      write(out_unitp,*) '    CALL sub_Init_Qmodel(...) in Model_driver.f90'
       STOP 'STOP in check_alloc_QM: QM is not allocated in QModel.'
     END IF
 

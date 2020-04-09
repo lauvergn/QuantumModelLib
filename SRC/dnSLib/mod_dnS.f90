@@ -1115,6 +1115,18 @@ CONTAINS
     CALL QML_dealloc_dnS(S1)
     !IF (nderiv_loc < 0 .OR. (nderiv_loc > 0 .AND. ndim_loc < 1)) RETURN
 
+    !several cases:
+    !   S1%nderiv       S2%nderiv   =>      Sres%nderiv
+    !       -1              -1                  -1          => all dnS are constants
+    !       -1              >= 0    =>      S2%nderiv
+    !      >= 0             -1      =>      S1%nderiv
+    !      >= 0             >= 0    =>    min(S1%nderiv,S2%nderiv)
+
+    !if nderiv of S is > -1, nderiv must be unchanged
+    !if nderiv = -1, nderiv must be undefined (-1). Therefore,nderiv must be unchanged
+
+
+
     S1%nderiv = nderiv_loc
 
     S1%d0 = S2%d0
@@ -1136,10 +1148,10 @@ CONTAINS
 
     nderiv_loc = QML_get_nderiv_FROM_dnS(S)
 
+    !if nderiv of S is > -1, nderiv must be unchanged
+    !if nderiv = -1, nderiv must be undefined (-1). Therefore,nderiv must be unchanged
+
     !write(out_unitp,*) 'nderiv',nderiv_loc
-
-    S%nderiv = nderiv_loc
-
 
     IF (nderiv_loc == 0) THEN
        S%d0 = R
@@ -1173,6 +1185,17 @@ CONTAINS
     ndim   = min(QML_get_ndim_FROM_dnS(S1),  QML_get_ndim_FROM_dnS(S2))
 
     CALL QML_dealloc_dnS(Sres)
+
+    !several cases:
+    !Rq: R1=S1%d0       R2=S2%d0
+    !   S1%nderiv       S2%nderiv   =>      Sres%nderiv
+    !       -1              -1                  -1          =>     R1+R2
+    !       -1              >= 0    =>      S2%nderiv       => eq: R1+S2
+    !      >= 0             -1      =>      S1%nderiv       => eq: S1+R2
+    !      >= 0             >= 0    =>    min(S1%nderiv,S2%nderiv) => all
+
+    !if nderiv of S is > -1, nderiv must be unchanged
+    !if nderiv = -1, nderiv must be undefined (-1). Therefore,nderiv must be unchanged
 
     !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
 
