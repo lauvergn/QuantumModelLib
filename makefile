@@ -248,7 +248,7 @@ DIRSRC    = $(DIR0)/SRC
 DIRLib    = $(DIRSRC)/Lib
 DIRdnS    = $(DIRSRC)/dnSLib
 DIRdnMat  = $(DIRSRC)/dnMatLib
-DIRModel    = $(DIRSRC)/PotLib
+DIRModel    = $(DIRSRC)/ModelLib
 
 #
 OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
