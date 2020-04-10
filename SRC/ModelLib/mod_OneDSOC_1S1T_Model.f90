@@ -275,7 +275,7 @@ MODULE mod_OneDSOC_1S1T_Model
 
     ! Sig(R) calculation
     IF (QModel%option == 1) THEN ! as in the publication
-      dnSig = dnQ(1) ! to have the correct initialization for dnSig = +/- ONE
+      !dnSig = dnQ(1) ! to have the correct initialization for dnSig = +/- ONE
       IF (dnQ(1) <= QModel%Rsig-HALF*QModel%DRsig) THEN
         dnSig = ONE
       ELSE IF (dnQ(1) >= QModel%Rsig+HALF*QModel%DRsig) THEN

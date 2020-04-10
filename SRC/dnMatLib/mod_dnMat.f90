@@ -52,7 +52,7 @@ MODULE mod_dnMat
   IMPLICIT NONE
 
   TYPE dnMat_t
-     integer                    :: nderiv = -1
+     integer                        :: nderiv = -1
 
      real (kind=Rkind), allocatable :: d0(:,:)
      real (kind=Rkind), allocatable :: d1(:,:,:)
@@ -323,7 +323,7 @@ CONTAINS
 !! @param i,j                   integer (optional) indices of the matrix element. If not present i=j=1
   SUBROUTINE QML_sub_dnS_TO_dnMat(S,Mat,i,j)
     USE mod_dnS
-    TYPE (dnMat_t),    intent(inout) :: Mat
+    TYPE (dnMat_t),     intent(inout) :: Mat
     TYPE (dnS_t),       intent(in)    :: S
     integer, optional,  intent(in)    :: i,j
 
@@ -341,23 +341,6 @@ CONTAINS
     nsurf_dnMat  = QML_get_nsurf_FROM_dnMat(Mat)
     ndim_dnMat   = QML_get_ndim_FROM_dnMat(Mat)
 
-    IF ( QML_check_notalloc_dnmat(Mat,nderiv_dnS) .OR.                  &
-         nderiv_dnS /= nderiv_dnMat  .OR.  ndim_dnS /= ndim_dnMat .OR.  &
-         nsurf_dnMat < 1 ) THEN
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' dnMat is not allocated or ...'
-      write(out_unitp,*) '  ... nderiv from dnMat or dnS are different or ...'
-      write(out_unitp,*) '  ... ndim from dnMat or dnS are different or ...'
-      write(out_unitp,*) '  ... nsurf from dnMat is < 1'
-
-      write(out_unitp,*) 'nderiv from dnMat and dnS:',nderiv_dnMat,nderiv_dnS
-      write(out_unitp,*) 'ndim   from dnMat and dnS:',ndim_dnMat,ndim_dnS
-      write(out_unitp,*) 'nsurf  from dnMat        :',nsurf_dnMat
-
-      write(out_unitp,*) 'It should never append! Check the source'
-      STOP
-    END IF
-
     i_loc = 1
     j_loc = 1
     IF (present(i)) i_loc = i
@@ -371,20 +354,54 @@ CONTAINS
       STOP
     END IF
 
+    IF (nderiv_dnS == -1) THEN
+      IF (nderiv_dnMat == -1) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' dnMat is not allocated.'
+        write(out_unitp,*) 'It should never append! Check the source.'
+        STOP 'dnMat is not allocated.'
+      END IF
+      ! S (dnS) is a constant
+      ! value
+      Mat%d0(i_loc,j_loc) = QML_get_d0_FROM_dnS(S)
 
-    ! Potential
-    Mat%d0(i_loc,j_loc) = QML_get_d0_FROM_dnS(S)
+      ! 1st order derivatives
+      IF (nderiv_dnMat >= 1) Mat%d1(i_loc,j_loc,:) = ZERO
 
-    ! gradient
-    IF (nderiv_dnS >= 1) THEN
-      CALL QML_sub_get_dn_FROM_dnS(S,d1=Mat%d1(i_loc,j_loc,:))
+      ! 2d order derivatives
+      IF (nderiv_dnMat >= 2) Mat%d2(i_loc,j_loc,:,:) = ZERO
+    ELSE
+
+      IF ( QML_check_notalloc_dnmat(Mat,nderiv_dnS) .OR.                  &
+           nderiv_dnS /= nderiv_dnMat  .OR.  ndim_dnS /= ndim_dnMat .OR.  &
+           nsurf_dnMat < 1 ) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' dnMat is not allocated or ...'
+        write(out_unitp,*) '  ... nderiv from dnMat or dnS are different or ...'
+        write(out_unitp,*) '  ... ndim from dnMat or dnS are different or ...'
+        write(out_unitp,*) '  ... nsurf from dnMat is < 1'
+
+        write(out_unitp,*) 'nderiv from dnMat and dnS:',nderiv_dnMat,nderiv_dnS
+        write(out_unitp,*) 'ndim   from dnMat and dnS:',ndim_dnMat,ndim_dnS
+        write(out_unitp,*) 'nsurf  from dnMat        :',nsurf_dnMat
+
+        write(out_unitp,*) 'It should never append! Check the source'
+        STOP 'dnMat is not allocated or inconsistent ndim,nderiv parameters.'
+      END IF
+
+      ! value
+      Mat%d0(i_loc,j_loc) = QML_get_d0_FROM_dnS(S)
+
+      ! 1st order derivatives
+      IF (nderiv_dnS >= 1) THEN
+        CALL QML_sub_get_dn_FROM_dnS(S,d1=Mat%d1(i_loc,j_loc,:))
+      END IF
+
+      ! 2d order derivatives
+      IF (nderiv_dnS >= 2) then
+        CALL QML_sub_get_dn_FROM_dnS(S,d2=Mat%d2(i_loc,j_loc,:,:))
+      END IF
     END IF
-
-    ! Hessian
-    IF (nderiv_dnS >= 2) then
-      CALL QML_sub_get_dn_FROM_dnS(S,d2=Mat%d2(i_loc,j_loc,:,:))
-    END IF
-
 
   END SUBROUTINE QML_sub_dnS_TO_dnMat
 !> @brief Public subroutine which copies a dnS derived type to one element of dnMat derived type.

@@ -78,6 +78,20 @@ MODULE mod_dnS
 !! @param d1                      real:    1st order derivative (gradient: table of ndim derivatives)
 !! @param d2                      real:    2d  order derivative (hessian: matrix of ndim*ndim derivatives)
 !! @param d3                      real:    3d  order derivative (ndim*ndim*ndim derivatives)
+
+    !several cases:
+    !   S1%nderiv       S2%nderiv   =>      Sres%nderiv
+    !       -1              -1                  -1          => all dnS are constants
+    !       -1              >= 0    =>      S2%nderiv
+    !      >= 0             -1      =>      S1%nderiv
+    !      >= 0             >= 0    =>    min(S1%nderiv,S2%nderiv)
+
+    !if nderiv of S is > -1, nderiv must be unchanged
+    !if nderiv = -1, nderiv must be undefined (-1). Therefore,nderiv must be unchanged
+
+    integer:: QML_dnS_test = 0
+
+
   TYPE, PUBLIC :: dnS_t
      PRIVATE
      integer                        :: nderiv = -1
@@ -578,7 +592,6 @@ CONTAINS
     character(len=*), intent(in), optional :: info
     logical,          intent(in), optional :: all_type,FOR_test
 
-
     integer :: i,j,k,nio_loc,ndim
     logical :: all_type_loc,FOR_test_loc
     character (len=50) :: fformat
@@ -618,10 +631,11 @@ CONTAINS
       write(nio_loc,*) 'END Write_dnS (all)'
       write(nio_loc,*) '-------------------------------------------'
     ELSE IF (FOR_test_loc) THEN ! for Test
+      QML_dnS_test = QML_dnS_test + 1
       IF (present(info)) THEN
-        write(nio_loc,*) 'TEST dnSca: ',trim(adjustl(info))
+        write(nio_loc,'(a,i0,1x,i0,a,a)') 'TEST #',QML_dnS_test,S%nderiv,' dnSca: ',trim(adjustl(info))
       ELSE
-        write(nio_loc,*) 'TEST dnSca: '
+        write(nio_loc,'(a,i0,1x,i0,a)') 'TEST #',QML_dnS_test,S%nderiv,' dnSca'
       END IF
       write(nio_loc,*) 'S%d0'
       write(nio_loc,*) 1
@@ -641,7 +655,8 @@ CONTAINS
         write(nio_loc,*) size(S%d3)
         write(nio_loc,*) S%d3
       END IF
-      write(nio_loc,*) 'END_TEST dnSca: '
+
+      write(nio_loc,'(a,i0,a)') 'END_TEST #',QML_dnS_test,' dnSca'
     ELSE ! normal writing
       IF (present(info)) write(nio_loc,*) info
 
@@ -701,7 +716,10 @@ CONTAINS
     integer                     :: nderiv
     TYPE (dnS_t), intent(in)    :: S
 
-    IF (.NOT. allocated(S%d1)) THEN
+    nderiv = S%nderiv
+    IF (S%nderiv == -1) THEN
+      nderiv = -1
+    ELSE IF (.NOT. allocated(S%d1)) THEN
       nderiv = 0
     ELSE IF (.NOT. allocated(S%d2)) THEN
       nderiv = 1
@@ -1103,31 +1121,12 @@ CONTAINS
     CLASS (dnS_t), intent(inout) :: S1
     CLASS (dnS_t), intent(in)    :: S2
 
-    integer :: nderiv_loc,ndim_loc
     integer :: err_dnS_loc
     character (len=*), parameter :: name_sub='QML_sub_dnS2_TO_dnS1'
 
-    nderiv_loc = QML_get_nderiv_FROM_dnS(S2)
-    ndim_loc   = QML_get_ndim_FROM_dnS(S2)
-
-    !write(out_unitp,*) 'ndim,nsurf,nderiv',ndim_loc,nderiv_loc
-
     CALL QML_dealloc_dnS(S1)
-    !IF (nderiv_loc < 0 .OR. (nderiv_loc > 0 .AND. ndim_loc < 1)) RETURN
 
-    !several cases:
-    !   S1%nderiv       S2%nderiv   =>      Sres%nderiv
-    !       -1              -1                  -1          => all dnS are constants
-    !       -1              >= 0    =>      S2%nderiv
-    !      >= 0             -1      =>      S1%nderiv
-    !      >= 0             >= 0    =>    min(S1%nderiv,S2%nderiv)
-
-    !if nderiv of S is > -1, nderiv must be unchanged
-    !if nderiv = -1, nderiv must be undefined (-1). Therefore,nderiv must be unchanged
-
-
-
-    S1%nderiv = nderiv_loc
+    S1%nderiv = S2%nderiv
 
     S1%d0 = S2%d0
     IF (allocated(S2%d1)) S1%d1 = S2%d1
@@ -1142,32 +1141,19 @@ CONTAINS
     CLASS (dnS_t),     intent(inout) :: S
     real (kind=Rkind), intent(in)    :: R
 
-    integer :: nderiv_loc,ndim_loc
     integer :: err_dnS_loc
     character (len=*), parameter :: name_sub='QML_set_dnS_TO_R'
 
-    nderiv_loc = QML_get_nderiv_FROM_dnS(S)
 
     !if nderiv of S is > -1, nderiv must be unchanged
     !if nderiv = -1, nderiv must be undefined (-1). Therefore,nderiv must be unchanged
 
-    !write(out_unitp,*) 'nderiv',nderiv_loc
+    S%d0 = R
 
-    IF (nderiv_loc == 0) THEN
-       S%d0 = R
-    ELSE IF (nderiv_loc == 1) THEN
-       S%d0 = R
-       S%d1 = ZERO
-    ELSE IF (nderiv_loc == 2) THEN
-       S%d0 = R
-       S%d1 = ZERO
-       S%d2 = ZERO
-    ELSE IF (nderiv_loc == 3) THEN
-       S%d0 = R
-       S%d1 = ZERO
-       S%d2 = ZERO
-       S%d3 = ZERO
-    END IF
+    IF (allocated(S%d1)) S%d1 = ZERO
+    IF (allocated(S%d2)) S%d2 = ZERO
+    IF (allocated(S%d3)) S%d3 = ZERO
+
   END SUBROUTINE QML_set_dnS_TO_R
 !=========================================================
 
@@ -1178,13 +1164,8 @@ CONTAINS
     TYPE (dnS_t)                :: Sres
     TYPE (dnS_t), intent(in)    :: S1,S2
 
-    integer :: nderiv,ndim
     character (len=*), parameter :: name_sub='QML_dnS2_PLUS_dnS1'
 
-    nderiv = min(QML_get_nderiv_FROM_dnS(S1),QML_get_nderiv_FROM_dnS(S2))
-    ndim   = min(QML_get_ndim_FROM_dnS(S1),  QML_get_ndim_FROM_dnS(S2))
-
-    CALL QML_dealloc_dnS(Sres)
 
     !several cases:
     !Rq: R1=S1%d0       R2=S2%d0
@@ -1197,23 +1178,25 @@ CONTAINS
     !if nderiv of S is > -1, nderiv must be unchanged
     !if nderiv = -1, nderiv must be undefined (-1). Therefore,nderiv must be unchanged
 
-    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
-
-    IF (nderiv == 0) THEN
+    IF (S1%nderiv == -1 .AND. S2%nderiv == -1) THEN
+       CALL QML_dealloc_dnS(Sres)
        Sres%d0 = S1%d0 + S2%d0
-    ELSE IF (nderiv == 1) THEN
-       Sres%d0 = S1%d0 + S2%d0
-       Sres%d1 = S1%d1 + S2%d1
-    ELSE IF (nderiv == 2) THEN
-       Sres%d0 = S1%d0 + S2%d0
-       Sres%d1 = S1%d1 + S2%d1
-       Sres%d2 = S1%d2 + S2%d2
-   ELSE IF (nderiv == 3) THEN
-       Sres%d0 = S1%d0 + S2%d0
-       Sres%d1 = S1%d1 + S2%d1
-       Sres%d2 = S1%d2 + S2%d2
-       Sres%d3 = S1%d3 + S2%d3
+       !Sres%nderiv = -1 (done in QML_dealloc_dnS)
+    ELSE IF (S1%nderiv == -1 .AND. S2%nderiv > -1) THEN
+       Sres = S1%d0 + S2 ! R+dnS
+       !Sres%nderiv = S2%nderiv (done in the equality)
+    ELSE IF (S1%nderiv > -1 .AND. S2%nderiv == -1) THEN
+       Sres = S1 + S2%d0 ! dnS+R
+       !Sres%nderiv = S1%nderiv
+    ELSE
+       CALL QML_dealloc_dnS(Sres)
+       Sres%nderiv = min(S1%nderiv,S2%nderiv)
+                                                    Sres%d0 = S1%d0 + S2%d0
+       IF (allocated(S1%d1) .AND. allocated(S2%d1)) Sres%d1 = S1%d1 + S2%d1
+       IF (allocated(S1%d2) .AND. allocated(S2%d2)) Sres%d2 = S1%d2 + S2%d2
+       IF (allocated(S1%d3) .AND. allocated(S2%d3)) Sres%d3 = S1%d3 + S2%d3
     END IF
+
   END FUNCTION QML_dnS2_PLUS_dnS1
   ELEMENTAL FUNCTION QML_dnS_PLUS_R(S,R) RESULT(Sres)
     USE mod_NumParameters
@@ -1223,7 +1206,6 @@ CONTAINS
     real (kind=Rkind),   intent(in)    :: R
 
 
-    integer :: nderiv,ndim
     character (len=*), parameter :: name_sub='QML_dnS_PLUS_R'
 
     Sres    = S
@@ -1262,32 +1244,28 @@ CONTAINS
     TYPE (dnS_t)                :: Sres
     TYPE (dnS_t), intent(in)    :: S1,S2
 
-    integer :: nderiv,ndim
     integer :: err_dnS_loc
     character (len=*), parameter :: name_sub='QML_dnS2_MINUS_dnS1'
 
-    nderiv = min(QML_get_nderiv_FROM_dnS(S1),QML_get_nderiv_FROM_dnS(S2))
-    ndim   = min(QML_get_ndim_FROM_dnS(S1),  QML_get_ndim_FROM_dnS(S2))
-
-    CALL QML_dealloc_dnS(Sres)
-
-    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
-
-    IF (nderiv == 0) THEN
+    IF (S1%nderiv == -1 .AND. S2%nderiv == -1) THEN
+       CALL QML_dealloc_dnS(Sres)
        Sres%d0 = S1%d0 - S2%d0
-    ELSE IF (nderiv == 1) THEN
-       Sres%d0 = S1%d0 - S2%d0
-       Sres%d1 = S1%d1 - S2%d1
-    ELSE IF (nderiv == 2) THEN
-       Sres%d0 = S1%d0 - S2%d0
-       Sres%d1 = S1%d1 - S2%d1
-       Sres%d2 = S1%d2 - S2%d2
-    ELSE IF (nderiv == 3) THEN
-       Sres%d0 = S1%d0 - S2%d0
-       Sres%d1 = S1%d1 - S2%d1
-       Sres%d2 = S1%d2 - S2%d2
-       Sres%d3 = S1%d3 - S2%d3
+       !Sres%nderiv = -1 (done in QML_dealloc_dnS)
+    ELSE IF (S1%nderiv == -1 .AND. S2%nderiv > -1) THEN
+       Sres = S1%d0 - S2
+       !Sres%nderiv = S2%nderiv (done in the equality)
+    ELSE IF (S1%nderiv > -1 .AND. S2%nderiv == -1) THEN
+       Sres = S1 - S2%d0
+       !Sres%nderiv = S1%nderiv
+    ELSE
+       CALL QML_dealloc_dnS(Sres)
+       Sres%nderiv = min(S1%nderiv,S2%nderiv)
+                                                    Sres%d0 = S1%d0 - S2%d0
+       IF (allocated(S1%d1) .AND. allocated(S2%d1)) Sres%d1 = S1%d1 - S2%d1
+       IF (allocated(S1%d2) .AND. allocated(S2%d2)) Sres%d2 = S1%d2 - S2%d2
+       IF (allocated(S1%d3) .AND. allocated(S2%d3)) Sres%d3 = S1%d3 - S2%d3
     END IF
+
   END FUNCTION QML_dnS2_MINUS_dnS1
   ELEMENTAL FUNCTION QML_dnS_MINUS_R(S,R) RESULT(Sres)
     USE mod_NumParameters
@@ -1311,31 +1289,13 @@ CONTAINS
     real (kind=Rkind),   intent(in)    :: R
 
 
-    integer :: nderiv,ndim
     character (len=*), parameter :: name_sub='QML_R_MINUS_dnS'
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-    ndim   = QML_get_ndim_FROM_dnS(S)
+    !CALL QML_dealloc_dnS(Sres) (done in Sres = -S)
 
-    CALL QML_dealloc_dnS(Sres)
+    Sres = -S
 
-    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
-
-    IF (nderiv == 0) THEN
-       Sres%d0 = R -S%d0
-    ELSE IF (nderiv == 1) THEN
-       Sres%d0 = R -S%d0
-       Sres%d1 =   -S%d1
-    ELSE IF (nderiv == 2) THEN
-       Sres%d0 = R - S%d0
-       Sres%d1 =   -S%d1
-       Sres%d2 =   -S%d2
-    ELSE IF (nderiv == 3) THEN
-       Sres%d0 = R - S%d0
-       Sres%d1 =   -S%d1
-       Sres%d2 =   -S%d2
-       Sres%d3 =   -S%d3
-    END IF
+    Sres%d0 = R -S%d0
 
   END FUNCTION QML_R_MINUS_dnS
   ELEMENTAL FUNCTION QML_MINUS_dnS(S) RESULT(Sres)
@@ -1345,31 +1305,17 @@ CONTAINS
     TYPE (dnS_t),        intent(in)    :: S
 
 
-    integer :: nderiv,ndim
     character (len=*), parameter :: name_sub='QML_MINUS_dnS'
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-    ndim   = QML_get_ndim_FROM_dnS(S)
 
     CALL QML_dealloc_dnS(Sres)
 
-    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    Sres%nderiv = S%nderiv
 
-    IF (nderiv == 0) THEN
-       Sres%d0 = -S%d0
-    ELSE IF (nderiv == 1) THEN
-       Sres%d0 = -S%d0
-       Sres%d1 = -S%d1
-    ELSE IF (nderiv == 2) THEN
-       Sres%d0 = -S%d0
-       Sres%d1 = -S%d1
-       Sres%d2 = -S%d2
-    ELSE IF (nderiv == 3) THEN
-       Sres%d0 = -S%d0
-       Sres%d1 = -S%d1
-       Sres%d2 = -S%d2
-       Sres%d3 = -S%d3
-    END IF
+                         Sres%d0 = -S%d0
+    IF (allocated(S%d1)) Sres%d1 = -S%d1
+    IF (allocated(S%d2)) Sres%d2 = -S%d2
+    IF (allocated(S%d3)) Sres%d3 = -S%d3
 
   END FUNCTION QML_MINUS_dnS
 
@@ -1379,57 +1325,56 @@ CONTAINS
     TYPE (dnS_t)                :: Sres
     TYPE (dnS_t), intent(in)    :: S1,S2
 
-    integer :: nderiv,ndim,id,jd,kd
+    integer :: id,jd,kd
     character (len=*), parameter :: name_sub='QML_dnS2_TIME_dnS1'
 
-    nderiv = min(QML_get_nderiv_FROM_dnS(S1),QML_get_nderiv_FROM_dnS(S2))
-    ndim   = min(QML_get_ndim_FROM_dnS(S1),  QML_get_ndim_FROM_dnS(S2))
-
-
-    CALL QML_dealloc_dnS(Sres)
-
-    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
-
-    IF (nderiv == 0) THEN
+    IF (S1%nderiv == -1 .AND. S2%nderiv == -1) THEN
+       CALL QML_dealloc_dnS(Sres)
        Sres%d0 = S1%d0 * S2%d0
-    ELSE IF (nderiv == 1) THEN
-       Sres%d0 = S1%d0 * S2%d0
-       Sres%d1 = S1%d1 * S2%d0 + S1%d0 * S2%d1
-    ELSE IF (nderiv == 2) THEN
-       Sres%d0 = S1%d0 * S2%d0
-       Sres%d1 = S1%d1 * S2%d0 + S1%d0 * S2%d1
-       Sres%d2 = S1%d2 * S2%d0 + S1%d0 * S2%d2
-       DO id=1,ndim
-       DO jd=1,ndim
-         Sres%d2(jd,id) = Sres%d2(jd,id) + S1%d1(id) * S2%d1(jd) + S1%d1(jd) * S2%d1(id)
-       END DO
-       END DO
-    ELSE IF (nderiv == 3) THEN
-       Sres%d0 = S1%d0 * S2%d0
-       Sres%d1 = S1%d1 * S2%d0 + S1%d0 * S2%d1
+       !Sres%nderiv = -1 (done in QML_dealloc_dnS)
+    ELSE IF (S1%nderiv == -1 .AND. S2%nderiv > -1) THEN
+       Sres = S1%d0 * S2 ! R*dnS
+       !Sres%nderiv = S2%nderiv (done in the equality)
+    ELSE IF (S1%nderiv > -1 .AND. S2%nderiv == -1) THEN
+       Sres = S1 * S2%d0 ! dnS*R
+       !Sres%nderiv = S1%nderiv
+    ELSE
+       CALL QML_dealloc_dnS(Sres)
+       Sres%nderiv = min(S1%nderiv,S2%nderiv)
 
-       Sres%d2 = S1%d2 * S2%d0 + S1%d0 * S2%d2
-       DO id=1,ndim
-       DO jd=1,ndim
-         Sres%d2(jd,id) = Sres%d2(jd,id) + S1%d1(id) * S2%d1(jd) + S1%d1(jd) * S2%d1(id)
-       END DO
-       END DO
+       Sres%d0 = S1%d0 * S2%d0
 
-       Sres%d3 = S1%d3 * S2%d0 + S1%d0 * S2%d3
-       DO id=1,ndim
-       DO jd=1,ndim
-       DO kd=1,ndim
-         Sres%d3(kd,jd,id) = Sres%d3(kd,jd,id) + S1%d1(id) * S2%d2(kd,jd) + &
-                                                 S1%d1(jd) * S2%d2(kd,id) + &
-                                                 S1%d1(kd) * S2%d2(jd,id) + &
-                                                 S1%d2(kd,jd) * S2%d1(id) + &
-                                                 S1%d2(kd,id) * S2%d1(jd) + &
-                                                 S1%d2(jd,id) * S2%d1(kd)
+       IF (allocated(S1%d1) .AND. allocated(S2%d1)) THEN
+         Sres%d1 = S1%d1 * S2%d0 + S1%d0 * S2%d1
 
-       END DO
-       END DO
-       END DO
+         IF (allocated(S1%d2) .AND. allocated(S2%d2)) THEN
+           Sres%d2 = S1%d2 * S2%d0 + S1%d0 * S2%d2
+           DO id=1,size(S1%d1)
+           DO jd=1,size(S1%d1)
+             Sres%d2(jd,id) = Sres%d2(jd,id) + S1%d1(id) * S2%d1(jd) + S1%d1(jd) * S2%d1(id)
+           END DO
+           END DO
+
+           IF (allocated(S1%d3) .AND. allocated(S2%d3)) THEN
+             Sres%d3 = S1%d3 * S2%d0 + S1%d0 * S2%d3
+             DO id=1,size(S1%d1)
+             DO jd=1,size(S1%d1)
+             DO kd=1,size(S1%d1)
+               Sres%d3(kd,jd,id) = Sres%d3(kd,jd,id) + S1%d1(id) * S2%d2(kd,jd) + &
+                                                       S1%d1(jd) * S2%d2(kd,id) + &
+                                                       S1%d1(kd) * S2%d2(jd,id) + &
+                                                       S1%d2(kd,jd) * S2%d1(id) + &
+                                                       S1%d2(kd,id) * S2%d1(jd) + &
+                                                       S1%d2(jd,id) * S2%d1(kd)
+
+             END DO
+             END DO
+             END DO
+           END IF
+         END IF
+       END IF
     END IF
+
   END FUNCTION QML_dnS2_TIME_dnS1
   !ELEMENTAL FUNCTION QML_d0S_TIME_R(S,R) RESULT(Sres)
    FUNCTION QML_d0S_TIME_R(S,R) RESULT(Sres)
@@ -1440,16 +1385,12 @@ CONTAINS
     real (kind=Rkind),     intent(in)    :: R
 
 
-    integer :: nderiv,ndim
     integer :: err_dnS_loc
     character (len=*), parameter :: name_sub='QML_d0S_TIME_R'
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-    ndim   = QML_get_ndim_FROM_dnS(S)
 
     Sres = S
 
-    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
     Sres%d0 = R * S%d0
 
   END FUNCTION QML_d0S_TIME_R
@@ -1462,32 +1403,16 @@ CONTAINS
     real (kind=Rkind),   intent(in)    :: R
 
 
-    integer :: nderiv,ndim
     character (len=*), parameter :: name_sub='QML_dnS_TIME_R'
-
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-    ndim   = QML_get_ndim_FROM_dnS(S)
-
 
     CALL QML_dealloc_dnS(Sres)
 
-    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    Sres%nderiv = S%nderiv
 
-    IF (nderiv == 0) THEN
-       Sres%d0 = R * S%d0
-    ELSE IF (nderiv == 1) THEN
-       Sres%d0 = R * S%d0
-       Sres%d1 = R * S%d1
-    ELSE IF (nderiv == 2) THEN
-       Sres%d0 = R * S%d0
-       Sres%d1 = R * S%d1
-       Sres%d2 = R * S%d2
-    ELSE IF (nderiv == 3) THEN
-       Sres%d0 = R * S%d0
-       Sres%d1 = R * S%d1
-       Sres%d2 = R * S%d2
-       Sres%d3 = R * S%d3
-    END IF
+                         Sres%d0 = R*S%d0
+    IF (allocated(S%d1)) Sres%d1 = R*S%d1
+    IF (allocated(S%d2)) Sres%d2 = R*S%d2
+    IF (allocated(S%d3)) Sres%d3 = R*S%d3
 
   END FUNCTION QML_dnS_TIME_R
 
@@ -1500,33 +1425,17 @@ CONTAINS
     real (kind=Rkind),   intent(in)    :: R
 
 
-    integer :: nderiv,ndim
     integer :: err_dnS_loc
     character (len=*), parameter :: name_sub='QML_R_TIME_dnS'
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-    ndim   = QML_get_ndim_FROM_dnS(S)
-
-
     CALL QML_dealloc_dnS(Sres)
 
-    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    Sres%nderiv = S%nderiv
 
-    IF (nderiv == 0) THEN
-       Sres%d0 = R * S%d0
-    ELSE IF (nderiv == 1) THEN
-       Sres%d0 = R * S%d0
-       Sres%d1 = R * S%d1
-    ELSE IF (nderiv == 2) THEN
-       Sres%d0 = R * S%d0
-       Sres%d1 = R * S%d1
-       Sres%d2 = R * S%d2
-    ELSE IF (nderiv == 3) THEN
-       Sres%d0 = R * S%d0
-       Sres%d1 = R * S%d1
-       Sres%d2 = R * S%d2
-       Sres%d3 = R * S%d3
-    END IF
+                         Sres%d0 = R*S%d0
+    IF (allocated(S%d1)) Sres%d1 = R*S%d1
+    IF (allocated(S%d2)) Sres%d2 = R*S%d2
+    IF (allocated(S%d3)) Sres%d3 = R*S%d3
 
   END FUNCTION QML_R_TIME_dnS
 
@@ -1539,8 +1448,7 @@ CONTAINS
     character (len=*), parameter :: name_sub='QML_dnS2_OVER_dnS1'
 
 
-    Sres = S1 * S2**(-ONE)
-
+    Sres = S1 * S2**(-1) ! idiot !!!
 
   END FUNCTION QML_dnS2_OVER_dnS1
   ELEMENTAL FUNCTION QML_dnS_OVER_R(S,R) RESULT(Sres)
@@ -1554,7 +1462,7 @@ CONTAINS
     character (len=*), parameter :: name_sub='QML_dnS_OVER_R'
 
 
-    Sres = S * R**(-ONE)
+    Sres = S * (ONE/R)
 
   END FUNCTION QML_dnS_OVER_R
 
@@ -1569,14 +1477,14 @@ CONTAINS
     character (len=*), parameter :: name_sub='QML_R_OVER_dnS'
 
 
-    Sres = R * S**(-ONE)
+    Sres = R * S**(-1)
 
 
   END FUNCTION QML_R_OVER_dnS
 
 !=========================================================
-! mathematical functions: cos, sin exp, log, cosh ....
-! All functions in the fortran norm except atan2 betause it has two arguments
+! mathematical intrinsic functions: cos, sin exp, log, cosh ....
+! All functions in the fortran norm except atan2 because it has two arguments
 !=========================================================
 
   ELEMENTAL FUNCTION QML_get_F_dnS(S,d0f,d1f,d2f,d3f) RESULT(Sres)
@@ -1586,53 +1494,40 @@ CONTAINS
     TYPE (dnS_t),        intent(in)    :: S
     real (kind=Rkind),   intent(in)    :: d0f,d1f,d2f,d3f
 
-    integer :: nderiv,ndim,id,jd,kd
+    integer :: id,jd,kd
     character (len=*), parameter :: name_sub='QML_get_F_dnS'
-
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-    ndim   = QML_get_ndim_FROM_dnS(S)
 
     CALL QML_dealloc_dnS(Sres)
 
-    !IF (nderiv < 0 .OR. (nderiv > 0 .AND. ndim < 1)) RETURN
+    Sres%nderiv = S%nderiv
 
-    IF (nderiv == 0) THEN
-       Sres%d0 = d0f
-    ELSE IF (nderiv == 1) THEN
-       Sres%d0 =  d0f
-       Sres%d1 =  d1f * S%d1
-    ELSE IF (nderiv == 2) THEN
-       Sres%d0 = d0f
-       Sres%d1 = d1f * S%d1
-       Sres%d2 = d1f * S%d2
+    Sres%d0 = d0f
+    IF (allocated(S%d1)) THEN
+      Sres%d1 =  d1f * S%d1
 
-       DO id=1,ndim
-       DO jd=1,ndim
-         Sres%d2(jd,id) = Sres%d2(jd,id) + d2f * S%d1(id)*S%d1(jd)
-       END DO
-       END DO
-    ELSE IF (nderiv == 3) THEN
-       Sres%d0 = d0f
-       Sres%d1 = d1f * S%d1
-       Sres%d2 = d1f * S%d2
-       Sres%d3 = d1f * S%d3
+      IF (allocated(S%d2)) THEN
+        Sres%d2 = d1f * S%d2
+        DO id=1,size(S%d1)
+        DO jd=1,size(S%d1)
+          Sres%d2(jd,id) = Sres%d2(jd,id) + d2f * S%d1(id)*S%d1(jd)
+        END DO
+        END DO
 
-       DO id=1,ndim
-       DO jd=1,ndim
-         Sres%d2(jd,id) = Sres%d2(jd,id) + d2f * S%d1(id)*S%d1(jd)
-       END DO
-       END DO
-
-       DO id=1,ndim
-       DO jd=1,ndim
-       DO kd=1,ndim
-         Sres%d3(kd,jd,id) = Sres%d3(kd,jd,id) + &
-                             d2f * (S%d1(id)*S%d2(kd,jd) + S%d1(jd)*S%d2(kd,id) + S%d1(kd)*S%d2(jd,id)) + &
-                             d3f * S%d1(id)*S%d1(jd)*S%d1(kd)
-       END DO
-       END DO
-       END DO
+        IF (allocated(S%d3)) THEN
+          Sres%d3 = d1f * S%d3
+          DO id=1,size(S%d1)
+          DO jd=1,size(S%d1)
+          DO kd=1,size(S%d1)
+            Sres%d3(kd,jd,id) = Sres%d3(kd,jd,id) + &
+                                d2f * (S%d1(id)*S%d2(kd,jd) + S%d1(jd)*S%d2(kd,id) + S%d1(kd)*S%d2(jd,id)) + &
+                                d3f * S%d1(id)*S%d1(jd)*S%d1(kd)
+          END DO
+          END DO
+          END DO
+        END IF
+      END IF
     END IF
+
 
   END FUNCTION QML_get_F_dnS
 
@@ -1643,25 +1538,21 @@ CONTAINS
     TYPE (dnS_t),        intent(in)    :: S
     real (kind=Rkind),   intent(in)    :: R
 
-    integer :: nderiv
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_dnS_EXP_R'
 
-
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-
     IF (R == ZERO) THEN
-      Sres = S ! to have the right initialization
+      Sres = S ! to have the right initialization. it cannot deallocate and set to the constant R
       Sres = ONE
     ELSE IF (R == ONE) THEN
       Sres = S
     ELSE IF (R == TWO) THEN
       Sres = S*S
     ELSE
-      IF (nderiv >= 0) d0f = S%d0**R
-      IF (nderiv >= 1) d1f = S%d0**(R-ONE)   * R
-      IF (nderiv >= 2) d2f = S%d0**(R-TWO)   * R*(R-ONE)
-      IF (nderiv >= 3) d3f = S%d0**(R-THREE) * R*(R-ONE)*(R-TWO)
+      d0f = S%d0**R
+      IF (S%nderiv >= 1) d1f = S%d0**(R-ONE)   * R
+      IF (S%nderiv >= 2) d2f = S%d0**(R-TWO)   * R*(R-ONE)
+      IF (S%nderiv >= 3) d3f = S%d0**(R-THREE) * R*(R-ONE)*(R-TWO)
       Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
     END IF
 
@@ -1672,14 +1563,20 @@ CONTAINS
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
-    integer,           intent(in)    :: I
+    integer,             intent(in)    :: I
 
-
+    real (kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_dnS_EXP_I'
 
     IF (I == 0) THEN
-      Sres = S ! to have the right initialization
+      Sres = S ! to have the right initialization. it cannot deallocate and set to the constant R
       Sres = ONE
+    ELSE IF (I == -1) THEN
+      d0f = ONE/S%d0
+      IF (S%nderiv >= 1) d1f = -d0f*d0f
+      IF (S%nderiv >= 2) d2f = -TWO*d0f*d1f
+      IF (S%nderiv >= 3) d3f =  -THREE*d0f*d2f
+      Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
     ELSE IF (I == 1) THEN
       Sres = S
     ELSE IF (I == 2) THEN
@@ -1723,19 +1620,15 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
 
     character (len=*), parameter :: name_sub='QML_get_EXP_dnS'
 
-
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-
-    IF (nderiv >= 0) d0f =  exp(S%d0)
-    IF (nderiv >= 1) d1f =  exp(S%d0)
-    IF (nderiv >= 2) d2f =  exp(S%d0)
-    IF (nderiv >= 3) d3f =  exp(S%d0)
+    d0f =  exp(S%d0)
+    IF (S%nderiv >= 1) d1f =  exp(S%d0)
+    IF (S%nderiv >= 2) d2f =  exp(S%d0)
+    IF (S%nderiv >= 3) d3f =  exp(S%d0)
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -1746,19 +1639,16 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
 
     character (len=*), parameter :: name_sub='QML_get_LOG_dnS'
 
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-
-    IF (nderiv >= 0) d0f =  log(S%d0)
-    IF (nderiv >= 1) d1f =  ONE/S%d0
-    IF (nderiv >= 2) d2f = -ONE/S%d0**2
-    IF (nderiv >= 3) d3f =  TWO/S%d0**3
+    d0f =  log(S%d0)
+    IF (S%nderiv >= 1) d1f =  ONE/S%d0
+    IF (S%nderiv >= 2) d2f = -ONE/S%d0**2
+    IF (S%nderiv >= 3) d3f =  TWO/S%d0**3
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -1769,7 +1659,6 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
 
@@ -1785,18 +1674,16 @@ CONTAINS
     TYPE (dnS_t),        intent(in)    :: S
 
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_COS_dnS'
 
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
 
-    IF (nderiv >= 0) d0f =  cos(S%d0)
-    IF (nderiv >= 1) d1f = -sin(S%d0)
-    IF (nderiv >= 2) d2f = -cos(S%d0)
-    IF (nderiv >= 3) d3f =  sin(S%d0)
+    d0f =  cos(S%d0)
+    IF (S%nderiv >= 1) d1f = -sin(S%d0)
+    IF (S%nderiv >= 2) d2f = -cos(S%d0)
+    IF (S%nderiv >= 3) d3f =  sin(S%d0)
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -1808,18 +1695,16 @@ CONTAINS
     TYPE (dnS_t),        intent(in)    :: S
 
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_ACOS_dnS'
 
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
 
-    IF (nderiv >= 0) d0f =  acos(S%d0)
-    IF (nderiv >= 1) d1f = -ONE/sqrt(ONE-S%d0**2)
-    IF (nderiv >= 2) d2f = S%d0*d1f**3
-    IF (nderiv >= 3) d3f = (ONE+TWO*S%d0**2)*d1f**5
+    d0f =  acos(S%d0)
+    IF (S%nderiv >= 1) d1f = -ONE/sqrt(ONE-S%d0**2)
+    IF (S%nderiv >= 2) d2f = S%d0*d1f**3
+    IF (S%nderiv >= 3) d3f = (ONE+TWO*S%d0**2)*d1f**5
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -1830,18 +1715,16 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_SIN_dnS'
 
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
 
-    IF (nderiv >= 0) d0f =  sin(S%d0)
-    IF (nderiv >= 1) d1f =  cos(S%d0)
-    IF (nderiv >= 2) d2f = -sin(S%d0)
-    IF (nderiv >= 3) d3f = -cos(S%d0)
+     d0f =  sin(S%d0)
+    IF (S%nderiv >= 1) d1f =  cos(S%d0)
+    IF (S%nderiv >= 2) d2f = -sin(S%d0)
+    IF (S%nderiv >= 3) d3f = -cos(S%d0)
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -1852,18 +1735,16 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_ASIN_dnS'
 
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
 
-    IF (nderiv >= 0) d0f =  asin(S%d0)
-    IF (nderiv >= 1) d1f = ONE/sqrt(ONE-S%d0**2)
-    IF (nderiv >= 2) d2f = S%d0*d1f**3
-    IF (nderiv >= 3) d3f = (ONE+TWO*S%d0**2)*d1f**5
+    d0f =  asin(S%d0)
+    IF (S%nderiv >= 1) d1f = ONE/sqrt(ONE-S%d0**2)
+    IF (S%nderiv >= 2) d2f = S%d0*d1f**3
+    IF (S%nderiv >= 3) d3f = (ONE+TWO*S%d0**2)*d1f**5
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -1874,7 +1755,6 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_TAN_dnS'
@@ -1889,17 +1769,15 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_ATAN_dnS'
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
 
-    IF (nderiv >= 0) d0f =  atan(S%d0)
-    IF (nderiv >= 1) d1f = ONE/(ONE+S%d0**2)
-    IF (nderiv >= 2) d2f = -TWO*S%d0 * d1f**2
-    IF (nderiv >= 3) d3f = (-TWO+SIX*S%d0**2) * d1f**3
+    d0f =  atan(S%d0)
+    IF (S%nderiv >= 1) d1f = ONE/(ONE+S%d0**2)
+    IF (S%nderiv >= 2) d2f = -TWO*S%d0 * d1f**2
+    IF (S%nderiv >= 3) d3f = (-TWO+SIX*S%d0**2) * d1f**3
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -1912,18 +1790,16 @@ CONTAINS
     TYPE (dnS_t),        intent(in)    :: S
 
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_COSH_dnS'
 
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
 
-    IF (nderiv >= 0) d0f =  cosh(S%d0)
-    IF (nderiv >= 1) d1f =  sinh(S%d0)
-    IF (nderiv >= 2) d2f =  cosh(S%d0)
-    IF (nderiv >= 3) d3f =  sinh(S%d0)
+    d0f =  cosh(S%d0)
+    IF (S%nderiv >= 1) d1f =  sinh(S%d0)
+    IF (S%nderiv >= 2) d2f =  cosh(S%d0)
+    IF (S%nderiv >= 3) d3f =  sinh(S%d0)
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -1935,21 +1811,19 @@ CONTAINS
     TYPE (dnS_t),        intent(in)    :: S
 
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_ACOSH_dnS'
 
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
 #if __INVHYP == 1
-    IF (nderiv >= 0) d0f = acosh(S%d0)
+    d0f = acosh(S%d0)
 #else
-    IF (nderiv >= 0) d0f = log(S%d0+sqrt(S%d0*S%d0-ONE))
+    d0f = log(S%d0+sqrt(S%d0*S%d0-ONE))
 #endif
-    IF (nderiv >= 1) d1f = ONE/sqrt(-ONE+S%d0**2)
-    IF (nderiv >= 2) d2f = -S%d0*d1f**3
-    IF (nderiv >= 3) d3f = (ONE+TWO*S%d0**2)*d1f**5
+    IF (S%nderiv >= 1) d1f = ONE/sqrt(-ONE+S%d0**2)
+    IF (S%nderiv >= 2) d2f = -S%d0*d1f**3
+    IF (S%nderiv >= 3) d3f = (ONE+TWO*S%d0**2)*d1f**5
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -1960,18 +1834,14 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_SINH_dnS'
 
-
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-
-    IF (nderiv >= 0) d0f =  sinh(S%d0)
-    IF (nderiv >= 1) d1f =  cosh(S%d0)
-    IF (nderiv >= 2) d2f =  sinh(S%d0)
-    IF (nderiv >= 3) d3f =  cosh(S%d0)
+    d0f =  sinh(S%d0)
+    IF (S%nderiv >= 1) d1f =  cosh(S%d0)
+    IF (S%nderiv >= 2) d2f =  sinh(S%d0)
+    IF (S%nderiv >= 3) d3f =  cosh(S%d0)
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -1982,21 +1852,19 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_ASINH_dnS'
 
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
 #if __INVHYP == 1
-    IF (nderiv >= 0) d0f =  asinh(S%d0)
+    d0f =  asinh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  log(S%d0+sqrt(S%d0*S%d0+ONE))
+    d0f =  log(S%d0+sqrt(S%d0*S%d0+ONE))
 #endif
-    IF (nderiv >= 1) d1f = ONE/sqrt(ONE+S%d0**2)
-    IF (nderiv >= 2) d2f = -S%d0*d1f**3
-    IF (nderiv >= 3) d3f = (-ONE+TWO*S%d0**2)*d1f**5
+    IF (S%nderiv >= 1) d1f = ONE/sqrt(ONE+S%d0**2)
+    IF (S%nderiv >= 2) d2f = -S%d0*d1f**3
+    IF (S%nderiv >= 3) d3f = (-ONE+TWO*S%d0**2)*d1f**5
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -2008,18 +1876,15 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_TANH_dnS'
 
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
-
-    IF (nderiv >= 0) d0f =  tanh(S%d0)
-    IF (nderiv >= 1) d1f =  ONE/cosh(S%d0)**2
-    IF (nderiv >= 2) d2f = -TWO*tanh(S%d0) * d1f
-    IF (nderiv >= 3) d3f = (-FOUR+TWO*cosh(TWO*S%d0)) * d1f**2
+    d0f =  tanh(S%d0)
+    IF (S%nderiv >= 1) d1f =  ONE/cosh(S%d0)**2
+    IF (S%nderiv >= 2) d2f = -TWO*tanh(S%d0) * d1f
+    IF (S%nderiv >= 3) d3f = (-FOUR+TWO*cosh(TWO*S%d0)) * d1f**2
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 
@@ -2031,21 +1896,19 @@ CONTAINS
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
 
-    integer :: nderiv
     integer :: err_dnS_loc
     real(kind=Rkind) :: d0f,d1f,d2f,d3f
     character (len=*), parameter :: name_sub='QML_get_ATANH_dnS'
 
 
-    nderiv = QML_get_nderiv_FROM_dnS(S)
 #if __INVHYP == 1
-    IF (nderiv >= 0) d0f =  atanh(S%d0)
+    d0f =  atanh(S%d0)
 #else
-    IF (nderiv >= 0) d0f =  HALF*log((ONE+S%d0)/(ONE-S%d0))
+    d0f =  HALF*log((ONE+S%d0)/(ONE-S%d0))
 #endif
-    IF (nderiv >= 1) d1f =  ONE/(ONE-S%d0**2)
-    IF (nderiv >= 2) d2f =  TWO*S%d0 * d1f**2
-    IF (nderiv >= 3) d3f =  (TWO+SIX*S%d0**2) * d1f**3
+    IF (S%nderiv >= 1) d1f =  ONE/(ONE-S%d0**2)
+    IF (S%nderiv >= 2) d2f =  TWO*S%d0 * d1f**2
+    IF (S%nderiv >= 3) d3f =  (TWO+SIX*S%d0**2) * d1f**3
 
     Sres = QML_get_F_dnS(S,d0f,d1f,d2f,d3f)
 

@@ -345,7 +345,7 @@ PROGRAM TEST_dnS
    !CALL QML_write_dnS(Sana,nio_test,info='dnX*dnZ (3D)',FOR_test=.TRUE.)
 
    write(out_unitp,'(a)') "============================================"
-   write(out_unitp,'(a)') "new tests : Vec_OF_dnS(1:3), 2D, nderiv=1"
+   write(out_unitp,'(a)') "new tests : Vec_OF_dnS(1:3), 2D, nderiv=2"
    write(out_unitp,'(a)') "============================================"
    nderiv = 2
    x=0.5_Rkind
@@ -361,6 +361,69 @@ PROGRAM TEST_dnS
    dnXZ = TWO*(dnX**2+dnY**2+dnX*dnY)
    write(out_unitp,'(a,l2)') 'dot_product - dnS_Result  ==0?',QML_Check_dnS_IS_ZERO(Sana-dnXZ,dnSerr_test)
 
+   write(out_unitp,'(a)') "============================================"
+   write(out_unitp,'(a)') "new tests : init const, 2D, nderiv=2"
+   write(out_unitp,'(a)') "============================================"
+   nderiv = 2
+   x=0.5_Rkind
+   y=1.0_Rkind
+   dnX     = QML_init_dnS(x  ,ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
+
+   CALL QML_dealloc_dnS(Sana)
+   CALL QML_dealloc_dnS(Snum)
+   Sana    = x ! here, Sana%nderiv = -1
+   CALL QML_write_dnS(Sana,info='test1 (x)')
+   Sana    = Sana + dnX ! here, Sana%nderiv = dnX%nderiv
+   CALL QML_write_dnS(Sana,info='test2 (x+dnX)')
+   CALL QML_write_dnS(Sana,nio_test,info='init const: (x+dnX)',FOR_test=.TRUE.)
+   Snum    = dnX + x    ! here, Snum%nderiv = dnX%nderiv
+   CALL QML_write_dnS(Snum,info='test3 (dnX+x)')
+   write(out_unitp,'(a,l2)') '(x+dnX) - (dnX+x)  ==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+
+   CALL QML_dealloc_dnS(Sana)
+   CALL QML_dealloc_dnS(Snum)
+   Sana    = x ! here, Sana%nderiv = -1
+   CALL QML_write_dnS(Sana,info='test1 (x)')
+   Sana    = Sana - dnX ! here, Sana%nderiv = dnX%nderiv
+   CALL QML_write_dnS(Sana,info='test2 (x-dnX)')
+   CALL QML_write_dnS(Sana,nio_test,info='init const: (x-dnX)',FOR_test=.TRUE.)
+   Snum    = -dnX + x    ! here, Snum%nderiv = dnX%nderiv
+   CALL QML_write_dnS(Snum,info='test3 (-dnX+x)')
+   write(out_unitp,'(a,l2)') '(x-dnX) - (-dnX+x)  ==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+
+   CALL QML_dealloc_dnS(Sana)
+   CALL QML_dealloc_dnS(Snum)
+   Sana    = x ! here, Sana%nderiv = -1
+   CALL QML_write_dnS(Sana,info='test1 (x)')
+   Sana    = Sana * dnX ! here, Sana%nderiv = dnX%nderiv
+   CALL QML_write_dnS(Sana,info='test2 (x*dnX)')
+   CALL QML_write_dnS(Sana,nio_test,info='init const: (x*dnX)',FOR_test=.TRUE.)
+   Snum    = dnX * x    ! here, Snum%nderiv = dnX%nderiv
+   CALL QML_write_dnS(Snum,info='test3 (dnX*x)')
+   write(out_unitp,'(a,l2)') '(x*dnX) - (dnX*x)  ==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+
+   CALL QML_dealloc_dnS(Sana)
+   CALL QML_dealloc_dnS(Snum)
+   Sana    = x ! here, Sana%nderiv = -1
+   CALL QML_write_dnS(Sana,info='test1 (x)')
+   Sana    = Sana / dnX ! here, Sana%nderiv = dnX%nderiv
+   CALL QML_write_dnS(Sana,info='test2 (x/dnX)')
+   CALL QML_write_dnS(Sana,nio_test,info='init const: (x/dnX)',FOR_test=.TRUE.)
+   Snum    = dnX**(-1) * x    ! here, Snum%nderiv = dnX%nderiv
+   CALL QML_write_dnS(Snum,info='test3 (dnX**(-1)*x)')
+   write(out_unitp,'(a,l2)') '(x/dnX) - (dnX**(-1)*x)  ==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+
+   CALL QML_dealloc_dnS(Sana)
+   CALL QML_dealloc_dnS(Snum)
+   Sana    = x ! here, Sana%nderiv = -1
+   CALL QML_write_dnS(Sana,info='test1 (x)')
+   Sana    = sin(Sana) ! here, Sana%nderiv = dnX%nderiv
+   CALL QML_write_dnS(Sana,info='test2 (sin(x)')
+   CALL QML_write_dnS(Sana,nio_test,info='init const: (sin(x))',FOR_test=.TRUE.)
+   Snum    = dnX ; Snum = ZERO
+   Snum    = sin(x)    ! here, Snum%nderiv = dnX%nderiv
+   CALL QML_write_dnS(Snum,info='test3 (sin(x))')
+   write(out_unitp,'(a,l2)') '(sin(x)) - (sin(x))  ==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
 
    close(unit=nio_test)
 
