@@ -67,11 +67,12 @@ MODULE mod_HenonHeilesModel
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_HenonHeilesModel'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
+      CALL QModel_in%Write_QModel(out_unitp)
       flush(out_unitp)
     END IF
 

@@ -23,10 +23,10 @@
 PROGRAM TEST_grid
   USE mod_NumParameters
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)                :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind)              :: a
   real (kind=Rkind), allocatable :: Qmin(:),Qmax(:)
   character (len=:), allocatable :: grid_file

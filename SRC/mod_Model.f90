@@ -20,7 +20,7 @@
 !
 !===========================================================================
 !===========================================================================
-MODULE mod_QModel
+MODULE mod_Model
 !$ USE omp_lib
   USE mod_NumParameters
   USE mod_dnMat
@@ -51,19 +51,19 @@ MODULE mod_QModel
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: QModel_t,Init_Model,Eval_Pot,check_alloc_QM
+  PUBLIC :: Model_t,Init_Model,Eval_Pot,check_alloc_QM
   PUBLIC :: Write0_Model,Write_Model,Write_QdnV_FOR_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
   PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model
 
-  TYPE :: QModel_t
+  TYPE :: Model_t
     ! add nsurf and ndim to avoid crash when using the driver without initialization
     ! at the intialization, the variables are set-up to the correct values
     integer :: nsurf       = 0
     integer :: ndim        = 0
     CLASS (EmptyModel_t), allocatable :: QM
-  END TYPE QModel_t
+  END TYPE Model_t
 
   real (kind=Rkind)                     :: step = ONETENTH**4
   real (kind=Rkind)                     :: epsi = ONETENTH**10
@@ -117,7 +117,7 @@ MODULE mod_QModel
 
 
 
-  TYPE(QModel_t), PUBLIC  :: QuantumModel
+  TYPE(Model_t), PUBLIC  :: QuantumModel
 
 CONTAINS
 
@@ -189,7 +189,7 @@ CONTAINS
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE (QModel_t),     intent(inout)        :: QModel
+    TYPE (Model_t),     intent(inout)         :: QModel
 
     character (len=*),   intent(in), optional :: pot_name
     integer,             intent(in), optional :: ndim,nsurf
@@ -231,10 +231,12 @@ CONTAINS
       write(out_unitp,*) '  with contributions of'
       write(out_unitp,*) '     Félix MOUHAT [2]'
       write(out_unitp,*) '     Liang LIANG [3]'
+      write(out_unitp,*) '     Emanuele MARSILI [1,4]'
       write(out_unitp,*)
       write(out_unitp,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
       write(out_unitp,*) '[2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France'
       write(out_unitp,*) '[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France'
+      write(out_unitp,*) '[4]: Durham University, Durham, UK'
       write(out_unitp,*) '================================================='
       write(out_unitp,*) '================================================='
       write(out_unitp,*) '== Initialization of the Model =================='
@@ -248,12 +250,12 @@ CONTAINS
     IF (present(ndim)) THEN
       QModel_in%ndim      = ndim
     ELSE
-      QModel_in%ndim      = 1
+      QModel_in%ndim      = 0
     END IF
     IF (present(nsurf)) THEN
       QModel_in%nsurf     = nsurf
     ELSE
-      QModel_in%nsurf     = 1
+      QModel_in%nsurf     = 0
     END IF
 
     IF (present(adiabatic)) THEN
@@ -424,7 +426,6 @@ CONTAINS
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
       !! === END README ==
       allocate(OneDSOC_1S1T_Model_t :: QModel%QM)
-      IF (.NOT. present(nsurf)) QModel_in%nsurf = 4
       QModel%QM = Init_OneDSOC_1S1T_Model(QModel_in,                    &
                        read_param=read_param_loc,nio_param_file=nio_loc)
 
@@ -561,7 +562,7 @@ CONTAINS
   IMPLICIT NONE
 
     real (kind=Rkind),  intent(inout)            :: Q0(:)
-    TYPE (QModel_t),    intent(in)               :: QModel
+    TYPE (Model_t),    intent(in)               :: QModel
     integer,            intent(in)               :: option
 
 
@@ -610,7 +611,7 @@ CONTAINS
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE (QModel_t),    intent(in)     :: QModel
+    TYPE (Model_t),    intent(in)     :: QModel
     character (len=*),  intent(in)     :: name_sub_in
 
     IF ( .NOT. allocated(QModel%QM)) THEN
@@ -618,7 +619,7 @@ CONTAINS
       write(out_unitp,*) ' QM is not allocated in QModel.'
       write(out_unitp,*) '  check_alloc_QM is called from ',name_sub_in
       write(out_unitp,*) '  You MUST initialize the model with:'
-      write(out_unitp,*) '    CALL init_Model(...) in mod_Qmodel.f90'
+      write(out_unitp,*) '    CALL init_Model(...) in mod_Model.f90'
       write(out_unitp,*) ' or'
       write(out_unitp,*) '    CALL sub_Init_Qmodel(...) in Model_driver.f90'
       STOP 'STOP in check_alloc_QM: QM is not allocated in QModel.'
@@ -631,7 +632,7 @@ CONTAINS
   USE mod_dnS
   IMPLICIT NONE
 
-    TYPE (QModel_t),    intent(inout)            :: QModel
+    TYPE (Model_t),    intent(inout)            :: QModel
     TYPE (dnMat_t),     intent(inout)            :: PotVal
     real (kind=Rkind),  intent(in)               :: Q(:)
     integer,            intent(in),    optional  :: nderiv
@@ -734,7 +735,7 @@ CONTAINS
   USE mod_dnS
   IMPLICIT NONE
 
-    TYPE (QModel_t),       intent(inout)            :: QModel
+    TYPE (Model_t),       intent(inout)            :: QModel
 
     TYPE (dnMat_t),        intent(inout)            :: PotVal
     real (kind=Rkind),     intent(in)               :: Q(:)
@@ -852,7 +853,7 @@ CONTAINS
   SUBROUTINE Eval_Pot_Numeric_dia(QModel,Q,PotVal,nderiv)
   IMPLICIT NONE
 
-    TYPE (QModel_t),   intent(inout)  :: QModel
+    TYPE (Model_t),   intent(inout)  :: QModel
     TYPE (dnMat_t),    intent(inout)  :: PotVal
     real (kind=Rkind), intent(in)     :: Q(:)
     integer,           intent(in)     :: nderiv
@@ -951,7 +952,7 @@ CONTAINS
   SUBROUTINE Eval_Pot_Numeric_adia(QModel,Q,PotVal,nderiv,Vec,NAC)
   IMPLICIT NONE
 
-    TYPE (QModel_t),   intent(inout)  :: QModel
+    TYPE (Model_t),   intent(inout)  :: QModel
     TYPE (dnMat_t),    intent(inout)  :: PotVal
     real (kind=Rkind), intent(in)     :: Q(:)
     integer,           intent(in)     :: nderiv
@@ -1319,7 +1320,7 @@ CONTAINS
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE(QModel_t),     intent(in)              :: QModel
+    TYPE(Model_t),     intent(in)              :: QModel
     integer,            intent(in), optional    :: nio
 
     integer :: nio_loc
@@ -1351,7 +1352,7 @@ CONTAINS
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE(QModel_t),   intent(in)              :: QModel
+    TYPE(Model_t),   intent(in)              :: QModel
     integer,          intent(in), optional    :: nio
 
     integer :: nio_loc
@@ -1383,7 +1384,7 @@ CONTAINS
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE (QModel_t),   intent(in)           :: QModel
+    TYPE (Model_t),   intent(in)           :: QModel
     TYPE (dnMat_t),    intent(in)           :: PotVal
     real (kind=Rkind), intent(in)           :: Q(:)
     TYPE (dnMat_t),    intent(in), optional :: Vec ! for non adiabatic couplings
@@ -1478,7 +1479,7 @@ CONTAINS
   SUBROUTINE Check_analytical_numerical_derivatives(QModel,Q,nderiv)
   IMPLICIT NONE
 
-    TYPE (QModel_t),      intent(inout)   :: QModel
+    TYPE (Model_t),      intent(inout)   :: QModel
     real (kind=Rkind),    intent(in)      :: Q(:)
     integer, intent(in)                   :: nderiv
 
@@ -1559,7 +1560,7 @@ CONTAINS
   SUBROUTINE Eval_pot_ON_Grid(QModel,Qmin,Qmax,nb_points,nderiv,grid_file)
   IMPLICIT NONE
 
-    TYPE (QModel_t),              intent(inout)   :: QModel
+    TYPE (Model_t),              intent(inout)   :: QModel
     real (kind=Rkind),            intent(in)      :: Qmin(:),Qmax(:)
     integer, optional,            intent(in)      :: nb_points,nderiv
     character (len=*), optional,  intent(in)      :: grid_file
@@ -1700,7 +1701,7 @@ CONTAINS
   SUBROUTINE calc_pot(V,QModel,Q)
   IMPLICIT NONE
 
-    TYPE (QModel_t),        intent(inout)   :: QModel
+    TYPE (Model_t),        intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
     real (kind=Rkind),      intent(inout)   :: V(:,:) ! it has to be allocated
 
@@ -1722,7 +1723,7 @@ CONTAINS
   SUBROUTINE calc_pot_grad(V,g,QModel,Q)
   IMPLICIT NONE
 
-    TYPE (QModel_t),        intent(inout)   :: QModel
+    TYPE (Model_t),        intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
     real (kind=Rkind),      intent(inout)   :: V(:,:) ! it has to be allocated
     real (kind=Rkind),      intent(inout)   :: g(:,:,:) ! it has to be allocated
@@ -1746,7 +1747,7 @@ CONTAINS
   SUBROUTINE calc_grad(g,QModel,Q)
   IMPLICIT NONE
 
-    TYPE (QModel_t),        intent(inout)   :: QModel
+    TYPE (Model_t),        intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
     real (kind=Rkind),      intent(inout)   :: g(:,:,:) ! it has to be allocated
 
@@ -1768,7 +1769,7 @@ CONTAINS
   SUBROUTINE calc_pot_grad_hess(V,g,h,QModel,Q)
   IMPLICIT NONE
 
-    TYPE (QModel_t),        intent(inout)   :: QModel
+    TYPE (Model_t),        intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
     real (kind=Rkind),      intent(inout)   :: V(:,:) ! it has to be allocated
     real (kind=Rkind),      intent(inout)   :: g(:,:,:) ! it has to be allocated
@@ -1795,7 +1796,7 @@ CONTAINS
   SUBROUTINE calc_hess(h,QModel,Q)
   IMPLICIT NONE
 
-    TYPE (QModel_t),    intent(inout)     :: QModel
+    TYPE (Model_t),     intent(inout)     :: QModel
     real (kind=Rkind),  intent(in)        :: Q(:)
     real (kind=Rkind),  intent(inout)     :: h(:,:,:,:) ! it has to be allocated
 
@@ -1815,4 +1816,4 @@ CONTAINS
 
 
   END SUBROUTINE calc_hess
-END MODULE mod_QModel
+END MODULE mod_Model

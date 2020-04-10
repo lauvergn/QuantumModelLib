@@ -57,10 +57,10 @@ END PROGRAM TEST_model
 SUBROUTINE test_Tully
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)                :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
@@ -163,14 +163,14 @@ END SUBROUTINE test_Tully
 SUBROUTINE test_OneDSOC_1S1T
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)             :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                :: PotVal
-  TYPE (dnMat_t)                :: NAC ! for non adiabatic couplings
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: NAC ! for non adiabatic couplings
 
   nderiv = 2
   write(out_unitp,*) '---------------------------------------------'
@@ -276,14 +276,14 @@ END SUBROUTINE test_OneDSOC_1S1T
 SUBROUTINE test_OneDSOC_2S1T
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)             :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                :: PotVal
-  TYPE (dnMat_t)                :: NAC ! for non adiabatic couplings
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: NAC ! for non adiabatic couplings
 
   nderiv = 2
   write(out_unitp,*) '---------------------------------------------'
@@ -386,10 +386,10 @@ SUBROUTINE test_OneDSOC_2S1T
 END SUBROUTINE test_OneDSOC_2S1T
 SUBROUTINE test_Morse
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)                :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
@@ -459,10 +459,10 @@ END SUBROUTINE test_Morse
 
 SUBROUTINE test_Buckingham
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)                :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
@@ -532,10 +532,10 @@ END SUBROUTINE test_Buckingham
 SUBROUTINE test_Phenol
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)                :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
@@ -646,13 +646,13 @@ END SUBROUTINE test_Phenol
 SUBROUTINE test_HenonHeiles
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)             :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                :: PotVal
+  TYPE (dnMat_t)                 :: PotVal
 
 
   nderiv = 2
@@ -660,7 +660,7 @@ SUBROUTINE test_HenonHeiles
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '------------ 4D-HenonHeiles -----------------'
-  CALL Init_Model(QModel,pot_name='HenonHeiles',Print_init=.FALSE.)
+  CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=4,Print_init=.FALSE.)
   CALL Write0_Model(QModel)
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -700,13 +700,13 @@ SUBROUTINE test_HenonHeiles
 END SUBROUTINE test_HenonHeiles
 SUBROUTINE test_LinearHBond
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)             :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                :: PotVal
+  TYPE (dnMat_t)                 :: PotVal
 
 
   nderiv = 2
@@ -843,15 +843,15 @@ SUBROUTINE test_PSB3
 
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
 
   IMPLICIT NONE
 
-  TYPE (QModel_t)             :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
-  integer                       :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                :: PotVal
-  TYPE (dnMat_t)                :: NAC ! for non adiabatic couplings
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: NAC ! for non adiabatic couplings
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' PSB3 potential'
@@ -927,13 +927,13 @@ END SUBROUTINE test_PSB3
 SUBROUTINE test_HONO
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)             :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                :: PotVal
+  TYPE (dnMat_t)                 :: PotVal
 
 
   nderiv = 2
@@ -1013,13 +1013,13 @@ END SUBROUTINE test_HONO
 SUBROUTINE test_HNNHp
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)             :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                :: PotVal
+  TYPE (dnMat_t)                 :: PotVal
 
 
   nderiv = 2
@@ -1066,13 +1066,13 @@ END SUBROUTINE test_HNNHp
 SUBROUTINE test_H2SiN
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)             :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                :: PotVal
+  TYPE (dnMat_t)                 :: PotVal
 
 
   nderiv = 2
@@ -1124,13 +1124,13 @@ END SUBROUTINE test_H2SiN
 SUBROUTINE test_H2NSi
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)             :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                :: PotVal
+  TYPE (dnMat_t)                 :: PotVal
 
 
   nderiv = 2
@@ -1182,10 +1182,10 @@ END SUBROUTINE test_H2NSi
 SUBROUTINE test_template
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)                :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: Q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
@@ -1247,10 +1247,10 @@ END SUBROUTINE test_template
 SUBROUTINE test_TwoD
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
-  TYPE (QModel_t)                :: QModel
+  TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: Q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal

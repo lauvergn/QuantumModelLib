@@ -86,23 +86,33 @@ MODULE mod_OneDSOC_1S1T_Model
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_OneDSOC_1S1T_Model'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
+      CALL QModel_in%Write_QModel(out_unitp)
       flush(out_unitp)
     END IF
 
     CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+
+    IF (QModel%nsurf == 0) THEN
+      ! it means that nsurf was not present in the CALL Init_Model().
+      ! => nsurf is set to the default value (4)
+      QModel%nsurf  = 4
+    END IF
     QModel%ndim     = 1
     QModel%pot_name = '1dsoc_1s1t'
 
+
     !The value of QModel%nsurf must be 2 or 4
     IF (QModel%nsurf /= 2 .AND. QModel%nsurf /= 4) THEN
+       write(out_unitp,*) 'Write_QModel'
+       CALL QModel%Write_QModel(out_unitp)
        write(out_unitp,*) ' ERROR in ',name_sub
        write(out_unitp,*) ' nsurf MUST equal to 4 or 2. nusrf: ',QModel%nsurf
-       STOP 'ERROR in c: nsurf MUST equal to 4 or 2'
+       STOP 'ERROR in Init_OneDSOC_1S1T_Model: nsurf MUST equal to 4 or 2'
     END IF
 
     ! to be able to change the sigmoid function (default 1, the original one)

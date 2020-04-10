@@ -4,7 +4,7 @@ program prog
   USE mod_MorseModel
   USE mod_dnS
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
 
@@ -13,7 +13,7 @@ program prog
   TYPE (dnS_t),      allocatable    :: Mat_OF_PotDia(:,:)
     TYPE (dnMat_t)                  :: PotVal
 
-  TYPE(QModel_t)                        :: QModel
+  TYPE(Model_t)                     :: QModel
 
   integer :: i,nderiv
 

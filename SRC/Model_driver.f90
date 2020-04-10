@@ -22,7 +22,7 @@
 !===========================================================================
 SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -55,7 +55,7 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
 END SUBROUTINE sub_Init_Qmodel
 SUBROUTINE sub_Write_Qmodel(nio)
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   integer,            intent(in)    :: nio
@@ -65,7 +65,7 @@ SUBROUTINE sub_Write_Qmodel(nio)
 END SUBROUTINE sub_Write_Qmodel
 SUBROUTINE get_Qmodel_Q0(Q0,option)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(inout)     :: Q0(QuantumModel%ndim)
@@ -76,7 +76,7 @@ SUBROUTINE get_Qmodel_Q0(Q0,option)
 END SUBROUTINE get_Qmodel_Q0
 SUBROUTINE sub_Qmodel_V(V,Q)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
@@ -88,7 +88,7 @@ END SUBROUTINE sub_Qmodel_V
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   USE mod_Lib
   USE mod_dnMat
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
@@ -116,7 +116,7 @@ SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
 END SUBROUTINE sub_Qmodel_VVec
 SUBROUTINE sub_Qmodel_VG(V,G,Q)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
@@ -130,7 +130,7 @@ SUBROUTINE sub_Qmodel_VG(V,G,Q)
 END SUBROUTINE sub_Qmodel_VG
 SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   USE mod_dnMat
   IMPLICIT NONE
 
@@ -163,7 +163,7 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
 END SUBROUTINE sub_Qmodel_VG_NAC
 SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
@@ -179,7 +179,7 @@ SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
 END SUBROUTINE sub_Qmodel_VGH
 SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
@@ -190,7 +190,7 @@ SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
 END SUBROUTINE sub_Qmodel_Check_anaVSnum
 SUBROUTINE get_Qmodel_GGdef(GGdef)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(inout)     :: GGdef(QuantumModel%ndim,QuantumModel%ndim)
@@ -203,7 +203,7 @@ SUBROUTINE get_Qmodel_GGdef(GGdef)
 END SUBROUTINE get_Qmodel_GGdef
 SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim
@@ -232,7 +232,7 @@ SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
 END SUBROUTINE set_Qmodel_GGdef
 SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -266,7 +266,7 @@ SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
 END SUBROUTINE sub_model_V
 SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -312,7 +312,7 @@ END SUBROUTINE sub_model1_V
 
 SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -358,7 +358,7 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
 END SUBROUTINE sub_model1_VG
 SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   USE mod_dnMat
   IMPLICIT NONE
 
@@ -417,7 +417,7 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
 END SUBROUTINE sub_model1_VG_NAC
 SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -464,7 +464,7 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 END SUBROUTINE sub_model1_VGH
 SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -520,7 +520,7 @@ SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
 END SUBROUTINE sub_model1_DiaV
 SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -567,7 +567,7 @@ SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
 END SUBROUTINE sub_model1_DiaVG
 SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
   USE mod_Lib
-  USE mod_QModel
+  USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf

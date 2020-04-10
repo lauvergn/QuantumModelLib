@@ -6,8 +6,8 @@
 #                gfortran (version: 6.3.0 linux and osx)
 #                pgf90 (version: 17.10-0, linux)
 #                nagfor (version 7.0, osx)
- F90 = gfortran
-#F90 = nagfor
+#F90 = gfortran
+F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
@@ -261,7 +261,7 @@ OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
                  $(DIROBJ)/mod_OneDSOC_1S1T_Model.o $(DIROBJ)/mod_OneDSOC_2S1T_Model.o \
                  $(DIROBJ)/mod_TullyModel.o
 
-OBJ_Model      = $(DIROBJ)/mod_QModel.o
+OBJ_Model      = $(DIROBJ)/mod_Model.o
 
 OBJ_test       = $(DIROBJ)/TEST_OOP.o
 OBJ_driver     = $(DIROBJ)/Model_driver.o
@@ -408,8 +408,8 @@ $(DIROBJ)/mod_HenonHeilesModel.o:$(DIRModel)/mod_HenonHeilesModel.f90
 ##################################################################################
 ### QModel
 #
-$(DIROBJ)/mod_QModel.o:$(DIRSRC)/mod_QModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_QML)  -c $(DIRSRC)/mod_QModel.f90
+$(DIROBJ)/mod_Model.o:$(DIRSRC)/mod_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_QML)  -c $(DIRSRC)/mod_Model.f90
 #
 ##################################################################################
 #
@@ -478,7 +478,7 @@ $(DIROBJ)/TEST_driver.o: $(ModLib)
 
 $(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
 
-$(DIROBJ)/mod_QModel.o: $(OBJ_lib) $(OBJ_ModelLib)
+$(DIROBJ)/mod_Model.o: $(OBJ_lib) $(OBJ_ModelLib)
 
 $(DIROBJ)/mod_EmptyModel.o: $(OBJ_lib)
 $(DIROBJ)/mod_MorseModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)

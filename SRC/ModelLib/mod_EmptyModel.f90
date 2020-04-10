@@ -22,7 +22,7 @@ MODULE mod_EmptyModel
       PROCEDURE :: Eval_QModel_Pot    => Eval_EmptyModel_Pot
       PROCEDURE :: Write_QModel       => Write_EmptyModel
       PROCEDURE :: Write0_QModel      => Write0_EmptyModel
-      !PROCEDURE :: get2_Q0_QModel      => get2_Q0_EmptyModel
+     !PROCEDURE :: get2_Q0_QModel     => get2_Q0_EmptyModel
       PROCEDURE :: get_d0GGdef_QModel => get_d0GGdef_EmptyModel
   END TYPE EmptyModel_t
 
