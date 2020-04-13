@@ -15,14 +15,21 @@
 !    You should have received a copy of the GNU Lesser General Public License
 !    along with ModelLib.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2016  David LAUVERGNAT, Félix MOUHAT and Liang LIANG
+!    Copyright 2016 David Lauvergnat [1]
+!      with contributions of:
+!        Félix MOUHAT [2]
+!        Liang LIANG [3]
+!        Emanuele MARSILI [1,4]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France
+![3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France
+![4]: Durham University, Durham, UK
+!* Originally, it has been developed during the Quantum-Dynamics E-CAM project :
+!     https://www.e-cam2020.eu/quantum-dynamics
 !
 !===========================================================================
 !===========================================================================
-
-!> @brief Module which makes the initialization, calculation of the Phenol potential (value, gradient and hessian).
-!> @brief Reference: Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218
-!> @brief The potential is a 2D (R,theta) with 3 electronic diabatic surfaces (S_0, Pi-Sigma* and Pi-Pi*)
 !!
 !> @author David Lauvergnat
 !! @date 02/12/2017

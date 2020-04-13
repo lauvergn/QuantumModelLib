@@ -79,16 +79,6 @@ MODULE mod_dnS
 !! @param d2                      real:    2d  order derivative (hessian: matrix of ndim*ndim derivatives)
 !! @param d3                      real:    3d  order derivative (ndim*ndim*ndim derivatives)
 
-    !several cases:
-    !   S1%nderiv       S2%nderiv   =>      Sres%nderiv
-    !       -1              -1                  -1          => all dnS are constants
-    !       -1              >= 0    =>      S2%nderiv
-    !      >= 0             -1      =>      S1%nderiv
-    !      >= 0             >= 0    =>    min(S1%nderiv,S2%nderiv)
-
-    !if nderiv of S is > -1, nderiv must be unchanged
-    !if nderiv = -1, nderiv must be undefined (-1). Therefore,nderiv must be unchanged
-
     integer:: QML_dnS_test = 0
 
 
@@ -110,9 +100,9 @@ MODULE mod_dnS
   ! Rk: the assignment(=) cannot be here, since it is bounded to the dnS type
   PUBLIC :: operator (+),operator (-),operator (*),operator (/),operator (**)
   PUBLIC :: operator (==),operator (/=),operator (<=),operator (>=),operator (<),operator (>)
-  PUBLIC :: dot_product
+  PUBLIC :: dot_product,product,sum
   PUBLIC :: sqrt,exp,abs,log,log10
-  PUBLIC :: cos,sin,tan,acos,asin,atan,cosh,sinh,tanh,acosh,asinh,atanh
+  PUBLIC :: cos,sin,tan,acos,asin,atan,cosh,sinh,tanh,acosh,asinh,atanh,atan2
 
   PUBLIC :: QML_alloc_dnS,QML_dealloc_dnS,QML_init_dnS,QML_set_dnS
   PUBLIC :: QML_Write_dnS
@@ -190,6 +180,9 @@ MODULE mod_dnS
   INTERFACE atan
      MODULE PROCEDURE QML_get_ATAN_dnS
   END INTERFACE
+  INTERFACE atan2
+     MODULE PROCEDURE QML_get_ATAN2_dnS
+  END INTERFACE
   INTERFACE cosh
      MODULE PROCEDURE QML_get_COSH_dnS
   END INTERFACE
@@ -213,7 +206,12 @@ MODULE mod_dnS
   INTERFACE dot_product
      MODULE PROCEDURE QML_dot_product_VecOFdnS
   END INTERFACE
-
+  INTERFACE product
+     MODULE PROCEDURE QML_product_VecOFdnS
+  END INTERFACE
+  INTERFACE sum
+     MODULE PROCEDURE QML_sum_VecOFdnS
+  END INTERFACE
 CONTAINS
 !> @brief Public subroutine which allocates a derived type dnS.
 !!
@@ -1783,6 +1781,21 @@ CONTAINS
 
   END FUNCTION QML_get_ATAN_dnS
 
+  ELEMENTAL FUNCTION QML_get_ATAN2_dnS(Sy,Sx) RESULT(Sres)
+    USE mod_NumParameters
+
+    TYPE (dnS_t)                       :: Sres
+    TYPE (dnS_t),        intent(in)    :: Sy,Sx
+
+    character (len=*), parameter :: name_sub='QML_get_ATAN2_dnS'
+
+    ! the derivatives of atan2(y,x) are identical to the atan(y/x) ones
+    Sres = atan(Sy/Sx)
+
+    Sres%d0 =  atan2(Sy%d0,Sx%d0)
+
+  END FUNCTION QML_get_ATAN2_dnS
+
   ELEMENTAL FUNCTION QML_get_COSH_dnS(S) RESULT(Sres)
     USE mod_NumParameters
 
@@ -1940,5 +1953,36 @@ CONTAINS
     END DO
 
   END FUNCTION QML_dot_product_VecOFdnS
+  FUNCTION QML_product_VecOFdnS(Vec) RESULT(Sres)
+    USE mod_NumParameters
 
+    TYPE (dnS_t)                              :: Sres
+    TYPE (dnS_t),        intent(in)           :: Vec(:)
+
+    integer :: i
+    character (len=*), parameter :: name_sub='QML_product_VecOFdnS'
+
+    Sres = Vec(lbound(Vec,dim=1)) ! for the initialization
+    Sres = ONE
+    DO i=lbound(Vec,dim=1),ubound(Vec,dim=1)
+      Sres = Sres * Vec(i)
+    END DO
+
+  END FUNCTION QML_product_VecOFdnS
+  FUNCTION QML_SUM_VecOFdnS(Vec) RESULT(Sres)
+    USE mod_NumParameters
+
+    TYPE (dnS_t)                              :: Sres
+    TYPE (dnS_t),        intent(in)           :: Vec(:)
+
+    integer :: i
+    character (len=*), parameter :: name_sub='QML_SUM_VecOFdnS'
+
+    Sres = Vec(lbound(Vec,dim=1)) ! for the initialization
+    Sres = ZERO
+    DO i=lbound(Vec,dim=1),ubound(Vec,dim=1)
+      Sres = Sres + Vec(i)
+    END DO
+
+  END FUNCTION QML_SUM_VecOFdnS
 END MODULE mod_dnS

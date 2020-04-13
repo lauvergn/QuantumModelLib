@@ -6,13 +6,13 @@
 #                gfortran (version: 6.3.0 linux and osx)
 #                pgf90 (version: 17.10-0, linux)
 #                nagfor (version 7.0, osx)
- F90 = gfortran
-#F90 = nagfor
+#F90 = gfortran
+ F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
@@ -58,7 +58,7 @@ OS=$(shell uname)
 #=================================================================================
 # for c++ preprocessing
 #=================================================================================
- CPP    = -cpp
+ CPPpre    = -cpp
 #=================================================================================
 #=================================================================================
 
@@ -67,7 +67,7 @@ OS=$(shell uname)
 #=================================================================================
 ifeq ($(F90),nagfor)
    # for c++ preprocessing
-   CPP = -fpp
+   CPPpre = -fpp
    # omp management
    ifeq ($(OMP),0)
       OMPFLAG =
@@ -79,11 +79,10 @@ ifeq ($(F90),nagfor)
       F90FLAGS = -O4  $(OMPFLAG) -Ounroll=4 -v
    else
       #F90FLAGS = -O0 $(OMPFLAG) -g -C=all -mtrace=all
-      #  -C=undefined is not compatible with -framework Accelerate
-      # -kind=byte and -dcfuns is not working
+      #  -C=undefined is not compatible with -framework Accelerate (because the routines are not compilled with the -C=undefined option)
       #with -mtrace=all add information on the memmory allocation/deallocation.
       ifeq ($(OMP),0)
-        F90FLAGS = -O0 $(OMPFLAG) -g -gline -C -C=alias -C=intovf -C=undefined -kind=byte
+        F90FLAGS = -O0 $(OMPFLAG) -g -gline -C=all -C=undefined
       else
         F90FLAGS = -O0 $(OMPFLAG) -g -C=all
       endif
@@ -133,7 +132,7 @@ ifeq ($(F90),pgf90)
    # With pgf90 invers hyperbolic functions are not present => INVHYP = 0
    INVHYP = 0
    # for c++ preprocessing
-   CPP    = -Mpreprocess
+   CPPpre    = -Mpreprocess
 
    # omp management
    ifeq ($(OMP),0)
@@ -225,6 +224,7 @@ CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
                -D__QML_VER='"$(QML_ver)"'
 
 CPPSHELL_INVHYP  = -D__INVHYP="$(INVHYP)"
+CPPSHELL_DIAGO   = -D__LAPACK="$(LAPACK)"
 
 F90_FLAGS = $(F90) $(F90FLAGS)
 LYNK90 = $(F90_FLAGS)
@@ -409,7 +409,7 @@ $(DIROBJ)/mod_HenonHeilesModel.o:$(DIRModel)/mod_HenonHeilesModel.f90
 ### QModel
 #
 $(DIROBJ)/mod_Model.o:$(DIRSRC)/mod_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_QML)  -c $(DIRSRC)/mod_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_QML)  -c $(DIRSRC)/mod_Model.f90
 #
 ##################################################################################
 #
@@ -437,9 +437,9 @@ $(DIROBJ)/TEST_OOP.o:$(DIRSRC)/TEST_OOP.f90
 ### dnS libraries
 #
 $(DIROBJ)/mod_dnS.o:$(DIRdnS)/mod_dnS.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/mod_dnS.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/mod_dnS.f90
 $(DIROBJ)/TEST_dnS.o:$(DIRdnS)/TEST_dnS.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/TEST_dnS.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/TEST_dnS.f90
 #
 ##################################################################################
 #
@@ -461,7 +461,7 @@ $(DIROBJ)/mod_dnMat.o:$(DIRdnMat)/mod_dnMat.f90
 $(DIROBJ)/mod_UtilLib.o:$(DIRLib)/mod_UtilLib.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_UtilLib.f90
 $(DIROBJ)/mod_diago.o:$(DIRLib)/mod_diago.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_diago.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DIRLib)/mod_diago.f90
 $(DIROBJ)/mod_NumParameters.o:$(DIRLib)/mod_NumParameters.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_NumParameters.f90
 #

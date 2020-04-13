@@ -37,7 +37,8 @@ echo ""
 
 echo "TESTING functions with or without analitical derivatives"
 
-nb_pb=`awk '/==0\?/ {print $3}' res_dnS | grep -c F`
+#awk '/==0\?/ {print $(NF)}' res_dnS
+nb_pb=`awk '/==0\?/ {print $(NF)}' res_dnS | grep -c F`
 if test $nb_pb -gt 0
 then
    echo "Error(s) detected!!"

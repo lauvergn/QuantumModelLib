@@ -361,6 +361,35 @@ PROGRAM TEST_dnS
    dnXZ = TWO*(dnX**2+dnY**2+dnX*dnY)
    write(out_unitp,'(a,l2)') 'dot_product - dnS_Result  ==0?',QML_Check_dnS_IS_ZERO(Sana-dnXZ,dnSerr_test)
 
+   Vec_dnS(:) = [-dnX,-dnY,dnX+dnY]
+   Sana = sum(Vec_dnS) ! ZERO
+   !CALL QML_write_dnS(Sana,info='test on sum (2D)')
+   !CALL QML_write_dnS(Sana,nio_test,info='sum (2D)',FOR_test=.TRUE.)
+   write(out_unitp,'(a,l2)') 'sum  ==0?',QML_Check_dnS_IS_ZERO(Sana,dnSerr_test)
+
+   CALL QML_dealloc_dnS(dnZ)
+   dnZ = ONE
+   Vec_dnS(:) = [dnX**2,ONE/dnX,ONE/dnX]
+   Sana = product(Vec_dnS) ! ONE
+   !CALL QML_write_dnS(Sana,info='test on product (2D)')
+   !CALL QML_write_dnS(Sana,nio_test,info='product (2D)',FOR_test=.TRUE.)
+   write(out_unitp,'(a,l2)') 'sum - 1 ==0?',QML_Check_dnS_IS_ZERO(Sana-dnZ,dnSerr_test)
+
+   write(out_unitp,'(a)') "============================================"
+   write(out_unitp,'(a)') "new tests : two-argument fuction, 2D, nderiv=2"
+   write(out_unitp,'(a)') "============================================"
+   nderiv = 2
+   x=-0.5_Rkind
+   y=-1.0_Rkind
+   dnX     = QML_init_dnS(x  ,ndim=2,nderiv=nderiv,iQ=1) ! to set up the derivatives
+   dnY     = QML_init_dnS(y  ,ndim=2,nderiv=nderiv,iQ=2) ! to set up the derivatives
+   Sana = atan2(dnY,dnX)
+   CALL QML_write_dnS(Sana,info='test on atan2 (2D)')
+   Snum = atan(dnY/dnX)-pi
+   CALL QML_write_dnS(Snum,info='test on atan (2D)')
+   write(out_unitp,'(a,l2)') 'atan2 - atan ==0?',QML_Check_dnS_IS_ZERO(Sana-Snum,dnSerr_test)
+
+
    write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a)') "new tests : init const, 2D, nderiv=2"
    write(out_unitp,'(a)') "============================================"

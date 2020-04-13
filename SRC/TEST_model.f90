@@ -15,8 +15,18 @@
 !    You should have received a copy of the GNU Lesser General Public License
 !    along with ModelLib.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2017 David Lauvergnat
-!      with contributions of Félix MOUHAT and Liang LIANG
+!    Copyright 2016 David Lauvergnat [1]
+!      with contributions of:
+!        Félix MOUHAT [2]
+!        Liang LIANG [3]
+!        Emanuele MARSILI [1,4]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France
+![3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France
+![4]: Durham University, Durham, UK
+!* Originally, it has been developed during the Quantum-Dynamics E-CAM project :
+!     https://www.e-cam2020.eu/quantum-dynamics
 !
 !===========================================================================
 !===========================================================================

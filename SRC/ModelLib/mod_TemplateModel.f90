@@ -1,3 +1,35 @@
+!===========================================================================
+!===========================================================================
+!This file is part of ModelLib.
+!
+!    ModelLib is a free software: you can redistribute it and/or modify
+!    it under the terms of the GNU Lesser General Public License as published by
+!    the Free Software Foundation, either version 3 of the License, or
+!    (at your option) any later version.
+!
+!    ModelLib is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU Lesser General Public License for more details.
+!
+!    You should have received a copy of the GNU Lesser General Public License
+!    along with ModelLib.  If not, see <http://www.gnu.org/licenses/>.
+!
+!    Copyright 2016 David Lauvergnat [1]
+!      with contributions of:
+!        Félix MOUHAT [2]
+!        Liang LIANG [3]
+!        Emanuele MARSILI [1,4]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France
+![3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France
+![4]: Durham University, Durham, UK
+!* Originally, it has been developed during the Quantum-Dynamics E-CAM project :
+!     https://www.e-cam2020.eu/quantum-dynamics
+!
+!===========================================================================
+!===========================================================================
 module mod_TemplateModel
   USE mod_EmptyModel
   USE mod_MorseModel
