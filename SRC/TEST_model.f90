@@ -35,7 +35,7 @@ PROGRAM TEST_model
 
   !CALL test_Tully_test() ; stop
   !CALL test_Test() ; stop
-  CALL test_PSB3() ; stop
+  !CALL test_PSB3() ; stop
   !CALL test_TwoD() ; stop
   !CALL test_HNO3() ; stop
 
