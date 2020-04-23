@@ -1512,9 +1512,9 @@ END IF
 
         NAC%d3(:,:,k,j,i)    = matmul(tVec,Vec%d3(:,:,k,j,i))
 
-        CALL FiniteDiff3_SymPerm_OF_dnMat(PotVal,indQ=[i,j])
-        CALL FiniteDiff3_SymPerm_OF_dnMat(Vec,indQ=[i,j])
-        CALL FiniteDiff3_SymPerm_OF_dnMat(NAC,indQ=[i,j])
+        CALL FiniteDiff3_SymPerm_OF_dnMat(PotVal,indQ=[i,j,k])
+        CALL FiniteDiff3_SymPerm_OF_dnMat(Vec,indQ=[i,j,k])
+        CALL FiniteDiff3_SymPerm_OF_dnMat(NAC,indQ=[i,j,k])
 
       END DO
       END DO
