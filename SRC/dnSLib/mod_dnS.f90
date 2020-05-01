@@ -408,9 +408,6 @@ CONTAINS
     Sres%d0 = R
     IF (nderiv_loc > 0) Sres%d1(iQ_loc) = ONE
 
-    !CALL QML_Write_dnS(Sres,all_type=.TRUE.,info='coucou in QML_init_dnS: Sres')
-
-
   END FUNCTION QML_init_dnS
 !> @brief Public subroutine which initializes a derived type dnS.
 !!

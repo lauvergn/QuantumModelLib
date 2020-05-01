@@ -873,8 +873,6 @@ CONTAINS
     TYPE (dnMat_t)                    :: PotVal_loc0
     integer                            :: i,j
 
-    !write(out_unitp,*) 'coucou0 Eval_Pot_Numeric' ; flush(out_unitp)
-
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_dia')
 
 
@@ -974,7 +972,6 @@ CONTAINS
     integer                            :: i,j
     real (kind=Rkind), allocatable     :: tVec(:,:)
 
-    !write(out_unitp,*) 'coucou0 Eval_Pot_Numeric' ; flush(out_unitp)
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_adia')
 
 

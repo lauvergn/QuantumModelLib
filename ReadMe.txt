@@ -8,12 +8,12 @@
         Félix MOUHAT [2]
         Liang LIANG [3]
         Emanuele MARSILI [1,4]
-
+ 
 [1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
 [2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France
 [3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France
 [4]: Durham University, Durham, UK
-*: Originally, it has been developed during the Quantum-Dynamics E-CAM project : 
+* Originally, it has been developed during the Quantum-Dynamics E-CAM project : 
      https://www.e-cam2020.eu/quantum-dynamics
 =========================================
  1) Installation
