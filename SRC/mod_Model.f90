@@ -48,6 +48,7 @@ MODULE mod_Model
   USE mod_HNNHp_Model
   USE mod_H2SiN_Model
   USE mod_H2NSi_Model
+  USE mod_HNO3_Model
 
   USE mod_OneDSOC_1S1T_Model
   USE mod_OneDSOC_2S1T_Model
@@ -500,6 +501,11 @@ CONTAINS
     CASE ('hono')
       allocate(HONO_Model_t :: QModel%QM)
       QModel%QM = Init_HONO_Model(QModel_in,read_param=read_param_loc,  &
+                                  nio_param_file=nio_loc)
+
+    CASE ('hno3')
+      allocate(HNO3_Model_t :: QModel%QM)
+      QModel%QM = Init_HNO3_Model(QModel_in,read_param=read_param_loc,  &
                                   nio_param_file=nio_loc)
 
     CASE ('hnnhp')

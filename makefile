@@ -237,6 +237,7 @@ LYNK90 = $(F90_FLAGS)
 GRIDEXE   = Grid.x
 MODEXE    = ModLib.x
 dnSEXE    = dnS.x
+dnPolyEXE = dnPoly.x
 TESTEXE   = testOOP.x
 DriverEXE = Driver.x
 ModLib    = libpot.a
@@ -247,8 +248,9 @@ DIROBJ    = $(DIR0)/OBJ
 DIRSRC    = $(DIR0)/SRC
 DIRLib    = $(DIRSRC)/Lib
 DIRdnS    = $(DIRSRC)/dnSLib
+DIRdnPoly = $(DIRSRC)/dnPolyLib
 DIRdnMat  = $(DIRSRC)/dnMatLib
-DIRModel    = $(DIRSRC)/ModelLib
+DIRModel  = $(DIRSRC)/ModelLib
 
 #
 OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
@@ -256,6 +258,7 @@ OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
                  $(DIROBJ)/mod_TemplateModel.o \
                  $(DIROBJ)/mod_H2NSi_Model.o $(DIROBJ)/mod_H2SiN_Model.o \
                  $(DIROBJ)/mod_HNNHp_Model.o $(DIROBJ)/mod_HONO_Model.o \
+                 $(DIROBJ)/mod_HNO3_Model.o \
                  $(DIROBJ)/mod_HenonHeilesModel.o $(DIROBJ)/mod_LinearHBondModel.o \
                  $(DIROBJ)/mod_PhenolModel.o $(DIROBJ)/mod_PSB3_Model.o $(DIROBJ)/mod_TwoD_Model.o \
                  $(DIROBJ)/mod_OneDSOC_1S1T_Model.o $(DIROBJ)/mod_OneDSOC_2S1T_Model.o \
@@ -268,10 +271,11 @@ OBJ_driver     = $(DIROBJ)/Model_driver.o
 OBJ_grid       = $(DIROBJ)/TEST_grid.o
 OBJ_testmod    = $(DIROBJ)/TEST_model.o
 OBJ_testdnS    = $(DIROBJ)/TEST_dnS.o
+OBJ_testdnPoly = $(DIROBJ)/TEST_dnPoly.o
 OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 
-OBJ_lib        = $(DIROBJ)/mod_dnMat.o $(DIROBJ)/mod_dnS.o \
+OBJ_lib        = $(DIROBJ)/mod_dnMat.o $(DIROBJ)/mod_dnPoly.o $(DIROBJ)/mod_dnS.o \
                  $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_diago.o \
                  $(DIROBJ)/mod_NumParameters.o
 
@@ -311,6 +315,16 @@ dns dnS testdns testdnS:$(dnSEXE)
 $(dnSEXE): $(OBJ_testdnS) $(OBJ_lib)
 	$(LYNK90)   -o $(dnSEXE) $(OBJ_testdnS) $(OBJ_lib) $(LYNKFLAGS)
 	echo "dnS compilation: OK"
+
+# dnS
+.PHONY: dnpoly dnPoly testdnpoly testdnPoly
+dnpoly dnPoly testdnpoly testdnPoly: $(dnPolyEXE)
+		echo "OBJ_testdnPoly compilation: OK"
+
+$(dnPolyEXE): $(OBJ_testdnPoly) $(OBJ_lib)
+	$(LYNK90)   -o $(dnPolyEXE) $(OBJ_testdnPoly) $(OBJ_lib) $(LYNKFLAGS)
+	echo "dnPoly compilation: OK"
+
 #
 #driver
 .PHONY: driver
@@ -375,6 +389,9 @@ $(DIROBJ)/mod_PSB3_Model.o:$(DIRModel)/mod_PSB3_Model.f90
 
 $(DIROBJ)/mod_HONO_Model.o:$(DIRModel)/mod_HONO_Model.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HONO_Model.f90
+
+$(DIROBJ)/mod_HNO3_Model.o:$(DIRModel)/mod_HNO3_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HNO3_Model.f90
 
 $(DIROBJ)/mod_HNNHp_Model.o:$(DIRModel)/mod_HNNHp_Model.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HNNHp_Model.f90
@@ -443,6 +460,16 @@ $(DIROBJ)/TEST_dnS.o:$(DIRdnS)/TEST_dnS.f90
 #
 ##################################################################################
 #
+##################################################################################
+### dnPoly libraries
+#
+$(DIROBJ)/mod_dnPoly.o:$(DIRdnPoly)/mod_dnPoly.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) -c $(DIRdnPoly)/mod_dnPoly.f90
+$(DIROBJ)/TEST_dnPoly.o:$(DIRdnPoly)/TEST_dnPoly.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRdnPoly)/TEST_dnPoly.f90
+#
+##################################################################################
+#
 #
 #
 ##################################################################################
@@ -474,6 +501,7 @@ $(DIROBJ)/mod_NumParameters.o:$(DIRLib)/mod_NumParameters.f90
 $(DIROBJ)/TEST_OOP.o:    $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
 $(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
 $(DIROBJ)/TEST_dnS.o:    $(OBJ_lib)
+$(DIROBJ)/TEST_dnPoly.o: $(OBJ_lib)
 $(DIROBJ)/TEST_driver.o: $(ModLib)
 
 $(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
@@ -494,6 +522,7 @@ $(DIROBJ)/mod_OneDSOC_2S1T_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_TwoD_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_PSB3_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HONO_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HNO3_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HNNHp_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_H2SiN_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_H2NSi_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
@@ -504,9 +533,10 @@ $(DIROBJ)/mod_PhenolModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
 
 
 $(DIROBJ)/mod_UtilLib.o: $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnS.o: $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnMat.o: $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_diago.o: $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnS.o:     $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnPoly.o:  $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnMat.o:   $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_diago.o:   $(DIROBJ)/mod_NumParameters.o
 #
 ############################################################################
 ### Documentation with doxygen
