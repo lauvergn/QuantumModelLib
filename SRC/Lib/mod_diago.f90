@@ -173,7 +173,7 @@ MODULE mod_diago
       deallocate(work)
 #else
       write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makfile).'
+      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makefile).'
       write(out_unitp,*) '  The program should not reach the LAPACK case.'
       write(out_unitp,*) '  => Probabely, wrong type_diag_default.'
       write(out_unitp,*) '  => CHECK the fortran!!'
@@ -243,7 +243,7 @@ MODULE mod_diago
       deallocate(Mat_save)
 #else
       write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makfile).'
+      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makefile).'
       write(out_unitp,*) '  The program should not reach the LAPACK case.'
       write(out_unitp,*) '  => Probabely, wrong type_diag_default.'
       write(out_unitp,*) '  => CHECK the fortran!!'

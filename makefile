@@ -255,7 +255,7 @@ DIRModel  = $(DIRSRC)/ModelLib
 #
 OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
                  $(DIROBJ)/mod_SigmoidModel.o $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_BuckModel.o \
-                 $(DIROBJ)/mod_TemplateModel.o \
+                 $(DIROBJ)/mod_TemplateModel.o $(DIROBJ)/mod_TestModel.o \
                  $(DIROBJ)/mod_H2NSi_Model.o $(DIROBJ)/mod_H2SiN_Model.o \
                  $(DIROBJ)/mod_HNNHp_Model.o $(DIROBJ)/mod_HONO_Model.o \
                  $(DIROBJ)/mod_HNO3_Model.o \
@@ -376,7 +376,8 @@ $(DIROBJ)/mod_MorseModel.o:$(DIRModel)/mod_MorseModel.f90
 $(DIROBJ)/mod_TemplateModel.o:$(DIRModel)/mod_TemplateModel.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_TemplateModel.f90
 
-
+$(DIROBJ)/mod_TestModel.o:$(DIRModel)/mod_TestModel.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_TestModel.f90
 
 $(DIROBJ)/mod_LinearHBondModel.o:$(DIRModel)/mod_LinearHBondModel.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_LinearHBondModel.f90
@@ -514,6 +515,7 @@ $(DIROBJ)/mod_BuckModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_SigmoidModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 
 $(DIROBJ)/mod_TemplateModel.o: $(OBJ_lib) $(DIROBJ)/mod_EmptyModel.o $(DIROBJ)/mod_MorseModel.o
+$(DIROBJ)/mod_TestModel.o: $(OBJ_lib) $(DIROBJ)/mod_EmptyModel.o
 
 $(DIROBJ)/mod_HenonHeilesModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_TullyModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
@@ -535,7 +537,7 @@ $(DIROBJ)/mod_PhenolModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
 $(DIROBJ)/mod_UtilLib.o: $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/mod_dnS.o:     $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/mod_dnPoly.o:  $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnMat.o:   $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnMat.o:   $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_diago.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/mod_diago.o:   $(DIROBJ)/mod_NumParameters.o
 #
 ############################################################################

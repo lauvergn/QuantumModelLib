@@ -33,8 +33,11 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  CALL test_HNO3()
-  stop
+  !CALL test_Tully_test() ; stop
+  !CALL test_Test() ; stop
+  !CALL test_PSB3() ; stop
+  !CALL test_TwoD() ; stop
+  !CALL test_HNO3() ; stop
 
 
   ! One electronic surface
@@ -168,7 +171,6 @@ SUBROUTINE test_Tully
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_Tully
-
 
 SUBROUTINE test_OneDSOC_1S1T
   USE mod_Lib
@@ -877,7 +879,7 @@ SUBROUTINE test_PSB3
   allocate(q(QModel%QM%ndim))
 
   q(:) = (/0.172459_Rkind,-3.14_Rkind,0._Rkind/)
-  nderiv=2
+  nderiv=3
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -1266,7 +1268,6 @@ SUBROUTINE test_TwoD
   TYPE (dnMat_t)                 :: PotVal
 
 
-  nderiv = 2
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -1280,8 +1281,9 @@ SUBROUTINE test_TwoD
   flush(out_unitp)
 
   CALL Init_Model(QModel,pot_name='TwoD',adiabatic=.FALSE.)
+  !CALL Init_Model(QModel,pot_name='TwoD',adiabatic=.TRUE.)
 
-  allocate(q(QModel%QM%ndim))
+  allocate(q(QModel%ndim))
   Q(:) = [3.875_Rkind,0.5_Rkind]
 
   nderiv=2
@@ -1297,12 +1299,12 @@ SUBROUTINE test_TwoD
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
-  write(out_unitp,*) ' Potential and derivatives'
+  write(out_unitp,*) ' Potential and derivatives',nderiv
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
   write(out_unitp,*) 'Energy (Hartree)'
   CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
@@ -1326,7 +1328,7 @@ SUBROUTINE test_HNO3
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: q(:)
+  real (kind=Rkind), allocatable :: Q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
 
@@ -1341,10 +1343,10 @@ SUBROUTINE test_HNO3
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(QModel,pot_name='HNO3')
+  CALL Init_Model(QModel,ndim=9,pot_name='HNO3')
 
-  allocate(q(QModel%QM%ndim))
-  q(:) = [2.65450_Rkind,2.28_Rkind,2.0_Rkind,Pi/TWO,                    &
+  allocate(q(QModel%ndim))
+  Q(:) = [2.65450_Rkind,2.28_Rkind,2.0_Rkind,Pi/TWO,                    &
           ZERO,ZERO,1.83492_Rkind,1.77157_Rkind,Pi/TWO]
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -1352,14 +1354,15 @@ SUBROUTINE test_HNO3
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL QML_Write_dnMat(PotVal,nio=out_unitp)
@@ -1373,3 +1376,91 @@ SUBROUTINE test_HNO3
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_HNO3
+SUBROUTINE test_Test
+  USE mod_Lib
+  USE mod_dnMat
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Test potential'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+
+  CALL Init_Model(QModel,pot_name='Test',adiabatic=.TRUE.)
+
+  allocate(q(QModel%ndim))
+  Q(:) = ZERO
+
+  nderiv=3
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q(:) (bohr):'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+
+
+END SUBROUTINE test_Test
+SUBROUTINE test_Tully_test
+  USE mod_Lib
+  USE mod_dnMat
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  nderiv = 3
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Tully potential'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+
+    CALL Init_Model(QModel,pot_name='Tully',option=option,adiabatic=.TRUE.)
+    allocate(q(QModel%QM%ndim))
+    write(out_unitp,*) '---------------------------------------------'
+    write(out_unitp,*) '----- CHECK POT -----------------------------'
+    write(out_unitp,*) '---------------------------------------------'
+    write(out_unitp,'(a,i1)') ' ----- TULLY',option
+
+    write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+    q(:) = 1.1_Rkind
+    write(out_unitp,'(a,f12.6)') ' R (Bohr)',q(:)
+    CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_Tully_test
