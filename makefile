@@ -275,7 +275,8 @@ OBJ_testdnPoly = $(DIROBJ)/TEST_dnPoly.o
 OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 
-OBJ_lib        = $(DIROBJ)/mod_dnMat.o $(DIROBJ)/mod_dnPoly.o $(DIROBJ)/mod_dnS.o \
+OBJ_lib        = $(DIROBJ)/mod_FiniteDiff.o \
+                 $(DIROBJ)/mod_dnMat.o $(DIROBJ)/mod_dnPoly.o $(DIROBJ)/mod_dnS.o \
                  $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_diago.o \
                  $(DIROBJ)/mod_NumParameters.o
 
@@ -486,6 +487,8 @@ $(DIROBJ)/mod_dnMat.o:$(DIRdnMat)/mod_dnMat.f90
 ##################################################################################
 ### libraries
 #
+$(DIROBJ)/mod_FiniteDiff.o:$(DIRLib)/mod_FiniteDiff.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_FiniteDiff.f90
 $(DIROBJ)/mod_UtilLib.o:$(DIRLib)/mod_UtilLib.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_UtilLib.f90
 $(DIROBJ)/mod_diago.o:$(DIRLib)/mod_diago.f90
@@ -517,28 +520,29 @@ $(DIROBJ)/mod_SigmoidModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_TemplateModel.o: $(OBJ_lib) $(DIROBJ)/mod_EmptyModel.o $(DIROBJ)/mod_MorseModel.o
 $(DIROBJ)/mod_TestModel.o: $(OBJ_lib) $(DIROBJ)/mod_EmptyModel.o
 
-$(DIROBJ)/mod_HenonHeilesModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_TullyModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HenonHeilesModel.o:   $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_TullyModel.o:         $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_OneDSOC_1S1T_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_OneDSOC_2S1T_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_TwoD_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_PSB3_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_HONO_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_HNO3_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_HNNHp_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_H2SiN_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_H2NSi_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_LinearHBondModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
-                                  $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_BuckModel.o
-$(DIROBJ)/mod_PhenolModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
-             $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_SigmoidModel.o
-
-
-$(DIROBJ)/mod_UtilLib.o: $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnS.o:     $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnPoly.o:  $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnMat.o:   $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_diago.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_diago.o:   $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_TwoD_Model.o:         $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_PSB3_Model.o:         $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HONO_Model.o:         $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HNO3_Model.o:         $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HNNHp_Model.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_H2SiN_Model.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_H2NSi_Model.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_LinearHBondModel.o:   $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
+                                    $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_BuckModel.o
+$(DIROBJ)/mod_PhenolModel.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
+                                    $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_SigmoidModel.o
+#
+#
+$(DIROBJ)/mod_UtilLib.o:    $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnS.o:        $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnPoly.o:     $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnMat.o:      $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_diago.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_diago.o:      $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_FiniteDiff.o: $(DIROBJ)/mod_dnMat.o $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_NumParameters.o
 #
 ############################################################################
 ### Documentation with doxygen

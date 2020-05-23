@@ -1502,7 +1502,7 @@ CONTAINS
     IF (.NOT. allocated(Mat%d1)) THEN
       ndim = 0
     ELSE
-      ndim = size(Mat%d1(1,1,:))
+      ndim = size(Mat%d1,dim=3)
     END IF
 
     END FUNCTION QML_get_ndim_FROM_dnMat
