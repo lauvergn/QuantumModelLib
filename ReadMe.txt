@@ -126,6 +126,18 @@
 =========================================
 =========================================
 =========================================
+      !! pot_name  = 'Retinal_JPCB2000'
+=========================================
+      !! Model for the photo-isomerization of retinal.
+      !! pot_name  = 'Retinal_JPCB2000'
+      !! ndim      = 2
+      !! nsurf     = 2
+      !! ref:  S. Hahn, G. Stock / Chemical Physics 259 (2000) 297-312.
+      !!              doi: 10.1016/S0301-0104(00)00201-9'
+=========================================
+=========================================
+=========================================
+=========================================
 =========================================
 =========================================
 =========================================
@@ -234,6 +246,7 @@
       !! remarks: two options are possible (option = 1,2)
       !! The default is option=1 (unpublished).
       !! The parameters for option=2 come from the following reference.
-      !! ref: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019). https://doi.org/10.1021/acs.jpca.8b10010
+      !! ref: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019).'
+      !!         https://doi.org/10.1021/acs.jpca.8b10010
 =========================================
 =========================================
