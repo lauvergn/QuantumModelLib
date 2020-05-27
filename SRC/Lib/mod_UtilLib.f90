@@ -139,7 +139,7 @@ CONTAINS
 
 
    IF (present(name_info)) THEN
-     name_info_loc = '(2x,"' // trim(adjustl(name_info)) // ' ",'
+     name_info_loc = '(2x,"' // trim(adjustl(name_info)) // ': ",'
    ELSE
      name_info_loc = '('
    END IF

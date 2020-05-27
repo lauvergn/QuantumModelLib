@@ -33,6 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test_Retinal_JPCB2000() ; stop
   !CALL test_Tully_test() ; stop
   !CALL test_Test() ; stop
   !CALL test_PSB3() ; stop
@@ -54,6 +55,7 @@ PROGRAM TEST_model
   CALL test_Phenol()
   CALL test_PSB3()
   CALL test_TwoD()
+  CALL test_Retinal_JPCB2000()
 
   ! 6D (full-D), One electronic surface
   CALL test_HONO()
@@ -936,6 +938,93 @@ SUBROUTINE test_PSB3
   deallocate(q)
 
 END SUBROUTINE test_PSB3
+SUBROUTINE test_Retinal_JPCB2000
+
+  USE mod_Lib
+  USE mod_dnMat
+  USE mod_Model
+
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: NAC ! for non adiabatic couplings
+  real (kind=Rkind)              :: DQ2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Retinal_JPCB2000 potential'
+  write(out_unitp,*) ' With units: Atomic Units'
+  write(out_unitp,*) '---------------------------------------------'
+  CALL Init_Model(QModel,pot_name='Retinal_JPCB2000',Print_init=.FALSE.)
+  CALL Write0_Model(QModel)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(QModel,pot_name='Retinal_JPCB2000',PubliUnit=.FALSE.)
+
+  allocate(q(QModel%QM%ndim))
+
+  q(:) = [ZERO,ONE]
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Evaluated in', q
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  write(out_unitp,*) '---------------------------------------------'
+
+  QModel%QM%adiabatic = .FALSE.
+  write(out_unitp,*) 'DIABATIC potential'
+  write(out_unitp,*) 'Evaluated in', q
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Retinal_JPCB2000')
+
+  QModel%QM%adiabatic = .TRUE.
+  q(:) = [ZERO,ZERO]
+  write(out_unitp,*) 'ADIABATIC potential'
+  write(out_unitp,*) 'Evaluated in', q
+
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  write(out_unitp,*) 'Non adiatic couplings:'
+  CALL QML_Write_dnMat(NAC,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='Retinal_JPCB2000')
+
+  write(out_unitp,*) '---------- END CHECK POT --------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '-----------Retinal_JPCB2000 on a 2D-grid ----'
+  write(out_unitp,*) '---------------------------------------------'
+
+  QModel%QM%adiabatic = .TRUE.
+  DQ2 = TWO
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-pi/TWO,-DQ2],Qmax=[THREE*pi/TWO,DQ2],         &
+                        nb_points=101,grid_file='grid_Retinal_JPCB2000')
+
+
+  CALL QML_dealloc_dnMat(PotVal)
+
+  deallocate(q)
+
+END SUBROUTINE test_Retinal_JPCB2000
 SUBROUTINE test_HONO
   USE mod_Lib
   USE mod_dnMat

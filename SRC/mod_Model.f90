@@ -46,6 +46,8 @@ MODULE mod_Model
   USE mod_TullyModel
 
   USE mod_PSB3_Model
+  USE mod_Retinal_JPCB2000_Model
+
   USE mod_HONO_Model
   USE mod_HNNHp_Model
   USE mod_H2SiN_Model
@@ -498,11 +500,25 @@ CONTAINS
       !! remarks: two options are possible (option = 1,2)
       !! The default is option=1 (unpublished).
       !! The parameters for option=2 come from the following reference.
-      !! ref: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019). https://doi.org/10.1021/acs.jpca.8b10010
+      !! ref: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019).'
+      !!         https://doi.org/10.1021/acs.jpca.8b10010
       !! === END README ==
       allocate(PSB3_Model_t :: QModel%QM)
       QModel%QM = Init_PSB3_Model(QModel_in,read_param=read_param_loc,  &
                                   nio_param_file=nio_loc)
+
+    CASE ('retinal_jpcb2000')
+      !! === README ==
+      !! Model for the photo-isomerization of retinal.
+      !! pot_name  = 'Retinal_JPCB2000'
+      !! ndim      = 2
+      !! nsurf     = 2
+      !! ref:  S. Hahn, G. Stock / Chemical Physics 259 (2000) 297-312.
+      !!              doi: 10.1016/S0301-0104(00)00201-9'
+      !! === END README ==
+      allocate(Retinal_JPCB2000_Model_t :: QModel%QM)
+      QModel%QM = Init_Retinal_JPCB2000_Model(QModel_in,                &
+                       read_param=read_param_loc,nio_param_file=nio_loc)
 
     CASE ('hono')
       allocate(HONO_Model_t :: QModel%QM)
@@ -1920,7 +1936,13 @@ END IF
     write(nio_loc,*) 'Output file for potential library'
 
     CALL QModel%QM%Write_QModel(nio=nio_loc)
-
+    write(nio_loc,*)
+    IF (allocated(QModel%QM%d0GGdef)) CALL Write_RMat(QModel%QM%d0GGdef,&
+                               nio_loc,5,name_info='d0GGdef')
+    write(nio_loc,*)
+    IF (allocated(QModel%QM%Q0)) CALL Write_RVec(QModel%QM%Q0,          &
+                               nio_loc,5,name_info='Q0')
+    write(nio_loc,*)
     write(nio_loc,*) '-----------------------------------------------'
     flush(nio_loc)
 

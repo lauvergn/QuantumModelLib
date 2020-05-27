@@ -10,11 +10,11 @@
 #F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 0
+LAPACK = 1
 ## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
 # NVHYP  = 1 : with intrinsic inverse hyperbolic functions
 # NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic ones)
@@ -260,7 +260,8 @@ OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
                  $(DIROBJ)/mod_HNNHp_Model.o $(DIROBJ)/mod_HONO_Model.o \
                  $(DIROBJ)/mod_HNO3_Model.o \
                  $(DIROBJ)/mod_HenonHeilesModel.o $(DIROBJ)/mod_LinearHBondModel.o \
-                 $(DIROBJ)/mod_PhenolModel.o $(DIROBJ)/mod_PSB3_Model.o $(DIROBJ)/mod_TwoD_Model.o \
+                 $(DIROBJ)/mod_PhenolModel.o $(DIROBJ)/mod_TwoD_Model.o \
+                 $(DIROBJ)/mod_PSB3_Model.o $(DIROBJ)/mod_Retinal_JPCB2000_Model.o \
                  $(DIROBJ)/mod_OneDSOC_1S1T_Model.o $(DIROBJ)/mod_OneDSOC_2S1T_Model.o \
                  $(DIROBJ)/mod_TullyModel.o
 
@@ -388,6 +389,9 @@ $(DIROBJ)/mod_PhenolModel.o:$(DIRModel)/mod_PhenolModel.f90
 
 $(DIROBJ)/mod_PSB3_Model.o:$(DIRModel)/mod_PSB3_Model.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_PSB3_Model.f90
+
+$(DIROBJ)/mod_Retinal_JPCB2000_Model.o:$(DIRModel)/mod_Retinal_JPCB2000_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_Retinal_JPCB2000_Model.f90
 
 $(DIROBJ)/mod_HONO_Model.o:$(DIRModel)/mod_HONO_Model.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HONO_Model.f90
@@ -520,21 +524,22 @@ $(DIROBJ)/mod_SigmoidModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_TemplateModel.o: $(OBJ_lib) $(DIROBJ)/mod_EmptyModel.o $(DIROBJ)/mod_MorseModel.o
 $(DIROBJ)/mod_TestModel.o: $(OBJ_lib) $(DIROBJ)/mod_EmptyModel.o
 
-$(DIROBJ)/mod_HenonHeilesModel.o:   $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_TullyModel.o:         $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_OneDSOC_1S1T_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_OneDSOC_2S1T_Model.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_TwoD_Model.o:         $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_PSB3_Model.o:         $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_HONO_Model.o:         $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_HNO3_Model.o:         $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_HNNHp_Model.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_H2SiN_Model.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_H2NSi_Model.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_LinearHBondModel.o:   $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
-                                    $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_BuckModel.o
-$(DIROBJ)/mod_PhenolModel.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
-                                    $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_SigmoidModel.o
+$(DIROBJ)/mod_HenonHeilesModel.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_TullyModel.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_OneDSOC_1S1T_Model.o:      $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_OneDSOC_2S1T_Model.o:      $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_TwoD_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_PSB3_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_Retinal_JPCB2000_Model.o:  $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HONO_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HNO3_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HNNHp_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_H2SiN_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_H2NSi_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_LinearHBondModel.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
+                                         $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_BuckModel.o
+$(DIROBJ)/mod_PhenolModel.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
+                                         $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_SigmoidModel.o
 #
 #
 $(DIROBJ)/mod_UtilLib.o:    $(DIROBJ)/mod_NumParameters.o
