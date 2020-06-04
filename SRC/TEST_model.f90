@@ -36,9 +36,6 @@ PROGRAM TEST_model
   !CALL test_Retinal_JPCB2000() ; stop
   !CALL test_Tully_test() ; stop
   !CALL test_Test() ; stop
-  !CALL test_PSB3() ; stop
-  !CALL test_TwoD() ; stop
-  !CALL test_HNO3() ; stop
 
 
   ! One electronic surface
@@ -1021,7 +1018,41 @@ SUBROUTINE test_Retinal_JPCB2000
 
 
   CALL QML_dealloc_dnMat(PotVal)
+  deallocate(q)
 
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Retinal_JPCB2000 potential+Bath'
+  write(out_unitp,*) ' With units: Atomic Units'
+  write(out_unitp,*) '---------------------------------------------'
+  CALL Init_Model(QModel,ndim=4,pot_name='Retinal_JPCB2000',PubliUnit=.FALSE.)
+
+  allocate(q(QModel%QM%ndim))
+
+  q(:) = ZERO
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'ADIABATIC potential'
+  write(out_unitp,*) 'Evaluated in',q
+
+  QModel%QM%adiabatic = .TRUE.
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  write(out_unitp,*) 'Non adiatic couplings:'
+  CALL QML_Write_dnMat(NAC,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='Retinal_JPCB2000')
+
+  write(out_unitp,*) '---------- END CHECK POT --------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL QML_dealloc_dnMat(PotVal)
   deallocate(q)
 
 END SUBROUTINE test_Retinal_JPCB2000

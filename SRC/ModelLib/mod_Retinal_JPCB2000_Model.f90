@@ -59,6 +59,17 @@ MODULE mod_Retinal_JPCB2000_Model
    real(kind=Rkind) :: kappa  = 0.1_Rkind
    real(kind=Rkind) :: lambda = 0.19_Rkind
 
+   real(kind=Rkind) :: wi(25)       = real([   0.0,   0.0,  792.8,  842.8,  866.2,  &
+                                             882.4, 970.3,   976.0,  997.0, 1017.1, &
+                                            1089.6, 1189.0, 1214.7, 1238.1, 1267.9, &
+                                            1317.0, 1359.0, 1389.0, 1428.4, 1434.9, &
+                                            1451.8, 1572.8, 1612.1, 1629.2, 1659.1],kind=Rkind)
+   real(kind=Rkind) :: ciwi_inv(25) = real([ 0.0,   0.0,    0.175,  0.2,    0.175, &
+                                             0.225, 0.55,   0.3,    0.33,   0.45,  &
+                                             0.125,  0.175, 0.44,   0.5,    0.475, &
+                                             0.238,  0.25,  0.25,   0.25,   0.225, &
+                                             0.225,  0.25,  0.225,  0.125,  0.225],kind=Rkind)
+   real(kind=Rkind) :: ci(25)       = ZERO ! it will be initialized after
 
    CONTAINS
     PROCEDURE :: Eval_QModel_Pot => eval_Retinal_JPCB2000_Pot
@@ -84,7 +95,9 @@ MODULE mod_Retinal_JPCB2000_Model
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
-    real (kind=Rkind) :: auTOeV  = 27.211384_Rkind
+    real (kind=Rkind), parameter :: auTOeV      = 27.211384_Rkind
+    real (kind=Rkind), parameter :: auTOcm_inv  = 219474.631443_Rkind
+    integer :: i
 
 
     !----- for debuging --------------------------------------------------
@@ -100,8 +113,25 @@ MODULE mod_Retinal_JPCB2000_Model
     CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
 
     QModel%nsurf    = 2
-    QModel%ndim     = 2
-    QModel%pot_name = 'retinal_jpcb2000'
+
+    IF (QModel%ndim == 0) THEN
+      ! it means that ndim was not present in the CALL Init_Model().
+      ! => ndim is set to the default value (2)
+      QModel%ndim  = 2
+      QModel%pot_name = 'retinal_jpcb2000'
+    END IF
+    IF (QModel%ndim  > 2) QModel%pot_name = 'retinal_cp2000'
+
+    !The value of QModel%ndim must be in [2:25]
+    IF (QModel%ndim < 2 .OR. QModel%ndim > 25) THEN
+       write(out_unitp,*) 'Write_QModel'
+       CALL QModel%Write_QModel(out_unitp)
+       write(out_unitp,*) ' ERROR in ',name_sub
+       write(out_unitp,*) ' ndim range MUST be [2:25]. ndim: ',QModel%ndim
+       STOP 'ERROR in Init_Retinal_JPCB2000_Model: ndim range MUST be [2:25]'
+    END IF
+
+
 
     IF (.NOT. QModel%PubliUnit) THEN
       QModel%m      = QModel%m      * auTOeV   ! 1/m has to be divided by auTOeV
@@ -111,17 +141,28 @@ MODULE mod_Retinal_JPCB2000_Model
       QModel%w      = QModel%w      / auTOeV
       QModel%kappa  = QModel%kappa  / auTOeV
       QModel%lambda = QModel%lambda / auTOeV
+
+      QModel%wi     = QModel%wi     / auTOcm_inv
+
+    ELSE ! if PubliUnit the wi must be convert in eV
+      QModel%wi     = QModel%wi     / auTOcm_inv*auTOeV
     END IF
 
+    QModel%ci       = QModel%ciwi_inv * QModel%wi
 
     IF (debug) write(out_unitp,*) 'init Q0 of Retinal_JPCB2000'
-    QModel%Q0 = [ZERO,ZERO]
+    allocate(QModel%Q0(QModel%ndim))
+    QModel%Q0 = ZERO
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of Retinal_JPCB2000'
     CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+
     QModel%d0GGdef(1,1) = ONE/QModel%m
     QModel%d0GGdef(2,2) = QModel%w
 
+    DO i=3,QModel%ndim
+      QModel%d0GGdef(i,i) = QModel%wi(i)
+    END DO
 
     IF (debug) THEN
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
@@ -210,14 +251,25 @@ MODULE mod_Retinal_JPCB2000_Model
     TYPE (dnS_t),                    intent(in)    :: dnQ(:)
     integer,                         intent(in)    :: nderiv
 
+    TYPE (dnS_t) :: VBath
+    integer      :: i
+
+
+    VBath = HALF*sum( QModel%wi(3:QModel%ndim)*dnQ(3:QModel%ndim)**2 )
+
+
     Mat_OF_PotDia(1,1) =             HALF*QModel%W0*(ONE-cos(dnQ(1))) + &
-                           HALF*QModel%W*dnQ(2)**2
+                        HALF*QModel%W*dnQ(2)**2 + VBath
 
     Mat_OF_PotDia(2,2) = QModel%E1 - HALF*QModel%W1*(ONE-cos(dnQ(1))) + &
-                           HALF*QModel%W*dnQ(2)**2 + QModel%kappa*dnQ(2)
+                        HALF*QModel%W*dnQ(2)**2 + QModel%kappa*dnQ(2) + &
+                        VBath + sum( QModel%ci(3:QModel%ndim)*dnQ(3:QModel%ndim) )
 
     Mat_OF_PotDia(1,2) = QModel%lambda*dnQ(2)
     Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
+
+
+    CALL QML_dealloc_dnS(VBath)
 
 
   END SUBROUTINE eval_Retinal_JPCB2000_Pot

@@ -507,7 +507,7 @@ CONTAINS
       QModel%QM = Init_PSB3_Model(QModel_in,read_param=read_param_loc,  &
                                   nio_param_file=nio_loc)
 
-    CASE ('retinal_jpcb2000')
+    CASE ('retinal_jpcb2000','retinal_cp2000')
       !! === README ==
       !! Model for the photo-isomerization of retinal.
       !! pot_name  = 'Retinal_JPCB2000'

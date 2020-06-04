@@ -175,11 +175,12 @@ MODULE mod_PSB3_Model
 
 
     IF (debug) write(out_unitp,*) 'init Q0 of PSB3'
-    !QModel%Q0 = [ZERO,ZERO,ZERO]
-    QModel%Q0 = [0.172459_Rkind,-3.14_Rkind,0._Rkind]
+    QModel%Q0 = [0.172459_Rkind, -3.14_Rkind, ZERO]
     IF (debug) write(out_unitp,*) 'init d0GGdef of PSB3'
     CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-
+    QModel%d0GGdef(1,:) = [0.00007981_Rkind, ZERO,             ZERO            ]
+    QModel%d0GGdef(2,:) = [ZERO,             0.00002599_Rkind, 0.00004025_Rkind]
+    QModel%d0GGdef(3,:) = [ZERO,             0.00004025_Rkind, 0.00040375_Rkind]
 
     IF (debug) THEN
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
@@ -202,6 +203,7 @@ MODULE mod_PSB3_Model
     write(nio,*)
     write(nio,*) '  PubliUnit:      ',QModel%PubliUnit
     write(nio,*)
+    write(nio,*) '  adiabatic:      ',QModel%adiabatic
     write(nio,*) '  Option   :      ',QModel%option
     write(nio,*)
 

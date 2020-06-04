@@ -1975,7 +1975,7 @@ CONTAINS
     integer :: i
     character (len=*), parameter :: name_sub='QML_SUM_VecOFdnS'
 
-    Sres = Vec(lbound(Vec,dim=1)) ! for the initialization
+    !Sres = Vec(lbound(Vec,dim=1)) ! for the initialization
     Sres = ZERO
     DO i=lbound(Vec,dim=1),ubound(Vec,dim=1)
       Sres = Sres + Vec(i)
