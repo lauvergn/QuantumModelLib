@@ -64,8 +64,9 @@ MODULE mod_dnMat
     PROCEDURE, PRIVATE :: QML_sub_dnMat2_TO_dnMat1
     PROCEDURE, PRIVATE :: QML_set_dnMat_TO_R
     PROCEDURE, PRIVATE :: QML_set_dnMat_FROM_MatOFdnS
-    GENERIC,   PUBLIC  :: assignment(=) => QML_sub_dnMat2_TO_dnMat1,    &
-                          QML_set_dnMat_TO_R,QML_set_dnMat_FROM_MatOFdnS
+    GENERIC,   PUBLIC  :: assignment(=) => QML_sub_dnMat2_TO_dnMat1,            &
+                                           QML_set_dnMat_TO_R,                  &
+                                           QML_set_dnMat_FROM_MatOFdnS
   END TYPE dnMat_t
 
   PRIVATE :: QML_sub_dnMat2_TO_dnMat1,QML_set_dnMat_TO_R,QML_set_dnMat_FROM_MatOFdnS

@@ -1,6 +1,6 @@
 #=================================================================================
 #=================================================================================
-# Compiler? 
+# Compiler?
 #Possible values: (Empty: gfortran)
 #                ifort (version: 14.0.2, 16.0.3, 17.0.1 linux)
 #                gfortran (version: 6.3.0 linux and osx)
@@ -10,7 +10,7 @@
 #F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -51,7 +51,7 @@ ifeq  ($(strip $(OMP)),)
 endif
 #=================================================================================
 
-# Operating system, OS? automatic using uname: 
+# Operating system, OS? automatic using uname:
 OS=$(shell uname)
 
 
@@ -91,7 +91,7 @@ ifeq ($(F90),nagfor)
    ifeq ($(LAPACK),1)
      F90LIB = -framework Accelerate
    else
-     F90LIB = 
+     F90LIB =
    endif
 
    F90_VER = $(shell $(F90) -V 3>&1 1>&2 2>&3 | head -1 )
@@ -259,6 +259,7 @@ OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
                  $(DIROBJ)/mod_H2NSi_Model.o $(DIROBJ)/mod_H2SiN_Model.o \
                  $(DIROBJ)/mod_HNNHp_Model.o $(DIROBJ)/mod_HONO_Model.o \
                  $(DIROBJ)/mod_HNO3_Model.o \
+                 $(DIROBJ)/mod_HOO_DMBE_Model.o \
                  $(DIROBJ)/mod_HenonHeilesModel.o $(DIROBJ)/mod_LinearHBondModel.o \
                  $(DIROBJ)/mod_PhenolModel.o $(DIROBJ)/mod_TwoD_Model.o \
                  $(DIROBJ)/mod_PSB3_Model.o $(DIROBJ)/mod_Retinal_JPCB2000_Model.o \
@@ -354,7 +355,7 @@ $(ModLib): $(OBJ_driver) $(OBJ_all)
 #===============================================
 #===============================================
 .PHONY: clean
-clean: 
+clean:
 	rm -f  $(MODEXE) $(GRIDEXE) $(dnSEXE) $(DriverEXE) $(TESTEXE)
 	rm -f  $(ModLib) libQMLib.a
 	rm -fr *.dSYM comp.log
@@ -398,6 +399,9 @@ $(DIROBJ)/mod_HONO_Model.o:$(DIRModel)/mod_HONO_Model.f90
 
 $(DIROBJ)/mod_HNO3_Model.o:$(DIRModel)/mod_HNO3_Model.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HNO3_Model.f90
+
+$(DIROBJ)/mod_HOO_DMBE_Model.o:$(DIRModel)/mod_HOO_DMBE_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HOO_DMBE_Model.f90
 
 $(DIROBJ)/mod_HNNHp_Model.o:$(DIRModel)/mod_HNNHp_Model.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HNNHp_Model.f90
@@ -533,6 +537,7 @@ $(DIROBJ)/mod_PSB3_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_Retinal_JPCB2000_Model.o:  $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HONO_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HNO3_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_HOO_DMBE_Model.o:          $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HNNHp_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_H2SiN_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_H2NSi_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)

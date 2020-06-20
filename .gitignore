@@ -1,3 +1,5 @@
-/save
 .DS_Store
 DOC/.DS_Store
+.metadata
+.project
+.settings

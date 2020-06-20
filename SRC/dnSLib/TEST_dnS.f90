@@ -42,7 +42,7 @@
 !!
 !! To test the installation, you can run tests (dnS and ModLib).
 !!
-!!     cd Tests ; ./run_tests
+!!     cd Tests ; ./run_test_dnS
 !!
 !! The results will be compared to previous ones in run_tests/RES_old
 !!
@@ -69,8 +69,10 @@ PROGRAM TEST_dnS
 
     character (len=*), parameter :: name_sub='TEST_dnS'
 
-   nderiv = 3
-   write(out_unitp,'(a,i2)') "== TESTING dnS module with nderiv=",nderiv
+    CALL TEST_EXCEPTION()
+
+    nderiv = 3
+    write(out_unitp,'(a,i2)') "== TESTING dnS module with nderiv=",nderiv
 
    nio_test = 10
    open(unit=nio_test,file='dnSca.txt')
@@ -458,6 +460,65 @@ PROGRAM TEST_dnS
 
 
 END PROGRAM TEST_dnS
+SUBROUTINE TEST_EXCEPTION
+  USE, INTRINSIC :: ieee_exceptions
+
+  USE mod_NumParameters
+  USE mod_dnS
+  IMPLICIT NONE
+
+    TYPE (dnS_t)                     :: dnX
+    real (kind=Rkind)                :: x
+    integer                          :: nderiv
+    logical                          :: flag_NAN
+
+
+    character (len=*), parameter :: name_sub='TEST_EXCEPTION'
+
+    nderiv = 3
+    write(out_unitp,'(a,i2)') "== TESTING EXCEPTION dnS module with nderiv=",nderiv
+
+    CALL ieee_set_halting_mode(ieee_invalid, .FALSE.)
+
+    x = -ONE
+    dnX     = QML_init_dnS(x  ,ndim=1,nderiv=nderiv,iQ=1) ! to set up the derivatives
+
+    write(out_unitp,*) 'log(-1)',log(x)
+    CALL  IEEE_GET_FLAG(ieee_invalid, flag_NAN)
+    IF (flag_NAN) THEN
+       write(out_unitp,*) 'a NAN occurs!'
+    ELSE
+      write(out_unitp,*) 'no NAN occurs!'
+    END IF
+
+    ! reset the NAN exception
+    CALL  IEEE_SET_FLAG(ieee_invalid, .FALSE.)
+
+    CALL QML_write_dnS(cos(dnX),info='cos(dnX)')
+    CALL  IEEE_GET_FLAG(ieee_invalid, flag_NAN)
+    IF (flag_NAN) THEN
+       write(out_unitp,*) 'a NAN occurs!'
+    ELSE
+      write(out_unitp,*) 'no NAN occurs!'
+    END IF
+
+    ! reset the NAN exception
+    CALL  IEEE_SET_FLAG(ieee_invalid, .FALSE.)
+
+    CALL QML_write_dnS(log(dnX),info='log(dnX)')
+    CALL QML_write_dnS(cos(dnX),info='cos(dnX)')
+    CALL  IEEE_GET_FLAG(ieee_invalid, flag_NAN)
+    IF (flag_NAN) THEN
+       write(out_unitp,*) 'a NAN occurs!'
+    ELSE
+      write(out_unitp,*) 'no NAN occurs!'
+    END IF
+
+    !write(out_unitp,*) 'dnX',dnX
+
+
+END SUBROUTINE TEST_EXCEPTION
+
 FUNCTION faplusx(x)
   USE mod_NumParameters
   IMPLICIT NONE

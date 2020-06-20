@@ -54,6 +54,8 @@ MODULE mod_Model
   USE mod_H2NSi_Model
   USE mod_HNO3_Model
 
+  USE mod_HOO_DMBE_Model
+
   USE mod_OneDSOC_1S1T_Model
   USE mod_OneDSOC_2S1T_Model
 
@@ -545,6 +547,19 @@ CONTAINS
       QModel%QM = Init_H2NSi_Model(QModel_in,read_param=read_param_loc, &
                                    nio_param_file=nio_loc)
 
+    CASE ('hoo_dmbe')
+      !! === README ==
+      !! HOO potential: DMBE IV of Varandas group
+      !! pot_name  = 'HOO_DMBE'
+      !! ndim      = 3   (R1=dOO,R2=dHO1,R3=dHO2)
+      !! nsurf     = 1
+      !! ref:    M. R. Pastrana, L. A. M. Quintales, J. Brandão and A. J. C. Varandas'
+      !!         JCP, 1990, 94, 8073-8080, doi: 10.1021/j100384a019.
+      !! === END README ==
+      allocate(HOO_DMBE_Model_t :: QModel%QM)
+      QModel%QM = Init_HOO_DMBE_Model(QModel_in,read_param=read_param_loc, &
+                                      nio_param_file=nio_loc)
+
     CASE ('template')
       !! 3D-potential with 1 surface
       allocate(TemplateModel_t :: QModel%QM)
@@ -720,10 +735,11 @@ CONTAINS
     END IF
 
     IF (present(numeric)) THEN
-      numeric_loc = (numeric .AND. nderiv_loc > 0)
+      numeric_loc = (numeric  .OR. QModel%QM%no_ana_der)
     ELSE
-      numeric_loc = (QModel%QM%numeric .AND. nderiv_loc > 0)
+      numeric_loc = (QModel%QM%numeric .OR. QModel%QM%no_ana_der)
     END IF
+    numeric_loc = (numeric_loc .AND. nderiv_loc > 0)
 
     adia_loc = (QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1)
 
@@ -2096,6 +2112,8 @@ END IF
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
+
+    IF (QModel%QM%no_ana_der) RETURN
 
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING ',name_sub

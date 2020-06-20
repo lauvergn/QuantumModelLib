@@ -35,6 +35,8 @@ PROGRAM TEST_model
 
   !CALL test_Retinal_JPCB2000() ; stop
   !CALL test_Tully_test() ; stop
+  !CALL test_PSB3_test() ; stop
+  !CALL test_HOO_DMBE ; stop
   !CALL test_Test() ; stop
 
 
@@ -60,6 +62,9 @@ PROGRAM TEST_model
 
   CALL test_H2SiN()
   CALL test_H2NSi()
+
+  ! 3D (full-D), One electronic surface for collision
+  CALL test_HOO_DMBE
 
   ! A template with one electronic surface
   CALL test_template()
@@ -1496,6 +1501,64 @@ SUBROUTINE test_HNO3
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_HNO3
+SUBROUTINE test_HOO_DMBE
+  USE mod_Lib
+  USE mod_dnMat
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:,:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-HOO_DMBE --------------------'
+  CALL Init_Model(QModel,pot_name='HOO_DMBE',Print_init=.FALSE.)
+  CALL Write0_Model(QModel)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(QModel,pot_name='HOO_DMBE')
+
+  allocate(q(QModel%ndim,3))
+
+  ! OH...O in TableVII of JCP paper, E=-0.1738 Hartree
+  Q(:,1) = [5.663_Rkind,3.821_Rkind,1.842_Rkind]
+
+  ! H...O-O in TableVII of JCP paper, E=-0.1916 Hartree
+  Q(:,2) = [2.282_Rkind,7.547_Rkind,9.829_Rkind]
+
+  ! HO2 in TableVII of JCP paper, E=-0.2141 Hartree
+  Q(:,3) = [2.806_Rkind,2.271_Rkind,2.271_Rkind]
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  DO i=1,size(Q,dim=2)
+    write(out_unitp,*) 'Q:'
+    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+
+    CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
+    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+    ! For testing the model
+    CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HOO_DMBE')
+  END DO
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_HOO_DMBE
 SUBROUTINE test_Test
   USE mod_Lib
   USE mod_dnMat
@@ -1584,3 +1647,50 @@ SUBROUTINE test_Tully_test
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_Tully_test
+SUBROUTINE test_PSB3_test
+
+  USE mod_Lib
+  USE mod_dnMat
+  USE mod_Model
+
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: NAC ! for non adiabatic couplings
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' PSB3 potential'
+  write(out_unitp,*) ' With units: Atomic Units (Angstrom, Rad, Rad, kcal.mol^-1)'
+  write(out_unitp,*) '---------------------------------------------'
+  CALL Init_Model(QModel,pot_name='PSB3',Print_init=.FALSE.)
+  CALL Write0_Model(QModel)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(QModel,pot_name='PSB3',PubliUnit=.FALSE.)
+
+  allocate(q(QModel%QM%ndim))
+
+  q(:) = [0.172459_Rkind,PI,ZERO]
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  write(out_unitp,*) '---------------------------------------------'
+
+  QModel%QM%adiabatic = .TRUE.
+  write(out_unitp,*) 'ADIABATIC potential'
+  write(out_unitp,*) 'Evaluated in', q
+
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(q)
+
+END SUBROUTINE test_PSB3_test

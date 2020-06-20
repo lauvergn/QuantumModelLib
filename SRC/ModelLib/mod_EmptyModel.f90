@@ -40,6 +40,9 @@ MODULE mod_EmptyModel
     integer :: nsurf       = 0
     integer :: ndim        = 0
     logical :: numeric     = .FALSE.
+    logical :: no_ana_der  = .FALSE. ! to force numerical derivatives
+                                     ! for potential without analitical derivatives
+
     logical :: adiabatic   = .TRUE.
     integer :: option      = 0
     logical :: PubliUnit   = .FALSE. ! when PubliUnit=.TRUE., the units of a reference (publi ...) are used. Default (atomic unit)
@@ -232,10 +235,12 @@ CONTAINS
     CLASS (EmptyModel_t), intent(in)    :: QModel
     integer,              intent(in)    :: nio
 
-    write(nio,*) 'nsurf:     ',QModel%nsurf
-    write(nio,*) 'ndim:      ',QModel%ndim
-    write(nio,*) 'numeric:   ',QModel%numeric
-    write(nio,*) 'adiabatic: ',QModel%adiabatic
+    write(nio,*) 'nsurf:                     ',QModel%nsurf
+    write(nio,*) 'ndim:                      ',QModel%ndim
+    write(nio,*) 'numeric:                   ',QModel%numeric
+    write(nio,*) 'adiabatic:                 ',QModel%adiabatic
+    write(nio,*) 'no analitical derivatives: ',QModel%no_ana_der
+
     IF (allocated(QModel%pot_name)) write(nio,*) 'pot_name: ',QModel%pot_name
     write(nio,*)
 
@@ -266,10 +271,11 @@ CONTAINS
     write(nio,*)
     write(nio,*) 'Potential parameters are written just below'
     write(nio,*)
-    write(nio,*) 'nsurf:     ',QModel%nsurf
-    write(nio,*) 'ndim:      ',QModel%ndim
-    write(nio,*) 'numeric:   ',QModel%numeric
-    write(nio,*) 'adiabatic: ',QModel%adiabatic
+    write(nio,*) 'nsurf:                     ',QModel%nsurf
+    write(nio,*) 'ndim:                      ',QModel%ndim
+    write(nio,*) 'numeric:                   ',QModel%numeric
+    write(nio,*) 'adiabatic:                 ',QModel%adiabatic
+    write(nio,*) 'no analitical derivatives: ',QModel%no_ana_der
     write(nio,*)
 
      IF (allocated(QModel%d0GGdef)) THEN

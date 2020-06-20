@@ -154,4 +154,61 @@ CONTAINS
     Sres = Sres/sqrt(Pnorm2)
 
   END FUNCTION QML_dnLegendre0
+!===================================================
+!
+!   Normalized Hermite polynomial Hm(x,l)
+!   with x in ( -inf =< x =< inf )
+!
+!===================================================
+  ELEMENTAL FUNCTION QML_dnHermite(x,l)  RESULT(Sres)
+    USE mod_NumParameters
+
+    TYPE (dnS_t)                       :: Sres
+    TYPE (dnS_t),        intent(in)    :: x
+    integer,             intent(in)    :: l
+
+
+    ! Polynomial for  l, l-1 et l-2
+    TYPE (dnS_t)      :: pl0,pl1,pl2
+    real (kind=Rkind) :: norm
+    integer           :: i
+
+    norm=sqrt(pi)
+
+    IF (l == 0) THEN
+       Sres = ONE/sqrt(norm)
+    ELSE IF (l == 1) THEN
+       Sres = TWO*x/sqrt(TWO*norm)
+    ELSE
+
+     pl2  = ONE
+     pl1  = TWO*x
+     norm = norm*TWO
+
+     DO i=2,l
+       norm = norm*TWO*real(i,kind=Rkind)
+       pl0  = TWO*( x*pl1 - real(i-1,kind=Rkind)*pl2 )
+       pl2  = pl1
+       pl1  = pl0
+     END DO
+     Sres = pl0/sqrt(norm)
+   END IF
+
+  END FUNCTION QML_dnHermite
+!===================================================
+!
+!   Normalized Hermite polynomial with gaussian part:Hm(x,l).exp(-x**2/2)
+!   with x in ( -inf =< x =< inf )
+!
+!===================================================
+  ELEMENTAL FUNCTION QML_dnExpHermite(x,l)  RESULT(Sres)
+    USE mod_NumParameters
+
+    TYPE (dnS_t)                       :: Sres
+    TYPE (dnS_t),        intent(in)    :: x
+    integer,             intent(in)    :: l
+
+    Sres = QML_dnHermite(x,l) * exp(-x*x*HALF)
+
+ END FUNCTION QML_dnExpHermite
 END MODULE mod_dnPoly
