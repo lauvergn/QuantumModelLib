@@ -39,9 +39,14 @@ MODULE mod_EmptyModel
   TYPE :: EmptyModel_t
     integer :: nsurf       = 0
     integer :: ndim        = 0
+    integer :: ndimQ       = 0
+    integer :: ndimCart    = 0
+
     logical :: numeric     = .FALSE.
     logical :: no_ana_der  = .FALSE. ! to force numerical derivatives
                                      ! for potential without analitical derivatives
+
+    logical :: Cart_TO_Q   = .FALSE. ! to perform the Cartesian to model coordinates
 
     logical :: adiabatic   = .TRUE.
     integer :: option      = 0
@@ -59,6 +64,8 @@ MODULE mod_EmptyModel
       PROCEDURE :: Write0_QModel      => Write0_EmptyModel
      !PROCEDURE :: get2_Q0_QModel     => get2_Q0_EmptyModel
       PROCEDURE :: get_d0GGdef_QModel => get_d0GGdef_EmptyModel
+      PROCEDURE :: Cart_TO_Q_QModel   => Cart_TO_Q_EmptyModel
+
   END TYPE EmptyModel_t
 
   INTERFACE get_Q0_QModel
@@ -117,13 +124,18 @@ CONTAINS
     END IF
 
     !QModel = QModel_in   ! it does not work always with nagfor
-    QModel%nsurf     = QModel_in%nsurf
-    QModel%ndim      = QModel_in%ndim
-    QModel%numeric   = QModel_in%numeric
-    QModel%adiabatic = QModel_in%adiabatic
-    QModel%option    = QModel_in%option
-    QModel%PubliUnit = QModel_in%PubliUnit
+    QModel%nsurf      = QModel_in%nsurf
+    QModel%ndim       = QModel_in%ndim
+    QModel%ndimQ      = QModel_in%ndimQ
+    QModel%ndimCart   = QModel_in%ndimCart
 
+    QModel%numeric    = QModel_in%numeric
+    QModel%adiabatic  = QModel_in%adiabatic
+    QModel%option     = QModel_in%option
+    QModel%PubliUnit  = QModel_in%PubliUnit
+
+    QModel%no_ana_der = QModel_in%no_ana_der
+    QModel%Cart_TO_Q  = QModel_in%Cart_TO_Q
 
     IF (QModel%adiabatic) THEN
       write(out_unitp,*) 'Adiabatic potential . . .'
@@ -239,7 +251,10 @@ CONTAINS
     write(nio,*) 'ndim:                      ',QModel%ndim
     write(nio,*) 'numeric:                   ',QModel%numeric
     write(nio,*) 'adiabatic:                 ',QModel%adiabatic
-    write(nio,*) 'no analitical derivatives: ',QModel%no_ana_der
+    write(nio,*) 'no analytical derivatives: ',QModel%no_ana_der
+    write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
+    write(nio,*) 'ndimQ:                     ',QModel%ndimQ
+    write(nio,*) 'ndimCart:                  ',QModel%ndimCart
 
     IF (allocated(QModel%pot_name)) write(nio,*) 'pot_name: ',QModel%pot_name
     write(nio,*)
@@ -275,7 +290,10 @@ CONTAINS
     write(nio,*) 'ndim:                      ',QModel%ndim
     write(nio,*) 'numeric:                   ',QModel%numeric
     write(nio,*) 'adiabatic:                 ',QModel%adiabatic
-    write(nio,*) 'no analitical derivatives: ',QModel%no_ana_der
+    write(nio,*) 'no analytical derivatives: ',QModel%no_ana_der
+    write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
+    write(nio,*) 'ndimQ:                     ',QModel%ndimQ
+    write(nio,*) 'ndimCart:                  ',QModel%ndimCart
     write(nio,*)
 
      IF (allocated(QModel%d0GGdef)) THEN
@@ -288,4 +306,18 @@ CONTAINS
 
 
   END SUBROUTINE Write0_EmptyModel
+
+  SUBROUTINE Cart_TO_Q_EmptyModel(QModel,dnX,dnQ,nderiv)
+  USE mod_dnS
+  IMPLICIT NONE
+
+    CLASS(EmptyModel_t),     intent(in)    :: QModel
+    TYPE (dnS_t),            intent(in)    :: dnX(:,:)
+    TYPE (dnS_t),            intent(inout) :: dnQ(:)
+    integer,                 intent(in)    :: nderiv
+
+
+    dnQ(:) = ZERO
+
+  END SUBROUTINE Cart_TO_Q_EmptyModel
 END MODULE mod_EmptyModel

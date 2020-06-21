@@ -49,9 +49,10 @@ MODULE mod_HOO_DMBE_Model
    PRIVATE
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_HOO_DMBE_Pot
-    PROCEDURE :: Write_QModel    => Write_HOO_DMBE_Model
-    PROCEDURE :: Write0_QModel   => Write0_HOO_DMBE_Model
+    PROCEDURE :: Eval_QModel_Pot  => eval_HOO_DMBE_Pot
+    PROCEDURE :: Write_QModel     => Write_HOO_DMBE_Model
+    PROCEDURE :: Write0_QModel    => Write0_HOO_DMBE_Model
+    PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_HOO_DMBE_Model
   END TYPE HOO_DMBE_Model_t
 
   PUBLIC :: HOO_DMBE_Model_t,Init_HOO_DMBE_Model
@@ -86,7 +87,15 @@ MODULE mod_HOO_DMBE_Model
     CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
 
     QModel%nsurf      = 1
-    QModel%ndim       = 3
+    QModel%ndimQ      = 3
+    QModel%ndimCart   = 9
+
+    IF (QModel%Cart_TO_Q) THEN
+      QModel%ndim       = QModel%ndimCart
+    ELSE
+      QModel%ndim       = QModel%ndimQ
+    END IF
+
     QModel%pot_name   = 'hoo_dmbe'
     QModel%no_ana_der = .TRUE.
 
@@ -99,6 +108,7 @@ MODULE mod_HOO_DMBE_Model
 
 
     IF (debug) THEN
+      !CALL Write_HOO_DMBE_Model(QModel,nio=out_unitp)
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
@@ -113,7 +123,13 @@ MODULE mod_HOO_DMBE_Model
   IMPLICIT NONE
 
     CLASS(HOO_DMBE_Model_t),   intent(in) :: QModel
-    integer,              intent(in) :: nio
+    integer,                   intent(in) :: nio
+
+    write(nio,*) 'HOO_DMBE IV current parameters'
+
+    CALL Write_EmptyModel(QModel%EmptyModel_t,nio)
+
+    write(nio,*) 'end HOO_DMBE IV current parameters'
 
   END SUBROUTINE Write_HOO_DMBE_Model
 !> @brief Subroutine wich prints the default HOO_DMBE_Model parameters.
@@ -179,8 +195,61 @@ MODULE mod_HOO_DMBE_Model
 
     CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0=V)
 
-
   END SUBROUTINE eval_HOO_DMBE_Pot
+
+  ! here we suppose that the atom ordering: H1-O2-O3
+  SUBROUTINE Cart_TO_Q_HOO_DMBE_Model(QModel,dnX,dnQ,nderiv)
+  USE mod_dnS
+  IMPLICIT NONE
+
+    CLASS(HOO_DMBE_Model_t), intent(in)    :: QModel
+    TYPE (dnS_t),            intent(in)    :: dnX(:,:)
+    TYPE (dnS_t),            intent(inout) :: dnQ(:)
+    integer,                 intent(in)    :: nderiv
+
+    ! local vector
+    integer         :: i,j
+    TYPE (dnS_t)    :: VecOO(3),VecHO2(3),VecHO3(3)
+
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Cart_TO_Q_HOO_DMBE_Model'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    !-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'dnX'
+      DO i=1,size(dnX,dim=2)
+      DO j=1,size(dnX,dim=1)
+        CALL QML_Write_dnS(dnX(j,i),out_unitp)
+      END DO
+      END DO
+      flush(out_unitp)
+    END IF
+
+    VecOO(:)  = dnX(:,3)-dnX(:,2)
+    VecHO2(:) = dnX(:,2)-dnX(:,1)
+    VecHO3(:) = dnX(:,3)-dnX(:,1)
+    IF (debug) write(out_unitp,*) 'Cart_TO_Q_HOO_DMBE_Model vect done'
+
+    dnQ(1) = sqrt(dot_product(VecOO,VecOO))
+    dnQ(2) = sqrt(dot_product(VecHO2,VecHO2))
+    dnQ(3) = sqrt(dot_product(VecHO3,VecHO3))
+
+    CALL QML_dealloc_dnS(VecOO)
+    CALL QML_dealloc_dnS(VecHO2)
+    CALL QML_dealloc_dnS(VecHO3)
+
+    IF (debug) THEN
+      CALL QML_Write_dnS(dnQ(1),out_unitp,info='dnQ(1)')
+      CALL QML_Write_dnS(dnQ(2),out_unitp,info='dnQ(2)')
+      CALL QML_Write_dnS(dnQ(3),out_unitp,info='dnQ(3)')
+      write(out_unitp,*) 'END ',name_sub
+      flush(out_unitp)
+    END IF
+  END SUBROUTINE Cart_TO_Q_HOO_DMBE_Model
+
 END MODULE mod_HOO_DMBE_Model
   SUBROUTINE HOO_DMBE4_pes(X,F)
   USE mod_NumParameters
@@ -195,16 +264,16 @@ END MODULE mod_HOO_DMBE_Model
       R2=X(2) ! H-O(2) distance
       R3=X(3) ! H-O(3) distance
 
-      Q1=1.0_Rkind/SQRT(3.0_Rkind)*(R1+R2+R3)
-      Q2=1.0_Rkind/SQRT(2.0_Rkind)*(R2-R3)
-      Q3=1.0_Rkind/SQRT(6.0_Rkind)*(2.0_Rkind*R1-R2-R3)
+      Q1=ONE/SQRT(THREE)*(R1+R2+R3)
+      Q2=ONE/SQRT(TWO)*(R2-R3)
+      Q3=ONE/SQRT(SIX)*(TWO*R1-R2-R3)
 
       F=VOO_HOO_DMBE4(R1)+VOH_HOO_DMBE4(R2)+VOH_HOO_DMBE4(R3)+ &
-         THREBQ_HOO_DMBE4(Q1,Q2,Q3)+ &
-         EXDIS_HOO_DMBE4(R1,R2,R3)+ELECT_HOO_DMBE4(R1,R2,R3)
+        THREBQ_HOO_DMBE4(Q1,Q2,Q3)+ &
+        EXDIS_HOO_DMBE4(R1,R2,R3)+ELECT_HOO_DMBE4(R1,R2,R3)
 
-      END
-      FUNCTION THREBQ_HOO_DMBE4(Q1,Q2,Q3)
+  END
+  FUNCTION THREBQ_HOO_DMBE4(Q1,Q2,Q3)
   USE mod_NumParameters
       IMPLICIT DOUBLE PRECISION(A-H,O-Z)
       COMMON/COEFF_HOO_DMBE4/C(52)
@@ -219,7 +288,7 @@ END MODULE mod_HOO_DMBE_Model
       Q22=Q2*Q2
       Q32=Q3*Q3
       TQ1=Q22+Q32
-      TQ2=Q32-3.0_Rkind*Q22
+      TQ2=Q32-THREE*Q22
       TQ3=Q22-Q32
       TQ12=TQ1*TQ1
       TQ13=TQ12*TQ1
@@ -239,9 +308,9 @@ END MODULE mod_HOO_DMBE_Model
         C(41)*Q32*TQ22+C(42)*Q15*Q3+C(43)*Q14*TQ3+C(44)*Q13*Q3*TQ1+&
         C(45)*Q12*Q32*TQ2+C(46)*Q12*TQ1*TQ3+C(47)*Q1*Q3*TQ12+&
         C(48)*Q1*Q3*TQ2*TQ3+C(49)*Q32*TQ1*TQ2+C(50)*TQ12*TQ3
-      DECAY1=1.0_Rkind-TANH(C(51)*S1)
-      DECAY2=1.0_Rkind-TANH(C(52)*S2)
-      DECAY3=1.0_Rkind-TANH(C(52)*S3)
+      DECAY1=ONE-TANH(C(51)*S1)
+      DECAY2=ONE-TANH(C(52)*S2)
+      DECAY3=ONE-TANH(C(52)*S3)
 
       THREBQ_HOO_DMBE4=POLQ*DECAY1*DECAY2*DECAY3
 
@@ -265,7 +334,7 @@ END MODULE mod_HOO_DMBE_Model
       R2=X*X
       R3=R2*X
 
-      EHFOH_HOO_DMBE4=-D*(1.0_Rkind+ASV(1)*X+ASV(2)*R2+ASV(3)*R3)*EXP(-ASV(4)*X)
+      EHFOH_HOO_DMBE4=-D*(ONE+ASV(1)*X+ASV(2)*R2+ASV(3)*R3)*EXP(-ASV(4)*X)
 
   END
   FUNCTION DISOH_HOO_DMBE4(R)
@@ -296,7 +365,7 @@ END MODULE mod_HOO_DMBE_Model
       R2=X*X
       R3=R2*X
 
-      EHFOO_HOO_DMBE4=-D*(1.0_Rkind+ASV(1)*X+ASV(2)*R2+ASV(3)*R3)*EXP(-ASV(4)*X)
+      EHFOO_HOO_DMBE4=-D*(ONE+ASV(1)*X+ASV(2)*R2+ASV(3)*R3)*EXP(-ASV(4)*X)
 
   END
   FUNCTION DISOO_HOO_DMBE4(R)
@@ -312,8 +381,8 @@ END MODULE mod_HOO_DMBE_Model
   USE mod_NumParameters
       IMPLICIT DOUBLE PRECISION(A-H,O-Z)
 
-      CEF_HOO_DMBE4=0.5_Rkind*CAS*((1.0_Rkind-RK01*EXP(-RK11*(R1-RE1)))*TANH(RK12*R2)+&
-       (1.0_Rkind-RK02*EXP(-RK12*(R2-RE2)))*TANH(RK11*R1))
+      CEF_HOO_DMBE4=0.5_Rkind*CAS*((ONE-RK01*EXP(-RK11*(R1-RE1)))*TANH(RK12*R2)+&
+       (ONE-RK02*EXP(-RK12*(R2-RE2)))*TANH(RK11*R1))
 
   END
   FUNCTION EXDIS_HOO_DMBE4 (R1,R2,R3)
@@ -383,17 +452,17 @@ END MODULE mod_HOO_DMBE_Model
       C5OHR3=CRE52*TAO
       C4OO=CRE43*TAH2+CRE42*TAH3
       C5OO=CRE53*TAH2+CRE52*TAH3
-      RROH2=2.0_Rkind*R2/(RMOH+2.5_Rkind*R0OH)
-      RROH3=2.0_Rkind*R3/(RMOH+2.5_Rkind*R0OH)
-      RROO=2.0_Rkind*R1/(RMOO+2.5_Rkind*R0OO)
+      RROH2=TWO*R2/(RMOH+2.5_Rkind*R0OH)
+      RROH3=TWO*R3/(RMOH+2.5_Rkind*R0OH)
+      RROO=TWO*R1/(RMOO+2.5_Rkind*R0OO)
 
-    TERM4=C4OO/R14*(1.0_Rkind-EXP(-ADAMP(4)*RROO-BDAMP(4)*RROO**2))**4+         &
-          C4OHR2/R24*(1.0_Rkind-EXP(-ADAMP(4)*RROH2-BDAMP(4)*RROH2**2))**4+     &
-          C4OHR3/R34*(1.0_Rkind-EXP(-ADAMP(4)*RROH3-BDAMP(4)*RROH3**2))**4
+    TERM4=C4OO/R14*(ONE-EXP(-ADAMP(4)*RROO-BDAMP(4)*RROO**2))**4+         &
+          C4OHR2/R24*(ONE-EXP(-ADAMP(4)*RROH2-BDAMP(4)*RROH2**2))**4+     &
+          C4OHR3/R34*(ONE-EXP(-ADAMP(4)*RROH3-BDAMP(4)*RROH3**2))**4
 
-    TERM5=C5OO/R15*(1.0_Rkind-EXP(-ADAMP(5)*RROO-BDAMP(5)*RROO**2))**5+         &
-          C5OHR2/R25*(1.0_Rkind-EXP(-ADAMP(5)*RROH2-BDAMP(5)*RROH2**2))**5+     &
-          C5OHR3/R35*(1.0_Rkind-EXP(-ADAMP(5)*RROH3-BDAMP(5)*RROH3**2))**5
+    TERM5=C5OO/R15*(ONE-EXP(-ADAMP(5)*RROO-BDAMP(5)*RROO**2))**5+         &
+          C5OHR2/R25*(ONE-EXP(-ADAMP(5)*RROH2-BDAMP(5)*RROH2**2))**5+     &
+          C5OHR3/R35*(ONE-EXP(-ADAMP(5)*RROH3-BDAMP(5)*RROH3**2))**5
 
     ELECT_HOO_DMBE4=TERM4+TERM5
 
@@ -406,10 +475,10 @@ END MODULE mod_HOO_DMBE_Model
       R6=R**6
       R8=R6*R*R
       R10=R8*R*R
-      RR=2.0_Rkind*R/(RM+2.5_Rkind*R0)
-      D6=(1.0_Rkind-EXP(-ADAMP(6)*RR-BDAMP(6)*RR*RR))**6
-      D8=(1.0_Rkind-EXP(-ADAMP(8)*RR-BDAMP(8)*RR*RR))**8
-      D10=(1.0_Rkind-EXP(-ADAMP(10)*RR-BDAMP(10)*RR*RR))**10
+      RR=TWO*R/(RM+2.5_Rkind*R0)
+      D6=(ONE-EXP(-ADAMP(6)*RR-BDAMP(6)*RR*RR))**6
+      D8=(ONE-EXP(-ADAMP(8)*RR-BDAMP(8)*RR*RR))**8
+      D10=(ONE-EXP(-ADAMP(10)*RR-BDAMP(10)*RR*RR))**10
 
       DISP_HOO_DMBE4=-C6/R6*D6-C8/R8*D8-C10/R10*D10
 

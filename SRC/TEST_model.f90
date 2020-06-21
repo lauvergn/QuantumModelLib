@@ -36,7 +36,7 @@ PROGRAM TEST_model
   !CALL test_Retinal_JPCB2000() ; stop
   !CALL test_Tully_test() ; stop
   !CALL test_PSB3_test() ; stop
-  !CALL test_HOO_DMBE ; stop
+  CALL test_HOO_DMBE ; stop
   !CALL test_Test() ; stop
 
 
@@ -1508,7 +1508,7 @@ SUBROUTINE test_HOO_DMBE
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: Q(:,:)
+  real (kind=Rkind), allocatable :: Q(:,:),x(:,:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
 
@@ -1525,7 +1525,7 @@ SUBROUTINE test_HOO_DMBE
 
   CALL Init_Model(QModel,pot_name='HOO_DMBE')
 
-  allocate(q(QModel%ndim,3))
+  allocate(Q(QModel%ndim,3))
 
   ! OH...O in TableVII of JCP paper, E=-0.1738 Hartree
   Q(:,1) = [5.663_Rkind,3.821_Rkind,1.842_Rkind]
@@ -1553,6 +1553,24 @@ SUBROUTINE test_HOO_DMBE
     ! For testing the model
     CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HOO_DMBE')
   END DO
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(Q)
+  write(out_unitp,*) ' END Potential and derivatives'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(QModel,pot_name='HOO_DMBE',Cart_TO_Q=.TRUE.)
+  nderiv = 1
+
+  allocate(x(3,3))
+  x(:,1) = [ZERO,ZERO,-7.547_Rkind] ! H1
+  x(:,2) = [ZERO,ZERO,ZERO]         ! O2
+  x(:,3) = [ZERO,ZERO,2.282_Rkind]  ! O3
+
+  CALL Eval_Pot(QModel,reshape(x,shape=[9]),PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  deallocate(x)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -1603,8 +1621,6 @@ SUBROUTINE test_Test
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
-
-
 
 END SUBROUTINE test_Test
 SUBROUTINE test_Tully_test

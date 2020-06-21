@@ -45,7 +45,7 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
       write(out_unitp,*) ' ERROR in sub_Init_Qmodel'
       write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
       write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unitp,*) '   .... with the intialized ones !!'
+      write(out_unitp,*) '   .... with the initialized ones !!'
       write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
       write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
       write(out_unitp,*) '   CHECK your data !!'
@@ -54,6 +54,41 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 !$OMP END CRITICAL (CRIT_sub_Init_Qmodel)
 
 END SUBROUTINE sub_Init_Qmodel
+SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
+
+  integer,                intent(in)        :: ndim,nsurf
+  character (len=*),      intent(in)        :: pot_name
+  integer,                intent(in)        :: option
+  logical,                intent(in)        :: adiabatic
+
+!$OMP CRITICAL (CRIT_sub_Init_Qmodel_Cart)
+    !$ write(out_unitp,*) 'begining: max threads?',omp_get_max_threads()
+    write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
+    flush(out_unitp)
+
+    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),              &
+                    ndim=ndim,nsurf=nsurf,adiabatic=adiabatic,Cart_TO_Q=.TRUE., &
+                    option=option)
+
+    CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Init_Qmodel_Cart in Model_driver.f90')
+
+    IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
+      write(out_unitp,*) ' ERROR in sub_Init_Qmodel_Cart'
+      write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
+      write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
+      write(out_unitp,*) '   .... with the initialized ones !!'
+      write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
+      write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
+      write(out_unitp,*) '   CHECK your data !!'
+      STOP 'ERROR in sub_Init_Qmodel_Cart: wrong ndim or nsurf'
+    END IF
+!$OMP END CRITICAL (CRIT_sub_Init_Qmodel_Cart)
+
+END SUBROUTINE sub_Init_Qmodel_Cart
 SUBROUTINE sub_Write_Qmodel(nio)
   USE mod_Model
   IMPLICIT NONE
@@ -167,12 +202,12 @@ SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
-  real (kind=Rkind),      intent(inout)     ::                          &
-                                V(QuantumModel%nsurf,QuantumModel%nsurf)
-  real (kind=Rkind),      intent(inout)     ::                          &
-              g(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
-  real (kind=Rkind),      intent(inout)     :: h(QuantumModel%nsurf,    &
-                 QuantumModel%nsurf,QuantumModel%ndim,QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)     ::                                  &
+                                        V(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     ::                                  &
+                      g(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)     :: h(QuantumModel%nsurf,            &
+                         QuantumModel%nsurf,QuantumModel%ndim,QuantumModel%ndim)
 
   CALL calc_pot_grad_hess(V,G,H,QuantumModel,Q)
 

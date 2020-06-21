@@ -204,8 +204,8 @@ CONTAINS
 
   END SUBROUTINE Read_Model
 
-  SUBROUTINE Init_Model(QModel,pot_name,ndim,nsurf,adiabatic,       &
-                        read_param,param_file_name,nio_param_file,      &
+  SUBROUTINE Init_Model(QModel,pot_name,ndim,nsurf,adiabatic,Cart_TO_Q,         &
+                        read_param,param_file_name,nio_param_file,              &
                         option,PubliUnit,Print_init)
   USE mod_Lib
   IMPLICIT NONE
@@ -215,6 +215,7 @@ CONTAINS
     character (len=*),   intent(in), optional :: pot_name
     integer,             intent(in), optional :: ndim,nsurf
     logical,             intent(in), optional :: adiabatic
+    logical,             intent(in), optional :: Cart_TO_Q
 
     logical,             intent(in), optional :: read_param
     integer,             intent(in), optional :: nio_param_file
@@ -283,6 +284,12 @@ CONTAINS
       QModel_in%adiabatic = adiabatic
     ELSE
       QModel_in%adiabatic = .TRUE.
+    END IF
+
+    IF (present(Cart_TO_Q)) THEN
+      QModel_in%Cart_TO_Q = Cart_TO_Q
+    ELSE
+      QModel_in%Cart_TO_Q = .FALSE.
     END IF
 
     IF (present(option)) THEN
@@ -557,7 +564,7 @@ CONTAINS
       !!         JCP, 1990, 94, 8073-8080, doi: 10.1021/j100384a019.
       !! === END README ==
       allocate(HOO_DMBE_Model_t :: QModel%QM)
-      QModel%QM = Init_HOO_DMBE_Model(QModel_in,read_param=read_param_loc, &
+      QModel%QM = Init_HOO_DMBE_Model(QModel_in,read_param=read_param_loc,      &
                                       nio_param_file=nio_loc)
 
     CASE ('template')
@@ -821,9 +828,10 @@ CONTAINS
     TYPE (dnMat_t),        intent(inout), optional  :: NAC,Vec
 
     ! local variables
-    integer                     :: i,j,id
+    integer                     :: i,j,ij,id,nat
     TYPE (dnMat_t)              :: PotVal_dia,Vec_loc,NAC_loc
     TYPE (dnS_t), allocatable   :: dnQ(:)
+    TYPE (dnS_t), allocatable   :: dnX(:,:)
     TYPE (dnS_t), allocatable   :: Mat_OF_PotDia(:,:)
     logical :: old = .FALSE.
     !logical :: old = .TRUE.
@@ -859,10 +867,30 @@ CONTAINS
     END DO
 
     ! intialization of the dnQ(:)
-    allocate(dnQ(QModel%QM%ndim))
-    DO i=1,QModel%QM%ndim
-      dnQ(i) = QML_init_dnS(Q(i),ndim=QModel%QM%ndim,nderiv=nderiv,iQ=i) ! to set up the derivatives
-    END DO
+    IF (QModel%QM%Cart_TO_Q) THEN
+      !in Q(:) we have the cartesian coordinates
+      allocate(dnQ(QModel%QM%ndimQ))
+      nat = int(QModel%QM%ndim/3)
+      allocate(dnX(3,nat))
+      ij = 0
+      DO i=1,nat
+      DO j=1,3
+        ij = ij + 1
+        dnX(j,i) = QML_init_dnS(Q(ij),ndim=QModel%QM%ndim,nderiv=nderiv,iQ=ij) ! to set up the derivatives
+      END DO
+      END DO
+
+      CALL QModel%QM%Cart_TO_Q_QModel(dnX,dnQ,nderiv=nderiv)
+
+      CALL QML_dealloc_dnS(dnX)
+      deallocate(dnX)
+
+    ELSE
+      allocate(dnQ(QModel%QM%ndim))
+      DO i=1,QModel%QM%ndim
+        dnQ(i) = QML_init_dnS(Q(i),ndim=QModel%QM%ndim,nderiv=nderiv,iQ=i) ! to set up the derivatives
+      END DO
+    END IF
 
     CALL QModel%QM%Eval_QModel_Pot(Mat_OF_PotDia,dnQ,nderiv=nderiv)
 
@@ -1055,8 +1083,6 @@ END IF
     integer                            :: i,j,k,ip,jp,kp
 
     integer                            :: i_pt,nb_pts,ind1DQ(1),ind2DQ(2),ind3DQ(3)
-
-
 
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_dia_v3')
 
