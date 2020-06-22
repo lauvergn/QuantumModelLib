@@ -57,6 +57,103 @@ MODULE mod_HOO_DMBE_Model
 
   PUBLIC :: HOO_DMBE_Model_t,Init_HOO_DMBE_Model
 
+
+    REAL (kind=Rkind), parameter :: C(52) = [                                                &
+     .49040645E+01_Rkind, -.86748216E+01_Rkind,  .50555792E+01_Rkind,  .42941301E+01_Rkind,  &
+    -.41874792E+01_Rkind,  .13461379_Rkind,     -.99064922_Rkind,      .13358488E+01_Rkind,  &
+     .13495231E+01_Rkind, -.18529696_Rkind,     -.23534213E+02_Rkind,  .24289930E+02_Rkind,  &
+    -.50209026E+01_Rkind, -.10365484E+02_Rkind,  .46692224E+01_Rkind, -.14747138E+01_Rkind,  &
+     .23119718E+01_Rkind, -.18247842E+01_Rkind, -.28472166_Rkind,      .51036509_Rkind,      &
+     .19124083_Rkind,      .45405729E+01_Rkind,  .11087611_Rkind,     -.19990481_Rkind,      &
+    -.37356178_Rkind,      .46142042E-01_Rkind, -.20565580_Rkind,     -.27015963_Rkind,      &
+     .34085281_Rkind,      .28321162_Rkind,     -.11558481_Rkind,     -.29448886_Rkind,      &
+    -.52932488_Rkind,      .58159523E-01_Rkind, -.48649560E-02_Rkind,  .11949167E-01_Rkind,  &
+     .21409804E-01_Rkind, -.20620608E-02_Rkind,  .30177088E-01_Rkind,  .27880291E-01_Rkind,  &
+     .88458711E-02_Rkind,  .13137410E-01_Rkind, -.24705619E-01_Rkind,  -.31085889E-01_Rkind, &
+     .34317857E-02_Rkind,  .52593878E-01_Rkind,  .79500714E-01_Rkind,  -.79782216E-02_Rkind, &
+     .31164575E-01_Rkind, -.28737598E-01_Rkind,  .98201698_Rkind,       .62000000_Rkind]
+
+    REAL (kind=Rkind), parameter  :: RMOO   = 2.2818_Rkind
+    REAL (kind=Rkind), parameter  :: R0OO   = 5.661693_Rkind
+    REAL (kind=Rkind), parameter  :: RMOH   = 1.8344_Rkind
+    REAL (kind=Rkind), parameter  :: R0OH   = 6.294894_Rkind
+
+    REAL (kind=Rkind), parameter  :: COO(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,        &
+                        15.40_Rkind,ZERO,235.219943_Rkind,ZERO,4066.23929_Rkind]
+    REAL (kind=Rkind), parameter  :: COH(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,TEN,    &
+                                    ZERO,180.447673_Rkind,ZERO,3685.25842_Rkind]
+
+    REAL (kind=Rkind), parameter  :: C4   = -0.92921_Rkind
+    REAL (kind=Rkind), parameter  :: C5   = -1.79000_Rkind
+
+    REAL (kind=Rkind), parameter  :: RK0OO(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,      &
+                  -.27847758_Rkind,ZERO,-.46815641_Rkind,ZERO,-1.20506384_Rkind]
+    REAL (kind=Rkind), parameter  :: RK1OO(10)= [ZERO,ZERO,ZERO,                &
+                   3.35224980_Rkind,3.35224980_Rkind,0.95273753_Rkind,ZERO,     &
+                   0.94148408_Rkind,ZERO,0.72379129_Rkind]
+    REAL (kind=Rkind), parameter  :: RK0OH(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,      &
+                    0.02465005_Rkind,ZERO,0.05036950_Rkind,ZERO,0.06294371_Rkind]
+    REAL (kind=Rkind), parameter  :: RK1OH(10)= [ZERO,ZERO,ZERO,                &
+                    2.54532760_Rkind,2.54532760_Rkind,0.68758097_Rkind,ZERO,    &
+                    0.82542359_Rkind,ZERO,0.94034225_Rkind]
+
+    REAL (kind=Rkind), parameter  :: ADAMP(10) = [ZERO,ZERO,ZERO,               &
+                    5.0079875_Rkind,3.8428294_Rkind,3.0951333_Rkind,ZERO,       &
+                    2.1999000_Rkind,ZERO,1.6880714_Rkind]
+    REAL (kind=Rkind), parameter  :: BDAMP(10) = [ZERO,ZERO,ZERO,               &
+                             10.6645006_Rkind,9.6758155_Rkind,8.7787895_Rkind,  &
+                             ZERO,7.2265123_Rkind,ZERO,5.9487108_Rkind]
+
+    REAL (kind=Rkind), parameter :: R10 = 2.5143000_Rkind
+    REAL (kind=Rkind), parameter :: R20 = 2.6469057_Rkind
+    REAL (kind=Rkind), parameter :: R30 = 2.6469057_Rkind
+
+!   BLOCK DATA HO2DAT_HOO_DMBE4
+!   USE mod_NumParameters
+!       IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+!       COMMON/COEFF_HOO_DMBE4/C(52)
+!       COMMON/DISPC_HOO_DMBE4/COO(10),COH(10)
+!       COMMON/DIATDI_HOO_DMBE4/R0OO,RMOO,R0OH,RMOH
+!       COMMON/RKVAL_HOO_DMBE4/RK0OO(10),RK1OO(10),RK0OH(10),RK1OH(10)
+!       COMMON/POLAR_HOO_DMBE4/C4,C5
+!       COMMON/DAMPC_HOO_DMBE4/ADAMP(10),BDAMP(10)
+!       COMMON/REFGEO_HOO_DMBE4/R10,R20,R30
+! !     ***************************************************************
+!       DATA C/ &
+!        .49040645E+01_Rkind, -.86748216E+01_Rkind,  .50555792E+01_Rkind,  .42941301E+01_Rkind,&
+!       -.41874792E+01_Rkind,  .13461379_Rkind,     -.99064922_Rkind,      .13358488E+01_Rkind,&
+!        .13495231E+01_Rkind, -.18529696_Rkind,     -.23534213E+02_Rkind,  .24289930E+02_Rkind,&
+!       -.50209026E+01_Rkind, -.10365484E+02_Rkind,  .46692224E+01_Rkind, -.14747138E+01_Rkind,&
+!        .23119718E+01_Rkind, -.18247842E+01_Rkind, -.28472166_Rkind,      .51036509_Rkind,&
+!        .19124083_Rkind,      .45405729E+01_Rkind,  .11087611_Rkind,      -.19990481_Rkind,&
+!       -.37356178_Rkind,      .46142042E-01_Rkind, -.20565580_Rkind,      -.27015963_Rkind,&
+!        .34085281_Rkind,      .28321162_Rkind,     -.11558481_Rkind,      -.29448886_Rkind,&
+!       -.52932488_Rkind,      .58159523E-01_Rkind, -.48649560E-02_Rkind,   .11949167E-01_Rkind,&
+!        .21409804E-01_Rkind, -.20620608E-02_Rkind,  .30177088E-01_Rkind,   .27880291E-01_Rkind,&
+!        .88458711E-02_Rkind,  .13137410E-01_Rkind, -.24705619E-01_Rkind,   -.31085889E-01_Rkind,&
+!        .34317857E-02_Rkind,  .52593878E-01_Rkind,  .79500714E-01_Rkind,    -.79782216E-02_Rkind,&
+!        .31164575E-01_Rkind, -.28737598E-01_Rkind,  .98201698_Rkind,         .62000000_Rkind/
+!     DATA R0OO,RMOO,R0OH,RMOH/5.661693_Rkind,2.2818_Rkind,6.294894_Rkind,1.8344_Rkind/
+!     DATA COO/ZERO,ZERO,ZERO,ZERO,0._Rkind,15.40_Rkind,ZERO,235.219943_Rkind,&
+!              ZERO,4066.23929_Rkind/
+!     DATA COH/ZERO,ZERO,ZERO,ZERO,0._Rkind,10.00_Rkind,ZERO,180.447673_Rkind,&
+!               ZERO,3685.25842_Rkind/
+!     DATA C4,C5/-0.92921_Rkind,-1.79000_Rkind/
+!     DATA RK0OO/ZERO,ZERO,ZERO,ZERO,ZERO,-.27847758_Rkind,ZERO,&
+!                 -.46815641_Rkind,ZERO,-1.20506384_Rkind/
+!     DATA RK1OO/ZERO,ZERO,ZERO,3.35224980_Rkind,3.35224980_Rkind,&
+!                 0.95273753_Rkind,ZERO,0.94148408_Rkind,ZERO,0.72379129_Rkind/
+!     DATA RK0OH/ZERO,ZERO,ZERO,ZERO,ZERO,0.02465005_Rkind,ZERO,&
+!                 0.05036950_Rkind,ZERO,0.06294371_Rkind/
+!     DATA RK1OH/ZERO,ZERO,ZERO,2.54532760_Rkind,2.54532760_Rkind,&
+!                 0.68758097_Rkind,ZERO,0.82542359_Rkind,ZERO,0.94034225_Rkind/
+!     DATA ADAMP/ZERO,ZERO,ZERO,5.0079875_Rkind,3.8428294_Rkind,3.0951333_Rkind,&
+!                 ZERO,2.1999000_Rkind,ZERO,1.6880714_Rkind/
+!     DATA BDAMP/ZERO,ZERO,0._Rkind,10.6645006_Rkind,9.6758155_Rkind,8.7787895_Rkind,&
+!                 ZERO,7.2265123_Rkind,ZERO,5.9487108_Rkind/
+!     DATA R10,R20,R30/2.5143000_Rkind,2.6469057_Rkind,2.6469057_Rkind/
+!   END
+
   CONTAINS
 !> @brief Function which makes the initialization of the HOO_DMBE parameters.
 !!
@@ -250,7 +347,6 @@ MODULE mod_HOO_DMBE_Model
     END IF
   END SUBROUTINE Cart_TO_Q_HOO_DMBE_Model
 
-END MODULE mod_HOO_DMBE_Model
 
   SUBROUTINE HOO_DMBE4_pes(X,F)
   USE mod_NumParameters
@@ -261,15 +357,6 @@ END MODULE mod_HOO_DMBE_Model
     REAL (kind=Rkind), intent(inout) :: F
 
     REAL (kind=Rkind) :: R1,R2,R3,Q1,Q2,Q3
-
-    REAL (kind=Rkind) :: VOO_HOO_DMBE4,VOH_HOO_DMBE4 ! functions
-    REAL (kind=Rkind) :: THREBQ_HOO_DMBE4 ! functions
-    REAL (kind=Rkind) :: EXDIS_HOO_DMBE4,ELECT_HOO_DMBE4 ! functions
-
-    !DIMENSION X(3)
-    !COMMON/COEFF_HOO_DMBE4/C(52)
-    !COMMON/THRBOD_HOO_DMBE4/POLQ,DECAY1,DECAY2,DECAY3,R1,R2,R3 ! DML now R1,R2,R3 are dummy variables in THREBQ_HOO_DMBE4
-    !COMMON/REFGEO_HOO_DMBE4/R10,R20,R30
 
     R1=X(1) ! O-O distance
     R2=X(2) ! H-O(2) distance
@@ -292,35 +379,13 @@ END MODULE mod_HOO_DMBE_Model
     REAL (kind=Rkind)             :: THREBQ_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: Q1,Q2,Q3,R1,R2,R3
 
-    !COMMON/COEFF_HOO_DMBE4/C(52)
-    !COMMON/THRBOD_HOO_DMBE4/POLQ,DECAY1,DECAY2,DECAY3,R1,R2,R3 ! DML now R1,R2,R3 are dummy arguments
-    !COMMON/REFGEO_HOO_DMBE4/R10,R20,R30
 
     REAL (kind=Rkind) :: POLQ,DECAY1,DECAY2,DECAY3
     REAL (kind=Rkind) :: Q12,Q13,Q14,Q15,Q16,Q22,Q32
     REAL (kind=Rkind) :: TQ1,TQ2,TQ3,TQ12,TQ13,TQ22
     REAL (kind=Rkind) :: S1,S2,S3
 
-    REAL (kind=Rkind), parameter :: R10 = 2.5143000_Rkind
-    REAL (kind=Rkind), parameter :: R20 = 2.6469057_Rkind
-    REAL (kind=Rkind), parameter :: R30 = 2.6469057_Rkind
 
-    REAL (kind=Rkind), parameter :: C(52) = [                                   &
-       .49040645E+01_Rkind, -.86748216E+01_Rkind,  .50555792E+01_Rkind,  .42941301E+01_Rkind,&
-      -.41874792E+01_Rkind,  .13461379_Rkind,     -.99064922_Rkind,      .13358488E+01_Rkind,&
-       .13495231E+01_Rkind, -.18529696_Rkind,     -.23534213E+02_Rkind,  .24289930E+02_Rkind,&
-      -.50209026E+01_Rkind, -.10365484E+02_Rkind,  .46692224E+01_Rkind, -.14747138E+01_Rkind,&
-       .23119718E+01_Rkind, -.18247842E+01_Rkind, -.28472166_Rkind,      .51036509_Rkind,&
-       .19124083_Rkind,      .45405729E+01_Rkind,  .11087611_Rkind,      -.19990481_Rkind,&
-      -.37356178_Rkind,      .46142042E-01_Rkind, -.20565580_Rkind,      -.27015963_Rkind,&
-       .34085281_Rkind,      .28321162_Rkind,     -.11558481_Rkind,      -.29448886_Rkind,&
-      -.52932488_Rkind,      .58159523E-01_Rkind, -.48649560E-02_Rkind,   .11949167E-01_Rkind,&
-       .21409804E-01_Rkind, -.20620608E-02_Rkind,  .30177088E-01_Rkind,   .27880291E-01_Rkind,&
-       .88458711E-02_Rkind,  .13137410E-01_Rkind, -.24705619E-01_Rkind,   -.31085889E-01_Rkind,&
-       .34317857E-02_Rkind,  .52593878E-01_Rkind,  .79500714E-01_Rkind,    -.79782216E-02_Rkind,&
-       .31164575E-01_Rkind, -.28737598E-01_Rkind,  .98201698_Rkind,         .62000000_Rkind]
-
-    !     ****************************************************************
     Q12=Q1*Q1
     Q13=Q12*Q1
     Q14=Q13*Q1
@@ -365,9 +430,6 @@ END MODULE mod_HOO_DMBE_Model
     REAL (kind=Rkind)             :: VOH_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
 
-    REAL (kind=Rkind)             :: EHFOH_HOO_DMBE4,DISOH_HOO_DMBE4 ! functions
-
-
     VOH_HOO_DMBE4 = EHFOH_HOO_DMBE4(R) + DISOH_HOO_DMBE4(R)
 
   END FUNCTION VOH_HOO_DMBE4
@@ -381,14 +443,9 @@ END MODULE mod_HOO_DMBE_Model
 
     REAL (kind=Rkind)             :: X,R2,R3
     REAL (kind=Rkind), parameter  :: D      = 0.13825385_Rkind
-    REAL (kind=Rkind), parameter  :: RMOH   = 1.8344_Rkind
     REAL (kind=Rkind), parameter  :: ASV(4) = [2.6564788_Rkind,1.7450528_Rkind, &
                                                0.71014391_Rkind,2.5453276_Rkind]
-    !DIMENSION ASV(4)
-    !COMMON/DIATDI_HOO_DMBE4/R0OO,RMOO,R0OH,RMOH
-    !****************************************************************
-    !DATA D,ASV/0.13825385_Rkind,2.6564788_Rkind,1.7450528_Rkind,0.71014391_Rkind,2.5453276_Rkind/
-    !****************************************************************
+
     X=R-RMOH
     R2=X*X
     R3=R2*X
@@ -404,15 +461,6 @@ END MODULE mod_HOO_DMBE_Model
     REAL (kind=Rkind)             :: DISOH_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
 
-    REAL (kind=Rkind)             :: DISP_HOO_DMBE4 ! function
-
-    REAL (kind=Rkind), parameter  :: RMOH   = 1.8344_Rkind
-    REAL (kind=Rkind), parameter  :: R0OH   = 6.294894_Rkind
-    REAL (kind=Rkind), parameter  :: COH(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,TEN,    &
-                                    ZERO,180.447673_Rkind,ZERO,3685.25842_Rkind]
-    !COMMON/DISPC_HOO_DMBE4/COO(10),COH(10)
-    !COMMON/DIATDI_HOO_DMBE4/R0OO,RMOO,R0OH,RMOH
-
     DISOH_HOO_DMBE4 = DISP_HOO_DMBE4(R,COH(6),COH(8),COH(10),R0OH,RMOH)
 
   END FUNCTION DISOH_HOO_DMBE4
@@ -423,7 +471,7 @@ END MODULE mod_HOO_DMBE_Model
     REAL (kind=Rkind)             :: VOO_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
 
-    REAL (kind=Rkind)             :: EHFOO_HOO_DMBE4,DISOO_HOO_DMBE4 ! functions
+    !REAL (kind=Rkind)             :: EHFOO_HOO_DMBE4,DISOO_HOO_DMBE4 ! functions
 
     VOO_HOO_DMBE4 = EHFOO_HOO_DMBE4(R)+DISOO_HOO_DMBE4(R)
 
@@ -439,15 +487,8 @@ END MODULE mod_HOO_DMBE_Model
 
     REAL (kind=Rkind)             :: X,R2,R3
     REAL (kind=Rkind), parameter  :: D      = 0.14291202_Rkind
-    REAL (kind=Rkind), parameter  :: RMOO   = 2.2818_Rkind
     REAL (kind=Rkind), parameter  :: ASV(4) = [3.6445906_Rkind,3.9281238_Rkind, &
                                                2.0986689_Rkind,3.3522498_Rkind]
-
-    !DIMENSION ASV(4)
-    !COMMON/DIATDI_HOO_DMBE4/R0OO,RMOO,R0OH,RMOH
-    !     ****************************************************************
-    !DATA D,ASV/0.14291202_Rkind,3.6445906_Rkind,3.9281238_Rkind,2.0986689_Rkind,3.3522498_Rkind/
-    !     ****************************************************************
 
     X  = R-RMOO
     R2 = X*X
@@ -464,16 +505,6 @@ END MODULE mod_HOO_DMBE_Model
     REAL (kind=Rkind)             :: DISOO_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
 
-    REAL (kind=Rkind)             :: DISP_HOO_DMBE4 ! function
-
-    REAL (kind=Rkind), parameter  :: RMOO   = 2.2818_Rkind
-    REAL (kind=Rkind), parameter  :: R0OO   = 5.661693_Rkind
-
-    REAL (kind=Rkind), parameter  :: COO(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,        &
-                        15.40_Rkind,ZERO,235.219943_Rkind,ZERO,4066.23929_Rkind]
-
-    !COMMON/DISPC_HOO_DMBE4/COO(10),COH(10)
-    !COMMON/DIATDI_HOO_DMBE4/R0OO,RMOO,R0OH,RMOH
 
     DISOO_HOO_DMBE4 = DISP_HOO_DMBE4(R,COO(6),COO(8),COO(10),R0OO,RMOO)
 
@@ -501,37 +532,9 @@ END MODULE mod_HOO_DMBE_Model
     REAL (kind=Rkind)             :: EXDIS_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R1,R2,R3
 
-    REAL (kind=Rkind), parameter  :: COO(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,        &
-                        15.40_Rkind,ZERO,235.219943_Rkind,ZERO,4066.23929_Rkind]
-    REAL (kind=Rkind), parameter  :: RMOO   = 2.2818_Rkind
-    REAL (kind=Rkind), parameter  :: R0OO   = 5.661693_Rkind
-
-    REAL (kind=Rkind), parameter  :: COH(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,TEN,    &
-                                    ZERO,180.447673_Rkind,ZERO,3685.25842_Rkind]
-    REAL (kind=Rkind), parameter  :: RMOH   = 1.8344_Rkind
-    REAL (kind=Rkind), parameter  :: R0OH   = 6.294894_Rkind
-
-    REAL (kind=Rkind), parameter  :: RK0OO(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,      &
-                  -.27847758_Rkind,ZERO,-.46815641_Rkind,ZERO,-1.20506384_Rkind]
-    REAL (kind=Rkind), parameter  :: RK1OO(10)= [ZERO,ZERO,ZERO,                &
-                   3.35224980_Rkind,3.35224980_Rkind,0.95273753_Rkind,ZERO,     &
-                   0.94148408_Rkind,ZERO,0.72379129_Rkind]
-    REAL (kind=Rkind), parameter  :: RK0OH(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,      &
-                    0.02465005_Rkind,ZERO,0.05036950_Rkind,ZERO,0.06294371_Rkind]
-    REAL (kind=Rkind), parameter  :: RK1OH(10)= [ZERO,ZERO,ZERO,                &
-                    2.54532760_Rkind,2.54532760_Rkind,0.68758097_Rkind,ZERO,    &
-                    0.82542359_Rkind,ZERO,0.94034225_Rkind]
-
-    !COMMON/DISPC_HOO_DMBE4/COO(10),COH(10)
-    !COMMON/RKVAL_HOO_DMBE4/RK0OO(10),RK1OO(10),RK0OH(10),RK0OH(10)  ! DML pourquoi 2fois RK0OH(10) ???
-    !COMMON/DIATDI_HOO_DMBE4/R0OO,RMOO,R0OH,RMOH
-
-    !COMMON/DISCO_HOO_DMBE4/CEFOO(10),CEFOH2(10),CEFOH3(10),CEDOO(10),CEDOH2(10) ! resultats
-    !COMMON/DISCO2_HOO_DMBE4/CEDOH3(10)
 
     REAL (kind=Rkind)  :: CEFOO(10),CEFOH2(10),CEFOH3(10),CEDOO(10),CEDOH2(10),CEDOH3(10)
     integer            :: i
-    REAL (kind=Rkind)  :: CEF_HOO_DMBE4,DISP_HOO_DMBE4 ! function
 
     DO i=6,10,2
       CEFOO(i)=CEF_HOO_DMBE4(COO(i),RK0OH(i),RK1OH(i),RK0OH(i),RK1OH(i),RMOH,RMOH,R2,R3)
@@ -555,49 +558,11 @@ END MODULE mod_HOO_DMBE_Model
     REAL (kind=Rkind)             :: ELECT_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R1,R2,R3
 
-    REAL (kind=Rkind), parameter  :: C4   = -0.92921_Rkind
-    REAL (kind=Rkind), parameter  :: C5   = -1.79000_Rkind
-
-    !REAL (kind=Rkind), parameter  :: COO(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,        &
-    !                    15.40_Rkind,ZERO,235.219943_Rkind,ZERO,4066.23929_Rkind]
-    REAL (kind=Rkind), parameter  :: RMOO   = 2.2818_Rkind
-    REAL (kind=Rkind), parameter  :: R0OO   = 5.661693_Rkind
-
-    !REAL (kind=Rkind), parameter  :: COH(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,TEN,    &
-    !                                ZERO,180.447673_Rkind,ZERO,3685.25842_Rkind]
-    REAL (kind=Rkind), parameter  :: RMOH   = 1.8344_Rkind
-    REAL (kind=Rkind), parameter  :: R0OH   = 6.294894_Rkind
-
-    REAL (kind=Rkind), parameter  :: RK0OO(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,      &
-                  -.27847758_Rkind,ZERO,-.46815641_Rkind,ZERO,-1.20506384_Rkind]
-    REAL (kind=Rkind), parameter  :: RK1OO(10)= [ZERO,ZERO,ZERO,                &
-                   3.35224980_Rkind,3.35224980_Rkind,0.95273753_Rkind,ZERO,     &
-                   0.94148408_Rkind,ZERO,0.72379129_Rkind]
-    REAL (kind=Rkind), parameter  :: RK0OH(10)= [ZERO,ZERO,ZERO,ZERO,ZERO,      &
-                    0.02465005_Rkind,ZERO,0.05036950_Rkind,ZERO,0.06294371_Rkind]
-    REAL (kind=Rkind), parameter  :: RK1OH(10)= [ZERO,ZERO,ZERO,                &
-                    2.54532760_Rkind,2.54532760_Rkind,0.68758097_Rkind,ZERO,    &
-                    0.82542359_Rkind,ZERO,0.94034225_Rkind]
-
-    REAL (kind=Rkind), parameter  :: ADAMP(10) = [ZERO,ZERO,ZERO,               &
-                    5.0079875_Rkind,3.8428294_Rkind,3.0951333_Rkind,ZERO,       &
-                    2.1999000_Rkind,ZERO,1.6880714_Rkind]
-    REAL (kind=Rkind), parameter  :: BDAMP(10) = [ZERO,ZERO,ZERO,               &
-                             10.6645006_Rkind,9.6758155_Rkind,8.7787895_Rkind,  &
-                             ZERO,7.2265123_Rkind,ZERO,5.9487108_Rkind]
-
     REAL (kind=Rkind) :: C4OHR2,C5OHR2,C4OHR3,C5OHR3,C4OO,C5OO,TERM4,TERM5
     REAL (kind=Rkind) :: C42,C43,C52,C53,R23,R33,R34,R14,R15,R25,R35,R24
     REAL (kind=Rkind) :: RMQ,RMQ5,RMR3,RMR2,RMR33,RMR23
     REAL (kind=Rkind) :: TAO,TAH2,TAH3,EX3,EX2,R3E3,R2E2,CRE43,CRE42,CRE53,CRE52
     REAL (kind=Rkind) :: RROH2,RROH3,RROO
-
-      !COMMON/POLAR_HOO_DMBE4/C4,C5
-      !COMMON/RKVAL_HOO_DMBE4/RK0OO(10),RK1OO(10),RK0OH(10),RK1OH(10)
-      !COMMON/DIATDI_HOO_DMBE4/R0OO,RMOO,R0OH,RMOH
-      !COMMON/DAMPC_HOO_DMBE4/ADAMP(10),BDAMP(10)
-      !COMMON/WELECT_HOO_DMBE4/C4OHR2,C5OHR2,C4OHR3,C5OHR3,C4OO,C5OO,TERM4,TERM5 ! variables
-
 
     C42=C4
     C43=C4
@@ -656,15 +621,6 @@ END MODULE mod_HOO_DMBE_Model
     REAL (kind=Rkind)             :: DISP_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R,C6,C8,C10,R0,RM
 
-
-    REAL (kind=Rkind), parameter  :: ADAMP(10) = [ZERO,ZERO,ZERO,               &
-                    5.0079875_Rkind,3.8428294_Rkind,3.0951333_Rkind,ZERO,       &
-                    2.1999000_Rkind,ZERO,1.6880714_Rkind]
-    REAL (kind=Rkind), parameter  :: BDAMP(10) = [ZERO,ZERO,ZERO,               &
-                             10.6645006_Rkind,9.6758155_Rkind,8.7787895_Rkind,  &
-                             ZERO,7.2265123_Rkind,ZERO,5.9487108_Rkind]
-    !COMMON/DAMPC_HOO_DMBE4/ADAMP(10),BDAMP(10)
-
     REAL (kind=Rkind) :: RR,R6,R8,R10,D6,D8,D10
 
 
@@ -679,48 +635,4 @@ END MODULE mod_HOO_DMBE_Model
       DISP_HOO_DMBE4 = -C6/R6*D6-C8/R8*D8-C10/R10*D10
 
   END FUNCTION DISP_HOO_DMBE4
-  BLOCK DATA HO2DAT_HOO_DMBE4
-  USE mod_NumParameters
-      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
-      COMMON/COEFF_HOO_DMBE4/C(52)
-      COMMON/DISPC_HOO_DMBE4/COO(10),COH(10)
-      COMMON/DIATDI_HOO_DMBE4/R0OO,RMOO,R0OH,RMOH
-      COMMON/RKVAL_HOO_DMBE4/RK0OO(10),RK1OO(10),RK0OH(10),RK1OH(10)
-      COMMON/POLAR_HOO_DMBE4/C4,C5
-      COMMON/DAMPC_HOO_DMBE4/ADAMP(10),BDAMP(10)
-      COMMON/REFGEO_HOO_DMBE4/R10,R20,R30
-!     ***************************************************************
-      DATA C/ &
-       .49040645E+01_Rkind, -.86748216E+01_Rkind,  .50555792E+01_Rkind,  .42941301E+01_Rkind,&
-      -.41874792E+01_Rkind,  .13461379_Rkind,     -.99064922_Rkind,      .13358488E+01_Rkind,&
-       .13495231E+01_Rkind, -.18529696_Rkind,     -.23534213E+02_Rkind,  .24289930E+02_Rkind,&
-      -.50209026E+01_Rkind, -.10365484E+02_Rkind,  .46692224E+01_Rkind, -.14747138E+01_Rkind,&
-       .23119718E+01_Rkind, -.18247842E+01_Rkind, -.28472166_Rkind,      .51036509_Rkind,&
-       .19124083_Rkind,      .45405729E+01_Rkind,  .11087611_Rkind,      -.19990481_Rkind,&
-      -.37356178_Rkind,      .46142042E-01_Rkind, -.20565580_Rkind,      -.27015963_Rkind,&
-       .34085281_Rkind,      .28321162_Rkind,     -.11558481_Rkind,      -.29448886_Rkind,&
-      -.52932488_Rkind,      .58159523E-01_Rkind, -.48649560E-02_Rkind,   .11949167E-01_Rkind,&
-       .21409804E-01_Rkind, -.20620608E-02_Rkind,  .30177088E-01_Rkind,   .27880291E-01_Rkind,&
-       .88458711E-02_Rkind,  .13137410E-01_Rkind, -.24705619E-01_Rkind,   -.31085889E-01_Rkind,&
-       .34317857E-02_Rkind,  .52593878E-01_Rkind,  .79500714E-01_Rkind,    -.79782216E-02_Rkind,&
-       .31164575E-01_Rkind, -.28737598E-01_Rkind,  .98201698_Rkind,         .62000000_Rkind/
-    DATA R0OO,RMOO,R0OH,RMOH/5.661693_Rkind,2.2818_Rkind,6.294894_Rkind,1.8344_Rkind/
-    DATA COO/ZERO,ZERO,ZERO,ZERO,0._Rkind,15.40_Rkind,ZERO,235.219943_Rkind,&
-             ZERO,4066.23929_Rkind/
-    DATA COH/ZERO,ZERO,ZERO,ZERO,0._Rkind,10.00_Rkind,ZERO,180.447673_Rkind,&
-              ZERO,3685.25842_Rkind/
-    DATA C4,C5/-0.92921_Rkind,-1.79000_Rkind/
-    DATA RK0OO/ZERO,ZERO,ZERO,ZERO,ZERO,-.27847758_Rkind,ZERO,&
-                -.46815641_Rkind,ZERO,-1.20506384_Rkind/
-    DATA RK1OO/ZERO,ZERO,ZERO,3.35224980_Rkind,3.35224980_Rkind,&
-                0.95273753_Rkind,ZERO,0.94148408_Rkind,ZERO,0.72379129_Rkind/
-    DATA RK0OH/ZERO,ZERO,ZERO,ZERO,ZERO,0.02465005_Rkind,ZERO,&
-                0.05036950_Rkind,ZERO,0.06294371_Rkind/
-    DATA RK1OH/ZERO,ZERO,ZERO,2.54532760_Rkind,2.54532760_Rkind,&
-                0.68758097_Rkind,ZERO,0.82542359_Rkind,ZERO,0.94034225_Rkind/
-    DATA ADAMP/ZERO,ZERO,ZERO,5.0079875_Rkind,3.8428294_Rkind,3.0951333_Rkind,&
-                ZERO,2.1999000_Rkind,ZERO,1.6880714_Rkind/
-    DATA BDAMP/ZERO,ZERO,0._Rkind,10.6645006_Rkind,9.6758155_Rkind,8.7787895_Rkind,&
-                ZERO,7.2265123_Rkind,ZERO,5.9487108_Rkind/
-    DATA R10,R20,R30/2.5143000_Rkind,2.6469057_Rkind,2.6469057_Rkind/
-  END
+END MODULE mod_HOO_DMBE_Model
