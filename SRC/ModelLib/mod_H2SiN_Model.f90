@@ -38,7 +38,7 @@ MODULE mod_H2SiN_Model
 
      real(kind=Rkind), allocatable :: Qref(:)
 
-     integer                       :: nb_func
+     integer                       :: nb_funcModel
      real(kind=Rkind), allocatable :: F(:)
      integer,          allocatable :: tab_func(:,:)
 
@@ -67,7 +67,7 @@ MODULE mod_H2SiN_Model
     logical,                     intent(in)      :: read_param
 
 
-    integer :: nio_fit,nb_func,nb_columns,j,k
+    integer :: nio_fit,nb_columns,j,k
     character (len=:), allocatable  :: FileName
 
     !----- for debuging --------------------------------------------------
@@ -93,14 +93,14 @@ MODULE mod_H2SiN_Model
 
       FileName = make_FileName('InternalData/H2SiN/h2sinf12a.pot')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
-      read(nio_fit,*) QModel%nb_func
+      read(nio_fit,*) QModel%nb_funcModel
       allocate(QModel%Qref(QModel%ndim))
-      allocate(QModel%F(QModel%nb_func))
-      allocate(QModel%tab_func(QModel%ndim,QModel%nb_func))
+      allocate(QModel%F(QModel%nb_funcModel))
+      allocate(QModel%tab_func(QModel%ndim,QModel%nb_funcModel))
 
        k = 0
        DO
-        nb_columns = min(6,QModel%nb_func-k)
+        nb_columns = min(6,QModel%nb_funcModel-k)
         !write(6,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
@@ -116,14 +116,14 @@ MODULE mod_H2SiN_Model
 
       FileName = make_FileName('InternalData/H2SiN/h2sinf12b.pot')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
-      read(nio_fit,*) QModel%nb_func
+      read(nio_fit,*) QModel%nb_funcModel
       allocate(QModel%Qref(QModel%ndim))
-      allocate(QModel%F(QModel%nb_func))
-      allocate(QModel%tab_func(QModel%ndim,QModel%nb_func))
+      allocate(QModel%F(QModel%nb_funcModel))
+      allocate(QModel%tab_func(QModel%ndim,QModel%nb_funcModel))
 
        k = 0
        DO
-        nb_columns = min(6,QModel%nb_func-k)
+        nb_columns = min(6,QModel%nb_funcModel-k)
         !write(6,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
@@ -138,14 +138,14 @@ MODULE mod_H2SiN_Model
 
       FileName = make_FileName('InternalData/H2SiN/h2sincc.pot')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
-      read(nio_fit,*) QModel%nb_func
+      read(nio_fit,*) QModel%nb_funcModel
       allocate(QModel%Qref(QModel%ndim))
-      allocate(QModel%F(QModel%nb_func))
-      allocate(QModel%tab_func(QModel%ndim,QModel%nb_func))
+      allocate(QModel%F(QModel%nb_funcModel))
+      allocate(QModel%tab_func(QModel%ndim,QModel%nb_funcModel))
 
        k = 0
        DO
-        nb_columns = min(6,QModel%nb_func-k)
+        nb_columns = min(6,QModel%nb_funcModel-k)
         !write(6,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
@@ -374,7 +374,7 @@ MODULE mod_H2SiN_Model
       Mat_OF_PotDia(1,1) = ZERO
       Vtemp = Mat_OF_PotDia(1,1) ! to have a correct initialization
 
-      DO j=1,QModel%nb_func
+      DO j=1,QModel%nb_funcModel
         Vtemp = QModel%F(j)
         DO i=1,QModel%ndim
           !Vtemp = Vtemp * DQ(i,1)**QModel%tab_func(i,j)

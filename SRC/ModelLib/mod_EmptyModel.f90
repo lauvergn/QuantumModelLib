@@ -37,10 +37,17 @@ MODULE mod_EmptyModel
   IMPLICIT NONE
 
   TYPE :: EmptyModel_t
+    logical :: Init        = .FALSE.
+
     integer :: nsurf       = 0
     integer :: ndim        = 0
     integer :: ndimQ       = 0
     integer :: ndimCart    = 0
+
+    ! for functions (used in the fit, Qeq(Q(1:ndimFunc)), hess() ....)
+    integer :: ndimFunc    = 0
+    integer :: nb_Func     = 0
+
 
     logical :: numeric     = .FALSE.
     logical :: no_ana_der  = .FALSE. ! to force numerical derivatives
@@ -60,6 +67,7 @@ MODULE mod_EmptyModel
     TYPE (dnMat_t),     allocatable :: Vec0 ! to get the correct phase of the adiatic couplings
     CONTAINS
       PROCEDURE :: Eval_QModel_Pot    => Eval_EmptyModel_Pot
+      PROCEDURE :: Eval_QModel_Func   => Eval_EmptyModel_Func
       PROCEDURE :: Write_QModel       => Write_EmptyModel
       PROCEDURE :: Write0_QModel      => Write0_EmptyModel
      !PROCEDURE :: get2_Q0_QModel     => get2_Q0_EmptyModel
@@ -124,6 +132,8 @@ CONTAINS
     END IF
 
     !QModel = QModel_in   ! it does not work always with nagfor
+    QModel%Init       = QModel_in%Init
+
     QModel%nsurf      = QModel_in%nsurf
     QModel%ndim       = QModel_in%ndim
     QModel%ndimQ      = QModel_in%ndimQ
@@ -158,6 +168,10 @@ CONTAINS
 
     IF (allocated(QModel%d0GGdef)) deallocate(QModel%d0GGdef)
     IF (allocated(QModel%Q0))      deallocate(QModel%Q0)
+
+
+    QModel%ndimFunc     = QModel_in%ndimFunc
+    QModel%nb_Func      = QModel_in%nb_Func
 
     IF (debug) THEN
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
@@ -236,9 +250,26 @@ CONTAINS
     integer,                intent(in)     :: nderiv
 
 
-    Mat_OF_PotDia(1,1) = ZERO
+    Mat_OF_PotDia(:,:) = ZERO
 
   END SUBROUTINE Eval_EmptyModel_Pot
+
+  SUBROUTINE Eval_EmptyModel_Func(QModel,Func,dnQ,nderiv)
+  USE mod_dnS
+  IMPLICIT NONE
+
+    CLASS (EmptyModel_t),   intent(in)     :: QModel
+    TYPE (dnS_t),           intent(in)     :: dnQ(:)
+    TYPE (dnS_t),           intent(inout)  :: Func(:)
+    integer,                intent(in)     :: nderiv
+
+    integer :: i
+
+    DO i=1,size(Func)
+      Func(i) = ZERO
+    END DO
+
+  END SUBROUTINE Eval_EmptyModel_Func
 
   SUBROUTINE Write_EmptyModel(QModel,nio)
   !USE mod_Lib
@@ -246,6 +277,9 @@ CONTAINS
 
     CLASS (EmptyModel_t), intent(in)    :: QModel
     integer,              intent(in)    :: nio
+
+
+    write(nio,*) 'Init:                      ',QModel%Init
 
     write(nio,*) 'nsurf:                     ',QModel%nsurf
     write(nio,*) 'ndim:                      ',QModel%ndim
@@ -255,6 +289,8 @@ CONTAINS
     write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
     write(nio,*) 'ndimQ:                     ',QModel%ndimQ
     write(nio,*) 'ndimCart:                  ',QModel%ndimCart
+    write(nio,*) 'ndimFunc:                  ',QModel%ndimQ
+    write(nio,*) 'nb_Func:                   ',QModel%ndimCart
 
     IF (allocated(QModel%pot_name)) write(nio,*) 'pot_name: ',QModel%pot_name
     write(nio,*)
@@ -285,6 +321,7 @@ CONTAINS
 
     write(nio,*)
     write(nio,*) 'Potential parameters are written just below'
+    write(nio,*) 'Init:                      ',QModel%Init
     write(nio,*)
     write(nio,*) 'nsurf:                     ',QModel%nsurf
     write(nio,*) 'ndim:                      ',QModel%ndim
@@ -294,6 +331,8 @@ CONTAINS
     write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
     write(nio,*) 'ndimQ:                     ',QModel%ndimQ
     write(nio,*) 'ndimCart:                  ',QModel%ndimCart
+    write(nio,*) 'ndimFunc:                  ',QModel%ndimQ
+    write(nio,*) 'nb_Func:                   ',QModel%ndimCart
     write(nio,*)
 
      IF (allocated(QModel%d0GGdef)) THEN

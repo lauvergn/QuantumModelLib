@@ -49,7 +49,7 @@ MODULE mod_HNNHp_Model
 
      real(kind=Rkind), allocatable :: Qref(:)
 
-     integer                       :: nb_func
+     integer                       :: nb_funcModel
      real(kind=Rkind), allocatable :: F(:)
      integer,          allocatable :: tab_func(:,:)
 
@@ -77,7 +77,7 @@ MODULE mod_HNNHp_Model
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
-    integer :: nio_fit,nb_func,nb_columns,i,j,k
+    integer :: nio_fit,nb_columns,i,j,k
     character (len=:), allocatable  :: FileName
 
     !----- for debuging --------------------------------------------------
@@ -103,16 +103,16 @@ MODULE mod_HNNHp_Model
 
       FileName = make_FileName('InternalData/HNNHp/n2h2pcc5.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
-      read(nio_fit,*) QModel%nb_func
-      !write(6,*) 'nb_func',QModel%nb_func
+      read(nio_fit,*) QModel%nb_funcModel
+      !write(6,*) 'nb_funcModel',QModel%nb_funcModel
 
       allocate(QModel%Qref(QModel%ndim))
-      allocate(QModel%F(QModel%nb_func))
-      allocate(QModel%tab_func(QModel%ndim,QModel%nb_func))
+      allocate(QModel%F(QModel%nb_funcModel))
+      allocate(QModel%tab_func(QModel%ndim,QModel%nb_funcModel))
 
        k = 0
        DO
-        nb_columns = min(6,QModel%nb_func-k)
+        nb_columns = min(6,QModel%nb_funcModel-k)
         !write(6,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
@@ -311,7 +311,7 @@ MODULE mod_HNNHp_Model
       Mat_OF_PotDia(1,1) = ZERO
       Vtemp = Mat_OF_PotDia(1,1) ! to have a correct initialization
 
-      DO j=1,QModel%nb_func
+      DO j=1,QModel%nb_funcModel
         Vtemp = QModel%F(j)
         DO i=1,QModel%ndim
           IF (QModel%tab_func(i,j) == 0) CYCLE

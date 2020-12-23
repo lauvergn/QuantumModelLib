@@ -53,10 +53,10 @@ MODULE mod_H2NSi_Model
 
      real(kind=Rkind), allocatable :: Qref(:)
 
-     integer                       :: nb_func
+     integer                       :: nb_funcModel
      real(kind=Rkind), allocatable :: F(:)
      integer, allocatable          :: tab_func(:,:)
- 
+
    CONTAINS
     PROCEDURE :: Eval_QModel_Pot => eval_H2NSi_Pot
     PROCEDURE :: Write_QModel    => Write_H2NSi_Model
@@ -81,7 +81,7 @@ MODULE mod_H2NSi_Model
     logical,                     intent(in)      :: read_param
 
     !local variable
-    integer                         :: nio_fit,nb_func,nb_columns,i,j,k
+    integer                         :: nio_fit,nb_columns,i,j,k
     character (len=50)              :: name_Qref
     character (len=:), allocatable  :: FileName
 
@@ -116,12 +116,12 @@ MODULE mod_H2NSi_Model
       QModel%Qref(4:6) = QModel%Qref(4:6) / (180._Rkind/pi)
       QModel%Qref(6)   = pi
 
-      read(nio_fit,*) QModel%nb_func
-      allocate(QModel%F(QModel%nb_func))
-      allocate(QModel%tab_func(QModel%ndim,QModel%nb_func))
+      read(nio_fit,*) QModel%nb_funcModel
+      allocate(QModel%F(QModel%nb_funcModel))
+      allocate(QModel%tab_func(QModel%ndim,QModel%nb_funcModel))
 
 
-      DO i=1,QModel%nb_func
+      DO i=1,QModel%nb_funcModel
          read(nio_fit,*) name_Qref,QModel%tab_func(:,i),QModel%F(i)
          QModel%F(i) = QModel%F(i) * (180._Rkind/pi)**sum(QModel%tab_func(4:QModel%ndim,i))
       END DO
@@ -132,14 +132,14 @@ MODULE mod_H2NSi_Model
 
       FileName = make_FileName('InternalData/H2NSi/h2nsicc.pot')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
-      read(nio_fit,*) QModel%nb_func
+      read(nio_fit,*) QModel%nb_funcModel
       allocate(QModel%Qref(QModel%ndim))
-      allocate(QModel%F(QModel%nb_func))
-      allocate(QModel%tab_func(QModel%ndim,QModel%nb_func))
+      allocate(QModel%F(QModel%nb_funcModel))
+      allocate(QModel%tab_func(QModel%ndim,QModel%nb_funcModel))
 
        k = 0
        DO
-        nb_columns = min(6,QModel%nb_func-k)
+        nb_columns = min(6,QModel%nb_funcModel-k)
         !write(6,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
@@ -187,7 +187,7 @@ MODULE mod_H2NSi_Model
 !! @param QModel            CLASS(H2NSi_Model_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:            file unit to print the parameters.
   SUBROUTINE Write_H2NSi_Model(QModel,nio)
-    
+
     CLASS(H2NSi_Model_t), intent(in) :: QModel
     integer,              intent(in) :: nio
 
@@ -369,7 +369,7 @@ MODULE mod_H2NSi_Model
       Mat_OF_PotDia(1,1) = ZERO
       Vtemp = Mat_OF_PotDia(1,1) ! to have a correct initialization
 
-      DO j=1,QModel%nb_func
+      DO j=1,QModel%nb_funcModel
         Vtemp = QModel%F(j)
         DO i=1,QModel%ndim
           !Vtemp = Vtemp * DQ(i,1)**QModel%tab_func(i,j)

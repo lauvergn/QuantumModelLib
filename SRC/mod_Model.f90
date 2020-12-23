@@ -53,8 +53,10 @@ MODULE mod_Model
   USE mod_H2SiN_Model
   USE mod_H2NSi_Model
   USE mod_HNO3_Model
+  USE mod_CH5_Model
 
   USE mod_HOO_DMBE_Model
+  USE mod_H3_Model
 
   USE mod_OneDSOC_1S1T_Model
   USE mod_OneDSOC_2S1T_Model
@@ -68,7 +70,8 @@ MODULE mod_Model
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: Model_t,Init_Model,Eval_Pot,check_alloc_QM
+  PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func
+  PUBLIC :: check_alloc_QM,check_Init_QModel
   PUBLIC :: Write0_Model,Write_Model,Write_QdnV_FOR_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
@@ -350,6 +353,7 @@ CONTAINS
       IF (allocated(param_file_name_loc)) deallocate(param_file_name_loc)
     END IF
 
+    QModel_in%Init = .TRUE.
 
     IF (QModel_in%adiabatic) THEN
       IF (Print_init_loc) write(out_unitp,*) 'Adiabatic potential . . .'
@@ -481,7 +485,6 @@ CONTAINS
       !! remark:
       !! ref: Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
       !! === END README ==
-
       allocate(PhenolModel_t :: QModel%QM)
       QModel%QM = Init_PhenolModel(QModel_in,read_param=read_param_loc,nio_param_file=nio_loc)
 
@@ -539,6 +542,11 @@ CONTAINS
       QModel%QM = Init_HNO3_Model(QModel_in,read_param=read_param_loc,  &
                                   nio_param_file=nio_loc)
 
+    CASE ('ch5')
+      allocate(CH5_Model_t :: QModel%QM)
+      QModel%QM = Init_CH5_Model(QModel_in,read_param=read_param_loc,  &
+                                 nio_param_file=nio_loc)
+
     CASE ('hnnhp')
       allocate(HNNHp_Model_t :: QModel%QM)
       QModel%QM = Init_HNNHp_Model(QModel_in,read_param=read_param_loc, &
@@ -565,6 +573,21 @@ CONTAINS
       !! === END README ==
       allocate(HOO_DMBE_Model_t :: QModel%QM)
       QModel%QM = Init_HOO_DMBE_Model(QModel_in,read_param=read_param_loc,      &
+                                      nio_param_file=nio_loc)
+
+    CASE ('h3_lsth','h3')
+      !! === README ==
+      !! H3 potential:
+      !! pot_name  = 'H3'
+      !! option    = 1 (LSTH)
+      !! ndim      = 3   (the 3 H-H distances)
+      !! nsurf     = 1
+      !! refs (option=1):
+      !! P. Siegbahn, B. Liu,  J. Chem. Phys. 68, 2457(1978).
+      !! D.G. Truhlar and C.J. Horowitz, J. Chem. Phys. 68, 2466 (1978); https://doi.org/10.1063/1.436019
+      !! === END README ==
+      allocate(H3_Model_t :: QModel%QM)
+      QModel%QM = Init_H3_Model(QModel_in,read_param=read_param_loc,            &
                                       nio_param_file=nio_loc)
 
     CASE ('template')
@@ -693,6 +716,20 @@ CONTAINS
 
   END SUBROUTINE check_alloc_QM
 
+  ! check if the check_Init_QModel [TYPE(Model_t)] is initialized
+  FUNCTION check_Init_QModel(QModel)
+  USE mod_Lib
+  IMPLICIT NONE
+
+    logical                             :: check_Init_QModel
+    TYPE (Model_t),     intent(in)      :: QModel
+
+    check_Init_QModel = allocated(QModel%QM)
+    IF (allocated(QModel%QM)) THEN
+      check_Init_QModel = QModel%QM%init
+    END IF
+
+  END FUNCTION check_Init_QModel
 
   SUBROUTINE Eval_Pot(QModel,Q,PotVal,nderiv,NAC,Vec,numeric)
   USE mod_dnS
@@ -1952,6 +1989,75 @@ END IF
     END IF
 
   END SUBROUTINE dia_TO_adia_old
+
+  SUBROUTINE Eval_Func(QModel,Q,Func,nderiv)
+  USE mod_dnS
+  IMPLICIT NONE
+
+    TYPE (Model_t),                 intent(inout)            :: QModel
+
+    TYPE (dnS_t),     allocatable,  intent(inout)            :: Func(:)
+    real (kind=Rkind),              intent(in)               :: Q(:)
+    integer,                        intent(in)               :: nderiv
+
+    ! local variables
+    integer                     :: i
+    TYPE (dnS_t), allocatable   :: dnQ(:)
+
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Eval_Func'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      write(out_unitp,*) '   nderiv    ',nderiv
+      flush(out_unitp)
+    END IF
+
+    CALL check_alloc_QM(QModel,name_sub)
+
+    IF (QModel%QM%nb_Func > 0) THEN
+      IF (ALLOCATED(Func)) THEN
+        DO i=1,size(Func)
+          CALL QML_dealloc_dnS(Func(i))
+        END DO
+        deallocate(Func)
+      END IF
+      allocate(Func(QModel%QM%nb_Func))
+      DO i=1,size(Func)
+        CALL QML_alloc_dnS(Func(i),QModel%QM%ndimFunc,nderiv)
+      END DO
+
+      allocate(dnQ(QModel%QM%ndimFunc))
+      DO i=1,QModel%QM%ndimFunc
+        dnQ(i) = QML_init_dnS(Q(i),ndim=QModel%QM%ndimFunc,nderiv=nderiv,iQ=i) ! to set up the derivatives
+      END DO
+
+      CALL QModel%QM%Eval_QModel_Func(Func,dnQ,nderiv=nderiv)
+
+      ! deallocation
+      DO i=1,size(dnQ)
+        CALL QML_dealloc_dnS(dnQ(i))
+      END DO
+      deallocate(dnQ)
+      ! end deallocation
+
+    END IF
+
+
+    IF (debug) THEN
+      write(out_unitp,*) 'Func',size(Func)
+      DO i=1,size(Func)
+        CALL QML_Write_dnS(Func(i),nio=out_unitp)
+      END DO
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    END IF
+
+  END SUBROUTINE Eval_Func
+
   SUBROUTINE Write_Model(QModel,nio)
   USE mod_Lib
   IMPLICIT NONE

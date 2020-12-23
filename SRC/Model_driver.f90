@@ -89,6 +89,17 @@ SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
 !$OMP END CRITICAL (CRIT_sub_Init_Qmodel_Cart)
 
 END SUBROUTINE sub_Init_Qmodel_Cart
+
+SUBROUTINE sub_check_Init_Qmodel(check)
+  USE mod_Model
+  IMPLICIT NONE
+
+  logical,            intent(inout)    :: check
+
+  check = check_Init_QModel(QuantumModel)
+
+END SUBROUTINE sub_check_Init_Qmodel
+
 SUBROUTINE sub_Write_Qmodel(nio)
   USE mod_Model
   IMPLICIT NONE
@@ -647,3 +658,143 @@ SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 
 
 END SUBROUTINE sub_model1_DiaVGH
+SUBROUTINE get_Qmodel_nb_Func_ndimFunc(nb_Func,ndimFunc)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
+
+  integer,      intent(inout)     :: nb_Func,ndimFunc
+
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_nb_Func_ndimFunc in Model_driver.f90')
+
+  nb_Func  = QuantumModel%QM%nb_Func
+  ndimFunc = QuantumModel%QM%ndimFunc
+
+END SUBROUTINE get_Qmodel_nb_Func_ndimFunc
+SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
+  USE mod_Lib
+  USE mod_Model
+  USE mod_dnS
+  IMPLICIT NONE
+
+  integer,          intent(in)      :: nb_Func,ndimFunc
+  real(kind=Rkind), intent(inout)   :: d0Func(nb_Func)
+  real(kind=Rkind), intent(in)      :: Q(ndimFunc)
+
+
+  TYPE (dnS_t),     allocatable     :: Func(:)
+  integer                           :: i
+
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_d0Func in Model_driver.f90')
+
+  CALL Eval_Func(QuantumModel,Q,Func,nderiv=0)
+
+  DO i=1,size(Func)
+    CALL QML_sub_get_dn_FROM_dnS(Func(i),d0=d0Func(i))
+  END DO
+
+  DO i=1,size(Func)
+    CALL QML_dealloc_dnS(Func(i))
+  END DO
+  deallocate(Func)
+
+END SUBROUTINE get_Qmodel_d0Func
+SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
+  USE mod_Lib
+  USE mod_Model
+  USE mod_dnS
+  IMPLICIT NONE
+
+  integer,          intent(in)      :: nb_Func,ndimFunc
+  real(kind=Rkind), intent(inout)   :: d0Func(nb_Func)
+  real(kind=Rkind), intent(inout)   :: d1Func(ndimFunc,nb_Func)
+  !real(kind=Rkind), intent(inout)   :: d2Func(ndimFunc,ndimFunc,nb_Func)
+  !real(kind=Rkind), intent(inout)   :: d3Func(ndimFunc,ndimFunc,ndimFunc,nb_Func)
+  real(kind=Rkind), intent(in)      :: Q(ndimFunc)
+
+
+  TYPE (dnS_t),     allocatable     :: Func(:)
+  integer                           :: i
+
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_d0d1Func in Model_driver.f90')
+
+  CALL Eval_Func(QuantumModel,Q,Func,nderiv=1)
+
+  DO i=1,size(Func)
+    CALL QML_sub_get_dn_FROM_dnS(Func(i),d0=d0Func(i),d1=d1Func(:,i))
+  END DO
+
+  DO i=1,size(Func)
+    CALL QML_dealloc_dnS(Func(i))
+  END DO
+  deallocate(Func)
+
+END SUBROUTINE get_Qmodel_d0d1Func
+SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
+  USE mod_Lib
+  USE mod_Model
+  USE mod_dnS
+  IMPLICIT NONE
+
+  integer,          intent(in)      :: nb_Func,ndimFunc
+  real(kind=Rkind), intent(inout)   :: d0Func(nb_Func)
+  real(kind=Rkind), intent(inout)   :: d1Func(ndimFunc,nb_Func)
+  real(kind=Rkind), intent(inout)   :: d2Func(ndimFunc,ndimFunc,nb_Func)
+  real(kind=Rkind), intent(in)      :: Q(ndimFunc)
+
+
+  TYPE (dnS_t),     allocatable     :: Func(:)
+  integer                           :: i
+
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_d0d1d2Func in Model_driver.f90')
+
+  CALL Eval_Func(QuantumModel,Q,Func,nderiv=2)
+
+  DO i=1,size(Func)
+    CALL QML_sub_get_dn_FROM_dnS(Func(i),d0=d0Func(i),d1=d1Func(:,i),           &
+                                         d2=d2Func(:,:,i))
+  END DO
+
+  DO i=1,size(Func)
+    CALL QML_dealloc_dnS(Func(i))
+  END DO
+  deallocate(Func)
+
+END SUBROUTINE get_Qmodel_d0d1d2Func
+SUBROUTINE get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Q,nb_Func,ndimFunc)
+  USE mod_Lib
+  USE mod_Model
+  USE mod_dnS
+  IMPLICIT NONE
+
+  integer,          intent(in)      :: nb_Func,ndimFunc
+  real(kind=Rkind), intent(inout)   :: d0Func(nb_Func)
+  real(kind=Rkind), intent(inout)   :: d1Func(ndimFunc,nb_Func)
+  real(kind=Rkind), intent(inout)   :: d2Func(ndimFunc,ndimFunc,nb_Func)
+  real(kind=Rkind), intent(inout)   :: d3Func(ndimFunc,ndimFunc,ndimFunc,nb_Func)
+  real(kind=Rkind), intent(in)      :: Q(ndimFunc)
+
+
+  TYPE (dnS_t),     allocatable     :: Func(:)
+  integer                           :: i
+
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_d0d1d2d3Func in Model_driver.f90')
+
+  CALL Eval_Func(QuantumModel,Q,Func,nderiv=3)
+
+  DO i=1,size(Func)
+    CALL QML_sub_get_dn_FROM_dnS(Func(i),d0=d0Func(i),d1=d1Func(:,i),           &
+                                         d2=d2Func(:,:,i),d3=d3Func(:,:,:,i))
+  END DO
+
+  DO i=1,size(Func)
+    CALL QML_dealloc_dnS(Func(i))
+  END DO
+  deallocate(Func)
+
+END SUBROUTINE get_Qmodel_d0d1d2d3Func

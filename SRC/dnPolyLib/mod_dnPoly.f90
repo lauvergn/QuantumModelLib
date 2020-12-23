@@ -150,7 +150,7 @@ CONTAINS
       END DO
       Sres = P2
     END IF
-    Pnorm2 = TWO/real(2*j+1,kind=Rkind)
+    Pnorm2 = TWO/real(2*i+1,kind=Rkind)
     Sres = Sres/sqrt(Pnorm2)
 
   END FUNCTION QML_dnLegendre0

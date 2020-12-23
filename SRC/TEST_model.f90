@@ -36,8 +36,10 @@ PROGRAM TEST_model
   !CALL test_Retinal_JPCB2000() ; stop
   !CALL test_Tully_test() ; stop
   !CALL test_PSB3_test() ; stop
-  !CALL test_HOO_DMBE ; stop
+  !CALL test_H3 ; stop
+  !CALL test_PSB3_Retinal2000_test ; stop
   !CALL test_Test() ; stop
+  CALL test_CH5() ; stop
 
 
   ! One electronic surface
@@ -1448,6 +1450,7 @@ SUBROUTINE test_TwoD
 END SUBROUTINE test_TwoD
 SUBROUTINE test_HNO3
   USE mod_Lib
+  USE mod_dnS
   USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
@@ -1456,7 +1459,7 @@ SUBROUTINE test_HNO3
   real (kind=Rkind), allocatable :: Q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
-
+  TYPE (dnS_t),      allocatable :: Func(:)
 
   nderiv = 2
   write(out_unitp,*) '---------------------------------------------'
@@ -1495,12 +1498,93 @@ SUBROUTINE test_HNO3
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='HNO3')
 
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Functions'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
+  CALL Eval_Func(QModel,Q,Func,nderiv=nderiv)
+
+  DO i=1,size(Func)
+    CALL QML_Write_dnS(Func(i))
+  END DO
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_HNO3
+SUBROUTINE test_CH5
+  USE mod_Lib
+  USE mod_dnS
+  USE mod_dnMat
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnS_t),      allocatable :: Func(:)
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 12D-CH5: H+CH4 -> H2+CH3 -------'
+  write(out_unitp,*) ' Qmodel, init: ',check_Init_QModel(QModel)
+  CALL Init_Model(QModel,pot_name='CH5',Print_init=.FALSE.)
+  write(out_unitp,*) ' Qmodel, init: ',check_Init_QModel(QModel)
+  CALL Write0_Model(QModel)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(QModel,ndim=1,pot_name='CH5')
+
+  allocate(q(QModel%ndim))
+  Q(:) = [0.5_Rkind]
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='HNO3')
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Functions'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+
+  DO i=0,200
+    Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
+    CALL Eval_Func(QModel,Q,Func,nderiv=0)
+    write(6,*) Q,QML_get_d0_FROM_dnS(Func)
+  END DO
+
+  !DO i=1,size(Func)
+  !  CALL QML_Write_dnS(Func(i))
+  !END DO
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_CH5
 SUBROUTINE test_HOO_DMBE
   USE mod_Lib
   USE mod_dnMat
@@ -1577,6 +1661,67 @@ SUBROUTINE test_HOO_DMBE
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_HOO_DMBE
+SUBROUTINE test_H3
+  USE mod_Lib
+  USE mod_dnMat
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:,:),x(:,:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-H+H2 ------------------------'
+  CALL Init_Model(QModel,pot_name='H3_LSTH',Print_init=.FALSE.)
+  CALL Write0_Model(QModel)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(QModel,pot_name='H3_LSTH')
+
+  allocate(Q(QModel%ndim,3))
+
+  ! TableII of JCP paper, E=9.802 kcal/mol
+  Q(:,1) = [1.757_Rkind,1.757_Rkind,1.757_Rkind]
+
+  Q(:,2) = [1.4_Rkind,1000._Rkind,1001.4_Rkind]
+
+  Q(:,3) = [1000._Rkind,1000._Rkind,2000._Rkind]
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  DO i=1,size(Q,dim=2)
+    write(out_unitp,*) 'Q:'
+    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+
+    CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
+    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+    ! For testing the model
+    CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='H3_SLTH')
+  END DO
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(Q)
+  write(out_unitp,*) ' END Potential and derivatives'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_H3
 SUBROUTINE test_Test
   USE mod_Lib
   USE mod_dnMat
@@ -1710,3 +1855,86 @@ SUBROUTINE test_PSB3_test
   deallocate(q)
 
 END SUBROUTINE test_PSB3_test
+SUBROUTINE test_PSB3_Retinal2000_test
+
+  USE mod_Lib
+  USE mod_dnMat
+  USE mod_Model
+
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel_PSB3
+  TYPE (Model_t)                 :: QModel_Retinal2000
+
+  real (kind=Rkind), allocatable :: q_PSB3(:)
+  real (kind=Rkind), allocatable :: q_Retinal2000(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+
+  TYPE (dnMat_t)                 :: PotVal_PSB3,PotVal_Retinal2000
+  TYPE (dnMat_t)                 :: NAC_PSB3,NAC_Retinal2000
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' PSB3 potential'
+  write(out_unitp,*) ' With units: Atomic Units'
+  write(out_unitp,*) '---------------------------------------------'
+  CALL Init_Model(QModel_PSB3,pot_name='PSB3',PubliUnit=.FALSE.)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Retinal_JPCB2000 potential'
+  write(out_unitp,*) ' With units: Atomic Units'
+  write(out_unitp,*) '---------------------------------------------'
+  CALL Init_Model(QModel_Retinal2000,pot_name='Retinal_JPCB2000',PubliUnit=.FALSE.)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+
+  allocate(q_Retinal2000(QModel_Retinal2000%QM%ndim))
+  q_Retinal2000(:) = [ZERO,PI]
+
+  allocate(q_PSB3(QModel_PSB3%QM%ndim))
+  q_PSB3(:) = [0.172459_Rkind,PI,ZERO]
+  nderiv=1
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  write(out_unitp,*) '    ADIABATIC potential'
+  write(out_unitp,*) '---------------------------------------------'
+
+  QModel_Retinal2000%QM%adiabatic = .TRUE.
+  QModel_PSB3%QM%adiabatic = .TRUE.
+
+  write(out_unitp,*) 'Evaluated in', q_PSB3
+  CALL Eval_Pot(QModel_PSB3,q_PSB3,PotVal_PSB3,NAC=NAC_PSB3,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal_PSB3,nio=out_unitp)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) 'Evaluated in', q_Retinal2000
+  CALL Eval_Pot(QModel_Retinal2000,q_Retinal2000,PotVal_Retinal2000,            &
+                    NAC=NAC_Retinal2000,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal_Retinal2000,nio=out_unitp)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  QModel_PSB3%QM%adiabatic = .TRUE.
+  CALL Eval_pot_ON_Grid(QModel_PSB3,Qmin=[0.172459_Rkind,-PI,ZERO],             &
+                                    Qmax=[0.172459_Rkind,PI,ZERO],nb_points=1001, &
+                        grid_file='grid_PSB3')
+
+  QModel_Retinal2000%QM%adiabatic = .TRUE.
+  CALL Eval_pot_ON_Grid(QModel_Retinal2000,Qmin=[-PI,ZERO],             &
+                                           Qmax=[PI,ZERO],nb_points=1001, &
+                        grid_file='grid_Retinal2000')
+
+  CALL QML_dealloc_dnMat(PotVal_Retinal2000)
+  CALL QML_dealloc_dnMat(NAC_Retinal2000)
+  deallocate(q_Retinal2000)
+
+  CALL QML_dealloc_dnMat(PotVal_PSB3)
+  CALL QML_dealloc_dnMat(NAC_PSB3)
+  deallocate(q_PSB3)
+
+END SUBROUTINE test_PSB3_Retinal2000_test

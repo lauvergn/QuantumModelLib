@@ -59,13 +59,14 @@ MODULE mod_HNO3_Model
     integer            :: nt(0:max_fit,0:max_fit)        = 0
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_HNO3_Pot
-    PROCEDURE :: Write_QModel    => Write_HNO3_Model
-    PROCEDURE :: Write0_QModel   => Write0_HNO3_Model
+    PROCEDURE :: Eval_QModel_Pot  => eval_HNO3_Pot
+    PROCEDURE :: Eval_QModel_Func => Eval_HNO3_Func
+    PROCEDURE :: Write_QModel     => Write_HNO3_Model
+    PROCEDURE :: Write0_QModel    => Write0_HNO3_Model
   END TYPE HNO3_Model_t
- 
+
   PUBLIC :: HNO3_Model_t,Init_HNO3_Model
- 
+
   CONTAINS
 !> @brief Function which makes the initialization of the HNO3 parameters.
 !!
@@ -111,11 +112,14 @@ MODULE mod_HNO3_Model
        CALL QModel%Write_QModel(out_unitp)
        write(out_unitp,*) ' ERROR in ',name_sub
        write(out_unitp,*) ' ndim MUST equal to 1 or 9. ndim: ',QModel%ndim
-       STOP 'ERROR in Init_OneDSOC_1S1T_Model: ndim MUST equal to 1 or 9'
+       STOP 'ERROR in Init_HNO3_Model: ndim MUST equal to 1 or 9'
     END IF
 
     QModel%nsurf    = 1
     QModel%pot_name = 'hno3'
+
+    QModel%ndimFunc = 1
+    QModel%nb_Func  = 72
 
     ! read the parameters
     jj=0
@@ -221,6 +225,37 @@ MODULE mod_HNO3_Model
     Mat_OF_PotDia(1,1) = dnvfour(rot,0,0,QModel) + vh * HALF
 
   END SUBROUTINE eval_HNO3_Pot
+
+  SUBROUTINE eval_HNO3_Func(QModel,Func,dnQ,nderiv)
+  USE mod_dnS
+  IMPLICIT NONE
+
+    CLASS(HNO3_Model_t),  intent(in)    :: QModel
+    TYPE (dnS_t),         intent(inout) :: Func(:)
+    TYPE (dnS_t),         intent(in)    :: dnQ(:)
+    integer,              intent(in)    :: nderiv
+
+
+
+    TYPE (dnS_t)    :: rot
+    integer         :: i1,i2,ifunc
+
+    rot   = dnQ(1)
+    ifunc = 0
+
+    DO i1=1,QModel%ndim-1
+      ifunc = ifunc + 1
+      Func(ifunc) = dnvfour(rot,i1,0,QModel)
+    END DO
+
+    DO i1=1,QModel%ndim-1
+    DO i2=1,QModel%ndim-1
+      ifunc = ifunc + 1
+      Func(ifunc) = dnvfour(rot,i1,i2,QModel)
+    END DO
+    END DO
+
+  END SUBROUTINE eval_HNO3_Func
 
   FUNCTION dnvfour(rot,iq,jq,QModel)
   USE mod_dnS
