@@ -6,7 +6,7 @@ here=`pwd`
 
 
 #for ExternalF90 in gfortran ifort pgf90 nagfor
-for ExternalF90 in gfortran nagfor
+for ExternalF90 in gfortran
 do
   export ExternalF90
   echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

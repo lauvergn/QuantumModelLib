@@ -138,6 +138,22 @@
 =========================================
 =========================================
 =========================================
+      !! pot_name  = 'CH5'
+=========================================
+      !! H + CH4 -> H-H + CH3 potential
+      !!    Quadratic potential along the reaction path'
+      !!    Reaction coordinate: R- = 1/2(RCH - RHH)'
+      !!    Optimal coordinates along the path at CCSD(T)-F12/cc-pVTZ-F12'
+      !!    V0 along the path at CCSD(T)-F12/cc-pVTZ-F12'
+      !!    Hessian along the path at MP2/cc-pVDZ'
+      !! pot_name  = 'CH5'
+      !! ndim      = 12 or 1
+      !! nsurf     = 1
+      !! option = 4 (default) or 5
+=========================================
+=========================================
+=========================================
+=========================================
       !! pot_name  = 'HOO_DMBE'
 =========================================
       !! HOO potential: DMBE IV of Varandas group

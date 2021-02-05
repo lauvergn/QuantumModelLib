@@ -46,16 +46,18 @@ MODULE mod_CH5_Model
 
   integer, parameter :: ndim    = 1
   integer, parameter :: max_fit = 12
-  integer, parameter :: max_nn  = 50
+  integer, parameter :: max_nn  = 20
                                              !   1  2  3  4  5  6  7  8  9 10 11 12
-  integer, parameter :: listQop_fit1(0:12) = [0,-1,-1, 3,-1,-1, 6,-1,-1,-1,-1,-1,-1]
   integer, parameter :: listQop_fit3(0:12) = [0,-1, 2, 3,-1,-1, 6,-1,-1,-1,-1,-1,-1]
 
-  integer :: fit = 3
-  character (len=*), parameter :: base_fit1_fileName='InternalData/CH5/fit1/inter12_'
   character (len=*), parameter :: base_fit3_fileName='InternalData/CH5/fit3/inter_'
-  character (len=*), parameter :: base_fit3_hess_fileName='InternalData/CH5/fit3/inter_mp2_'
+  character (len=*), parameter :: base_fit3_hess_fileName='InternalData/CH5/fit3/inter_'
 
+  character (len=*), parameter :: base_fit4_fileName='InternalData/CH5/fit4/inter_'
+  character (len=*), parameter :: base_fit4_hess_fileName='InternalData/CH5/fit4/inter_mp2_'
+
+  character (len=*), parameter :: base_fit5_fileName='InternalData/CH5/fit5/inter_'
+  character (len=*), parameter :: base_fit5_hess_fileName='InternalData/CH5/fit5/inter_mp2_'
 
 !> @brief Derived type in which the CH5 parameters are set-up.
   TYPE, EXTENDS (EmptyModel_t) ::  CH5_Model_t
@@ -70,6 +72,9 @@ MODULE mod_CH5_Model
     real (kind=Rkind)  :: b(0:max_fit,0:max_fit)  = ZERO
 
     logical            :: file_exist(0:max_fit,0:max_fit)  = .FALSE.
+
+    integer, allocatable :: ifunc_TO_i1i2(:,:)
+    integer, allocatable :: i1i2_TO_ifunc(:,:)
 
 
    CONTAINS
@@ -98,9 +103,9 @@ MODULE mod_CH5_Model
     logical,                     intent(in)      :: read_param
 
 
-    integer :: ii,jj
+    integer :: ii,jj,ifunc
     logical :: exist
-    character (len=:), allocatable  :: FileName,base_fit_fileName
+    character (len=:), allocatable  :: FileName
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_CH5_Model'
@@ -121,48 +126,68 @@ MODULE mod_CH5_Model
     END IF
 
     !The value of QModel%ndim must be 1 or 12
-    IF (QModel%ndim /= 1 .AND. QModel%ndim /= 12) THEN
+    IF (QModel%ndim /= 1 .AND. QModel%ndim /= 12 .AND. QModel%ndim /= 2 ) THEN
        write(out_unitp,*) 'Write_QModel'
        CALL QModel%Write_QModel(out_unitp)
        write(out_unitp,*) ' ERROR in ',name_sub
-       write(out_unitp,*) ' ndim MUST equal to 1 or 12. ndim: ',QModel%ndim
-       STOP 'ERROR in Init_CH5_Model: ndim MUST equal to 1 or 9'
+       write(out_unitp,*) ' ndim MUST equal to 1 or 2 or 12. ndim: ',QModel%ndim
+       STOP 'ERROR in Init_CH5_Model: ndim MUST equal to 1 or 2 or 12'
     END IF
 
     QModel%nsurf    = 1
     QModel%pot_name = 'ch5'
 
     QModel%ndimFunc = 1
-
                   !  ene   Qopt(i)       hess(i,j)
     QModel%nb_Func  = 1 + (max_fit-1) + (max_fit-1)**2
-
-    SELECT CASE (fit)
-    CASE(1)
-      base_fit_fileName = base_fit1_fileName
-                   !  ene   Qopt(i)
-      QModel%nb_Func  = 1 + (max_fit-1)
-    CASE (3)
-      base_fit_fileName = base_fit3_fileName
-    END SELECT
+    allocate(QModel%ifunc_TO_i1i2(2,QModel%nb_Func))
+    allocate(QModel%i1i2_TO_ifunc(0:max_fit,0:max_fit))
+    QModel%ifunc_TO_i1i2(:,:) = 0
+    QModel%i1i2_TO_ifunc(:,:) = 0
 
     ! read the parameters
     jj = 0
     ii = 0
     ! for the energy
-    FileName = make_FileName(base_fit_fileName // int_TO_char(ii))
+    ifunc = 1
+
+    SELECT CASE (QModel%option)
+    CASE (3)
+      FileName = make_FileName(base_fit3_fileName // int_TO_char(ii))
+    CASE (4)
+      FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+    CASE (5)
+      FileName = make_FileName(base_fit5_fileName // int_TO_char(ii))
+    CASE Default
+      FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+    END SELECT
+
     !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
     CALL read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
                      ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
     !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
     IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 parameters'
+    QModel%ifunc_TO_i1i2(:,ifunc) = [0,0]
+    QModel%i1i2_TO_ifunc(0,0)     = ifunc
+
 
     DO ii=2,max_fit
+      ifunc = ifunc + 1
+      QModel%ifunc_TO_i1i2(:,ifunc) = [ii,0]
+      QModel%i1i2_TO_ifunc(ii,0)    = ifunc
 
-      IF (fit == 1 .AND. listQop_fit1(ii) == -1) CYCLE
-      IF (fit == 3 .AND. listQop_fit3(ii) == -1) CYCLE
+      IF (listQop_fit3(ii) == -1) CYCLE
 
-      FileName = make_FileName(base_fit_fileName // int_TO_char(ii))
+      SELECT CASE (QModel%option)
+      CASE (3)
+        FileName = make_FileName(base_fit3_fileName // int_TO_char(ii))
+      CASE (4)
+        FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+      CASE (5)
+        FileName = make_FileName(base_fit5_fileName // int_TO_char(ii))
+      CASE Default
+        FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+      END SELECT
 
       !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
       CALL read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
@@ -175,23 +200,58 @@ MODULE mod_CH5_Model
 
     ! !hess(i,j)
     DO ii=2,max_fit
-    DO jj=ii,max_fit
-      FileName = make_FileName(base_fit3_hess_fileName //                       &
-                               int_TO_char(ii) // '_' // int_TO_char(jj) )
+    DO jj=2,max_fit
+      ifunc = ifunc + 1
+      QModel%i1i2_TO_ifunc(ii,jj)    = ifunc
+
+      IF (jj < ii) THEN
+        QModel%ifunc_TO_i1i2(:,ifunc) = [jj,ii]
+        CYCLE
+      ELSE
+        QModel%ifunc_TO_i1i2(:,ifunc) = [ii,jj]
+      END IF
+
+      SELECT CASE (QModel%option)
+      CASE (3)
+        FileName = make_FileName(base_fit3_hess_fileName //                     &
+                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+      CASE (4)
+        FileName = make_FileName(base_fit4_hess_fileName //                     &
+                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+      CASE (5)
+        FileName = make_FileName(base_fit5_hess_fileName //                     &
+                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+      CASE Default
+        FileName = make_FileName(base_fit4_hess_fileName //                     &
+                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+      END SELECT
+
       CALL read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
                       ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
     END DO
     END DO
 
     deallocate(FileName)
-    deallocate(base_fit_fileName)
 
     IF (debug) write(out_unitp,*) 'init Q0 of CH5' ! for the rigid constraints
-    QModel%Q0 = [0.5_Rkind,2.182480603843_Rkind,              &
-                 2.069879989614_Rkind,ZERO,ZERO,              &
-                 1.797743737992_Rkind,ZERO,ZERO,              &
-                 TWO*PI/THREE,-TWO*PI/THREE,PI/TWO,PI/TWO]
 
+    SELECT CASE (QModel%option)
+    CASE (3,4)
+      QModel%Q0 = [0.5_Rkind,2.182480603843_Rkind,              &
+                   2.069879989614_Rkind,ZERO,ZERO,              &
+                   1.797743737992_Rkind,ZERO,ZERO,              &
+                   TWO*PI/THREE,-TWO*PI/THREE,PI/TWO,PI/TWO]
+    CASE (5)
+      QModel%Q0 = [0.5_Rkind,2.182480603843_Rkind,              &
+                   2.069879989614_Rkind,ZERO,ZERO,              &
+                   tan(1.797743737992_Rkind-Pi/TWO),ZERO,ZERO,  &
+                   TWO*PI/THREE,-TWO*PI/THREE,ZERO,PI/TWO]
+    CASE Default
+      QModel%Q0 = [0.5_Rkind,2.182480603843_Rkind,              &
+                   2.069879989614_Rkind,ZERO,ZERO,              &
+                   1.797743737992_Rkind,ZERO,ZERO,              &
+                   TWO*PI/THREE,-TWO*PI/THREE,PI/TWO,PI/TWO]
+    END SELECT
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of CH5'
     CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
@@ -211,7 +271,7 @@ MODULE mod_CH5_Model
   SUBROUTINE Write_CH5_Model(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(CH5_Model_t),  intent(in) :: QModel
+    CLASS(CH5_Model_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
   END SUBROUTINE Write_CH5_Model
@@ -222,14 +282,54 @@ MODULE mod_CH5_Model
   SUBROUTINE Write0_CH5_Model(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(CH5_Model_t),  intent(in) :: QModel
+    CLASS(CH5_Model_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
-    write(nio,*) 'CH5 default parameters'
+    write(nio,*) 'CH5 parameters'
     write(nio,*)
+    write(nio,*) ' H + H-CH3 -> H-H + CH3 approximate 12D-potential:'
     write(nio,*)
-    write(nio,*) 'end CH5 default parameters'
-
+    write(nio,*) '   Quadratic potential along the reaction path'
+    write(nio,*) '   Reaction coordinate: R- = 1/2(RCH1-RHH)'
+    write(nio,*) '   Optimal coordinates along the path at CCSD(T)-F12/cc-pVTZ-F12'
+    write(nio,*) '   V0 along the path at CCSD(T)-F12/cc-pVTZ-F12'
+    write(nio,*) '   Hessian along the path at MP2/cc-pVDZ'
+    write(nio,*)
+    write(nio,*) 'Two options are availble, which differ from the coordinates'
+    write(nio,*) '-option=4 (default)'
+    write(nio,*) '-option=5:'
+    write(nio,*) '  Coordinate transformations on some valence angles are added.'
+    write(nio,*) '  x = tan(A-Pi/2), so that the tranformed angle range is ]-inf,+inf[.'
+    write(nio,*)
+    write(nio,*) 'Primitive coordinates (z-matrix):'
+    write(nio,*) '   C'
+    write(nio,*) '   H 1 RCH1'
+    write(nio,*) '   H 1 RCH2 2 ACH2'
+    write(nio,*) '   H 1 RCH3 2 ACH3 3 DH3'
+    write(nio,*) '   H 1 RCH4 2 ACH4 3 DH4'
+    write(nio,*) '   X 2 1.   1 Pi/2 3 0.'
+    write(nio,*) '   X 2 1.   1 Pi/2 3 Pi/2'
+    write(nio,*) '   H 2 RHH  7 A    6 D'
+    write(nio,*)
+    write(nio,*) 'If option=5 is selected, the angles (ACH2,ACH3,ACH4,A) are transformed:'
+    write(nio,*)     ' x = tan(A-Pi/2)'
+    write(nio,*)
+    write(nio,*) 'Symetrization of some coordinates (linear combinations):'
+    write(nio,*)
+    write(nio,*) '   R-= 1/2 (RCH1 - RHH)'
+    write(nio,*) '   R+= 1/2 (RCH1 + RHH)'
+    write(nio,*)
+    write(nio,*) '   Ra1= 1/3      (  RCH1 + RCH2 + RCH3)'
+    write(nio,*) '   Re1= 1/sqrt(6)(2.RCH1 - RCH2 - RCH3)'
+    write(nio,*) '   Re2= 1/sqrt(2)(         RCH2 - RCH3)'
+    write(nio,*)
+    write(nio,*) '   Aa1= 1/3      (  ACH1 + ACH2 + ACH3)'
+    write(nio,*) '   Ae1= 1/sqrt(6)(2.ACH1 - ACH2 - ACH3)'
+    write(nio,*) '   Ae2= 1/sqrt(2)(         ACH2 - ACH3)'
+    write(nio,*) '   Remark: when option=5 is selected, ...'
+    write(nio,*) '      ... the symetrization is performed on the transformed angle, x.'
+    write(nio,*)
+    write(nio,*) 'end CH5 parameters'
 
   END SUBROUTINE Write0_CH5_Model
 
@@ -256,24 +356,19 @@ MODULE mod_CH5_Model
 
     Rm  = dnQ(1)
 
-    SELECT CASE (fit)
-    CASE (1)
-      Mat_OF_PotDia(1,1) = dnvfour_fit1(Rm,0,0,QModel)
-    CASE(3)
-      DO i1=2,QModel%ndim
-        dnDQ(i1) = dnQ(i1) - dnvfour_fit3(Rm,i1,0,QModel)
-      END DO
+    DO i1=2,QModel%ndim
+      dnDQ(i1) = dnQ(i1) - dnvfour_fit3(Rm,i1,0,QModel)
+    END DO
 
-      vh = ZERO
-      DO i1=2,QModel%ndim
-        vh = vh + dnDQ(i1)*dnDQ(i1) * dnvfour_fit3(Rm,i1,i1,QModel)
-        DO i2=i1+1,QModel%ndim
-          IF (.NOT. QModel%file_exist(i1,i2)) CYCLE
-          vh = vh + dnDQ(i1)*dnDQ(i2) * TWO*dnvfour_fit3(Rm,i1,i2,QModel)
-        END DO
+    vh = ZERO
+    DO i1=2,QModel%ndim
+      vh = vh + dnDQ(i1)*dnDQ(i1) * dnvfour_fit3(Rm,i1,i1,QModel)
+      DO i2=i1+1,QModel%ndim
+        IF (.NOT. QModel%file_exist(i1,i2)) CYCLE
+        vh = vh + dnDQ(i1)*dnDQ(i2) * TWO*dnvfour_fit3(Rm,i1,i2,QModel)
       END DO
-      Mat_OF_PotDia(1,1) = dnvfour_fit3(Rm,0,0,QModel) + vh * HALF
-    END SELECT
+    END DO
+    Mat_OF_PotDia(1,1) = dnvfour_fit3(Rm,0,0,QModel) + vh * HALF
 
   END SUBROUTINE eval_CH5_Pot
 
@@ -289,12 +384,7 @@ MODULE mod_CH5_Model
     TYPE (dnS_t)    :: Rm
     integer         :: i1,i2,ifunc
 
-    SELECT CASE (fit)
-    CASE (1)
-      CALL eval_CH5_Func_fit1(QModel,Func,dnQ,nderiv)
-    CASE(3)
-      CALL eval_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
-    END SELECT
+    CALL eval_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
 
   END SUBROUTINE eval_CH5_Func
 
@@ -310,27 +400,33 @@ MODULE mod_CH5_Model
 
 
     TYPE (dnS_t)    :: Rm
-    integer         :: i1,i2,ifunc
+    integer         :: i1,i2,ifunc,ifunc2
 
     Rm    = dnQ(1)
-    ifunc = 1
 
     ! energy
+    ifunc = QModel%i1i2_TO_ifunc(0,0)
     Func(ifunc) = dnvfour_fit3(Rm,0,0,QModel)
 
     ! Qopt: 11 values
     DO i1=2,max_fit
-      ifunc = ifunc + 1
+      ifunc = QModel%i1i2_TO_ifunc(i1,0)
       Func(ifunc) = dnvfour_fit3(Rm,i1,0,QModel)
     END DO
 
 
     ! hess_ij: xx values
     DO i1=2,max_fit
-    DO i2=i1,max_fit
-       IF ( .NOT. QModel%file_exist(i1,i2)) CYCLE
-       ifunc = ifunc + 1
-       Func(ifunc) = dnvfour_fit3(Rm,i1,i2,QModel)
+      ifunc = QModel%i1i2_TO_ifunc(i1,i1)
+      Func(ifunc) = dnvfour_fit3(Rm,i1,i1,QModel)
+    END DO
+
+    DO i1=2,max_fit
+    DO i2=i1+1,max_fit
+      ifunc = QModel%i1i2_TO_ifunc(i1,i2)
+      Func(ifunc) = dnvfour_fit3(Rm,i1,i2,QModel)
+      ifunc2 = QModel%i1i2_TO_ifunc(i2,i1)
+      Func(ifunc2) = Func(ifunc)
     END DO
     END DO
 
@@ -409,6 +505,10 @@ MODULE mod_CH5_Model
       CALL QML_dealloc_dnS(tRm)
     END IF
 
+    IF (iq == 6 .AND. jq == 0 .AND. QModel%option == 5) THEN
+      dnvfour = tan(dnvfour - pi/TWO)
+    END IF
+
   END FUNCTION dnvfour_fit3
   FUNCTION sc2_fit3(x,a,b)
     TYPE (dnS_t)                          :: sc2_fit3
@@ -426,79 +526,7 @@ MODULE mod_CH5_Model
     sc_fit3 = a + b*tanh(x)
 
   END FUNCTION sc_fit3
-  SUBROUTINE eval_CH5_Func_fit1(QModel,Func,dnQ,nderiv)
-  USE mod_dnS
-  IMPLICIT NONE
 
-    CLASS(CH5_Model_t),   intent(in)    :: QModel
-    TYPE (dnS_t),         intent(inout) :: Func(:)
-    TYPE (dnS_t),         intent(in)    :: dnQ(:)
-    integer,              intent(in)    :: nderiv
-
-
-
-    TYPE (dnS_t)    :: Rm
-    integer         :: i1,i2,ifunc
-
-    Rm    = dnQ(1)
-    ifunc = 1
-
-    Func(ifunc) = dnvfour_fit1(Rm,0,0,QModel)
-
-    DO i1=1,12
-      ifunc = ifunc + 1
-      Func(ifunc) = dnvfour_fit1(Rm,i1,0,QModel)
-    END DO
-
-    ! DO i1=1,QModel%ndim-1
-    ! DO i2=1,QModel%ndim-1
-    !   ifunc = ifunc + 1
-    !   Func(ifunc) = dnvfour_fit1(Rm,i1,i2,QModel)
-    ! END DO
-    ! END DO
-
-  END SUBROUTINE eval_CH5_Func_fit1
-
-  FUNCTION dnvfour_fit1(Rm,iq,jq,QModel) RESULT(dnvfour)
-  USE mod_dnS
-  USE mod_dnPoly
-  IMPLICIT NONE
-
-    TYPE (dnS_t)                        :: dnvfour
-
-    CLASS(CH5_Model_t),   intent(in)    :: QModel
-    integer,              intent(in)    :: iq,jq
-    TYPE (dnS_t),         intent(in)    :: Rm
-
-    integer         :: i,kl
-    TYPE (dnS_t)    :: tRm,Rm0 ! transformation of Rm
-
-    IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
-      write(out_unitp,*) ' ERROR in dnvfour'
-      write(out_unitp,*) ' wrong value for iq or jq E [0...8]',iq,jq
-      STOP ' ERROR in dnvfour: wrong value for iq or jq E [0...8]'
-    END IF
-
-    IF (listQop_fit1(iq) == -1 .AND. jq == 0) THEN
-      IF (iq == 1) THEN
-        Rm0 = 0.3_Rkind
-        dnvfour =               fm_fit1(Rm ,1.3_Rkind)+fp_fit1(Rm ,1.3_Rkind) + &
-                  (2.15_Rkind - fm_fit1(Rm0,1.3_Rkind)-fp_fit1(Rm0,1.3_Rkind)) *&
-                  exp(-0.9_Rkind*(Rm-0.3_Rkind)**2)
-      ELSE
-        dnvfour = QModel%Q0(iq)
-      END IF
-    ELSE
-      tRm = tanh(Rm)
-
-      dnvfour = ZERO
-      DO i=1,QModel%nn(0,iq,jq)
-        dnvfour = dnvfour + QModel%F(i,iq,jq)*QML_dnLegendre0(tRm,i-1)
-      END DO
-
-      CALL QML_dealloc_dnS(tRm)
-    END IF
-  END FUNCTION dnvfour_fit1
   SUBROUTINE read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist)
   IMPLICIT NONE
 
@@ -555,34 +583,4 @@ MODULE mod_CH5_Model
     dnSigmoid = (ONE+tanh(a*x))/TWO
 
   END FUNCTION dnSigmoid
-  FUNCTION fp_fit1(x,a)
-  USE mod_dnS
-  IMPLICIT NONE
-
-    TYPE (dnS_t)                        :: fp_fit1
-
-    TYPE (dnS_t),         intent(in)    :: x
-    real(kind=Rkind),     INTENT(IN)    :: a
-
-    real(kind=Rkind), parameter    :: x0=0.3_Rkind
-    real(kind=Rkind), parameter    :: b=6.401578173119_Rkind-FIVE
-
-    fp_fit1 = dnSigmoid(x-x0,a)*(x+b)
-
-  END FUNCTION fp_fit1
-  FUNCTION fm_fit1(x,a)
-  USE mod_dnS
-  IMPLICIT NONE
-
-    TYPE (dnS_t)                        :: fm_fit1
-
-    TYPE (dnS_t),         intent(in)    :: x
-    real(kind=Rkind),     INTENT(IN)    :: a
-
-    real(kind=Rkind), parameter    :: x0=0.3_Rkind
-    real(kind=Rkind), parameter    :: b=7.055647895899_Rkind-FIVE
-
-    fm_fit1 = dnSigmoid(-x+x0,a)*(-x+b)
-
-  END FUNCTION fm_fit1
 END MODULE mod_CH5_Model

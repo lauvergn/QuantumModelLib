@@ -39,7 +39,7 @@ PROGRAM TEST_model
   !CALL test_H3 ; stop
   !CALL test_PSB3_Retinal2000_test ; stop
   !CALL test_Test() ; stop
-  CALL test_CH5() ; stop
+  !CALL test_CH5() ; stop
 
 
   ! One electronic surface
@@ -66,7 +66,10 @@ PROGRAM TEST_model
   CALL test_H2NSi()
 
   ! 3D (full-D), One electronic surface for collision
-  CALL test_HOO_DMBE
+  CALL test_HOO_DMBE()
+
+  ! 12D (full-D), One electronic surface for collision H+CH4 -> H2+CH3
+  CALL test_CH5()
 
   ! A template with one electronic surface
   CALL test_template()
@@ -1523,7 +1526,7 @@ SUBROUTINE test_CH5
 
   TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: Q(:)
-  integer                        :: ndim,nsurf,nderiv,i,option
+  integer                        :: ndim,nsurf,nderiv,i,i1,option
   TYPE (dnMat_t)                 :: PotVal
   TYPE (dnS_t),      allocatable :: Func(:)
 
@@ -1539,10 +1542,10 @@ SUBROUTINE test_CH5
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL Init_Model(QModel,ndim=1,pot_name='CH5')
+  CALL Init_Model(QModel,ndim=12,pot_name='CH5',option=5)
 
-  allocate(q(QModel%ndim))
-  Q(:) = [0.5_Rkind]
+  allocate(Q(QModel%ndim))
+  CALL get_Q0_Model(Q,QModel,option=5)
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -1563,7 +1566,7 @@ SUBROUTINE test_CH5
   CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='HNO3')
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='CH5')
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -1573,13 +1576,35 @@ SUBROUTINE test_CH5
 
   DO i=0,200
     Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
-    CALL Eval_Func(QModel,Q,Func,nderiv=0)
+    CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
     write(6,*) Q,QML_get_d0_FROM_dnS(Func)
   END DO
 
-  !DO i=1,size(Func)
-  !  CALL QML_Write_dnS(Func(i))
-  !END DO
+  Q(1)= 0.5_Rkind
+  CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
+  write(6,*) Q(1),'Energy',QML_get_d0_FROM_dnS(Func(1))
+  write(6,*) Q(1),'Qopt',QML_get_d0_FROM_dnS(Func(2:12))
+  write(6,*) Q(1),'hessian'
+  DO i=1,121
+    write(6,*) '                       ',QML_get_d0_FROM_dnS(Func(12+i)),',     &'
+  END DO
+
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential in the asymptotic region'
+
+  allocate(Q(QModel%ndim))
+  Q(1)= 5._Rkind
+  CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
+  Q(2:12) = QML_get_d0_FROM_dnS(Func(2:12))
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
