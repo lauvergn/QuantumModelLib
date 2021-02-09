@@ -132,20 +132,20 @@ CONTAINS
     END IF
 
     !QModel = QModel_in   ! it does not work always with nagfor
-    QModel%Init       = QModel_in%Init
+    QModel%Init         = QModel_in%Init
 
-    QModel%nsurf      = QModel_in%nsurf
-    QModel%ndim       = QModel_in%ndim
-    QModel%ndimQ      = QModel_in%ndimQ
-    QModel%ndimCart   = QModel_in%ndimCart
+    QModel%nsurf        = QModel_in%nsurf
+    QModel%ndim         = QModel_in%ndim
+    QModel%ndimQ        = QModel_in%ndimQ
+    QModel%ndimCart     = QModel_in%ndimCart
 
-    QModel%numeric    = QModel_in%numeric
-    QModel%adiabatic  = QModel_in%adiabatic
-    QModel%option     = QModel_in%option
-    QModel%PubliUnit  = QModel_in%PubliUnit
+    QModel%numeric      = QModel_in%numeric
+    QModel%adiabatic    = QModel_in%adiabatic
+    QModel%option       = QModel_in%option
+    QModel%PubliUnit    = QModel_in%PubliUnit
 
-    QModel%no_ana_der = QModel_in%no_ana_der
-    QModel%Cart_TO_Q  = QModel_in%Cart_TO_Q
+    QModel%no_ana_der   = QModel_in%no_ana_der
+    QModel%Cart_TO_Q    = QModel_in%Cart_TO_Q
 
     IF (QModel%adiabatic) THEN
       write(out_unitp,*) 'Adiabatic potential . . .'

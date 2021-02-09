@@ -49,23 +49,23 @@ MODULE mod_LinearHBondModel
   TYPE, EXTENDS (EmptyModel_t) :: LinearHBondModel_t
    PRIVATE
 
-     TYPE (MorseModel_t) :: Morse1
-     TYPE (MorseModel_t) :: Morse2
-     real (kind=Rkind) :: Eref2 = ZERO  ! energy reference for the second morse (-D*epsi^2)
+     TYPE (MorseModel_t)  :: Morse1
+     TYPE (MorseModel_t)  :: Morse2
+     real (kind=Rkind)    :: Eref2 = ZERO  ! energy reference for the second morse (-D*epsi^2)
 
-     TYPE (BuckModel_t)  :: Buck
+     TYPE (BuckModel_t)   :: Buck
 
-     real (kind=Rkind) :: muQQ= 29156.946380706224_Rkind/TWO  ! reduced mass associated to QQ (O---O)
-     real (kind=Rkind) :: muq = 1837.1526464003414_Rkind      ! reduced mass associated to q (H atom)
+     real (kind=Rkind)    :: muQQ= 29156.946380706224_Rkind/TWO  ! reduced mass associated to QQ (O---O)
+     real (kind=Rkind)    :: muq = 1837.1526464003414_Rkind      ! reduced mass associated to q (H atom)
 
    CONTAINS
     PROCEDURE :: Eval_QModel_Pot => eval_LinearHBondPot
     PROCEDURE :: Write_QModel    => Write_LinearHBondModel
     PROCEDURE :: Write0_QModel   => Write0_LinearHBondModel
   END TYPE LinearHBondModel_t
- 
+
   PUBLIC :: LinearHBondModel_t,Init_LinearHBondModel
- 
+
   CONTAINS
 !> @brief Function which makes the initialization of the LinearHBond parameters.
 !!when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
@@ -120,8 +120,8 @@ MODULE mod_LinearHBondModel
     Cbuck_loc = 2.31e4_Rkind
 
     IF (read_param) THEN
-      CALL Read_LinearHBondModel(nio_param_file,                        &
-                                 D_loc,a_loc,req_loc,epsi_loc,          &
+      CALL Read_LinearHBondModel(nio_param_file,                                &
+                                 D_loc,a_loc,req_loc,epsi_loc,                  &
                                  Abuck_loc,Bbuck_loc,Cbuck_loc)
     ELSE
 
@@ -257,7 +257,11 @@ MODULE mod_LinearHBondModel
 
     write(nio,*) 'LinearHBond default parameters:'
     write(nio,*)
-    write(nio,*) ' Potential and parameters from J. Beutier PhD thesis (Eq 3.79)'
+    write(nio,*) ' Potential and parameters from:'
+    write(nio,*) '  - Dana Codruta Marinica, Marie-Pierre Gaigeot, Daniel Borgis, '
+    write(nio,*) '    Chemical Physics Letters 423 (2006) 390–394'
+    write(nio,*) '    DOI: 10.1016/j.cplett.2006.04.007'
+    write(nio,*) ' -  J. Beutier PhD thesis (Eq 3.79)'
     write(nio,*) '    Hydrogen motion between two atoms, A and B.'
     write(nio,*)
     write(nio,*) '    A--------------H-----X--------------------B'
@@ -321,7 +325,7 @@ MODULE mod_LinearHBondModel
 
     !logical, parameter :: debug=.TRUE.
     logical, parameter :: debug=.FALSE.
-    IF (debug) THEN
+    IF (debug .OR. print_level > 0) THEN
       write(out_unitp,*) 'BEGINNING Eval_LinearHBondPot'
       write(out_unitp,*) 'r(:) or QQ,q: ',QML_get_d0_FROM_dnS(dnQ(:))
       write(out_unitp,*) 'nderiv',nderiv
@@ -329,7 +333,7 @@ MODULE mod_LinearHBondModel
       flush(out_unitp)
     END IF
 
-    IF (debug) THEN
+    IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'dnQQ'
       CALL QML_Write_dnS(dnQ(1),all_type=.TRUE.)
       write(out_unitp,*) 'dnsq'
@@ -341,7 +345,7 @@ MODULE mod_LinearHBondModel
        dnQQ = a0*dnQ(1) ! to convert the bhor into Angstrom.
        dnsq = a0*dnQ(2) ! to convert the bhor into Angstrom.
 
-      IF (debug) THEN
+      IF (debug .OR. print_level > 1) THEN
         write(out_unitp,*) 'dnQQ in Angs'
         CALL QML_Write_dnS(dnQQ,all_type=.TRUE.)
         write(out_unitp,*) 'dnsq in Angs'
@@ -359,7 +363,7 @@ MODULE mod_LinearHBondModel
     dnX = dnQQ/TWO + dnsq
     dnY = dnQQ/TWO - dnsq
 
-    IF (debug) THEN
+    IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'dnX'
       flush(out_unitp)
       CALL QML_Write_dnS(dnX)
@@ -370,29 +374,29 @@ MODULE mod_LinearHBondModel
     END IF
 
     PotVal_m1 = dnMorse(dnX,QModel%Morse1)
-    IF (debug) THEN
+    IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'PotVal_m1. x:',QML_get_d0_FROM_dnS(dnX)
       CALL QML_Write_dnS(PotVal_m1)
       flush(out_unitp)
     END IF
 
     PotVal_m2 = dnMorse(dnY,QModel%Morse2)+QModel%Eref2
-    IF (debug) THEN
+    IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'PotVal_m2. y:',QML_get_d0_FROM_dnS(dnY)
       CALL QML_Write_dnS(PotVal_m2)
       flush(out_unitp)
     END IF
 
     PotVal_Buck = dnBuck(dnQQ,QModel%Buck)
-    IF (debug) THEN
+    IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'PotVal_Buck. QQ:',QML_get_d0_FROM_dnS(dnQQ)
       CALL QML_Write_dnS(PotVal_Buck)
       flush(out_unitp)
     END IF
 
-    Mat_OF_PotDia(1,1) = PotVal_m1+PotVal_m2+PotVal_Buck
+    Mat_OF_PotDia(1,1) = PotVal_m1 + PotVal_m2 + PotVal_Buck
 
-    IF (debug) THEN
+    IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
       CALL QML_Write_dnS(Mat_OF_PotDia(1,1))
       flush(out_unitp)
@@ -411,7 +415,10 @@ MODULE mod_LinearHBondModel
     CALL QML_dealloc_dnS(PotVal_m2)
     CALL QML_dealloc_dnS(PotVal_Buck)
 
-    IF (debug) THEN
+    IF (debug .OR. print_level > 0) THEN
+      write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
+      CALL QML_Write_dnS(Mat_OF_PotDia(1,1))
+      flush(out_unitp)
       write(out_unitp,*) 'END Eval_LinearHBondPot'
       flush(out_unitp)
     END IF

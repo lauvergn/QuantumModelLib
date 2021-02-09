@@ -41,16 +41,6 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
     CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Init_Qmodel in Model_driver.f90')
 
-    IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unitp,*) ' ERROR in sub_Init_Qmodel'
-      write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unitp,*) '   .... with the initialized ones !!'
-      write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unitp,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_Init_Qmodel: wrong ndim or nsurf'
-    END IF
 !$OMP END CRITICAL (CRIT_sub_Init_Qmodel)
 
 END SUBROUTINE sub_Init_Qmodel
@@ -99,6 +89,21 @@ SUBROUTINE sub_check_Init_Qmodel(check)
   check = check_Init_QModel(QuantumModel)
 
 END SUBROUTINE sub_check_Init_Qmodel
+
+FUNCTION get_Qmodel_ndim() RESULT(ndim)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
+
+  integer     :: ndim
+
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_ndim in Model_driver.f90')
+
+  !ndim  = QuantumModel%QM%ndim
+  ndim  = QuantumModel%ndim
+
+END FUNCTION get_Qmodel_ndim
 
 SUBROUTINE sub_Write_Qmodel(nio)
   USE mod_Model
@@ -276,6 +281,18 @@ SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
   QuantumModel%QM%d0GGdef(:,:) = GGdef
 
 END SUBROUTINE set_Qmodel_GGdef
+SUBROUTINE set_Qmodel_Print_level(printlevel)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
+
+  integer,                intent(in)        :: printlevel
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='set_Qmodel_Print_level in Model_driver.f90')
+
+  print_level = printlevel  ! from them module mod_NumParameters.f90
+
+END SUBROUTINE set_Qmodel_Print_level
 SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
   USE mod_Lib
   USE mod_Model

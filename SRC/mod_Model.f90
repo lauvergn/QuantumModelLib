@@ -155,23 +155,25 @@ CONTAINS
     logical,             intent(inout) :: read_nml1
 
     ! local variable
-    integer :: ndim,nsurf,nderiv,option
+    integer :: ndim,nsurf,nderiv,option,printlevel
     logical :: adiabatic,numeric,PubliUnit,read_nml
     character (len=20) :: pot_name
     integer :: err_read
 
     ! Namelists for input file
-    namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,read_nml
+    namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
+                          read_nml,printlevel
 
 !    ! Default values defined
-    ndim      = QModel_inout%ndim
-    nsurf     = QModel_inout%nsurf
-    adiabatic = QModel_inout%adiabatic
-    pot_name  = 'morse'
-    numeric   = .FALSE.
-    PubliUnit = .FALSE.
-    read_nml  = .TRUE. ! if T, read the namelist in PotLib (HenonHeiles ....)
-    option    = -1 ! no option
+    printlevel  = 0
+    ndim        = QModel_inout%ndim
+    nsurf       = QModel_inout%nsurf
+    adiabatic   = QModel_inout%adiabatic
+    pot_name    = 'morse'
+    numeric     = .FALSE.
+    PubliUnit   = .FALSE.
+    read_nml    = .TRUE. ! if T, read the namelist in PotLib (HenonHeiles ....)
+    option      = -1 ! no option
 
 
     write(out_unitp,*) 'Reading input file . . .'
@@ -194,16 +196,17 @@ CONTAINS
 
     !write(out_unitp,nml=potential)
 
-    read_nml1              = read_nml
+    read_nml1                 = read_nml
 
-    QModel_inout%option    = option
-    QModel_inout%ndim      = ndim
-    QModel_inout%nsurf     = nsurf
-    QModel_inout%adiabatic = adiabatic
-    QModel_inout%numeric   = numeric
-    QModel_inout%pot_name  = trim(pot_name)
-    !QModel_inout%pot_name  = strdup(pot_name) ! panic with nagfor !!!
-    QModel_inout%PubliUnit = PubliUnit
+    QModel_inout%option       = option
+    print_level  = printlevel ! from them module mod_NumParameters.f90
+    QModel_inout%ndim         = ndim
+    QModel_inout%nsurf        = nsurf
+    QModel_inout%adiabatic    = adiabatic
+    QModel_inout%numeric      = numeric
+    QModel_inout%pot_name     = trim(pot_name)
+    !QModel_inout%pot_name    = strdup(pot_name) ! panic with nagfor !!!
+    QModel_inout%PubliUnit    = PubliUnit
 
   END SUBROUTINE Read_Model
 
@@ -625,14 +628,21 @@ CONTAINS
     END IF
 
     IF (present(ndim)) THEN
-    IF (ndim /= QModel%QM%ndim) THEN
-        write(out_unitp,*) ' ERROR in Init_Model'
-        write(out_unitp,*) ' ndim is present and ...'
-        write(out_unitp,*) ' its value is not equal to QModel%QM%ndim'
-        write(out_unitp,*) ' ndim,QModel%QM%ndim',ndim,QModel%QM%ndim
-        write(out_unitp,*) ' check your data!'
-        STOP 'STOP in Init_Model: wrong ndim'
-    END IF
+      IF (ndim > QModel%QM%ndim) THEN
+          write(out_unitp,*) ' ERROR in Init_Model'
+          write(out_unitp,*) ' ndim is present and ...'
+          write(out_unitp,*) ' its value is larger than QModel%QM%ndim'
+          write(out_unitp,*) ' ndim,QModel%QM%ndim',ndim,QModel%QM%ndim
+          write(out_unitp,*) ' check your data!'
+          STOP 'STOP in Init_Model: wrong ndim'
+      END IF
+      IF (ndim < QModel%QM%ndim) THEN
+          write(out_unitp,*) ' WARNING in Init_Model'
+          write(out_unitp,*) ' ndim is present and ...'
+          write(out_unitp,*) ' its value is smaller than QModel%QM%ndim'
+          write(out_unitp,*) ' ndim,QModel%QM%ndim',ndim,QModel%QM%ndim
+          write(out_unitp,*) ' => We assume that all variables  will be given!'
+      END IF
     END IF
     IF (present(nsurf)) THEN
     IF (nsurf /= QModel%QM%nsurf) THEN
