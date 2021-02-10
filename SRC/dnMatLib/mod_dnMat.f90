@@ -463,6 +463,89 @@ CONTAINS
 !> @brief Public subroutine which copies a dnS derived type to one element of dnMat derived type.
 !!
 !> @author David Lauvergnat
+!! @date 25/06/2018
+!!
+!! @param Mat                   TYPE (dnMat_t):    derived type which deals with the derivatives of a matrix.
+!! @param S                     TYPE(dnS):       derived type which deals with the derivatives of a scalar.
+!! @param i,j                   integer (optional) indices of the matrix element. If not present i=j=1
+  SUBROUTINE QML_sub_dnMat_TO_dnS(Mat,S,i,j)
+    USE mod_dnS
+    TYPE (dnMat_t),     intent(in)    :: Mat
+    TYPE (dnS_t),       intent(inout) :: S
+    integer, optional,  intent(in)    :: i,j
+
+    integer :: nderiv_dnMat,nsurf_dnMat,ndim_dnMat,nderiv_dnS,ndim_dnS
+    integer :: i_loc,j_loc
+
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_dnMat_TO_dnS'
+
+
+    nderiv_dnS = QML_get_nderiv_FROM_dnS(S)
+    ndim_dnS   = QML_get_ndim_FROM_dnS(S)
+
+    nderiv_dnMat = QML_get_nderiv_FROM_dnMat(Mat)
+    nsurf_dnMat  = QML_get_nsurf_FROM_dnMat(Mat)
+    ndim_dnMat   = QML_get_ndim_FROM_dnMat(Mat)
+
+    i_loc = 1
+    j_loc = 1
+    IF (present(i)) i_loc = i
+    IF (present(j)) j_loc = j
+
+
+    IF (i_loc < 1 .OR. i_loc > nsurf_dnMat .OR. j_loc < 1 .OR. j_loc > nsurf_dnMat) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' The matrix indexes, (',i_loc,j_loc,') are out of range [1...',nsurf_dnMat,']'
+      write(out_unitp,*) 'It should never append! Check the source'
+      STOP
+    END IF
+
+    IF (nderiv_dnMat == -1) THEN
+      IF (nderiv_dnS == -1) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' dnS is not allocated.'
+        write(out_unitp,*) 'It should never append! Check the source.'
+        STOP 'dnS is not allocated.'
+      END IF
+      ! dnMat is a constant
+      S = Mat%d0(i_loc,j_loc)
+      !CALL QML_set_dnS_TO_R(S,Mat%d0(i_loc,j_loc))
+    ELSE
+
+      IF ( QML_check_notalloc_dnmat(Mat,nderiv_dnS) .OR. nsurf_dnMat < 1 ) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' dnMat is not allocated or ...'
+        write(out_unitp,*) '  ... nsurf from dnMat is < 1'
+        write(out_unitp,*) 'nsurf  from dnMat        :',nsurf_dnMat
+
+        write(out_unitp,*) 'It should never append! Check the source'
+        STOP 'dnMat is not allocated or inconsistent nsurf parameter.'
+      END IF
+
+      SELECT CASE (nderiv_dnMat)
+      CASE (1)
+        CALL QML_set_dnS(S, d0=Mat%d0(i_loc,j_loc),       &
+                            d1=Mat%d1(i_loc,j_loc,:))
+      CASE (2)
+        CALL QML_set_dnS(S, d0=Mat%d0(i_loc,j_loc),       &
+                            d1=Mat%d1(i_loc,j_loc,:),     &
+                            d2=Mat%d2(i_loc,j_loc,:,:))
+      CASE (3)
+        CALL QML_set_dnS(S, d0=Mat%d0(i_loc,j_loc),       &
+                            d1=Mat%d1(i_loc,j_loc,:),     &
+                            d2=Mat%d2(i_loc,j_loc,:,:),   &
+                            d3=Mat%d3(i_loc,j_loc,:,:,:))
+      CASE Default ! nderiv_dnS = -1, 0
+        CALL QML_set_dnS(S, d0=Mat%d0(i_loc,j_loc))
+      END SELECT
+
+    END IF
+
+  END SUBROUTINE QML_sub_dnMat_TO_dnS
+!> @brief Public subroutine which copies a dnS derived type to one element of dnMat derived type.
+!!
+!> @author David Lauvergnat
 !! @date 30/07/2019
 !!
 !! @param Mat                   TYPE (dnMat_t):    derived type which deals with the derivatives of a matrix.
@@ -1617,7 +1700,7 @@ CONTAINS
     integer                       :: i,j,k,id,jd,kd
     real (kind=Rkind)             :: ai,aj,aii,aij,aji,ajj,th,cc,ss
 
-  real (kind=Rkind)               :: epsi = ONETENTH**10
+    real (kind=Rkind)               :: epsi = ONETENTH**10
 
 
 !----- for debuging --------------------------------------------------

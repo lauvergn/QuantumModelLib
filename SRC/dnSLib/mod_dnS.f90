@@ -109,6 +109,7 @@ MODULE mod_dnS
   PUBLIC :: QML_get_nderiv_FROM_dnS,QML_get_ndim_FROM_dnS
   PUBLIC :: QML_sub_get_dn_FROM_dnS
   PUBLIC :: QML_get_d0_FROM_dnS,QML_get_d1_FROM_dnS,QML_get_d2_FROM_dnS,QML_get_d3_FROM_dnS
+  PUBLIC :: QML_ReduceDerivatives_dnS2_TO_dnS1
 
   PUBLIC :: QML_get_Num_dnS_FROM_f_x,QML_Check_dnS_IS_ZERO,QML_d0S_TIME_R
 
@@ -204,7 +205,7 @@ MODULE mod_dnS
 
 
   INTERFACE dot_product
-     MODULE PROCEDURE QML_dot_product_VecOFdnS
+     MODULE PROCEDURE QML_dot_product_VecOFdnS,QML_dot_product_Vec_VecOFdnS,QML_dot_product_VecOFdnS_Vec
   END INTERFACE
   INTERFACE product
      MODULE PROCEDURE QML_product_VecOFdnS
@@ -468,6 +469,35 @@ CONTAINS
     END IF
 
   END SUBROUTINE QML_set_dnS
+  SUBROUTINE QML_ReduceDerivatives_dnS2_TO_dnS1(S1,S2,list_act)
+    USE mod_NumParameters
+    CLASS (dnS_t), intent(inout) :: S1
+    CLASS (dnS_t), intent(in)    :: S2
+    integer,       intent(in)    :: list_act(:)
+
+    integer :: err_dnS_loc
+    character (len=*), parameter :: name_sub='QML_ReduceDerivatives_dnS2_TO_dnS1'
+
+    CALL QML_dealloc_dnS(S1)
+
+    IF (allocated(S2%d1) .AND. (size(list_act) > size(S2%d1)) ) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' size(list_act) > size(S2%d1)'
+        write(out_unitp,*) ' size(list_act) ',size(list_act)
+        write(out_unitp,*) ' size(S2%d1)    ',size(S2%d1)
+        write(out_unitp,*) ' CHECK the fortran!!'
+        STOP 'ERROR in QML_ReduceDerivatives_dnS2_TO_dnS1'
+      END IF
+
+    S1%nderiv = S2%nderiv
+
+    S1%d0 = S2%d0
+    IF (allocated(S2%d1)) S1%d1 = S2%d1(list_act)
+    IF (allocated(S2%d2)) S1%d2 = S2%d2(list_act,list_act)
+    IF (allocated(S2%d3)) S1%d3 = S2%d3(list_act,list_act,list_act)
+
+  END SUBROUTINE QML_ReduceDerivatives_dnS2_TO_dnS1
+
 !> @brief Public function to get d0 from a derived type dnS.
 !!
 !> @author David Lauvergnat
@@ -1950,6 +1980,60 @@ CONTAINS
     END DO
 
   END FUNCTION QML_dot_product_VecOFdnS
+  FUNCTION QML_dot_product_VecOFdnS_Vec(VecA,VecB) RESULT(Sres)
+    USE mod_NumParameters
+
+    TYPE (dnS_t)                       :: Sres
+    TYPE (dnS_t),        intent(in)    :: VecA(:)
+    real(kind=Rkind),    intent(in)    :: VecB(:)
+
+    integer :: i
+    integer :: err_dnS_loc
+    real(kind=Rkind) :: d0f,d1f,d2f,d3f
+    character (len=*), parameter :: name_sub='QML_dot_product_VecOFdnS_Vec'
+
+
+    IF (size(VecA) /= size(VecB)) THEN
+       write(out_unitp,*) ' ERROR in ',name_sub
+       write(out_unitp,*) '  size of both vectors are different'
+       write(out_unitp,*) '  size(VecA),size(VecB)',size(VecA),size(VecB)
+       STOP 'Problem in QML_dot_product_VecOFdnS_Vec'
+    END IF
+
+    Sres = VecA(lbound(VecA,dim=1)) ! for the initialization
+    Sres = ZERO
+    DO i=lbound(VecA,dim=1),ubound(VecA,dim=1)
+      Sres = Sres + VecA(i) * VecB(lbound(VecB,dim=1)+i-1)
+    END DO
+
+  END FUNCTION QML_dot_product_VecOFdnS_Vec
+  FUNCTION QML_dot_product_Vec_VecOFdnS(VecA,VecB) RESULT(Sres)
+    USE mod_NumParameters
+
+    TYPE (dnS_t)                       :: Sres
+    TYPE (dnS_t),        intent(in)    :: VecB(:)
+    real(kind=Rkind),    intent(in)    :: VecA(:)
+
+    integer :: i
+    integer :: err_dnS_loc
+    real(kind=Rkind) :: d0f,d1f,d2f,d3f
+    character (len=*), parameter :: name_sub='QML_dot_product_Vec_VecOFdnS'
+
+
+    IF (size(VecA) /= size(VecB)) THEN
+       write(out_unitp,*) ' ERROR in ',name_sub
+       write(out_unitp,*) '  size of both vectors are different'
+       write(out_unitp,*) '  size(VecA),size(VecB)',size(VecA),size(VecB)
+       STOP 'Problem in QML_dot_product_Vec_VecOFdnS'
+    END IF
+
+    Sres = VecB(lbound(VecA,dim=1)) ! for the initialization
+    Sres = ZERO
+    DO i=lbound(VecA,dim=1),ubound(VecA,dim=1)
+      Sres = Sres + VecA(i) * VecB(lbound(VecB,dim=1)+i-1)
+    END DO
+
+  END FUNCTION QML_dot_product_Vec_VecOFdnS
   FUNCTION QML_product_VecOFdnS(Vec) RESULT(Sres)
     USE mod_NumParameters
 

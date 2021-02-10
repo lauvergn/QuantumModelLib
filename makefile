@@ -10,7 +10,7 @@
 #F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -235,6 +235,7 @@ LYNK90 = $(F90_FLAGS)
 
 #
 GRIDEXE   = Grid.x
+ADIAEXE   = Adia.x
 MODEXE    = ModLib.x
 dnSEXE    = dnS.x
 dnPolyEXE = dnPoly.x
@@ -251,15 +252,15 @@ DIRdnS    = $(DIRSRC)/dnSLib
 DIRdnPoly = $(DIRSRC)/dnPolyLib
 DIRdnMat  = $(DIRSRC)/dnMatLib
 DIRModel  = $(DIRSRC)/ModelLib
-
+DIRAdia   = $(DIRSRC)/AdiaChannels
 #
 OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
                  $(DIROBJ)/mod_SigmoidModel.o $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_BuckModel.o \
                  $(DIROBJ)/mod_TemplateModel.o $(DIROBJ)/mod_TestModel.o \
                  $(DIROBJ)/mod_H2NSi_Model.o $(DIROBJ)/mod_H2SiN_Model.o \
                  $(DIROBJ)/mod_HNNHp_Model.o $(DIROBJ)/mod_HONO_Model.o \
-                 $(DIROBJ)/mod_HNO3_Model.o $(DIROBJ)/mod_CH5_Model.o \
-                 $(DIROBJ)/mod_HOO_DMBE_Model.o \
+                 $(DIROBJ)/mod_HNO3_Model.o \
+                 $(DIROBJ)/mod_CH5_Model.o $(DIROBJ)/mod_HOO_DMBE_Model.o \
                  $(DIROBJ)/mod_H3_Model.o \
                  $(DIROBJ)/mod_HenonHeilesModel.o $(DIROBJ)/mod_LinearHBondModel.o \
                  $(DIROBJ)/mod_PhenolModel.o $(DIROBJ)/mod_TwoD_Model.o \
@@ -267,11 +268,14 @@ OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
                  $(DIROBJ)/mod_OneDSOC_1S1T_Model.o $(DIROBJ)/mod_OneDSOC_2S1T_Model.o \
                  $(DIROBJ)/mod_TullyModel.o
 
+OBJ_AdiaLib    = $(DIROBJ)/mod_AdiaChannels.o
+
 OBJ_Model      = $(DIROBJ)/mod_Model.o
 
 OBJ_test       = $(DIROBJ)/TEST_OOP.o
 OBJ_driver     = $(DIROBJ)/Model_driver.o
 OBJ_grid       = $(DIROBJ)/TEST_grid.o
+OBJ_adia       = $(DIROBJ)/TEST_Adia.o
 OBJ_testmod    = $(DIROBJ)/TEST_model.o
 OBJ_testdnS    = $(DIROBJ)/TEST_dnS.o
 OBJ_testdnPoly = $(DIROBJ)/TEST_dnPoly.o
@@ -310,6 +314,12 @@ $(MODEXE): $(OBJ_testmod) $(OBJ_all)
 grid testgrid:$(GRIDEXE)
 $(GRIDEXE): $(OBJ_grid) $(OBJ_all)
 	$(LYNK90)   -o $(GRIDEXE) $(OBJ_grid) $(OBJ_all) $(LYNKFLAGS)
+#
+# Adia
+.PHONY: adia testadia
+adia testadia:$(ADIAEXE)
+$(ADIAEXE): $(OBJ_adia) $(OBJ_AdiaLib) $(OBJ_all)
+	$(LYNK90)   -o $(ADIAEXE) $(OBJ_adia) $(OBJ_AdiaLib) $(OBJ_all) $(LYNKFLAGS)
 #
 # dnS
 .PHONY: dns dnS testdns testdnS
@@ -357,7 +367,7 @@ $(ModLib): $(OBJ_driver) $(OBJ_all)
 #===============================================
 .PHONY: clean
 clean:
-	rm -f  $(MODEXE) $(GRIDEXE) $(dnSEXE) $(DriverEXE) $(TESTEXE)
+	rm -f  $(MODEXE) $(GRIDEXE) $(ADIAEXE) $(dnSEXE) $(DriverEXE) $(TESTEXE)
 	rm -f  $(ModLib) libQMLib.a
 	rm -fr *.dSYM comp.log
 	cd $(DIROBJ) ; rm -f *.o *.mod *.MOD
@@ -448,6 +458,14 @@ $(DIROBJ)/mod_Model.o:$(DIRSRC)/mod_Model.f90
 ##################################################################################
 #
 #
+##################################################################################
+### AdiaChannels
+#
+$(DIROBJ)/mod_AdiaChannels.o:$(DIRAdia)/mod_AdiaChannels.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRAdia)/mod_AdiaChannels.f90
+#
+##################################################################################
+#
 #
 ##################################################################################
 ### Main + driver + tests
@@ -462,6 +480,8 @@ $(DIROBJ)/TEST_grid.o:$(DIRSRC)/TEST_grid.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRSRC)/TEST_grid.f90
 $(DIROBJ)/TEST_OOP.o:$(DIRSRC)/TEST_OOP.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRSRC)/TEST_OOP.f90
+$(DIROBJ)/TEST_Adia.o:$(DIRSRC)/TEST_Adia.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRSRC)/TEST_Adia.f90
 #
 ##################################################################################
 #
@@ -522,6 +542,7 @@ $(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
 $(DIROBJ)/TEST_dnS.o:    $(OBJ_lib)
 $(DIROBJ)/TEST_dnPoly.o: $(OBJ_lib)
 $(DIROBJ)/TEST_driver.o: $(ModLib)
+$(DIROBJ)/TEST_Adia.o:   $(ModLib) $(OBJ_AdiaLib)
 
 $(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
 
@@ -545,7 +566,8 @@ $(DIROBJ)/mod_Retinal_JPCB2000_Model.o:  $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HONO_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HNO3_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HOO_DMBE_Model.o:          $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_H3_Model.o:          $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_H3_Model.o:                $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_CH5_Model.o:               $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HNNHp_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_H2SiN_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_H2NSi_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)

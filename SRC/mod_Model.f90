@@ -913,7 +913,7 @@ CONTAINS
 
     IF ( QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
       CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
-                          nderiv=nderiv)
+                           nderiv=nderiv)
     END IF
     PotVal = ZERO
 
