@@ -31,6 +31,19 @@
 !===========================================================================
 !===========================================================================
 PROGRAM main_pot
+  IMPLICIT NONE
+
+  CALL test_1DSOC_1S1T()
+  CALL test_PSB3()
+  CALL test_HBond()
+  CALL test_Phenol_Dia(10**7)
+  CALL test_Phenol_ADia()
+  CALL test_henonheiles(10**7)
+  CALL test_Vib_adia(1000)
+
+END PROGRAM main_pot
+
+SUBROUTINE test_1DSOC_1S1T
   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
 !$ USE omp_lib
   IMPLICIT NONE
@@ -48,16 +61,12 @@ PROGRAM main_pot
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
-
-  maxth = 1
-  !$ maxth           = omp_get_max_threads()
-  write(6,*) 'NTEST_driver. number of threads:',maxth
-
   write(6,*) '============================================================'
   write(6,*) '============================================================'
+  nb_eval = 1
+
   pot_name = '1DSOC_1S1T'
   write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL time_perso('Test ' // pot_name)
 
   ndim      = 1
   nsurf     = 4
@@ -90,6 +99,33 @@ PROGRAM main_pot
   write(6,*) '============================================================'
   write(6,*) '============================================================'
 
+
+END SUBROUTINE test_1DSOC_1S1T
+SUBROUTINE test_PSB3
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+!$ USE omp_lib
+  IMPLICIT NONE
+
+  real (kind=real64),      allocatable     :: Q(:)
+  real (kind=real64),      allocatable     :: GGdef(:,:)
+  real (kind=real64),      allocatable     :: V(:,:)
+  real (kind=real64),      allocatable     :: Vec(:,:)
+  real (kind=real64),      allocatable     :: g(:,:,:)
+  real (kind=real64),      allocatable     :: h(:,:,:,:)
+  real (kind=real64),      allocatable     :: NAC(:,:,:)
+
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
+
+  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
+
+  nb_eval = 1
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  maxth = 1
+  !$ maxth           = omp_get_max_threads()
+  write(6,*) '============================================================'
+  write(6,*) 'NTEST_driver. number of threads:',maxth
   write(6,*) '============================================================'
   write(6,*) '============================================================'
   pot_name = 'PSB3'
@@ -123,7 +159,35 @@ PROGRAM main_pot
   write(6,*) '============================================================'
   write(6,*) '============================================================'
 
- write(6,*) '============================================================'
+END SUBROUTINE test_PSB3
+
+SUBROUTINE test_HBond
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+!$ USE omp_lib
+  IMPLICIT NONE
+
+  real (kind=real64),      allocatable     :: Q(:)
+  real (kind=real64),      allocatable     :: GGdef(:,:)
+  real (kind=real64),      allocatable     :: V(:,:)
+  real (kind=real64),      allocatable     :: Vec(:,:)
+  real (kind=real64),      allocatable     :: g(:,:,:)
+  real (kind=real64),      allocatable     :: h(:,:,:,:)
+  real (kind=real64),      allocatable     :: NAC(:,:,:)
+
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
+
+  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
+
+  nb_eval = 1
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  maxth = 1
+  !$ maxth           = omp_get_max_threads()
+  write(6,*) '============================================================'
+  write(6,*) 'NTEST_driver. number of threads:',maxth
+
+  write(6,*) '============================================================'
   write(6,*) '============================================================'
   pot_name = 'HBond'
   write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
@@ -156,7 +220,33 @@ PROGRAM main_pot
   write(6,*) '============================================================'
 
 
-  nb_eval  = 10**7
+
+END SUBROUTINE test_HBond
+
+SUBROUTINE test_Phenol_Dia(nb_eval)
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+!$ USE omp_lib
+  IMPLICIT NONE
+
+  real (kind=real64),      allocatable     :: Q(:)
+  real (kind=real64),      allocatable     :: GGdef(:,:)
+  real (kind=real64),      allocatable     :: V(:,:)
+  real (kind=real64),      allocatable     :: Vec(:,:)
+  real (kind=real64),      allocatable     :: g(:,:,:)
+  real (kind=real64),      allocatable     :: h(:,:,:,:)
+  real (kind=real64),      allocatable     :: NAC(:,:,:)
+
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
+
+  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  maxth = 1
+  !$ maxth           = omp_get_max_threads()
+  write(6,*) '============================================================'
+  write(6,*) 'NTEST_driver. number of threads:',maxth
 
   write(6,*) '============================================================'
   write(6,*) '============================================================'
@@ -197,7 +287,7 @@ PROGRAM main_pot
 
 
   CALL time_perso('Test ' // pot_name)
-STOP
+
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
 !$OMP   PRIVATE(i,Q,V) &
@@ -222,6 +312,35 @@ STOP
   CALL time_perso('Test ' // pot_name)
   write(6,*) '============================================================'
   write(6,*) '============================================================'
+
+
+END SUBROUTINE test_Phenol_Dia
+SUBROUTINE test_Phenol_ADia
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+!$ USE omp_lib
+  IMPLICIT NONE
+
+  real (kind=real64),      allocatable     :: Q(:)
+  real (kind=real64),      allocatable     :: GGdef(:,:)
+  real (kind=real64),      allocatable     :: V(:,:)
+  real (kind=real64),      allocatable     :: Vec(:,:)
+  real (kind=real64),      allocatable     :: g(:,:,:)
+  real (kind=real64),      allocatable     :: h(:,:,:,:)
+  real (kind=real64),      allocatable     :: NAC(:,:,:)
+
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
+
+  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
+
+  nb_eval = 1
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  maxth = 1
+  !$ maxth           = omp_get_max_threads()
+  write(6,*) '============================================================'
+  write(6,*) 'NTEST_driver. number of threads:',maxth
+
 
 
   write(6,*) '============================================================'
@@ -269,6 +388,32 @@ STOP
   write(6,*) '============================================================'
 
 
+END SUBROUTINE test_Phenol_ADia
+SUBROUTINE test_henonheiles(nb_eval)
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+!$ USE omp_lib
+  IMPLICIT NONE
+
+  real (kind=real64),      allocatable     :: Q(:)
+  real (kind=real64),      allocatable     :: GGdef(:,:)
+  real (kind=real64),      allocatable     :: V(:,:)
+  real (kind=real64),      allocatable     :: Vec(:,:)
+  real (kind=real64),      allocatable     :: g(:,:,:)
+  real (kind=real64),      allocatable     :: h(:,:,:,:)
+  real (kind=real64),      allocatable     :: NAC(:,:,:)
+
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
+
+  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  maxth = 1
+  !$ maxth           = omp_get_max_threads()
+  write(6,*) '============================================================'
+  write(6,*) 'NTEST_driver. number of threads:',maxth
+
   write(6,*) '============================================================'
   write(6,*) '============================================================'
 
@@ -276,7 +421,6 @@ STOP
   nsurf    = 1
   option   = 0
   adiabatic = .TRUE.
-  nb_eval  = 10**8
   pot_name = 'henonheiles'
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
 
@@ -311,7 +455,75 @@ STOP
   write(6,*) '============================================================'
   write(6,*) '============================================================'
 
-END PROGRAM main_pot
+END SUBROUTINE test_henonheiles
+
+SUBROUTINE test_Vib_adia(nb_eval)
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+!$ USE omp_lib
+  IMPLICIT NONE
+
+  real (kind=real64),      allocatable     :: Q(:)
+  real (kind=real64),      allocatable     :: GGdef(:,:)
+  real (kind=real64),      allocatable     :: V(:,:)
+  real (kind=real64),      allocatable     :: Vec(:,:)
+  real (kind=real64),      allocatable     :: g(:,:,:)
+  real (kind=real64),      allocatable     :: h(:,:,:,:)
+  real (kind=real64),      allocatable     :: NAC(:,:,:)
+
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
+
+  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  maxth = 1
+  !$ maxth           = omp_get_max_threads()
+  write(6,*) '============================================================'
+  write(6,*) '  Vibrational adiabatic separation'
+  write(6,*) 'NTEST_driver. number of threads:',maxth
+
+  pot_name  = 'read_model'
+  ndim      = 0
+  nsurf     = 0
+  option    = -1
+  adiabatic = .FALSE.
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  write(6,*) 'ndim,nsurf',ndim,nsurf
+
+  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  CALL time_perso('Test ' // pot_name)
+
+!$OMP   PARALLEL DEFAULT(NONE) &
+!$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
+!$OMP   PRIVATE(i,k,Q,V) &
+!$OMP   NUM_THREADS(maxth)
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+
+!$OMP   DO SCHEDULE(STATIC)
+  DO i=1,nb_eval
+    CALL  random_number(Q)
+    Q = Q + 4.d0
+
+    CALL sub_Qmodel_V(V,Q)
+
+    !write(6,*) Q,(V(k,k),k=1,nsurf)
+  END DO
+!$OMP   END DO
+
+  deallocate(Q)
+  deallocate(V)
+
+!$OMP   END PARALLEL
+
+  CALL time_perso('Test ' // pot_name)
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+
+END SUBROUTINE test_Vib_adia
+
   SUBROUTINE time_perso(name)
   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
   IMPLICIT NONE

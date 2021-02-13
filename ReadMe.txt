@@ -13,7 +13,7 @@
 [2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France
 [3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France
 [4]: Durham University, Durham, UK
-* Originally, it has been developed during the Quantum-Dynamics E-CAM project : 
+* Originally, it has been developed during the Quantum-Dynamics E-CAM project :
      https://www.e-cam2020.eu/quantum-dynamics
 =========================================
  1) Installation
@@ -48,7 +48,9 @@
      The list of available models is given below
 
      Example:
-        CALL sub_Init_Qmodel(2,3,'phenol',.FALSE.,0)
+        ndim  = 2
+        nsurf = 3
+        CALL sub_Init_Qmodel(ndim,nsurf,'phenol',.FALSE.,0)
 
         It initializes the phenol potential (2D and 3 PES).
 
@@ -63,16 +65,47 @@
 
      Remarks:
       - when adiabatic is set to .TRUE., V(:,:) is a diagonal matrix.
-      - Use sub_Qmodel_VG(V,G,Q) to get the potential and the gradient 
-            G(:,:,:) are real (kind=8) of nsurf x nsurf x ndim 
+      - Use sub_Qmodel_VG(V,G,Q) to get the potential and the gradient
+            G(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
       - Use sub_Qmodel_VGH(V,G,H,Q) to get the potential, the gradient and the hessian
             H(:,:,:,:) are real (kind=8) of nsurf x nsurf x ndim x ndim
       - Use sub_Qmodel_VG_NAC(V,G,NAC,Q) to get the potential, the gradient and the
             non-adiabatic couplings (NAC).
-            NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim 
+            NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
 
+ 3c) Potential energy surface with vibrational adiabatic separation
+    This feature can be used only when the "model" is read.
+    Therefore in the initialization with sub_Init_Qmodel "pot_name" must be "read_model".
+    Then:
 
- 3c) Get the metric tensor, GGdef
+    (i) The potential must be read as a namelist:
+
+      &potential
+          pot_name='hbond' ! potential surface name
+          Vib_adia=t
+          list_act=1
+          read_nml=f
+          nb_channels=6
+      /
+
+    In this example the 'Hbond' potential is used within the adiabatic separation (Vib_adia=t).
+    Read_nml=f, the specific namelist for 'hbond' model is not read.
+    The number of channels (nsurf) is 6
+    list_act is a table which enables to select the active coordinate(s) (here the first one only)
+    The inactive coordinates are just the remaining coordinates (here 2)
+
+    (ii) A basis set must be read for the inactive coordinates:
+
+    &basis_nD name='boxAB' nb=64 nq=64 A=-2.5 B=2.5 /
+
+    Here, it is a 1D basis set (particle-in-a-box), with
+      64 basis function (nb)
+      64 grid points (nq)
+      The range of the coordinate is [A,B]
+
+    WARNING: It is working only with ONE inactive variable.
+
+ 3d) Get the metric tensor, GGdef
 
         CALL get_Qmodel_GGdef(GGdef)
 
@@ -95,7 +128,7 @@
 
         where
            ndim       is the number of degree(s) of freedom it MUST be indentical to the initialized value (with sub_Init_Qmodel)
-           GGdef(:,)  is the new metric tansor a ndim x ndim matrix of real (kind=8)
+           GGdef(:,)  is the new metric tensor a ndim x ndim matrix of real (kind=8)
 
 =========================================
 =========================================
@@ -286,9 +319,11 @@
       !! ndim      = 3
       !! nsurf     = 2
       !! remarks: two options are possible (option = 1,2)
-      !! The default is option=1 (unpublished).
+      !! The default is option=1 (ref2).
       !! The parameters for option=2 come from the following reference.
-      !! ref: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019).'
+      !! ref1: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019).
       !!         https://doi.org/10.1021/acs.jpca.8b10010
+      !! ref2: 1 E. Marsili, M. Olivucci, D. Lauvergnat, and F. Agostini, JCTC 16, 6032 (2020).
+      !!        https://pubs.acs.org/doi/10.1021/acs.jctc.0c00679
 =========================================
 =========================================

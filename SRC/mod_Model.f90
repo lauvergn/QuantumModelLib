@@ -67,10 +67,12 @@ MODULE mod_Model
   USE mod_SigmoidModel
   USE mod_TwoD_Model
 
+  USE mod_Basis
+
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func
+  PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func,Eval_dnHVib_ana
   PUBLIC :: check_alloc_QM,check_Init_QModel
   PUBLIC :: Write0_Model,Write_Model,Write_QdnV_FOR_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
@@ -81,9 +83,10 @@ MODULE mod_Model
     ! add nsurf and ndim to avoid crash when using the driver without initialization
     ! at the intialization, the variables are set-up to the correct values and are
     !   identical to QM%nsurf and QM%ndim ones respectively.
-    integer :: nsurf       = 0
-    integer :: ndim        = 0
+    integer                           :: nsurf       = 0
+    integer                           :: ndim        = 0
     CLASS (EmptyModel_t), allocatable :: QM
+    TYPE(Basis_t),        allocatable :: Basis ! Basis for the adiabatic separation between coordinates
   END TYPE Model_t
 
   !real (kind=Rkind)                     :: step = ONETENTH**4 ! model TWOD => 0.4e-7 (nderiv=2)
@@ -140,7 +143,6 @@ MODULE mod_Model
 
 
 
-
   TYPE(Model_t), PUBLIC  :: QuantumModel
 
 CONTAINS
@@ -155,20 +157,27 @@ CONTAINS
     logical,             intent(inout) :: read_nml1
 
     ! local variable
-    integer :: ndim,nsurf,nderiv,option,printlevel
-    logical :: adiabatic,numeric,PubliUnit,read_nml
+    integer, parameter :: max_act = 10
+    integer :: ndim,nsurf,nderiv,option,printlevel,nb_Channels
+    logical :: adiabatic,numeric,PubliUnit,read_nml,Vib_adia
     character (len=20) :: pot_name
-    integer :: err_read
+    integer :: err_read,nb_act
+    integer :: list_act(max_act)
 
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
-                          read_nml,printlevel
+                         read_nml,printlevel,Vib_adia,nb_Channels,list_act
 
 !    ! Default values defined
     printlevel  = 0
     ndim        = QModel_inout%ndim
     nsurf       = QModel_inout%nsurf
     adiabatic   = QModel_inout%adiabatic
+
+    Vib_adia    = QModel_inout%Vib_adia
+    nb_Channels = 0
+    list_act(:) = 0
+
     pot_name    = 'morse'
     numeric     = .FALSE.
     PubliUnit   = .FALSE.
@@ -208,33 +217,74 @@ CONTAINS
     !QModel_inout%pot_name    = strdup(pot_name) ! panic with nagfor !!!
     QModel_inout%PubliUnit    = PubliUnit
 
+
+    IF (Vib_adia) THEN
+      QModel_inout%nb_Channels    = nb_Channels
+      QModel_inout%Vib_adia       = Vib_adia
+
+      IF (nb_Channels == 0) THEN
+        write(out_unitp,*) ' ERROR in Read_Model'
+        write(out_unitp,*) ' Vib_adia=t and nb_Channels = 0'
+        write(out_unitp,*) ' You have to define "nb_Channels" in the namelist.'
+        write(out_unitp,*) ' check your data!'
+        write(out_unitp,*)
+        STOP ' ERROR in Read_Model'
+      END IF
+
+      nb_act = count(list_act /= 0)
+      IF (nb_act == 0) THEN
+        write(out_unitp,*) ' ERROR in Read_Model'
+        write(out_unitp,*) ' Vib_adia=t and nb_act = 0'
+        write(out_unitp,*) ' You have to define "list_act(:)" in the namelist.'
+        write(out_unitp,*) ' check your data!'
+        write(out_unitp,*)
+        STOP ' ERROR in Read_Model'
+      END IF
+      QModel_inout%list_act = list_act(1:nb_act)
+
+      IF (count(QModel_inout%list_act == 0) /= 0) THEN
+        write(out_unitp,*) ' ERROR in Read_Model'
+        write(out_unitp,*) ' list_act(:) is wrong.'
+        write(out_unitp,*) ' list_act(1:nb_act) has some 0 :',list_act(1:nb_act)
+        write(out_unitp,*) ' You have to define in the namelist list_act(:)'
+        write(out_unitp,*) ' check your data!'
+        write(out_unitp,*)
+        STOP ' ERROR in Read_Model'
+      END IF
+    END IF
+
+
   END SUBROUTINE Read_Model
 
   SUBROUTINE Init_Model(QModel,pot_name,ndim,nsurf,adiabatic,Cart_TO_Q,         &
                         read_param,param_file_name,nio_param_file,              &
-                        option,PubliUnit,Print_init)
+                        option,PubliUnit,Print_init,Vib_adia)
   USE mod_Lib
   IMPLICIT NONE
 
-    TYPE (Model_t),      intent(inout)        :: QModel
+    TYPE (Model_t),      intent(inout)            :: QModel
 
-    character (len=*),   intent(in), optional :: pot_name
-    integer,             intent(in), optional :: ndim,nsurf
-    logical,             intent(in), optional :: adiabatic
-    logical,             intent(in), optional :: Cart_TO_Q
+    character (len=*),   intent(in),    optional :: pot_name
+    integer,             intent(in),    optional :: ndim,nsurf
+    logical,             intent(in),    optional :: adiabatic
+    logical,             intent(in),    optional :: Cart_TO_Q
 
-    logical,             intent(in), optional :: read_param
-    integer,             intent(in), optional :: nio_param_file
-    character (len=*),   intent(in), optional :: param_file_name
+    logical,             intent(in),    optional :: read_param
+    integer,             intent(in),    optional :: nio_param_file
+    character (len=*),   intent(in),    optional :: param_file_name
 
-    integer,             intent(in), optional :: option
-    logical,             intent(in), optional :: PubliUnit
-    logical,             intent(in), optional :: Print_init
+    integer,             intent(in),    optional :: option
+    logical,             intent(in),    optional :: PubliUnit
+    logical,             intent(in),    optional :: Print_init
+
+    logical,             intent(in),    optional :: Vib_adia
+
 
     ! local variables
     TYPE(EmptyModel_t)             :: QModel_in ! variable to transfer info to the init
-    integer                        :: i,nio_loc
+    integer                        :: i,nio_loc,i_inact,nb_inact
     logical                        :: read_param_loc,read_nml,Print_init_loc
+    logical,           allocatable :: list_Q(:)
     character (len=:), allocatable :: param_file_name_loc,pot_name_loc
     real (kind=Rkind), allocatable :: Q0(:)
 
@@ -304,6 +354,13 @@ CONTAINS
       QModel_in%option = -1
     END IF
 
+    IF (present(Vib_adia)) THEN
+      QModel_in%Vib_adia = Vib_adia
+    ELSE
+      QModel_in%Vib_adia = .FALSE.
+    END IF
+
+
     IF (present(PubliUnit)) THEN
       QModel_in%PubliUnit      = PubliUnit
     ELSE
@@ -316,6 +373,8 @@ CONTAINS
     ELSE
       read_param_loc = .FALSE.
     END IF
+    IF (QModel_in%Vib_adia) read_param_loc = .TRUE.
+
 
     IF (present(nio_param_file)) THEN
       nio_loc = nio_param_file
@@ -513,10 +572,12 @@ CONTAINS
       !! ndim      = 3
       !! nsurf     = 2
       !! remarks: two options are possible (option = 1,2)
-      !! The default is option=1 (unpublished).
+      !! The default is option=1 (ref2).
       !! The parameters for option=2 come from the following reference.
-      !! ref: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019).'
+      !! ref1: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019).
       !!         https://doi.org/10.1021/acs.jpca.8b10010
+      !! ref2: 1 E. Marsili, M. Olivucci, D. Lauvergnat, and F. Agostini, JCTC 16, 6032 (2020).
+      !!        https://pubs.acs.org/doi/10.1021/acs.jctc.0c00679
       !! === END README ==
       allocate(PSB3_Model_t :: QModel%QM)
       QModel%QM = Init_PSB3_Model(QModel_in,read_param=read_param_loc,  &
@@ -636,27 +697,82 @@ CONTAINS
           write(out_unitp,*) ' check your data!'
           STOP 'STOP in Init_Model: wrong ndim'
       END IF
-      IF (ndim < QModel%QM%ndim) THEN
+      IF (ndim < QModel%QM%ndim  .AND. ndim > 0) THEN
           write(out_unitp,*) ' WARNING in Init_Model'
           write(out_unitp,*) ' ndim is present and ...'
           write(out_unitp,*) ' its value is smaller than QModel%QM%ndim'
           write(out_unitp,*) ' ndim,QModel%QM%ndim',ndim,QModel%QM%ndim
-          write(out_unitp,*) ' => We assume that all variables  will be given!'
+          write(out_unitp,*) ' => We assume that ...'
+          write(out_unitp,*) ' ... all variables (QModel%QM%ndim) will be given!'
       END IF
     END IF
     IF (present(nsurf)) THEN
-    IF (nsurf /= QModel%QM%nsurf) THEN
-        write(out_unitp,*) ' ERROR in Init_Model'
-        write(out_unitp,*) ' nsurf is present and ...'
-        write(out_unitp,*) ' its value is not equal to QModel%QM%nsurf'
-        write(out_unitp,*) ' nsurf,QModel%QM%nsurf',nsurf,QModel%QM%nsurf
-        write(out_unitp,*) ' check your data!'
-        STOP 'STOP in Init_Model: wrong nsurf'
-    END IF
+      IF (nsurf /= QModel%QM%nsurf .AND. nsurf > 0) THEN
+          write(out_unitp,*) ' ERROR in Init_Model'
+          write(out_unitp,*) ' nsurf is present and ...'
+          write(out_unitp,*) ' its value is not equal to QModel%QM%nsurf'
+          write(out_unitp,*) ' nsurf,QModel%QM%nsurf',nsurf,QModel%QM%nsurf
+          write(out_unitp,*) ' check your data!'
+          STOP 'STOP in Init_Model: wrong nsurf'
+        END IF
     END IF
 
     QModel%ndim  = QModel%QM%ndim
     QModel%nsurf = QModel%QM%nsurf
+
+    ! special feature when Vib_adia = .TRUE.
+    IF (QModel%QM%Vib_adia) THEN
+
+      ! check the value of list_act (>0 and <= ndim)
+      IF (any(QModel%QM%list_act < 1)           .OR. &
+          any(QModel%QM%list_act > QModel%QM%ndim)) THEN
+        write(out_unitp,*) ' ERROR in Init_Model'
+        write(out_unitp,*) ' Some values of list_act(:) are out of range.'
+        write(out_unitp,*) '   list_act(:): ',QModel%QM%list_act(:)
+        write(out_unitp,*) '   range = [1,',QModel%QM%ndim,']'
+        write(out_unitp,*) ' check your data!'
+        STOP 'STOP in Init_Model: wrong list_act'
+      END IF
+
+      allocate(list_Q(QModel%QM%ndim))
+      list_Q(:) = .FALSE.
+      DO i=1,size(QModel%QM%list_act)
+        list_Q(QModel%QM%list_act(i)) = .TRUE.
+      END DO
+      i_inact  = 0
+      nb_inact = QModel%QM%ndim - size(QModel%QM%list_act)
+      allocate(QModel%QM%list_inact(nb_inact))
+
+      DO i=1,QModel%QM%ndim
+        IF (.NOT. list_Q(i)) THEN
+          i_inact = i_inact + 1
+          QModel%QM%list_inact(i_inact) = i
+          list_Q(i) = .TRUE.
+        END IF
+      END DO
+
+      IF (count(list_Q) /= QModel%QM%ndim) THEN
+        write(out_unitp,*) ' ERROR in Init_Model'
+        write(out_unitp,*) ' Some coordinate indexes are missing in ...'
+        write(out_unitp,*) ' ... list_act(:):   ',QModel%QM%list_act(:)
+        write(out_unitp,*) ' and list_inact(:): ',QModel%QM%list_inact(:)
+        write(out_unitp,*) ' check your data!'
+        STOP 'STOP in Init_Model: wrong list_act'
+      END IF
+
+      write(out_unitp,*) 'Vib_adia   ',QModel%QM%Vib_adia
+      write(out_unitp,*) 'nb_Channels',QModel%QM%nb_Channels
+      write(out_unitp,*) 'list_act   ',QModel%QM%list_act
+      write(out_unitp,*) 'list_inact ',QModel%QM%list_inact
+
+      QModel%ndim  = size(QModel%QM%list_act)
+      QModel%nsurf = QModel%QM%nb_Channels
+
+      allocate(QModel%Basis)
+      CALL Read_Basis(QModel%Basis,nio_loc)
+
+    END IF
+
     IF (Print_init_loc) THEN
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' Quantum Model'
@@ -693,7 +809,7 @@ CONTAINS
 
     IF (size(Q0) /= QModel%QM%ndim) THEN
       write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' The size of Q0 is not QModel%ndim: '
+      write(out_unitp,*) ' The size of Q0 is not QModel%QM%ndim: '
       write(out_unitp,*) ' size(Q0)',size(Q0)
       write(out_unitp,*) ' ndim',QModel%QM%ndim
       STOP 'STOP in get_Q0_Model: Wrong Q0 size'
@@ -766,7 +882,7 @@ CONTAINS
 
     ! local variables
     integer                    :: nderiv_loc
-    TYPE (dnMat_t)             :: Vec_loc,NAC_loc
+    TYPE (dnMat_t)             :: Vec_loc,NAC_loc,PotVal_dia,PotVal_loc
     logical                    :: numeric_loc,adia_loc
 
     integer :: numeric_option = 3   ! 0 old (up to 2d derivatives
@@ -779,33 +895,61 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
-    IF (debug) THEN
-      write(out_unitp,*) ' BEGINNING ',name_sub
-      IF (present(nderiv)) write(out_unitp,*) '   nderiv',nderiv
-      flush(out_unitp)
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    IF (present(nderiv)) write(out_unitp,*) '   nderiv',nderiv
+    flush(out_unitp)
+  END IF
+
+  CALL check_alloc_QM(QModel,name_sub)
+
+  IF (debug) THEN
+    write(out_unitp,*) '  QModel%QM%numeric   ',QModel%QM%numeric
+    write(out_unitp,*) '  QModel%QM%adiabatic ',QModel%QM%adiabatic
+    write(out_unitp,*) '  QModel%QM%Vib_adia  ',QModel%QM%Vib_adia
+    flush(out_unitp)
+  END IF
+
+  IF (present(nderiv)) THEN
+    nderiv_loc = max(0,nderiv)
+    nderiv_loc = min(3,nderiv_loc)
+  ELSE
+    nderiv_loc = 0
+  END IF
+
+  IF (present(numeric)) THEN
+    numeric_loc = (numeric  .OR. QModel%QM%no_ana_der)
+  ELSE
+    numeric_loc = (QModel%QM%numeric .OR. QModel%QM%no_ana_der)
+  END IF
+  numeric_loc = (numeric_loc .AND. nderiv_loc > 0)
+
+
+  IF (QModel%QM%Vib_adia) THEN
+    CALL Eval_dnHVib_ana(QModel,Q,PotVal_dia,nderiv_loc)
+
+    !write(out_unitp,*) 'PotVal (Vib_dia)'
+    !CALL QML_Write_dnMat(PotVal_dia,nio=out_unitp)
+
+    IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
+    CALL dia_TO_adia(PotVal_dia,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,nderiv_loc)
+
+    CALL QML_sub_Reduced_dnMat2_TO_dnMat1(PotVal,PotVal_loc,lb=1,ub=QModel%QM%nb_Channels)
+
+    IF (present(Vec)) THEN
+      CALL QML_sub_Reduced_dnMat2_TO_dnMat1(Vec,Vec_loc,lb=1,ub=QModel%QM%nb_Channels)
     END IF
 
-    CALL check_alloc_QM(QModel,name_sub)
-
-    IF (debug) THEN
-      write(out_unitp,*) '  QModel%QM%numeric   ',QModel%QM%numeric
-      write(out_unitp,*) '  QModel%QM%adiabatic ',QModel%QM%adiabatic
-      flush(out_unitp)
+    IF (present(NAC)) THEN
+      CALL QML_sub_Reduced_dnMat2_TO_dnMat1(NAC,NAC_loc,lb=1,ub=QModel%QM%nb_Channels)
     END IF
 
-    IF (present(nderiv)) THEN
-      nderiv_loc = max(0,nderiv)
-      nderiv_loc = min(3,nderiv_loc)
-    ELSE
-      nderiv_loc = 0
-    END IF
+    CALL QML_dealloc_dnMat(NAC_loc)
+    CALL QML_dealloc_dnMat(Vec_loc)
+    CALL QML_dealloc_dnMat(PotVal_loc)
+    CALL QML_dealloc_dnMat(PotVal_dia)
 
-    IF (present(numeric)) THEN
-      numeric_loc = (numeric  .OR. QModel%QM%no_ana_der)
-    ELSE
-      numeric_loc = (QModel%QM%numeric .OR. QModel%QM%no_ana_der)
-    END IF
-    numeric_loc = (numeric_loc .AND. nderiv_loc > 0)
+  ELSE
 
     adia_loc = (QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1)
 
@@ -860,18 +1004,18 @@ CONTAINS
       END IF
 
     END IF
+  END IF
 
-
-    IF (debug) THEN
-      IF ( QModel%QM%adiabatic) THEN
-        write(out_unitp,*) 'PotVal (adia)'
-      ELSE
-        write(out_unitp,*) 'PotVal (dia)'
-      END IF
-      CALL QML_Write_dnMat(PotVal,nio=out_unitp)
-      write(out_unitp,*) ' END ',name_sub
-      flush(out_unitp)
+  IF (debug) THEN
+    IF ( QModel%QM%adiabatic) THEN
+      write(out_unitp,*) 'PotVal (adia)'
+    ELSE
+      write(out_unitp,*) 'PotVal (dia)'
     END IF
+    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
 
   END SUBROUTINE Eval_Pot
 
@@ -1706,7 +1850,7 @@ END IF
 
 
     IF (QML_Check_NotAlloc_dnMat(Vec0,nderiv=0)) THEN
-       !$OMP CRITICAL (CRIT_dia_TO_adia_old)
+       !$OMP CRITICAL (CRIT_dia_TO_adia)
        CALL QML_alloc_dnMat(Vec0,nsurf=nsurf,ndim=ndim,nderiv=0)
 
        allocate(Eig(nsurf))
@@ -1717,7 +1861,7 @@ END IF
 
        IF (debug) write(out_unitp,*) 'init Vec0 done'
 
-       !$OMP END CRITICAL (CRIT_dia_TO_adia_old)
+       !$OMP END CRITICAL (CRIT_dia_TO_adia)
     END IF
 
 
@@ -2012,6 +2156,80 @@ END IF
 
   END SUBROUTINE dia_TO_adia_old
 
+  SUBROUTINE Eval_dnHVib_ana(QModel,Qact,dnH,nderiv)
+  USE mod_NumParameters
+  USE mod_Lib
+  USE mod_dnS
+  USE mod_dnMat
+  USE mod_Basis
+  IMPLICIT NONE
+
+  real (kind=Rkind),              intent(in)    :: Qact(:)
+  TYPE (Model_t),                 intent(inout) :: QModel
+  TYPE (dnMat_t),                 intent(inout) :: dnH ! derivative of the Hamiltonian
+  integer,                        intent(in)    :: nderiv
+
+
+  integer                        :: i,iq,ib,jb,nb,nq
+
+  TYPE (dnMat_t)                 :: PotVal
+  real (kind=Rkind), allocatable :: Q(:),d0GGdef(:,:)
+  integer                        :: ndim_act
+
+  TYPE (dnS_t), allocatable      :: dnV(:),dnHB(:)
+  TYPE (dnS_t)                   :: dnVfull,dnHij
+
+
+  ndim_act = size(QModel%QM%list_act)
+
+  nb = QModel%Basis%nb
+  nq = QModel%Basis%nq
+
+
+  CALL QML_alloc_dnMat(dnH,      nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnH')
+
+  allocate(dnV(nq))
+  allocate(dnHB(nq))
+
+  allocate(Q(QModel%QM%ndim))
+  DO i=1,size(QModel%QM%list_act)
+    Q(QModel%QM%list_act(i)) = Qact(i)
+  END DO
+
+  !Buid H
+  DO iq=1,QModel%Basis%nq
+    DO i=1,size(QModel%QM%list_inact)
+      Q(QModel%QM%list_inact(i)) = QModel%Basis%x(iq)
+    END DO
+
+    CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv=nderiv)
+    CALL QML_sub_dnMat_TO_dnS(PotVal,dnVfull,i=1,j=1)
+    CALL QML_ReduceDerivatives_dnS2_TO_dnS1(dnV(iq),dnVfull,QModel%QM%list_act)
+  END DO
+
+  !CALL QML_Write_dnMat(PotVal,6,info='PotVal')
+  !CALL QML_Write_dnS(dnV(nq),6,info='dnV',all_type=.TRUE.)
+
+  d0GGdef = QModel%QM%get_d0GGdef_QModel()
+  d0GGdef = d0GGdef(QModel%QM%list_inact,QModel%QM%list_inact)
+  DO ib=1,nb
+    ! H B(:,ib)>
+    DO iq=1,nq
+      dnHB(iq) = -HALF*d0GGdef(1,1)*QModel%Basis%d2gb(iq,ib,1,1) + &
+                 dnV(iq)*QModel%Basis%d0gb(iq,ib)
+      dnHB(iq) = dnHB(iq) * QModel%Basis%w(iq)
+    END DO
+    !CALL QML_Write_dnS(dnHB(1),6,info='dnHB',all_type=.TRUE.)
+    !write(6,*) 'coucou dnHB: done',ib ; flush(6)
+    DO jb=1,nb
+      dnHij = dot_product(QModel%Basis%d0gb(:,jb),dnHB(:))
+      CALL QML_sub_dnS_TO_dnMat(dnHij,dnH,jb,ib)
+    END DO
+  END DO
+  !CALL Write_RMat(H,6,5,name_info='H')
+
+  END SUBROUTINE Eval_dnHVib_ana
+
   SUBROUTINE Eval_Func(QModel,Q,Func,nderiv)
   USE mod_dnS
   IMPLICIT NONE
@@ -2150,7 +2368,7 @@ END IF
 
 
   END SUBROUTINE Write0_Model
-  SUBROUTINE Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec,NAC,info)
+  SUBROUTINE Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec,NAC,info,name_file)
   USE mod_Lib
   IMPLICIT NONE
 
@@ -2160,13 +2378,22 @@ END IF
     TYPE (dnMat_t),    intent(in), optional :: Vec ! for non adiabatic couplings
     TYPE (dnMat_t),    intent(in), optional :: NAC ! for non adiabatic couplings
     character(len=*),  intent(in), optional :: info
+    character(len=*),  intent(in), optional :: name_file
 
     integer :: nio_loc,err_io
 
-    CALL file_open2(trim(adjustl(QModel%QM%pot_name))//'.txt',nio_loc,lformatted=.TRUE.,append=.TRUE.,err_file=err_io)
+    IF (present(name_file)) THEN
+      CALL file_open2(trim(adjustl(name_file)),                                 &
+                      nio_loc,lformatted=.TRUE.,append=.TRUE.,err_file=err_io)
+    ELSE
+      CALL file_open2(trim(adjustl(QModel%QM%pot_name))//'.txt',                &
+                      nio_loc,lformatted=.TRUE.,append=.TRUE.,err_file=err_io)
+    END IF
+
     IF (err_io /= 0) THEN
       write(out_unitp,*) 'ERROR in Write_QdnV_FOR_Model'
-      write(out_unitp,*) ' Impossible to open the file "',trim(adjustl(QModel%QM%pot_name))//'.txt','"'
+      write(out_unitp,*) ' Impossible to open the file "',                      &
+                          trim(adjustl(QModel%QM%pot_name))//'.txt','"'
       STOP 'Impossible to open the file'
     END IF
 
@@ -2533,9 +2760,6 @@ END IF
 
     CALL check_alloc_QM(QModel,'calc_pot')
 
-
-    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,nderiv=0)
-
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=0)
 
     V = PotVal%d0
@@ -2556,9 +2780,6 @@ END IF
 
     CALL check_alloc_QM(QModel,'calc_pot_grad')
 
-
-    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,nderiv=1)
-
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=1)
 
     V = PotVal%d0
@@ -2578,9 +2799,6 @@ END IF
     TYPE (dnMat_t)           :: PotVal
 
     CALL check_alloc_QM(QModel,'calc_grad')
-
-
-    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,nderiv=1)
 
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=1)
 
@@ -2604,9 +2822,6 @@ END IF
 
     CALL check_alloc_QM(QModel,'calc_pot_grad_hess')
 
-
-    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,nderiv=2)
-
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
 
     V = PotVal%d0
@@ -2628,9 +2843,6 @@ END IF
     TYPE (dnMat_t)           :: PotVal
 
     CALL check_alloc_QM(QModel,'calc_hess')
-
-
-    CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,nderiv=2)
 
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
 

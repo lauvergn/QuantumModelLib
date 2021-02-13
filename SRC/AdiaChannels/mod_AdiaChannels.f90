@@ -36,144 +36,78 @@ MODULE mod_AdiaChannels
 
   IMPLICIT NONE
 
-  !PRIVATE
-  !PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func
-
-  TYPE :: AdiaChannels_t
-    integer                 :: nact        = 0
-    integer                 :: ninact      = 0
-    integer, allocatable    :: list_act(:)
-    integer, allocatable    :: list_inact(:)
-    integer, allocatable    :: nb_inact(:)
-    integer, allocatable    :: nq_inact(:)
-  END TYPE AdiaChannels_t
-  TYPE :: BasisPrim_t
-    integer                 :: nb      = 0
-    integer                 :: nq      = 0
-    real(kind=Rkind), allocatable :: x(:)
-    real(kind=Rkind), allocatable :: w(:)
-    real(kind=Rkind), allocatable :: d0gb(:,:)      ! basis functions d0gb(nq,nb)
-    real(kind=Rkind), allocatable :: d1gb(:,:,:)    ! basis functions d2gb(nq,nb,1)
-    real(kind=Rkind), allocatable :: d2gb(:,:,:,:)  ! basis functions d2gb(nq,nb,1,1)
-
-  END TYPE BasisPrim_t
 CONTAINS
-  SUBROUTINE Write_BasisPrim(BasisPrim)
+
+  SUBROUTINE Make_Hinact(Qact,QModel)
+  USE mod_NumParameters
   USE mod_Lib
-
-    TYPE(BasisPrim_t),       intent(in)  :: BasisPrim
-
-    write(6,*) '-------------------------------------------------'
-    write(6,*) 'Write_BasisPrim'
-    write(6,*) 'nb,nq',BasisPrim%nb,BasisPrim%nq
-    write(6,*)
-    CALL Write_RVec(BasisPrim%x,6,5,name_info='x')
-    write(6,*)
-    CALL Write_RVec(BasisPrim%w,6,5,name_info='w')
-    write(6,*)
-    CALL Write_RMat(BasisPrim%d0gb,6,5,name_info='d0gb')
-    write(6,*)
-    CALL Write_RMat(BasisPrim%d1gb(:,:,1),6,5,name_info='d1gb')
-    write(6,*)
-    CALL Write_RMat(BasisPrim%d2gb(:,:,1,1),6,5,name_info='d2gb')
-    write(6,*) '-------------------------------------------------'
-
-  END SUBROUTINE Write_BasisPrim
-  SUBROUTINE Make_BasisPrim(BasisPrim,nb,nq,A,B) ! boxAB
-  USE mod_Lib
+  USE mod_diago
   USE mod_dnS
-  USE mod_dnPoly
-
-    TYPE(BasisPrim_t),       intent(inout)  :: BasisPrim
-    integer,                 intent(in)     :: nb
-    integer,                 intent(in)     :: nq
-    real(kind=Rkind),        intent(in)     :: A,B
-
-    real(kind=Rkind)          :: dx,sx,x0
-    TYPE (dnS_t)              :: dnBox
-    TYPE (dnS_t)              :: dnx
-    integer :: iq,ib,jb
-    real(kind=Rkind), ALLOCATABLE          :: S(:,:)
-
-    BasisPrim%nb = nb
-    BasisPrim%nq = nq
-
-    x0 = A
-    sx = pi/(B-A)
-
-    allocate(BasisPrim%d0gb(nq,nb))
-    allocate(BasisPrim%d1gb(nq,nb,1))
-    allocate(BasisPrim%d2gb(nq,nb,1,1))
-
-    ! grid
-    dx = pi/nq
-    allocate(BasisPrim%x(nq))
-    BasisPrim%x(:) = [(dx*(iq-HALF),iq=1,nq)]
-
-    ! weight
-    allocate(BasisPrim%w(nq))
-    BasisPrim%w(:) = dx
-
-    DO iq=1,nq
-      dnx = QML_init_dnS(BasisPrim%x(iq),ndim=1,nderiv=2,iQ=1) ! to set up the derivatives
-      DO ib=1,nb
-        dnBox = QML_dnBox(dnx,ib)
-        CALL QML_sub_get_dn_FROM_dnS(dnBox,BasisPrim%d0gb(iq,ib),               &
-                              BasisPrim%d1gb(iq,ib,:),BasisPrim%d2gb(iq,ib,:,:))
-      END DO
-    END DO
-    IF (nb == nq) THEN
-      BasisPrim%d0gb(:,nb)      = BasisPrim%d0gb(:,nb)      / sqrt(TWO)
-      BasisPrim%d1gb(:,nb,:)    = BasisPrim%d1gb(:,nb,:)    / sqrt(TWO)
-      BasisPrim%d2gb(:,nb,:,:)  = BasisPrim%d2gb(:,nb,:,:)  / sqrt(TWO)
-    END IF
-
-    CALL Scale_BasisPrim(BasisPrim,x0,sx)
-
-    RETURN
-    allocate(S(nb,nb))
-    DO ib=1,nb
-    DO jb=1,nb
-      S(jb,ib) = dot_product(BasisPrim%d0gb(:,jb),BasisPrim%w(:)*BasisPrim%d0gb(:,ib))
-    END DO
-    END DO
-    CALL Write_RMat(S,6,5,name_info='S')
-
-    DO ib=1,nb
-    DO jb=1,nb
-      S(jb,ib) = dot_product(BasisPrim%d0gb(:,jb),BasisPrim%w(:)*BasisPrim%d2gb(:,ib,1,1))
-    END DO
-    END DO
-    CALL Write_RMat(S,6,5,name_info='<d0b|d2b>')
-
-
-    CALL Write_BasisPrim(BasisPrim)
-
-  END SUBROUTINE Make_BasisPrim
-  SUBROUTINE Scale_BasisPrim(BasisPrim,x0,sx)
-  USE mod_Lib
-  USE mod_dnS
-  USE mod_dnPoly
-
-    TYPE(BasisPrim_t),       intent(inout)  :: BasisPrim
-    real(kind=Rkind),        intent(in)     :: x0,sx
-
-
-    BasisPrim%x(:) = x0 + BasisPrim%x(:) / sx
-    BasisPrim%w(:) =      BasisPrim%w(:) / sx
-
-    BasisPrim%d0gb(:,:)     = BasisPrim%d0gb(:,:)     * sqrt(sx)
-    BasisPrim%d1gb(:,:,:)   = BasisPrim%d1gb(:,:,:)   * sqrt(sx)*sx
-    BasisPrim%d2gb(:,:,:,:) = BasisPrim%d2gb(:,:,:,:) * sqrt(sx)*sx*sx
-
-
-  END SUBROUTINE Scale_BasisPrim
-  SUBROUTINE Make_Hinact(Qact,QModel,AdiaChannels)
+  USE mod_dnMat
   USE mod_Model
+  USE mod_Basis
+  IMPLICIT NONE
 
-  real (kind=Rkind), allocatable, intent(in) :: Qact(:)
-  TYPE (Model_t),                 intent(in) :: QModel
-  TYPE (AdiaChannels_t),          intent(in) :: AdiaChannels
+  real (kind=Rkind), allocatable, intent(in)    :: Qact(:)
+  TYPE (Model_t),                 intent(inout) :: QModel
+
+  real(kind=Rkind), parameter :: auTOcm_inv = 219474.631443_Rkind
+
+  integer                        :: i,iq,ib,jb,nb,nq
+  !real (kind=Rkind), allocatable :: V(:),H(:,:),HB(:),Vec(:,:)
+  real (kind=Rkind), allocatable :: Ene(:)
+
+  TYPE (dnMat_t)                 :: PotVal
+  real (kind=Rkind), allocatable :: Q(:),d0GGdef(:,:)
+
+
+  integer :: nderiv
+  TYPE (dnMat_t)              :: dnH ! derivative of the Hamiltonian
+  TYPE (dnMat_t)              :: dnVec,dnVecProj ! Eigenvectors
+  TYPE (dnMat_t)              :: dnHdiag ! derivative of the Hamiltonian
+  integer                     :: ndim_act
+
+  TYPE (dnS_t), allocatable :: dnV(:),dnHB(:)
+  TYPE (dnS_t) :: dnVfull,dnHij
+
+
+  ndim_act = size(QModel%QM%list_act)
+  nderiv = 1
+
+  nb = QModel%Basis%nb
+  nq = QModel%Basis%nq
+
+
+  CALL Eval_dnHVib_ana(QModel,Qact,dnH,nderiv)
+
+  allocate(Ene(nb))
+
+
+  CALL QML_alloc_dnMat(dnVec,    nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnVec')
+  CALL QML_alloc_dnMat(dnHdiag,  nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnHdiag')
+  CALL QML_alloc_dnMat(dnVecProj,nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnVecProj')
+
+  IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
+  IF (QML_Check_NotAlloc_dnMat(QModel%QM%Vec0,nderiv=0)) THEN
+!$OMP CRITICAL (CRIT_Make_Hinact)
+    CALL QML_alloc_dnMat(QModel%QM%Vec0,nsurf=nb,ndim=ndim_act,nderiv=0)
+    CALL diagonalization(dnH%d0,Ene,QModel%QM%Vec0%d0,nb,sort=1,phase=.TRUE.)
+    write(out_unitp,*) 'init Vec0 done'
+!$OMP END CRITICAL (CRIT_Make_Hinact)
+  END IF
+
+  CALL QML_DIAG_dnMat(dnH,dnHdiag,dnVec,dnVecProj,dnVec0=QModel%QM%Vec0)
+  !CALL Write_RMat(dnVec%d0(:,1:QModel%QM%nb_Channels),6,6,name_info='Vec')
+  write(out_unitp,*) 'NAC'
+  !CALL QML_Write_dnMat(dnVecProj,nio=out_unitp)
+  CALL Write_RMat(dnVecProj%d1(1:QModel%QM%nb_Channels,1:QModel%QM%nb_Channels,1),out_unitp,6,name_info='NAC')
+
+  DO ib=1,nb
+    Ene(ib) = dnHdiag%d0(ib,ib)
+  END DO
+  write(out_unitp,*) 'Ene'
+  CALL Write_RVec(Ene(1:QModel%QM%nb_Channels)*auTOcm_inv,out_unitp,6,name_info='Ene')
 
   END SUBROUTINE Make_Hinact
+
 END MODULE mod_AdiaChannels

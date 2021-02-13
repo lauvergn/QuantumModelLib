@@ -33,6 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test_Vib_adia() ; stop
   !CALL test_Retinal_JPCB2000() ; stop
   !CALL test_Tully_test() ; stop
   !CALL test_PSB3_test() ; stop
@@ -73,6 +74,9 @@ PROGRAM TEST_model
 
   ! A template with one electronic surface
   CALL test_template()
+
+  ! vibrational adiabatic separation (on HBond potential)
+  CALL test_Vib_adia()
 
 END PROGRAM TEST_model
 
@@ -746,7 +750,7 @@ SUBROUTINE test_LinearHBond
 
   allocate(q(QModel%QM%ndim))
 
-  q(:) = (/ 2.75_Rkind,0._Rkind /)
+  q(:) = [ 2.75_Rkind,0._Rkind ]
   nderiv=2
 
   write(out_unitp,*) '---------------------------------------------'
@@ -860,6 +864,68 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_LinearHBond
+SUBROUTINE test_Vib_adia
+  USE mod_Lib
+  USE mod_dnMat
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Qact(:)
+  integer                        :: ndim,nsurf,nderiv,option
+  TYPE (dnMat_t)                 :: PotVal,NAC
+
+  real(kind=Rkind) :: dQ
+  integer :: i,iq
+  integer, parameter :: nq=100
+  real(kind=Rkind), parameter    :: auTOcm_inv = 219474.631443_Rkind
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Vibrational adiabatic separation with ...'
+  write(out_unitp,*) ' Linear H-Bond (symmetric one and the default parameters)'
+  write(out_unitp,*) '---------------------------------------------'
+  CALL Init_Model(QModel,Print_init=.TRUE.,Vib_adia=.TRUE.,PubliUnit=.TRUE.,   &
+                  param_file_name='Vibadia_HBond.dat')
+  CALL Write0_Model(QModel)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  Qact = [4.0_Rkind]
+  CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
+  write(out_unitp,*) 'NAC'
+  CALL Write_RMat(NAC%d1(:,:,1),out_unitp,6,name_info='NAC')
+  write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,QML_get_nsurf_FROM_dnMat(PotVal))
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Qact,PotVal,QModel,info='Pot',name_file='Vib_adia.txt')
+  CALL Write_QdnV_FOR_Model(Qact,NAC,QModel,info='NAC',name_file='Vib_adia.txt')
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Adiatic potential on a 1D grid (as a function of QQ)'
+  write(out_unitp,*) '---------------------------------------------'
+
+  dQ = TWO / real(nq,kind=Rkind)
+  DO iq=0,nq
+    Qact = [4.0_Rkind+iq*dQ]
+    CALL Eval_Pot(QModel,Qact,PotVal,nderiv=0)
+    write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,QML_get_nsurf_FROM_dnMat(PotVal))
+  END DO
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(Qact)
+
+END SUBROUTINE test_Vib_adia
 SUBROUTINE test_PSB3
 
   USE mod_Lib

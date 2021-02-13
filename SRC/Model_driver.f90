@@ -25,7 +25,7 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
   USE mod_Model
   IMPLICIT NONE
 
-  integer,                intent(in)        :: ndim,nsurf
+  integer,                intent(inout)     :: ndim,nsurf
   character (len=*),      intent(in)        :: pot_name
   integer,                intent(in)        :: option
   logical,                intent(in)        :: adiabatic
@@ -36,10 +36,13 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
     write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
     flush(out_unitp)
 
-    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
+    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),              &
                     ndim=ndim,nsurf=nsurf,adiabatic=adiabatic,option=option)
 
     CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Init_Qmodel in Model_driver.f90')
+
+    ndim  = QuantumModel%ndim
+    nsurf = QuantumModel%nsurf
 
 !$OMP END CRITICAL (CRIT_sub_Init_Qmodel)
 
@@ -49,7 +52,7 @@ SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
   USE mod_Model
   IMPLICIT NONE
 
-  integer,                intent(in)        :: ndim,nsurf
+  integer,                intent(inout)     :: ndim,nsurf
   character (len=*),      intent(in)        :: pot_name
   integer,                intent(in)        :: option
   logical,                intent(in)        :: adiabatic
@@ -66,16 +69,9 @@ SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
 
     CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Init_Qmodel_Cart in Model_driver.f90')
 
-    IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unitp,*) ' ERROR in sub_Init_Qmodel_Cart'
-      write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unitp,*) '   .... with the initialized ones !!'
-      write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unitp,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_Init_Qmodel_Cart: wrong ndim or nsurf'
-    END IF
+    ndim  = QuantumModel%ndim
+    nsurf = QuantumModel%nsurf
+
 !$OMP END CRITICAL (CRIT_sub_Init_Qmodel_Cart)
 
 END SUBROUTINE sub_Init_Qmodel_Cart
@@ -97,14 +93,23 @@ FUNCTION get_Qmodel_ndim() RESULT(ndim)
 
   integer     :: ndim
 
-
   CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_ndim in Model_driver.f90')
 
-  !ndim  = QuantumModel%QM%ndim
   ndim  = QuantumModel%ndim
 
 END FUNCTION get_Qmodel_ndim
+FUNCTION get_Qmodel_nsurf() RESULT(nsurf)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
 
+  integer     :: nsurf
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_ndim in Model_driver.f90')
+
+  nsurf  = QuantumModel%nsurf
+
+END FUNCTION get_Qmodel_nsurf
 SUBROUTINE sub_Write_Qmodel(nio)
   USE mod_Model
   IMPLICIT NONE
@@ -130,10 +135,11 @@ SUBROUTINE sub_Qmodel_V(V,Q)
   USE mod_Model
   IMPLICIT NONE
 
+
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
   real (kind=Rkind),      intent(inout)     :: V(QuantumModel%nsurf,QuantumModel%nsurf)
 
-  CALL calc_pot(V,QuantumModel,Q)
+  CALL calc_pot(V,QuantumModel,Q(1:QuantumModel%ndim))
 
 END SUBROUTINE sub_Qmodel_V
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
@@ -147,7 +153,6 @@ SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   real (kind=Rkind),      intent(inout)     :: Vec(QuantumModel%nsurf,QuantumModel%nsurf)
 
   TYPE (dnMat_t)                  :: Vec_loc,PotVal_loc
-
 
 
   CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VVec in Model_driver.f90')

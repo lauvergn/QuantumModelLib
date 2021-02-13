@@ -363,6 +363,57 @@ CONTAINS
       STOP
     END IF
   END SUBROUTINE QML_sub_dnMat2_TO_dnMat1
+  SUBROUTINE QML_sub_Reduced_dnMat2_TO_dnMat1(dnMat1,dnMat2,lb,ub)
+    CLASS (dnMat_t),  intent(inout) :: dnMat1
+    CLASS (dnMat_t),  intent(in)    :: dnMat2
+    integer,          intent(in)    :: lb,ub
+
+    integer :: nderiv_loc,nsurf_loc,ndim_loc
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_sub_Reduced_dnMat2_TO_dnMat1'
+
+    nderiv_loc = QML_get_nderiv_FROM_dnMat(dnMat2)
+    nsurf_loc  = QML_get_nsurf_FROM_dnMat(dnMat2)
+    ndim_loc   = QML_get_ndim_FROM_dnMat(dnMat2)
+
+    !write(out_unitp,*) 'in ',name_sub,' ndim,nsurf,nderiv',ndim_loc,nsurf_loc,nderiv_loc
+
+
+    IF (nderiv_loc < 0 .OR. nsurf_loc < 1 .OR. (nderiv_loc > 0  .AND. ndim_loc < 1)) RETURN
+
+    IF (lb < 1 .OR. ub > nsurf_loc .OR. lb > ub) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' The indexes lb and ub are wrong.'
+      write(out_unitp,*) 'lb,ub',lb,ub
+      write(out_unitp,*) 'The range is [1...',nsurf_loc,']'
+      write(out_unitp,*) 'It should never append! Check the source'
+      STOP 'ERROR in QML_sub_Reduced_dnMat2_TO_dnMat1: lb or ub are wrong'
+    END IF
+
+    CALL QML_alloc_dnMat(dnMat1,ub-lb+1,ndim_loc,nderiv_loc,name_var='dnMat1',name_sub=name_sub)
+
+
+    IF (nderiv_loc == 0) THEN
+       dnMat1%d0 = dnMat2%d0(lb:ub,lb:ub)
+    ELSE IF (nderiv_loc == 1) THEN
+       dnMat1%d0 = dnMat2%d0(lb:ub,lb:ub)
+       dnMat1%d1 = dnMat2%d1(lb:ub,lb:ub,:)
+    ELSE IF (nderiv_loc == 2) THEN
+       dnMat1%d0 = dnMat2%d0(lb:ub,lb:ub)
+       dnMat1%d1 = dnMat2%d1(lb:ub,lb:ub,:)
+       dnMat1%d2 = dnMat2%d2(lb:ub,lb:ub,:,:)
+    ELSE IF (nderiv_loc == 3) THEN
+       dnMat1%d0 = dnMat2%d0(lb:ub,lb:ub)
+       dnMat1%d1 = dnMat2%d1(lb:ub,lb:ub,:)
+       dnMat1%d2 = dnMat2%d2(lb:ub,lb:ub,:,:)
+       dnMat1%d3 = dnMat2%d3(lb:ub,lb:ub,:,:,:)
+    ELSE
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' nderiv > 3 is NOT possible',nderiv_loc
+      write(out_unitp,*) 'It should never append! Check the source'
+      STOP
+    END IF
+  END SUBROUTINE QML_sub_Reduced_dnMat2_TO_dnMat1
 !> @brief Public subroutine which copies a dnS derived type to one element of dnMat derived type.
 !!
 !> @author David Lauvergnat
@@ -1674,9 +1725,7 @@ CONTAINS
     TYPE (dnMat_t), intent(in)    :: Mat
     integer,        intent(in)    :: nderiv
 
-
-
-    NotAlloc = (nderiv >= 0 .AND. .NOT. allocated(Mat%d0))
+    NotAlloc =               (nderiv >= 0 .AND. .NOT. allocated(Mat%d0))
     NotAlloc = NotAlloc .OR. (nderiv >= 1 .AND. .NOT. allocated(Mat%d1))
     NotAlloc = NotAlloc .OR. (nderiv >= 2 .AND. .NOT. allocated(Mat%d2))
     NotAlloc = NotAlloc .OR. (nderiv >= 3 .AND. .NOT. allocated(Mat%d3))

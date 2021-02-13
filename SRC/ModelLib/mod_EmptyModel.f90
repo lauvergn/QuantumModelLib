@@ -59,6 +59,13 @@ MODULE mod_EmptyModel
     integer :: option      = 0
     logical :: PubliUnit   = .FALSE. ! when PubliUnit=.TRUE., the units of a reference (publi ...) are used. Default (atomic unit)
 
+    logical :: Vib_adia    = .FALSE.
+    integer :: nb_Channels = 0
+    integer, allocatable :: list_act(:)
+    integer, allocatable :: list_inact(:)
+
+
+
     character (len=:),  allocatable :: pot_name
     real (kind=Rkind),  allocatable :: d0GGdef(:,:)
     real (kind=Rkind),  allocatable :: Q0(:)
@@ -173,6 +180,17 @@ CONTAINS
     QModel%ndimFunc     = QModel_in%ndimFunc
     QModel%nb_Func      = QModel_in%nb_Func
 
+
+
+    QModel%Vib_adia     = QModel_in%Vib_adia
+    QModel%nb_Channels  = QModel_in%nb_Channels
+
+    IF (allocated(QModel_in%list_act)) THEN
+      QModel%list_act     = QModel_in%list_act
+    END IF
+
+    IF (allocated(QModel%list_inact)) deallocate(QModel%list_inact)
+
     IF (debug) THEN
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) 'END ',name_sub
@@ -285,6 +303,14 @@ CONTAINS
     write(nio,*) 'ndim:                      ',QModel%ndim
     write(nio,*) 'numeric:                   ',QModel%numeric
     write(nio,*) 'adiabatic:                 ',QModel%adiabatic
+    write(nio,*) 'Vib_adia:                  ',QModel%Vib_adia
+    IF (QModel%Vib_adia) THEN
+      write(nio,*) 'nb_Channels:                  ',QModel%nb_Channels
+      IF (allocated(QModel%list_act)) &
+        write(nio,*) 'list_act(:):               ',QModel%list_act(:)
+      IF (allocated(QModel%list_inact)) &
+        write(nio,*) 'list_inact(:):             ',QModel%list_inact(:)
+    END IF
     write(nio,*) 'no analytical derivatives: ',QModel%no_ana_der
     write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
     write(nio,*) 'ndimQ:                     ',QModel%ndimQ
