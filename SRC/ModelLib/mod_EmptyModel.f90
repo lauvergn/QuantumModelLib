@@ -241,16 +241,22 @@ CONTAINS
     real (kind=Rkind),   allocatable               :: d0GGdef(:,:)
     CLASS(EmptyModel_t),             intent(in)    :: QModel
 
-    integer :: i
+    integer :: i,nact
 
     IF (allocated(d0GGdef)) deallocate(d0GGdef)
 
+
     IF (allocated(QModel%d0GGdef)) THEN
-      d0GGdef =  QModel%d0GGdef
+      IF (allocated(QModel%list_act)) THEN
+        d0GGdef =  QModel%d0GGdef(QModel%list_act,QModel%list_act)
+      else
+        d0GGdef =  QModel%d0GGdef(:,:)
+      END IF
     ELSE
-      allocate(d0GGdef(QModel%ndim,QModel%ndim))
+      nact = size(QModel%list_act)
+      allocate(d0GGdef(nact,nact))
       d0GGdef = ZERO
-      DO i=1,QModel%ndim
+      DO i=1,nact
         d0GGdef(i,i) = ONE
       END DO
     END IF

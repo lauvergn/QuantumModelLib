@@ -779,8 +779,8 @@ CONTAINS
       CALL Write_Model(QModel,nio=out_unitp)
       write(out_unitp,*) '================================================='
       write(out_unitp,*) '================================================='
+      flush(out_unitp)
     END IF
-
 
   END SUBROUTINE Init_Model
 
@@ -868,6 +868,60 @@ CONTAINS
     END IF
 
   END FUNCTION check_Init_QModel
+
+  SUBROUTINE Eval_tab_HMat(QModel,Q,tab_MatH)
+  USE mod_dnS
+  IMPLICIT NONE
+
+    TYPE (Model_t),                 intent(inout)            :: QModel
+    real (kind=Rkind), allocatable, intent(inout)            :: tab_MatH(:,:,:)
+    real (kind=Rkind),              intent(in)               :: Q(:)
+
+    integer                         :: nb_terms,nsurf
+    TYPE (dnMat_t)                  :: PotVal,NAC
+    real (kind=Rkind), allocatable  :: GGdef(:,:)
+    integer                         :: iterm,i1,i2
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Eval_tab_HMat'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      flush(out_unitp)
+    END IF
+
+    CALL check_alloc_QM(QModel,name_sub)
+
+    nsurf    = QModel%QM%nsurf
+    nb_terms = (QModel%QM%ndim + 1)*(QModel%QM%ndim + 2)/2
+    IF (.NOT. allocated(tab_MatH)) THEN
+      allocate(tab_MatH(QModel%QM%nsurf,QModel%QM%nsurf,nb_terms))
+    END IF
+    IF ( any([nsurf,nsurf,nb_terms] /= shape(tab_MatH)) ) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' The shape of tab_MatH is wrong.'
+      write(out_unitp,*) '    shape(tab_MatH):',shape(tab_MatH)
+      write(out_unitp,*) '  It MUST be:      [',nsurf,nsurf,nb_terms,']'
+      write(out_unitp,*) '  Check your data or the code!'
+      STOP 'STOP in Eval_tab_HMat: The shape of tab_MatH is wrong.'
+    END IF
+
+    CALL Eval_Pot(QModel,Q,PotVal,nderiv=2,NAC=NAC)
+
+    GGdef = QuantumModel%QM%get_d0GGdef_QModel()
+
+    ! potential
+    iterm = 1
+    tab_MatH(:,:,iterm) = PotVal%d0
+    DO i1=1,QModel%QM%ndim
+      iterm = iterm + 1
+      tab_MatH(:,:,iterm) = NAC%d1(:,:,i1)
+    END DO
+
+  END SUBROUTINE Eval_tab_HMat
 
   SUBROUTINE Eval_Pot(QModel,Q,PotVal,nderiv,NAC,Vec,numeric)
   USE mod_dnS
@@ -2210,8 +2264,7 @@ END IF
   !CALL QML_Write_dnMat(PotVal,6,info='PotVal')
   !CALL QML_Write_dnS(dnV(nq),6,info='dnV',all_type=.TRUE.)
 
-  d0GGdef = QModel%QM%get_d0GGdef_QModel()
-  d0GGdef = d0GGdef(QModel%QM%list_inact,QModel%QM%list_inact)
+  d0GGdef = QModel%QM%d0GGdef(QModel%QM%list_inact,QModel%QM%list_inact)
   DO ib=1,nb
     ! H B(:,ib)>
     DO iq=1,nq

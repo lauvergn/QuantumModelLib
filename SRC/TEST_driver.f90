@@ -33,6 +33,9 @@
 PROGRAM main_pot
   IMPLICIT NONE
 
+  !CALL test_Vib_adia(1000); stop
+
+
   CALL test_1DSOC_1S1T()
   CALL test_PSB3()
   CALL test_HBond()
@@ -261,6 +264,7 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
+  write(6,*) 'ndim,nsurf',ndim,nsurf
 
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
@@ -463,11 +467,8 @@ SUBROUTINE test_Vib_adia(nb_eval)
   IMPLICIT NONE
 
   real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: GGdef(:,:)
   real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: Vec(:,:)
   real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: h(:,:,:,:)
   real (kind=real64),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
@@ -481,15 +482,41 @@ SUBROUTINE test_Vib_adia(nb_eval)
   !$ maxth           = omp_get_max_threads()
   write(6,*) '============================================================'
   write(6,*) '  Vibrational adiabatic separation'
-  write(6,*) 'NTEST_driver. number of threads:',maxth
+  write(6,*) 'TEST_driver. number of threads:',maxth
 
   pot_name  = 'read_model'
-  ndim      = 0
-  nsurf     = 0
+  ndim      = 0 ! it would be initialized
+  nsurf     = 0 ! it would be initialized
   option    = -1
   adiabatic = .FALSE.
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
   write(6,*) 'ndim,nsurf',ndim,nsurf
+
+  write(6,*) ' Test V, G and NAC'
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+  allocate(G(nsurf,nsurf,ndim))
+  allocate(NAC(nsurf,nsurf,ndim))
+
+  CALL  random_number(Q)
+  Q = Q + 4.d0
+
+  ! calculation of the adiabatic potential (as a matrix)
+  ! calculation of the gradient and the NAC
+
+  CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
+  write(6,*) 'Q',Q
+  write(6,*) 'Vadia',(V(i,i),i=1,nsurf)
+  write(6,*) 'Gadia',(G(i,i,1:ndim),i=1,nsurf)
+  write(6,*) 'NAC'
+  DO i=1,nsurf
+    write(6,*) i,NAC(:,i,1:ndim)
+  END DO
+
+  deallocate(Q)
+  deallocate(V)
+  deallocate(G)
+  deallocate(NAC)
 
   write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
   CALL time_perso('Test ' // pot_name)

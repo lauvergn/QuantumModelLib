@@ -39,6 +39,7 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
     CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),              &
                     ndim=ndim,nsurf=nsurf,adiabatic=adiabatic,option=option)
 
+
     CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Init_Qmodel in Model_driver.f90')
 
     ndim  = QuantumModel%ndim
@@ -251,10 +252,23 @@ SUBROUTINE get_Qmodel_GGdef(GGdef)
 
   real (kind=Rkind),      intent(inout)     :: GGdef(QuantumModel%ndim,QuantumModel%ndim)
 
+  real (kind=Rkind),  allocatable  :: GGdef_loc(:,:)
 
   CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_GGdef in Model_driver.f90')
 
-  GGdef(:,:) = QuantumModel%QM%d0GGdef
+  GGdef_loc = QuantumModel%QM%get_d0GGdef_QModel()
+
+  IF (any(shape(GGdef) /= shape(GGdef_loc))) THEN
+      write(out_unitp,*) ' ERROR in get_Qmodel_GGdef'
+      write(out_unitp,*) ' The shapes of GGdef and the one from get_d0GGdef_QModel() are different'
+      write(out_unitp,*) ' shape(GGdef)    ',shape(GGdef)
+      write(out_unitp,*) ' shape(GGdef_loc)',shape(GGdef_loc)
+      write(out_unitp,*) ' check the fortran!'
+      write(out_unitp,*)
+      STOP ' ERROR in get_Qmodel_GGdef'
+  END IF
+
+  GGdef(:,:) = GGdef_loc(:,:)
 
 END SUBROUTINE get_Qmodel_GGdef
 SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
