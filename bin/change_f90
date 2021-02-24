@@ -1,5 +1,5 @@
 #list_f90="SRC/*f90 SRC/*/*f90"
-list_f90=" SRC/dnSLib/*f90"
+list_f90=" SRC/ModelLib/*f90"
 
 for f in $list_f90
 do
@@ -10,8 +10,9 @@ do
   do
     echo --------------------------------------
     echo $f   $sub
-    sed "s/"$sub"/"$sub"_QML/g" $f > $f.i
-    #cp $f.i $f
+#    sed "s/"$sub"/"$sub"_QML/g" $f > $f.i
+    #sed "s/mod_NumParameters/mod_QML_NumParameters/" $f > $f.i
+     cp $f.i $f
 
     echo ""
   done

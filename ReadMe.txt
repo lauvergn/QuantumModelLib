@@ -54,6 +54,10 @@
 
         It initializes the phenol potential (2D and 3 PES).
 
+        Some extra parameters can be initialized with specific procedures:
+          - Phase_Following (default: .TRUE. ) for the adiabatic calculations:
+              CALL set_Qmodel_Phase_Following(Phase_Following)
+          - ...
 
  3b) Potential energy surface(s), PES, evaluation
 
@@ -104,6 +108,13 @@
       The range of the coordinate is [A,B]
 
     WARNING: It is working only with ONE inactive variable.
+
+    The following subroutine enables to get the effective Hamiltonian along Qact(:).
+      CALL sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
+    The table tab_MatH(nsurf,nsurf,nb_terms) contains:
+      - Heff: tab_MatH(nsurf,nsurf,1)                 [1 matrix]
+      - F2 terms: tab_MatH(nsurf,nsurf,2:...)         [ (nb_act+1)nb_act/2 matrices)]
+      - F1 terms: tab_MatH(nsurf,nsurf,...:nb_terms)  [ nb_act matrices ]
 
  3d) Get the metric tensor, GGdef
 

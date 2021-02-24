@@ -50,7 +50,7 @@
 !! @date 03/08/2017
 !!
 PROGRAM TEST_dnS
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   USE mod_dnS
   IMPLICIT NONE
 
@@ -463,7 +463,7 @@ END PROGRAM TEST_dnS
 SUBROUTINE TEST_EXCEPTION
   USE, INTRINSIC :: ieee_exceptions
 
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   USE mod_dnS
   IMPLICIT NONE
 
@@ -520,7 +520,7 @@ SUBROUTINE TEST_EXCEPTION
 END SUBROUTINE TEST_EXCEPTION
 
 FUNCTION faplusx(x)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
   real (kind=Rkind) :: faplusx
@@ -530,7 +530,7 @@ FUNCTION faplusx(x)
 
 END FUNCTION faplusx
 FUNCTION faminusx(x)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
   real (kind=Rkind) :: faminusx
@@ -540,7 +540,7 @@ FUNCTION faminusx(x)
 
 END FUNCTION faminusx
 FUNCTION fatimex(x)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
   real (kind=Rkind) :: fatimex
@@ -550,7 +550,7 @@ FUNCTION fatimex(x)
 
 END FUNCTION fatimex
 FUNCTION faoverx(x)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
   real (kind=Rkind) :: faoverx
@@ -560,7 +560,7 @@ FUNCTION faoverx(x)
 
 END FUNCTION faoverx
 FUNCTION SQRT_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -569,7 +569,7 @@ FUNCTION SQRT_perso(x) RESULT(f)
 
 END FUNCTION SQRT_perso
 FUNCTION ABS_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -578,7 +578,7 @@ FUNCTION ABS_perso(x) RESULT(f)
 
 END FUNCTION ABS_perso
 FUNCTION EXP_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -587,7 +587,7 @@ FUNCTION EXP_perso(x) RESULT(f)
 
 END FUNCTION EXP_perso
 FUNCTION LOG_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -596,7 +596,7 @@ FUNCTION LOG_perso(x) RESULT(f)
 
 END FUNCTION LOG_perso
 FUNCTION LOG10_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -605,7 +605,7 @@ FUNCTION LOG10_perso(x) RESULT(f)
 
 END FUNCTION LOG10_perso
 FUNCTION SIN_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -614,7 +614,7 @@ FUNCTION SIN_perso(x) RESULT(f)
 
 END FUNCTION SIN_perso
 FUNCTION ASIN_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -623,7 +623,7 @@ FUNCTION ASIN_perso(x) RESULT(f)
 
 END FUNCTION ASIN_perso
 FUNCTION COS_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -632,7 +632,7 @@ FUNCTION COS_perso(x) RESULT(f)
 
 END FUNCTION COS_perso
 FUNCTION ACOS_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -641,7 +641,7 @@ FUNCTION ACOS_perso(x) RESULT(f)
 
 END FUNCTION ACOS_perso
 FUNCTION TAN_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -650,7 +650,7 @@ FUNCTION TAN_perso(x) RESULT(f)
 
 END FUNCTION TAN_perso
 FUNCTION ATAN_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -659,7 +659,7 @@ FUNCTION ATAN_perso(x) RESULT(f)
 
 END FUNCTION ATAN_perso
 FUNCTION SINH_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -668,7 +668,7 @@ FUNCTION SINH_perso(x) RESULT(f)
 
 END FUNCTION SINH_perso
 FUNCTION ASINH_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -681,7 +681,7 @@ FUNCTION ASINH_perso(x) RESULT(f)
 
 END FUNCTION ASINH_perso
 FUNCTION COSH_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -690,7 +690,7 @@ FUNCTION COSH_perso(x) RESULT(f)
 
 END FUNCTION COSH_perso
 FUNCTION ACOSH_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -703,7 +703,7 @@ FUNCTION ACOSH_perso(x) RESULT(f)
 
 END FUNCTION ACOSH_perso
 FUNCTION TANH_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x
@@ -712,7 +712,7 @@ FUNCTION TANH_perso(x) RESULT(f)
 
 END FUNCTION TANH_perso
 FUNCTION ATANH_perso(x) RESULT(f)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
   real (kind=Rkind) :: f
   real (kind=Rkind), intent(in) :: x

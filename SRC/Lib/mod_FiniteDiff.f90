@@ -23,7 +23,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_FiniteDiff
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
   PRIVATE

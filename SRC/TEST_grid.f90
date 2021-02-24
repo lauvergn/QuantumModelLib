@@ -31,7 +31,7 @@
 !===========================================================================
 !===========================================================================
 PROGRAM TEST_grid
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   USE mod_Lib
   USE mod_Model
   IMPLICIT NONE

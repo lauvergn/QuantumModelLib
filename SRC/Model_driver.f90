@@ -111,6 +111,18 @@ FUNCTION get_Qmodel_nsurf() RESULT(nsurf)
   nsurf  = QuantumModel%nsurf
 
 END FUNCTION get_Qmodel_nsurf
+FUNCTION get_Qmodel_Vib_Adia() RESULT(Vib_Adia)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
+
+  logical     :: Vib_Adia
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_VibAdia in Model_driver.f90')
+
+  Vib_Adia  = QuantumModel%QM%Vib_adia
+
+END FUNCTION get_Qmodel_Vib_Adia
 SUBROUTINE sub_Write_Qmodel(nio)
   USE mod_Model
   IMPLICIT NONE
@@ -234,6 +246,33 @@ SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
   CALL calc_pot_grad_hess(V,G,H,QuantumModel,Q)
 
 END SUBROUTINE sub_Qmodel_VGH
+SUBROUTINE sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
+
+  real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
+  integer,                intent(in)        :: nb_terms
+  real (kind=Rkind),      intent(inout)     ::                                  &
+                        tab_MatH(QuantumModel%nsurf,QuantumModel%nsurf,nb_terms)
+
+  real (kind=Rkind),  allocatable  :: tab_MatH_loc(:,:,:)
+
+
+  CALL Eval_tab_HMatVibAdia(QuantumModel,Q,tab_MatH_loc)
+
+  IF ( any(shape(tab_MatH_loc) /= shape(tab_MatH) )) THEN
+    write(out_unitp,*) ' ERROR in sub_Qmodel_tab_HMatVibAdia'
+    write(out_unitp,*) ' The shapes of tab_MatH and the one from Eval_tab_HMatVibAdia() are different'
+    write(out_unitp,*) ' shape(tab_MatH)    ',shape(tab_MatH)
+    write(out_unitp,*) ' shape(tab_MatH_loc)',shape(tab_MatH_loc)
+    write(out_unitp,*) ' check the fortran!'
+    write(out_unitp,*)
+    STOP ' ERROR in sub_Qmodel_tab_HMatVibAdia'
+  END IF
+  tab_MatH(:,:,:) = tab_MatH_loc
+
+END SUBROUTINE sub_Qmodel_tab_HMatVibAdia
 SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
   USE mod_Lib
   USE mod_Model
@@ -307,11 +346,41 @@ SUBROUTINE set_Qmodel_Print_level(printlevel)
 
   integer,                intent(in)        :: printlevel
 
-  CALL check_alloc_QM(QuantumModel,name_sub_in='set_Qmodel_Print_level in Model_driver.f90')
-
-  print_level = printlevel  ! from them module mod_NumParameters.f90
+  print_level = printlevel  ! from them module mod_QML_NumParameters.f90
 
 END SUBROUTINE set_Qmodel_Print_level
+SUBROUTINE set_Qmodel_in_unitp(inunitp)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
+
+  integer,                intent(in)        :: inunitp
+
+  in_unitp = inunitp  ! from them module mod_QML_NumParameters.f90
+
+END SUBROUTINE set_Qmodel_in_unitp
+SUBROUTINE set_Qmodel_out_unitp(outunitp)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
+
+  integer,                intent(in)        :: outunitp
+
+  out_unitp = outunitp  ! from them module mod_QML_NumParameters.f90
+
+END SUBROUTINE set_Qmodel_out_unitp
+SUBROUTINE set_Qmodel_Phase_Following(Phase_Following)
+  USE mod_Lib
+  USE mod_Model
+  IMPLICIT NONE
+
+  logical,                intent(in)        :: Phase_Following
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='set_Qmodel_Phase_Following in Model_driver.f90')
+
+  QuantumModel%QM%Phase_Following = Phase_Following
+
+END SUBROUTINE set_Qmodel_Phase_Following
 SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
   USE mod_Lib
   USE mod_Model

@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE mod_H3_Model
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   USE mod_EmptyModel
   IMPLICIT NONE
 
@@ -459,7 +459,7 @@ MODULE mod_H3_Model
   END SUBROUTINE Cart_TO_Q_H3_Model
 
   SUBROUTINE LSTH(X,VXD)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
 !       tag='LSTH PES of H2+H. [P. Siegbahn, B. Liu, D.G. Truhlar and C.J.Horowitz, JCP 68, 2457(1978)'
@@ -547,7 +547,7 @@ MODULE mod_H3_Model
   END SUBROUTINE LSTH
 
   SUBROUTINE VH2(X,S1,S2,S3)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
         real(kind=Rkind), intent(in)    :: X(3)
         real(kind=Rkind), intent(inout) :: S1(3),S2(3),S3(3)
@@ -572,7 +572,7 @@ MODULE mod_H3_Model
   END SUBROUTINE VH2
 !       *************************************************************
   SUBROUTINE VBIGR(X,S)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
         real(kind=Rkind), intent(in)    ::  X
         real(kind=Rkind), intent(inout) ::  S(3)
@@ -591,7 +591,7 @@ MODULE mod_H3_Model
   END SUBROUTINE VBIGR
 
   SUBROUTINE SPLID2(N,X,F,W,IJ,Y,TAB)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
         integer,          intent(in)    :: N,IJ

@@ -22,7 +22,7 @@
 !       <http://pagesperso.lcp.u-psud.fr/lauvergnat/ElVibRot/ElVibRot.html>
 !===========================================================================
 !===========================================================================
-  MODULE mod_NumParameters
+  MODULE mod_QML_NumParameters
 !$ USE omp_lib
       USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : INPUT_UNIT,OUTPUT_UNIT,real64,real128,int32,int64
       IMPLICIT NONE
@@ -82,5 +82,4 @@
       integer :: in_unitp  = INPUT_UNIT  ! Unit for the ouptput files, with the ISO_FORTRAN_ENV
       integer :: out_unitp = OUTPUT_UNIT ! Unit for the input, with the ISO_FORTRAN_ENV
 
-  END MODULE mod_NumParameters
-
+  END MODULE mod_QML_NumParameters

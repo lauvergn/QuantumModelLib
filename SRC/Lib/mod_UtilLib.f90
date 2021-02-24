@@ -23,7 +23,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_Lib
-USE mod_NumParameters
+USE mod_QML_NumParameters
 !$ USE omp_lib
 IMPLICIT NONE
 
@@ -83,7 +83,7 @@ CONTAINS
 
   END FUNCTION strdup
   PURE FUNCTION int_TO_char(i)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
 
     character (len=:), allocatable  :: int_TO_char
     integer, intent(in)             :: i
@@ -123,7 +123,7 @@ CONTAINS
 
   SUBROUTINE sub_Format_OF_Line(wformat,nb_line,max_col,cplx,       &
                                 Rformat,name_info)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
    character (len=*), optional  :: Rformat
@@ -188,7 +188,7 @@ CONTAINS
   END SUBROUTINE sub_Format_OF_Line
 
   SUBROUTINE Write_RMat(f,nio,nbcol1,Rformat,name_info)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
      character (len=*), optional :: Rformat
@@ -235,7 +235,7 @@ CONTAINS
 
   END SUBROUTINE Write_RMat
   SUBROUTINE Write_RVec(l,nio,nbcol1,Rformat,name_info)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
     character (len=*), optional  :: Rformat

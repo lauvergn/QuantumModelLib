@@ -35,7 +35,7 @@
 !! @date 02/12/2017
 !!
 MODULE mod_Vibronic
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   USE mod_dnMat
   USE mod_EmptyModel
   IMPLICIT NONE

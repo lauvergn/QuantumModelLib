@@ -39,7 +39,7 @@
 !! @date 03/08/2017
 !!
 MODULE mod_PhenolModel
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   USE mod_EmptyModel
   USE mod_MorseModel
   USE mod_SigmoidModel

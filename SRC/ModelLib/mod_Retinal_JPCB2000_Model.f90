@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE mod_Retinal_JPCB2000_Model
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   USE mod_EmptyModel
   IMPLICIT NONE
 

@@ -53,14 +53,15 @@ MODULE mod_EmptyModel
     logical :: no_ana_der  = .FALSE. ! to force numerical derivatives
                                      ! for potential without analitical derivatives
 
-    logical :: Cart_TO_Q   = .FALSE. ! to perform the Cartesian to model coordinates
+    logical :: Cart_TO_Q        = .FALSE. ! to perform the Cartesian to model coordinates
 
-    logical :: adiabatic   = .TRUE.
-    integer :: option      = 0
-    logical :: PubliUnit   = .FALSE. ! when PubliUnit=.TRUE., the units of a reference (publi ...) are used. Default (atomic unit)
+    logical :: Phase_Following  = .TRUE.
+    logical :: adiabatic        = .TRUE.
+    integer :: option           = 0
+    logical :: PubliUnit        = .FALSE. ! when PubliUnit=.TRUE., the units of a reference (publi ...) are used. Default (atomic unit)
 
-    logical :: Vib_adia    = .FALSE.
-    integer :: nb_Channels = 0
+    logical :: Vib_adia         = .FALSE.
+    integer :: nb_Channels      = 0
     integer, allocatable :: list_act(:)
     integer, allocatable :: list_inact(:)
 
@@ -139,20 +140,21 @@ CONTAINS
     END IF
 
     !QModel = QModel_in   ! it does not work always with nagfor
-    QModel%Init         = QModel_in%Init
+    QModel%Init             = QModel_in%Init
 
-    QModel%nsurf        = QModel_in%nsurf
-    QModel%ndim         = QModel_in%ndim
-    QModel%ndimQ        = QModel_in%ndimQ
-    QModel%ndimCart     = QModel_in%ndimCart
+    QModel%nsurf            = QModel_in%nsurf
+    QModel%ndim             = QModel_in%ndim
+    QModel%ndimQ            = QModel_in%ndimQ
+    QModel%ndimCart         = QModel_in%ndimCart
 
-    QModel%numeric      = QModel_in%numeric
-    QModel%adiabatic    = QModel_in%adiabatic
-    QModel%option       = QModel_in%option
-    QModel%PubliUnit    = QModel_in%PubliUnit
+    QModel%numeric          = QModel_in%numeric
+    QModel%adiabatic        = QModel_in%adiabatic
+    QModel%Phase_Following  = QModel_in%Phase_Following
+    QModel%option           = QModel_in%option
+    QModel%PubliUnit        = QModel_in%PubliUnit
 
-    QModel%no_ana_der   = QModel_in%no_ana_der
-    QModel%Cart_TO_Q    = QModel_in%Cart_TO_Q
+    QModel%no_ana_der       = QModel_in%no_ana_der
+    QModel%Cart_TO_Q        = QModel_in%Cart_TO_Q
 
     IF (QModel%adiabatic) THEN
       write(out_unitp,*) 'Adiabatic potential . . .'
@@ -310,6 +312,7 @@ CONTAINS
     write(nio,*) 'numeric:                   ',QModel%numeric
     write(nio,*) 'adiabatic:                 ',QModel%adiabatic
     write(nio,*) 'Vib_adia:                  ',QModel%Vib_adia
+    write(nio,*) 'Phase_Following:           ',QModel%Phase_Following
     IF (QModel%Vib_adia) THEN
       write(nio,*) 'nb_Channels:                  ',QModel%nb_Channels
       IF (allocated(QModel%list_act)) &

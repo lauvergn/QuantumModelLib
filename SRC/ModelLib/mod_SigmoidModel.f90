@@ -36,7 +36,7 @@
 !! @date 03/08/2017
 !!
 MODULE mod_SigmoidModel
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   USE mod_EmptyModel
   IMPLICIT NONE
 

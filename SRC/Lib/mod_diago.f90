@@ -44,7 +44,7 @@ MODULE mod_diago
 !
   SUBROUTINE diagonalization(Mat,REig,Vec,n,type_diag,sort,phase,IEig)
     USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64,int32
-    USE mod_NumParameters
+    USE mod_QML_NumParameters
     IMPLICIT NONE
 
     integer,          intent(in)              :: n
@@ -290,7 +290,7 @@ MODULE mod_diago
   END SUBROUTINE diagonalization
 
       SUBROUTINE JACOBI2(A,N,D,V)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       integer            :: N
@@ -416,13 +416,13 @@ MODULE mod_diago
 !       write(*,*)'ierr=',ierr
 
       SUBROUTINE TRED2(NM,N,A,D,E,Z)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       integer          ::  N,NM
       real(kind=Rkind) ::  A(NM,N),Z(NM,N),D(N),E(N)
 
-!     already in mod_NumParameters
+!     already in mod_QML_NumParameters
 !     real(kind=Rkind)    h,scale,hh,f,g,one,zero
       real(kind=Rkind)    h,scale,hh,f,g
       integer             ii,l,k,jp1,j,i
@@ -511,7 +511,7 @@ MODULE mod_diago
       end subroutine TRED2
 
       SUBROUTINE TQL2(NZ,N,D,E,Z,IERR)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       integer   NZ,N
@@ -522,7 +522,7 @@ MODULE mod_diago
 !     MACHEP = 2.**(-47) FOR SINGLE PRECISION ARITHMETIC
 !     BOTH ON CDC AND CRAY
 
-!     already in mod_NumParameters
+!     already in mod_QML_NumParameters
 !     real(kind=Rkind) ZERO,ONE,TWO
 !     DATA ZERO/0./,ONE/1./,TWO/2./
 
@@ -613,7 +613,7 @@ MODULE mod_diago
 
 
       SUBROUTINE TRED2_EISPACK(A,N,NP,D,E)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       integer          :: N,NP
@@ -703,7 +703,7 @@ MODULE mod_diago
       END SUBROUTINE TRED2_EISPACK
 
       SUBROUTINE TQLI_EISPACK(D,E,N,NP,Z)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       integer          :: N,NP
@@ -780,7 +780,7 @@ MODULE mod_diago
 !============================================================
 !
       SUBROUTINE trie_tab(nb_niv,ene,max_niv)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       integer nb_niv,max_niv
@@ -810,7 +810,7 @@ MODULE mod_diago
 !============================================================
 !
       SUBROUTINE trie(nb_niv,ene,psi,max_niv)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       integer nb_niv,max_niv
@@ -837,7 +837,7 @@ MODULE mod_diago
 
       END SUBROUTINE trie
       SUBROUTINE trie_abs(nb_niv,ene,psi,max_niv)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
         integer nb_niv,max_niv
@@ -871,7 +871,7 @@ MODULE mod_diago
 !============================================================
 !
       SUBROUTINE Unique_phase(Vec)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       real(kind=Rkind), intent(inout) :: Vec(:,:)
@@ -886,7 +886,7 @@ MODULE mod_diago
 
       END SUBROUTINE Unique_phase
       SUBROUTINE Unique_phase_old(n,Vec,max_n)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       integer          :: n,max_n
@@ -921,7 +921,7 @@ MODULE mod_diago
 !
 !=====================================================================
       SUBROUTINE rota_denerated(v,c,n)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
 
@@ -990,7 +990,7 @@ MODULE mod_diago
 
       end subroutine rota_denerated
       SUBROUTINE rota_denerated_old(v,c,n)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
 
@@ -1088,7 +1088,7 @@ MODULE mod_diago
 !============================================================
 !
       Subroutine cTql2(nZ,n,D,E,Z,ierr)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       Integer :: i,j,k,l,m,n,ii,Nbiter,nm,mml,nZ,ierr
@@ -1196,7 +1196,7 @@ MODULE mod_diago
       end subroutine cTql2
 
       Subroutine cTred2(nm,n,A,d,e,Z)
-      USE mod_NumParameters
+      USE mod_QML_NumParameters
       IMPLICIT NONE
 
       INTEGER I,II,J,JP1,K,L,N,NM

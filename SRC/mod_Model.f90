@@ -33,7 +33,7 @@
 
 MODULE mod_Model
 !$ USE omp_lib
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   USE mod_dnMat
 
   USE mod_EmptyModel
@@ -72,7 +72,7 @@ MODULE mod_Model
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func,Eval_dnHVib_ana
+  PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func,Eval_tab_HMatVibAdia
   PUBLIC :: check_alloc_QM,check_Init_QModel
   PUBLIC :: Write0_Model,Write_Model,Write_QdnV_FOR_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
@@ -208,7 +208,7 @@ CONTAINS
     read_nml1                 = read_nml
 
     QModel_inout%option       = option
-    print_level  = printlevel ! from them module mod_NumParameters.f90
+    print_level  = printlevel ! from them module mod_QML_NumParameters.f90
     QModel_inout%ndim         = ndim
     QModel_inout%nsurf        = nsurf
     QModel_inout%adiabatic    = adiabatic
@@ -258,7 +258,7 @@ CONTAINS
 
   SUBROUTINE Init_Model(QModel,pot_name,ndim,nsurf,adiabatic,Cart_TO_Q,         &
                         read_param,param_file_name,nio_param_file,              &
-                        option,PubliUnit,Print_init,Vib_adia)
+                        option,PubliUnit,Print_init,Vib_adia,Phase_Following)
   USE mod_Lib
   IMPLICIT NONE
 
@@ -278,6 +278,7 @@ CONTAINS
     logical,             intent(in),    optional :: Print_init
 
     logical,             intent(in),    optional :: Vib_adia
+    logical,             intent(in),    optional :: Phase_Following
 
 
     ! local variables
@@ -360,6 +361,11 @@ CONTAINS
       QModel_in%Vib_adia = .FALSE.
     END IF
 
+    IF (present(Phase_Following)) THEN
+      QModel_in%Phase_Following = Phase_Following
+    ELSE
+      QModel_in%Phase_Following = .TRUE.
+    END IF
 
     IF (present(PubliUnit)) THEN
       QModel_in%PubliUnit      = PubliUnit
@@ -869,59 +875,124 @@ CONTAINS
 
   END FUNCTION check_Init_QModel
 
-  SUBROUTINE Eval_tab_HMat(QModel,Q,tab_MatH)
+  SUBROUTINE Eval_tab_HMatVibAdia(QModel,Qact,tab_MatH)
   USE mod_dnS
   IMPLICIT NONE
 
-    TYPE (Model_t),                 intent(inout)            :: QModel
-    real (kind=Rkind), allocatable, intent(inout)            :: tab_MatH(:,:,:)
-    real (kind=Rkind),              intent(in)               :: Q(:)
+  TYPE (Model_t),                 intent(inout)            :: QModel
+  real (kind=Rkind),              intent(in)               :: Qact(:)
+  real (kind=Rkind), allocatable, intent(inout)            :: tab_MatH(:,:,:)
 
-    integer                         :: nb_terms,nsurf
-    TYPE (dnMat_t)                  :: PotVal,NAC
-    real (kind=Rkind), allocatable  :: GGdef(:,:)
-    integer                         :: iterm,i1,i2
+
+
+  integer                        :: nb_terms,nsurf
+
+  integer                        :: ia,ja,iterm,ii,ji,i,iq,ib,jb,nb,nq
+
+  TYPE (dnMat_t)                 :: PotVal_dia,PotVal,Vec,NAC,Mat_diag
+  LOGICAL                        :: PF ! phase_following
+  real (kind=Rkind), allocatable :: Q(:)
+  real (kind=Rkind), allocatable :: d0GGdef_ii(:,:),d0GGdef_aa(:,:),d0GGdef_ai(:,:),d0GGdef_ia(:,:)
+
+  integer                        :: ndim_act,ndim_inact
+
+  TYPE (dnS_t), allocatable      :: dnV(:),dnHB(:)
+  TYPE (dnS_t)                   :: dnVfull,dnHij
+  TYPE (dnMat_t)                 :: dnH ! derivative of the Hamiltonian
+
 
 !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Eval_tab_HMat'
+    character (len=*), parameter :: name_sub='Eval_tab_HMatVibAdia'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
-    IF (debug) THEN
-      write(out_unitp,*) ' BEGINNING ',name_sub
-      flush(out_unitp)
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    flush(out_unitp)
+  END IF
+
+  CALL check_alloc_QM(QModel,name_sub)
+
+  PF = QModel%QM%Phase_Following
+  CALL Eval_dnHVib_ana(QModel,Qact,PotVal_dia,nderiv=2)
+  IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
+  CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,PF,nderiv=2)
+
+  !CALL QML_Write_dnMat(PotVal,nio=out_unitp,info='PotVal (adia)')
+
+  !Mat_diag = matmul(transpose(Vec),matmul(PotVal_dia,Vec))
+  !CALL QML_Write_dnMat(Mat_diag,nio=out_unitp,info='Mat_diag')
+
+  !write(6,*) 'nsurf,ndim',QModel%nsurf,QModel%ndim
+  nsurf    = QModel%nsurf
+  nb_terms = (QModel%ndim + 1)*(QModel%ndim + 2)/2
+  IF (.NOT. allocated(tab_MatH)) THEN
+    allocate(tab_MatH(nsurf,nsurf,nb_terms))
+  END IF
+
+  !write(out_unitp,*) Qact,'NAC1',NAC%d1(1:nsurf,1:nsurf,:)
+
+
+  IF ( any([nsurf,nsurf,nb_terms] /= shape(tab_MatH)) ) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' The shape of tab_MatH is wrong.'
+    write(out_unitp,*) '    shape(tab_MatH):',shape(tab_MatH)
+    write(out_unitp,*) '  It MUST be:      [',nsurf,nsurf,nb_terms,']'
+    write(out_unitp,*) '  Check your data or the code!'
+    STOP 'STOP in Eval_tab_HMatVibAdia: The shape of tab_MatH is wrong.'
+  END IF
+  tab_MatH(:,:,:) = ZERO
+
+  ndim_act    = size(QModel%QM%list_act)
+  ndim_inact  = size(QModel%QM%list_inact)
+
+  ! Veff
+  d0GGdef_aa = QModel%QM%d0GGdef(QModel%QM%list_act,QModel%QM%list_act)
+  iterm = 1
+  tab_MatH(:,:,iterm) = PotVal%d0(1:nsurf,1:nsurf)
+  DO ia=1,ndim_act
+  DO ja=1,ndim_act
+    tab_MatH(:,:,iterm) = tab_MatH(:,:,iterm) - HALF*d0GGdef_aa(ja,ia) *        &
+       NAC%d2(1:nsurf,1:nsurf,ja,ia)
+  END DO
+  END DO
+
+  ! F2^jaia
+  d0GGdef_aa = QModel%QM%d0GGdef(QModel%QM%list_act,QModel%QM%list_act)
+  DO ia=1,ndim_act
+  DO ja=ia,ndim_act
+    iterm = iterm + 1
+    IF (ja == ia) THEN
+      tab_MatH(:,:,iterm) = -HALF*d0GGdef_aa(ja,ia) * NAC%d0(1:nsurf,1:nsurf)
+    ELSE
+      tab_MatH(:,:,iterm) = -d0GGdef_aa(ja,ia) * NAC%d0(1:nsurf,1:nsurf)
     END IF
+  END DO
+  END DO
 
-    CALL check_alloc_QM(QModel,name_sub)
-
-    nsurf    = QModel%QM%nsurf
-    nb_terms = (QModel%QM%ndim + 1)*(QModel%QM%ndim + 2)/2
-    IF (.NOT. allocated(tab_MatH)) THEN
-      allocate(tab_MatH(QModel%QM%nsurf,QModel%QM%nsurf,nb_terms))
-    END IF
-    IF ( any([nsurf,nsurf,nb_terms] /= shape(tab_MatH)) ) THEN
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' The shape of tab_MatH is wrong.'
-      write(out_unitp,*) '    shape(tab_MatH):',shape(tab_MatH)
-      write(out_unitp,*) '  It MUST be:      [',nsurf,nsurf,nb_terms,']'
-      write(out_unitp,*) '  Check your data or the code!'
-      STOP 'STOP in Eval_tab_HMat: The shape of tab_MatH is wrong.'
-    END IF
-
-    CALL Eval_Pot(QModel,Q,PotVal,nderiv=2,NAC=NAC)
-
-    GGdef = QuantumModel%QM%get_d0GGdef_QModel()
-
-    ! potential
-    iterm = 1
-    tab_MatH(:,:,iterm) = PotVal%d0
-    DO i1=1,QModel%QM%ndim
-      iterm = iterm + 1
-      tab_MatH(:,:,iterm) = NAC%d1(:,:,i1)
+  ! F1^ia
+  d0GGdef_aa = QModel%QM%d0GGdef(QModel%QM%list_act,QModel%QM%list_act)
+  DO ia=1,ndim_act
+    iterm = iterm + 1
+    tab_MatH(:,:,iterm) = ZERO
+    DO ja=1,ndim_act
+      tab_MatH(:,:,iterm) = tab_MatH(:,:,iterm) - d0GGdef_aa(ja,ia) * &
+           NAC%d1(1:nsurf,1:nsurf,ja)
     END DO
+    !the contribution d0GGdef_ai is missing
+  END DO
 
-  END SUBROUTINE Eval_tab_HMat
+  IF (debug) THEN
+    DO iterm=1,nb_terms
+      write(out_unitp,*) iterm
+      CALL Write_RMat(tab_MatH(:,:,iterm),nio=out_unitp,nbcol1=5)
+    END DO
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+  END SUBROUTINE Eval_tab_HMatVibAdia
 
   SUBROUTINE Eval_Pot(QModel,Q,PotVal,nderiv,NAC,Vec,numeric)
   USE mod_dnS
@@ -938,6 +1009,7 @@ CONTAINS
     integer                    :: nderiv_loc
     TYPE (dnMat_t)             :: Vec_loc,NAC_loc,PotVal_dia,PotVal_loc
     logical                    :: numeric_loc,adia_loc
+    logical                    :: PF ! phase_following
 
     integer :: numeric_option = 3   ! 0 old (up to 2d derivatives
                                     ! 3 version up to 3d derivatives less points than 4
@@ -956,11 +1028,12 @@ CONTAINS
   END IF
 
   CALL check_alloc_QM(QModel,name_sub)
-
+  PF = QModel%QM%Phase_Following
   IF (debug) THEN
-    write(out_unitp,*) '  QModel%QM%numeric   ',QModel%QM%numeric
-    write(out_unitp,*) '  QModel%QM%adiabatic ',QModel%QM%adiabatic
-    write(out_unitp,*) '  QModel%QM%Vib_adia  ',QModel%QM%Vib_adia
+    write(out_unitp,*) '  QModel%QM%numeric         ',QModel%QM%numeric
+    write(out_unitp,*) '  QModel%QM%adiabatic       ',QModel%QM%adiabatic
+    write(out_unitp,*) '  QModel%QM%Vib_adia        ',QModel%QM%Vib_adia
+    write(out_unitp,*) '  QModel%QM%Phase_Following ',QModel%QM%Phase_Following
     flush(out_unitp)
   END IF
 
@@ -980,17 +1053,25 @@ CONTAINS
 
 
   IF (QModel%QM%Vib_adia) THEN
+    IF (present(Vec)) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' Vib_adia=t and Vec is present'
+      write(out_unitp,*) ' This is not possible yet !'
+      STOP 'ERROR in Eval_Pot: Vib_adia=t is not compatible with Vec'
+    END IF
+
     CALL Eval_dnHVib_ana(QModel,Q,PotVal_dia,nderiv_loc)
 
     !write(out_unitp,*) 'PotVal (Vib_dia)'
     !CALL QML_Write_dnMat(PotVal_dia,nio=out_unitp)
 
     IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
-    CALL dia_TO_adia(PotVal_dia,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,nderiv_loc)
+    CALL dia_TO_adia(PotVal_dia,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,PF,nderiv_loc)
 
     CALL QML_sub_Reduced_dnMat2_TO_dnMat1(PotVal,PotVal_loc,lb=1,ub=QModel%QM%nb_Channels)
 
     IF (present(Vec)) THEN
+      ! it needs dnMat as a rectangular matrix !!
       CALL QML_sub_Reduced_dnMat2_TO_dnMat1(Vec,Vec_loc,lb=1,ub=QModel%QM%nb_Channels)
     END IF
 
@@ -1090,8 +1171,7 @@ CONTAINS
     TYPE (dnS_t), allocatable   :: dnQ(:)
     TYPE (dnS_t), allocatable   :: dnX(:,:)
     TYPE (dnS_t), allocatable   :: Mat_OF_PotDia(:,:)
-    logical :: old = .FALSE.
-    !logical :: old = .TRUE.
+    logical                     :: PF ! phase_following
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Eval_Pot_ana'
@@ -1105,6 +1185,8 @@ CONTAINS
     END IF
 
     CALL check_alloc_QM(QModel,name_sub)
+
+    PF = QModel%QM%Phase_Following
 
     IF (debug) write(out_unitp,*) '   adiabatic ',QModel%QM%adiabatic
 
@@ -1177,43 +1259,24 @@ CONTAINS
       IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
 
       PotVal_dia = PotVal
-IF (old) THEN
+
       IF (present(Vec)) THEN
         IF (present(NAC)) THEN
-          CALL  dia_TO_adia_old(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,PF,nderiv)
         ELSE
-          CALL  dia_TO_adia_old(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC_loc,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC_loc,PF,nderiv)
           CALL QML_dealloc_dnMat(NAC_loc)
         END IF
       ELSE
         IF (present(NAC)) THEN
-          CALL  dia_TO_adia_old(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC,PF,nderiv)
         ELSE
-          CALL  dia_TO_adia_old(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC_loc,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC_loc,PF,nderiv)
           CALL QML_dealloc_dnMat(NAC_loc)
         END IF
         CALL QML_dealloc_dnMat(Vec_loc)
       END IF
       CALL QML_dealloc_dnMat(PotVal_dia)
-ELSE
-      IF (present(Vec)) THEN
-        IF (present(NAC)) THEN
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,nderiv)
-        ELSE
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC_loc,nderiv)
-          CALL QML_dealloc_dnMat(NAC_loc)
-        END IF
-      ELSE
-        IF (present(NAC)) THEN
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC,nderiv)
-        ELSE
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC_loc,nderiv)
-          CALL QML_dealloc_dnMat(NAC_loc)
-        END IF
-        CALL QML_dealloc_dnMat(Vec_loc)
-      END IF
-      CALL QML_dealloc_dnMat(PotVal_dia)
-END IF
     END IF
 
 
@@ -1227,7 +1290,6 @@ END IF
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)
     END IF
-
 
   END SUBROUTINE Eval_Pot_ana
 
@@ -1846,12 +1908,14 @@ END IF
     CALL QML_dealloc_dnMat(Vec_loc0)
 
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
-  SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,nderiv)
+  SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,nderiv)
     USE mod_diago
     IMPLICIT NONE
 
     TYPE (dnMat_t), intent(in)               :: PotVal_dia
     TYPE (dnMat_t), intent(inout)            :: PotVal_adia,Vec,Vec0,NAC
+
+    logical, intent(in)                      :: Phase_Following
 
     integer, intent(in), optional            :: nderiv
 
@@ -1922,6 +1986,8 @@ END IF
     CALL QML_DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,         &
                         dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0)
 
+    IF (Phase_Following) Vec0%d0 = Vec%d0
+
     IF (debug) THEN
 
       write(out_unitp,*) 'Eig',(PotVal_adia%d0(i,i),i=1,nsurf)
@@ -1939,279 +2005,9 @@ END IF
     END IF
 
   END SUBROUTINE dia_TO_adia
-  SUBROUTINE dia_TO_adia_old(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,nderiv)
-    USE mod_diago
-    IMPLICIT NONE
-
-    TYPE (dnMat_t), intent(in)               :: PotVal_dia
-    TYPE (dnMat_t), intent(inout)            :: PotVal_adia,Vec,Vec0,NAC
-
-    integer, intent(in), optional            :: nderiv
-
-    ! local variable
-    integer                        :: i,j,k,id,jd,kd,nderiv_loc,ndim,nsurf
-    real (kind=Rkind)              :: ai,aj,aii,aij,aji,ajj,th,cc,ss,DEne
-    real (kind=Rkind), allocatable :: Eig(:),tVec(:,:),Vdum(:),Vi(:)
-
-    TYPE (dnMat_t)                :: PotVal_dia_onadia
-
-
-!----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='dia_TO_adia_old'
-    logical, parameter :: debug = .FALSE.
-    !logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
-
-    IF (debug) THEN
-      write(out_unitp,*) ' BEGINNING ',name_sub
-      IF (present(nderiv)) write(out_unitp,*) '   nderiv',nderiv
-      flush(out_unitp)
-    END IF
-
-    IF (present(nderiv)) THEN
-      nderiv_loc = max(0,nderiv)
-      nderiv_loc = min(3,nderiv_loc)
-    ELSE
-      nderiv_loc = 0
-    END IF
-
-
-    IF ( QML_Check_NotAlloc_dnMat(PotVal_dia,nderiv_loc) ) THEN
-      write(out_unitp,*) ' The diabatic potential MUST be allocated!'
-      CALL QML_Write_dnMat(PotVal_dia)
-      STOP 'PotVal_dia%dn NOT allocated in "dia_TO_adia_old"'
-    END IF
-    IF (debug) THEN
-      write(out_unitp,*) 'PotVal_dia'
-      CALL QML_Write_dnMat(PotVal_dia,nio=out_unitp)
-      flush(out_unitp)
-    END IF
-
-    nsurf = QML_get_nsurf_FROM_dnMat(PotVal_dia)
-    ndim  = QML_get_ndim_FROM_dnMat(PotVal_dia)
-
-    IF ( QML_Check_NotAlloc_dnMat(PotVal_adia,nderiv_loc) ) THEN
-      CALL QML_alloc_dnMat(PotVal_adia,nsurf=nsurf,ndim=ndim,nderiv=nderiv_loc)
-    END IF
-    PotVal_adia = ZERO
-
-
-    IF ( QML_Check_NotAlloc_dnMat(Vec,nderiv_loc) ) THEN
-      CALL QML_alloc_dnMat(Vec,nsurf=nsurf,ndim=ndim,nderiv=nderiv_loc)
-    END IF
-    Vec = ZERO
-
-    IF ( QML_Check_NotAlloc_dnMat(NAC,nderiv_loc) ) THEN
-      CALL QML_alloc_dnMat(NAC,nsurf=nsurf,ndim=ndim,nderiv=nderiv_loc)
-    END IF
-    NAC = ZERO
-
-
-    ! local variables
-    CALL QML_alloc_dnMat(PotVal_dia_onadia,nsurf=nsurf,ndim=ndim,nderiv=nderiv_loc)
-    PotVal_dia_onadia = ZERO
-
-
-    allocate(Eig(nsurf))
-    allocate(tVec(nsurf,nsurf))
-    CALL diagonalization(PotVal_dia%d0,Eig,Vec%d0,nsurf)
-    IF (QML_Check_NotAlloc_dnMat(Vec0,nderiv=0)) THEN
-       !$OMP CRITICAL (CRIT_dia_TO_adia_old)
-       IF (debug) write(out_unitp,*) 'init Vec0'
-       CALL QML_alloc_dnMat(Vec0,nsurf=nsurf,ndim=ndim,nderiv=0)
-       Vec0%d0 = Vec%d0
-       !$OMP END CRITICAL (CRIT_dia_TO_adia_old)
-    ELSE ! change the phase if required
-       IF (debug) write(out_unitp,*) 'Change phase?'
-       flush(out_unitp)
-
-       DO i=1,nsurf
-         IF (dot_product(Vec0%d0(:,i),Vec%d0(:,i)) < ZERO) Vec%d0(:,i) = -Vec%d0(:,i)
-       END DO
-
-       IF (debug) THEN
-         write(out_unitp,*) 'Vec before rotation'
-         CALL QML_Write_dnMat(Vec,nio=out_unitp)
-       END IF
-       !For degenerated eigenvectors (works only with 2 vectors)
-       DO i=1,nsurf-1
-        IF ( abs(Eig(i)-Eig(i+1)) < epsi) THEN
-          j = i+1
-          IF (debug) write(out_unitp,*) 'degenerated vectors',i,j
-
-          aii = dot_product(Vec0%d0(:,i),Vec%d0(:,i))
-          aji = dot_product(Vec0%d0(:,j),Vec%d0(:,i))
-          aij = dot_product(Vec0%d0(:,i),Vec%d0(:,j))
-          ajj = dot_product(Vec0%d0(:,j),Vec%d0(:,j))
-
-          th = ( atan2(aij,ajj) -atan2(aji,aii) ) * HALF
-          IF (debug) write(out_unitp,*) 'theta',th
-
-          cc = cos(th)
-          ss = sin(th)
-
-          DO k=1,nsurf
-           ai = Vec%d0(k,i)
-           aj = Vec%d0(k,j)
-
-           Vec%d0(k,i) =  cc * ai + ss * aj
-           Vec%d0(k,j) = -ss * ai + cc * aj
-
-          END DO
-
-        END IF
-       END DO
-
-       IF (debug) THEN
-         write(out_unitp,*) 'Vec after rotation'
-         CALL QML_Write_dnMat(Vec,nio=out_unitp)
-       END IF
-
-    END IF
-    tVec = transpose(Vec%d0)
-
-    IF (debug) write(out_unitp,*) 'Eig',Eig
-
-    ! transformation of PotVal_dia on the adiabatic basis (Vec)
-    !PotVal_dia_onadia%d0 = matmul(tVec,matmul(PotVal_dia%d0,Vec%d0))
-    DO i=1,nsurf
-      PotVal_dia_onadia%d0(i,i) = Eig(i)
-    END DO
-    IF (nderiv_loc > 0) THEN
-      DO id=1,ndim
-        PotVal_dia_onadia%d1(:,:,id) = matmul(tVec,matmul(PotVal_dia%d1(:,:,id),Vec%d0))
-      END DO
-    END IF
-    IF (nderiv_loc > 1) THEN
-      DO jd=1,ndim
-      DO id=1,ndim
-        PotVal_dia_onadia%d2(:,:,id,jd) =                               &
-                    matmul(tVec,matmul(PotVal_dia%d2(:,:,id,jd),Vec%d0) )
-      END DO
-      END DO
-    END IF
-    IF (nderiv_loc > 2) THEN
-      DO kd=1,ndim
-      DO jd=1,ndim
-      DO id=1,ndim
-        PotVal_dia_onadia%d3(:,:,id,jd,kd) =                            &
-                 matmul(tVec,matmul(PotVal_dia%d3(:,:,id,jd,kd),Vec%d0) )
-      END DO
-      END DO
-      END DO
-    END IF
-    deallocate(Eig)
-    deallocate(tVec)
-    IF (debug) THEN
-      write(out_unitp,*) "< Psi_j I dnHdia I Psi_i>"
-      CALL QML_Write_dnMat(PotVal_dia_onadia,nio=out_unitp)
-      flush(out_unitp)
-    END IF
-
-
-    ! project the eigenvector derivatives on the eigenvectors => NAC
-
-    ! no derivative
-    PotVal_adia%d0 = ZERO
-    NAC%d0         = ZERO
-    DO i=1,nsurf
-      PotVal_adia%d0(i,i) = PotVal_dia_onadia%d0(i,i)
-      NAC%d0(i,i)         = ONE
-    END DO
-
-    ! 1st order derivatives
-    IF (nderiv_loc > 0) THEN
-
-      ! eigenvalue derivatives
-      PotVal_adia%d1 = ZERO
-      DO id=1,ndim
-      DO i=1,nsurf
-        PotVal_adia%d1(i,i,id) = PotVal_dia_onadia%d1(i,i,id)
-      END DO
-      END DO
-
-      ! eigenvector derivatives projected on the eigenvectors
-      DO id=1,ndim
-      DO i=1,nsurf ! I Psi_i' >
-      DO j=1,nsurf ! projection on < Psi_j I
-        DEne = PotVal_adia%d0(j,j) - PotVal_adia%d0(i,i)
-        IF (j /= i .AND. abs(DEne) > ONETENTH**10) THEN
-          NAC%d1(j,i,id) = - PotVal_dia_onadia%d1(j,i,id) / DEne
-        ELSE
-          NAC%d1(j,i,id) = ZERO
-        END IF
-      END DO
-      END DO
-      END DO
-
-    END IF
-
-
-    ! 2d order derivatives
-    IF (nderiv_loc > 1) THEN
-      PotVal_adia%d2 = ZERO
-      allocate(Vdum(nsurf))
-      ! eigenvalue derivatives
-      DO id=1,ndim
-      DO jd=1,ndim
-        DO i=1,nsurf
-          Vdum = matmul(PotVal_dia_onadia%d2(:,:,id,jd),NAC%d0(:,i))    + &
-                 matmul(PotVal_dia_onadia%d1(:,:,jd),   NAC%d1(:,i,id)) + &
-                 matmul(PotVal_dia_onadia%d1(:,:,id),   NAC%d1(:,i,jd))
-
-          !write(out_unitp,*) 'Dum',id,jd,i,':',Vdum
-          PotVal_adia%d2(i,i,id,jd) = dot_product(NAC%d0(:,i),Vdum)
-        END DO
-
-      END DO
-      END DO
-      deallocate(Vdum)
-    END IF
-
-    ! 3d order derivatives (it is not working, because NAC%d2 are not calculated)
-    IF (nderiv_loc > 2) THEN
-      PotVal_adia%d3 = ZERO
-      allocate(Vdum(nsurf))
-      ! eigenvalue derivatives
-      DO id=1,ndim
-      DO jd=1,ndim
-      DO kd=1,ndim
-        DO i=1,nsurf
-          Vdum = matmul(PotVal_dia_onadia%d3(:,:,id,jd,kd),NAC%d0(:,i))       + &
-                 matmul(PotVal_dia_onadia%d2(:,:,jd,kd),   NAC%d1(:,i,id))    + &
-                 matmul(PotVal_dia_onadia%d2(:,:,id,jd),   NAC%d1(:,i,kd))    + &
-                 matmul(PotVal_dia_onadia%d2(:,:,kd,id),   NAC%d1(:,i,jd))    + &
-                 matmul(PotVal_dia_onadia%d1(:,:,id),      NAC%d2(:,i,jd,kd)) + &
-                 matmul(PotVal_dia_onadia%d1(:,:,jd),      NAC%d2(:,i,kd,id)) + &
-                 matmul(PotVal_dia_onadia%d1(:,:,kd),      NAC%d2(:,i,id,jd))
-          !write(out_unitp,*) 'Dum',id,jd,i,':',Vdum
-          PotVal_adia%d3(i,i,id,jd,kd) = dot_product(NAC%d0(:,i),Vdum)
-        END DO
-      END DO
-      END DO
-      END DO
-      deallocate(Vdum)
-    END IF
-
-    CALL QML_dealloc_dnMat(PotVal_dia_onadia)
-
-    IF (debug) THEN
-      write(out_unitp,*) 'PotVal_adia'
-      CALL QML_Write_dnMat(PotVal_adia,nio=out_unitp)
-
-      write(out_unitp,*) 'Vec'
-      CALL QML_Write_dnMat(Vec,nio=out_unitp)
-
-      write(out_unitp,*) 'NAC'
-      CALL QML_Write_dnMat(NAC,nio=out_unitp)
-      write(out_unitp,*) ' END ',name_sub
-      flush(out_unitp)
-    END IF
-
-  END SUBROUTINE dia_TO_adia_old
 
   SUBROUTINE Eval_dnHVib_ana(QModel,Qact,dnH,nderiv)
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   USE mod_Lib
   USE mod_dnS
   USE mod_dnMat
@@ -2224,7 +2020,7 @@ END IF
   integer,                        intent(in)    :: nderiv
 
 
-  integer                        :: i,iq,ib,jb,nb,nq
+  integer                        :: ii,ji,i,iq,ib,jb,nb,nq
 
   TYPE (dnMat_t)                 :: PotVal
   real (kind=Rkind), allocatable :: Q(:),d0GGdef(:,:)
@@ -2252,8 +2048,8 @@ END IF
 
   !Buid H
   DO iq=1,QModel%Basis%nq
-    DO i=1,size(QModel%QM%list_inact)
-      Q(QModel%QM%list_inact(i)) = QModel%Basis%x(iq)
+    DO ii=1,size(QModel%QM%list_inact)
+      Q(QModel%QM%list_inact(ii)) = QModel%Basis%x(iq)
     END DO
 
     CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv=nderiv)

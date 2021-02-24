@@ -49,7 +49,7 @@
 !! @date 09/08/2017
 !!
 MODULE mod_dnMat
-  USE mod_NumParameters
+  USE mod_QML_NumParameters
   IMPLICIT NONE
 
   TYPE dnMat_t
@@ -1650,7 +1650,7 @@ CONTAINS
 !! @param Mat                      TYPE (dnMat_t):      derived type which deals with the derivatives of a matrix.
 !! @param epsi                     real (optional):     when present zero limit, otherwise 10^-10
   FUNCTION QML_Check_dnMat_IS_ZERO(Mat,epsi) RESULT(Check_dnMat_IS_ZERO)
-    USE mod_NumParameters
+    USE mod_QML_NumParameters
 
     logical                                  :: Check_dnMat_IS_ZERO
     TYPE (dnMat_t),     intent(in)           :: Mat
@@ -1673,7 +1673,7 @@ CONTAINS
 !! @param get_maxval_OF_dnMat   real  (result):      largest value (all components)
 !! @param Mat                      TYPE (dnMat_t):      derived type which deals with the derivatives of a matrix.
   FUNCTION QML_get_maxval_OF_dnMat(Mat,nderiv) RESULT(get_maxval_OF_dnMat)
-    USE mod_NumParameters
+    USE mod_QML_NumParameters
 
     real(kind=Rkind)                     :: get_maxval_OF_dnMat
     TYPE (dnMat_t), intent(in)           :: Mat
@@ -1791,7 +1791,10 @@ CONTAINS
        flush(out_unitp)
 
        DO i=1,nsurf
-         IF (dot_product(dnVec0%d0(:,i),Vec(:,i)) < ZERO) Vec(:,i) = -Vec(:,i)
+         IF (dot_product(dnVec0%d0(:,i),Vec(:,i)) < ZERO) THEN
+            IF (debug) write(out_unitp,*) 'Change phase:',i
+            Vec(:,i) = -Vec(:,i)
+          END IF
        END DO
 
        IF (debug) THEN
@@ -1951,7 +1954,7 @@ CONTAINS
 
     IF (present(dnVecProj)) dnVecProj = dnVec ! since here dnVec are the projected vectors
 
-    ! unproject the dnVec: correct ???
+    ! unproject the dnVec: correct yes (check with transpose(Vec).dnMat.Vec )
     dnVec%d0(:,:) = Vec
     IF (nderiv > 0) THEN
       DO id=1,ndim

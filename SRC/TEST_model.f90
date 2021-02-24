@@ -33,6 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test2_Vib_adia() ; stop
   !CALL test_Vib_adia() ; stop
   !CALL test_Retinal_JPCB2000() ; stop
   !CALL test_Tully_test() ; stop
@@ -77,6 +78,7 @@ PROGRAM TEST_model
 
   ! vibrational adiabatic separation (on HBond potential)
   CALL test_Vib_adia()
+ CALL test2_Vib_adia()
 
 END PROGRAM TEST_model
 
@@ -926,6 +928,59 @@ SUBROUTINE test_Vib_adia
   deallocate(Qact)
 
 END SUBROUTINE test_Vib_adia
+SUBROUTINE test2_Vib_adia
+  USE mod_Lib
+  USE mod_dnMat
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Qact(:)
+  integer                        :: ndim,nsurf,nderiv,option
+  real (kind=Rkind), allocatable :: tab_MatH(:,:,:)
+
+  TYPE (dnMat_t)                 :: PotVal,NAC
+
+  integer            :: i,iq,iterm
+  integer, parameter :: nq=100
+  real(kind=Rkind)   :: dQ
+  real(kind=Rkind), parameter    :: auTOcm_inv = 219474.631443_Rkind
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Vibrational adiabatic separation with ...'
+  write(out_unitp,*) ' Linear H-Bond (symmetric one and the default parameters)'
+  write(out_unitp,*) '---------------------------------------------'
+  CALL Init_Model(QModel,Print_init=.TRUE.,Vib_adia=.TRUE.,PubliUnit=.TRUE.,   &
+                  param_file_name='Vibadia_HBond.dat')
+  CALL Write0_Model(QModel)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  Qact = [4.0_Rkind]
+  CALL Eval_tab_HMatVibAdia(QModel,Qact,tab_MatH)
+
+  DO iterm=1,size(tab_MatH,dim=3)
+    CALL Write_RMat(tab_MatH(:,:,iterm),nio=out_unitp,nbcol1=5)
+  END DO
+
+  dQ = TWO / real(nq,kind=Rkind)
+  DO iq=0,nq
+    Qact = [4.0_Rkind+iq*dQ]
+    CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
+    write(out_unitp,*) Qact,'Ene',PotVal%d0
+    write(out_unitp,*) Qact,'NAC1',NAC%d1
+  END DO
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  deallocate(Qact)
+
+END SUBROUTINE test2_Vib_adia
 SUBROUTINE test_PSB3
 
   USE mod_Lib
