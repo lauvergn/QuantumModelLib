@@ -67,6 +67,7 @@ MODULE mod_CH5_Model
     real (kind=Rkind)  :: F(max_nn,0:max_fit,0:max_fit)  = ZERO
     integer            :: nn(0:ndim,0:max_fit,0:max_fit) = 0
     integer            :: nt(0:max_fit,0:max_fit)        = 0
+    INTEGER            :: largest_nn = 0
 
     real (kind=Rkind)  :: a(0:max_fit,0:max_fit)  = ZERO
     real (kind=Rkind)  :: b(0:max_fit,0:max_fit)  = ZERO
@@ -166,10 +167,11 @@ MODULE mod_CH5_Model
     CALL read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
                      ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
     !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
-    IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 parameters'
+    IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 energy parameters'
     QModel%ifunc_TO_i1i2(:,ifunc) = [0,0]
     QModel%i1i2_TO_ifunc(0,0)     = ifunc
 
+    QModel%largest_nn = QModel%nn(0,ii,jj)
 
     DO ii=2,max_fit
       ifunc = ifunc + 1
@@ -194,7 +196,9 @@ MODULE mod_CH5_Model
                        ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
       !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
 
-      IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 parameters'
+      IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 Qop parameters'
+
+       QModel%largest_nn = max(QModel%largest_nn,QModel%nn(0,ii,jj))
 
     END DO
 
@@ -228,10 +232,18 @@ MODULE mod_CH5_Model
 
       CALL read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
                       ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
+
+      !IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 hessian parameters'
+
+       QModel%largest_nn = max(QModel%largest_nn,QModel%nn(0,ii,jj))
+
     END DO
     END DO
 
     deallocate(FileName)
+
+    IF (debug) write(out_unitp,*) 'largest_nn',QModel%largest_nn
+
 
     IF (debug) write(out_unitp,*) 'init Q0 of CH5' ! for the rigid constraints
 
@@ -390,6 +402,7 @@ MODULE mod_CH5_Model
 
   SUBROUTINE eval_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
   USE mod_dnS
+  USE mod_dnPoly
   IMPLICIT NONE
 
     CLASS(CH5_Model_t),   intent(in)    :: QModel
@@ -398,37 +411,50 @@ MODULE mod_CH5_Model
     integer,              intent(in)    :: nderiv
 
 
+    TYPE (dnS_t), allocatable   :: dnPoly(:)
+    TYPE (dnS_t)                :: Rm,tRm
+    integer                     :: i,i1,i2,ifunc,ifunc2
 
-    TYPE (dnS_t)    :: Rm
-    integer         :: i1,i2,ifunc,ifunc2
+    Rm  = dnQ(1)
+    tRm = tanh(Rm)
 
-    Rm    = dnQ(1)
+
+    allocate(dnPoly(QModel%largest_nn))
+    DO i=1,QModel%largest_nn
+        dnPoly(i) = QML_dnLegendre0(tRm,i-1)
+    END DO
 
     ! energy
     ifunc = QModel%i1i2_TO_ifunc(0,0)
-    Func(ifunc) = dnvfour_fit3(Rm,0,0,QModel)
+    Func(ifunc) = dnvfour_fit3_WITH_poly(Rm,0,0,QModel,dnPoly)
 
     ! Qopt: 11 values
     DO i1=2,max_fit
       ifunc = QModel%i1i2_TO_ifunc(i1,0)
-      Func(ifunc) = dnvfour_fit3(Rm,i1,0,QModel)
+      Func(ifunc) = dnvfour_fit3_WITH_poly(Rm,i1,0,QModel,dnPoly)
     END DO
 
 
     ! hess_ij: xx values
     DO i1=2,max_fit
       ifunc = QModel%i1i2_TO_ifunc(i1,i1)
-      Func(ifunc) = dnvfour_fit3(Rm,i1,i1,QModel)
+      Func(ifunc) = dnvfour_fit3_WITH_poly(Rm,i1,i1,QModel,dnPoly)
     END DO
 
     DO i1=2,max_fit
     DO i2=i1+1,max_fit
       ifunc = QModel%i1i2_TO_ifunc(i1,i2)
-      Func(ifunc) = dnvfour_fit3(Rm,i1,i2,QModel)
+      Func(ifunc) = dnvfour_fit3_WITH_poly(Rm,i1,i2,QModel,dnPoly)
       ifunc2 = QModel%i1i2_TO_ifunc(i2,i1)
       Func(ifunc2) = Func(ifunc)
     END DO
     END DO
+
+    CALL QML_dealloc_dnS(Rm)
+    CALL QML_dealloc_dnS(tRm)
+    CALL QML_dealloc_dnS(dnPoly)
+    deallocate(dnPoly)
+
 
   END SUBROUTINE eval_CH5_Func_fit3
   FUNCTION dnvfour_fit3(Rm,iq,jq,QModel) RESULT(dnvfour)
@@ -443,7 +469,7 @@ MODULE mod_CH5_Model
     TYPE (dnS_t),         intent(in)    :: Rm
 
     integer         :: i,kl,iiq,jjq
-    TYPE (dnS_t)    :: tRm,Rm0 ! transformation of Rm
+    TYPE (dnS_t)    :: tRm ! transformation of Rm
 
     !write(6,*) 'in dnvfour_fit3',iq,jq
 
@@ -510,6 +536,71 @@ MODULE mod_CH5_Model
     END IF
 
   END FUNCTION dnvfour_fit3
+  FUNCTION dnvfour_fit3_WITH_poly(Rm,iq,jq,QModel,dnPoly) RESULT(dnvfour)
+  USE mod_dnS
+  IMPLICIT NONE
+
+    TYPE (dnS_t)                        :: dnvfour
+
+    CLASS(CH5_Model_t),   intent(in)    :: QModel
+    integer,              intent(in)    :: iq,jq
+    TYPE (dnS_t),         intent(in)    :: Rm
+    TYPE (dnS_t),         intent(in)    :: dnPoly(:)
+
+    integer         :: i,kl,iiq,jjq,np
+
+    !write(6,*) 'in dnvfour_fit3',iq,jq
+
+    IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
+      write(out_unitp,*) ' ERROR in dnvfour'
+      write(out_unitp,*) ' wrong value for iq or jq',iq,jq
+      STOP ' ERROR in dnvfour_fit3: wrong value for iq or jq'
+    END IF
+
+    IF (listQop_fit3(iq) == -1 .AND. jq == 0) THEN
+      dnvfour = QModel%Q0(iq)
+    ELSE
+
+      np = QModel%nn(0,iq,jq)
+      dnvfour = dot_product(QModel%F(1:np,iq,jq),dnPoly(1:np))
+
+    END IF
+
+    IF (jq == 0  .AND. listQop_fit3(iq) /= -1) THEN
+      IF (iq == 2) THEN
+        dnvfour = dnvfour + sc2_fit3(Rm,QModel%a(iq,0),QModel%b(iq,0))
+      ELSE
+        dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iq,0),QModel%b(iq,0))
+      END IF
+    END IF
+
+    IF (jq > 0 .AND. iq == jq) THEN
+      iiq = iq
+      IF (iq == 4)  iiq = 5
+      IF (iq == 7)  iiq = 8
+      IF (iq == 9)  iiq = 10
+      IF (iq == 11) iiq = 12
+
+      np = QModel%nn(0,iiq,iiq)
+      dnvfour = dot_product(QModel%F(1:np,iiq,iiq),dnPoly(1:np))
+      dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iiq,iiq),QModel%b(iiq,iiq))
+
+    ELSE IF (jq > 0 .AND. iq > 0 .AND. iq < jq) THEN
+      iiq = iq
+      jjq = jq
+
+
+      np = QModel%nn(0,iiq,jjq)
+      dnvfour = dot_product(QModel%F(1:np,iiq,jjq),dnPoly(1:np))
+      dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iiq,jjq),QModel%b(iiq,jjq))
+
+    END IF
+
+    IF (iq == 6 .AND. jq == 0 .AND. QModel%option == 5) THEN
+      dnvfour = tan(dnvfour - pi/TWO)
+    END IF
+
+  END FUNCTION dnvfour_fit3_WITH_poly
   FUNCTION sc2_fit3(x,a,b)
     TYPE (dnS_t)                          :: sc2_fit3
     TYPE (dnS_t),           intent(in)    :: x
@@ -541,7 +632,7 @@ MODULE mod_CH5_Model
    write(out_unitp,*) 'read_para4d: nom1,max_points: ',nom1,max_points
 
 
-   CALL file_open2(name_file=nom1,iunit=no,lformatted=.TRUE.,           &
+   CALL file_open2(name_file=nom1,iunit=no,lformatted=.TRUE.,                   &
                    old=.TRUE.,err_file=ios)
    IF (ios == 0) THEN
 
