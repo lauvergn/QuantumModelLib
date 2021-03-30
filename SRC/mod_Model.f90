@@ -181,7 +181,7 @@ CONTAINS
     pot_name    = 'morse'
     numeric     = .FALSE.
     PubliUnit   = .FALSE.
-    read_nml    = .TRUE. ! if T, read the namelist in PotLib (HenonHeiles ....)
+    read_nml    = read_nml1 ! if T, read the namelist in PotLib (HenonHeiles ....)
     option      = -1 ! no option
 
 
@@ -194,13 +194,13 @@ CONTAINS
       write(out_unitp,*) ' The namelist "potential" is probably absent'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,*)
-      STOP ' ERROR in Read_Model'
+      STOP ' ERROR in Read_Model: End-of-file or End-of-record while reading the namelist'
     ELSE IF (err_read > 0) THEN
       write(out_unitp,*) ' ERROR in Read_Model'
       write(out_unitp,*) ' Some parameter names of the namelist "potential" are probaly wrong'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,nml=potential)
-      STOP ' ERROR in Read_Model'
+      STOP ' ERROR in Read_Model: wrong parameter(s) in the namelist'
     END IF
 
     !write(out_unitp,nml=potential)
@@ -228,7 +228,7 @@ CONTAINS
         write(out_unitp,*) ' You have to define "nb_Channels" in the namelist.'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,*)
-        STOP ' ERROR in Read_Model'
+        STOP ' ERROR in Read_Model: define "nb_Channels" in the namelist'
       END IF
 
       nb_act = count(list_act /= 0)
@@ -238,7 +238,7 @@ CONTAINS
         write(out_unitp,*) ' You have to define "list_act(:)" in the namelist.'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,*)
-        STOP ' ERROR in Read_Model'
+        STOP ' ERROR in Read_Model: define "list_act(:)" in the namelist.'
       END IF
       QModel_inout%list_act = list_act(1:nb_act)
 
@@ -249,7 +249,7 @@ CONTAINS
         write(out_unitp,*) ' You have to define in the namelist list_act(:)'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,*)
-        STOP ' ERROR in Read_Model'
+        STOP ' ERROR in Read_Model: "list_act(:)" with 0 in the namelist.'
       END IF
     END IF
 
@@ -401,16 +401,16 @@ CONTAINS
     IF (present(pot_name)) THEN
       pot_name_loc  = strdup(pot_name)
       CALL string_uppercase_TO_lowercase(pot_name_loc)
+      read_param_loc = (read_param_loc .OR.  pot_name_loc == 'read_model')
     ELSE
       IF (.NOT. read_param_loc) THEN
         write(out_unitp,*) 'ERROR in Init_Model'
         write(out_unitp,*) ' pot_name is not present and read_param=F'
-        STOP ' pot_name is not present and read_param=F'
+        STOP 'ERROR in Init_Model: pot_name is not present and read_param=F'
       END IF
     END IF
 
     read_nml       = .FALSE.
-    read_param_loc = (read_param_loc .OR.  pot_name_loc == 'read_model')
     IF (read_param_loc) THEN
       IF (nio_loc /= in_unitp) THEN
         open(unit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
@@ -433,7 +433,7 @@ CONTAINS
       write(out_unitp,*) 'You have decided to perform a numeric checking of the analytic formulas.'
     END IF
 
-    read_param_loc = (read_param_loc .AND. read_nml) ! this enables to not read the next namelist when read_param_loc=t
+    !read_param_loc = (read_param_loc .AND. read_nml) ! this enables to not read the next namelist when read_param_loc=t
 
     CALL string_uppercase_TO_lowercase(pot_name_loc)
     IF (Print_init_loc) write(out_unitp,*) 'pot_name_loc: ',pot_name_loc
@@ -450,12 +450,12 @@ CONTAINS
       !! === END README ==
 
       allocate(MorseModel_t :: QModel%QM)
-      QModel%QM = Init_MorseModel(QModel_in,read_param=read_param_loc,nio_param_file=nio_loc)
+      QModel%QM = Init_MorseModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('sigmoid')
       !! sigmoid function: A * 1/2(1+e*tanh((x-B)/C))  remark: e=+/-1
       allocate(SigmoidModel_t :: QModel%QM)
-      QModel%QM = Init_SigmoidModel(QModel_in,read_param=read_param_loc,nio_param_file=nio_loc)
+      QModel%QM = Init_SigmoidModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('buck')
       !! === README ==
@@ -468,7 +468,7 @@ CONTAINS
       !! ref:  R.A. Buckingham, Proc. R. Soc. A Math. Phys. Eng. Sci. 168 (1938) 264–283. doi:10.1098/rspa.1938.0173
       !! === END README ==
       allocate(BuckModel_t :: QModel%QM)
-      QModel%QM = Init_BuckModel(QModel_in,read_param=read_param_loc,nio_param_file=nio_loc)
+      QModel%QM = Init_BuckModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hbond','linearhbond ')
       !! === README ==
@@ -484,7 +484,7 @@ CONTAINS
       !! ref:  Eq 3.79 of J. Beutier, thesis.
       !! === END README ==
       allocate(LinearHBondModel_t :: QModel%QM)
-      QModel%QM = Init_LinearHBondModel(QModel_in,read_param=read_param_loc,   &
+      QModel%QM = Init_LinearHBondModel(QModel_in,read_param=read_nml,   &
                                  nio_param_file=nio_loc)
 
     CASE ('henonheiles')
@@ -498,7 +498,7 @@ CONTAINS
       !! === END README ==
       allocate(HenonHeilesModel_t :: QModel%QM)
       QModel%QM = Init_HenonHeilesModel(QModel_in,                      &
-                        read_param=read_param_loc,nio_param_file=nio_loc)
+                        read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('tully')
       !! === README ==
@@ -511,7 +511,7 @@ CONTAINS
       !! ref:  Tully, J. Chem. Phys. V93, pp15, 1990
       !! === END README ==
       allocate(TullyModel_t :: QModel%QM)
-      QModel%QM = Init_TullyModel(QModel_in,read_param=read_param_loc,  &
+      QModel%QM = Init_TullyModel(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
 
     CASE ('1dsoc','1dsoc_1s1t')
@@ -527,7 +527,7 @@ CONTAINS
       !! === END README ==
       allocate(OneDSOC_1S1T_Model_t :: QModel%QM)
       QModel%QM = Init_OneDSOC_1S1T_Model(QModel_in,                    &
-                       read_param=read_param_loc,nio_param_file=nio_loc)
+                       read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('1dsoc_2s1t')
       !! === README ==
@@ -541,7 +541,7 @@ CONTAINS
       !! === END README ==
       allocate(OneDSOC_2S1T_Model_t :: QModel%QM)
       QModel%QM = Init_OneDSOC_2S1T_Model(QModel_in,                    &
-                       read_param=read_param_loc,nio_param_file=nio_loc)
+                       read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('phenol')
       !! === README ==
@@ -554,7 +554,7 @@ CONTAINS
       !! ref: Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
       !! === END README ==
       allocate(PhenolModel_t :: QModel%QM)
-      QModel%QM = Init_PhenolModel(QModel_in,read_param=read_param_loc,nio_param_file=nio_loc)
+      QModel%QM = Init_PhenolModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
 
     CASE ('twod')
@@ -568,7 +568,7 @@ CONTAINS
       !! ref: A. Ferretti, G. Granucci, A. Lami, M. Persico, G. Villani, J. Chem. Phys. 104, 5517 (1996); https://doi.org/10.1063/1.471791
       !! === END README ==
       allocate(TwoD_Model_t :: QModel%QM)
-      QModel%QM = Init_TwoD_Model(QModel_in,read_param=read_param_loc,  &
+      QModel%QM = Init_TwoD_Model(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
 
     CASE ('psb3')
@@ -586,7 +586,7 @@ CONTAINS
       !!        https://pubs.acs.org/doi/10.1021/acs.jctc.0c00679
       !! === END README ==
       allocate(PSB3_Model_t :: QModel%QM)
-      QModel%QM = Init_PSB3_Model(QModel_in,read_param=read_param_loc,  &
+      QModel%QM = Init_PSB3_Model(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
 
     CASE ('retinal_jpcb2000','retinal_cp2000')
@@ -600,16 +600,16 @@ CONTAINS
       !! === END README ==
       allocate(Retinal_JPCB2000_Model_t :: QModel%QM)
       QModel%QM = Init_Retinal_JPCB2000_Model(QModel_in,                &
-                       read_param=read_param_loc,nio_param_file=nio_loc)
+                       read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hono')
       allocate(HONO_Model_t :: QModel%QM)
-      QModel%QM = Init_HONO_Model(QModel_in,read_param=read_param_loc,  &
+      QModel%QM = Init_HONO_Model(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
 
     CASE ('hno3')
       allocate(HNO3_Model_t :: QModel%QM)
-      QModel%QM = Init_HNO3_Model(QModel_in,read_param=read_param_loc,  &
+      QModel%QM = Init_HNO3_Model(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
 
     CASE ('ch5')
@@ -626,22 +626,22 @@ CONTAINS
       !! option = 4 (default) or 5
       !! === END README ==
       allocate(CH5_Model_t :: QModel%QM)
-      QModel%QM = Init_CH5_Model(QModel_in,read_param=read_param_loc,  &
+      QModel%QM = Init_CH5_Model(QModel_in,read_param=read_nml,  &
                                  nio_param_file=nio_loc)
 
     CASE ('hnnhp')
       allocate(HNNHp_Model_t :: QModel%QM)
-      QModel%QM = Init_HNNHp_Model(QModel_in,read_param=read_param_loc, &
+      QModel%QM = Init_HNNHp_Model(QModel_in,read_param=read_nml, &
                                    nio_param_file=nio_loc)
 
     CASE ('h2sin')
       allocate(H2SiN_Model_t :: QModel%QM)
-      QModel%QM = Init_H2SiN_Model(QModel_in,read_param=read_param_loc, &
+      QModel%QM = Init_H2SiN_Model(QModel_in,read_param=read_nml, &
                                    nio_param_file=nio_loc)
 
     CASE ('h2nsi')
       allocate(H2NSi_Model_t :: QModel%QM)
-      QModel%QM = Init_H2NSi_Model(QModel_in,read_param=read_param_loc, &
+      QModel%QM = Init_H2NSi_Model(QModel_in,read_param=read_nml, &
                                    nio_param_file=nio_loc)
 
     CASE ('hoo_dmbe')
@@ -654,7 +654,7 @@ CONTAINS
       !!         JCP, 1990, 94, 8073-8080, doi: 10.1021/j100384a019.
       !! === END README ==
       allocate(HOO_DMBE_Model_t :: QModel%QM)
-      QModel%QM = Init_HOO_DMBE_Model(QModel_in,read_param=read_param_loc,      &
+      QModel%QM = Init_HOO_DMBE_Model(QModel_in,read_param=read_nml,      &
                                       nio_param_file=nio_loc)
 
     CASE ('h3_lsth','h3')
@@ -669,30 +669,23 @@ CONTAINS
       !! D.G. Truhlar and C.J. Horowitz, J. Chem. Phys. 68, 2466 (1978); https://doi.org/10.1063/1.436019
       !! === END README ==
       allocate(H3_Model_t :: QModel%QM)
-      QModel%QM = Init_H3_Model(QModel_in,read_param=read_param_loc,            &
-                                      nio_param_file=nio_loc)
+      QModel%QM = Init_H3_Model(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('template')
       !! 3D-potential with 1 surface
       allocate(TemplateModel_t :: QModel%QM)
-      QModel%QM = Init_TemplateModel(QModel_in,                         &
-                        read_param=read_param_loc,nio_param_file=nio_loc)
+      QModel%QM = Init_TemplateModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('test')
       !! test-potential
       allocate(TemplateModel_t :: QModel%QM)
-      QModel%QM = Init_testModel(QModel_in,                             &
-                        read_param=read_param_loc,nio_param_file=nio_loc)
+      QModel%QM = Init_testModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE DEFAULT
         write(out_unitp,*) ' ERROR in Init_Model'
         write(out_unitp,*) ' This model/potential is unknown. pot_name: ',pot_name_loc
         STOP 'STOP in Init_Model: Other potentials have to be done'
     END SELECT
-
-    IF (read_param_loc .AND. nio_loc /= in_unitp) THEN
-       close(nio_loc)
-    END IF
 
     IF (present(ndim)) THEN
       IF (ndim > QModel%QM%ndim) THEN
@@ -787,6 +780,11 @@ CONTAINS
       write(out_unitp,*) '================================================='
       flush(out_unitp)
     END IF
+
+    IF (read_param_loc .AND. nio_loc /= in_unitp) THEN
+       close(unit=nio_loc)
+    END IF
+
 
   END SUBROUTINE Init_Model
 

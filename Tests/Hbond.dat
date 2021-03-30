@@ -1,5 +1,6 @@
 &potential 
   pot_name='hbond' ! potential surface name
+  read_nml=t
   PubliUnit=t /
 &LinearHBond epsi=0.707 /
 

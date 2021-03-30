@@ -244,7 +244,6 @@ MODULE mod_CH5_Model
 
     IF (debug) write(out_unitp,*) 'largest_nn',QModel%largest_nn
 
-
     IF (debug) write(out_unitp,*) 'init Q0 of CH5' ! for the rigid constraints
 
     SELECT CASE (QModel%option)
@@ -550,7 +549,7 @@ MODULE mod_CH5_Model
     integer         :: i,kl,iiq,jjq,np
 
     !write(6,*) 'in dnvfour_fit3',iq,jq
-
+    dnvfour = ZERO
     IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
       write(out_unitp,*) ' ERROR in dnvfour'
       write(out_unitp,*) ' wrong value for iq or jq',iq,jq
@@ -559,10 +558,10 @@ MODULE mod_CH5_Model
 
     IF (listQop_fit3(iq) == -1 .AND. jq == 0) THEN
       dnvfour = QModel%Q0(iq)
-    ELSE
+    ELSE IF (jq == 0  .AND. listQop_fit3(iq) /= -1) THEN
 
       np = QModel%nn(0,iq,jq)
-      dnvfour = dot_product(QModel%F(1:np,iq,jq),dnPoly(1:np))
+      IF (np > 0) dnvfour = dot_product(QModel%F(1:np,iq,jq),dnPoly(1:np))
 
     END IF
 
@@ -582,7 +581,8 @@ MODULE mod_CH5_Model
       IF (iq == 11) iiq = 12
 
       np = QModel%nn(0,iiq,iiq)
-      dnvfour = dot_product(QModel%F(1:np,iiq,iiq),dnPoly(1:np))
+
+      IF (np > 0) dnvfour = dot_product(QModel%F(1:np,iiq,iiq),dnPoly(1:np))
       dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iiq,iiq),QModel%b(iiq,iiq))
 
     ELSE IF (jq > 0 .AND. iq > 0 .AND. iq < jq) THEN
@@ -591,7 +591,8 @@ MODULE mod_CH5_Model
 
 
       np = QModel%nn(0,iiq,jjq)
-      dnvfour = dot_product(QModel%F(1:np,iiq,jjq),dnPoly(1:np))
+
+      IF (np > 0) dnvfour = dot_product(QModel%F(1:np,iiq,jjq),dnPoly(1:np))
       dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iiq,jjq),QModel%b(iiq,jjq))
 
     END IF

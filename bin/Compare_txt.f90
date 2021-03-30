@@ -54,7 +54,8 @@ PROGRAM Compare_txt
     CASE("-n","-new")
       file_name_new = arg2
     CASE Default
-      STOP 'no default argument'
+      write(6,*) 'Number of argument(s): ',COMMAND_ARGUMENT_COUNT()
+      STOP 'ERROR in Compare_txt.f90: no default argument'
     END SELECT
 
     deallocate(arg)

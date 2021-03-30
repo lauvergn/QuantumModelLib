@@ -33,8 +33,8 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  !CALL test2_Vib_adia() ; stop
   !CALL test_Vib_adia() ; stop
+  !CALL test2_Vib_adia() ; stop
   !CALL test_Retinal_JPCB2000() ; stop
   !CALL test_Tully_test() ; stop
   !CALL test_PSB3_test() ; stop
@@ -42,6 +42,7 @@ PROGRAM TEST_model
   !CALL test_PSB3_Retinal2000_test ; stop
   !CALL test_Test() ; stop
   !CALL test_CH5() ; stop
+  !CALL test_LinearHBond() ; stop
 
 
   ! One electronic surface
@@ -78,7 +79,7 @@ PROGRAM TEST_model
 
   ! vibrational adiabatic separation (on HBond potential)
   CALL test_Vib_adia()
- CALL test2_Vib_adia()
+  CALL test2_Vib_adia()
 
 END PROGRAM TEST_model
 
@@ -1699,6 +1700,7 @@ SUBROUTINE test_CH5
     Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
     CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
     write(6,*) Q,QML_get_d0_FROM_dnS(Func)
+    flush(6)
   END DO
 
   Q(1)= 0.5_Rkind

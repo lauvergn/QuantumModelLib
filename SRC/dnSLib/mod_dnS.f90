@@ -1973,6 +1973,13 @@ CONTAINS
        STOP 'Problem in dot_product_VecOFdnS'
     END IF
 
+    IF (size(VecA) < 1) THEN
+       write(out_unitp,*) ' ERROR in ',name_sub
+       write(out_unitp,*) '  size of both vectors are < 1'
+       write(out_unitp,*) '  size(VecA),size(VecB)',size(VecA),size(VecB)
+       STOP 'Problem in dot_product_VecOFdnS'
+    END IF
+
     Sres = VecA(lbound(VecA,dim=1)) ! for the initialization
     Sres = ZERO
     DO i=lbound(VecA,dim=1),ubound(VecA,dim=1)
@@ -1999,6 +2006,14 @@ CONTAINS
        write(out_unitp,*) '  size(VecA),size(VecB)',size(VecA),size(VecB)
        STOP 'Problem in QML_dot_product_VecOFdnS_Vec'
     END IF
+
+    IF (size(VecA) < 1) THEN
+       write(out_unitp,*) ' ERROR in ',name_sub
+       write(out_unitp,*) '  size of both vectors are < 1'
+       write(out_unitp,*) '  size(VecA),size(VecB)',size(VecA),size(VecB)
+       STOP 'Problem in QML_dot_product_VecOFdnS_Vec'
+    END IF
+
 
     Sres = VecA(lbound(VecA,dim=1)) ! for the initialization
     Sres = ZERO
@@ -2027,7 +2042,14 @@ CONTAINS
        STOP 'Problem in QML_dot_product_Vec_VecOFdnS'
     END IF
 
-    Sres = VecB(lbound(VecA,dim=1)) ! for the initialization
+    IF (size(VecA) < 1) THEN
+       write(out_unitp,*) ' ERROR in ',name_sub
+       write(out_unitp,*) '  size of both vectors are < 1'
+       write(out_unitp,*) '  size(VecA),size(VecB)',size(VecA),size(VecB)
+       STOP 'Problem in QML_dot_product_Vec_VecOFdnS'
+    END IF
+
+    Sres = VecB(lbound(VecB,dim=1)) ! for the initialization
     Sres = ZERO
     DO i=lbound(VecA,dim=1),ubound(VecA,dim=1)
       Sres = Sres + VecA(i) * VecB(lbound(VecB,dim=1)+i-1)

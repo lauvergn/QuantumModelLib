@@ -33,9 +33,6 @@
 PROGRAM main_pot
   IMPLICIT NONE
 
-  !CALL test_Vib_adia(1000); stop
-
-
   CALL test_1DSOC_1S1T()
   CALL test_PSB3()
   CALL test_HBond()
