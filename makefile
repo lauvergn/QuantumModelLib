@@ -10,7 +10,7 @@
 #F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -260,7 +260,8 @@ OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
                  $(DIROBJ)/mod_H2NSi_Model.o $(DIROBJ)/mod_H2SiN_Model.o \
                  $(DIROBJ)/mod_HNNHp_Model.o $(DIROBJ)/mod_HONO_Model.o \
                  $(DIROBJ)/mod_HNO3_Model.o \
-                 $(DIROBJ)/mod_CH5_Model.o $(DIROBJ)/mod_HOO_DMBE_Model.o \
+                 $(DIROBJ)/mod_CH5_Model.o $(DIROBJ)/mod_PH4_Model.o \
+								 $(DIROBJ)/mod_HOO_DMBE_Model.o \
                  $(DIROBJ)/mod_H3_Model.o \
                  $(DIROBJ)/mod_HenonHeilesModel.o $(DIROBJ)/mod_LinearHBondModel.o \
                  $(DIROBJ)/mod_PhenolModel.o $(DIROBJ)/mod_TwoD_Model.o \
@@ -413,6 +414,9 @@ $(DIROBJ)/mod_HNO3_Model.o:$(DIRModel)/mod_HNO3_Model.f90
 
 $(DIROBJ)/mod_CH5_Model.o:$(DIRModel)/mod_CH5_Model.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_CH5_Model.f90
+
+$(DIROBJ)/mod_PH4_Model.o:$(DIRModel)/mod_PH4_Model.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_PH4_Model.f90
 
 $(DIROBJ)/mod_HOO_DMBE_Model.o:$(DIRModel)/mod_HOO_DMBE_Model.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HOO_DMBE_Model.f90
@@ -574,6 +578,7 @@ $(DIROBJ)/mod_HNO3_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HOO_DMBE_Model.o:          $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_H3_Model.o:                $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_CH5_Model.o:               $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/mod_PH4_Model.o:               $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_HNNHp_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_H2SiN_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
 $(DIROBJ)/mod_H2NSi_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)

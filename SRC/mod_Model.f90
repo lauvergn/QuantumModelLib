@@ -54,6 +54,7 @@ MODULE mod_Model
   USE mod_H2NSi_Model
   USE mod_HNO3_Model
   USE mod_CH5_Model
+  USE mod_PH4_Model
 
   USE mod_HOO_DMBE_Model
   USE mod_H3_Model
@@ -627,6 +628,24 @@ CONTAINS
       !! === END README ==
       allocate(CH5_Model_t :: QModel%QM)
       QModel%QM = Init_CH5_Model(QModel_in,read_param=read_nml,  &
+                                 nio_param_file=nio_loc)
+
+    CASE ('ph4')
+      !! === README ==
+      !! H + PH3 -> H-H + PH2 potential
+      !!    Quadratic potential along the reaction path'
+      !!    Reaction coordinate: R- = 1/2(RPH - RHH)'
+      !!    Optimal coordinates along the path at MP2/cc-pVTZ'
+      !!    V0 along the path at CCSD(T)-F12/cc-pVTZ-F12 (option 4) or ...'
+      !!      ... MP2/cc-pVTZ'
+      !!    Hessian and gradient along the path at MP2/cc-pVTZ'
+      !! pot_name  = 'PH4'
+      !! ndim      = 9 or 1
+      !! nsurf     = 1
+      !! option = 4 (default)
+      !! === END README ==
+      allocate(PH4_Model_t :: QModel%QM)
+      QModel%QM = Init_PH4_Model(QModel_in,read_param=read_nml,  &
                                  nio_param_file=nio_loc)
 
     CASE ('hnnhp')
@@ -2106,7 +2125,7 @@ CONTAINS
     CALL check_alloc_QM(QModel,name_sub)
 
     IF (QModel%QM%nb_Func > 0) THEN
-      IF (ALLOCATED(Func)) THEN
+      IF (allocated(Func)) THEN
         DO i=1,size(Func)
           CALL QML_dealloc_dnS(Func(i))
         END DO
@@ -2133,11 +2152,10 @@ CONTAINS
 
     END IF
 
-
     IF (debug) THEN
       write(out_unitp,*) 'Func',size(Func)
       DO i=1,size(Func)
-        CALL QML_Write_dnS(Func(i),nio=out_unitp)
+        CALL QML_Write_dnS(Func(i),nio=out_unitp,all_type=.TRUE.)
       END DO
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)

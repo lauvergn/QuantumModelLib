@@ -198,6 +198,23 @@
 =========================================
 =========================================
 =========================================
+      !! pot_name  = 'PH4'
+=========================================
+      !! H + PH3 -> H-H + PH2 potential
+      !!    Quadratic potential along the reaction path'
+      !!    Reaction coordinate: R- = 1/2(RPH - RHH)'
+      !!    Optimal coordinates along the path at MP2/cc-pVTZ'
+      !!    V0 along the path at CCSD(T)-F12/cc-pVTZ-F12 (option 4) or ...'
+      !!      ... MP2/cc-pVTZ'
+      !!    Hessian and gradient along the path at MP2/cc-pVTZ'
+      !! pot_name  = 'PH4'
+      !! ndim      = 9 or 1
+      !! nsurf     = 1
+      !! option = 4 (default)
+=========================================
+=========================================
+=========================================
+=========================================
       !! pot_name  = 'HOO_DMBE'
 =========================================
       !! HOO potential: DMBE IV of Varandas group

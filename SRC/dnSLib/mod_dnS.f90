@@ -589,13 +589,25 @@ CONTAINS
         d0 = S%d0
       END IF
       IF (present(d1)) THEN
-        IF (allocated(S%d1)) d1(:) = S%d1
+        IF (allocated(S%d1)) THEN
+           d1(:) = S%d1
+        ELSE
+           d1(:) = ZERO
+        END IF
       END IF
       IF (present(d2)) THEN
-        IF (allocated(S%d2)) d2(:,:) = S%d2
+        IF (allocated(S%d2)) THEN
+           d2(:,:) = S%d2
+        ELSE
+           d2(:,:) = ZERO
+        END IF
       END IF
       IF (present(d3)) THEN
-        IF (allocated(S%d3)) d3(:,:,:) = S%d3
+        IF (allocated(S%d3)) THEN
+           d3(:,:,:) = S%d3
+        ELSE
+           d3(:,:,:) = ZERO
+        END IF
       END IF
 
   END SUBROUTINE QML_sub_get_dn_FROM_dnS

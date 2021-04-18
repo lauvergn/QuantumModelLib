@@ -33,6 +33,8 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test_PH4() ; stop
+
   !CALL test_Vib_adia() ; stop
   !CALL test2_Vib_adia() ; stop
   !CALL test_Retinal_JPCB2000() ; stop
@@ -1639,6 +1641,101 @@ SUBROUTINE test_HNO3
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_HNO3
+SUBROUTINE test_PH4
+  USE mod_Lib
+  USE mod_dnS
+  USE mod_dnMat
+  USE mod_Model
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,i1,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnS_t),      allocatable :: Func(:)
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 9D-PH4: H+PH3 -> H2+PH2 --------'
+  write(out_unitp,*) ' Qmodel, init: ',check_Init_QModel(QModel)
+  CALL Init_Model(QModel,pot_name='PH4',Print_init=.FALSE.)
+  write(out_unitp,*) ' Qmodel, init: ',check_Init_QModel(QModel)
+  CALL Write0_Model(QModel)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL Init_Model(QModel,ndim=9,pot_name='PH4',option=4)
+
+  allocate(Q(QModel%ndim))
+  CALL get_Q0_Model(Q,QModel,option=3)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='PH4')
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Functions'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+
+  DO i=0,200
+    Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
+    CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
+    write(6,*) Q(1:1),QML_get_d0_FROM_dnS(Func)
+    flush(6)
+  END DO
+
+  Q(1)= 0.5_Rkind
+  CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
+  write(6,*) Q(1),'Energy',QML_get_d0_FROM_dnS(Func(1))
+  write(6,*) Q(1),'Qopt',QML_get_d0_FROM_dnS(Func(2:9))
+  write(6,*) Q(1),'Grad',QML_get_d0_FROM_dnS(Func(10:17))
+  write(6,*) Q(1),'hessian'
+  DO i=1,64
+    write(6,*) '                       ',QML_get_d0_FROM_dnS(Func(17+i)),',     &'
+  END DO
+
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential in the asymptotic region'
+
+  allocate(Q(QModel%ndim))
+  Q(1)= 10._Rkind
+  CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
+  Q(2:9) = QML_get_d0_FROM_dnS(Func(2:9))
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_PH4
 SUBROUTINE test_CH5
   USE mod_Lib
   USE mod_dnS
