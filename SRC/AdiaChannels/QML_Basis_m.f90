@@ -31,16 +31,16 @@
 !===========================================================================
 !===========================================================================
 
-MODULE mod_Basis
+MODULE QML_Basis_m
   USE mod_QML_NumParameters
 
   IMPLICIT NONE
 
-  !PRIVATE
-  !PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func
+  PRIVATE
+  PUBLIC :: QML_Basis_t,Read_Basis,Write_Basis
 
 
-  TYPE :: Basis_t
+  TYPE :: QML_Basis_t
     integer                         :: nb_basis   = 0
 
     integer                         :: nb         = 0
@@ -54,15 +54,33 @@ MODULE mod_Basis
     real(kind=Rkind),   allocatable :: d1gb(:,:,:)    ! basis functions d2gb(nq,nb,1)
     real(kind=Rkind),   allocatable :: d2gb(:,:,:,:)  ! basis functions d2gb(nq,nb,1,1)
 
-    TYPE (Basis_t),     allocatable :: tab_basis(:)
+    TYPE (QML_Basis_t),     allocatable :: tab_basis(:)
+  END TYPE QML_Basis_t
 
+  INTERFACE Basis_IS_allocated
+      MODULE PROCEDURE QML_Basis_IS_allocated
+  END INTERFACE
+  INTERFACE Write_Basis
+      MODULE PROCEDURE QML_Write_Basis
+  END INTERFACE
+  INTERFACE Read_Basis
+      MODULE PROCEDURE QML_Read_Basis
+  END INTERFACE
+  INTERFACE Construct_Basis_Sin
+      MODULE PROCEDURE QML_Construct_Basis_Sin
+  END INTERFACE
+  INTERFACE CheckOrtho_Basis
+      MODULE PROCEDURE QML_CheckOrtho_Basis
+  END INTERFACE
+  INTERFACE Scale_Basis
+      MODULE PROCEDURE QML_Scale_Basis
+  END INTERFACE
 
-  END TYPE Basis_t
 CONTAINS
-  FUNCTION Basis_IS_allocated(Basis) RESULT(alloc)
+  FUNCTION QML_Basis_IS_allocated(Basis) RESULT(alloc)
   USE mod_Lib
 
-    TYPE(Basis_t),       intent(in)  :: Basis
+    TYPE(QML_Basis_t),       intent(in)  :: Basis
     logical                          :: alloc
 
     alloc =             allocated(Basis%x)
@@ -71,11 +89,11 @@ CONTAINS
     alloc = alloc .AND. allocated(Basis%d1gb)
     alloc = alloc .AND. allocated(Basis%d2gb)
 
-  END FUNCTION Basis_IS_allocated
-  RECURSIVE SUBROUTINE Write_Basis(Basis)
+  END FUNCTION QML_Basis_IS_allocated
+  RECURSIVE SUBROUTINE QML_Write_Basis(Basis)
   USE mod_Lib
 
-    TYPE(Basis_t),       intent(in)  :: Basis
+    TYPE(QML_Basis_t),       intent(in)  :: Basis
 
     integer :: ib
 
@@ -106,11 +124,11 @@ CONTAINS
     END IF
     write(out_unitp,*) '-------------------------------------------------'
 
-  END SUBROUTINE Write_Basis
-  RECURSIVE SUBROUTINE Read_Basis(Basis,nio)
+  END SUBROUTINE QML_Write_Basis
+  RECURSIVE SUBROUTINE QML_Read_Basis(Basis,nio)
   USE mod_Lib
 
-    TYPE(Basis_t),       intent(inout)  :: Basis
+    TYPE(QML_Basis_t),       intent(inout)  :: Basis
     integer,             intent(in)     :: nio
 
 
@@ -138,7 +156,7 @@ CONTAINS
     write(out_unitp,nml=basis_nD)
     IF (err_io < 0) THEN
       write(out_unitp,basis_nD)
-      write(out_unitp,*) ' ERROR in Read_Basis'
+      write(out_unitp,*) ' ERROR in QML_Read_Basis'
       write(out_unitp,*) '  while reading the namelist "basis_nD"'
       write(out_unitp,*) ' end of file or end of record'
       write(out_unitp,*) ' Probably, you forget a basis set ...'
@@ -147,7 +165,7 @@ CONTAINS
     END IF
     IF (err_io > 0) THEN
       write(out_unitp,basis_nD)
-      write(out_unitp,*) ' ERROR in Read_Basis'
+      write(out_unitp,*) ' ERROR in QML_Read_Basis'
       write(out_unitp,*) '  while reading the namelist "basis_nD"'
       write(out_unitp,*) ' Probably, some arguments of namelist are wrong.'
       write(out_unitp,*) ' Check your data !!'
@@ -187,13 +205,13 @@ CONTAINS
 
     END IF
 
-  END SUBROUTINE Read_Basis
-  SUBROUTINE Construct_Basis_Sin(Basis) ! sin : boxAB with A=0 and B=pi
+  END SUBROUTINE QML_Read_Basis
+  SUBROUTINE QML_Construct_Basis_Sin(Basis) ! sin : boxAB with A=0 and B=pi
   USE mod_Lib
   USE mod_dnS
   USE mod_dnPoly
 
-    TYPE(Basis_t),       intent(inout)  :: Basis
+    TYPE(QML_Basis_t),       intent(inout)  :: Basis
 
 
     real(kind=Rkind)          :: dx,sx,x0
@@ -227,13 +245,13 @@ CONTAINS
       Basis%d2gb(:,nb,:,:)  = Basis%d2gb(:,nb,:,:)  / sqrt(TWO)
     END IF
 
-  END SUBROUTINE Construct_Basis_Sin
-  SUBROUTINE CheckOrtho_Basis(Basis,nderiv)
+  END SUBROUTINE QML_Construct_Basis_Sin
+  SUBROUTINE QML_CheckOrtho_Basis(Basis,nderiv)
   USE mod_Lib
   USE mod_dnS
   USE mod_dnPoly
 
-    TYPE(Basis_t),           intent(in)     :: Basis
+    TYPE(QML_Basis_t),           intent(in)     :: Basis
     integer,                 intent(in)     :: nderiv
 
     integer                         :: iq,ib,jb
@@ -270,15 +288,15 @@ CONTAINS
       END IF
 
     ELSE
-      write(out_unitp,*) ' WARNNING in CheckOrtho_Basis'
+      write(out_unitp,*) ' WARNNING in QML_CheckOrtho_Basis'
       write(out_unitp,*) ' the basis is not allocated.'
     END IF
 
-  END SUBROUTINE CheckOrtho_Basis
-  SUBROUTINE Scale_Basis(Basis,x0,sx)
+  END SUBROUTINE QML_CheckOrtho_Basis
+  SUBROUTINE QML_Scale_Basis(Basis,x0,sx)
   USE mod_Lib
 
-    TYPE(Basis_t),       intent(inout)  :: Basis
+    TYPE(QML_Basis_t),       intent(inout)  :: Basis
     real(kind=Rkind),    intent(in)     :: x0,sx
 
     IF (Basis%nb_basis == 0 .AND. abs(sx) > ONETENTH**6 .AND. &
@@ -291,13 +309,13 @@ CONTAINS
       Basis%d1gb(:,:,:)   = Basis%d1gb(:,:,:)   * sqrt(sx)*sx
       Basis%d2gb(:,:,:,:) = Basis%d2gb(:,:,:,:) * sqrt(sx)*sx*sx
     ELSE
-      write(out_unitp,*) ' ERROR in Scale_Basis'
+      write(out_unitp,*) ' ERROR in QML_Scale_Basis'
       write(out_unitp,*) ' nb_basis > 0     or ...'
       write(out_unitp,*) ' sx is too small  or ...'
       write(out_unitp,*) ' the basis is not allocated.'
       STOP 'ERROR in Scale_Basis: nb_basis > 0'
     END IF
 
-  END SUBROUTINE Scale_Basis
+  END SUBROUTINE QML_Scale_Basis
 
-END MODULE mod_Basis
+END MODULE QML_Basis_m

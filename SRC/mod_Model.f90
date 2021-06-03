@@ -68,7 +68,7 @@ MODULE mod_Model
   USE mod_SigmoidModel
   USE mod_TwoD_Model
 
-  USE mod_Basis
+  USE QML_Basis_m
 
   IMPLICIT NONE
 
@@ -87,7 +87,7 @@ MODULE mod_Model
     integer                           :: nsurf       = 0
     integer                           :: ndim        = 0
     CLASS (EmptyModel_t), allocatable :: QM
-    TYPE(Basis_t),        allocatable :: Basis ! Basis for the adiabatic separation between coordinates
+    TYPE(QML_Basis_t),    allocatable :: Basis ! Basis for the adiabatic separation between coordinates
   END TYPE Model_t
 
   !real (kind=Rkind)                     :: step = ONETENTH**4 ! model TWOD => 0.4e-7 (nderiv=2)
@@ -2028,7 +2028,7 @@ CONTAINS
   USE mod_Lib
   USE mod_dnS
   USE mod_dnMat
-  USE mod_Basis
+  USE QML_Basis_m
   IMPLICIT NONE
 
   real (kind=Rkind),              intent(in)    :: Qact(:)

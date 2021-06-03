@@ -271,7 +271,7 @@ OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
 
 OBJ_AdiaLib    = $(DIROBJ)/mod_AdiaChannels.o
 
-OBJ_Model      = $(DIROBJ)/mod_Model.o $(DIROBJ)/mod_Basis.o
+OBJ_Model      = $(DIROBJ)/mod_Model.o $(DIROBJ)/QML_Basis_m.o
 
 OBJ_test       = $(DIROBJ)/TEST_OOP.o
 OBJ_driver     = $(DIROBJ)/Model_driver.o
@@ -467,8 +467,8 @@ $(DIROBJ)/mod_Model.o:$(DIRSRC)/mod_Model.f90
 #
 $(DIROBJ)/mod_AdiaChannels.o:$(DIRAdia)/mod_AdiaChannels.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRAdia)/mod_AdiaChannels.f90
-$(DIROBJ)/mod_Basis.o:$(DIRAdia)/mod_Basis.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRAdia)/mod_Basis.f90
+$(DIROBJ)/QML_Basis_m.o:$(DIRAdia)/QML_Basis_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRAdia)/QML_Basis_m.f90
 #
 ##################################################################################
 #
@@ -553,9 +553,9 @@ $(DIROBJ)/TEST_Adia.o:   $(ModLib) $(OBJ_AdiaLib)
 
 $(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
 
-$(DIROBJ)/mod_Model.o: $(DIROBJ)/mod_Basis.o $(OBJ_lib) $(OBJ_ModelLib)
+$(DIROBJ)/mod_Model.o: $(DIROBJ)/QML_Basis_m.o $(OBJ_lib) $(OBJ_ModelLib)
 
-$(DIROBJ)/mod_AdiaChannels.o: $(DIROBJ)/mod_Basis.o $(ModLib)
+$(DIROBJ)/mod_AdiaChannels.o: $(DIROBJ)/QML_Basis_m.o $(ModLib)
 
 
 $(DIROBJ)/mod_EmptyModel.o: $(OBJ_lib)

@@ -45,7 +45,7 @@ CONTAINS
   USE mod_dnS
   USE mod_dnMat
   USE mod_Model
-  USE mod_Basis
+  USE QML_Basis_m
   IMPLICIT NONE
 
   real (kind=Rkind), allocatable, intent(in)    :: Qact(:)

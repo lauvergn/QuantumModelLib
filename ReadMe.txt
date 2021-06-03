@@ -22,7 +22,7 @@
 
    This version works with:
        gfortran 8.3, 9.1, 9.2 (macOS)
-       ifort    17, 18
+       ifort    18
        pgf90    17.10-0
        nagfor   7.0 (macOS)
 

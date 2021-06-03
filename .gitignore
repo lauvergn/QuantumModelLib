@@ -3,3 +3,16 @@ DOC/.DS_Store
 .metadata
 .project
 .settings
+dnS.x
+Driver.x
+Grid.x
+libpot.a
+libQMLib.a
+ModLib.x
+SRC/AdiaChannels/mod_Basis.f90-pointer
+SRC/AdiaChannels/mod_Basis.f90.i
+SRC/AdiaChannels/mod_Basis.f90.corrfort17
+Tests/*txt
+Tests/*.log
+Tests/grid*
+Tests/res
