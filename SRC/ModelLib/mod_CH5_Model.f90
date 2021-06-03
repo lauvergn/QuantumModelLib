@@ -352,7 +352,7 @@ MODULE mod_CH5_Model
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_CH5_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS(CH5_Model_t),   intent(in)    :: QModel
@@ -384,7 +384,7 @@ MODULE mod_CH5_Model
   END SUBROUTINE eval_CH5_Pot
 
   SUBROUTINE eval_CH5_Func(QModel,Func,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS(CH5_Model_t),   intent(in)    :: QModel
@@ -400,7 +400,7 @@ MODULE mod_CH5_Model
   END SUBROUTINE eval_CH5_Func
 
   SUBROUTINE eval_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   USE mod_dnPoly
   IMPLICIT NONE
 
@@ -457,7 +457,7 @@ MODULE mod_CH5_Model
 
   END SUBROUTINE eval_CH5_Func_fit3
   FUNCTION dnvfour_fit3(Rm,iq,jq,QModel) RESULT(dnvfour)
-  USE mod_dnS
+  USE QML_dnS_m
   USE mod_dnPoly
   IMPLICIT NONE
 
@@ -536,7 +536,7 @@ MODULE mod_CH5_Model
 
   END FUNCTION dnvfour_fit3
   FUNCTION dnvfour_fit3_WITH_poly(Rm,iq,jq,QModel,dnPoly) RESULT(dnvfour)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
@@ -664,7 +664,7 @@ MODULE mod_CH5_Model
 
   END SUBROUTINE read_para4d
   FUNCTION dnSigmoid(x,a)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnSigmoid

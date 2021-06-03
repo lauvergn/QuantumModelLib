@@ -282,7 +282,7 @@ MODULE mod_PSB3_Model
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_PSB3_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS(PSB3_Model_t),  intent(in)    :: QModel
@@ -317,7 +317,7 @@ MODULE mod_PSB3_Model
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_PSB3Pot1(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv)
     !Unpublished model potential (yet)
-    USE mod_dnS
+    USE QML_dnS_m
     IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
@@ -413,7 +413,7 @@ MODULE mod_PSB3_Model
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_PSB3Pot2(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv) !Second PSB3's potential
   ! Published potential
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (PSB3_Model_t), intent(in)     :: PSB3Pot

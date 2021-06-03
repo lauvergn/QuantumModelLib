@@ -284,7 +284,7 @@ OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 
 OBJ_lib        = $(DIROBJ)/mod_FiniteDiff.o \
-                 $(DIROBJ)/mod_dnMat.o $(DIROBJ)/mod_dnPoly.o $(DIROBJ)/mod_dnS.o \
+                 $(DIROBJ)/mod_dnMat.o $(DIROBJ)/mod_dnPoly.o $(DIROBJ)/QML_dnS_m.o \
                  $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_diago.o \
                  $(DIROBJ)/mod_NumParameters.o
 
@@ -496,8 +496,8 @@ $(DIROBJ)/TEST_Adia.o:$(DIRSRC)/TEST_Adia.f90
 ##################################################################################
 ### dnS libraries
 #
-$(DIROBJ)/mod_dnS.o:$(DIRdnS)/mod_dnS.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/mod_dnS.f90
+$(DIROBJ)/QML_dnS_m.o:$(DIRdnS)/QML_dnS_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/QML_dnS_m.f90
 $(DIROBJ)/TEST_dnS.o:$(DIRdnS)/TEST_dnS.f90
 	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/TEST_dnS.f90
 #
@@ -589,11 +589,11 @@ $(DIROBJ)/mod_PhenolModel.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
 #
 #
 $(DIROBJ)/mod_UtilLib.o:    $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnS.o:        $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnPoly.o:     $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnMat.o:      $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_diago.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/QML_dnS_m.o:        $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnPoly.o:     $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_dnMat.o:      $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_diago.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/mod_diago.o:      $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_FiniteDiff.o: $(DIROBJ)/mod_dnMat.o $(DIROBJ)/mod_dnS.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_FiniteDiff.o: $(DIROBJ)/mod_dnMat.o $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_NumParameters.o
 #
 ############################################################################
 ### Documentation with doxygen

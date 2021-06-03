@@ -780,7 +780,7 @@ END SUBROUTINE get_Qmodel_nb_Func_ndimFunc
 SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
   USE mod_Lib
   USE mod_Model
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
   integer,          intent(in)      :: nb_Func,ndimFunc
@@ -809,7 +809,7 @@ END SUBROUTINE get_Qmodel_d0Func
 SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
   USE mod_Lib
   USE mod_Model
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
   integer,          intent(in)      :: nb_Func,ndimFunc
@@ -841,7 +841,7 @@ END SUBROUTINE get_Qmodel_d0d1Func
 SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
   USE mod_Lib
   USE mod_Model
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
   integer,          intent(in)      :: nb_Func,ndimFunc
@@ -873,7 +873,7 @@ END SUBROUTINE get_Qmodel_d0d1d2Func
 SUBROUTINE get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Q,nb_Func,ndimFunc)
   USE mod_Lib
   USE mod_Model
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
   integer,          intent(in)      :: nb_Func,ndimFunc

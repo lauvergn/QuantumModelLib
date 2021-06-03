@@ -51,7 +51,7 @@
 !!
 PROGRAM TEST_dnS
   USE mod_QML_NumParameters
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                       :: dnX,dn2X,dnY,dnZ,Sana,Snum,dnXZ
@@ -464,7 +464,7 @@ SUBROUTINE TEST_EXCEPTION
   USE, INTRINSIC :: ieee_exceptions
 
   USE mod_QML_NumParameters
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                     :: dnX

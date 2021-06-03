@@ -42,7 +42,7 @@ CONTAINS
   USE mod_QML_NumParameters
   USE mod_Lib
   USE mod_diago
-  USE mod_dnS
+  USE QML_dnS_m
   USE mod_dnMat
   USE mod_Model
   USE QML_Basis_m

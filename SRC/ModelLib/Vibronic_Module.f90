@@ -240,7 +240,7 @@ CONTAINS
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_Vibronic(PotVal,Q,Para_Phenol,nderiv)
     USE mod_dnMat
-    USE mod_dnS
+    USE QML_dnS_m
 
     TYPE (Param_Phenol), intent(in)     :: Para_Phenol
     real (kind=Rkind),   intent(in)     :: Q(2)

@@ -893,7 +893,7 @@ CONTAINS
   END FUNCTION check_Init_QModel
 
   SUBROUTINE Eval_tab_HMatVibAdia(QModel,Qact,tab_MatH)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
   TYPE (Model_t),                 intent(inout)            :: QModel
@@ -1012,7 +1012,7 @@ CONTAINS
   END SUBROUTINE Eval_tab_HMatVibAdia
 
   SUBROUTINE Eval_Pot(QModel,Q,PotVal,nderiv,NAC,Vec,numeric)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (Model_t),     intent(inout)            :: QModel
@@ -1172,7 +1172,7 @@ CONTAINS
   END SUBROUTINE Eval_Pot
 
   SUBROUTINE Eval_Pot_ana(QModel,Q,PotVal,nderiv,NAC,Vec)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (Model_t),        intent(inout)            :: QModel
@@ -2026,7 +2026,7 @@ CONTAINS
   SUBROUTINE Eval_dnHVib_ana(QModel,Qact,dnH,nderiv)
   USE mod_QML_NumParameters
   USE mod_Lib
-  USE mod_dnS
+  USE QML_dnS_m
   USE mod_dnMat
   USE QML_Basis_m
   IMPLICIT NONE
@@ -2097,7 +2097,7 @@ CONTAINS
   END SUBROUTINE Eval_dnHVib_ana
 
   SUBROUTINE Eval_Func(QModel,Q,Func,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (Model_t),                 intent(inout)            :: QModel

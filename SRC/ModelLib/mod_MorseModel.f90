@@ -292,7 +292,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE Eval_MorsePot(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS(MorseModel_t), intent(in)     :: QModel
@@ -333,7 +333,7 @@ CONTAINS
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param QModel         TYPE(MorseModel_t):   derived type with the Morse parameters.
   FUNCTION dnMorse(dnR,QModel)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                         :: dnMorse

@@ -1577,7 +1577,7 @@ SUBROUTINE test_TwoD
 END SUBROUTINE test_TwoD
 SUBROUTINE test_HNO3
   USE mod_Lib
-  USE mod_dnS
+  USE QML_dnS_m
   USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
@@ -1643,7 +1643,7 @@ SUBROUTINE test_HNO3
 END SUBROUTINE test_HNO3
 SUBROUTINE test_PH4
   USE mod_Lib
-  USE mod_dnS
+  USE QML_dnS_m
   USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE
@@ -1738,7 +1738,7 @@ SUBROUTINE test_PH4
 END SUBROUTINE test_PH4
 SUBROUTINE test_CH5
   USE mod_Lib
-  USE mod_dnS
+  USE QML_dnS_m
   USE mod_dnMat
   USE mod_Model
   IMPLICIT NONE

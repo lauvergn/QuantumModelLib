@@ -51,7 +51,7 @@
 !!
 PROGRAM TEST_dnPoly
   USE mod_QML_NumParameters
-  USE mod_dnS
+  USE QML_dnS_m
   USE mod_dnPoly
   IMPLICIT NONE
 

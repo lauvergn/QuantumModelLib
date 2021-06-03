@@ -63,7 +63,7 @@
 !! @author David Lauvergnat
 !! @date 09/08/2017
 !!
-MODULE mod_dnS
+MODULE QML_dnS_m
   USE mod_QML_NumParameters
   IMPLICIT NONE
   PRIVATE
@@ -2100,4 +2100,4 @@ CONTAINS
     END DO
 
   END FUNCTION QML_SUM_VecOFdnS
-END MODULE mod_dnS
+END MODULE QML_dnS_m

@@ -141,7 +141,7 @@ MODULE mod_TestModel
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TestPot(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS(TestModel_t),   intent(in)    :: QModel

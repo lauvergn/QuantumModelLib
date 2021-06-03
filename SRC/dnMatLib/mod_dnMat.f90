@@ -423,7 +423,7 @@ CONTAINS
 !! @param S                     TYPE(dnS):       derived type which deals with the derivatives of a scalar.
 !! @param i,j                   integer (optional) indices of the matrix element. If not present i=j=1
   SUBROUTINE QML_sub_dnS_TO_dnMat(S,Mat,i,j)
-    USE mod_dnS
+    USE QML_dnS_m
     TYPE (dnMat_t),     intent(inout) :: Mat
     TYPE (dnS_t),       intent(in)    :: S
     integer, optional,  intent(in)    :: i,j
@@ -520,7 +520,7 @@ CONTAINS
 !! @param S                     TYPE(dnS):       derived type which deals with the derivatives of a scalar.
 !! @param i,j                   integer (optional) indices of the matrix element. If not present i=j=1
   SUBROUTINE QML_sub_dnMat_TO_dnS(Mat,S,i,j)
-    USE mod_dnS
+    USE QML_dnS_m
     TYPE (dnMat_t),     intent(in)    :: Mat
     TYPE (dnS_t),       intent(inout) :: S
     integer, optional,  intent(in)    :: i,j
@@ -602,7 +602,7 @@ CONTAINS
 !! @param Mat                   TYPE (dnMat_t):    derived type which deals with the derivatives of a matrix.
 !! @param MatOFS                TYPE(dnS):       matrix of derived type which deals with the derivatives of a scalar.
   SUBROUTINE QML_set_dnMat_FROM_MatOFdnS(Mat,MatOFS)
-    USE mod_dnS
+    USE QML_dnS_m
     CLASS (dnMat_t),   intent(inout) :: Mat
     TYPE (dnS_t),      intent(in)    :: MatOFS(:,:)
 

@@ -276,7 +276,7 @@ MODULE mod_HOO_DMBE_Model
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_HOO_DMBE_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS(HOO_DMBE_Model_t), intent(in)    :: QModel
@@ -296,7 +296,7 @@ MODULE mod_HOO_DMBE_Model
 
   ! here we suppose that the atom ordering: H1-O2-O3
   SUBROUTINE Cart_TO_Q_HOO_DMBE_Model(QModel,dnX,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS(HOO_DMBE_Model_t), intent(in)    :: QModel

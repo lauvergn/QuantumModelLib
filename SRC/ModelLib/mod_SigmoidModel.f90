@@ -259,7 +259,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE Eval_SigmoidPot(QModel,Mat_OF_PotDia,dnQ,nderiv)
-    USE mod_dnS
+    USE QML_dnS_m
 
     CLASS (SigmoidModel_t), intent(in)     :: QModel
     TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
@@ -288,7 +288,7 @@ CONTAINS
 !! @param SigmoidPot       TYPE(SigmoidModel_t): derived type with the Sigmoid parameters.
   FUNCTION dnSigmoid(dnR,SigmoidPot) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
     USE mod_dnMat
-    USE mod_dnS
+    USE QML_dnS_m
 
     TYPE (dnS_t)                          :: dnSigmoid
     TYPE (dnS_t),          intent(in)     :: dnR

@@ -117,7 +117,7 @@ contains
 
 
   SUBROUTINE Eval_TemplatePot(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS (TemplateModel_t),  intent(in)     :: QModel

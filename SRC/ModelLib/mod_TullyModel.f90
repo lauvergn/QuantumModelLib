@@ -318,7 +318,7 @@ MODULE mod_TullyModel
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TullyPot(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS(TullyModel_t),  intent(in)    :: QModel
@@ -353,7 +353,7 @@ MODULE mod_TullyModel
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TullyPot1(Mat_OF_PotDia,dnR,QModel,nderiv)
   !A. Simple avoided crossing
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (TullyModel_t), intent(in)     :: QModel
@@ -388,7 +388,7 @@ MODULE mod_TullyModel
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TullyPot2(Mat_OF_PotDia,dnR,QModel,nderiv) !2d Tully's potential
   !B. Dual avoided crossing
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (TullyModel_t), intent(in)     :: QModel
@@ -418,7 +418,7 @@ MODULE mod_TullyModel
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_TullyPot3(Mat_OF_PotDia,dnR,QModel,nderiv) !3d Tully's potential
   !C. Extended coupling with reflection
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (TullyModel_t), intent(in)     :: QModel

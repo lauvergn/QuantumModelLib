@@ -32,7 +32,7 @@
 !===========================================================================
 MODULE mod_EmptyModel
   USE mod_Lib
-  USE mod_dnS
+  USE QML_dnS_m
   USE mod_dnMat
   IMPLICIT NONE
 
@@ -267,7 +267,7 @@ CONTAINS
 
   END FUNCTION get_d0GGdef_EmptyModel
   SUBROUTINE Eval_EmptyModel_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS (EmptyModel_t),   intent(in)     :: QModel
@@ -281,7 +281,7 @@ CONTAINS
   END SUBROUTINE Eval_EmptyModel_Pot
 
   SUBROUTINE Eval_EmptyModel_Func(QModel,Func,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS (EmptyModel_t),   intent(in)     :: QModel
@@ -382,7 +382,7 @@ CONTAINS
   END SUBROUTINE Write0_EmptyModel
 
   SUBROUTINE Cart_TO_Q_EmptyModel(QModel,dnX,dnQ,nderiv)
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
     CLASS(EmptyModel_t),     intent(in)    :: QModel

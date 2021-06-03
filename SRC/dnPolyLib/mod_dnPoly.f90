@@ -65,7 +65,7 @@
 !!
 MODULE mod_dnPoly
   USE mod_QML_NumParameters
-  USE mod_dnS
+  USE QML_dnS_m
   IMPLICIT NONE
 
 
