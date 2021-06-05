@@ -32,16 +32,16 @@
 !===========================================================================
 
 MODULE mod_AdiaChannels
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
 
   IMPLICIT NONE
 
 CONTAINS
 
   SUBROUTINE Make_Hinact(Qact,QModel)
-  USE mod_QML_NumParameters
-  USE mod_Lib
-  USE mod_diago
+  USE QML_NumParameters_m
+  USE QML_UtilLib_m
+  USE QML_diago_m
   USE QML_dnS_m
   USE QML_dnMat_m
   USE mod_Model

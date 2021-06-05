@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE mod_OneDSOC_1S1T_Model
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
   USE mod_EmptyModel
   IMPLICIT NONE
 

@@ -31,7 +31,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_EmptyModel
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE QML_dnS_m
   USE QML_dnMat_m
   IMPLICIT NONE
@@ -92,7 +92,7 @@ MODULE mod_EmptyModel
 CONTAINS
 
   FUNCTION Init_EmptyModel(QModel_in) RESULT(QModel)
-  USE mod_Lib
+  USE QML_UtilLib_m
   IMPLICIT NONE
 
     TYPE (EmptyModel_t)                  :: QModel
@@ -121,7 +121,7 @@ CONTAINS
 
   END FUNCTION Init_EmptyModel
   SUBROUTINE Init0_EmptyModel(QModel,QModel_in)
-  USE mod_Lib
+  USE QML_UtilLib_m
   IMPLICIT NONE
 
     TYPE (EmptyModel_t), intent(inout)   :: QModel
@@ -298,7 +298,7 @@ CONTAINS
   END SUBROUTINE Eval_EmptyModel_Func
 
   SUBROUTINE Write_EmptyModel(QModel,nio)
-  !USE mod_Lib
+  !USE QML_UtilLib_m
   IMPLICIT NONE
 
     CLASS (EmptyModel_t), intent(in)    :: QModel
@@ -344,7 +344,7 @@ CONTAINS
 
   END SUBROUTINE Write_EmptyModel
   SUBROUTINE Write0_EmptyModel(QModel,nio)
-  !USE mod_Lib
+  !USE QML_UtilLib_m
   IMPLICIT NONE
 
     CLASS (EmptyModel_t), intent(in)    :: QModel

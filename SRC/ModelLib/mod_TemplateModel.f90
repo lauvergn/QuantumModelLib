@@ -57,7 +57,7 @@ module mod_TemplateModel
 contains
 
   FUNCTION Init_TemplateModel(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  USE mod_Lib
+  USE QML_UtilLib_m
   IMPLICIT NONE
 
     TYPE (TemplateModel_t)             :: QModel

@@ -39,7 +39,7 @@
 !!
 MODULE mod_MorseModel
   USE mod_EmptyModel
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
   IMPLICIT NONE
 
   PRIVATE

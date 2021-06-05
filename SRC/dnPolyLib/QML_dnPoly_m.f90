@@ -64,14 +64,14 @@
 !! @date 26/04/2020
 !!
 MODULE QML_dnPoly_m
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
   USE QML_dnS_m
   IMPLICIT NONE
 
 
 CONTAINS
   ELEMENTAL FUNCTION QML_dnMonomial(x,i) RESULT(Sres)
-    USE mod_QML_NumParameters
+    USE QML_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: x
@@ -84,7 +84,7 @@ CONTAINS
 
   END FUNCTION QML_dnMonomial
   ELEMENTAL FUNCTION QML_dnBox(x,i) RESULT(Sres)
-    USE mod_QML_NumParameters
+    USE QML_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: x
@@ -96,7 +96,7 @@ CONTAINS
 
   END FUNCTION QML_dnBox
   ELEMENTAL FUNCTION QML_dnFourier(x,i) RESULT(Sres)
-    USE mod_QML_NumParameters
+    USE QML_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: x
@@ -124,7 +124,7 @@ CONTAINS
 
   END FUNCTION QML_dnFourier
   ELEMENTAL FUNCTION QML_dnLegendre0(x,i) RESULT(Sres)
-    USE mod_QML_NumParameters
+    USE QML_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: x
@@ -161,7 +161,7 @@ CONTAINS
 !
 !===================================================
   ELEMENTAL FUNCTION QML_dnHermite(x,l)  RESULT(Sres)
-    USE mod_QML_NumParameters
+    USE QML_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: x
@@ -202,7 +202,7 @@ CONTAINS
 !
 !===================================================
   ELEMENTAL FUNCTION QML_dnExpHermite(x,l)  RESULT(Sres)
-    USE mod_QML_NumParameters
+    USE QML_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: x

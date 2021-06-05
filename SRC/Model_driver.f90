@@ -21,7 +21,7 @@
 !===========================================================================
 !===========================================================================
 SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -49,7 +49,7 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
 END SUBROUTINE sub_Init_Qmodel
 SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -88,7 +88,7 @@ SUBROUTINE sub_check_Init_Qmodel(check)
 END SUBROUTINE sub_check_Init_Qmodel
 
 FUNCTION get_Qmodel_ndim() RESULT(ndim)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -100,7 +100,7 @@ FUNCTION get_Qmodel_ndim() RESULT(ndim)
 
 END FUNCTION get_Qmodel_ndim
 FUNCTION get_Qmodel_nsurf() RESULT(nsurf)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -112,7 +112,7 @@ FUNCTION get_Qmodel_nsurf() RESULT(nsurf)
 
 END FUNCTION get_Qmodel_nsurf
 FUNCTION get_Qmodel_Vib_Adia() RESULT(Vib_Adia)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -133,7 +133,7 @@ SUBROUTINE sub_Write_Qmodel(nio)
 
 END SUBROUTINE sub_Write_Qmodel
 SUBROUTINE get_Qmodel_Q0(Q0,option)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -144,7 +144,7 @@ SUBROUTINE get_Qmodel_Q0(Q0,option)
 
 END SUBROUTINE get_Qmodel_Q0
 SUBROUTINE sub_Qmodel_V(V,Q)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -156,7 +156,7 @@ SUBROUTINE sub_Qmodel_V(V,Q)
 
 END SUBROUTINE sub_Qmodel_V
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
@@ -184,7 +184,7 @@ SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
 
 END SUBROUTINE sub_Qmodel_VVec
 SUBROUTINE sub_Qmodel_VG(V,G,Q)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -198,7 +198,7 @@ SUBROUTINE sub_Qmodel_VG(V,G,Q)
 
 END SUBROUTINE sub_Qmodel_VG
 SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   USE QML_dnMat_m
   IMPLICIT NONE
@@ -231,7 +231,7 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
 
 END SUBROUTINE sub_Qmodel_VG_NAC
 SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -247,7 +247,7 @@ SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
 
 END SUBROUTINE sub_Qmodel_VGH
 SUBROUTINE sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -274,7 +274,7 @@ SUBROUTINE sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
 
 END SUBROUTINE sub_Qmodel_tab_HMatVibAdia
 SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -285,7 +285,7 @@ SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
 
 END SUBROUTINE sub_Qmodel_Check_anaVSnum
 SUBROUTINE get_Qmodel_GGdef(GGdef)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -311,7 +311,7 @@ SUBROUTINE get_Qmodel_GGdef(GGdef)
 
 END SUBROUTINE get_Qmodel_GGdef
 SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -340,37 +340,37 @@ SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
 
 END SUBROUTINE set_Qmodel_GGdef
 SUBROUTINE set_Qmodel_Print_level(printlevel)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: printlevel
 
-  print_level = printlevel  ! from them module mod_QML_NumParameters.f90
+  print_level = printlevel  ! from them module QML_NumParameters_m.f90
 
 END SUBROUTINE set_Qmodel_Print_level
 SUBROUTINE set_Qmodel_in_unitp(inunitp)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: inunitp
 
-  in_unitp = inunitp  ! from them module mod_QML_NumParameters.f90
+  in_unitp = inunitp  ! from them module QML_NumParameters_m.f90
 
 END SUBROUTINE set_Qmodel_in_unitp
 SUBROUTINE set_Qmodel_out_unitp(outunitp)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
   integer,                intent(in)        :: outunitp
 
-  out_unitp = outunitp  ! from them module mod_QML_NumParameters.f90
+  out_unitp = outunitp  ! from them module QML_NumParameters_m.f90
 
 END SUBROUTINE set_Qmodel_out_unitp
 SUBROUTINE set_Qmodel_Phase_Following(Phase_Following)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -382,7 +382,7 @@ SUBROUTINE set_Qmodel_Phase_Following(Phase_Following)
 
 END SUBROUTINE set_Qmodel_Phase_Following
 SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -416,7 +416,7 @@ SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
 
 END SUBROUTINE sub_model_V
 SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -462,7 +462,7 @@ SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
 END SUBROUTINE sub_model1_V
 
 SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -508,7 +508,7 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_VG
 SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   USE QML_dnMat_m
   IMPLICIT NONE
@@ -567,7 +567,7 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_VG_NAC
 SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -614,7 +614,7 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_VGH
 SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -670,7 +670,7 @@ SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_DiaV
 SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -717,7 +717,7 @@ SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_DiaVG
 SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -764,7 +764,7 @@ SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_DiaVGH
 SUBROUTINE get_Qmodel_nb_Func_ndimFunc(nb_Func,ndimFunc)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -778,7 +778,7 @@ SUBROUTINE get_Qmodel_nb_Func_ndimFunc(nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_nb_Func_ndimFunc
 SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   USE QML_dnS_m
   IMPLICIT NONE
@@ -807,7 +807,7 @@ SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_d0Func
 SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   USE QML_dnS_m
   IMPLICIT NONE
@@ -839,7 +839,7 @@ SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_d0d1Func
 SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   USE QML_dnS_m
   IMPLICIT NONE
@@ -871,7 +871,7 @@ SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_d0d1d2Func
 SUBROUTINE get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Q,nb_Func,ndimFunc)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE mod_Model
   USE QML_dnS_m
   IMPLICIT NONE

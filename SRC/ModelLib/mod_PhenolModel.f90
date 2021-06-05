@@ -39,7 +39,7 @@
 !! @date 03/08/2017
 !!
 MODULE mod_PhenolModel
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
   USE mod_EmptyModel
   USE mod_MorseModel
   USE mod_SigmoidModel
@@ -108,7 +108,7 @@ CONTAINS
 !!
 !! @param PhenolPot          TYPE(PhenolPot_t):   derived type in which the parameters are set-up.
   FUNCTION Init_PhenolModel(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  USE mod_Lib
+  USE QML_UtilLib_m
   IMPLICIT NONE
 
     TYPE (PhenolModel_t)               :: QModel

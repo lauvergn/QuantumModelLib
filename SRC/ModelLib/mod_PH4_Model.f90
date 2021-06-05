@@ -37,7 +37,7 @@
 !! @date 08/04/2021
 !!
 MODULE mod_PH4_Model
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
   USE mod_EmptyModel
   IMPLICIT NONE
 

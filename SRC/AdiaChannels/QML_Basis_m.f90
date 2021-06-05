@@ -32,7 +32,7 @@
 !===========================================================================
 
 MODULE QML_Basis_m
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
 
   IMPLICIT NONE
 
@@ -78,7 +78,7 @@ MODULE QML_Basis_m
 
 CONTAINS
   FUNCTION QML_Basis_IS_allocated(Basis) RESULT(alloc)
-  USE mod_Lib
+  USE QML_UtilLib_m
 
     TYPE(QML_Basis_t),       intent(in)  :: Basis
     logical                          :: alloc
@@ -91,7 +91,7 @@ CONTAINS
 
   END FUNCTION QML_Basis_IS_allocated
   RECURSIVE SUBROUTINE QML_Write_Basis(Basis)
-  USE mod_Lib
+  USE QML_UtilLib_m
 
     TYPE(QML_Basis_t),       intent(in)  :: Basis
 
@@ -126,7 +126,7 @@ CONTAINS
 
   END SUBROUTINE QML_Write_Basis
   RECURSIVE SUBROUTINE QML_Read_Basis(Basis,nio)
-  USE mod_Lib
+  USE QML_UtilLib_m
 
     TYPE(QML_Basis_t),       intent(inout)  :: Basis
     integer,             intent(in)     :: nio
@@ -207,7 +207,7 @@ CONTAINS
 
   END SUBROUTINE QML_Read_Basis
   SUBROUTINE QML_Construct_Basis_Sin(Basis) ! sin : boxAB with A=0 and B=pi
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE QML_dnS_m
   USE QML_dnPoly_m
 
@@ -247,7 +247,7 @@ CONTAINS
 
   END SUBROUTINE QML_Construct_Basis_Sin
   SUBROUTINE QML_CheckOrtho_Basis(Basis,nderiv)
-  USE mod_Lib
+  USE QML_UtilLib_m
   USE QML_dnS_m
   USE QML_dnPoly_m
 
@@ -294,7 +294,7 @@ CONTAINS
 
   END SUBROUTINE QML_CheckOrtho_Basis
   SUBROUTINE QML_Scale_Basis(Basis,x0,sx)
-  USE mod_Lib
+  USE QML_UtilLib_m
 
     TYPE(QML_Basis_t),       intent(inout)  :: Basis
     real(kind=Rkind),    intent(in)     :: x0,sx

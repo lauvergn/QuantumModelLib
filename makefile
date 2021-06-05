@@ -10,7 +10,7 @@
 #F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -283,10 +283,10 @@ OBJ_testdnPoly = $(DIROBJ)/TEST_dnPoly.o
 OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 
-OBJ_lib        = $(DIROBJ)/mod_FiniteDiff.o \
+OBJ_lib        = $(DIROBJ)/QML_FiniteDiff_m.o \
                  $(DIROBJ)/QML_dnMat_m.o $(DIROBJ)/QML_dnPoly_m.o $(DIROBJ)/QML_dnS_m.o \
-                 $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_diago.o \
-                 $(DIROBJ)/mod_NumParameters.o
+                 $(DIROBJ)/QML_UtilLib_m.o $(DIROBJ)/QML_diago_m.o \
+                 $(DIROBJ)/QML_NumParameters_m.o
 
 OBJ_all        = $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
 
@@ -528,14 +528,14 @@ $(DIROBJ)/QML_dnMat_m.o:$(DIRdnMat)/QML_dnMat_m.f90
 ##################################################################################
 ### libraries
 #
-$(DIROBJ)/mod_FiniteDiff.o:$(DIRLib)/mod_FiniteDiff.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_FiniteDiff.f90
-$(DIROBJ)/mod_UtilLib.o:$(DIRLib)/mod_UtilLib.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_UtilLib.f90
-$(DIROBJ)/mod_diago.o:$(DIRLib)/mod_diago.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DIRLib)/mod_diago.f90
-$(DIROBJ)/mod_NumParameters.o:$(DIRLib)/mod_NumParameters.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/mod_NumParameters.f90
+$(DIROBJ)/QML_FiniteDiff_m.o:$(DIRLib)/QML_FiniteDiff_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/QML_FiniteDiff_m.f90
+$(DIROBJ)/QML_UtilLib_m.o:$(DIRLib)/QML_UtilLib_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/QML_UtilLib_m.f90
+$(DIROBJ)/QML_diago_m.o:$(DIRLib)/QML_diago_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DIRLib)/QML_diago_m.f90
+$(DIROBJ)/QML_NumParameters_m.o:$(DIRLib)/QML_NumParameters_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/QML_NumParameters_m.f90
 #
 ##################################################################################
 #
@@ -588,12 +588,12 @@ $(DIROBJ)/mod_PhenolModel.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
                                          $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_SigmoidModel.o
 #
 #
-$(DIROBJ)/mod_UtilLib.o:    $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/QML_dnS_m.o:        $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/QML_dnPoly_m.o:     $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/QML_dnMat_m.o:      $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_diago.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_diago.o:      $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_FiniteDiff.o: $(DIROBJ)/QML_dnMat_m.o $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/QML_UtilLib_m.o:    $(DIROBJ)/QML_NumParameters_m.o
+$(DIROBJ)/QML_dnS_m.o:        $(DIROBJ)/QML_UtilLib_m.o $(DIROBJ)/QML_NumParameters_m.o
+$(DIROBJ)/QML_dnPoly_m.o:     $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/QML_UtilLib_m.o $(DIROBJ)/QML_NumParameters_m.o
+$(DIROBJ)/QML_dnMat_m.o:      $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/QML_diago_m.o $(DIROBJ)/QML_UtilLib_m.o $(DIROBJ)/QML_NumParameters_m.o
+$(DIROBJ)/QML_diago_m.o:      $(DIROBJ)/QML_NumParameters_m.o
+$(DIROBJ)/QML_FiniteDiff_m.o: $(DIROBJ)/QML_dnMat_m.o $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/QML_NumParameters_m.o
 #
 ############################################################################
 ### Documentation with doxygen

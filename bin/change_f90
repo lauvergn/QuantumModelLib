@@ -11,7 +11,7 @@ do
     echo --------------------------------------
     echo $f   $sub
 #    sed "s/"$sub"/"$sub"_QML/g" $f > $f.i
-    #sed "s/mod_NumParameters/mod_QML_NumParameters/" $f > $f.i
+    #sed "s/mod_NumParameters/QML_NumParameters_m/" $f > $f.i
      cp $f.i $f
 
     echo ""

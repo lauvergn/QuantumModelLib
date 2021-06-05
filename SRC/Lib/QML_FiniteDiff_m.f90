@@ -22,8 +22,8 @@
 !       <http://pagesperso.lcp.u-psud.fr/lauvergnat/ElVibRot/ElVibRot.html>
 !===========================================================================
 !===========================================================================
-MODULE mod_FiniteDiff
-  USE mod_QML_NumParameters
+MODULE QML_FiniteDiff_m
+  USE QML_NumParameters_m
   IMPLICIT NONE
 
   PRIVATE
@@ -692,4 +692,4 @@ CONTAINS
 
   END SUBROUTINE FiniteDiff_Finalize_dnMat
 
-END MODULE mod_FiniteDiff
+END MODULE QML_FiniteDiff_m

@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE mod_HNNHp_Model
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
   USE mod_EmptyModel
   IMPLICIT NONE
 

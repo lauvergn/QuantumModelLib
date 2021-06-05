@@ -22,8 +22,8 @@
 !       <http://pagesperso.lcp.u-psud.fr/lauvergnat/ElVibRot/ElVibRot.html>
 !===========================================================================
 !===========================================================================
-MODULE mod_Lib
-USE mod_QML_NumParameters
+MODULE QML_UtilLib_m
+USE QML_NumParameters_m
 !$ USE omp_lib
 IMPLICIT NONE
 
@@ -83,7 +83,7 @@ CONTAINS
 
   END FUNCTION strdup
   PURE FUNCTION int_TO_char(i)
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
 
     character (len=:), allocatable  :: int_TO_char
     integer, intent(in)             :: i
@@ -123,7 +123,7 @@ CONTAINS
 
   SUBROUTINE sub_Format_OF_Line(wformat,nb_line,max_col,cplx,       &
                                 Rformat,name_info)
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
   IMPLICIT NONE
 
    character (len=*), optional  :: Rformat
@@ -188,7 +188,7 @@ CONTAINS
   END SUBROUTINE sub_Format_OF_Line
 
   SUBROUTINE Write_RMat(f,nio,nbcol1,Rformat,name_info)
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
   IMPLICIT NONE
 
      character (len=*), optional :: Rformat
@@ -235,7 +235,7 @@ CONTAINS
 
   END SUBROUTINE Write_RMat
   SUBROUTINE Write_RVec(l,nio,nbcol1,Rformat,name_info)
-  USE mod_QML_NumParameters
+  USE QML_NumParameters_m
   IMPLICIT NONE
 
     character (len=*), optional  :: Rformat
@@ -604,4 +604,4 @@ CONTAINS
 ! write(out_unitp,*) 'open ',name_file,iunit
 
   END SUBROUTINE file_open2
-END MODULE mod_Lib
+END MODULE QML_UtilLib_m
