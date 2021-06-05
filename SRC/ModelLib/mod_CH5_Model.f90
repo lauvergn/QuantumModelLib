@@ -401,7 +401,7 @@ MODULE mod_CH5_Model
 
   SUBROUTINE eval_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
   USE QML_dnS_m
-  USE mod_dnPoly
+  USE QML_dnPoly_m
   IMPLICIT NONE
 
     CLASS(CH5_Model_t),   intent(in)    :: QModel
@@ -458,7 +458,7 @@ MODULE mod_CH5_Model
   END SUBROUTINE eval_CH5_Func_fit3
   FUNCTION dnvfour_fit3(Rm,iq,jq,QModel) RESULT(dnvfour)
   USE QML_dnS_m
-  USE mod_dnPoly
+  USE QML_dnPoly_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour

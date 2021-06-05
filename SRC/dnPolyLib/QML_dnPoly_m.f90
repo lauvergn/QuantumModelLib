@@ -63,7 +63,7 @@
 !! @author David Lauvergnat
 !! @date 26/04/2020
 !!
-MODULE mod_dnPoly
+MODULE QML_dnPoly_m
   USE mod_QML_NumParameters
   USE QML_dnS_m
   IMPLICIT NONE
@@ -211,4 +211,4 @@ CONTAINS
     Sres = QML_dnHermite(x,l) * exp(-x*x*HALF)
 
  END FUNCTION QML_dnExpHermite
-END MODULE mod_dnPoly
+END MODULE QML_dnPoly_m

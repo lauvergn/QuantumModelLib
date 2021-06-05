@@ -370,7 +370,7 @@ MODULE mod_PH4_Model
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_PH4_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
-  USE mod_dnPoly
+  USE QML_dnPoly_m
   IMPLICIT NONE
 
     CLASS(PH4_Model_t),   intent(in)    :: QModel
@@ -440,7 +440,7 @@ MODULE mod_PH4_Model
 
   SUBROUTINE eval_PH4_Func_fit3(QModel,Func,dnQ,nderiv)
   USE QML_dnS_m
-  USE mod_dnPoly
+  USE QML_dnPoly_m
   IMPLICIT NONE
 
     CLASS(PH4_Model_t),   intent(in)    :: QModel

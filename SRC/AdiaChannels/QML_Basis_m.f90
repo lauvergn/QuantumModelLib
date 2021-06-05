@@ -209,7 +209,7 @@ CONTAINS
   SUBROUTINE QML_Construct_Basis_Sin(Basis) ! sin : boxAB with A=0 and B=pi
   USE mod_Lib
   USE QML_dnS_m
-  USE mod_dnPoly
+  USE QML_dnPoly_m
 
     TYPE(QML_Basis_t),       intent(inout)  :: Basis
 
@@ -249,7 +249,7 @@ CONTAINS
   SUBROUTINE QML_CheckOrtho_Basis(Basis,nderiv)
   USE mod_Lib
   USE QML_dnS_m
-  USE mod_dnPoly
+  USE QML_dnPoly_m
 
     TYPE(QML_Basis_t),           intent(in)     :: Basis
     integer,                 intent(in)     :: nderiv

@@ -284,7 +284,7 @@ OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 
 OBJ_lib        = $(DIROBJ)/mod_FiniteDiff.o \
-                 $(DIROBJ)/mod_dnMat.o $(DIROBJ)/mod_dnPoly.o $(DIROBJ)/QML_dnS_m.o \
+                 $(DIROBJ)/mod_dnMat.o $(DIROBJ)/QML_dnPoly_m.o $(DIROBJ)/QML_dnS_m.o \
                  $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_diago.o \
                  $(DIROBJ)/mod_NumParameters.o
 
@@ -506,8 +506,8 @@ $(DIROBJ)/TEST_dnS.o:$(DIRdnS)/TEST_dnS.f90
 ##################################################################################
 ### dnPoly libraries
 #
-$(DIROBJ)/mod_dnPoly.o:$(DIRdnPoly)/mod_dnPoly.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) -c $(DIRdnPoly)/mod_dnPoly.f90
+$(DIROBJ)/QML_dnPoly_m.o:$(DIRdnPoly)/QML_dnPoly_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) -c $(DIRdnPoly)/QML_dnPoly_m.f90
 $(DIROBJ)/TEST_dnPoly.o:$(DIRdnPoly)/TEST_dnPoly.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRdnPoly)/TEST_dnPoly.f90
 #
@@ -590,7 +590,7 @@ $(DIROBJ)/mod_PhenolModel.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
 #
 $(DIROBJ)/mod_UtilLib.o:    $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/QML_dnS_m.o:        $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnPoly.o:     $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/QML_dnPoly_m.o:     $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/mod_dnMat.o:      $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_diago.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/mod_diago.o:      $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/mod_FiniteDiff.o: $(DIROBJ)/mod_dnMat.o $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_NumParameters.o

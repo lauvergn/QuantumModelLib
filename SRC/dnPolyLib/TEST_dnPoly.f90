@@ -52,7 +52,7 @@
 PROGRAM TEST_dnPoly
   USE mod_QML_NumParameters
   USE QML_dnS_m
-  USE mod_dnPoly
+  USE QML_dnPoly_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                       :: dnX,dn2X,dnY,dnZ,Sana,Snum,dnXZ

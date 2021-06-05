@@ -259,7 +259,7 @@ MODULE mod_HNO3_Model
 
   FUNCTION dnvfour(rot,iq,jq,QModel)
   USE QML_dnS_m
-  USE mod_dnPoly
+  USE QML_dnPoly_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
