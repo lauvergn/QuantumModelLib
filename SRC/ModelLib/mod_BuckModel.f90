@@ -320,7 +320,7 @@ CONTAINS
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param BuckPot          TYPE(BuckModel_t):    derived type with the Buckingham parameters.
   FUNCTION dnBuck(dnR,BuckPot)
-    USE mod_dnMat
+    USE QML_dnMat_m
     USE QML_dnS_m
 
 

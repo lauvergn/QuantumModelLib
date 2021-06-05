@@ -6,7 +6,7 @@ for name in *f90
 
     #sed  "s/TYPE [(]dnMatPot/TYPE (dnMat_t/" $name > $name.i
     #sed  "s/TYPE[(]dnMatPot/TYPE (dnMat_t/" $name.i > $name
-    #sed  "s/USE mod_dnMatPot/USE mod_dnMat/" $name > $name.i
+    #sed  "s/USE QML_dnMat_mPot/USE QML_dnMat_m/" $name > $name.i
     sed  "s/dnMatPot/dnMat/" $name > $name.i
     mv $name.i $name
  done

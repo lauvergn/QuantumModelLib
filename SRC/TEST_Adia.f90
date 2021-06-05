@@ -33,7 +33,7 @@
 PROGRAM TEST_adia
   USE mod_QML_NumParameters
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   USE mod_AdiaChannels
   IMPLICIT NONE

@@ -211,7 +211,7 @@ CONTAINS
 
 
   SUBROUTINE FiniteDiff_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ,option)
-  USE mod_dnMat
+  USE QML_dnMat_m
   IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
@@ -271,7 +271,7 @@ CONTAINS
   END SUBROUTINE FiniteDiff_AddMat_TO_dnMat
 
   SUBROUTINE FiniteDiff4_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
-  USE mod_dnMat
+  USE QML_dnMat_m
   IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
@@ -432,7 +432,7 @@ CONTAINS
 
   END SUBROUTINE FiniteDiff4_AddMat_TO_dnMat
   SUBROUTINE FiniteDiff3_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
-  USE mod_dnMat
+  USE QML_dnMat_m
   IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
@@ -608,7 +608,7 @@ CONTAINS
   END SUBROUTINE FiniteDiff3_AddMat_TO_dnMat
 
   SUBROUTINE FiniteDiff3_SymPerm_OF_dnMat(dnMat,indQ)
-  USE mod_dnMat
+  USE QML_dnMat_m
   IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)   :: dnMat
@@ -668,7 +668,7 @@ CONTAINS
 
   END SUBROUTINE FiniteDiff3_SymPerm_OF_dnMat
   SUBROUTINE FiniteDiff_Finalize_dnMat(dnMat,step)
-  USE mod_dnMat
+  USE QML_dnMat_m
   IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat

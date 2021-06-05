@@ -157,7 +157,7 @@ SUBROUTINE sub_Qmodel_V(V,Q)
 END SUBROUTINE sub_Qmodel_V
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -200,7 +200,7 @@ END SUBROUTINE sub_Qmodel_VG
 SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   USE mod_Lib
   USE mod_Model
-  USE mod_dnMat
+  USE QML_dnMat_m
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)       :: Q(QuantumModel%ndim)
@@ -510,7 +510,7 @@ END SUBROUTINE sub_model1_VG
 SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
   USE mod_Lib
   USE mod_Model
-  USE mod_dnMat
+  USE QML_dnMat_m
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf

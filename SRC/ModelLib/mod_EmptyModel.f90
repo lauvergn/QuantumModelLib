@@ -33,7 +33,7 @@
 MODULE mod_EmptyModel
   USE mod_Lib
   USE QML_dnS_m
-  USE mod_dnMat
+  USE QML_dnMat_m
   IMPLICIT NONE
 
   TYPE :: EmptyModel_t

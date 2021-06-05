@@ -35,7 +35,7 @@ program prog
   USE mod_TemplateModel
   USE mod_MorseModel
   USE QML_dnS_m
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 

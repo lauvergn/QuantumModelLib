@@ -87,7 +87,7 @@ END PROGRAM TEST_model
 
 SUBROUTINE test_Tully
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -192,7 +192,7 @@ END SUBROUTINE test_Tully
 
 SUBROUTINE test_OneDSOC_1S1T
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -305,7 +305,7 @@ SUBROUTINE test_OneDSOC_1S1T
 END SUBROUTINE test_OneDSOC_1S1T
 SUBROUTINE test_OneDSOC_2S1T
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -415,7 +415,7 @@ SUBROUTINE test_OneDSOC_2S1T
   CALL QML_dealloc_dnMat(NAC)
 END SUBROUTINE test_OneDSOC_2S1T
 SUBROUTINE test_Morse
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -488,7 +488,7 @@ SUBROUTINE test_Morse
 END SUBROUTINE test_Morse
 
 SUBROUTINE test_Buckingham
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -561,7 +561,7 @@ END SUBROUTINE test_Buckingham
 
 SUBROUTINE test_Phenol
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -675,7 +675,7 @@ SUBROUTINE test_Phenol
 END SUBROUTINE test_Phenol
 SUBROUTINE test_HenonHeiles
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -729,7 +729,7 @@ SUBROUTINE test_HenonHeiles
 
 END SUBROUTINE test_HenonHeiles
 SUBROUTINE test_LinearHBond
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -871,7 +871,7 @@ SUBROUTINE test_LinearHBond
 END SUBROUTINE test_LinearHBond
 SUBROUTINE test_Vib_adia
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -933,7 +933,7 @@ SUBROUTINE test_Vib_adia
 END SUBROUTINE test_Vib_adia
 SUBROUTINE test2_Vib_adia
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -987,7 +987,7 @@ END SUBROUTINE test2_Vib_adia
 SUBROUTINE test_PSB3
 
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
 
   IMPLICIT NONE
@@ -1072,7 +1072,7 @@ END SUBROUTINE test_PSB3
 SUBROUTINE test_Retinal_JPCB2000
 
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
 
   IMPLICIT NONE
@@ -1192,7 +1192,7 @@ SUBROUTINE test_Retinal_JPCB2000
 END SUBROUTINE test_Retinal_JPCB2000
 SUBROUTINE test_HONO
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1278,7 +1278,7 @@ SUBROUTINE test_HONO
 END SUBROUTINE test_HONO
 SUBROUTINE test_HNNHp
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1331,7 +1331,7 @@ SUBROUTINE test_HNNHp
 END SUBROUTINE test_HNNHp
 SUBROUTINE test_H2SiN
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1389,7 +1389,7 @@ END DO
 END SUBROUTINE test_H2SiN
 SUBROUTINE test_H2NSi
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1447,7 +1447,7 @@ END DO
 END SUBROUTINE test_H2NSi
 SUBROUTINE test_template
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1512,7 +1512,7 @@ SUBROUTINE test_template
 END SUBROUTINE test_template
 SUBROUTINE test_TwoD
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1578,7 +1578,7 @@ END SUBROUTINE test_TwoD
 SUBROUTINE test_HNO3
   USE mod_Lib
   USE QML_dnS_m
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1644,7 +1644,7 @@ END SUBROUTINE test_HNO3
 SUBROUTINE test_PH4
   USE mod_Lib
   USE QML_dnS_m
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1739,7 +1739,7 @@ END SUBROUTINE test_PH4
 SUBROUTINE test_CH5
   USE mod_Lib
   USE QML_dnS_m
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1832,7 +1832,7 @@ SUBROUTINE test_CH5
 END SUBROUTINE test_CH5
 SUBROUTINE test_HOO_DMBE
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1908,7 +1908,7 @@ SUBROUTINE test_HOO_DMBE
 END SUBROUTINE test_HOO_DMBE
 SUBROUTINE test_H3
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -1969,7 +1969,7 @@ SUBROUTINE test_H3
 END SUBROUTINE test_H3
 SUBROUTINE test_Test
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -2015,7 +2015,7 @@ SUBROUTINE test_Test
 END SUBROUTINE test_Test
 SUBROUTINE test_Tully_test
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   IMPLICIT NONE
 
@@ -2056,7 +2056,7 @@ END SUBROUTINE test_Tully_test
 SUBROUTINE test_PSB3_test
 
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
 
   IMPLICIT NONE
@@ -2103,7 +2103,7 @@ END SUBROUTINE test_PSB3_test
 SUBROUTINE test_PSB3_Retinal2000_test
 
   USE mod_Lib
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
 
   IMPLICIT NONE

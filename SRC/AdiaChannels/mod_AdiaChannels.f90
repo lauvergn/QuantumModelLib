@@ -43,7 +43,7 @@ CONTAINS
   USE mod_Lib
   USE mod_diago
   USE QML_dnS_m
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_Model
   USE QML_Basis_m
   IMPLICIT NONE

@@ -287,7 +287,7 @@ CONTAINS
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param SigmoidPot       TYPE(SigmoidModel_t): derived type with the Sigmoid parameters.
   FUNCTION dnSigmoid(dnR,SigmoidPot) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
-    USE mod_dnMat
+    USE QML_dnMat_m
     USE QML_dnS_m
 
     TYPE (dnS_t)                          :: dnSigmoid

@@ -36,7 +36,7 @@
 !!
 MODULE mod_Vibronic
   USE mod_QML_NumParameters
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE mod_EmptyModel
   IMPLICIT NONE
 
@@ -239,7 +239,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_Vibronic(PotVal,Q,Para_Phenol,nderiv)
-    USE mod_dnMat
+    USE QML_dnMat_m
     USE QML_dnS_m
 
     TYPE (Param_Phenol), intent(in)     :: Para_Phenol

@@ -48,7 +48,7 @@
 !! @author David Lauvergnat
 !! @date 09/08/2017
 !!
-MODULE mod_dnMat
+MODULE QML_dnMat_m
   USE mod_QML_NumParameters
   IMPLICIT NONE
 
@@ -1995,4 +1995,4 @@ CONTAINS
 
   END SUBROUTINE QML_DIAG_dnMat
 
-END MODULE mod_dnMat
+END MODULE QML_dnMat_m

@@ -284,7 +284,7 @@ OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 
 OBJ_lib        = $(DIROBJ)/mod_FiniteDiff.o \
-                 $(DIROBJ)/mod_dnMat.o $(DIROBJ)/QML_dnPoly_m.o $(DIROBJ)/QML_dnS_m.o \
+                 $(DIROBJ)/QML_dnMat_m.o $(DIROBJ)/QML_dnPoly_m.o $(DIROBJ)/QML_dnS_m.o \
                  $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_diago.o \
                  $(DIROBJ)/mod_NumParameters.o
 
@@ -518,8 +518,8 @@ $(DIROBJ)/TEST_dnPoly.o:$(DIRdnPoly)/TEST_dnPoly.f90
 ##################################################################################
 ### dnMat libraries
 #
-$(DIROBJ)/mod_dnMat.o:$(DIRdnMat)/mod_dnMat.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRdnMat)/mod_dnMat.f90
+$(DIROBJ)/QML_dnMat_m.o:$(DIRdnMat)/QML_dnMat_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRdnMat)/QML_dnMat_m.f90
 #
 ##################################################################################
 #
@@ -591,9 +591,9 @@ $(DIROBJ)/mod_PhenolModel.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
 $(DIROBJ)/mod_UtilLib.o:    $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/QML_dnS_m.o:        $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/QML_dnPoly_m.o:     $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_dnMat.o:      $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_diago.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/QML_dnMat_m.o:      $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_diago.o $(DIROBJ)/mod_UtilLib.o $(DIROBJ)/mod_NumParameters.o
 $(DIROBJ)/mod_diago.o:      $(DIROBJ)/mod_NumParameters.o
-$(DIROBJ)/mod_FiniteDiff.o: $(DIROBJ)/mod_dnMat.o $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_NumParameters.o
+$(DIROBJ)/mod_FiniteDiff.o: $(DIROBJ)/QML_dnMat_m.o $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/mod_NumParameters.o
 #
 ############################################################################
 ### Documentation with doxygen

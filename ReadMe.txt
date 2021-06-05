@@ -21,7 +21,7 @@
    the "libpot.a" must be created
 
    This version works with:
-       gfortran 8.3, 9.1, 9.2 (macOS)
+       gfortran 8.3, 9.1, 9.2 (linux and macOS)
        ifort    18
        pgf90    17.10-0
        nagfor   7.0 (macOS)

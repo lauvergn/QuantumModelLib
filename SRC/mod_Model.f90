@@ -34,7 +34,7 @@
 MODULE mod_Model
 !$ USE omp_lib
   USE mod_QML_NumParameters
-  USE mod_dnMat
+  USE QML_dnMat_m
 
   USE mod_EmptyModel
 
@@ -2027,7 +2027,7 @@ CONTAINS
   USE mod_QML_NumParameters
   USE mod_Lib
   USE QML_dnS_m
-  USE mod_dnMat
+  USE QML_dnMat_m
   USE QML_Basis_m
   IMPLICIT NONE
 
