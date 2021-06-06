@@ -12,5 +12,5 @@ SRC/AdiaChannels/mod_Basis.f90.corrfort17
 Tests/*txt
 Tests/*.log
 Tests/grid*
-Tests/res
+Tests/res*
 SRC/QML/chqml

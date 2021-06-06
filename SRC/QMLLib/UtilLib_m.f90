@@ -27,7 +27,7 @@ USE QMLLib_NumParameters_m
 !$ USE omp_lib
 IMPLICIT NONE
 
-  !PRIVATE
+  PRIVATE
 
   character (len=Line_len), public :: File_path = ''
 
