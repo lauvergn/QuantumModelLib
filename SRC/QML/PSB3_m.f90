@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_PSB3_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -81,7 +81,7 @@ MODULE QML_PSB3_m
     ! Warning the parameters are given as in the publication.
     !   Therefore, the BLA(=Q(1)) is in Angstrom and the energy is in kcal.mol^-1.
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_PSB3
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_PSB3
     PROCEDURE :: Write_QModel    => Write_QML_PSB3
     PROCEDURE :: Write0_QModel   => Write0_QML_PSB3
   END TYPE QML_PSB3_t
@@ -282,7 +282,7 @@ MODULE QML_PSB3_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_PSB3(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_PSB3_t),  intent(in)    :: QModel
@@ -317,7 +317,7 @@ MODULE QML_PSB3_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv)
     !Unpublished model potential (yet)
-    USE QML_dnS_m
+    USE QMLdnSVM_dnS_m
     IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
@@ -413,7 +413,7 @@ MODULE QML_PSB3_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot2_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv) !Second PSB3's potential
   ! Published potential
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (QML_PSB3_t), intent(in)     :: PSB3Pot

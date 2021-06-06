@@ -150,7 +150,7 @@ cat << ** > ReadMe.txt
 **
 
 
-awk '/=== README ==/,/=== END README ==/' SRC/mod_Model.f90 > temp/RMtmp
+awk '/=== README ==/,/=== END README ==/' SRC/Model_m.f90 > temp/RMtmp
 
 cd temp
 

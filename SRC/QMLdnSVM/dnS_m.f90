@@ -63,8 +63,8 @@
 !! @author David Lauvergnat
 !! @date 09/08/2017
 !!
-MODULE QML_dnS_m
-  USE QML_NumParameters_m
+MODULE QMLdnSVM_dnS_m
+  USE QMLLib_NumParameters_m
   IMPLICIT NONE
   PRIVATE
 
@@ -117,7 +117,7 @@ MODULE QML_dnS_m
      MODULE PROCEDURE QML_dnS2_PLUS_dnS1,QML_dnS_PLUS_R,QML_R_PLUS_dnS,QML_PLUS_dnS
   END INTERFACE
   INTERFACE operator (-)
-     MODULE PROCEDURE QML_dnS2_MINUS_dnS1,QML_dnS_MINUS_R,QML_R_MINUS_dnS,QML_MINUS_dnS
+     MODULE PROCEDURE QML_dnS2_MINUS_dnS1,QMLdnSVM_dnS_mINUS_R,QML_R_MINUS_dnS,QML_MINUS_dnS
   END INTERFACE
   INTERFACE operator (*)
      MODULE PROCEDURE QML_dnS2_TIME_dnS1,QML_dnS_TIME_R,QML_R_TIME_dnS
@@ -224,7 +224,7 @@ CONTAINS
 !! @param nderiv             integer (optional):    it enables to chose the derivative order (from 0 to 3).
 !! @param err_dnS            integer (optional):  to handle the errors errors (0: no error).
   SUBROUTINE QML_alloc_dnS(S,ndim,nderiv,err_dnS)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
     TYPE (dnS_t), intent(inout)          :: S         !< derived type, which contains, matrix potential, its derivatives
     integer,     intent(in),  optional  :: ndim      !< number of variables (coordiantes)
     integer,     intent(in),  optional  :: nderiv    !< order of the derivatives [0,1,3]
@@ -315,7 +315,7 @@ CONTAINS
 !!
 !! @param S                  TYPE (dnS_t):             derived type which deals with the derivatives of a scalar functions.
   ELEMENTAL SUBROUTINE QML_dealloc_dnS(S)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t), intent(inout)       :: S !< derived type, which contains, matrix potential, its derivatives
 
@@ -334,7 +334,7 @@ CONTAINS
 !! @param S                  TYPE (dnS_t):  derived type which deals with the derivatives of a scalar functions.
 !! @param nderiv             integer:    the derivative order.
   ELEMENTAL FUNCTION QML_Check_NotAlloc_dnS(S,nderiv) RESULT (NotAlloc)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     logical                     :: NotAlloc
     TYPE (dnS_t), intent(in)    :: S
@@ -357,7 +357,7 @@ CONTAINS
 !! @param nderiv             integer (optional):    it enables to chose the derivative order (from 0 to 3).
 !! @param iQ                 integer (optional):    when ndim > 1, dSres/dQ_iQ = Sres%d1(iQ)= 1, the other derivatives are zero
   FUNCTION QML_init_dnS(R,ndim,nderiv,iQ) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                     :: Sres
     real (kind=Rkind), intent(in)    :: R
@@ -418,7 +418,7 @@ CONTAINS
 !! @param S                  TYPE (dnS_t):           derived type which deals with the derivatives of a scalar functions.
 !! @param d0,d1,d2,d3        real  (optional):    real value (d0) or table to initialize S.
   SUBROUTINE QML_set_dnS(S,d0,d1,d2,d3)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     real (kind=Rkind), optional,   intent(in)     :: d0
     real (kind=Rkind), optional,   intent(in)     :: d1(:)
@@ -470,7 +470,7 @@ CONTAINS
 
   END SUBROUTINE QML_set_dnS
   SUBROUTINE QML_ReduceDerivatives_dnS2_TO_dnS1(S1,S2,list_act)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
     CLASS (dnS_t), intent(inout) :: S1
     CLASS (dnS_t), intent(in)    :: S2
     integer,       intent(in)    :: list_act(:)
@@ -506,7 +506,7 @@ CONTAINS
 !! @param S                  TYPE (dnS_t):           derived type which deals with the derivatives of a scalar functions.
 !! @param d0                 real  (result):      d0=S%d0
   ELEMENTAL FUNCTION QML_get_d0_FROM_dnS(S) RESULT(d0)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     real (kind=Rkind)                :: d0
     TYPE (dnS_t),        intent(in)  :: S
@@ -524,7 +524,7 @@ CONTAINS
 !! @param S                  TYPE (dnS_t):           derived type which deals with the derivatives of a scalar functions.
 !! @param d1                 real  (result):        d1=S%d1, d1 is allocatable
   FUNCTION QML_get_d1_FROM_dnS(S) RESULT(d1)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     real (kind=Rkind), allocatable     :: d1(:)
     TYPE (dnS_t),        intent(in)    :: S
@@ -542,7 +542,7 @@ CONTAINS
   !! @param S                  TYPE (dnS_t):           derived type which deals with the derivatives of a scalar functions.
   !! @param d2                 real  (result):        d2=S%d2, d2 is allocatable
   FUNCTION QML_get_d2_FROM_dnS(S) RESULT(d2)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
       real (kind=Rkind),   allocatable   :: d2(:,:)
       TYPE (dnS_t),        intent(in)    :: S
@@ -560,7 +560,7 @@ CONTAINS
   !! @param S                  TYPE (dnS_t):           derived type which deals with the derivatives of a scalar functions.
   !! @param d3                 real  (result):        d3=S%d3, d3 is allocatable
   FUNCTION QML_get_d3_FROM_dnS(S) RESULT(d3)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
       real (kind=Rkind), allocatable   :: d3(:,:,:)
       TYPE (dnS_t),        intent(in)    :: S
@@ -578,7 +578,7 @@ CONTAINS
   !! @param S                  TYPE (dnS_t):          derived type which deals with the derivatives of a scalar functions.
   !! @param d0,d1,d2,d3                 real:         NOT allocatable
   SUBROUTINE QML_sub_get_dn_FROM_dnS(S,d0,d1,d2,d3)
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
 
       TYPE (dnS_t),        intent(in)              :: S
       real (kind=Rkind),   intent(inout), optional :: d0,d1(:),d2(:,:),d3(:,:,:)
@@ -622,7 +622,7 @@ CONTAINS
 !! @param all_type           character (optional): when present and true, write all the type variable (old WriteAll_dnS)
 !! @param FOR_test           character (optional): when present and true, write for the test (old Write_dnS_FOR_test)
   SUBROUTINE QML_Write_dnS(S,nio,info,all_type,FOR_test)
-    USE QML_UtilLib_m
+    USE QMLLib_UtilLib_m
 
     TYPE (dnS_t),     intent(in)           :: S
     integer,          intent(in), optional :: nio
@@ -748,7 +748,7 @@ CONTAINS
 !! @param S                     TYPE (dnS_t):        derived type which deals with the derivatives of a scalar functions.
 !! @param get_nderiv_FROM_dnS   integer  (result):   nderiv value, check against S%nederiv and the allocated d1,d2 or d3
   ELEMENTAL FUNCTION QML_get_nderiv_FROM_dnS(S) RESULT(nderiv)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     integer                     :: nderiv
     TYPE (dnS_t), intent(in)    :: S
@@ -775,7 +775,7 @@ CONTAINS
 !! @param S                     TYPE (dnS_t):        derived type which deals with the derivatives of a scalar functions.
 !! @param ndim                  integer  (result):   ndim value from the size of S%d1.
   ELEMENTAL FUNCTION QML_get_ndim_FROM_dnS(S) RESULT(ndim)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     integer                     :: ndim
     TYPE (dnS_t), intent(in)    :: S
@@ -796,7 +796,7 @@ CONTAINS
 !! @param S                     TYPE (dnS_t):           derived type which deals with the derivatives of a scalar functions.
 !! @param epsi                  real (optional):     when present zero limit, otherwise 10^-10
   ELEMENTAL FUNCTION QML_Check_dnS_IS_ZERO(S,epsi) RESULT(Check_dnS_IS_ZERO)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     logical                                  :: Check_dnS_IS_ZERO
     TYPE (dnS_t),       intent(in)           :: S
@@ -823,7 +823,7 @@ CONTAINS
 !! @param get_maxval_OF_dnS     real  (result):      largest value
 !! @param S                     TYPE (dnS_t):           derived type which deals with the derivatives of a scalar functions.
   ELEMENTAL FUNCTION QML_get_maxval_OF_dnS(S) RESULT(maxval_OF_dnS)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     real(kind=Rkind)            :: maxval_OF_dnS
     TYPE (dnS_t), intent(in)    :: S
@@ -852,7 +852,7 @@ CONTAINS
 !! @param x                        real:            abciss
 !! @param nderiv                   integer:         order of the derivative
   FUNCTION QML_get_Num_dnS_FROM_f_x(x,f,nderiv) RESULT(Snum)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                                   :: Snum
     real (kind=Rkind), external                  :: f ! an intrinsic function: sin exp ....
@@ -927,7 +927,7 @@ CONTAINS
 ! operators ==,/=,>=,>,<=,<
 !=========================================================
   ELEMENTAL FUNCTION QML_dnS_EQ_dnS(S1,S2) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     logical                     :: lres
     TYPE (dnS_t), intent(in)    :: S1,S2
@@ -955,7 +955,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_EQ_R
   ELEMENTAL FUNCTION QML_R_EQ_dnS(R,S1) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     logical                            :: lres
     TYPE (dnS_t),        intent(in)    :: S1
@@ -969,7 +969,7 @@ CONTAINS
   END FUNCTION QML_R_EQ_dnS
 
   ELEMENTAL FUNCTION QML_dnS_NEQ_dnS(S1,S2) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     logical                     :: lres
     TYPE (dnS_t), intent(in)    :: S1,S2
@@ -995,7 +995,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_NEQ_R
   ELEMENTAL FUNCTION QML_R_NEQ_dnS(R,S1) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t),        intent(in)    :: S1
     real (kind=Rkind), intent(in)    :: R
@@ -1008,7 +1008,7 @@ CONTAINS
   END FUNCTION QML_R_NEQ_dnS
 
   ELEMENTAL FUNCTION QML_dnS_LE_dnS(S1,S2) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t), intent(in)    :: S1,S2
     logical                   :: lres
@@ -1019,7 +1019,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_LE_dnS
   ELEMENTAL FUNCTION QML_dnS_LE_R(S1,R) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t),        intent(in)    :: S1
     real (kind=Rkind), intent(in)    :: R
@@ -1031,7 +1031,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_LE_R
   ELEMENTAL FUNCTION QML_R_LE_dnS(R,S1) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t),        intent(in)    :: S1
     real (kind=Rkind), intent(in)    :: R
@@ -1044,7 +1044,7 @@ CONTAINS
   END FUNCTION QML_R_LE_dnS
 
   ELEMENTAL FUNCTION QML_dnS_LT_dnS(S1,S2) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t), intent(in)    :: S1,S2
     logical                   :: lres
@@ -1055,7 +1055,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_LT_dnS
   ELEMENTAL FUNCTION QML_dnS_LT_R(S1,R) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t),        intent(in)    :: S1
     real (kind=Rkind), intent(in)    :: R
@@ -1067,7 +1067,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_LT_R
   ELEMENTAL FUNCTION QML_R_LT_dnS(R,S1) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t),        intent(in)    :: S1
     real (kind=Rkind), intent(in)    :: R
@@ -1080,7 +1080,7 @@ CONTAINS
   END FUNCTION QML_R_LT_dnS
 
   ELEMENTAL FUNCTION QML_dnS_GE_dnS(S1,S2) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t), intent(in)    :: S1,S2
     logical                   :: lres
@@ -1091,7 +1091,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_GE_dnS
   ELEMENTAL FUNCTION QML_dnS_GE_R(S1,R) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t),        intent(in)    :: S1
     real (kind=Rkind), intent(in)    :: R
@@ -1103,7 +1103,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_GE_R
   ELEMENTAL FUNCTION QML_R_GE_dnS(R,S1) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t),        intent(in)    :: S1
     real (kind=Rkind), intent(in)    :: R
@@ -1116,7 +1116,7 @@ CONTAINS
   END FUNCTION QML_R_GE_dnS
 
   ELEMENTAL FUNCTION QML_dnS_GT_dnS(S1,S2) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t), intent(in)    :: S1,S2
     logical                   :: lres
@@ -1127,7 +1127,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_GT_dnS
   ELEMENTAL FUNCTION QML_dnS_GT_R(S1,R) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t),        intent(in)    :: S1
     real (kind=Rkind), intent(in)    :: R
@@ -1139,7 +1139,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_GT_R
   ELEMENTAL FUNCTION QML_R_GT_dnS(R,S1) RESULT(lres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t),        intent(in)    :: S1
     real (kind=Rkind),   intent(in)    :: R
@@ -1154,7 +1154,7 @@ CONTAINS
 ! operators =,+,-,*,/,**
 !=========================================================
   ELEMENTAL SUBROUTINE QML_sub_dnS2_TO_dnS1(S1,S2)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
     CLASS (dnS_t), intent(inout) :: S1
     CLASS (dnS_t), intent(in)    :: S2
 
@@ -1173,7 +1173,7 @@ CONTAINS
   END SUBROUTINE QML_sub_dnS2_TO_dnS1
 
   ELEMENTAL SUBROUTINE QML_set_dnS_TO_R(S,R)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     CLASS (dnS_t),     intent(inout) :: S
     real (kind=Rkind), intent(in)    :: R
@@ -1196,7 +1196,7 @@ CONTAINS
 
 
   ELEMENTAL FUNCTION QML_dnS2_PLUS_dnS1(S1,S2) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                :: Sres
     TYPE (dnS_t), intent(in)    :: S1,S2
@@ -1236,7 +1236,7 @@ CONTAINS
 
   END FUNCTION QML_dnS2_PLUS_dnS1
   ELEMENTAL FUNCTION QML_dnS_PLUS_R(S,R) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1250,7 +1250,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_PLUS_R
   ELEMENTAL FUNCTION QML_R_PLUS_dnS(R,S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1264,7 +1264,7 @@ CONTAINS
 
   END FUNCTION QML_R_PLUS_dnS
   ELEMENTAL FUNCTION QML_PLUS_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1276,7 +1276,7 @@ CONTAINS
 
   END FUNCTION QML_PLUS_dnS
   ELEMENTAL FUNCTION QML_dnS2_MINUS_dnS1(S1,S2) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                :: Sres
     TYPE (dnS_t), intent(in)    :: S1,S2
@@ -1304,22 +1304,22 @@ CONTAINS
     END IF
 
   END FUNCTION QML_dnS2_MINUS_dnS1
-  ELEMENTAL FUNCTION QML_dnS_MINUS_R(S,R) RESULT(Sres)
-    USE QML_NumParameters_m
+  ELEMENTAL FUNCTION QMLdnSVM_dnS_mINUS_R(S,R) RESULT(Sres)
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
     real (kind=Rkind),   intent(in)    :: R
 
 
-    character (len=*), parameter :: name_sub='QML_dnS_MINUS_R'
+    character (len=*), parameter :: name_sub='QMLdnSVM_dnS_mINUS_R'
 
     Sres    = S
     Sres%d0 = Sres%d0 - R
 
-  END FUNCTION QML_dnS_MINUS_R
+  END FUNCTION QMLdnSVM_dnS_mINUS_R
   ELEMENTAL FUNCTION QML_R_MINUS_dnS(R,S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1336,7 +1336,7 @@ CONTAINS
 
   END FUNCTION QML_R_MINUS_dnS
   ELEMENTAL FUNCTION QML_MINUS_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1357,7 +1357,7 @@ CONTAINS
   END FUNCTION QML_MINUS_dnS
 
   ELEMENTAL FUNCTION QML_dnS2_TIME_dnS1(S1,S2) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                :: Sres
     TYPE (dnS_t), intent(in)    :: S1,S2
@@ -1415,7 +1415,7 @@ CONTAINS
   END FUNCTION QML_dnS2_TIME_dnS1
   !ELEMENTAL FUNCTION QML_d0S_TIME_R(S,R) RESULT(Sres)
    FUNCTION QML_d0S_TIME_R(S,R) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                         :: Sres
     TYPE (dnS_t),          intent(in)    :: S
@@ -1432,8 +1432,8 @@ CONTAINS
 
   END FUNCTION QML_d0S_TIME_R
   ELEMENTAL FUNCTION QML_dnS_TIME_R(S,R) RESULT(Sres)
-    USE QML_NumParameters_m
-    USE QML_UtilLib_m
+    USE QMLLib_NumParameters_m
+    USE QMLLib_UtilLib_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1454,8 +1454,8 @@ CONTAINS
   END FUNCTION QML_dnS_TIME_R
 
    ELEMENTAL FUNCTION QML_R_TIME_dnS(R,S) RESULT(Sres)
-    USE QML_NumParameters_m
-    USE QML_UtilLib_m
+    USE QMLLib_NumParameters_m
+    USE QMLLib_UtilLib_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1477,7 +1477,7 @@ CONTAINS
   END FUNCTION QML_R_TIME_dnS
 
   ELEMENTAL FUNCTION QML_dnS2_OVER_dnS1(S1,S2) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                :: Sres
     TYPE (dnS_t), intent(in)    :: S1,S2
@@ -1489,7 +1489,7 @@ CONTAINS
 
   END FUNCTION QML_dnS2_OVER_dnS1
   ELEMENTAL FUNCTION QML_dnS_OVER_R(S,R) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1504,7 +1504,7 @@ CONTAINS
   END FUNCTION QML_dnS_OVER_R
 
   ELEMENTAL FUNCTION QML_R_OVER_dnS(R,S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1525,7 +1525,7 @@ CONTAINS
 !=========================================================
 
   ELEMENTAL FUNCTION QML_get_F_dnS(S,d0f,d1f,d2f,d3f) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1569,7 +1569,7 @@ CONTAINS
   END FUNCTION QML_get_F_dnS
 
   ELEMENTAL FUNCTION QML_dnS_EXP_R(S,R) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1596,7 +1596,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_EXP_R
   ELEMENTAL FUNCTION QML_dnS_EXP_I(S,I) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1624,7 +1624,7 @@ CONTAINS
 
   END FUNCTION QML_dnS_EXP_I
   ELEMENTAL FUNCTION QML_get_SQRT_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1638,7 +1638,7 @@ CONTAINS
   END FUNCTION QML_get_SQRT_dnS
 
   ELEMENTAL FUNCTION QML_get_ABS_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1652,7 +1652,7 @@ CONTAINS
   END FUNCTION QML_get_ABS_dnS
 
   ELEMENTAL FUNCTION QML_get_EXP_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1671,7 +1671,7 @@ CONTAINS
 
   END FUNCTION QML_get_EXP_dnS
   ELEMENTAL FUNCTION QML_get_LOG_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1691,7 +1691,7 @@ CONTAINS
 
   END FUNCTION QML_get_LOG_dnS
   ELEMENTAL FUNCTION QML_get_LOG10_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1705,7 +1705,7 @@ CONTAINS
 
   END FUNCTION QML_get_LOG10_dnS
   ELEMENTAL FUNCTION QML_get_COS_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1726,7 +1726,7 @@ CONTAINS
 
   END FUNCTION QML_get_COS_dnS
   ELEMENTAL FUNCTION QML_get_ACOS_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1747,7 +1747,7 @@ CONTAINS
 
   END FUNCTION QML_get_ACOS_dnS
   ELEMENTAL FUNCTION QML_get_SIN_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1767,7 +1767,7 @@ CONTAINS
 
   END FUNCTION QML_get_SIN_dnS
   ELEMENTAL FUNCTION QML_get_ASIN_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1787,7 +1787,7 @@ CONTAINS
 
   END FUNCTION QML_get_ASIN_dnS
   ELEMENTAL FUNCTION QML_get_TAN_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1801,7 +1801,7 @@ CONTAINS
   END FUNCTION QML_get_TAN_dnS
 
   ELEMENTAL FUNCTION QML_get_ATAN_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1821,7 +1821,7 @@ CONTAINS
   END FUNCTION QML_get_ATAN_dnS
 
   ELEMENTAL FUNCTION QML_get_ATAN2_dnS(Sy,Sx) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: Sy,Sx
@@ -1836,7 +1836,7 @@ CONTAINS
   END FUNCTION QML_get_ATAN2_dnS
 
   ELEMENTAL FUNCTION QML_get_COSH_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1857,7 +1857,7 @@ CONTAINS
 
   END FUNCTION QML_get_COSH_dnS
   ELEMENTAL FUNCTION QML_get_ACOSH_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1881,7 +1881,7 @@ CONTAINS
 
   END FUNCTION QML_get_ACOSH_dnS
   ELEMENTAL FUNCTION QML_get_SINH_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1899,7 +1899,7 @@ CONTAINS
 
   END FUNCTION QML_get_SINH_dnS
   ELEMENTAL FUNCTION QML_get_ASINH_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1923,7 +1923,7 @@ CONTAINS
   END FUNCTION QML_get_ASINH_dnS
 
   ELEMENTAL FUNCTION QML_get_TANH_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1943,7 +1943,7 @@ CONTAINS
   END FUNCTION QML_get_TANH_dnS
 
   ELEMENTAL FUNCTION QML_get_ATANH_dnS(S) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: S
@@ -1967,7 +1967,7 @@ CONTAINS
   END FUNCTION QML_get_ATANH_dnS
 
   FUNCTION QML_dot_product_VecOFdnS(VecA,VecB) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: VecA(:),VecB(:)
@@ -2000,7 +2000,7 @@ CONTAINS
 
   END FUNCTION QML_dot_product_VecOFdnS
   FUNCTION QML_dot_product_VecOFdnS_Vec(VecA,VecB) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: VecA(:)
@@ -2035,7 +2035,7 @@ CONTAINS
 
   END FUNCTION QML_dot_product_VecOFdnS_Vec
   FUNCTION QML_dot_product_Vec_VecOFdnS(VecA,VecB) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: VecB(:)
@@ -2069,7 +2069,7 @@ CONTAINS
 
   END FUNCTION QML_dot_product_Vec_VecOFdnS
   FUNCTION QML_product_VecOFdnS(Vec) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                              :: Sres
     TYPE (dnS_t),        intent(in)           :: Vec(:)
@@ -2085,7 +2085,7 @@ CONTAINS
 
   END FUNCTION QML_product_VecOFdnS
   FUNCTION QML_SUM_VecOFdnS(Vec) RESULT(Sres)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                              :: Sres
     TYPE (dnS_t),        intent(in)           :: Vec(:)
@@ -2100,4 +2100,4 @@ CONTAINS
     END DO
 
   END FUNCTION QML_SUM_VecOFdnS
-END MODULE QML_dnS_m
+END MODULE QMLdnSVM_dnS_m

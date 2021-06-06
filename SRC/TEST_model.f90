@@ -86,9 +86,9 @@ PROGRAM TEST_model
 END PROGRAM TEST_model
 
 SUBROUTINE test_Tully
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -191,9 +191,9 @@ SUBROUTINE test_Tully
 END SUBROUTINE test_Tully
 
 SUBROUTINE test_OneDSOC_1S1T
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -304,9 +304,9 @@ SUBROUTINE test_OneDSOC_1S1T
   CALL QML_dealloc_dnMat(NAC)
 END SUBROUTINE test_OneDSOC_1S1T
 SUBROUTINE test_OneDSOC_2S1T
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -415,8 +415,8 @@ SUBROUTINE test_OneDSOC_2S1T
   CALL QML_dealloc_dnMat(NAC)
 END SUBROUTINE test_OneDSOC_2S1T
 SUBROUTINE test_Morse
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -488,8 +488,8 @@ SUBROUTINE test_Morse
 END SUBROUTINE test_Morse
 
 SUBROUTINE test_Buckingham
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -560,9 +560,9 @@ SUBROUTINE test_Buckingham
 END SUBROUTINE test_Buckingham
 
 SUBROUTINE test_Phenol
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -674,9 +674,9 @@ SUBROUTINE test_Phenol
 
 END SUBROUTINE test_Phenol
 SUBROUTINE test_HenonHeiles
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -729,8 +729,8 @@ SUBROUTINE test_HenonHeiles
 
 END SUBROUTINE test_HenonHeiles
 SUBROUTINE test_LinearHBond
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -870,9 +870,9 @@ SUBROUTINE test_LinearHBond
 
 END SUBROUTINE test_LinearHBond
 SUBROUTINE test_Vib_adia
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -932,9 +932,9 @@ SUBROUTINE test_Vib_adia
 
 END SUBROUTINE test_Vib_adia
 SUBROUTINE test2_Vib_adia
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -986,9 +986,9 @@ SUBROUTINE test2_Vib_adia
 END SUBROUTINE test2_Vib_adia
 SUBROUTINE test_PSB3
 
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
 
   IMPLICIT NONE
 
@@ -1071,9 +1071,9 @@ SUBROUTINE test_PSB3
 END SUBROUTINE test_PSB3
 SUBROUTINE test_Retinal_JPCB2000
 
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
 
   IMPLICIT NONE
 
@@ -1191,9 +1191,9 @@ SUBROUTINE test_Retinal_JPCB2000
 
 END SUBROUTINE test_Retinal_JPCB2000
 SUBROUTINE test_HONO
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1277,9 +1277,9 @@ SUBROUTINE test_HONO
 
 END SUBROUTINE test_HONO
 SUBROUTINE test_HNNHp
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1330,9 +1330,9 @@ SUBROUTINE test_HNNHp
 
 END SUBROUTINE test_HNNHp
 SUBROUTINE test_H2SiN
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1388,9 +1388,9 @@ END DO
 
 END SUBROUTINE test_H2SiN
 SUBROUTINE test_H2NSi
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1446,9 +1446,9 @@ END DO
 
 END SUBROUTINE test_H2NSi
 SUBROUTINE test_template
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1511,9 +1511,9 @@ SUBROUTINE test_template
 
 END SUBROUTINE test_template
 SUBROUTINE test_TwoD
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1576,10 +1576,10 @@ SUBROUTINE test_TwoD
 
 END SUBROUTINE test_TwoD
 SUBROUTINE test_HNO3
-  USE QML_UtilLib_m
-  USE QML_dnS_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1642,10 +1642,10 @@ SUBROUTINE test_HNO3
 
 END SUBROUTINE test_HNO3
 SUBROUTINE test_PH4
-  USE QML_UtilLib_m
-  USE QML_dnS_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1737,10 +1737,10 @@ SUBROUTINE test_PH4
 
 END SUBROUTINE test_PH4
 SUBROUTINE test_CH5
-  USE QML_UtilLib_m
-  USE QML_dnS_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1831,9 +1831,9 @@ SUBROUTINE test_CH5
 
 END SUBROUTINE test_CH5
 SUBROUTINE test_HOO_DMBE
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1907,9 +1907,9 @@ SUBROUTINE test_HOO_DMBE
 
 END SUBROUTINE test_HOO_DMBE
 SUBROUTINE test_H3
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -1968,9 +1968,9 @@ SUBROUTINE test_H3
 
 END SUBROUTINE test_H3
 SUBROUTINE test_Test
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -2014,9 +2014,9 @@ SUBROUTINE test_Test
 
 END SUBROUTINE test_Test
 SUBROUTINE test_Tully_test
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -2055,9 +2055,9 @@ SUBROUTINE test_Tully_test
 END SUBROUTINE test_Tully_test
 SUBROUTINE test_PSB3_test
 
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
 
   IMPLICIT NONE
 
@@ -2102,9 +2102,9 @@ SUBROUTINE test_PSB3_test
 END SUBROUTINE test_PSB3_test
 SUBROUTINE test_PSB3_Retinal2000_test
 
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
 
   IMPLICIT NONE
 

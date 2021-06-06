@@ -36,7 +36,7 @@
 !! @date 03/08/2017
 !!
 MODULE QML_Buck_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -61,7 +61,7 @@ MODULE QML_Buck_m
      ! C= 102 10^-12 erg A^-6 = 106.54483566475760255666 Hartree bohr^-6
      real (kind=Rkind) :: mu  = 36423.484024390622_Rkind        ! au
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Buck
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Buck
     PROCEDURE :: Write_QModel    => Write_QML_Buck
     PROCEDURE :: Write0_QModel   => Write0_QML_Buck
   END TYPE QML_Buck_t
@@ -293,7 +293,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Buck(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_Buck_t),  intent(in)     :: QModel
@@ -320,8 +320,8 @@ CONTAINS
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param BuckPot          TYPE(QML_Buck_t):    derived type with the Buckingham parameters.
   FUNCTION QML_dnBuck(dnR,BuckPot)
-    USE QML_dnMat_m
-    USE QML_dnS_m
+    USE QMLdnSVM_dnMat_m
+    USE QMLdnSVM_dnS_m
 
 
     TYPE (dnS_t)                          :: QML_dnBuck

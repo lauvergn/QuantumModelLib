@@ -31,9 +31,9 @@
 !===========================================================================
 !===========================================================================
 PROGRAM TEST_grid
-  USE QML_NumParameters_m
-  USE QML_UtilLib_m
-  USE mod_Model
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE Model_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel

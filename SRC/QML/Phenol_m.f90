@@ -39,7 +39,7 @@
 !! @date 03/08/2017
 !!
 MODULE QML_Phenol_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   USE QML_Morse_m
   USE QML_Sigmoid_m
@@ -91,7 +91,7 @@ MODULE QML_Phenol_m
      real (kind=Rkind), PUBLIC :: G_RR    = 0.0005786177_Rkind
      real (kind=Rkind), PUBLIC :: G_ThTh  = 0.0002550307_Rkind
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Phenol
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Phenol
     PROCEDURE :: Write_QModel    => Write_QML_Phenol
     PROCEDURE :: Write0_QModel   => Write0_QML_Phenol
   END TYPE QML_Phenol_t
@@ -108,7 +108,7 @@ CONTAINS
 !!
 !! @param PhenolPot          TYPE(PhenolPot_t):   derived type in which the parameters are set-up.
   FUNCTION Init_QML_Phenol(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     TYPE (QML_Phenol_t)               :: QModel
@@ -312,7 +312,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Phenol(QModel,Mat_OF_PotDia,dnQ,nderiv)
-    USE QML_dnS_m
+    USE QMLdnSVM_dnS_m
     CLASS(QML_Phenol_t),    intent(in) :: QModel
 
     TYPE (dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)

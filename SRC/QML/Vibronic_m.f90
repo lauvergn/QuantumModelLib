@@ -35,8 +35,8 @@
 !! @date 02/12/2017
 !!
 MODULE QML_Vibronic_m
-  USE QML_NumParameters_m
-  USE QML_dnMat_m
+  USE QMLLib_NumParameters_m
+  USE QMLdnSVM_dnMat_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -62,7 +62,7 @@ MODULE QML_Vibronic_m
      !Q0(:,i,j) is the reference geometry for the diabatic (j=i) or compling (i/=j) terms
      real (kind=Rkind), allocatable     :: Q0(:,:,:)
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Vibronic
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Vibronic
     PROCEDURE :: Write_QModel    => Write_QML_Vibronic
     PROCEDURE :: Write0_QModel   => Write0_QML_Vibronic
   END TYPE QML_Vibronic_t
@@ -239,8 +239,8 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_Vibronic(PotVal,Q,Para_Phenol,nderiv)
-    USE QML_dnMat_m
-    USE QML_dnS_m
+    USE QMLdnSVM_dnMat_m
+    USE QMLdnSVM_dnS_m
 
     TYPE (Param_Phenol), intent(in)     :: Para_Phenol
     real (kind=Rkind),   intent(in)     :: Q(2)

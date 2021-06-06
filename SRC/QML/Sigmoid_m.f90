@@ -36,7 +36,7 @@
 !! @date 03/08/2017
 !!
 MODULE QML_Sigmoid_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -56,7 +56,7 @@ MODULE QML_Sigmoid_m
      real (kind=Rkind) :: C   = ONE
      real (kind=Rkind) :: e   = ONE
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Sigmoid
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Sigmoid
     PROCEDURE :: Write_QModel    => Write_QML_Sigmoid
     PROCEDURE :: Write0_QModel   => Write0_QML_Sigmoid
   END TYPE QML_Sigmoid_t
@@ -259,7 +259,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Sigmoid(QModel,Mat_OF_PotDia,dnQ,nderiv)
-    USE QML_dnS_m
+    USE QMLdnSVM_dnS_m
 
     CLASS (QML_Sigmoid_t), intent(in)     :: QModel
     TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
@@ -287,8 +287,8 @@ CONTAINS
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param SigmoidPot       TYPE(QML_Sigmoid_t): derived type with the Sigmoid parameters.
   FUNCTION QML_dnSigmoid(dnR,SigmoidPot) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
-    USE QML_dnMat_m
-    USE QML_dnS_m
+    USE QMLdnSVM_dnMat_m
+    USE QMLdnSVM_dnS_m
 
     TYPE (dnS_t)                          :: QML_dnSigmoid
     TYPE (dnS_t),          intent(in)     :: dnR

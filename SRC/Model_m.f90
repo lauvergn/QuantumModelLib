@@ -31,10 +31,10 @@
 !===========================================================================
 !===========================================================================
 
-MODULE mod_Model
+MODULE Model_m
 !$ USE omp_lib
-  USE QML_NumParameters_m
-  USE QML_dnMat_m
+  USE QMLLib_NumParameters_m
+  USE QMLdnSVM_dnMat_m
 
   USE QML_Empty_m
 
@@ -68,7 +68,7 @@ MODULE mod_Model
   USE QML_Sigmoid_m
   USE QML_TwoD_m
 
-  USE QML_Basis_m
+  USE AdiaChannels_Basis_m
 
   IMPLICIT NONE
 
@@ -150,7 +150,7 @@ CONTAINS
 
 
   SUBROUTINE Read_Model(QModel_inout,nio,read_nml1)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     TYPE (QML_Empty_t), intent(inout) :: QModel_inout ! variable to transfer info to the init
@@ -209,7 +209,7 @@ CONTAINS
     read_nml1                 = read_nml
 
     QModel_inout%option       = option
-    print_level  = printlevel ! from them module QML_NumParameters_m.f90
+    print_level  = printlevel ! from them module QMLLib_NumParameters_m.f90
     QModel_inout%ndim         = ndim
     QModel_inout%nsurf        = nsurf
     QModel_inout%adiabatic    = adiabatic
@@ -260,7 +260,7 @@ CONTAINS
   SUBROUTINE Init_Model(QModel,pot_name,ndim,nsurf,adiabatic,Cart_TO_Q,         &
                         read_param,param_file_name,nio_param_file,              &
                         option,PubliUnit,Print_init,Vib_adia,Phase_Following)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     TYPE (Model_t),      intent(inout)            :: QModel
@@ -808,7 +808,7 @@ CONTAINS
   END SUBROUTINE Init_Model
 
   SUBROUTINE get_Q0_Model(Q0,QModel,option)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     real (kind=Rkind),  intent(inout)            :: Q0(:)
@@ -858,7 +858,7 @@ CONTAINS
 
   ! check if the QM [CLASS(QML_Empty_t)] is allocated
   SUBROUTINE check_alloc_QM(QModel,name_sub_in)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     TYPE (Model_t),     intent(in)     :: QModel
@@ -869,7 +869,7 @@ CONTAINS
       write(out_unitp,*) ' QM is not allocated in QModel.'
       write(out_unitp,*) '  check_alloc_QM is called from ',name_sub_in
       write(out_unitp,*) '  You MUST initialize the model with:'
-      write(out_unitp,*) '    CALL init_Model(...) in mod_Model.f90'
+      write(out_unitp,*) '    CALL init_Model(...) in Model_m.f90'
       write(out_unitp,*) ' or'
       write(out_unitp,*) '    CALL sub_Init_Qmodel(...) in Model_driver.f90'
       STOP 'STOP in check_alloc_QM: QM is not allocated in QModel.'
@@ -879,7 +879,7 @@ CONTAINS
 
   ! check if the check_Init_QModel [TYPE(Model_t)] is initialized
   FUNCTION check_Init_QModel(QModel)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     logical                             :: check_Init_QModel
@@ -893,7 +893,7 @@ CONTAINS
   END FUNCTION check_Init_QModel
 
   SUBROUTINE Eval_tab_HMatVibAdia(QModel,Qact,tab_MatH)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
   TYPE (Model_t),                 intent(inout)            :: QModel
@@ -1012,7 +1012,7 @@ CONTAINS
   END SUBROUTINE Eval_tab_HMatVibAdia
 
   SUBROUTINE Eval_Pot(QModel,Q,PotVal,nderiv,NAC,Vec,numeric)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (Model_t),     intent(inout)            :: QModel
@@ -1172,7 +1172,7 @@ CONTAINS
   END SUBROUTINE Eval_Pot
 
   SUBROUTINE Eval_Pot_ana(QModel,Q,PotVal,nderiv,NAC,Vec)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (Model_t),        intent(inout)            :: QModel
@@ -1248,7 +1248,7 @@ CONTAINS
       END DO
     END IF
 
-    CALL QModel%QM%Eval_QModel_Pot(Mat_OF_PotDia,dnQ,nderiv=nderiv)
+    CALL QModel%QM%EvalPot_QModel(Mat_OF_PotDia,dnQ,nderiv=nderiv)
 
 
     PotVal = Mat_OF_PotDia ! transfert the potential and its derivatives to the matrix form (PotVal)
@@ -1311,7 +1311,7 @@ CONTAINS
   END SUBROUTINE Eval_Pot_ana
 
   SUBROUTINE Eval_Pot_Numeric_dia_v4(QModel,Q,PotVal,nderiv)
-  USE QML_FiniteDiff_m
+  USE QMLLib_FiniteDiff_m
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -1405,7 +1405,7 @@ CONTAINS
 
   END SUBROUTINE Eval_Pot_Numeric_dia_v4
   SUBROUTINE Eval_Pot_Numeric_dia_v3(QModel,Q,PotVal,nderiv)
-  USE QML_FiniteDiff_m
+  USE QMLLib_FiniteDiff_m
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -1776,7 +1776,7 @@ CONTAINS
 
   END SUBROUTINE Eval_Pot_Numeric_adia_old
   SUBROUTINE Eval_Pot_Numeric_adia_v3(QModel,Q,PotVal,nderiv,Vec,NAC)
-  USE QML_FiniteDiff_m
+  USE QMLLib_FiniteDiff_m
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -1926,7 +1926,7 @@ CONTAINS
 
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
   SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,nderiv)
-    USE QML_diago_m
+    USE QMLLib_diago_m
     IMPLICIT NONE
 
     TYPE (dnMat_t), intent(in)               :: PotVal_dia
@@ -2024,11 +2024,11 @@ CONTAINS
   END SUBROUTINE dia_TO_adia
 
   SUBROUTINE Eval_dnHVib_ana(QModel,Qact,dnH,nderiv)
-  USE QML_NumParameters_m
-  USE QML_UtilLib_m
-  USE QML_dnS_m
-  USE QML_dnMat_m
-  USE QML_Basis_m
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnMat_m
+  USE AdiaChannels_Basis_m
   IMPLICIT NONE
 
   real (kind=Rkind),              intent(in)    :: Qact(:)
@@ -2097,7 +2097,7 @@ CONTAINS
   END SUBROUTINE Eval_dnHVib_ana
 
   SUBROUTINE Eval_Func(QModel,Q,Func,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (Model_t),                 intent(inout)            :: QModel
@@ -2164,7 +2164,7 @@ CONTAINS
   END SUBROUTINE Eval_Func
 
   SUBROUTINE Write_Model(QModel,nio)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     TYPE(Model_t),      intent(in)              :: QModel
@@ -2202,7 +2202,7 @@ CONTAINS
 
   END SUBROUTINE Write_Model
   SUBROUTINE Write0_Model(QModel,nio)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     TYPE(Model_t),    intent(in)              :: QModel
@@ -2234,7 +2234,7 @@ CONTAINS
 
   END SUBROUTINE Write0_Model
   SUBROUTINE Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec,NAC,info,name_file)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(in)           :: QModel
@@ -2717,4 +2717,4 @@ CONTAINS
 
 
   END SUBROUTINE calc_hess
-END MODULE mod_Model
+END MODULE Model_m

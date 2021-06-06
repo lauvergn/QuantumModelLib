@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HONO_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -60,7 +60,7 @@ MODULE QML_HONO_m
                                               1.9315017_Rkind,ZERO]
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_HONO
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_HONO
     PROCEDURE :: Write_QModel    => Write_QML_HONO
     PROCEDURE :: Write0_QModel   => Write0_QML_HONO
   END TYPE QML_HONO_t
@@ -235,7 +235,7 @@ MODULE QML_HONO_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HONO(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_HONO_t),  intent(in)    :: QModel
@@ -267,7 +267,7 @@ MODULE QML_HONO_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
   SUBROUTINE EvalPot1_QML_HONO(Mat_OF_PotDia,dnQ,QModel,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)

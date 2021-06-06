@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HNNHp_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -54,7 +54,7 @@ MODULE QML_HNNHp_m
      integer,          allocatable :: tab_func(:,:)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_HNNHp
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_HNNHp
     PROCEDURE :: Write_QModel    => Write_QML_HNNHp
     PROCEDURE :: Write0_QModel   => Write0_QML_HNNHp
   END TYPE QML_HNNHp_t
@@ -253,7 +253,7 @@ MODULE QML_HNNHp_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HNNHp(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_HNNHp_t), intent(in)    :: QModel
@@ -284,7 +284,7 @@ MODULE QML_HNNHp_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_HNNHp(Mat_OF_PotDia,dnQ,QModel)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
@@ -333,7 +333,7 @@ MODULE QML_HNNHp_m
   ! here we suppose that the atom ordering: N1-N2-H1-H2
   ! the bounds are N1-N2, N1-H1, n2-H2
   SUBROUTINE Cart_TO_Q_QML_HNNHp(dnX,dnQ,QModel,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(in)    :: dnX(:,:)

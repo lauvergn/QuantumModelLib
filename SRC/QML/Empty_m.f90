@@ -31,9 +31,9 @@
 !===========================================================================
 !===========================================================================
 MODULE QML_Empty_m
-  USE QML_UtilLib_m
-  USE QML_dnS_m
-  USE QML_dnMat_m
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnMat_m
   IMPLICIT NONE
 
   TYPE :: QML_Empty_t
@@ -74,7 +74,7 @@ MODULE QML_Empty_m
     !Vec0 must be allocatable, to be able to deallocate with deallocate of the QML_Empty_t variable.
     TYPE (dnMat_t),     allocatable :: Vec0 ! to get the correct phase of the adiatic couplings
     CONTAINS
-      PROCEDURE :: Eval_QModel_Pot    => EvalPot_QML_Empty
+      PROCEDURE :: EvalPot_QModel    => EvalPot_QML_Empty
       PROCEDURE :: Eval_QModel_Func   => EvalFunc_QML_Empty
       PROCEDURE :: Write_QModel       => Write_QML_Empty
       PROCEDURE :: Write0_QModel      => Write0_QML_Empty
@@ -92,7 +92,7 @@ MODULE QML_Empty_m
 CONTAINS
 
   FUNCTION Init_QML_Empty(QModel_in) RESULT(QModel)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     TYPE (QML_Empty_t)                  :: QModel
@@ -121,7 +121,7 @@ CONTAINS
 
   END FUNCTION Init_QML_Empty
   SUBROUTINE Init0_QML_Empty(QModel,QModel_in)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     TYPE (QML_Empty_t), intent(inout)   :: QModel
@@ -267,7 +267,7 @@ CONTAINS
 
   END FUNCTION get_d0GGdef_QML_Empty
   SUBROUTINE EvalPot_QML_Empty(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS (QML_Empty_t),   intent(in)     :: QModel
@@ -281,7 +281,7 @@ CONTAINS
   END SUBROUTINE EvalPot_QML_Empty
 
   SUBROUTINE EvalFunc_QML_Empty(QModel,Func,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS (QML_Empty_t),   intent(in)     :: QModel
@@ -298,7 +298,7 @@ CONTAINS
   END SUBROUTINE EvalFunc_QML_Empty
 
   SUBROUTINE Write_QML_Empty(QModel,nio)
-  !USE QML_UtilLib_m
+  !USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     CLASS (QML_Empty_t), intent(in)    :: QModel
@@ -344,7 +344,7 @@ CONTAINS
 
   END SUBROUTINE Write_QML_Empty
   SUBROUTINE Write0_QML_Empty(QModel,nio)
-  !USE QML_UtilLib_m
+  !USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     CLASS (QML_Empty_t), intent(in)    :: QModel
@@ -382,7 +382,7 @@ CONTAINS
   END SUBROUTINE Write0_QML_Empty
 
   SUBROUTINE Cart_TO_Q_QML_Empty(QModel,dnX,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_Empty_t),     intent(in)    :: QModel

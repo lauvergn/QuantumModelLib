@@ -31,21 +31,21 @@
 !===========================================================================
 !===========================================================================
 
-MODULE mod_AdiaChannels
-  USE QML_NumParameters_m
+MODULE AdiaChannels_MakeHinact_m
+  USE QMLLib_NumParameters_m
 
   IMPLICIT NONE
 
 CONTAINS
 
-  SUBROUTINE Make_Hinact(Qact,QModel)
-  USE QML_NumParameters_m
-  USE QML_UtilLib_m
-  USE QML_diago_m
-  USE QML_dnS_m
-  USE QML_dnMat_m
-  USE mod_Model
-  USE QML_Basis_m
+  SUBROUTINE QML_MakeHinact(Qact,QModel)
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE QMLLib_diago_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+  USE AdiaChannels_Basis_m
   IMPLICIT NONE
 
   real (kind=Rkind), allocatable, intent(in)    :: Qact(:)
@@ -89,11 +89,11 @@ CONTAINS
 
   IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
   IF (QML_Check_NotAlloc_dnMat(QModel%QM%Vec0,nderiv=0)) THEN
-!$OMP CRITICAL (CRIT_Make_Hinact)
+!$OMP CRITICAL (CRIT_QML_MakeHinact)
     CALL QML_alloc_dnMat(QModel%QM%Vec0,nsurf=nb,ndim=ndim_act,nderiv=0)
     CALL diagonalization(dnH%d0,Ene,QModel%QM%Vec0%d0,nb,sort=1,phase=.TRUE.)
     write(out_unitp,*) 'init Vec0 done'
-!$OMP END CRITICAL (CRIT_Make_Hinact)
+!$OMP END CRITICAL (CRIT_QML_MakeHinact)
   END IF
 
   CALL QML_DIAG_dnMat(dnH,dnHdiag,dnVec,dnVecProj,dnVec0=QModel%QM%Vec0)
@@ -108,6 +108,6 @@ CONTAINS
   write(out_unitp,*) 'Ene'
   CALL Write_RVec(Ene(1:QModel%QM%nb_Channels)*auTOcm_inv,out_unitp,6,name_info='Ene')
 
-  END SUBROUTINE Make_Hinact
+  END SUBROUTINE QML_MakeHinact
 
-END MODULE mod_AdiaChannels
+END MODULE AdiaChannels_MakeHinact_m

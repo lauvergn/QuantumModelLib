@@ -37,7 +37,7 @@
 !! @date 08/04/2021
 !!
 MODULE QML_PH4_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -82,7 +82,7 @@ MODULE QML_PH4_m
     integer, allocatable :: iQjQHess_TO_ifunc(:,:)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot  => EvalPot_QML_PH4
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_PH4
     PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_PH4
     PROCEDURE :: Write_QModel     => Write_QML_PH4
     PROCEDURE :: Write0_QModel    => Write0_QML_PH4
@@ -369,8 +369,8 @@ MODULE QML_PH4_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_PH4(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
-  USE QML_dnPoly_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnPoly_m
   IMPLICIT NONE
 
     CLASS(QML_PH4_t),   intent(in)    :: QModel
@@ -423,7 +423,7 @@ MODULE QML_PH4_m
   END SUBROUTINE EvalPot_QML_PH4
 
   SUBROUTINE EvalFunc_QML_PH4(QModel,Func,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_PH4_t),   intent(in)    :: QModel
@@ -439,8 +439,8 @@ MODULE QML_PH4_m
   END SUBROUTINE EvalFunc_QML_PH4
 
   SUBROUTINE EvalFunc_QML_PH4_fit3(QModel,Func,dnQ,nderiv)
-  USE QML_dnS_m
-  USE QML_dnPoly_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnPoly_m
   IMPLICIT NONE
 
     CLASS(QML_PH4_t),   intent(in)    :: QModel
@@ -496,7 +496,7 @@ MODULE QML_PH4_m
   END SUBROUTINE EvalFunc_QML_PH4_fit3
 
   FUNCTION QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly) RESULT(dnvfour)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
@@ -595,7 +595,7 @@ MODULE QML_PH4_m
 
   END SUBROUTINE QML_read_para4d
   FUNCTION QML_dnSigmoid_PH4(x,a)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnSigmoid_PH4

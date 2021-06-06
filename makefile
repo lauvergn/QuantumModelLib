@@ -247,10 +247,10 @@ QMLib     = libQMLib.a
 DIR0      = $(QML_path)
 DIROBJ    = $(DIR0)/OBJ
 DIRSRC    = $(DIR0)/SRC
-DIRLib    = $(DIRSRC)/Lib
-DIRdnS    = $(DIRSRC)/dnSLib
-DIRdnPoly = $(DIRSRC)/dnPolyLib
-DIRdnMat  = $(DIRSRC)/dnMatLib
+DIRLib    = $(DIRSRC)/QMLLib
+DIRdnS    = $(DIRSRC)/QMLdnSVM
+DIRdnPoly = $(DIRSRC)/QMLdnSVM
+DIRdnMat  = $(DIRSRC)/QMLdnSVM
 DIRModel  = $(DIRSRC)/QML
 DIRAdia   = $(DIRSRC)/AdiaChannels
 #
@@ -261,7 +261,7 @@ OBJ_QML   = $(DIROBJ)/Empty_m.o \
                  $(DIROBJ)/HNNHp_m.o $(DIROBJ)/HONO_m.o \
                  $(DIROBJ)/HNO3_m.o \
                  $(DIROBJ)/CH5_m.o $(DIROBJ)/PH4_m.o \
-								 $(DIROBJ)/HOO_DMBE_m.o \
+                 $(DIROBJ)/HOO_DMBE_m.o \
                  $(DIROBJ)/H3_m.o \
                  $(DIROBJ)/HenonHeiles_m.o $(DIROBJ)/LinearHBond_m.o \
                  $(DIROBJ)/Phenol_m.o $(DIROBJ)/TwoD_m.o \
@@ -269,9 +269,9 @@ OBJ_QML   = $(DIROBJ)/Empty_m.o \
                  $(DIROBJ)/OneDSOC_1S1T_m.o $(DIROBJ)/OneDSOC_2S1T_m.o \
                  $(DIROBJ)/Tully_m.o
 
-OBJ_AdiaLib    = $(DIROBJ)/mod_AdiaChannels.o
+OBJ_AdiaLib    = $(DIROBJ)/MakeHinact_m.o
 
-OBJ_Model      = $(DIROBJ)/mod_Model.o $(DIROBJ)/QML_Basis_m.o
+OBJ_Model      = $(DIROBJ)/Model_m.o $(DIROBJ)/Basis_m.o
 
 OBJ_test       = $(DIROBJ)/TEST_OOP.o
 OBJ_driver     = $(DIROBJ)/Model_driver.o
@@ -283,10 +283,10 @@ OBJ_testdnPoly = $(DIROBJ)/TEST_dnPoly.o
 OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 
-OBJ_lib        = $(DIROBJ)/QML_FiniteDiff_m.o \
-                 $(DIROBJ)/QML_dnMat_m.o $(DIROBJ)/QML_dnPoly_m.o $(DIROBJ)/QML_dnS_m.o \
-                 $(DIROBJ)/QML_UtilLib_m.o $(DIROBJ)/QML_diago_m.o \
-                 $(DIROBJ)/QML_NumParameters_m.o
+OBJ_lib        = $(DIROBJ)/FiniteDiff_m.o \
+                 $(DIROBJ)/dnMat_m.o $(DIROBJ)/dnPoly_m.o $(DIROBJ)/dnS_m.o \
+                 $(DIROBJ)/UtilLib_m.o $(DIROBJ)/diago_m.o \
+                 $(DIROBJ)/NumParameters_m.o
 
 OBJ_all        = $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 
@@ -368,7 +368,7 @@ $(ModLib): $(OBJ_driver) $(OBJ_all)
 #===============================================
 .PHONY: clean
 clean:
-	rm -f  $(MODEXE) $(GRIDEXE) $(ADIAEXE) $(dnSEXE) $(DriverEXE) $(TESTEXE)
+	rm -f  $(MODEXE) $(GRIDEXE) $(ADIAEXE) $(dnSEXE) $(DriverEXE) $(TESTEXE) $(dnPolyEXE)
 	rm -f  $(ModLib) libQMLib.a
 	rm -fr *.dSYM comp.log
 	cd $(DIROBJ) ; rm -f *.o *.mod *.MOD
@@ -456,8 +456,8 @@ $(DIROBJ)/HenonHeiles_m.o:$(DIRModel)/HenonHeiles_m.f90
 ##################################################################################
 ### QModel
 #
-$(DIROBJ)/mod_Model.o:$(DIRSRC)/mod_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_QML)  -c $(DIRSRC)/mod_Model.f90
+$(DIROBJ)/Model_m.o:$(DIRSRC)/Model_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_QML)  -c $(DIRSRC)/Model_m.f90
 #
 ##################################################################################
 #
@@ -465,10 +465,10 @@ $(DIROBJ)/mod_Model.o:$(DIRSRC)/mod_Model.f90
 ##################################################################################
 ### AdiaChannels
 #
-$(DIROBJ)/mod_AdiaChannels.o:$(DIRAdia)/mod_AdiaChannels.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRAdia)/mod_AdiaChannels.f90
-$(DIROBJ)/QML_Basis_m.o:$(DIRAdia)/QML_Basis_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRAdia)/QML_Basis_m.f90
+$(DIROBJ)/MakeHinact_m.o:$(DIRAdia)/MakeHinact_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRAdia)/MakeHinact_m.f90
+$(DIROBJ)/Basis_m.o:$(DIRAdia)/Basis_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRAdia)/Basis_m.f90
 #
 ##################################################################################
 #
@@ -496,20 +496,20 @@ $(DIROBJ)/TEST_Adia.o:$(DIRSRC)/TEST_Adia.f90
 ##################################################################################
 ### dnS libraries
 #
-$(DIROBJ)/QML_dnS_m.o:$(DIRdnS)/QML_dnS_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/QML_dnS_m.f90
-$(DIROBJ)/TEST_dnS.o:$(DIRdnS)/TEST_dnS.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/TEST_dnS.f90
+$(DIROBJ)/dnS_m.o:$(DIRdnS)/dnS_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/dnS_m.f90
+$(DIROBJ)/TEST_dnS.o:$(DIRSRC)/TEST_dnS.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRSRC)/TEST_dnS.f90
 #
 ##################################################################################
 #
 ##################################################################################
 ### dnPoly libraries
 #
-$(DIROBJ)/QML_dnPoly_m.o:$(DIRdnPoly)/QML_dnPoly_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) -c $(DIRdnPoly)/QML_dnPoly_m.f90
-$(DIROBJ)/TEST_dnPoly.o:$(DIRdnPoly)/TEST_dnPoly.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRdnPoly)/TEST_dnPoly.f90
+$(DIROBJ)/dnPoly_m.o:$(DIRdnPoly)/dnPoly_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) -c $(DIRdnPoly)/dnPoly_m.f90
+$(DIROBJ)/TEST_dnPoly.o:$(DIRSRC)/TEST_dnPoly.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRSRC)/TEST_dnPoly.f90
 #
 ##################################################################################
 #
@@ -518,8 +518,8 @@ $(DIROBJ)/TEST_dnPoly.o:$(DIRdnPoly)/TEST_dnPoly.f90
 ##################################################################################
 ### dnMat libraries
 #
-$(DIROBJ)/QML_dnMat_m.o:$(DIRdnMat)/QML_dnMat_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRdnMat)/QML_dnMat_m.f90
+$(DIROBJ)/dnMat_m.o:$(DIRdnMat)/dnMat_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRdnMat)/dnMat_m.f90
 #
 ##################################################################################
 #
@@ -528,14 +528,14 @@ $(DIROBJ)/QML_dnMat_m.o:$(DIRdnMat)/QML_dnMat_m.f90
 ##################################################################################
 ### libraries
 #
-$(DIROBJ)/QML_FiniteDiff_m.o:$(DIRLib)/QML_FiniteDiff_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/QML_FiniteDiff_m.f90
-$(DIROBJ)/QML_UtilLib_m.o:$(DIRLib)/QML_UtilLib_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/QML_UtilLib_m.f90
-$(DIROBJ)/QML_diago_m.o:$(DIRLib)/QML_diago_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DIRLib)/QML_diago_m.f90
-$(DIROBJ)/QML_NumParameters_m.o:$(DIRLib)/QML_NumParameters_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/QML_NumParameters_m.f90
+$(DIROBJ)/FiniteDiff_m.o:$(DIRLib)/FiniteDiff_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/FiniteDiff_m.f90
+$(DIROBJ)/UtilLib_m.o:$(DIRLib)/UtilLib_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/UtilLib_m.f90
+$(DIROBJ)/diago_m.o:$(DIRLib)/diago_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DIRLib)/diago_m.f90
+$(DIROBJ)/NumParameters_m.o:$(DIRLib)/NumParameters_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/NumParameters_m.f90
 #
 ##################################################################################
 #
@@ -553,9 +553,9 @@ $(DIROBJ)/TEST_Adia.o:   $(ModLib) $(OBJ_AdiaLib)
 
 $(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 
-$(DIROBJ)/mod_Model.o: $(DIROBJ)/QML_Basis_m.o $(OBJ_lib) $(OBJ_QML)
+$(DIROBJ)/Model_m.o: $(DIROBJ)/Basis_m.o $(OBJ_lib) $(OBJ_QML)
 
-$(DIROBJ)/mod_AdiaChannels.o: $(DIROBJ)/QML_Basis_m.o $(ModLib)
+$(DIROBJ)/MakeHinact_m.o: $(DIROBJ)/Basis_m.o $(ModLib)
 
 
 $(DIROBJ)/Empty_m.o: $(OBJ_lib)
@@ -588,12 +588,12 @@ $(DIROBJ)/Phenol_m.o:            $(DIROBJ)/Empty_m.o $(OBJ_lib) \
                                        $(DIROBJ)/Morse_m.o $(DIROBJ)/Sigmoid_m.o
 #
 #
-$(DIROBJ)/QML_UtilLib_m.o:    $(DIROBJ)/QML_NumParameters_m.o
-$(DIROBJ)/QML_dnS_m.o:        $(DIROBJ)/QML_UtilLib_m.o $(DIROBJ)/QML_NumParameters_m.o
-$(DIROBJ)/QML_dnPoly_m.o:     $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/QML_UtilLib_m.o $(DIROBJ)/QML_NumParameters_m.o
-$(DIROBJ)/QML_dnMat_m.o:      $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/QML_diago_m.o $(DIROBJ)/QML_UtilLib_m.o $(DIROBJ)/QML_NumParameters_m.o
-$(DIROBJ)/QML_diago_m.o:      $(DIROBJ)/QML_NumParameters_m.o
-$(DIROBJ)/QML_FiniteDiff_m.o: $(DIROBJ)/QML_dnMat_m.o $(DIROBJ)/QML_dnS_m.o $(DIROBJ)/QML_NumParameters_m.o
+$(DIROBJ)/UtilLib_m.o:    $(DIROBJ)/NumParameters_m.o
+$(DIROBJ)/dnS_m.o:        $(DIROBJ)/UtilLib_m.o $(DIROBJ)/NumParameters_m.o
+$(DIROBJ)/dnPoly_m.o:     $(DIROBJ)/dnS_m.o $(DIROBJ)/UtilLib_m.o $(DIROBJ)/NumParameters_m.o
+$(DIROBJ)/dnMat_m.o:      $(DIROBJ)/dnS_m.o $(DIROBJ)/diago_m.o $(DIROBJ)/UtilLib_m.o $(DIROBJ)/NumParameters_m.o
+$(DIROBJ)/diago_m.o:      $(DIROBJ)/NumParameters_m.o
+$(DIROBJ)/FiniteDiff_m.o: $(DIROBJ)/dnMat_m.o $(DIROBJ)/dnS_m.o $(DIROBJ)/NumParameters_m.o
 #
 ############################################################################
 ### Documentation with doxygen

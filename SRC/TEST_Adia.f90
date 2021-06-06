@@ -31,10 +31,10 @@
 !===========================================================================
 !===========================================================================
 PROGRAM TEST_adia
-  USE QML_NumParameters_m
-  USE QML_UtilLib_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   USE mod_AdiaChannels
   IMPLICIT NONE
 

@@ -48,8 +48,8 @@
 !! @author David Lauvergnat
 !! @date 09/08/2017
 !!
-MODULE QML_dnMat_m
-  USE QML_NumParameters_m
+MODULE QMLdnSVM_dnMat_m
+  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
   TYPE dnMat_t
@@ -423,7 +423,7 @@ CONTAINS
 !! @param S                     TYPE(dnS):       derived type which deals with the derivatives of a scalar.
 !! @param i,j                   integer (optional) indices of the matrix element. If not present i=j=1
   SUBROUTINE QML_sub_dnS_TO_dnMat(S,Mat,i,j)
-    USE QML_dnS_m
+    USE QMLdnSVM_dnS_m
     TYPE (dnMat_t),     intent(inout) :: Mat
     TYPE (dnS_t),       intent(in)    :: S
     integer, optional,  intent(in)    :: i,j
@@ -520,7 +520,7 @@ CONTAINS
 !! @param S                     TYPE(dnS):       derived type which deals with the derivatives of a scalar.
 !! @param i,j                   integer (optional) indices of the matrix element. If not present i=j=1
   SUBROUTINE QML_sub_dnMat_TO_dnS(Mat,S,i,j)
-    USE QML_dnS_m
+    USE QMLdnSVM_dnS_m
     TYPE (dnMat_t),     intent(in)    :: Mat
     TYPE (dnS_t),       intent(inout) :: S
     integer, optional,  intent(in)    :: i,j
@@ -602,7 +602,7 @@ CONTAINS
 !! @param Mat                   TYPE (dnMat_t):    derived type which deals with the derivatives of a matrix.
 !! @param MatOFS                TYPE(dnS):       matrix of derived type which deals with the derivatives of a scalar.
   SUBROUTINE QML_set_dnMat_FROM_MatOFdnS(Mat,MatOFS)
-    USE QML_dnS_m
+    USE QMLdnSVM_dnS_m
     CLASS (dnMat_t),   intent(inout) :: Mat
     TYPE (dnS_t),      intent(in)    :: MatOFS(:,:)
 
@@ -1475,7 +1475,7 @@ CONTAINS
 !! @param Mat                TYPE (dnMat_t):      derived type which deals with the derivatives of a matrix.
 !! @param nio                integer (optional):  when present unit to print S, otherwise it is the default unit:out_unitp
   SUBROUTINE QML_Write_dnMat(Mat,nio,info)
-    USE QML_UtilLib_m
+    USE QMLLib_UtilLib_m
 
     TYPE (dnMat_t),   intent(in)           :: Mat
     integer,          intent(in), optional :: nio
@@ -1650,7 +1650,7 @@ CONTAINS
 !! @param Mat                      TYPE (dnMat_t):      derived type which deals with the derivatives of a matrix.
 !! @param epsi                     real (optional):     when present zero limit, otherwise 10^-10
   FUNCTION QML_Check_dnMat_IS_ZERO(Mat,epsi) RESULT(Check_dnMat_IS_ZERO)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     logical                                  :: Check_dnMat_IS_ZERO
     TYPE (dnMat_t),     intent(in)           :: Mat
@@ -1673,7 +1673,7 @@ CONTAINS
 !! @param get_maxval_OF_dnMat   real  (result):      largest value (all components)
 !! @param Mat                      TYPE (dnMat_t):      derived type which deals with the derivatives of a matrix.
   FUNCTION QML_get_maxval_OF_dnMat(Mat,nderiv) RESULT(get_maxval_OF_dnMat)
-    USE QML_NumParameters_m
+    USE QMLLib_NumParameters_m
 
     real(kind=Rkind)                     :: get_maxval_OF_dnMat
     TYPE (dnMat_t), intent(in)           :: Mat
@@ -1733,8 +1733,8 @@ CONTAINS
   END FUNCTION QML_Check_NotAlloc_dnMat
 
   SUBROUTINE QML_DIAG_dnMat(dnMat,dnMatDiag,dnVec,dnVecProj,dnVec0)
-    USE QML_UtilLib_m
-    USE QML_diago_m
+    USE QMLLib_UtilLib_m
+    USE QMLLib_diago_m
     IMPLICIT NONE
 
     TYPE (dnMat_t),     intent(in)              :: dnMat
@@ -1995,4 +1995,4 @@ CONTAINS
 
   END SUBROUTINE QML_DIAG_dnMat
 
-END MODULE QML_dnMat_m
+END MODULE QMLdnSVM_dnMat_m

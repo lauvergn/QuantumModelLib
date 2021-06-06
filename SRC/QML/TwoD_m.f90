@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_TwoD_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -61,7 +61,7 @@ MODULE QML_TwoD_m
    real (kind=Rkind)    :: muY  = 6667._Rkind
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_TwoD
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_TwoD
     PROCEDURE :: Write_QModel    => Write_QML_TwoD
     PROCEDURE :: Write0_QModel   => Write0_QML_TwoD
   END TYPE QML_TwoD_t
@@ -226,7 +226,7 @@ MODULE QML_TwoD_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_TwoD(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_TwoD_t),  intent(in)    :: QModel

@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HNO3_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -59,7 +59,7 @@ MODULE QML_HNO3_m
     integer            :: nt(0:max_fit,0:max_fit)        = 0
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot  => EvalPot_QML_HNO3
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_HNO3
     PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_HNO3
     PROCEDURE :: Write_QModel     => Write_QML_HNO3
     PROCEDURE :: Write0_QModel    => Write0_QML_HNO3
@@ -197,7 +197,7 @@ MODULE QML_HNO3_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HNO3(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_HNO3_t),  intent(in)    :: QModel
@@ -227,7 +227,7 @@ MODULE QML_HNO3_m
   END SUBROUTINE EvalPot_QML_HNO3
 
   SUBROUTINE EvalFunc_QML_HNO3(QModel,Func,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_HNO3_t),  intent(in)    :: QModel
@@ -258,8 +258,8 @@ MODULE QML_HNO3_m
   END SUBROUTINE EvalFunc_QML_HNO3
 
   FUNCTION QML_dnvfour_HNO3(rot,iq,jq,QModel)
-  USE QML_dnS_m
-  USE QML_dnPoly_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnPoly_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnvfour_HNO3

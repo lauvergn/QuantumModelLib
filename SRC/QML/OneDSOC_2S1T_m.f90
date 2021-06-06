@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_OneDSOC_2S1T_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -65,7 +65,7 @@ MODULE QML_OneDSOC_2S1T_m
 
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_QML_OneDSOC_2S1T_Pot
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_OneDSOC_2S1T
     PROCEDURE :: Write_QModel    => Write_QML_OneDSOC_2S1T
     PROCEDURE :: Write0_QModel   => Write0_QML_OneDSOC_2S1T
   END TYPE QML_OneDSOC_2S1T_t
@@ -231,8 +231,8 @@ MODULE QML_OneDSOC_2S1T_m
 !! @param dnQ(:)             TYPE (dnS_t)                 value for which the potential is calculated
 !! @param nderiv             integer:                    it enables to specify up to which derivatives the potential is calculated:
 !!                                                       the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_QML_OneDSOC_2S1T_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  SUBROUTINE EvalPot_QML_OneDSOC_2S1T(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_OneDSOC_2S1T_t), intent(in)    :: QModel
@@ -286,6 +286,6 @@ MODULE QML_OneDSOC_2S1T_m
     Mat_OF_PotDia(j,i) = ZERO
 
 
-  END SUBROUTINE eval_QML_OneDSOC_2S1T_Pot
+  END SUBROUTINE EvalPot_QML_OneDSOC_2S1T
 
 END MODULE QML_OneDSOC_2S1T_m

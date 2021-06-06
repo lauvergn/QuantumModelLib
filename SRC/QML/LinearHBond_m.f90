@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_LinearHBond_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   USE QML_Morse_m
   USE QML_Buck_m
@@ -59,7 +59,7 @@ MODULE QML_LinearHBond_m
      real (kind=Rkind)    :: muq = 1837.1526464003414_Rkind      ! reduced mass associated to q (H atom)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_LinearHBond
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_LinearHBond
     PROCEDURE :: Write_QModel    => Write_QML_LinearHBond
     PROCEDURE :: Write0_QModel   => Write0_QML_LinearHBond
   END TYPE QML_LinearHBond_t
@@ -307,7 +307,7 @@ MODULE QML_LinearHBond_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_LinearHBond(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_LinearHBond_t),  intent(in)    :: QModel

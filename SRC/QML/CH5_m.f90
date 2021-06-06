@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_CH5_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -79,7 +79,7 @@ MODULE QML_CH5_m
 
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot  => EvalPot_QML_CH5
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_CH5
     PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_CH5
     PROCEDURE :: Write_QModel     => Write_QML_CH5
     PROCEDURE :: Write0_QModel    => Write0_QML_CH5
@@ -352,7 +352,7 @@ MODULE QML_CH5_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_CH5(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_CH5_t),   intent(in)    :: QModel
@@ -384,7 +384,7 @@ MODULE QML_CH5_m
   END SUBROUTINE EvalPot_QML_CH5
 
   SUBROUTINE EvalFunc_QML_CH5(QModel,Func,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_CH5_t),   intent(in)    :: QModel
@@ -400,8 +400,8 @@ MODULE QML_CH5_m
   END SUBROUTINE EvalFunc_QML_CH5
 
   SUBROUTINE EvalFunc_QML_CH5_fit3(QModel,Func,dnQ,nderiv)
-  USE QML_dnS_m
-  USE QML_dnPoly_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnPoly_m
   IMPLICIT NONE
 
     CLASS(QML_CH5_t),   intent(in)    :: QModel
@@ -457,8 +457,8 @@ MODULE QML_CH5_m
 
   END SUBROUTINE EvalFunc_QML_CH5_fit3
   FUNCTION QML_dnvfour_fit3(Rm,iq,jq,QModel) RESULT(dnvfour)
-  USE QML_dnS_m
-  USE QML_dnPoly_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnPoly_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
@@ -536,7 +536,7 @@ MODULE QML_CH5_m
 
   END FUNCTION QML_dnvfour_fit3
   FUNCTION QML_dnvfour_fit3_WITH_poly(Rm,iq,jq,QModel,dnPoly) RESULT(dnvfour)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
@@ -664,7 +664,7 @@ MODULE QML_CH5_m
 
   END SUBROUTINE QML_read_para4d
   FUNCTION QML_dnSigmoid_CH5(x,a)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnSigmoid_CH5

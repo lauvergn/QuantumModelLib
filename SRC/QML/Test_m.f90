@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_Test_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -49,7 +49,7 @@ MODULE QML_Test_m
    PRIVATE
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Test
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Test
     PROCEDURE :: Write_QModel    => Write_QML_Test
     PROCEDURE :: Write0_QModel   => Write0_QML_Test
   END TYPE QML_Test_t
@@ -141,7 +141,7 @@ MODULE QML_Test_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Test(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_Test_t),   intent(in)    :: QModel

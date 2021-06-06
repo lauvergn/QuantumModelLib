@@ -26,7 +26,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_H2SiN_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -43,7 +43,7 @@ MODULE QML_H2SiN_m
      integer,          allocatable :: tab_func(:,:)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_H2SiN
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_H2SiN
     PROCEDURE :: Write_QModel    => Write_QML_H2SiN
     PROCEDURE :: Write0_QModel   => Write0_QML_H2SiN
   END TYPE QML_H2SiN_t
@@ -318,7 +318,7 @@ MODULE QML_H2SiN_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H2SiN(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_H2SiN_t), intent(in)    :: QModel
@@ -350,7 +350,7 @@ MODULE QML_H2SiN_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_H2SiN(Mat_OF_PotDia,dnQ,QModel)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)

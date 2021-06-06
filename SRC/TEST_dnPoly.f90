@@ -50,9 +50,9 @@
 !! @date 03/08/2017
 !!
 PROGRAM TEST_dnPoly
-  USE QML_NumParameters_m
-  USE QML_dnS_m
-  USE QML_dnPoly_m
+  USE QMLLib_NumParameters_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnPoly_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                       :: dnX,dn2X,dnY,dnZ,Sana,Snum,dnXZ

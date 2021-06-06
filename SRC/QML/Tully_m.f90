@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_Tully_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -57,7 +57,7 @@ MODULE QML_Tully_m
 
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Tully
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Tully
     PROCEDURE :: Write_QModel    => Write_QML_Tully
     PROCEDURE :: Write0_QModel   => Write0_QML_Tully
   END TYPE QML_Tully_t
@@ -318,7 +318,7 @@ MODULE QML_Tully_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Tully(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_Tully_t),  intent(in)    :: QModel
@@ -353,7 +353,7 @@ MODULE QML_Tully_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv)
   !A. Simple avoided crossing
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (QML_Tully_t), intent(in)     :: QModel
@@ -388,7 +388,7 @@ MODULE QML_Tully_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot2_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv) !2d Tully's potential
   !B. Dual avoided crossing
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (QML_Tully_t), intent(in)     :: QModel
@@ -418,7 +418,7 @@ MODULE QML_Tully_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot3_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv) !3d Tully's potential
   !C. Extended coupling with reflection
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (QML_Tully_t), intent(in)     :: QModel

@@ -22,13 +22,65 @@
 !       <http://pagesperso.lcp.u-psud.fr/lauvergnat/ElVibRot/ElVibRot.html>
 !===========================================================================
 !===========================================================================
-MODULE QML_UtilLib_m
-USE QML_NumParameters_m
+MODULE QMLLib_UtilLib_m
+USE QMLLib_NumParameters_m
 !$ USE omp_lib
 IMPLICIT NONE
 
+  !PRIVATE
+
   character (len=Line_len), public :: File_path = ''
 
+  PUBLIC :: string_uppercase_TO_lowercase,strdup,string_IS_empty,               &
+            int_TO_char,sub_Format_OF_Line
+  PUBLIC :: Write_RMat,Write_RVec,Read_RMat,Read_RVec,Init_IdMat
+  PUBLIC :: time_perso
+  PUBLIC :: err_file_name,make_FileName,file_open2
+
+INTERFACE string_uppercase_TO_lowercase
+  MODULE PROCEDURE QML_string_uppercase_TO_lowercase
+END INTERFACE
+INTERFACE strdup
+  MODULE PROCEDURE QML_strdup
+END INTERFACE
+INTERFACE int_TO_char
+  MODULE PROCEDURE QML_int_TO_char
+END INTERFACE
+INTERFACE string_IS_empty
+  MODULE PROCEDURE QML_string_IS_empty
+END INTERFACE
+INTERFACE sub_Format_OF_Line
+  MODULE PROCEDURE QML_sub_Format_OF_Line
+END INTERFACE
+
+INTERFACE Write_RMat
+  MODULE PROCEDURE QML_Write_RMat
+END INTERFACE
+INTERFACE Write_RVec
+  MODULE PROCEDURE QML_Write_RVec
+END INTERFACE
+INTERFACE Read_RMat
+  MODULE PROCEDURE QML_Read_RMat
+END INTERFACE
+INTERFACE Read_RVec
+  MODULE PROCEDURE QML_Read_RVec
+END INTERFACE
+INTERFACE Init_IdMat
+  MODULE PROCEDURE QML_Init_IdMat
+END INTERFACE
+
+INTERFACE time_perso
+  MODULE PROCEDURE QML_time_perso
+END INTERFACE
+INTERFACE err_file_name
+  MODULE PROCEDURE QML_err_file_name
+END INTERFACE
+INTERFACE make_FileName
+  MODULE PROCEDURE QML_make_FileName
+END INTERFACE
+INTERFACE file_open2
+  MODULE PROCEDURE QML_file_open2
+END INTERFACE
 
 CONTAINS
 
@@ -37,7 +89,7 @@ CONTAINS
   !!@param: lower If the variable is present and its value is F,
   !!              the string will be converted into a uppercase string, otherwise,
   !!              it will be convert into a lowercase string.
-  SUBROUTINE string_uppercase_TO_lowercase(name_string,lower)
+  SUBROUTINE QML_string_uppercase_TO_lowercase(name_string,lower)
   IMPLICIT NONE
 
    character (len=*), intent(inout)  :: name_string
@@ -70,22 +122,22 @@ CONTAINS
    !write(out_unitp,*) 'name_string: ',name_string
 
 
-  END SUBROUTINE string_uppercase_TO_lowercase
+  END SUBROUTINE QML_string_uppercase_TO_lowercase
 
-  PURE FUNCTION strdup(string)
+  PURE FUNCTION QML_strdup(string)
   IMPLICIT NONE
 
    character (len=*), intent(in)   :: string
-   character (len=:), allocatable  :: strdup
+   character (len=:), allocatable  :: QML_strdup
 
-   allocate(character(len=len_trim(string)) :: strdup)
-   strdup = trim(string)
+   allocate(character(len=len_trim(string)) :: QML_strdup)
+   QML_strdup = trim(string)
 
-  END FUNCTION strdup
-  PURE FUNCTION int_TO_char(i)
-  USE QML_NumParameters_m
+  END FUNCTION QML_strdup
+  PURE FUNCTION QML_int_TO_char(i)
+  USE QMLLib_NumParameters_m
 
-    character (len=:), allocatable  :: int_TO_char
+    character (len=:), allocatable  :: QML_int_TO_char
     integer, intent(in)             :: i
 
     character (len=:), allocatable  :: name_int
@@ -106,24 +158,24 @@ CONTAINS
     ! write i in name_int
     write(name_int,'(i0)') i
 
-    ! transfert name_int in int_TO_char
-    int_TO_char = strdup(name_int)
+    ! transfert name_int in QML_int_TO_char
+    QML_int_TO_char = QML_strdup(name_int)
 
     ! deallocate name_int
     deallocate(name_int)
 
-  END FUNCTION int_TO_char
-  FUNCTION string_IS_empty(String)
-    logical                          :: string_IS_empty
+  END FUNCTION QML_int_TO_char
+  FUNCTION QML_string_IS_empty(String)
+    logical                          :: QML_string_IS_empty
     character(len=*), intent(in)     :: String
 
-    string_IS_empty = (len_trim(String) == 0)
+    QML_string_IS_empty = (len_trim(String) == 0)
 
-  END FUNCTION string_IS_empty
+  END FUNCTION QML_string_IS_empty
 
-  SUBROUTINE sub_Format_OF_Line(wformat,nb_line,max_col,cplx,       &
+  SUBROUTINE QML_sub_Format_OF_Line(wformat,nb_line,max_col,cplx,       &
                                 Rformat,name_info)
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
    character (len=*), optional  :: Rformat
@@ -146,7 +198,7 @@ CONTAINS
 
    IF (present(Rformat)) THEN
      IF (len_trim(Rformat) > 10) THEN
-       write(out_unitp,*) ' ERROR in sub_Format_OF_Line'
+       write(out_unitp,*) ' ERROR in QML_sub_Format_OF_Line'
        write(out_unitp,*) ' The format (len_trim) in "Rformat" is too long',len_trim(Rformat)
        write(out_unitp,*) ' Rformat: ',Rformat
        STOP
@@ -185,10 +237,10 @@ CONTAINS
    END IF
 
   !write(out_unitp,*) 'format?: ',trim(wformat)
-  END SUBROUTINE sub_Format_OF_Line
+  END SUBROUTINE QML_sub_Format_OF_Line
 
-  SUBROUTINE Write_RMat(f,nio,nbcol1,Rformat,name_info)
-  USE QML_NumParameters_m
+  SUBROUTINE QML_Write_RMat(f,nio,nbcol1,Rformat,name_info)
+  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
      character (len=*), optional :: Rformat
@@ -211,14 +263,14 @@ CONTAINS
 
 
      IF (present(name_info)) THEN
-       wformat = strdup( '(" ' // trim(name_info) // ': ",' )
+       wformat = QML_strdup( '(" ' // trim(name_info) // ': ",' )
      ELSE
-       wformat = strdup( '(' )
+       wformat = QML_strdup( '(' )
      END IF
      IF (present(Rformat)) THEN
-       wformat = strdup( wformat // 'i0,1x,10' // trim(Rformat) // ')' )
+       wformat = QML_strdup( wformat // 'i0,1x,10' // trim(Rformat) // ')' )
      ELSE
-       wformat = strdup( wformat // 'i0,1x,10f18.9)' )
+       wformat = QML_strdup( wformat // 'i0,1x,10f18.9)' )
      END IF
 
      DO nb=0,nbblocs-1
@@ -233,9 +285,9 @@ CONTAINS
      END DO
      flush(nio)
 
-  END SUBROUTINE Write_RMat
-  SUBROUTINE Write_RVec(l,nio,nbcol1,Rformat,name_info)
-  USE QML_NumParameters_m
+  END SUBROUTINE QML_Write_RMat
+  SUBROUTINE QML_Write_RVec(l,nio,nbcol1,Rformat,name_info)
+  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
     character (len=*), optional  :: Rformat
@@ -277,9 +329,9 @@ CONTAINS
      write(nio,wformat) (l(i+nbcol*nbblocs),i=1,nfin)
      flush(nio)
 
-  END SUBROUTINE Write_RVec
+  END SUBROUTINE QML_Write_RVec
 
-  SUBROUTINE Read_RMat(f,nio,nbcol,err)
+  SUBROUTINE QML_Read_RMat(f,nio,nbcol,err)
 
   integer, intent(in)             :: nio,nbcol
   integer, intent(inout)          :: err
@@ -288,7 +340,7 @@ CONTAINS
 
   integer i,j,jj,nb,nbblocs,nfin,nl,nc
 
-!$OMP    CRITICAL (Read_RMat_CRIT)
+!$OMP    CRITICAL (QML_Read_RMat_CRIT)
 
   nl = size(f,dim=1)
   nc = size(f,dim=2)
@@ -324,18 +376,18 @@ CONTAINS
 
   IF (err /= 0) THEN
     CALL Write_RMat(f,out_unitp,nbcol)
-    write(out_unitp,*) ' ERROR in Read_RMat'
+    write(out_unitp,*) ' ERROR in QML_Read_RMat'
     write(out_unitp,*) '  while reading a matrix'
     write(out_unitp,*) '  end of file or end of record'
     write(out_unitp,*) '  The matrix paramters: nl,nc,nbcol',nl,nc,nbcol
     write(out_unitp,*) ' Check your data !!'
   END IF
 
-!$OMP    END CRITICAL (Read_RMat_CRIT)
+!$OMP    END CRITICAL (QML_Read_RMat_CRIT)
 
-  END SUBROUTINE Read_RMat
+  END SUBROUTINE QML_Read_RMat
 
-  SUBROUTINE Read_RVec(l,nio,nbcol,err)
+  SUBROUTINE QML_Read_RVec(l,nio,nbcol,err)
 
   integer, intent(in)                :: nio,nbcol
   real(kind=Rkind), intent(inout)    :: l(:)
@@ -343,7 +395,7 @@ CONTAINS
 
   integer :: n,i,nb,nbblocs,nfin
 
-!$OMP    CRITICAL (Read_RVec_CRIT)
+!$OMP    CRITICAL (QML_Read_RVec_CRIT)
 
   n = size(l,dim=1)
   nbblocs=int(n/nbcol)
@@ -361,18 +413,18 @@ CONTAINS
   read(nio,*,IOSTAT=err) (l(i+nbcol*nbblocs),i=1,nfin)
 
   IF (err /= 0) THEN
-    write(out_unitp,*) ' ERROR in Read_RVec'
+    write(out_unitp,*) ' ERROR in QML_Read_RVec'
     write(out_unitp,*) '  while reading a vector'
     write(out_unitp,*) '  end of file or end of record'
     write(out_unitp,*) '  The vector paramters: n,nbcol',n,nbcol
     write(out_unitp,*) ' Check your data !!'
   END IF
 
-!$OMP    END CRITICAL (Read_RVec_CRIT)
+!$OMP    END CRITICAL (QML_Read_RVec_CRIT)
 
-  END SUBROUTINE Read_RVec
+  END SUBROUTINE QML_Read_RVec
 
-  SUBROUTINE Init_IdMat(Mat,ndim)
+  SUBROUTINE QML_Init_IdMat(Mat,ndim)
   IMPLICIT NONE
 
   integer,                        intent(in)    :: ndim
@@ -388,10 +440,10 @@ CONTAINS
       mat(i,i) = ONE
     END DO
 
-  END SUBROUTINE Init_IdMat
+  END SUBROUTINE QML_Init_IdMat
 
 
-  SUBROUTINE time_perso(name)
+  SUBROUTINE QML_time_perso(name)
   IMPLICIT NONE
 
     character (len=*) :: name
@@ -408,7 +460,7 @@ CONTAINS
     logical, save     :: begin = .TRUE.
 
 
-!$OMP    CRITICAL (time_perso_CRIT)
+!$OMP    CRITICAL (QML_time_perso_CRIT)
 
     CALL date_and_time(values=tab_time)
     write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
@@ -481,51 +533,51 @@ CONTAINS
      count_old = count
      t_cpu_old = t_cpu
 
-!$OMP   END CRITICAL (time_perso_CRIT)
+!$OMP   END CRITICAL (QML_time_perso_CRIT)
 
 
-  END SUBROUTINE time_perso
+  END SUBROUTINE QML_time_perso
 
-  FUNCTION err_file_name(file_name,name_sub)
-  integer                                 :: err_file_name
+  FUNCTION QML_err_file_name(file_name,name_sub)
+  integer                                 :: QML_err_file_name
   character (len=*), intent(in)           :: file_name
   character (len=*), intent(in), optional :: name_sub
 
     IF (string_IS_empty(file_name) ) THEN
       IF (present(name_sub)) THEN
-        write(out_unitp,*) ' ERROR in err_file_name, called from: ',name_sub
+        write(out_unitp,*) ' ERROR in QML_err_file_name, called from: ',name_sub
       ELSE
-        write(out_unitp,*) ' ERROR in err_file_name'
+        write(out_unitp,*) ' ERROR in QML_err_file_name'
       END IF
       write(out_unitp,*) '   The file name is empty'
-      err_file_name = 1
+      QML_err_file_name = 1
     ELSE
-      err_file_name = 0
+      QML_err_file_name = 0
     END IF
 
-  END FUNCTION err_file_name
+  END FUNCTION QML_err_file_name
 
-  FUNCTION make_FileName(FileName)
+  FUNCTION QML_make_FileName(FileName)
     character(len=*), intent(in)    :: FileName
 
-    character (len=:), allocatable  :: make_FileName
+    character (len=:), allocatable  :: QML_make_FileName
     integer :: ilast_char
 
     ilast_char = len_trim(File_path)
 
     IF (FileName(1:1) == "/" .OR. FileName(1:1) == "" .OR. ilast_char == 0) THEN
-      make_FileName = trim(adjustl(FileName))
+      QML_make_FileName = trim(adjustl(FileName))
     ELSE
       IF (File_path(ilast_char:ilast_char) == "/") THEN
-        make_FileName = trim(adjustl(File_path)) // trim(adjustl(FileName))
+        QML_make_FileName = trim(adjustl(File_path)) // trim(adjustl(FileName))
       ELSE
-        make_FileName = trim(adjustl(File_path)) // '/' // trim(adjustl(FileName))
+        QML_make_FileName = trim(adjustl(File_path)) // '/' // trim(adjustl(FileName))
       END IF
     END IF
-    !write(666,*) 'make_FileName: ',make_FileName
+    !write(666,*) 'QML_make_FileName: ',QML_make_FileName
     !stop
-  END FUNCTION make_FileName
-  SUBROUTINE file_open2(name_file,iunit,lformatted,append,old,err_file)
+  END FUNCTION QML_make_FileName
+  SUBROUTINE QML_file_open2(name_file,iunit,lformatted,append,old,err_file)
 
   character (len=*),   intent(in)              :: name_file
   integer,             intent(inout)           :: iunit
@@ -569,7 +621,7 @@ CONTAINS
       fstatus = 'unknown'
   END IF
 
-  err_file_loc = err_file_name(name_file,'file_open2')
+  err_file_loc = err_file_name(name_file,'QML_file_open2')
   IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
   IF (present(err_file)) err_file = err_file_loc
 
@@ -603,5 +655,5 @@ CONTAINS
 
 ! write(out_unitp,*) 'open ',name_file,iunit
 
-  END SUBROUTINE file_open2
-END MODULE QML_UtilLib_m
+  END SUBROUTINE QML_file_open2
+END MODULE QMLLib_UtilLib_m

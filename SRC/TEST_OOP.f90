@@ -34,9 +34,9 @@ program prog
   USE QML_Empty_m
   USE QML_Template_m
   USE QML_Morse_m
-  USE QML_dnS_m
-  USE QML_dnMat_m
-  USE mod_Model
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
   IMPLICIT NONE
 
 

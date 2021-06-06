@@ -39,7 +39,7 @@
 !!
 MODULE QML_Morse_m
   USE QML_Empty_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
   PRIVATE
@@ -62,7 +62,7 @@ MODULE QML_Morse_m
      real (kind=Rkind) :: req = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
      real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Morse
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Morse
     PROCEDURE :: Write_QModel    => Write_QML_Morse
     PROCEDURE :: Write0_QModel   => Write0_QML_Morse
   END TYPE QML_Morse_t
@@ -292,7 +292,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Morse(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_Morse_t), intent(in)     :: QModel
@@ -333,7 +333,7 @@ CONTAINS
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param QModel         TYPE(QML_Morse_t):   derived type with the Morse parameters.
   FUNCTION QML_dnMorse(dnR,QModel)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                         :: QML_dnMorse

@@ -37,7 +37,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_H3_m
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -257,7 +257,7 @@ MODULE QML_H3_m
    PRIVATE
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot  => EvalPot_QML_H3
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_H3
     PROCEDURE :: Write_QModel     => Write_QML_H3
     PROCEDURE :: Write0_QModel    => Write0_QML_H3
     PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_H3
@@ -388,7 +388,7 @@ MODULE QML_H3_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H3(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_H3_t),       intent(in)    :: QModel
@@ -407,7 +407,7 @@ MODULE QML_H3_m
   END SUBROUTINE EvalPot_QML_H3
 
   SUBROUTINE Cart_TO_Q_QML_H3(QModel,dnX,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS(QML_H3_t),       intent(in)    :: QModel
@@ -459,7 +459,7 @@ MODULE QML_H3_m
   END SUBROUTINE Cart_TO_Q_QML_H3
 
   SUBROUTINE QML_LSTH(X,VXD)
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
 !       tag='LSTH PES of H2+H. [P. Siegbahn, B. Liu, D.G. Truhlar and C.J.Horowitz, JCP 68, 2457(1978)'
@@ -547,7 +547,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_LSTH
 
   SUBROUTINE QML_VH2(X,S1,S2,S3)
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   IMPLICIT NONE
         real(kind=Rkind), intent(in)    :: X(3)
         real(kind=Rkind), intent(inout) :: S1(3),S2(3),S3(3)
@@ -572,7 +572,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_VH2
 !       *************************************************************
   SUBROUTINE QML_VBIGR(X,S)
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   IMPLICIT NONE
         real(kind=Rkind), intent(in)    ::  X
         real(kind=Rkind), intent(inout) ::  S(3)
@@ -591,7 +591,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_VBIGR
 
   SUBROUTINE QML_SPLID2(N,X,F,W,IJ,Y,TAB)
-  USE QML_NumParameters_m
+  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
         integer,          intent(in)    :: N,IJ

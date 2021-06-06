@@ -46,7 +46,7 @@ module QML_Template_m
      real(kind=Rkind)     :: kXmY=0.1_Rkind
 
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Template
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Template
     PROCEDURE :: Write_QModel    => Write_QML_Template
     PROCEDURE :: Write0_QModel   => Write0_QML_Template
   END TYPE QML_Template_t
@@ -57,7 +57,7 @@ module QML_Template_m
 contains
 
   FUNCTION Init_QML_Template(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  USE QML_UtilLib_m
+  USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
     TYPE (QML_Template_t)             :: QModel
@@ -117,7 +117,7 @@ contains
 
 
   SUBROUTINE EvalPot_QML_Template(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QML_dnS_m
+  USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     CLASS (QML_Template_t),  intent(in)     :: QModel
