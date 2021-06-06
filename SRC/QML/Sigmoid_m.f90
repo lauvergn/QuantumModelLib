@@ -35,9 +35,9 @@
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-MODULE mod_SigmoidModel
+MODULE QML_Sigmoid_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
@@ -49,7 +49,7 @@ MODULE mod_SigmoidModel
 !! @date 03/08/2017
 !!
 !! @param A,B,C,e        real: sigmoid parameters
-  TYPE, EXTENDS (EmptyModel_t) :: SigmoidModel_t
+  TYPE, EXTENDS (QML_Empty_t) :: SigmoidModel_t
      PRIVATE
      real (kind=Rkind) :: A   = ONE
      real (kind=Rkind) :: B   = ZERO ! equivalent to Req
@@ -78,7 +78,7 @@ CONTAINS
 
     TYPE (SigmoidModel_t)                        :: QModel
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: A,B,C,e
@@ -97,8 +97,8 @@ CONTAINS
     END IF
 
 
-    !QModel_loc%EmptyModel_t = Init_EmptyModel(QModel_in) ! it does not work with nagfor
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    !QModel_loc%QML_Empty_t = Init_QML_Empty(QModel_in) ! it does not work with nagfor
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     IF (debug) write(out_unitp,*) 'init default Sigmoid parameters'
     CALL Init0_SigmoidModel(QModel,A=ONE,B=ZERO,C=ONE,e=ONE,model_name='sigmoid')
@@ -226,7 +226,7 @@ CONTAINS
     integer,                  intent(in) :: nio
 
     write(nio,*) 'Sigmoid current parameters'
-    CALL Write_EmptyModel(QModel%EmptyModel_t,nio)
+    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
     write(nio,*) '  s(x) = A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)'
     write(nio,*) '  A:   ',QModel%A
     write(nio,*) '  B:   ',QModel%B
@@ -315,4 +315,4 @@ CONTAINS
     !flush(out_unitp)
 
   END FUNCTION dnSigmoid
-END MODULE mod_SigmoidModel
+END MODULE QML_Sigmoid_m

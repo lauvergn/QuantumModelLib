@@ -36,9 +36,9 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_H2NSi_Model
+MODULE QML_H2NSi_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
@@ -47,7 +47,7 @@ MODULE mod_H2NSi_Model
 !!
 !! @param option                  integer: it enables to chose between the 1 model(s) (default 1)
 
-  TYPE, EXTENDS (EmptyModel_t) ::  H2NSi_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_H2NSi_t
 
      PRIVATE
 
@@ -59,24 +59,24 @@ MODULE mod_H2NSi_Model
 
    CONTAINS
     PROCEDURE :: Eval_QModel_Pot => eval_H2NSi_Pot
-    PROCEDURE :: Write_QModel    => Write_H2NSi_Model
-    PROCEDURE :: Write0_QModel   => Write_H2NSi_Model
-  END TYPE H2NSi_Model_t
+    PROCEDURE :: Write_QModel    => Write_QML_H2NSi
+    PROCEDURE :: Write0_QModel   => Write_QML_H2NSi
+  END TYPE QML_H2NSi_t
 
-  PUBLIC :: H2NSi_Model_t,Init_H2NSi_Model
+  PUBLIC :: QML_H2NSi_t,Init_QML_H2NSi
 
   CONTAINS
 !> @brief Subroutine which makes the initialization of the H2NSi parameters.
 !!
-!! @param H2NSiPot          TYPE(H2NSi_Model_t):   derived type in which the parameters are set-up.
+!! @param H2NSiPot          TYPE(QML_H2NSi_t):   derived type in which the parameters are set-up.
 !! @param option             integer:            to be able to chose between the 3 models (default 1, Simple avoided crossing).
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_H2NSi_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_H2NSi(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
-    TYPE (H2NSi_Model_t)                         :: QModel
+    TYPE (QML_H2NSi_t)                         :: QModel
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -86,7 +86,7 @@ MODULE mod_H2NSi_Model
     character (len=:), allocatable  :: FileName
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_H2NSi_Model'
+    character (len=*), parameter :: name_sub='Init_QML_H2NSi'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -95,7 +95,7 @@ MODULE mod_H2NSi_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 1
     QModel%ndim     = 6
@@ -154,7 +154,7 @@ MODULE mod_H2NSi_Model
 
     CASE Default
 
-          write(out_unitp,*) ' ERROR in Init_H2NSi_Model '
+          write(out_unitp,*) ' ERROR in Init_QML_H2NSi '
           write(out_unitp,*) ' This option is not possible. option: ',QModel%option
           write(out_unitp,*) ' Its value MUST be 1 or 2'
 
@@ -181,14 +181,14 @@ MODULE mod_H2NSi_Model
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_H2NSi_Model
-!> @brief Subroutine wich prints the H2NSi_Model parameters.
+  END FUNCTION Init_QML_H2NSi
+!> @brief Subroutine wich prints the QML_H2NSi parameters.
 !!
-!! @param QModel            CLASS(H2NSi_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_H2NSi_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:            file unit to print the parameters.
-  SUBROUTINE Write_H2NSi_Model(QModel,nio)
+  SUBROUTINE Write_QML_H2NSi(QModel,nio)
 
-    CLASS(H2NSi_Model_t), intent(in) :: QModel
+    CLASS(QML_H2NSi_t), intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*) 'H2NSi current parameters'
@@ -282,13 +282,13 @@ MODULE mod_H2NSi_Model
     write(nio,*)
     write(nio,*) 'end H2NSi current parameters'
 
-  END SUBROUTINE Write_H2NSi_Model
+  END SUBROUTINE Write_QML_H2NSi
 
   SUBROUTINE get_Q0_H2NSi(Q0,QModel,option)
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: Q0(:)
-    TYPE (H2NSi_Model_t),        intent(in)    :: QModel
+    TYPE (QML_H2NSi_t),        intent(in)    :: QModel
     integer,                     intent(in)    :: option
 
     IF (size(Q0) /= 6) THEN
@@ -310,13 +310,13 @@ MODULE mod_H2NSi_Model
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param QModel         TYPE(H2NSi_Model_t):    derived type in which the parameters are set-up.
+!! @param QModel         TYPE(QML_H2NSi_t):    derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_H2NSi_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE QML_dnS_m
 
-    CLASS(H2NSi_Model_t), intent(in)    :: QModel
+    CLASS(QML_H2NSi_t), intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:) !
     integer,              intent(in)    :: nderiv
@@ -340,7 +340,7 @@ MODULE mod_H2NSi_Model
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param QModel         TYPE(H2NSi_Model_t):    derived type in which the parameters are set-up.
+!! @param QModel         TYPE(QML_H2NSi_t):    derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
@@ -350,7 +350,7 @@ MODULE mod_H2NSi_Model
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:)
-    TYPE(H2NSi_Model_t) , intent(in)    :: QModel
+    TYPE(QML_H2NSi_t) , intent(in)    :: QModel
 
 
     TYPE (dnS_t)        :: DQ(6,6)
@@ -389,4 +389,4 @@ MODULE mod_H2NSi_Model
 
   END SUBROUTINE eval_H2NSi_Pot1
 
-END MODULE mod_H2NSi_Model
+END MODULE QML_H2NSi_m

@@ -34,10 +34,10 @@
 !> @author David Lauvergnat
 !! @date 02/12/2017
 !!
-MODULE mod_Vibronic
+MODULE QML_Vibronic_m
   USE QML_NumParameters_m
   USE QML_dnMat_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
 !> @brief Derived type in which the parameters of the Phenol potential are set-up.
@@ -46,7 +46,7 @@ MODULE mod_Vibronic
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
-  TYPE, EXTENDS (EmptyModel_t) ::  VibronicPot_t
+  TYPE, EXTENDS (QML_Empty_t) ::  VibronicPot_t
      PRIVATE
      ! Vij, the diabatic potentials (i=j) or couplings (i/=j), are
      !   expanded as a taylor expension at second order
@@ -275,7 +275,7 @@ CONTAINS
 
    ! for V(1,1): first diabatic state
    !write(out_unitp,*) 'morse:'
-   v10R = dnMorse(dnR,Para_Phenol%v10)
+   v10R = QML_dnMorse(dnR,Para_Phenol%v10)
    !CALL QML_Write_dnS(v10R,6)
    !write(out_unitp,*) 'sigmoid:'
    v11R = dnSigmoid(dnR,Para_Phenol%v11)
@@ -295,7 +295,7 @@ CONTAINS
    CALL dealloc_dnS(v11th)
 
    ! for V(2,2): 2d diabatic state
-   v201R = dnMorse(dnR,Para_Phenol%v201) + Para_Phenol%B204
+   v201R = QML_dnMorse(dnR,Para_Phenol%v201) + Para_Phenol%B204
    v202R = Para_Phenol%B205*exp(-Para_Phenol%B206*(dnR-Para_Phenol%B207)) + Para_Phenol%B208
    v20pR = v201R + v202R
    v20mR = v201R - v202R
@@ -344,7 +344,7 @@ CONTAINS
 
    ! for V(3,3): 3d diabatic state
    !write(out_unitp,*) 'morse:'
-   v30R = dnMorse(dnR,Para_Phenol%v30) + Para_Phenol%a30
+   v30R = QML_dnMorse(dnR,Para_Phenol%v30) + Para_Phenol%a30
    !CALL QML_Write_dnMat(v30R,6)
    !write(out_unitp,*) 'sigmoid:'
    v31R = dnSigmoid(dnR,Para_Phenol%v31)
@@ -392,4 +392,4 @@ CONTAINS
   END SUBROUTINE eval_Vibronic
 
 
-END MODULE mod_Vibronic
+END MODULE QML_Vibronic_m

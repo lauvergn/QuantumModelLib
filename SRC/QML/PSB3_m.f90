@@ -36,15 +36,15 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_PSB3_Model
+MODULE QML_PSB3_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the PSB3 parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  PSB3_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  PSB3_Model_t
     PRIVATE
 
     real (kind=Rkind) :: blamin   = 0.0912615_Rkind
@@ -85,14 +85,14 @@ MODULE mod_PSB3_Model
     PROCEDURE :: Write_QModel    => Write_PSB3_Model
     PROCEDURE :: Write0_QModel   => Write0_PSB3_Model
   END TYPE PSB3_Model_t
- 
+
   PUBLIC :: PSB3_Model_t,Init_PSB3_Model
- 
+
   CONTAINS
 !> @brief Function which makes the initialization of the PSB3 parameters.
 !!
 !! @param QModel             TYPE(PSB3_Model_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_PSB3_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
@@ -100,7 +100,7 @@ MODULE mod_PSB3_Model
 
     TYPE (PSB3_Model_t)                          :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -115,7 +115,7 @@ MODULE mod_PSB3_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 2
     QModel%ndim     = 3
@@ -494,4 +494,4 @@ MODULE mod_PSB3_Model
 
   END SUBROUTINE eval_PSB3Pot2
 
-END MODULE mod_PSB3_Model
+END MODULE QML_PSB3_m

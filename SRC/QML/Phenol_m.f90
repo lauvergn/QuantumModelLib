@@ -38,11 +38,11 @@
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-MODULE mod_PhenolModel
+MODULE QML_Phenol_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
-  USE mod_MorseModel
-  USE mod_SigmoidModel
+  USE QML_Empty_m
+  USE QML_Morse_m
+  USE QML_Sigmoid_m
   IMPLICIT NONE
 
   PRIVATE
@@ -54,20 +54,20 @@ MODULE mod_PhenolModel
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
-  TYPE, EXTENDS (EmptyModel_t) :: PhenolModel_t
+  TYPE, EXTENDS (QML_Empty_t) :: PhenolModel_t
      PRIVATE
 
      ! V(1,1) term
-     TYPE (MorseModel_t)   :: v10
+     TYPE (QML_Morse_t)   :: v10
      TYPE (SigmoidModel_t) :: v11
 
      ! V(3,3) term
-     TYPE (MorseModel_t)   :: v30
+     TYPE (QML_Morse_t)   :: v30
      TYPE (SigmoidModel_t) :: v31
      real(kind=Rkind)      :: a30=4.85842_Rkind ! eV
 
      ! V(2,2) term
-     TYPE (MorseModel_t)   :: v201
+     TYPE (QML_Morse_t)   :: v201
      real(kind=Rkind)      :: b204=5.50696_Rkind ! eV
 
      real(kind=Rkind)      :: b205=4.70601_Rkind ! eV
@@ -113,7 +113,7 @@ CONTAINS
 
     TYPE (PhenolModel_t)               :: QModel
 
-    TYPE(EmptyModel_t),   intent(in)   :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),   intent(in)   :: QModel_in ! variable to transfer info to the init
     logical,              intent(in)   :: read_param
     integer,              intent(in)   :: nio_param_file
 
@@ -132,7 +132,7 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
     QModel%pot_name = 'phenol'
     QModel%ndim     = 2
     QModel%nsurf    = 3
@@ -144,7 +144,7 @@ CONTAINS
     ! V(1,1) term
     !De1=4.26302 eV r1=0.96994 Å a1=2.66021 Å−1
     Req = 0.96994_Rkind
-    CALL Init0_MorseModel(QModel%v10,D=4.26302_Rkind,a=2.66021_Rkind,    &
+    CALL Init0_QML_Morse(QModel%v10,D=4.26302_Rkind,a=2.66021_Rkind,    &
                           req=0.96994_Rkind,model_name='morse-v10')
     !A1=0.27037 eV A2=1.96606 Å A3=0.685264 Å
     CALL Init0_SigmoidModel(QModel%v11,A=0.27037_Rkind,B=1.96606_Rkind,  &
@@ -152,7 +152,7 @@ CONTAINS
 
     ! V(2,2) term
     !B201=0.192205 eV B202=5.67356 Å−1 B203=1.03171 Å
-    CALL Init0_MorseModel(QModel%v201,D=0.192205_Rkind,a=5.67356_Rkind,  &
+    CALL Init0_QML_Morse(QModel%v201,D=0.192205_Rkind,a=5.67356_Rkind,  &
                           req=1.03171_Rkind,model_name='morse-v201')
     !the exp term is given with the coef's: a205,a206,a207,a208
 
@@ -171,7 +171,7 @@ CONTAINS
 
     ! V(3,3) term
     !De3=4.47382 eV r3=0.96304 Å a3=2.38671 Å−1 a30=4.85842 eV
-    CALL Init0_MorseModel(QModel%v30,D=4.47382_Rkind,a=2.38671_Rkind,    &
+    CALL Init0_QML_Morse(QModel%v30,D=4.47382_Rkind,a=2.38671_Rkind,    &
                           req=0.96304_Rkind,model_name='morse-v30')
     !C1=0.110336 eV C2=1.21724 Å C3=0.06778 Å̊
     CALL Init0_SigmoidModel(QModel%v31,A=0.110336_Rkind,B=1.21724_Rkind, &
@@ -265,12 +265,12 @@ CONTAINS
     write(nio,*)
     write(nio,*) '-----------------------------------------'
     write(nio,*) ' V(1,1):'
-    CALL Write_MorseModel(QModel%v10,nio)
+    CALL Write_QML_Morse(QModel%v10,nio)
     CALL Write_SigmoidModel(QModel%v11,nio)
 
     write(nio,*) '-----------------------------------------'
     write(nio,*) ' V(2,2):'
-    CALL Write_MorseModel(QModel%v201,nio)
+    CALL Write_QML_Morse(QModel%v201,nio)
     write(nio,*) ' b204:',QModel%b204
     write(nio,*) ' v202=B205*exp(-B206*(R-B207)) + B208'
     write(nio,*) ' b205...b208:',QModel%b205,QModel%b206,QModel%b207,QModel%b208
@@ -287,7 +287,7 @@ CONTAINS
     write(nio,*) ' V(3,3):'
     write(nio,*) ' a30:',QModel%a30
 
-    CALL Write_MorseModel(QModel%v30,nio)
+    CALL Write_QML_Morse(QModel%v30,nio)
     CALL Write_SigmoidModel(QModel%v31,nio)
 
     write(nio,*) '-----------------------------------------'
@@ -347,7 +347,7 @@ CONTAINS
    !--------------------------------------------------------------------
    ! for V(1,1): first diabatic state
    !write(out_unitp,*) 'morse:'
-   v10R = dnMorse(dnR,QModel%v10)
+   v10R = QML_dnMorse(dnR,QModel%v10)
    !CALL QML_Write_dnS(v10R,6)
    !write(out_unitp,*) 'sigmoid:'
    v11R = dnSigmoid(dnR,QModel%v11)
@@ -366,7 +366,7 @@ CONTAINS
 
    !--------------------------------------------------------------------
    ! for V(2,2): 2d diabatic state
-   v201R = dnMorse(dnR,QModel%v201) + QModel%B204
+   v201R = QML_dnMorse(dnR,QModel%v201) + QModel%B204
    v202R = QModel%B205*exp(-QModel%B206*(dnR-QModel%B207)) + QModel%B208
    v20pR = v201R + v202R
    v20mR = v201R - v202R
@@ -416,7 +416,7 @@ CONTAINS
    !--------------------------------------------------------------------
    ! for V(3,3): 3d diabatic state
    !write(out_unitp,*) 'morse:'
-   v30R = dnMorse(dnR,QModel%v30) + QModel%a30
+   v30R = QML_dnMorse(dnR,QModel%v30) + QModel%a30
    !CALL QML_Write_dnMat(v30R,6)
    !write(out_unitp,*) 'sigmoid:'
    v31R = dnSigmoid(dnR,QModel%v31)
@@ -479,4 +479,4 @@ CONTAINS
 
   END SUBROUTINE eval_PhenolPot
 
-END MODULE mod_PhenolModel
+END MODULE QML_Phenol_m

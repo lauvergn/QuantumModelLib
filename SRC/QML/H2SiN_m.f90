@@ -25,15 +25,15 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_H2SiN_Model
+MODULE QML_H2SiN_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the H2SiN parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  H2SiN_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_H2SiN_t
    PRIVATE
 
      real(kind=Rkind), allocatable :: Qref(:)
@@ -43,26 +43,26 @@ MODULE mod_H2SiN_Model
      integer,          allocatable :: tab_func(:,:)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_H2SiN_Pot
-    PROCEDURE :: Write_QModel    => Write_H2SiN_Model
-    PROCEDURE :: Write0_QModel   => Write0_H2SiN_Model
-  END TYPE H2SiN_Model_t
+    PROCEDURE :: Eval_QModel_Pot => eval_QML_H2SiN_Pot
+    PROCEDURE :: Write_QModel    => Write_QML_H2SiN
+    PROCEDURE :: Write0_QModel   => Write0_QML_H2SiN
+  END TYPE QML_H2SiN_t
 
-  PUBLIC :: H2SiN_Model_t,Init_H2SiN_Model
+  PUBLIC :: QML_H2SiN_t,Init_QML_H2SiN
 
   CONTAINS
 !> @brief Function which makes the initialization of the H2SiN parameters.
 !!
-!! @param QModel             TYPE(H2SiN_Model_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel             TYPE(QML_H2SiN_t):   result derived type in which the parameters are set-up.
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_H2SiN_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_H2SiN(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (H2SiN_Model_t)                         :: QModel ! RESULT
+    TYPE (QML_H2SiN_t)                         :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -71,7 +71,7 @@ MODULE mod_H2SiN_Model
     character (len=:), allocatable  :: FileName
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_H2SiN_Model'
+    character (len=*), parameter :: name_sub='Init_QML_H2SiN'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -80,7 +80,7 @@ MODULE mod_H2SiN_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 1
     QModel%ndim     = 6
@@ -177,15 +177,15 @@ MODULE mod_H2SiN_Model
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_H2SiN_Model
-!> @brief Subroutine wich prints the H2SiN_Model parameters.
+  END FUNCTION Init_QML_H2SiN
+!> @brief Subroutine wich prints the QML_H2SiN parameters.
 !!
-!! @param QModel            CLASS(H2SiN_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_H2SiN_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_H2SiN_Model(QModel,nio)
+  SUBROUTINE Write_QML_H2SiN(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(H2SiN_Model_t),   intent(in) :: QModel
+    CLASS(QML_H2SiN_t),   intent(in) :: QModel
     integer,                intent(in) :: nio
 
     write(nio,*) 'H2SiN current parameters'
@@ -285,7 +285,7 @@ MODULE mod_H2SiN_Model
     CONTINUE
 
     CASE Default
-        write(out_unitp,*) ' ERROR in Write_H2SiN_Model '
+        write(out_unitp,*) ' ERROR in Write_QML_H2SiN '
         write(out_unitp,*) ' This option is not possible. option: ',QModel%option
         write(out_unitp,*) ' Its value MUST be 1,2,3'
 
@@ -295,11 +295,11 @@ MODULE mod_H2SiN_Model
     write(nio,*)
     write(nio,*) 'end H2SiN current parameters'
 
-  END SUBROUTINE Write_H2SiN_Model
-  SUBROUTINE Write0_H2SiN_Model(QModel,nio)
+  END SUBROUTINE Write_QML_H2SiN
+  SUBROUTINE Write0_QML_H2SiN(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(H2SiN_Model_t),   intent(in) :: QModel
+    CLASS(QML_H2SiN_t),   intent(in) :: QModel
     integer,                intent(in) :: nio
 
     write(nio,*) 'H2SiN default parameters'
@@ -308,20 +308,20 @@ MODULE mod_H2SiN_Model
     write(nio,*) 'end H2SiN default parameters'
 
 
-  END SUBROUTINE Write0_H2SiN_Model
+  END SUBROUTINE Write0_QML_H2SiN
 
 !> @brief Subroutine wich calculates the H2SiN potential with derivatives up to the 2d order.
 !!
-!! @param QModel             TYPE(H2SiN_Model_t):    derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_H2SiN_t):    derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_H2SiN_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE eval_QML_H2SiN_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(H2SiN_Model_t), intent(in)    :: QModel
+    CLASS(QML_H2SiN_t), intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -329,10 +329,10 @@ MODULE mod_H2SiN_Model
     SELECT CASE (QModel%option)
 
     CASE (1,2,3)
-      CALL eval_H2SiNPot1(Mat_OF_PotDia,dnQ,QModel)
+      CALL eval_QML_H2SiN_Pot1(Mat_OF_PotDia,dnQ,QModel)
 
     CASE Default
-        write(out_unitp,*) ' ERROR in eval_H2SiN_Pot '
+        write(out_unitp,*) ' ERROR in eval_QML_H2SiN_Pot '
         write(out_unitp,*) ' This option is not possible. option: ',QModel%option
         write(out_unitp,*) ' Its value MUST be 1, 2 or 3'
 
@@ -340,29 +340,29 @@ MODULE mod_H2SiN_Model
     END SELECT
 
 
-  END SUBROUTINE eval_H2SiN_Pot
+  END SUBROUTINE eval_QML_H2SiN_Pot
 
 !> @brief Subroutine wich calculates the H2SiN potential (Not published model) with derivatives up to the 2d order is required.
 !!
 !! @param PotVal             TYPE (dnMat_t):       derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                 value for which the potential is calculated
-!! @param QModel             TYPE(H2SiN_Model_t):  derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_H2SiN_t):  derived type in which the parameters are set-up.
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_H2SiNPot1(Mat_OF_PotDia,dnQ,QModel)
+  SUBROUTINE eval_QML_H2SiN_Pot1(Mat_OF_PotDia,dnQ,QModel)
   USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:)
-    TYPE(H2SiN_Model_t), intent(in)    :: QModel
+    TYPE(QML_H2SiN_t), intent(in)    :: QModel
 
 
     TYPE (dnS_t)        :: DQ(6,4)
     TYPE (dnS_t)        :: Vtemp
     integer             :: i,j
 
-    !write(6,*) ' sub eval_H2SiNPot1' ; flush(6)
+    !write(6,*) ' sub eval_QML_H2SiN_Pot1' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,4,1,3,5,6]) - QModel%Qref(:)
@@ -390,9 +390,9 @@ MODULE mod_H2SiN_Model
    CALL QML_dealloc_dnS(Vtemp)
    CALL QML_dealloc_dnS(DQ)
 
-   !write(6,*) ' end eval_H2SiNPot1' ; flush(6)
+   !write(6,*) ' end eval_QML_H2SiN_Pot1' ; flush(6)
 
-  END SUBROUTINE eval_H2SiNPot1
+  END SUBROUTINE eval_QML_H2SiN_Pot1
 
 
-END MODULE mod_H2SiN_Model
+END MODULE QML_H2SiN_m

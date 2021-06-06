@@ -36,9 +36,9 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_CH5_Model
+MODULE QML_CH5_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
@@ -60,7 +60,7 @@ MODULE mod_CH5_Model
   character (len=*), parameter :: base_fit5_hess_fileName='InternalData/CH5/fit5/inter_mp2_'
 
 !> @brief Derived type in which the CH5 parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  CH5_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_CH5_t
 
     PRIVATE
 
@@ -79,27 +79,27 @@ MODULE mod_CH5_Model
 
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot  => eval_CH5_Pot
-    PROCEDURE :: Eval_QModel_Func => Eval_CH5_Func
-    PROCEDURE :: Write_QModel     => Write_CH5_Model
-    PROCEDURE :: Write0_QModel    => Write0_CH5_Model
-  END TYPE CH5_Model_t
+    PROCEDURE :: Eval_QModel_Pot  => eval_QML_CH5_Pot
+    PROCEDURE :: Eval_QModel_Func => eval_QML_CH5_Func
+    PROCEDURE :: Write_QModel     => Write_QML_CH5
+    PROCEDURE :: Write0_QModel    => Write0_QML_CH5
+  END TYPE QML_CH5_t
 
-  PUBLIC :: CH5_Model_t,Init_CH5_Model
+  PUBLIC :: QML_CH5_t,Init_QML_CH5
 
   CONTAINS
 !> @brief Function which makes the initialization of the CH5 parameters.
 !!
-!! @param QModel             TYPE(CH5_Model_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel             TYPE(QML_CH5_t):   result derived type in which the parameters are set-up.
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_CH5_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_CH5(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (CH5_Model_t)                           :: QModel ! RESULT
+    TYPE (QML_CH5_t)                           :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -109,7 +109,7 @@ MODULE mod_CH5_Model
     character (len=:), allocatable  :: FileName
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_CH5_Model'
+    character (len=*), parameter :: name_sub='Init_QML_CH5'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -118,7 +118,7 @@ MODULE mod_CH5_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     IF (QModel%ndim == 0) THEN
       ! it means that ndim was not present in the CALL Init_Model().
@@ -132,7 +132,7 @@ MODULE mod_CH5_Model
        CALL QModel%Write_QModel(out_unitp)
        write(out_unitp,*) ' ERROR in ',name_sub
        write(out_unitp,*) ' ndim MUST equal to 1 or 2 or 12. ndim: ',QModel%ndim
-       STOP 'ERROR in Init_CH5_Model: ndim MUST equal to 1 or 2 or 12'
+       STOP 'ERROR in Init_QML_CH5: ndim MUST equal to 1 or 2 or 12'
     END IF
 
     QModel%nsurf    = 1
@@ -164,7 +164,7 @@ MODULE mod_CH5_Model
     END SELECT
 
     !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
-    CALL read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
+    CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
                      ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
     !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
     IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 energy parameters'
@@ -192,7 +192,7 @@ MODULE mod_CH5_Model
       END SELECT
 
       !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
-      CALL read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
+      CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
                        ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
       !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
 
@@ -230,7 +230,7 @@ MODULE mod_CH5_Model
                              int_TO_char(ii) // '_' // int_TO_char(jj) )
       END SELECT
 
-      CALL read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
+      CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
                       ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
 
       !IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 hessian parameters'
@@ -274,26 +274,26 @@ MODULE mod_CH5_Model
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_CH5_Model
-!> @brief Subroutine wich prints the current CH5_Model parameters.
+  END FUNCTION Init_QML_CH5
+!> @brief Subroutine wich prints the current QML_CH5 parameters.
 !!
-!! @param QModel            CLASS(CH5_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_CH5_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_CH5_Model(QModel,nio)
+  SUBROUTINE Write_QML_CH5(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(CH5_Model_t),   intent(in) :: QModel
+    CLASS(QML_CH5_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
-  END SUBROUTINE Write_CH5_Model
-!> @brief Subroutine wich prints the default CH5_Model parameters.
+  END SUBROUTINE Write_QML_CH5
+!> @brief Subroutine wich prints the default QML_CH5 parameters.
 !!
-!! @param QModel            CLASS(CH5_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_CH5_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_CH5_Model(QModel,nio)
+  SUBROUTINE Write0_QML_CH5(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(CH5_Model_t),   intent(in) :: QModel
+    CLASS(QML_CH5_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*) 'CH5 parameters'
@@ -342,20 +342,20 @@ MODULE mod_CH5_Model
     write(nio,*)
     write(nio,*) 'end CH5 parameters'
 
-  END SUBROUTINE Write0_CH5_Model
+  END SUBROUTINE Write0_QML_CH5
 
 !> @brief Subroutine wich calculates the CH5 potential with derivatives up to the 2d order.
 !!
-!! @param QModel             CLASS(CH5_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_CH5_t):   derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_CH5_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE eval_QML_CH5_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(CH5_Model_t),   intent(in)    :: QModel
+    CLASS(QML_CH5_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -368,26 +368,26 @@ MODULE mod_CH5_Model
     Rm  = dnQ(1)
 
     DO i1=2,QModel%ndim
-      dnDQ(i1) = dnQ(i1) - dnvfour_fit3(Rm,i1,0,QModel)
+      dnDQ(i1) = dnQ(i1) - QML_dnvfour_fit3(Rm,i1,0,QModel)
     END DO
 
     vh = ZERO
     DO i1=2,QModel%ndim
-      vh = vh + dnDQ(i1)*dnDQ(i1) * dnvfour_fit3(Rm,i1,i1,QModel)
+      vh = vh + dnDQ(i1)*dnDQ(i1) * QML_dnvfour_fit3(Rm,i1,i1,QModel)
       DO i2=i1+1,QModel%ndim
         IF (.NOT. QModel%file_exist(i1,i2)) CYCLE
-        vh = vh + dnDQ(i1)*dnDQ(i2) * TWO*dnvfour_fit3(Rm,i1,i2,QModel)
+        vh = vh + dnDQ(i1)*dnDQ(i2) * TWO*QML_dnvfour_fit3(Rm,i1,i2,QModel)
       END DO
     END DO
-    Mat_OF_PotDia(1,1) = dnvfour_fit3(Rm,0,0,QModel) + vh * HALF
+    Mat_OF_PotDia(1,1) = QML_dnvfour_fit3(Rm,0,0,QModel) + vh * HALF
 
-  END SUBROUTINE eval_CH5_Pot
+  END SUBROUTINE eval_QML_CH5_Pot
 
-  SUBROUTINE eval_CH5_Func(QModel,Func,dnQ,nderiv)
+  SUBROUTINE eval_QML_CH5_Func(QModel,Func,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(CH5_Model_t),   intent(in)    :: QModel
+    CLASS(QML_CH5_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -395,16 +395,16 @@ MODULE mod_CH5_Model
     TYPE (dnS_t)    :: Rm
     integer         :: i1,i2,ifunc
 
-    CALL eval_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
+    CALL eval_QML_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
 
-  END SUBROUTINE eval_CH5_Func
+  END SUBROUTINE eval_QML_CH5_Func
 
-  SUBROUTINE eval_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
+  SUBROUTINE eval_QML_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
   USE QML_dnS_m
   USE QML_dnPoly_m
   IMPLICIT NONE
 
-    CLASS(CH5_Model_t),   intent(in)    :: QModel
+    CLASS(QML_CH5_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -425,25 +425,25 @@ MODULE mod_CH5_Model
 
     ! energy
     ifunc = QModel%i1i2_TO_ifunc(0,0)
-    Func(ifunc) = dnvfour_fit3_WITH_poly(Rm,0,0,QModel,dnPoly)
+    Func(ifunc) = QML_dnvfour_fit3_WITH_poly(Rm,0,0,QModel,dnPoly)
 
     ! Qopt: 11 values
     DO i1=2,max_fit
       ifunc = QModel%i1i2_TO_ifunc(i1,0)
-      Func(ifunc) = dnvfour_fit3_WITH_poly(Rm,i1,0,QModel,dnPoly)
+      Func(ifunc) = QML_dnvfour_fit3_WITH_poly(Rm,i1,0,QModel,dnPoly)
     END DO
 
 
     ! hess_ij: xx values
     DO i1=2,max_fit
       ifunc = QModel%i1i2_TO_ifunc(i1,i1)
-      Func(ifunc) = dnvfour_fit3_WITH_poly(Rm,i1,i1,QModel,dnPoly)
+      Func(ifunc) = QML_dnvfour_fit3_WITH_poly(Rm,i1,i1,QModel,dnPoly)
     END DO
 
     DO i1=2,max_fit
     DO i2=i1+1,max_fit
       ifunc = QModel%i1i2_TO_ifunc(i1,i2)
-      Func(ifunc) = dnvfour_fit3_WITH_poly(Rm,i1,i2,QModel,dnPoly)
+      Func(ifunc) = QML_dnvfour_fit3_WITH_poly(Rm,i1,i2,QModel,dnPoly)
       ifunc2 = QModel%i1i2_TO_ifunc(i2,i1)
       Func(ifunc2) = Func(ifunc)
     END DO
@@ -455,27 +455,27 @@ MODULE mod_CH5_Model
     deallocate(dnPoly)
 
 
-  END SUBROUTINE eval_CH5_Func_fit3
-  FUNCTION dnvfour_fit3(Rm,iq,jq,QModel) RESULT(dnvfour)
+  END SUBROUTINE eval_QML_CH5_Func_fit3
+  FUNCTION QML_dnvfour_fit3(Rm,iq,jq,QModel) RESULT(dnvfour)
   USE QML_dnS_m
   USE QML_dnPoly_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
 
-    CLASS(CH5_Model_t),   intent(in)    :: QModel
+    CLASS(QML_CH5_t),   intent(in)    :: QModel
     integer,              intent(in)    :: iq,jq
     TYPE (dnS_t),         intent(in)    :: Rm
 
     integer         :: i,kl,iiq,jjq
     TYPE (dnS_t)    :: tRm ! transformation of Rm
 
-    !write(6,*) 'in dnvfour_fit3',iq,jq
+    !write(6,*) 'in QML_dnvfour_fit3',iq,jq
 
     IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
       write(out_unitp,*) ' ERROR in dnvfour'
       write(out_unitp,*) ' wrong value for iq or jq',iq,jq
-      STOP ' ERROR in dnvfour_fit3: wrong value for iq or jq'
+      STOP ' ERROR in QML_dnvfour_fit3: wrong value for iq or jq'
     END IF
 
     IF (listQop_fit3(iq) == -1 .AND. jq == 0) THEN
@@ -494,9 +494,9 @@ MODULE mod_CH5_Model
 
     IF (jq == 0  .AND. listQop_fit3(iq) /= -1) THEN
       IF (iq == 2) THEN
-        dnvfour = dnvfour + sc2_fit3(Rm,QModel%a(iq,0),QModel%b(iq,0))
+        dnvfour = dnvfour + QML_sc2_fit3(Rm,QModel%a(iq,0),QModel%b(iq,0))
       ELSE
-        dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iq,0),QModel%b(iq,0))
+        dnvfour = dnvfour + QML_sc_fit3(Rm,QModel%a(iq,0),QModel%b(iq,0))
       END IF
     END IF
 
@@ -513,7 +513,7 @@ MODULE mod_CH5_Model
       DO i=1,QModel%nn(0,iiq,iiq)
         dnvfour = dnvfour + QModel%F(i,iiq,iiq)*QML_dnLegendre0(tRm,i-1)
       END DO
-      dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iiq,iiq),QModel%b(iiq,iiq))
+      dnvfour = dnvfour + QML_sc_fit3(Rm,QModel%a(iiq,iiq),QModel%b(iiq,iiq))
 
       CALL QML_dealloc_dnS(tRm)
     ELSE IF (jq > 0 .AND. iq > 0 .AND. iq < jq) THEN
@@ -525,7 +525,7 @@ MODULE mod_CH5_Model
       DO i=1,QModel%nn(0,iiq,jjq)
         dnvfour = dnvfour + QModel%F(i,iiq,jjq)*QML_dnLegendre0(tRm,i-1)
       END DO
-      dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iiq,jjq),QModel%b(iiq,jjq))
+      dnvfour = dnvfour + QML_sc_fit3(Rm,QModel%a(iiq,jjq),QModel%b(iiq,jjq))
 
       CALL QML_dealloc_dnS(tRm)
     END IF
@@ -534,26 +534,26 @@ MODULE mod_CH5_Model
       dnvfour = tan(dnvfour - pi/TWO)
     END IF
 
-  END FUNCTION dnvfour_fit3
-  FUNCTION dnvfour_fit3_WITH_poly(Rm,iq,jq,QModel,dnPoly) RESULT(dnvfour)
+  END FUNCTION QML_dnvfour_fit3
+  FUNCTION QML_dnvfour_fit3_WITH_poly(Rm,iq,jq,QModel,dnPoly) RESULT(dnvfour)
   USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
 
-    CLASS(CH5_Model_t),   intent(in)    :: QModel
+    CLASS(QML_CH5_t),   intent(in)    :: QModel
     integer,              intent(in)    :: iq,jq
     TYPE (dnS_t),         intent(in)    :: Rm
     TYPE (dnS_t),         intent(in)    :: dnPoly(:)
 
     integer         :: i,kl,iiq,jjq,np
 
-    !write(6,*) 'in dnvfour_fit3',iq,jq
+    !write(6,*) 'in QML_dnvfour_fit3',iq,jq
     dnvfour = ZERO
     IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
       write(out_unitp,*) ' ERROR in dnvfour'
       write(out_unitp,*) ' wrong value for iq or jq',iq,jq
-      STOP ' ERROR in dnvfour_fit3: wrong value for iq or jq'
+      STOP ' ERROR in QML_dnvfour_fit3: wrong value for iq or jq'
     END IF
 
     IF (listQop_fit3(iq) == -1 .AND. jq == 0) THEN
@@ -567,9 +567,9 @@ MODULE mod_CH5_Model
 
     IF (jq == 0  .AND. listQop_fit3(iq) /= -1) THEN
       IF (iq == 2) THEN
-        dnvfour = dnvfour + sc2_fit3(Rm,QModel%a(iq,0),QModel%b(iq,0))
+        dnvfour = dnvfour + QML_sc2_fit3(Rm,QModel%a(iq,0),QModel%b(iq,0))
       ELSE
-        dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iq,0),QModel%b(iq,0))
+        dnvfour = dnvfour + QML_sc_fit3(Rm,QModel%a(iq,0),QModel%b(iq,0))
       END IF
     END IF
 
@@ -583,7 +583,7 @@ MODULE mod_CH5_Model
       np = QModel%nn(0,iiq,iiq)
 
       IF (np > 0) dnvfour = dot_product(QModel%F(1:np,iiq,iiq),dnPoly(1:np))
-      dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iiq,iiq),QModel%b(iiq,iiq))
+      dnvfour = dnvfour + QML_sc_fit3(Rm,QModel%a(iiq,iiq),QModel%b(iiq,iiq))
 
     ELSE IF (jq > 0 .AND. iq > 0 .AND. iq < jq) THEN
       iiq = iq
@@ -593,7 +593,7 @@ MODULE mod_CH5_Model
       np = QModel%nn(0,iiq,jjq)
 
       IF (np > 0) dnvfour = dot_product(QModel%F(1:np,iiq,jjq),dnPoly(1:np))
-      dnvfour = dnvfour + sc_fit3(Rm,QModel%a(iiq,jjq),QModel%b(iiq,jjq))
+      dnvfour = dnvfour + QML_sc_fit3(Rm,QModel%a(iiq,jjq),QModel%b(iiq,jjq))
 
     END IF
 
@@ -601,25 +601,25 @@ MODULE mod_CH5_Model
       dnvfour = tan(dnvfour - pi/TWO)
     END IF
 
-  END FUNCTION dnvfour_fit3_WITH_poly
-  FUNCTION sc2_fit3(x,a,b)
-    TYPE (dnS_t)                          :: sc2_fit3
+  END FUNCTION QML_dnvfour_fit3_WITH_poly
+  FUNCTION QML_sc2_fit3(x,a,b)
+    TYPE (dnS_t)                          :: QML_sc2_fit3
     TYPE (dnS_t),           intent(in)    :: x
     real(kind=Rkind),       intent(in)    :: a,b
 
-    sc2_fit3 = dnSigmoid(-x,ONE)*(-x+a) + dnSigmoid(x,ONE)*(x+b)
+    QML_sc2_fit3 = QML_dnSigmoid_CH5(-x,ONE)*(-x+a) + QML_dnSigmoid_CH5(x,ONE)*(x+b)
 
-  END FUNCTION sc2_fit3
-  FUNCTION sc_fit3(x,a,b)
-    TYPE (dnS_t)                          :: sc_fit3
+  END FUNCTION QML_sc2_fit3
+  FUNCTION QML_sc_fit3(x,a,b)
+    TYPE (dnS_t)                          :: QML_sc_fit3
     TYPE (dnS_t),           intent(in)    :: x
     real(kind=Rkind),       intent(in)    :: a,b
 
-    sc_fit3 = a + b*tanh(x)
+    QML_sc_fit3 = a + b*tanh(x)
 
-  END FUNCTION sc_fit3
+  END FUNCTION QML_sc_fit3
 
-  SUBROUTINE read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist)
+  SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist)
   IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim
@@ -630,7 +630,7 @@ MODULE mod_CH5_Model
 
    integer :: no,ios,kl,i
 
-   write(out_unitp,*) 'read_para4d: nom1,max_points: ',nom1,max_points
+   write(out_unitp,*) 'QML_read_para4d: nom1,max_points: ',nom1,max_points
 
 
    CALL file_open2(name_file=nom1,iunit=no,lformatted=.TRUE.,                   &
@@ -645,8 +645,8 @@ MODULE mod_CH5_Model
      IF (n(0) > max_points) THEN
          write(out_unitp,*) ' ERROR : The number of coefficients (',n(0),') >'
          write(out_unitp,*) '         than max_points (',max_points,')'
-         write(out_unitp,*) '         STOP in read_para4d'
-         STOP 'ERROR in read_para4d'
+         write(out_unitp,*) '         STOP in QML_read_para4d'
+         STOP 'ERROR in QML_read_para4d'
      END IF
      DO kl=1,n(0)
         read(no,*) F(kl)
@@ -662,17 +662,17 @@ MODULE mod_CH5_Model
      exist = .FALSE.
    END IF
 
-  END SUBROUTINE read_para4d
-  FUNCTION dnSigmoid(x,a)
+  END SUBROUTINE QML_read_para4d
+  FUNCTION QML_dnSigmoid_CH5(x,a)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    TYPE (dnS_t)                        :: dnSigmoid
+    TYPE (dnS_t)                        :: QML_dnSigmoid_CH5
 
     TYPE (dnS_t),         intent(in)    :: x
     real(kind=Rkind),     INTENT(IN)    :: a
 
-    dnSigmoid = (ONE+tanh(a*x))/TWO
+    QML_dnSigmoid_CH5 = (ONE+tanh(a*x))/TWO
 
-  END FUNCTION dnSigmoid
-END MODULE mod_CH5_Model
+  END FUNCTION QML_dnSigmoid_CH5
+END MODULE QML_CH5_m

@@ -251,23 +251,23 @@ DIRLib    = $(DIRSRC)/Lib
 DIRdnS    = $(DIRSRC)/dnSLib
 DIRdnPoly = $(DIRSRC)/dnPolyLib
 DIRdnMat  = $(DIRSRC)/dnMatLib
-DIRModel  = $(DIRSRC)/ModelLib
+DIRModel  = $(DIRSRC)/QML
 DIRAdia   = $(DIRSRC)/AdiaChannels
 #
-OBJ_ModelLib   = $(DIROBJ)/mod_EmptyModel.o \
-                 $(DIROBJ)/mod_SigmoidModel.o $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_BuckModel.o \
-                 $(DIROBJ)/mod_TemplateModel.o $(DIROBJ)/mod_TestModel.o \
-                 $(DIROBJ)/mod_H2NSi_Model.o $(DIROBJ)/mod_H2SiN_Model.o \
-                 $(DIROBJ)/mod_HNNHp_Model.o $(DIROBJ)/mod_HONO_Model.o \
-                 $(DIROBJ)/mod_HNO3_Model.o \
-                 $(DIROBJ)/mod_CH5_Model.o $(DIROBJ)/mod_PH4_Model.o \
-								 $(DIROBJ)/mod_HOO_DMBE_Model.o \
-                 $(DIROBJ)/mod_H3_Model.o \
-                 $(DIROBJ)/mod_HenonHeilesModel.o $(DIROBJ)/mod_LinearHBondModel.o \
-                 $(DIROBJ)/mod_PhenolModel.o $(DIROBJ)/mod_TwoD_Model.o \
-                 $(DIROBJ)/mod_PSB3_Model.o $(DIROBJ)/mod_Retinal_JPCB2000_Model.o \
-                 $(DIROBJ)/mod_OneDSOC_1S1T_Model.o $(DIROBJ)/mod_OneDSOC_2S1T_Model.o \
-                 $(DIROBJ)/mod_TullyModel.o
+OBJ_QML   = $(DIROBJ)/Empty_m.o \
+                 $(DIROBJ)/Sigmoid_m.o $(DIROBJ)/Morse_m.o $(DIROBJ)/Buck_m.o \
+                 $(DIROBJ)/Template_m.o $(DIROBJ)/Test_m.o \
+                 $(DIROBJ)/H2NSi_m.o $(DIROBJ)/H2SiN_m.o \
+                 $(DIROBJ)/HNNHp_m.o $(DIROBJ)/HONO_m.o \
+                 $(DIROBJ)/HNO3_m.o \
+                 $(DIROBJ)/CH5_m.o $(DIROBJ)/PH4_m.o \
+								 $(DIROBJ)/HOO_DMBE_m.o \
+                 $(DIROBJ)/H3_m.o \
+                 $(DIROBJ)/HenonHeiles_m.o $(DIROBJ)/LinearHBond_m.o \
+                 $(DIROBJ)/Phenol_m.o $(DIROBJ)/TwoD_m.o \
+                 $(DIROBJ)/PSB3_m.o $(DIROBJ)/Retinal_JPCB2000_m.o \
+                 $(DIROBJ)/OneDSOC_1S1T_m.o $(DIROBJ)/OneDSOC_2S1T_m.o \
+                 $(DIROBJ)/Tully_m.o
 
 OBJ_AdiaLib    = $(DIROBJ)/mod_AdiaChannels.o
 
@@ -288,7 +288,7 @@ OBJ_lib        = $(DIROBJ)/QML_FiniteDiff_m.o \
                  $(DIROBJ)/QML_UtilLib_m.o $(DIROBJ)/QML_diago_m.o \
                  $(DIROBJ)/QML_NumParameters_m.o
 
-OBJ_all        = $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
+OBJ_all        = $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 
 #===============================================
 #============= Main program ====================
@@ -382,76 +382,76 @@ clean:
 ##################################################################################
 ### Model libraries
 #
-$(DIROBJ)/mod_EmptyModel.o:$(DIRModel)/mod_EmptyModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_EmptyModel.f90
+$(DIROBJ)/Empty_m.o:$(DIRModel)/Empty_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Empty_m.f90
 
-$(DIROBJ)/mod_MorseModel.o:$(DIRModel)/mod_MorseModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_MorseModel.f90
+$(DIROBJ)/Morse_m.o:$(DIRModel)/Morse_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Morse_m.f90
 
-$(DIROBJ)/mod_TemplateModel.o:$(DIRModel)/mod_TemplateModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_TemplateModel.f90
+$(DIROBJ)/Template_m.o:$(DIRModel)/Template_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Template_m.f90
 
-$(DIROBJ)/mod_TestModel.o:$(DIRModel)/mod_TestModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_TestModel.f90
+$(DIROBJ)/Test_m.o:$(DIRModel)/Test_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Test_m.f90
 
-$(DIROBJ)/mod_LinearHBondModel.o:$(DIRModel)/mod_LinearHBondModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_LinearHBondModel.f90
+$(DIROBJ)/LinearHBond_m.o:$(DIRModel)/LinearHBond_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/LinearHBond_m.f90
 
-$(DIROBJ)/mod_PhenolModel.o:$(DIRModel)/mod_PhenolModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_PhenolModel.f90
+$(DIROBJ)/Phenol_m.o:$(DIRModel)/Phenol_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Phenol_m.f90
 
-$(DIROBJ)/mod_PSB3_Model.o:$(DIRModel)/mod_PSB3_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_PSB3_Model.f90
+$(DIROBJ)/PSB3_m.o:$(DIRModel)/PSB3_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/PSB3_m.f90
 
-$(DIROBJ)/mod_Retinal_JPCB2000_Model.o:$(DIRModel)/mod_Retinal_JPCB2000_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_Retinal_JPCB2000_Model.f90
+$(DIROBJ)/Retinal_JPCB2000_m.o:$(DIRModel)/Retinal_JPCB2000_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Retinal_JPCB2000_m.f90
 
-$(DIROBJ)/mod_HONO_Model.o:$(DIRModel)/mod_HONO_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HONO_Model.f90
+$(DIROBJ)/HONO_m.o:$(DIRModel)/HONO_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/HONO_m.f90
 
-$(DIROBJ)/mod_HNO3_Model.o:$(DIRModel)/mod_HNO3_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HNO3_Model.f90
+$(DIROBJ)/HNO3_m.o:$(DIRModel)/HNO3_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/HNO3_m.f90
 
-$(DIROBJ)/mod_CH5_Model.o:$(DIRModel)/mod_CH5_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_CH5_Model.f90
+$(DIROBJ)/CH5_m.o:$(DIRModel)/CH5_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/CH5_m.f90
 
-$(DIROBJ)/mod_PH4_Model.o:$(DIRModel)/mod_PH4_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_PH4_Model.f90
+$(DIROBJ)/PH4_m.o:$(DIRModel)/PH4_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/PH4_m.f90
 
-$(DIROBJ)/mod_HOO_DMBE_Model.o:$(DIRModel)/mod_HOO_DMBE_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HOO_DMBE_Model.f90
+$(DIROBJ)/HOO_DMBE_m.o:$(DIRModel)/HOO_DMBE_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/HOO_DMBE_m.f90
 
-$(DIROBJ)/mod_H3_Model.o:$(DIRModel)/mod_H3_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_H3_Model.f90
+$(DIROBJ)/H3_m.o:$(DIRModel)/H3_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/H3_m.f90
 
-$(DIROBJ)/mod_HNNHp_Model.o:$(DIRModel)/mod_HNNHp_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HNNHp_Model.f90
+$(DIROBJ)/HNNHp_m.o:$(DIRModel)/HNNHp_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/HNNHp_m.f90
 
-$(DIROBJ)/mod_H2SiN_Model.o:$(DIRModel)/mod_H2SiN_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_H2SiN_Model.f90
+$(DIROBJ)/H2SiN_m.o:$(DIRModel)/H2SiN_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/H2SiN_m.f90
 
-$(DIROBJ)/mod_H2NSi_Model.o:$(DIRModel)/mod_H2NSi_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_H2NSi_Model.f90
+$(DIROBJ)/H2NSi_m.o:$(DIRModel)/H2NSi_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/H2NSi_m.f90
 
-$(DIROBJ)/mod_TwoD_Model.o:$(DIRModel)/mod_TwoD_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_TwoD_Model.f90
+$(DIROBJ)/TwoD_m.o:$(DIRModel)/TwoD_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/TwoD_m.f90
 
-$(DIROBJ)/mod_TullyModel.o:$(DIRModel)/mod_TullyModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_TullyModel.f90
+$(DIROBJ)/Tully_m.o:$(DIRModel)/Tully_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Tully_m.f90
 
-$(DIROBJ)/mod_OneDSOC_1S1T_Model.o:$(DIRModel)/mod_OneDSOC_1S1T_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_OneDSOC_1S1T_Model.f90
-$(DIROBJ)/mod_OneDSOC_2S1T_Model.o:$(DIRModel)/mod_OneDSOC_2S1T_Model.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_OneDSOC_2S1T_Model.f90
+$(DIROBJ)/OneDSOC_1S1T_m.o:$(DIRModel)/OneDSOC_1S1T_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/OneDSOC_1S1T_m.f90
+$(DIROBJ)/OneDSOC_2S1T_m.o:$(DIRModel)/OneDSOC_2S1T_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/OneDSOC_2S1T_m.f90
 
-$(DIROBJ)/mod_BuckModel.o:$(DIRModel)/mod_BuckModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_BuckModel.f90
+$(DIROBJ)/Buck_m.o:$(DIRModel)/Buck_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Buck_m.f90
 
-$(DIROBJ)/mod_SigmoidModel.o:$(DIRModel)/mod_SigmoidModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_SigmoidModel.f90
+$(DIROBJ)/Sigmoid_m.o:$(DIRModel)/Sigmoid_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Sigmoid_m.f90
 
-$(DIROBJ)/mod_HenonHeilesModel.o:$(DIRModel)/mod_HenonHeilesModel.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/mod_HenonHeilesModel.f90
+$(DIROBJ)/HenonHeiles_m.o:$(DIRModel)/HenonHeiles_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/HenonHeiles_m.f90
 #
 ##################################################################################
 ### QModel
@@ -543,49 +543,49 @@ $(DIROBJ)/QML_NumParameters_m.o:$(DIRLib)/QML_NumParameters_m.f90
 ##################################################################################
 ### dependencies
 #
-$(DIROBJ)/TEST_OOP.o:    $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
-$(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
+$(DIROBJ)/TEST_OOP.o:    $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
+$(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 $(DIROBJ)/TEST_dnS.o:    $(OBJ_lib)
 $(DIROBJ)/TEST_dnPoly.o: $(OBJ_lib)
 $(DIROBJ)/TEST_driver.o: $(ModLib)
 $(DIROBJ)/TEST_Adia.o:   $(ModLib) $(OBJ_AdiaLib)
 
 
-$(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_ModelLib)
+$(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 
-$(DIROBJ)/mod_Model.o: $(DIROBJ)/QML_Basis_m.o $(OBJ_lib) $(OBJ_ModelLib)
+$(DIROBJ)/mod_Model.o: $(DIROBJ)/QML_Basis_m.o $(OBJ_lib) $(OBJ_QML)
 
 $(DIROBJ)/mod_AdiaChannels.o: $(DIROBJ)/QML_Basis_m.o $(ModLib)
 
 
-$(DIROBJ)/mod_EmptyModel.o: $(OBJ_lib)
-$(DIROBJ)/mod_MorseModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_BuckModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_SigmoidModel.o: $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
+$(DIROBJ)/Empty_m.o: $(OBJ_lib)
+$(DIROBJ)/Morse_m.o: $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/Buck_m.o: $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/Sigmoid_m.o: $(DIROBJ)/Empty_m.o $(OBJ_lib)
 
-$(DIROBJ)/mod_TemplateModel.o: $(OBJ_lib) $(DIROBJ)/mod_EmptyModel.o $(DIROBJ)/mod_MorseModel.o
-$(DIROBJ)/mod_TestModel.o: $(OBJ_lib) $(DIROBJ)/mod_EmptyModel.o
+$(DIROBJ)/Template_m.o: $(OBJ_lib) $(DIROBJ)/Empty_m.o $(DIROBJ)/Morse_m.o
+$(DIROBJ)/Test_m.o: $(OBJ_lib) $(DIROBJ)/Empty_m.o
 
-$(DIROBJ)/mod_HenonHeilesModel.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_TullyModel.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_OneDSOC_1S1T_Model.o:      $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_OneDSOC_2S1T_Model.o:      $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_TwoD_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_PSB3_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_Retinal_JPCB2000_Model.o:  $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_HONO_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_HNO3_Model.o:              $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_HOO_DMBE_Model.o:          $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_H3_Model.o:                $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_CH5_Model.o:               $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_PH4_Model.o:               $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_HNNHp_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_H2SiN_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_H2NSi_Model.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib)
-$(DIROBJ)/mod_LinearHBondModel.o:        $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
-                                         $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_BuckModel.o
-$(DIROBJ)/mod_PhenolModel.o:             $(DIROBJ)/mod_EmptyModel.o $(OBJ_lib) \
-                                         $(DIROBJ)/mod_MorseModel.o $(DIROBJ)/mod_SigmoidModel.o
+$(DIROBJ)/HenonHeiles_m.o:       $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/Tully_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/OneDSOC_1S1T_m.o:      $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/OneDSOC_2S1T_m.o:      $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/TwoD_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/PSB3_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/Retinal_JPCB2000_m.o:  $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/HONO_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/HNO3_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/HOO_DMBE_m.o:          $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/H3_m.o:                $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/CH5_m.o:               $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/PH4_m.o:               $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/HNNHp_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/H2SiN_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/H2NSi_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/LinearHBond_m.o:       $(DIROBJ)/Empty_m.o $(OBJ_lib) \
+                                          $(DIROBJ)/Morse_m.o $(DIROBJ)/Buck_m.o
+$(DIROBJ)/Phenol_m.o:            $(DIROBJ)/Empty_m.o $(OBJ_lib) \
+                                       $(DIROBJ)/Morse_m.o $(DIROBJ)/Sigmoid_m.o
 #
 #
 $(DIROBJ)/QML_UtilLib_m.o:    $(DIROBJ)/QML_NumParameters_m.o

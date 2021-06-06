@@ -36,9 +36,9 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_H3_Model
+MODULE QML_H3_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
@@ -252,39 +252,39 @@ MODULE mod_H3_Model
   !       END
 
 !> @brief Derived type in which the H3 parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  H3_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_H3_t
 
    PRIVATE
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot  => eval_H3_Pot
-    PROCEDURE :: Write_QModel     => Write_H3_Model
-    PROCEDURE :: Write0_QModel    => Write0_H3_Model
-    PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_H3_Model
-  END TYPE H3_Model_t
+    PROCEDURE :: Eval_QModel_Pot  => eval_QML_H3_Pot
+    PROCEDURE :: Write_QModel     => Write_QML_H3
+    PROCEDURE :: Write0_QModel    => Write0_QML_H3
+    PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_H3
+  END TYPE QML_H3_t
 
-  PUBLIC :: H3_Model_t,Init_H3_Model
+  PUBLIC :: QML_H3_t,Init_QML_H3
 
 
   CONTAINS
 !> @brief Function which makes the initialization of the H3 parameters.
 !!
-!! @param QModel             TYPE(H3_Model_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel             TYPE(QML_H3_t):   result derived type in which the parameters are set-up.
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_H3_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_H3(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (H3_Model_t)                           :: QModel ! RESULT
+    TYPE (QML_H3_t)                           :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_H3_Model'
+    character (len=*), parameter :: name_sub='Init_QML_H3'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -293,7 +293,7 @@ MODULE mod_H3_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf      = 1
     QModel%ndimQ      = 3
@@ -317,38 +317,38 @@ MODULE mod_H3_Model
 
 
     IF (debug) THEN
-      !CALL Write_H3_Model(QModel,nio=out_unitp)
+      !CALL Write_QML_H3(QModel,nio=out_unitp)
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_H3_Model
-!> @brief Subroutine wich prints the current H3_Model parameters.
+  END FUNCTION Init_QML_H3
+!> @brief Subroutine wich prints the current QML_H3 parameters.
 !!
-!! @param QModel            CLASS(H3_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_H3_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_H3_Model(QModel,nio)
+  SUBROUTINE Write_QML_H3(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(H3_Model_t),   intent(in) :: QModel
+    CLASS(QML_H3_t),   intent(in) :: QModel
     integer,                   intent(in) :: nio
 
     write(nio,*) 'H3 IV current parameters'
 
-    CALL Write_EmptyModel(QModel%EmptyModel_t,nio)
+    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
 
     write(nio,*) 'end H3 current parameters'
 
-  END SUBROUTINE Write_H3_Model
-!> @brief Subroutine wich prints the default H3_Model parameters.
+  END SUBROUTINE Write_QML_H3
+!> @brief Subroutine wich prints the default QML_H3 parameters.
 !!
-!! @param QModel            CLASS(H3_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_H3_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_H3_Model(QModel,nio)
+  SUBROUTINE Write0_QML_H3(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(H3_Model_t),   intent(in) :: QModel
+    CLASS(QML_H3_t),   intent(in) :: QModel
     integer,                   intent(in) :: nio
 
     write(nio,*) 'H3 IV default parameters'
@@ -378,20 +378,20 @@ MODULE mod_H3_Model
     write(nio,*) 'end H3 IV default parameters'
 
 
-  END SUBROUTINE Write0_H3_Model
+  END SUBROUTINE Write0_QML_H3
 
 !> @brief Subroutine wich calculates the H3 potential with derivatives up to the 2d order.
 !!
-!! @param QModel             CLASS(H3_Model_t):    derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_H3_t):    derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_H3_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE eval_QML_H3_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(H3_Model_t),       intent(in)    :: QModel
+    CLASS(QML_H3_t),       intent(in)    :: QModel
     TYPE (dnS_t),            intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),            intent(in)    :: dnQ(:)
     integer,                 intent(in)    :: nderiv
@@ -400,17 +400,17 @@ MODULE mod_H3_Model
 
     Q(:) = QML_get_d0_FROM_dnS(dnQ)
 
-    CALL LSTH(Q,V)
+    CALL QML_LSTH(Q,V)
 
     CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0=V)
 
-  END SUBROUTINE eval_H3_Pot
+  END SUBROUTINE eval_QML_H3_Pot
 
-  SUBROUTINE Cart_TO_Q_H3_Model(QModel,dnX,dnQ,nderiv)
+  SUBROUTINE Cart_TO_Q_QML_H3(QModel,dnX,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(H3_Model_t),       intent(in)    :: QModel
+    CLASS(QML_H3_t),       intent(in)    :: QModel
     TYPE (dnS_t),            intent(in)    :: dnX(:,:)
     TYPE (dnS_t),            intent(inout) :: dnQ(:)
     integer,                 intent(in)    :: nderiv
@@ -421,7 +421,7 @@ MODULE mod_H3_Model
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Cart_TO_Q_H3_Model'
+    character (len=*), parameter :: name_sub='Cart_TO_Q_QML_H3'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -439,7 +439,7 @@ MODULE mod_H3_Model
     Vec23(:) = dnX(:,3)-dnX(:,2)
     Vec12(:) = dnX(:,2)-dnX(:,1)
     Vec13(:) = dnX(:,3)-dnX(:,1)
-    IF (debug) write(out_unitp,*) 'Cart_TO_Q_H3_Model vect done'
+    IF (debug) write(out_unitp,*) 'Cart_TO_Q_QML_H3 vect done'
 
     dnQ(1) = sqrt(dot_product(Vec23,Vec23))
     dnQ(2) = sqrt(dot_product(Vec12,Vec12))
@@ -456,9 +456,9 @@ MODULE mod_H3_Model
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
     END IF
-  END SUBROUTINE Cart_TO_Q_H3_Model
+  END SUBROUTINE Cart_TO_Q_QML_H3
 
-  SUBROUTINE LSTH(X,VXD)
+  SUBROUTINE QML_LSTH(X,VXD)
   USE QML_NumParameters_m
   IMPLICIT NONE
 
@@ -491,7 +491,7 @@ MODULE mod_H3_Model
         T1=C*(A+X(1)+A1*X21)/EF1
         T2=C*(A+X(2)+A1*X22)/EF2
         T3=C*(A+X(3)+A1*X23)/EF3
-        CALL VH2(X,S1,S2,S3)
+        CALL QML_VH2(X,S1,S2,S3)
         XQ1=S1(1)+T1
         XQ2=S2(1)+T2
         XQ3=S3(1)+T3
@@ -544,9 +544,9 @@ MODULE mod_H3_Model
         !VX=E/23.06+4.7466
         !VXD=DBLE(VX)
         !VXD = (E+V0)*autTOeV_SLTH
-  END SUBROUTINE LSTH
+  END SUBROUTINE QML_LSTH
 
-  SUBROUTINE VH2(X,S1,S2,S3)
+  SUBROUTINE QML_VH2(X,S1,S2,S3)
   USE QML_NumParameters_m
   IMPLICIT NONE
         real(kind=Rkind), intent(in)    :: X(3)
@@ -554,24 +554,24 @@ MODULE mod_H3_Model
 
         !COMMON/POTCOM/C6,C8,RKW(87),EKW(87),WKW(87)
         IF (X(1) > TEN) THEN
-          CALL VBIGR(X(1),S1)
+          CALL QML_VBIGR(X(1),S1)
         ELSE
-          CALL SPLID2(87,RKW,EKW,WKW,1,X(1),S1)
+          CALL QML_SPLID2(87,RKW,EKW,WKW,1,X(1),S1)
         END IF
         IF (X(2) > TEN) THEN
-          CALL VBIGR(X(2),S2)
+          CALL QML_VBIGR(X(2),S2)
         ELSE
-          CALL SPLID2(87,RKW,EKW,WKW,1,X(2),S2)
+          CALL QML_SPLID2(87,RKW,EKW,WKW,1,X(2),S2)
         END IF
 
         IF(X(3) > TEN) THEN
-          CALL VBIGR(X(3),S3)
+          CALL QML_VBIGR(X(3),S3)
         ELSE
-          CALL SPLID2(87,RKW,EKW,WKW,1,X(3),S3)
+          CALL QML_SPLID2(87,RKW,EKW,WKW,1,X(3),S3)
         END IF
-  END SUBROUTINE VH2
+  END SUBROUTINE QML_VH2
 !       *************************************************************
-  SUBROUTINE VBIGR(X,S)
+  SUBROUTINE QML_VBIGR(X,S)
   USE QML_NumParameters_m
   IMPLICIT NONE
         real(kind=Rkind), intent(in)    ::  X
@@ -588,9 +588,9 @@ MODULE mod_H3_Model
         S(1)=-(C6+C8A)/X6
         S(2)=(C6*SIX + C8A*EIGHT)/X6/X
 
-  END SUBROUTINE VBIGR
+  END SUBROUTINE QML_VBIGR
 
-  SUBROUTINE SPLID2(N,X,F,W,IJ,Y,TAB)
+  SUBROUTINE QML_SPLID2(N,X,F,W,IJ,Y,TAB)
   USE QML_NumParameters_m
   IMPLICIT NONE
 
@@ -640,6 +640,6 @@ MODULE mod_H3_Model
         CC=FLK*(W(MI)-W(KI))/SIX
         TAB(2)=AA+BB+CC
         TAB(3)=(W(MI)*(X(I+1)-Y)+W(KI)*(Y-X(I)))/FLK
-  END SUBROUTINE SPLID2
+  END SUBROUTINE QML_SPLID2
 
-END MODULE mod_H3_Model
+END MODULE QML_H3_m

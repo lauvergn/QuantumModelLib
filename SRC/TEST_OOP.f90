@@ -31,9 +31,9 @@
 !===========================================================================
 !===========================================================================
 program prog
-  USE mod_EmptyModel
-  USE mod_TemplateModel
-  USE mod_MorseModel
+  USE QML_Empty_m
+  USE QML_Template_m
+  USE QML_Morse_m
   USE QML_dnS_m
   USE QML_dnMat_m
   USE mod_Model

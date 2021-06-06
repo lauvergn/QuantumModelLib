@@ -37,8 +37,8 @@
 !> @author Félix MOUHAT
 !! @date 10/07/2019
 !!
-MODULE mod_MorseModel
-  USE mod_EmptyModel
+MODULE QML_Morse_m
+  USE QML_Empty_m
   USE QML_NumParameters_m
   IMPLICIT NONE
 
@@ -55,19 +55,19 @@ MODULE mod_MorseModel
 !! @param a              real: Scaling parameter (in bohr^-1)
 !! @param req            real: Equilibrium distance (in bohr)
 !! @param mu             real: Reduced mass of HF (in au)
-  TYPE, EXTENDS (EmptyModel_t) :: MorseModel_t ! V(R) = D*(1-exp(-a*(r-Req))**2
+  TYPE, EXTENDS (QML_Empty_t) :: QML_Morse_t ! V(R) = D*(1-exp(-a*(r-Req))**2
      PRIVATE
      real (kind=Rkind) :: D   = 0.225_Rkind  !< Dissociation energy for HF (in Hartree)
      real (kind=Rkind) :: a   = 1.1741_Rkind !< Scaling parameter for HF (in bohr^-1)
      real (kind=Rkind) :: req = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
      real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_MorsePot
-    PROCEDURE :: Write_QModel    => Write_MorseModel
-    PROCEDURE :: Write0_QModel   => Write0_MorseModel
-  END TYPE MorseModel_t
+    PROCEDURE :: Eval_QModel_Pot => Eval_QML_Morse_Pot
+    PROCEDURE :: Write_QModel    => Write_QML_Morse
+    PROCEDURE :: Write0_QModel   => Write0_QML_Morse
+  END TYPE QML_Morse_t
 
-  PUBLIC :: MorseModel_t,Init_MorseModel,Init0_MorseModel,Write_MorseModel,dnMorse
+  PUBLIC :: QML_Morse_t,Init_QML_Morse,Init0_QML_Morse,Write_QML_Morse,QML_dnMorse
 
 CONTAINS
 !> @brief Subroutine which makes the initialization of the Morse parameters.
@@ -75,24 +75,24 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param MorsePot         TYPE(MorseModel_t):   derived type in which the parameters are set-up.
+!! @param MorsePot         TYPE(QML_Morse_t):   derived type in which the parameters are set-up.
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param D                  real (optional):    Dissociation energy (in Hartree)
 !! @param a                  real (optional):    Scaling parameter (in bohr^-1)
 !! @param req                real (optional):    Equilibrium distance (in bohr)
-  FUNCTION Init_MorseModel(QModel_in,read_param,nio_param_file,D,a,req) RESULT(QModel)
+  FUNCTION Init_QML_Morse(QModel_in,read_param,nio_param_file,D,a,req) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (MorseModel_t)                          :: QModel
+    TYPE (QML_Morse_t)                          :: QModel
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: D,a,req
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_MorseModel'
+    character (len=*), parameter :: name_sub='Init_QML_Morse'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -105,8 +105,8 @@ CONTAINS
     END IF
 
 
-    !QModel_loc%EmptyModel_t = Init_EmptyModel(QModel_in) ! it does not work with nagfor
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    !QModel_loc%QML_Empty_t = Init_QML_Empty(QModel_in) ! it does not work with nagfor
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%pot_name = 'morse'
     QModel%ndim     = 1
@@ -114,12 +114,12 @@ CONTAINS
 
 
     IF (debug) write(out_unitp,*) 'init default morse parameters (HF)'
-    ! the initialization with MorseModel_t does not work. Why ???
-    !QModel = MorseModel_t(D=0.225_Rkind,a=1.1741_Rkind,Req=1.7329_Rkind) ! default values (HF)
-    CALL Init0_MorseModel(QModel,D=0.225_Rkind,a=1.1741_Rkind,req=1.7329_Rkind)
+    ! the initialization with QML_Morse_t does not work. Why ???
+    !QModel = QML_Morse_t(D=0.225_Rkind,a=1.1741_Rkind,Req=1.7329_Rkind) ! default values (HF)
+    CALL Init0_QML_Morse(QModel,D=0.225_Rkind,a=1.1741_Rkind,req=1.7329_Rkind)
 
     IF (read_param) THEN
-      CALL Read_MorseModel(QModel%D,QModel%a,QModel%req,nio_param_file)
+      CALL Read_QML_Morse(QModel%D,QModel%a,QModel%req,nio_param_file)
     ELSE
       IF (debug) write(out_unitp,*) 'init morse parameters (D,a,req), if present'
       IF (present(D))   QModel%D   = D
@@ -139,17 +139,17 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_MorseModel
+  END FUNCTION Init_QML_Morse
 
-  SUBROUTINE Init0_MorseModel(QModel,D,a,req,model_name)
+  SUBROUTINE Init0_QML_Morse(QModel,D,a,req,model_name)
   IMPLICIT NONE
 
-    TYPE (MorseModel_t),           intent(inout)   :: QModel
+    TYPE (QML_Morse_t),           intent(inout)   :: QModel
     real (kind=Rkind), optional,   intent(in)      :: D,a,req
     character (len=*), optional,   intent(in)      :: model_name
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init0_MorseModel'
+    character (len=*), parameter :: name_sub='Init0_QML_Morse'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -177,17 +177,17 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-  END SUBROUTINE Init0_MorseModel
+  END SUBROUTINE Init0_QML_Morse
 
 !> @brief Subroutine wich reads the Morse parameters with a namelist.
-!!   This can be called only from the "Init_MorseModel" subroutine.
+!!   This can be called only from the "Init_QML_Morse" subroutine.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param QModel         TYPE(MorseModel_t):   derived type in which the parameters are set-up.
+!! @param QModel         TYPE(QML_Morse_t):   derived type in which the parameters are set-up.
 !! @param nio                integer          :   file unit to read the parameters.
-  SUBROUTINE Read_MorseModel(D_inout,a_inout,req_inout,nio)
+  SUBROUTINE Read_QML_Morse(D_inout,a_inout,req_inout,nio)
   IMPLICIT NONE
 
     integer,           intent(in)    :: nio
@@ -206,18 +206,18 @@ CONTAINS
 
     read(nio,nml=Morse,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_MorseModel'
+      write(out_unitp,*) ' ERROR in Read_QML_Morse'
       write(out_unitp,*) ' End-of-file or End-of-record'
       write(out_unitp,*) ' The namelist "Morse" is probably absent'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,*)
-      STOP ' ERROR in Read_MorseModel'
+      STOP ' ERROR in Read_QML_Morse'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_MorseModel'
+      write(out_unitp,*) ' ERROR in Read_QML_Morse'
       write(out_unitp,*) ' Some parameter names of the namelist "Morse" are probaly wrong'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,nml=Morse)
-      STOP ' ERROR in Read_MorseModel'
+      STOP ' ERROR in Read_QML_Morse'
     END IF
     !write(out_unitp,nml=Morse)
 
@@ -225,17 +225,17 @@ CONTAINS
     a_inout    = a
     req_inout  = req
 
-  END SUBROUTINE Read_MorseModel
+  END SUBROUTINE Read_QML_Morse
 !> @brief Subroutine wich prints the Morse parameters.
 !!
 !> @author David Lauvergnat
 !! @date 30/07/2019
 !!
 !! @param nio                integer          :   file unit to print the parameters.
-  SUBROUTINE Write0_MorseModel(QModel,nio)
+  SUBROUTINE Write0_QML_Morse(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(MorseModel_t),    intent(in) :: QModel
+    CLASS(QML_Morse_t),    intent(in) :: QModel
     integer,                intent(in) :: nio
 
     write(nio,*) 'Morse parameters:'
@@ -254,23 +254,23 @@ CONTAINS
     write(nio,*)
     write(nio,*) 'end Morse parameters'
 
-  END SUBROUTINE Write0_MorseModel
+  END SUBROUTINE Write0_QML_Morse
 !> @brief Subroutine wich prints the Morse current parameters.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param QModel         TYPE(MorseModel_t):   derived type with the Morse parameters.
+!! @param QModel         TYPE(QML_Morse_t):   derived type with the Morse parameters.
 !! @param nio                integer          :   file unit to print the parameters.
-  SUBROUTINE Write_MorseModel(QModel,nio)
+  SUBROUTINE Write_QML_Morse(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(MorseModel_t),    intent(in) :: QModel
+    CLASS(QML_Morse_t),    intent(in) :: QModel
     integer,                intent(in) :: nio
 
 
     write(nio,*) 'Morse current parameters:'
-    CALL Write_EmptyModel(QModel%EmptyModel_t,nio)
+    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
     write(nio,*)
     write(nio,*) '    V(R) = D.( 1 - exp(-a.(r-req)) )^2'
     write(nio,*) '  D:   ',QModel%D
@@ -279,7 +279,7 @@ CONTAINS
     write(nio,*)
     write(nio,*) 'end Morse current parameters'
 
-  END SUBROUTINE Write_MorseModel
+  END SUBROUTINE Write_QML_Morse
 
 !> @brief Subroutine wich calculates the Morse potential with derivatives up to the 2d order if required.
 !!
@@ -288,21 +288,21 @@ CONTAINS
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param QModel         TYPE(MorseModel_t):   derived type with the Morse parameters.
+!! @param QModel         TYPE(QML_Morse_t):   derived type with the Morse parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_MorsePot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE Eval_QML_Morse_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(MorseModel_t), intent(in)     :: QModel
+    CLASS(QML_Morse_t), intent(in)     :: QModel
     TYPE(dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)
     TYPE(dnS_t),         intent(in)     :: dnQ(:)
     integer,             intent(in)     :: nderiv
 
     integer :: i
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Eval_MorsePot'
+    character (len=*), parameter :: name_sub='Eval_QML_Morse_Pot'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -313,7 +313,7 @@ CONTAINS
       write(out_unitp,*) ' Q(:):',(QML_get_d0_FROM_dnS(dnQ(i)),i=1,size(dnQ))
     END IF
 
-    Mat_OF_PotDia(1,1) = dnMorse(dnQ(1),QModel)
+    Mat_OF_PotDia(1,1) = QML_dnMorse(dnQ(1),QModel)
 
     IF (debug) THEN
       write(out_unitp,*) 'Mat_OF_PotDia'
@@ -322,29 +322,29 @@ CONTAINS
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
     END IF
-  END SUBROUTINE Eval_MorsePot
+  END SUBROUTINE Eval_QML_Morse_Pot
 
 !> @brief Function wich calculates the Morse potential with derivatives up to the 2d order is required.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @return dnMorse           TYPE (dnS_t):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
+!! @return QML_dnMorse           TYPE (dnS_t):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
-!! @param QModel         TYPE(MorseModel_t):   derived type with the Morse parameters.
-  FUNCTION dnMorse(dnR,QModel)
+!! @param QModel         TYPE(QML_Morse_t):   derived type with the Morse parameters.
+  FUNCTION QML_dnMorse(dnR,QModel)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    TYPE (dnS_t)                         :: dnMorse
+    TYPE (dnS_t)                         :: QML_dnMorse
 
     TYPE (dnS_t),          intent(in)    :: dnR
-    TYPE (MorseModel_t),   intent(in)    :: QModel
+    TYPE (QML_Morse_t),   intent(in)    :: QModel
 
     !local variable
     TYPE (dnS_t)     :: dnbeta
 
-    !write(out_unitp,*) 'BEGINNING in dnMorse'
+    !write(out_unitp,*) 'BEGINNING in QML_dnMorse'
     !write(out_unitp,*) 'dnR'
     !CALL QML_Write_dnS(dnR)
 
@@ -352,15 +352,15 @@ CONTAINS
     !write(out_unitp,*) 'dnbeta'
     !CALL QML_Write_dnS(dnbeta)
 
-    dnMorse = QModel%D * (ONE-dnbeta)**2
+    QML_dnMorse = QModel%D * (ONE-dnbeta)**2
 
      CALL QML_dealloc_dnS(dnbeta)
 
     !write(out_unitp,*) 'Morse at',QML_get_d0_FROM_dnS(dnR)
-    !CALL QML_Write_dnS(dnMorse)
-    !write(out_unitp,*) 'END in dnMorse'
+    !CALL QML_Write_dnS(QML_dnMorse)
+    !write(out_unitp,*) 'END in QML_dnMorse'
     !flush(out_unitp)
 
-  END FUNCTION dnMorse
+  END FUNCTION QML_dnMorse
 
-END MODULE mod_MorseModel
+END MODULE QML_Morse_m

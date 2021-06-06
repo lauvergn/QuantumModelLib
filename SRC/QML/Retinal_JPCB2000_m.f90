@@ -36,15 +36,15 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_Retinal_JPCB2000_Model
+MODULE QML_Retinal_JPCB2000_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the Retinal_JPCB2000 parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  Retinal_JPCB2000_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  Retinal_JPCB2000_Model_t
 
    PRIVATE
 
@@ -76,14 +76,14 @@ MODULE mod_Retinal_JPCB2000_Model
     PROCEDURE :: Write_QModel    => Write_Retinal_JPCB2000_Model
     PROCEDURE :: Write0_QModel   => Write0_Retinal_JPCB2000_Model
   END TYPE Retinal_JPCB2000_Model_t
- 
+
   PUBLIC :: Retinal_JPCB2000_Model_t,Init_Retinal_JPCB2000_Model
- 
+
   CONTAINS
 !> @brief Function which makes the initialization of the Retinal_JPCB2000 parameters.
 !!
 !! @param QModel             TYPE(Retinal_JPCB2000_Model_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_Retinal_JPCB2000_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
@@ -91,7 +91,7 @@ MODULE mod_Retinal_JPCB2000_Model
 
     TYPE (Retinal_JPCB2000_Model_t)              :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -110,7 +110,7 @@ MODULE mod_Retinal_JPCB2000_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 2
 
@@ -274,4 +274,4 @@ MODULE mod_Retinal_JPCB2000_Model
 
   END SUBROUTINE eval_Retinal_JPCB2000_Pot
 
-END MODULE mod_Retinal_JPCB2000_Model
+END MODULE QML_Retinal_JPCB2000_m

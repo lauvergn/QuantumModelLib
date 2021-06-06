@@ -36,37 +36,37 @@ MODULE mod_Model
   USE QML_NumParameters_m
   USE QML_dnMat_m
 
-  USE mod_EmptyModel
+  USE QML_Empty_m
 
-  USE mod_TemplateModel
-  USE mod_TestModel
-  USE mod_MorseModel
+  USE QML_Template_m
+  USE QML_Test_m
+  USE QML_Morse_m
 
-  USE mod_HenonHeilesModel
-  USE mod_TullyModel
+  USE QML_HenonHeiles_m
+  USE QML_Tully_m
 
-  USE mod_PSB3_Model
-  USE mod_Retinal_JPCB2000_Model
+  USE QML_PSB3_m
+  USE QML_Retinal_JPCB2000_m
 
-  USE mod_HONO_Model
-  USE mod_HNNHp_Model
-  USE mod_H2SiN_Model
-  USE mod_H2NSi_Model
-  USE mod_HNO3_Model
-  USE mod_CH5_Model
-  USE mod_PH4_Model
+  USE QML_HONO_m
+  USE QML_HNNHp_m
+  USE QML_H2SiN_m
+  USE QML_H2NSi_m
+  USE QML_HNO3_m
+  USE QML_CH5_m
+  USE QML_PH4_m
 
-  USE mod_HOO_DMBE_Model
-  USE mod_H3_Model
+  USE QML_HOO_DMBE_m
+  USE QML_H3_m
 
-  USE mod_OneDSOC_1S1T_Model
-  USE mod_OneDSOC_2S1T_Model
+  USE QML_OneDSOC_1S1T_m
+  USE QML_OneDSOC_2S1T_m
 
-  USE mod_LinearHBondModel
-  USE mod_BuckModel
-  USE mod_PhenolModel
-  USE mod_SigmoidModel
-  USE mod_TwoD_Model
+  USE QML_LinearHBond_m
+  USE QML_Buck_m
+  USE QML_Phenol_m
+  USE QML_Sigmoid_m
+  USE QML_TwoD_m
 
   USE QML_Basis_m
 
@@ -86,7 +86,7 @@ MODULE mod_Model
     !   identical to QM%nsurf and QM%ndim ones respectively.
     integer                           :: nsurf       = 0
     integer                           :: ndim        = 0
-    CLASS (EmptyModel_t), allocatable :: QM
+    CLASS (QML_Empty_t), allocatable :: QM
     TYPE(QML_Basis_t),    allocatable :: Basis ! Basis for the adiabatic separation between coordinates
   END TYPE Model_t
 
@@ -153,7 +153,7 @@ CONTAINS
   USE QML_UtilLib_m
   IMPLICIT NONE
 
-    TYPE (EmptyModel_t), intent(inout) :: QModel_inout ! variable to transfer info to the init
+    TYPE (QML_Empty_t), intent(inout) :: QModel_inout ! variable to transfer info to the init
     integer,             intent(in)    :: nio
     logical,             intent(inout) :: read_nml1
 
@@ -283,7 +283,7 @@ CONTAINS
 
 
     ! local variables
-    TYPE(EmptyModel_t)             :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t)             :: QModel_in ! variable to transfer info to the init
     integer                        :: i,nio_loc,i_inact,nb_inact
     logical                        :: read_param_loc,read_nml,Print_init_loc
     logical,           allocatable :: list_Q(:)
@@ -450,8 +450,8 @@ CONTAINS
       !! remark: Default parameters for H-F
       !! === END README ==
 
-      allocate(MorseModel_t :: QModel%QM)
-      QModel%QM = Init_MorseModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+      allocate(QML_Morse_t :: QModel%QM)
+      QModel%QM = Init_QML_Morse(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('sigmoid')
       !! sigmoid function: A * 1/2(1+e*tanh((x-B)/C))  remark: e=+/-1
@@ -468,8 +468,8 @@ CONTAINS
       !! remark: default parameters for Ar2
       !! ref:  R.A. Buckingham, Proc. R. Soc. A Math. Phys. Eng. Sci. 168 (1938) 264–283. doi:10.1098/rspa.1938.0173
       !! === END README ==
-      allocate(BuckModel_t :: QModel%QM)
-      QModel%QM = Init_BuckModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+      allocate(QML_Buck_t :: QModel%QM)
+      QModel%QM = Init_QML_Buck(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hbond','linearhbond ')
       !! === README ==
@@ -484,8 +484,8 @@ CONTAINS
       !!                    <-q->
       !! ref:  Eq 3.79 of J. Beutier, thesis.
       !! === END README ==
-      allocate(LinearHBondModel_t :: QModel%QM)
-      QModel%QM = Init_LinearHBondModel(QModel_in,read_param=read_nml,   &
+      allocate(QML_LinearHBond_t :: QModel%QM)
+      QModel%QM = Init_QML_LinearHBond(QModel_in,read_param=read_nml,   &
                                  nio_param_file=nio_loc)
 
     CASE ('henonheiles')
@@ -497,8 +497,8 @@ CONTAINS
       !! reduced masses(:)      = ONE au
       !! ref:  parameters taken from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
       !! === END README ==
-      allocate(HenonHeilesModel_t :: QModel%QM)
-      QModel%QM = Init_HenonHeilesModel(QModel_in,                      &
+      allocate(QML_HenonHeiles_t :: QModel%QM)
+      QModel%QM = Init_QML_HenonHeiles(QModel_in,                      &
                         read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('tully')
@@ -604,13 +604,13 @@ CONTAINS
                        read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hono')
-      allocate(HONO_Model_t :: QModel%QM)
-      QModel%QM = Init_HONO_Model(QModel_in,read_param=read_nml,  &
+      allocate(QML_HONO_t :: QModel%QM)
+      QModel%QM = Init_QML_HONO(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
 
     CASE ('hno3')
-      allocate(HNO3_Model_t :: QModel%QM)
-      QModel%QM = Init_HNO3_Model(QModel_in,read_param=read_nml,  &
+      allocate(QML_HNO3_t :: QModel%QM)
+      QModel%QM = Init_QML_HNO3(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
 
     CASE ('ch5')
@@ -626,8 +626,8 @@ CONTAINS
       !! nsurf     = 1
       !! option = 4 (default) or 5
       !! === END README ==
-      allocate(CH5_Model_t :: QModel%QM)
-      QModel%QM = Init_CH5_Model(QModel_in,read_param=read_nml,  &
+      allocate(QML_CH5_t :: QModel%QM)
+      QModel%QM = Init_QML_CH5(QModel_in,read_param=read_nml,  &
                                  nio_param_file=nio_loc)
 
     CASE ('ph4')
@@ -649,18 +649,18 @@ CONTAINS
                                  nio_param_file=nio_loc)
 
     CASE ('hnnhp')
-      allocate(HNNHp_Model_t :: QModel%QM)
-      QModel%QM = Init_HNNHp_Model(QModel_in,read_param=read_nml, &
+      allocate(QML_HNNHp_t :: QModel%QM)
+      QModel%QM = Init_QML_HNNHp(QModel_in,read_param=read_nml, &
                                    nio_param_file=nio_loc)
 
     CASE ('h2sin')
-      allocate(H2SiN_Model_t :: QModel%QM)
-      QModel%QM = Init_H2SiN_Model(QModel_in,read_param=read_nml, &
+      allocate(QML_H2SiN_t :: QModel%QM)
+      QModel%QM = Init_QML_H2SiN(QModel_in,read_param=read_nml, &
                                    nio_param_file=nio_loc)
 
     CASE ('h2nsi')
-      allocate(H2NSi_Model_t :: QModel%QM)
-      QModel%QM = Init_H2NSi_Model(QModel_in,read_param=read_nml, &
+      allocate(QML_H2NSi_t :: QModel%QM)
+      QModel%QM = Init_QML_H2NSi(QModel_in,read_param=read_nml, &
                                    nio_param_file=nio_loc)
 
     CASE ('hoo_dmbe')
@@ -672,8 +672,8 @@ CONTAINS
       !! ref:    M. R. Pastrana, L. A. M. Quintales, J. Brandão and A. J. C. Varandas'
       !!         JCP, 1990, 94, 8073-8080, doi: 10.1021/j100384a019.
       !! === END README ==
-      allocate(HOO_DMBE_Model_t :: QModel%QM)
-      QModel%QM = Init_HOO_DMBE_Model(QModel_in,read_param=read_nml,      &
+      allocate(QML_HOO_DMBE_t :: QModel%QM)
+      QModel%QM = Init_QML_HOO_DMBE(QModel_in,read_param=read_nml,      &
                                       nio_param_file=nio_loc)
 
     CASE ('h3_lsth','h3')
@@ -687,8 +687,8 @@ CONTAINS
       !! P. Siegbahn, B. Liu,  J. Chem. Phys. 68, 2457(1978).
       !! D.G. Truhlar and C.J. Horowitz, J. Chem. Phys. 68, 2466 (1978); https://doi.org/10.1063/1.436019
       !! === END README ==
-      allocate(H3_Model_t :: QModel%QM)
-      QModel%QM = Init_H3_Model(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+      allocate(QML_H3_t :: QModel%QM)
+      QModel%QM = Init_QML_H3(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('template')
       !! 3D-potential with 1 surface
@@ -856,7 +856,7 @@ CONTAINS
 
   END SUBROUTINE get_Q0_Model
 
-  ! check if the QM [CLASS(EmptyModel_t)] is allocated
+  ! check if the QM [CLASS(QML_Empty_t)] is allocated
   SUBROUTINE check_alloc_QM(QModel,name_sub_in)
   USE QML_UtilLib_m
   IMPLICIT NONE

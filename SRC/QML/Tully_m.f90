@@ -36,15 +36,15 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_TullyModel
+MODULE QML_Tully_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the Tully parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  TullyModel_t
+  TYPE, EXTENDS (QML_Empty_t) ::  TullyModel_t
    PRIVATE
 
      real (kind=Rkind) :: A      = 0.01_Rkind
@@ -61,14 +61,14 @@ MODULE mod_TullyModel
     PROCEDURE :: Write_QModel    => Write_TullyModel
     PROCEDURE :: Write0_QModel   => Write0_TullyModel
   END TYPE TullyModel_t
- 
+
   PUBLIC :: TullyModel_t,Init_TullyModel
- 
+
   CONTAINS
 !> @brief Function which makes the initialization of the Tully parameters.
 !!
 !! @param QModel             TYPE(TullyModel_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_TullyModel(QModel_in,read_param,nio_param_file,          &
@@ -77,7 +77,7 @@ MODULE mod_TullyModel
 
     TYPE (TullyModel_t)                           :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: A,B,C,D,E0
@@ -93,7 +93,7 @@ MODULE mod_TullyModel
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 2
     QModel%ndim     = 1
@@ -441,4 +441,4 @@ MODULE mod_TullyModel
 
   END SUBROUTINE eval_TullyPot3
 
-END MODULE mod_TullyModel
+END MODULE QML_Tully_m

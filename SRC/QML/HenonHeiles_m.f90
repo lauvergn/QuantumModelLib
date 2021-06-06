@@ -36,48 +36,48 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_HenonHeilesModel
+MODULE QML_HenonHeiles_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the HenonHeiles parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  HenonHeilesModel_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_HenonHeiles_t
    PRIVATE
 
      real (kind=Rkind) :: lambda = 0.111803_Rkind
 
    CONTAINS
-    !PROCEDURE :: Eval_QModel_Pot => eval_HenonHeilesPot
-    PROCEDURE :: Eval_QModel_Pot => eval_HenonHeilesPot_new
-    PROCEDURE :: Write_QModel    => Write_HenonHeilesModel
-    PROCEDURE :: Write0_QModel   => Write0_HenonHeilesModel
-  END TYPE HenonHeilesModel_t
+    !PROCEDURE :: Eval_QModel_Pot => QML_HenonHeiles_Pot
+    PROCEDURE :: Eval_QModel_Pot => QML_HenonHeiles_Pot_new
+    PROCEDURE :: Write_QModel    => Write_QML_HenonHeiles
+    PROCEDURE :: Write0_QModel   => Write0_QML_HenonHeiles
+  END TYPE QML_HenonHeiles_t
 
-  PUBLIC :: HenonHeilesModel_t,Init_HenonHeilesModel
+  PUBLIC :: QML_HenonHeiles_t,Init_QML_HenonHeiles
 
   CONTAINS
 !> @brief Function which makes the initialization of the HenonHeiles parameters.
 !!
-!! @param QModel             TYPE(HenonHeilesModel_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel             TYPE(QML_HenonHeiles_t):   result derived type in which the parameters are set-up.
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_HenonHeilesModel(QModel_in,read_param,nio_param_file,lambda) RESULT(QModel)
+  FUNCTION Init_QML_HenonHeiles(QModel_in,read_param,nio_param_file,lambda) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (HenonHeilesModel_t)                    :: QModel ! RESULT
+    TYPE (QML_HenonHeiles_t)                    :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: lambda
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_HenonHeilesModel'
+    character (len=*), parameter :: name_sub='Init_QML_HenonHeiles'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -87,7 +87,7 @@ MODULE mod_HenonHeilesModel
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 1
     QModel%pot_name = 'henonheiles'
@@ -96,16 +96,16 @@ MODULE mod_HenonHeilesModel
     QModel%lambda     = 0.111803_Rkind
 
     IF (read_param) THEN
-      CALL Read_HenonHeilesModel(QModel,nio_param_file)
+      CALL Read_QML_HenonHeiles(QModel,nio_param_file)
     ELSE
       IF (present(lambda))  QModel%lambda = lambda
     END IF
 
     IF (QModel%ndim < 1) THEN
-      write(out_unitp,*) ' ERROR in Init_HenonHeilesModel'
+      write(out_unitp,*) ' ERROR in Init_QML_HenonHeiles'
       write(out_unitp,*) ' ndim MUST be > 0. ndim: ',QModel%ndim
       write(out_unitp,*) ' Its value MUST be given in with Init_Model or Read_Model subroutines.'
-      STOP 'ERROR in Init_HenonHeilesModel: Wrong ndim value.'
+      STOP 'ERROR in Init_QML_HenonHeiles: Wrong ndim value.'
     END IF
 
 
@@ -123,17 +123,17 @@ MODULE mod_HenonHeilesModel
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_HenonHeilesModel
+  END FUNCTION Init_QML_HenonHeiles
 !> @brief Subroutine wich reads the Hénon-Heiles parameter with a namelist.
 !!   This can be called only from the "Init_HenonHeilesPot" subroutine.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param QModel            TYPE(HenonHeilesModel_t):   derived type in which the parameters are set-up.
+!! @param QModel            TYPE(QML_HenonHeiles_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:                    file unit to read the parameters.
-  SUBROUTINE Read_HenonHeilesModel(QModel,nio)
-    TYPE (HenonHeilesModel_t), intent(inout)   :: QModel
+  SUBROUTINE Read_QML_HenonHeiles(QModel,nio)
+    TYPE (QML_HenonHeiles_t), intent(inout)   :: QModel
     integer,                   intent(in)      :: nio
 
     real (kind=Rkind) :: lambda
@@ -146,14 +146,14 @@ MODULE mod_HenonHeilesModel
 
     read(nio,nml=HenonHeiles,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_HenonHeilesModel'
+      write(out_unitp,*) ' ERROR in Read_QML_HenonHeiles'
       write(out_unitp,*) ' End-of-file or End-of-record'
       write(out_unitp,*) ' The namelist "HenonHeiles" is probably absent'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,*)
       STOP ' ERROR in Read_HenonHeilesPot'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_HenonHeilesModel'
+      write(out_unitp,*) ' ERROR in Read_QML_HenonHeiles'
       write(out_unitp,*) ' Some parameter names of the namelist "HenonHeiles" are probaly wrong'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,nml=HenonHeiles)
@@ -163,15 +163,15 @@ MODULE mod_HenonHeilesModel
     !write(out_unitp,nml=HenonHeiles)
     QModel%lambda = lambda
 
-  END SUBROUTINE Read_HenonHeilesModel
-!> @brief Subroutine wich prints the HenonHeilesModel parameters.
+  END SUBROUTINE Read_QML_HenonHeiles
+!> @brief Subroutine wich prints the QML_HenonHeiles parameters.
 !!
-!! @param QModel            CLASS(HenonHeilesModel_t): derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_HenonHeiles_t): derived type in which the parameters are set-up.
 !! @param nio               integer:                   file unit to print the parameters.
-  SUBROUTINE Write_HenonHeilesModel(QModel,nio)
+  SUBROUTINE Write_QML_HenonHeiles(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(HenonHeilesModel_t),   intent(in) :: QModel
+    CLASS(QML_HenonHeiles_t),   intent(in) :: QModel
     integer,                     intent(in) :: nio
 
 
@@ -182,11 +182,11 @@ MODULE mod_HenonHeilesModel
     write(nio,*)
     write(nio,*) 'end HenonHeiles current parameters'
 
-  END SUBROUTINE Write_HenonHeilesModel
-  SUBROUTINE Write0_HenonHeilesModel(QModel,nio)
+  END SUBROUTINE Write_QML_HenonHeiles
+  SUBROUTINE Write0_QML_HenonHeiles(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(HenonHeilesModel_t),   intent(in) :: QModel
+    CLASS(QML_HenonHeiles_t),   intent(in) :: QModel
     integer,                     intent(in) :: nio
 
     write(nio,*) 'HenonHeiles default parameters'
@@ -216,20 +216,20 @@ MODULE mod_HenonHeilesModel
     write(nio,*)
     write(nio,*) 'end HenonHeiles default parameters'
 
-  END SUBROUTINE Write0_HenonHeilesModel
+  END SUBROUTINE Write0_QML_HenonHeiles
 
 !> @brief Subroutine wich calculates the HenonHeiles potential with derivatives up to the 2d order.
 !!
-!! @param QModel             TYPE(HenonHeilesModel_t): derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_HenonHeiles_t): derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):             derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)              value for which the potential is calculated
 !! @param nderiv             integer:                  it enables to specify up to which derivatives the potential is calculated:
 !!                                                     the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_HenonHeilesPot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE QML_HenonHeiles_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(HenonHeilesModel_t), intent(in)    :: QModel
+    CLASS(QML_HenonHeiles_t), intent(in)    :: QModel
     TYPE (dnS_t),              intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),              intent(in)    :: dnQ(:)
     integer,                   intent(in)    :: nderiv
@@ -297,13 +297,13 @@ MODULE mod_HenonHeilesModel
     IF (nderiv == 1) CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0,d1)
     IF (nderiv == 2) CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0,d1,d2)
 
-  END SUBROUTINE eval_HenonHeilesPot
+  END SUBROUTINE QML_HenonHeiles_Pot
 
-  SUBROUTINE eval_HenonHeilesPot_new(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE QML_HenonHeiles_Pot_new(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(HenonHeilesModel_t), intent(in)    :: QModel
+    CLASS(QML_HenonHeiles_t), intent(in)    :: QModel
     TYPE (dnS_t),              intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),              intent(in)    :: dnQ(:)
     integer,                   intent(in)    :: nderiv
@@ -327,6 +327,6 @@ MODULE mod_HenonHeilesModel
 
     CALL QML_dealloc_dnS(dnV)
 
-  END SUBROUTINE eval_HenonHeilesPot_new
+  END SUBROUTINE QML_HenonHeiles_Pot_new
 
-END MODULE mod_HenonHeilesModel
+END MODULE QML_HenonHeiles_m

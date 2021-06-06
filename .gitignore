@@ -13,3 +13,4 @@ Tests/*txt
 Tests/*.log
 Tests/grid*
 Tests/res
+SRC/QML/chqml

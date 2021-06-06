@@ -36,54 +36,54 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_LinearHBondModel
+MODULE QML_LinearHBond_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
-  USE mod_MorseModel
-  USE mod_BuckModel
+  USE QML_Empty_m
+  USE QML_Morse_m
+  USE QML_Buck_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the LinearHBond parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) :: LinearHBondModel_t
+  TYPE, EXTENDS (QML_Empty_t) :: QML_LinearHBond_t
    PRIVATE
 
-     TYPE (MorseModel_t)  :: Morse1
-     TYPE (MorseModel_t)  :: Morse2
+     TYPE (QML_Morse_t)  :: Morse1
+     TYPE (QML_Morse_t)  :: Morse2
      real (kind=Rkind)    :: Eref2 = ZERO  ! energy reference for the second morse (-D*epsi^2)
 
-     TYPE (BuckModel_t)   :: Buck
+     TYPE (QML_Buck_t)   :: Buck
 
      real (kind=Rkind)    :: muQQ= 29156.946380706224_Rkind/TWO  ! reduced mass associated to QQ (O---O)
      real (kind=Rkind)    :: muq = 1837.1526464003414_Rkind      ! reduced mass associated to q (H atom)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_LinearHBondPot
-    PROCEDURE :: Write_QModel    => Write_LinearHBondModel
-    PROCEDURE :: Write0_QModel   => Write0_LinearHBondModel
-  END TYPE LinearHBondModel_t
+    PROCEDURE :: Eval_QModel_Pot => eval_QML_LinearHBond_Pot
+    PROCEDURE :: Write_QModel    => Write_QML_LinearHBond
+    PROCEDURE :: Write0_QModel   => Write0_QML_LinearHBond
+  END TYPE QML_LinearHBond_t
 
-  PUBLIC :: LinearHBondModel_t,Init_LinearHBondModel
+  PUBLIC :: QML_LinearHBond_t,Init_QML_LinearHBond
 
   CONTAINS
 !> @brief Function which makes the initialization of the LinearHBond parameters.
 !!when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
 !!
-!! @param QModel             TYPE(LinearHBondModel_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel             TYPE(QML_LinearHBond_t):   result derived type in which the parameters are set-up.
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param D,a,req            real (optional):     parameters for the first Morse
 !! @param epsi               real (optional):     scaling parameters for the 2d Morse (using parameters of the first Morse)
 !! @param Abuck,Bbuck,Cbuck  real (optional):     parameters for the Buckingham potential
-  FUNCTION Init_LinearHBondModel(QModel_in,read_param,nio_param_file,   &
+  FUNCTION Init_QML_LinearHBond(QModel_in,read_param,nio_param_file,   &
                                  D,a,req,epsi,Abuck,Bbuck,Cbuck) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (LinearHBondModel_t)                    :: QModel ! RESULT
+    TYPE (QML_LinearHBond_t)                    :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: D,a,req,Abuck,Bbuck,Cbuck,epsi
@@ -93,7 +93,7 @@ MODULE mod_LinearHBondModel
     real (kind=Rkind), parameter  :: a0               = 0.52917720835354106_Rkind
     real (kind=Rkind), parameter  :: auTOkcalmol_inv  = 627.51_Rkind
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_LinearHBondModel'
+    character (len=*), parameter :: name_sub='Init_QML_LinearHBond'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -102,7 +102,7 @@ MODULE mod_LinearHBondModel
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 1
     QModel%ndim     = 2
@@ -120,7 +120,7 @@ MODULE mod_LinearHBondModel
     Cbuck_loc = 2.31e4_Rkind
 
     IF (read_param) THEN
-      CALL Read_LinearHBondModel(nio_param_file,                                &
+      CALL Read_QML_LinearHBond(nio_param_file,                                &
                                  D_loc,a_loc,req_loc,epsi_loc,                  &
                                  Abuck_loc,Bbuck_loc,Cbuck_loc)
     ELSE
@@ -136,9 +136,9 @@ MODULE mod_LinearHBondModel
       IF (present(Cbuck))   Cbuck_loc = Cbuck
     END IF
 
-    CALL Init0_MorseModel(QModel%Morse1,D=D_loc,            a=a_loc,         req=req_loc,model_name='Morse1')
-    CALL Init0_MorseModel(QModel%Morse2,D=D_loc*epsi_loc**2,a=a_loc/epsi_loc,req=req_loc,model_name='Morse2')
-    CALL Init0_BuckModel(QModel%Buck,A=Abuck_loc,B=Bbuck_loc,C=Cbuck_loc,model_name='Buck')
+    CALL Init0_QML_Morse(QModel%Morse1,D=D_loc,            a=a_loc,         req=req_loc,model_name='Morse1')
+    CALL Init0_QML_Morse(QModel%Morse2,D=D_loc*epsi_loc**2,a=a_loc/epsi_loc,req=req_loc,model_name='Morse2')
+    CALL Init0_QML_Buck(QModel%Buck,A=Abuck_loc,B=Bbuck_loc,C=Cbuck_loc,model_name='Buck')
     QModel%Eref2 = -D_loc*epsi_loc**2
 
     IF (QModel%PubliUnit) THEN
@@ -163,9 +163,9 @@ MODULE mod_LinearHBondModel
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_LinearHBondModel
+  END FUNCTION Init_QML_LinearHBond
 !> @brief Subroutine wich reads the model parameters with a namelist.
-!!   This can be called only from the "Init_LinearHBondModel" subroutine.
+!!   This can be called only from the "Init_QML_LinearHBond" subroutine.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
@@ -174,7 +174,7 @@ MODULE mod_LinearHBondModel
 !! @param Dsub,asub,reqsub            real (optional):            parameters for the first Morse
 !! @param epsisub                     real (optional):            scaling parameters for the 2d Morse (using parameters of the first Morse)
 !! @param Abucksub,Bbucksub,Cbucksub  real (optional):            parameters for the Buckingham potential
-  SUBROUTINE Read_LinearHBondModel(nio,Dsub,asub,reqsub,epsisub,        &
+  SUBROUTINE Read_QML_LinearHBond(nio,Dsub,asub,reqsub,epsisub,        &
                                    Abucksub,Bbucksub,Cbucksub)
 
     real (kind=Rkind),        intent(inout) :: Dsub,asub,reqsub,epsisub
@@ -197,18 +197,18 @@ MODULE mod_LinearHBondModel
 
     read(nio,nml=LinearHBond,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_LinearHBondModel'
+      write(out_unitp,*) ' ERROR in Read_QML_LinearHBond'
       write(out_unitp,*) ' End-of-file or End-of-record'
       write(out_unitp,*) ' The namelist "LinearHBond" is probably absent'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,*)
       STOP ' ERROR in Read_LinearHBondPot'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_LinearHBondModel'
+      write(out_unitp,*) ' ERROR in Read_QML_LinearHBond'
       write(out_unitp,*) ' Some parameter names of the namelist "LinearHBond" are probaly wrong'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,nml=LinearHBond)
-      STOP ' ERROR in Read_LinearHBondModel'
+      STOP ' ERROR in Read_QML_LinearHBond'
     END IF
     !write(out_unitp,nml=LinearHBond)
 
@@ -220,15 +220,15 @@ MODULE mod_LinearHBondModel
     Bbucksub = Bbuck
     Cbucksub = Cbuck
 
-  END SUBROUTINE Read_LinearHBondModel
-!> @brief Subroutine wich prints the current LinearHBondModel parameters.
+  END SUBROUTINE Read_QML_LinearHBond
+!> @brief Subroutine wich prints the current QML_LinearHBond parameters.
 !!
-!! @param QModel            CLASS(LinearHBondModel_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_LinearHBond_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_LinearHBondModel(QModel,nio)
+  SUBROUTINE Write_QML_LinearHBond(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(LinearHBondModel_t),   intent(in) :: QModel
+    CLASS(QML_LinearHBond_t),   intent(in) :: QModel
     integer,                     intent(in) :: nio
 
     write(nio,*) 'LinearHBond current parameters:'
@@ -236,23 +236,23 @@ MODULE mod_LinearHBondModel
     write(nio,*) 'PubliUnit: ',QModel%PubliUnit
     write(nio,*)
     write(nio,*) '   Morse parameters:   '
-    CALL Write_MorseModel(QModel%Morse1,nio)
-    CALL Write_MorseModel(QModel%Morse2,nio)
+    CALL Write_QML_Morse(QModel%Morse1,nio)
+    CALL Write_QML_Morse(QModel%Morse2,nio)
     write(nio,*) '   Buckingham parameters:   '
-    CALL Write_BuckModel(QModel%Buck,nio)
+    CALL Write_QML_Buck(QModel%Buck,nio)
     write(nio,*) '  Eref2 = ',QModel%Eref2
 
     write(nio,*) 'END LinearHBond current parameters'
 
-  END SUBROUTINE Write_LinearHBondModel
-!> @brief Subroutine wich prints the default LinearHBondModel parameters.
+  END SUBROUTINE Write_QML_LinearHBond
+!> @brief Subroutine wich prints the default QML_LinearHBond parameters.
 !!
-!! @param QModel            CLASS(LinearHBondModel_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_LinearHBond_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_LinearHBondModel(QModel,nio)
+  SUBROUTINE Write0_QML_LinearHBond(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(LinearHBondModel_t),   intent(in) :: QModel
+    CLASS(QML_LinearHBond_t),   intent(in) :: QModel
     integer,                     intent(in) :: nio
 
     write(nio,*) 'LinearHBond default parameters:'
@@ -297,20 +297,20 @@ MODULE mod_LinearHBondModel
     write(nio,*) 'end LinearHBond default parameters'
 
 
-  END SUBROUTINE Write0_LinearHBondModel
+  END SUBROUTINE Write0_QML_LinearHBond
 
 !> @brief Subroutine wich calculates the LinearHBond potential with derivatives up to the 2d order.
 !!
-!! @param QModel             CLASS(LinearHBondModel_t):   derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_LinearHBond_t):   derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_LinearHBondPot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE eval_QML_LinearHBond_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(LinearHBondModel_t),  intent(in)    :: QModel
+    CLASS(QML_LinearHBond_t),  intent(in)    :: QModel
     TYPE (dnS_t),               intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),               intent(in)    :: dnQ(:)
     integer,                    intent(in)    :: nderiv
@@ -326,7 +326,7 @@ MODULE mod_LinearHBondModel
     !logical, parameter :: debug=.TRUE.
     logical, parameter :: debug=.FALSE.
     IF (debug .OR. print_level > 0) THEN
-      write(out_unitp,*) 'BEGINNING Eval_LinearHBondPot'
+      write(out_unitp,*) 'BEGINNING eval_QML_LinearHBond_Pot'
       write(out_unitp,*) 'r(:) or QQ,q: ',QML_get_d0_FROM_dnS(dnQ(:))
       write(out_unitp,*) 'nderiv',nderiv
       write(out_unitp,*) 'PubliUnit',QModel%PubliUnit
@@ -373,21 +373,21 @@ MODULE mod_LinearHBondModel
       flush(out_unitp)
     END IF
 
-    PotVal_m1 = dnMorse(dnX,QModel%Morse1)
+    PotVal_m1 = QML_dnMorse(dnX,QModel%Morse1)
     IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'PotVal_m1. x:',QML_get_d0_FROM_dnS(dnX)
       CALL QML_Write_dnS(PotVal_m1)
       flush(out_unitp)
     END IF
 
-    PotVal_m2 = dnMorse(dnY,QModel%Morse2)+QModel%Eref2
+    PotVal_m2 = QML_dnMorse(dnY,QModel%Morse2)+QModel%Eref2
     IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'PotVal_m2. y:',QML_get_d0_FROM_dnS(dnY)
       CALL QML_Write_dnS(PotVal_m2)
       flush(out_unitp)
     END IF
 
-    PotVal_Buck = dnBuck(dnQQ,QModel%Buck)
+    PotVal_Buck = QML_dnBuck(dnQQ,QModel%Buck)
     IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'PotVal_Buck. QQ:',QML_get_d0_FROM_dnS(dnQQ)
       CALL QML_Write_dnS(PotVal_Buck)
@@ -419,11 +419,11 @@ MODULE mod_LinearHBondModel
       write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
       CALL QML_Write_dnS(Mat_OF_PotDia(1,1))
       flush(out_unitp)
-      write(out_unitp,*) 'END Eval_LinearHBondPot'
+      write(out_unitp,*) 'END eval_QML_LinearHBond_Pot'
       flush(out_unitp)
     END IF
 
 
-  END SUBROUTINE eval_LinearHBondPot
+  END SUBROUTINE eval_QML_LinearHBond_Pot
 
-END MODULE mod_LinearHBondModel
+END MODULE QML_LinearHBond_m

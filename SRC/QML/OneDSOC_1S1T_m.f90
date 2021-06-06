@@ -36,15 +36,15 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_OneDSOC_1S1T_Model
+MODULE QML_OneDSOC_1S1T_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the OneDSOC_1S1T parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  OneDSOC_1S1T_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  OneDSOC_1S1T_Model_t
    PRIVATE
 
       real (kind=Rkind) :: a1     = 0.03452_Rkind
@@ -67,14 +67,14 @@ MODULE mod_OneDSOC_1S1T_Model
     PROCEDURE :: Write_QModel    => Write_OneDSOC_1S1T_Model
     PROCEDURE :: Write0_QModel   => Write0_OneDSOC_1S1T_Model
   END TYPE OneDSOC_1S1T_Model_t
- 
+
   PUBLIC :: OneDSOC_1S1T_Model_t,Init_OneDSOC_1S1T_Model
- 
+
   CONTAINS
 !> @brief Function which makes the initialization of the OneDSOC_1S1T parameters.
 !!
 !! @param QModel             TYPE(OneDSOC_1S1T_Model_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_OneDSOC_1S1T_Model(QModel_in,read_param,nio_param_file,&
@@ -83,7 +83,7 @@ MODULE mod_OneDSOC_1S1T_Model
 
     TYPE (OneDSOC_1S1T_Model_t)                  :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: Rsig_in
@@ -106,7 +106,7 @@ MODULE mod_OneDSOC_1S1T_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     IF (QModel%nsurf == 0) THEN
       ! it means that nsurf was not present in the CALL Init_Model().
@@ -363,4 +363,4 @@ MODULE mod_OneDSOC_1S1T_Model
 
   END SUBROUTINE eval_OneDSOC_1S1T_Pot
 
-END MODULE mod_OneDSOC_1S1T_Model
+END MODULE QML_OneDSOC_1S1T_m

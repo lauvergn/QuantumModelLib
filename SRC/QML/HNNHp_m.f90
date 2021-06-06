@@ -36,15 +36,15 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_HNNHp_Model
+MODULE QML_HNNHp_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the HNNHp parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  HNNHp_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_HNNHp_t
    PRIVATE
 
      real(kind=Rkind), allocatable :: Qref(:)
@@ -54,26 +54,26 @@ MODULE mod_HNNHp_Model
      integer,          allocatable :: tab_func(:,:)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_HNNHp_Pot
-    PROCEDURE :: Write_QModel    => Write_HNNHp_Model
-    PROCEDURE :: Write0_QModel   => Write0_HNNHp_Model
-  END TYPE HNNHp_Model_t
+    PROCEDURE :: Eval_QModel_Pot => eval_QML_HNNHp_Pot
+    PROCEDURE :: Write_QModel    => Write_QML_HNNHp
+    PROCEDURE :: Write0_QModel   => Write0_QML_HNNHp
+  END TYPE QML_HNNHp_t
 
-  PUBLIC :: HNNHp_Model_t,Init_HNNHp_Model
+  PUBLIC :: QML_HNNHp_t,Init_QML_HNNHp
 
   CONTAINS
 !> @brief Function which makes the initialization of the HNNHp parameters.
 !!
-!! @param QModel             TYPE(HNNHp_Model_t): result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel             TYPE(QML_HNNHp_t): result derived type in which the parameters are set-up.
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_HNNHp_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_HNNHp(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (HNNHp_Model_t)                           :: QModel ! RESULT
+    TYPE (QML_HNNHp_t)                           :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -81,7 +81,7 @@ MODULE mod_HNNHp_Model
     character (len=:), allocatable  :: FileName
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_HNNHp_Model'
+    character (len=*), parameter :: name_sub='Init_QML_HNNHp'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -90,7 +90,7 @@ MODULE mod_HNNHp_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 1
     QModel%ndim     = 6
@@ -150,15 +150,15 @@ MODULE mod_HNNHp_Model
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_HNNHp_Model
-!> @brief Subroutine wich prints the HNNHp_Model parameters.
+  END FUNCTION Init_QML_HNNHp
+!> @brief Subroutine wich prints the QML_HNNHp parameters.
 !!
-!! @param QModel            CLASS(HNNHp_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_HNNHp_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_HNNHp_Model(QModel,nio)
+  SUBROUTINE Write_QML_HNNHp(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(HNNHp_Model_t),   intent(in) :: QModel
+    CLASS(QML_HNNHp_t),   intent(in) :: QModel
     integer,                intent(in) :: nio
 
     write(nio,*) 'trans-HNNH+ current parameters'
@@ -220,7 +220,7 @@ MODULE mod_HNNHp_Model
     CONTINUE
 
     CASE Default
-        write(out_unitp,*) ' ERROR in Write_HNNHp_Model'
+        write(out_unitp,*) ' ERROR in Write_QML_HNNHp'
         write(out_unitp,*) ' This option is not possible. option: ',QModel%option
         write(out_unitp,*) ' Its value MUST be 1'
 
@@ -230,11 +230,11 @@ MODULE mod_HNNHp_Model
     write(nio,*)
     write(nio,*) 'end HNNHp current parameters'
 
-  END SUBROUTINE Write_HNNHp_Model
-  SUBROUTINE Write0_HNNHp_Model(QModel,nio)
+  END SUBROUTINE Write_QML_HNNHp
+  SUBROUTINE Write0_QML_HNNHp(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(HNNHp_Model_t),   intent(in) :: QModel
+    CLASS(QML_HNNHp_t),   intent(in) :: QModel
     integer,                intent(in) :: nio
 
     write(nio,*) 'HNNHp default parameters'
@@ -243,20 +243,20 @@ MODULE mod_HNNHp_Model
     write(nio,*) 'end HNNHp default parameters'
 
 
-  END SUBROUTINE Write0_HNNHp_Model
+  END SUBROUTINE Write0_QML_HNNHp
 
 !> @brief Subroutine wich calculates the HNNHp potential with derivatives up to the 2d order.
 !!
-!! @param QModel             TYPE(HNNHp_Model_t):    derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_HNNHp_t):    derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_HNNHp_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE eval_QML_HNNHp_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(HNNHp_Model_t), intent(in)    :: QModel
+    CLASS(QML_HNNHp_t), intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -264,7 +264,7 @@ MODULE mod_HNNHp_Model
     SELECT CASE (QModel%option)
 
     CASE (1)
-      CALL eval_HNNHpPot1(Mat_OF_PotDia,dnQ,QModel)
+      CALL eval_QML_HNNHp_Pot1(Mat_OF_PotDia,dnQ,QModel)
 
     CASE Default
         write(out_unitp,*) ' ERROR in eval_HNNHpPot '
@@ -274,29 +274,29 @@ MODULE mod_HNNHp_Model
         STOP
     END SELECT
 
-  END SUBROUTINE eval_HNNHp_Pot
+  END SUBROUTINE eval_QML_HNNHp_Pot
 
 !> @brief Subroutine wich calculates the HNNHp potential (Not published model) with derivatives up to the 2d order is required.
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param QModel             TYPE(HNNHp_Model_t): derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_HNNHp_t): derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_HNNHpPot1(Mat_OF_PotDia,dnQ,QModel)
+  SUBROUTINE eval_QML_HNNHp_Pot1(Mat_OF_PotDia,dnQ,QModel)
   USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:)
-    TYPE(HNNHp_Model_t), intent(in)    :: QModel
+    TYPE(QML_HNNHp_t), intent(in)    :: QModel
 
 
     TYPE (dnS_t)        :: DQ(6,6)
     TYPE (dnS_t)        :: Vtemp
     integer             :: i,j
 
-    !write(6,*) ' sub eval_HNNHpPot1' ; flush(6)
+    !write(6,*) ' sub eval_QML_HNNHp_Pot1' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,1,4,3,5,6]) - QModel%Qref(:)
@@ -326,19 +326,19 @@ MODULE mod_HNNHp_Model
    CALL QML_dealloc_dnS(Vtemp)
    CALL QML_dealloc_dnS(DQ)
 
-   !write(6,*) ' end eval_HNNHpPot1' ; flush(6)
+   !write(6,*) ' end eval_QML_HNNHp_Pot1' ; flush(6)
 
-  END SUBROUTINE eval_HNNHpPot1
+  END SUBROUTINE eval_QML_HNNHp_Pot1
 
   ! here we suppose that the atom ordering: N1-N2-H1-H2
   ! the bounds are N1-N2, N1-H1, n2-H2
-  SUBROUTINE Cart_TO_Q_HNNHp_Model(dnX,dnQ,QModel,nderiv)
+  SUBROUTINE Cart_TO_Q_QML_HNNHp(dnX,dnQ,QModel,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(in)    :: dnX(:,:)
     TYPE (dnS_t),        intent(inout) :: dnQ(:)
-    TYPE(HNNHp_Model_t), intent(in)    :: QModel
+    TYPE(QML_HNNHp_t), intent(in)    :: QModel
     integer,             intent(in)    :: nderiv
 
 
@@ -359,6 +359,6 @@ MODULE mod_HNNHp_Model
 
 
 
-  END SUBROUTINE Cart_TO_Q_HNNHp_Model
+  END SUBROUTINE Cart_TO_Q_QML_HNNHp
 
-END MODULE mod_HNNHp_Model
+END MODULE QML_HNNHp_m

@@ -36,9 +36,9 @@
 !> @author David Lauvergnat
 !! @date 08/04/2021
 !!
-MODULE mod_PH4_Model
+MODULE QML_PH4_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
@@ -59,7 +59,7 @@ MODULE mod_PH4_Model
   character (len=*), parameter :: base_fit3_hess_fileName='InternalData/PH4/fit3/interHess_'
 
 !> @brief Derived type in which the PH4 parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  PH4_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  PH4_Model_t
 
     PRIVATE
 
@@ -94,7 +94,7 @@ MODULE mod_PH4_Model
 !> @brief Function which makes the initialization of the PH4 parameters.
 !!
 !! @param QModel             TYPE(PH4_Model_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_PH4_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
@@ -102,7 +102,7 @@ MODULE mod_PH4_Model
 
     TYPE (PH4_Model_t)                           :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -121,7 +121,7 @@ MODULE mod_PH4_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     IF (QModel%ndim == 0) THEN
       ! it means that ndim was not present in the CALL Init_Model().
@@ -183,7 +183,7 @@ MODULE mod_PH4_Model
     END SELECT
 
     !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
-    CALL read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
+    CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
                      ndim,QModel%nt(ifunc),max_nn,FileName,QModel%file_exist(ifunc),read_ab)
     !write(out_unitp,*) i,'Read done' ; flush(out_unitp)
     IF ( .NOT. QModel%file_exist(ifunc)) STOP ' ERROR while reading PH4 energy parameters'
@@ -207,7 +207,7 @@ MODULE mod_PH4_Model
       read_ab = (i == 2)
 
       !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
-      CALL read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
+      CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
                      ndim,QModel%nt(ifunc),max_nn,FileName,QModel%file_exist(ifunc),read_ab)
       !write(out_unitp,*) i,'Read done' ; flush(out_unitp)
 
@@ -232,7 +232,7 @@ MODULE mod_PH4_Model
       END SELECT
 
       !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
-      CALL read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
+      CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
                        ndim,QModel%nt(ifunc),max_nn,FileName,QModel%file_exist(ifunc),read_ab)
       !write(out_unitp,*) i,'Read done' ; flush(out_unitp)
 
@@ -258,7 +258,7 @@ MODULE mod_PH4_Model
       END SELECT
 
       !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
-      CALL read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
+      CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
                        ndim,QModel%nt(ifunc),max_nn,FileName,QModel%file_exist(ifunc),read_ab)
       !write(out_unitp,*) i,'Read done' ; flush(out_unitp)
 
@@ -393,26 +393,26 @@ MODULE mod_PH4_Model
 
     DO i1=2,QModel%ndim
       ifunc = QModel%iQopt_TO_ifunc(i1)
-      dnDQ(i1) = dnQ(i1) - dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+      dnDQ(i1) = dnQ(i1) - QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
     END DO
 
     vh = ZERO
     DO i1=2,QModel%ndim
       ifunc = QModel%iQgrad_TO_ifunc(i1)
-      IF (QModel%file_exist(ifunc)) vh = vh + dnDQ(i1) * dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+      IF (QModel%file_exist(ifunc)) vh = vh + dnDQ(i1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
 
       ifunc = QModel%iQjQHess_TO_ifunc(i1,i1)
-      IF (QModel%file_exist(ifunc)) vh = vh + dnDQ(i1)**2 * dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+      IF (QModel%file_exist(ifunc)) vh = vh + dnDQ(i1)**2 * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
     END DO
     DO i1=2,QModel%ndim
       DO i2=i1+1,QModel%ndim
         ifunc = QModel%iQjQHess_TO_ifunc(i1,i2)
         IF (.NOT. QModel%file_exist(ifunc)) CYCLE
-        vh = vh + dnDQ(i1)*dnDQ(i2) * TWO*dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+        vh = vh + dnDQ(i1)*dnDQ(i2) * TWO*QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
       END DO
     END DO
     ifunc = QModel%ifunc_Ene
-    Mat_OF_PotDia(1,1) = dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly) + vh * HALF
+    Mat_OF_PotDia(1,1) = QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly) + vh * HALF
 
     CALL QML_dealloc_dnS(Rm)
     CALL QML_dealloc_dnS(tRm)
@@ -477,7 +477,7 @@ MODULE mod_PH4_Model
     END DO
 
     DO ifunc=1,QModel%nb_Func
-      Func(ifunc) = dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+      Func(ifunc) = QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
     END DO
 
     CALL QML_dealloc_dnS(Rm)
@@ -495,7 +495,7 @@ MODULE mod_PH4_Model
 
   END SUBROUTINE eval_PH4_Func_fit3
 
-  FUNCTION dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly) RESULT(dnvfour)
+  FUNCTION QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly) RESULT(dnvfour)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -508,14 +508,14 @@ MODULE mod_PH4_Model
 
     integer         :: iq,np
 
-    !write(out_unitp,*) 'in dnvfour_fit3_WITH_poly',ifunc
+    !write(out_unitp,*) 'in QML_dnvfour_fit3_WITH_poly',ifunc
     !dnvfour = Rm
     dnvfour = ZERO
     IF (ifunc > max_fit) THEN
       write(out_unitp,*) ' ERROR in dnvfour'
       write(out_unitp,*) ' wrong value for ifunc',ifunc
       write(out_unitp,*) ' It must be smaller than max_fit:',max_fit
-      STOP ' ERROR in dnvfour_fit3_WITH_poly: wrong value for ifunc'
+      STOP ' ERROR in QML_dnvfour_fit3_WITH_poly: wrong value for ifunc'
     END IF
 
     !CALL QML_Write_dnS(dnvfour,nio=out_unitp,all_type=.TRUE.)
@@ -532,7 +532,7 @@ MODULE mod_PH4_Model
         dnvfour = dot_product(QModel%F(1:np,ifunc),dnPoly(1:np))
       END IF
 
-      IF (iq == 2) dnvfour = dnvfour + sc2_fit3(Rm,QModel%a(ifunc),QModel%b(ifunc))
+      IF (iq == 2) dnvfour = dnvfour + QML_sc2_fit3(Rm,QModel%a(ifunc),QModel%b(ifunc))
 
     ELSE
       IF (np > 1) dnvfour = dot_product(QModel%F(1:np,ifunc),dnPoly(1:np))
@@ -540,16 +540,16 @@ MODULE mod_PH4_Model
     !CALL QML_Write_dnS(dnvfour,nio=out_unitp,all_type=.TRUE.)
 
 
-  END FUNCTION dnvfour_fit3_WITH_poly
-  FUNCTION sc2_fit3(x,a,b)
-    TYPE (dnS_t)                          :: sc2_fit3
+  END FUNCTION QML_dnvfour_fit3_WITH_poly
+  FUNCTION QML_sc2_fit3(x,a,b)
+    TYPE (dnS_t)                          :: QML_sc2_fit3
     TYPE (dnS_t),           intent(in)    :: x
     real(kind=Rkind),       intent(in)    :: a,b
 
-    sc2_fit3 = dnSigmoid(-x,ONE)*(-x+a) + dnSigmoid(x,ONE)*(x+b)
+    QML_sc2_fit3 = dnSigmoid(-x,ONE)*(-x+a) + dnSigmoid(x,ONE)*(x+b)
 
-  END FUNCTION sc2_fit3
-  SUBROUTINE read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist,read_ab)
+  END FUNCTION QML_sc2_fit3
+  SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist,read_ab)
   IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim
@@ -561,7 +561,7 @@ MODULE mod_PH4_Model
 
    integer :: no,ios,kl,i
 
-   write(out_unitp,*) 'read_para4d: nom1,max_points: ',nom1,max_points
+   write(out_unitp,*) 'QML_read_para4d: nom1,max_points: ',nom1,max_points
 
 
    CALL file_open2(name_file=nom1,iunit=no,lformatted=.TRUE.,                   &
@@ -576,8 +576,8 @@ MODULE mod_PH4_Model
      IF (n(0) > max_points) THEN
          write(out_unitp,*) ' ERROR : The number of coefficients (',n(0),') >'
          write(out_unitp,*) '         than max_points (',max_points,')'
-         write(out_unitp,*) '         STOP in read_para4d'
-         STOP 'ERROR in read_para4d'
+         write(out_unitp,*) '         STOP in QML_read_para4d'
+         STOP 'ERROR in QML_read_para4d'
      END IF
      DO kl=1,n(0)
         read(no,*) F(kl)
@@ -593,7 +593,7 @@ MODULE mod_PH4_Model
      exist = .FALSE.
    END IF
 
-  END SUBROUTINE read_para4d
+  END SUBROUTINE QML_read_para4d
   FUNCTION dnSigmoid(x,a)
   USE QML_dnS_m
   IMPLICIT NONE
@@ -606,4 +606,4 @@ MODULE mod_PH4_Model
     dnSigmoid = (ONE+tanh(a*x))/TWO
 
   END FUNCTION dnSigmoid
-END MODULE mod_PH4_Model
+END MODULE QML_PH4_m

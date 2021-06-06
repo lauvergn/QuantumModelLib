@@ -30,18 +30,18 @@
 !
 !===========================================================================
 !===========================================================================
-module mod_TemplateModel
-  USE mod_EmptyModel
-  USE mod_MorseModel
+module QML_Template_m
+  USE QML_Empty_m
+  USE QML_Morse_m
   IMPLICIT NONE
 
   PRIVATE
 
-  TYPE, EXTENDS (EmptyModel_t) :: TemplateModel_t
+  TYPE, EXTENDS (QML_Empty_t) :: TemplateModel_t
      PRIVATE
 
-     TYPE (MorseModel_t)  :: morseXpY
-     TYPE (MorseModel_t)  :: morseZ
+     TYPE (QML_Morse_t)  :: morseXpY
+     TYPE (QML_Morse_t)  :: morseZ
 
      real(kind=Rkind)     :: kXmY=0.1_Rkind
 
@@ -62,7 +62,7 @@ contains
 
     TYPE (TemplateModel_t)             :: QModel
 
-    TYPE(EmptyModel_t),   intent(in)   :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),   intent(in)   :: QModel_in ! variable to transfer info to the init
     logical,              intent(in)   :: read_param
     integer,              intent(in)   :: nio_param_file
 
@@ -81,22 +81,22 @@ contains
       flush(out_unitp)
     END IF
 
-    !QModel%EmptyModel_t = Init_EmptyModel(QModel_in) ! it does not work with nagfor
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    !QModel%QML_Empty_t = Init_QML_Empty(QModel_in) ! it does not work with nagfor
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
     QModel%pot_name = 'template'
     QModel%nsurf    = 1
     QModel%ndim     = 3
 
     IF (debug) write(out_unitp,*) 'init QModel%morseXpY'
     ! V(1,1) term, all parameters in atomic unit (Hartree, bohr)
-    !QModel%morseXpY = Init_MorseModel(D=0.1_Rkind, a=1._Rkind,req=2._Rkind) ! does not work !!
+    !QModel%morseXpY = Init_QML_Morse(D=0.1_Rkind, a=1._Rkind,req=2._Rkind) ! does not work !!
     XpYeq = 2._Rkind
-    CALL Init0_MorseModel(QModel%morseXpY,D=0.1_Rkind,a=1._Rkind,req=XpYeq,model_name='morseXpY')
+    CALL Init0_QML_Morse(QModel%morseXpY,D=0.1_Rkind,a=1._Rkind,req=XpYeq,model_name='morseXpY')
 
     IF (debug) write(out_unitp,*) 'init QModel%morseZ'
-    !QModel%morseZ   = Init_MorseModel(D=0.08_Rkind,a=1._Rkind,req=2._Rkind) ! does not work !!
+    !QModel%morseZ   = Init_QML_Morse(D=0.08_Rkind,a=1._Rkind,req=2._Rkind) ! does not work !!
     Zeq  = 2._Rkind
-    CALL Init0_MorseModel(QModel%morseZ,D=0.08_Rkind,a=1._Rkind,req=Zeq,model_name='morseZ')
+    CALL Init0_QML_Morse(QModel%morseZ,D=0.08_Rkind,a=1._Rkind,req=Zeq,model_name='morseZ')
 
 
     IF (debug) write(out_unitp,*) 'init Q0 of Template'
@@ -146,9 +146,9 @@ contains
 
     Mat_OF_PotDia(1,1) = QModel%kXmY*HALF * (dnQ(1)-dnQ(2))**2
 
-    mXpY = dnMorse(dnQ(1)+dnQ(2),QModel%morseXpY)
+    mXpY = QML_dnMorse(dnQ(1)+dnQ(2),QModel%morseXpY)
 
-    mZ   = dnMorse(dnQ(3),QModel%morseZ)
+    mZ   = QML_dnMorse(dnQ(3),QModel%morseZ)
 
     vXmY = (QModel%kXmY*HALF) * (dnQ(1)-dnQ(2))**2
 
@@ -176,11 +176,11 @@ contains
 
     write(nio,*) '========================================'
     write(nio,*) 'TemplateModel current parameters'
-    CALL Write_EmptyModel(QModel%EmptyModel_t,nio)
+    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
     write(nio,*)
-    CALL Write_MorseModel(QModel%morseXpY,nio)
+    CALL Write_QML_Morse(QModel%morseXpY,nio)
     write(nio,*)
-    CALL Write_MorseModel(QModel%morseZ,nio)
+    CALL Write_QML_Morse(QModel%morseZ,nio)
     write(nio,*)
     write(nio,*) ' kXmY:',QModel%kXmY
     write(nio,*)
@@ -225,4 +225,4 @@ contains
 
   END SUBROUTINE Write0_TemplateModel
 
-end module mod_TemplateModel
+end module QML_Template_m

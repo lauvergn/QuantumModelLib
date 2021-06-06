@@ -30,13 +30,13 @@
 !
 !===========================================================================
 !===========================================================================
-MODULE mod_EmptyModel
+MODULE QML_Empty_m
   USE QML_UtilLib_m
   USE QML_dnS_m
   USE QML_dnMat_m
   IMPLICIT NONE
 
-  TYPE :: EmptyModel_t
+  TYPE :: QML_Empty_t
     logical :: Init        = .FALSE.
 
     integer :: nsurf       = 0
@@ -71,36 +71,36 @@ MODULE mod_EmptyModel
     real (kind=Rkind),  allocatable :: d0GGdef(:,:)
     real (kind=Rkind),  allocatable :: Q0(:)
 
-    !Vec0 must be allocatable, to be able to deallocate with deallocate of the EmptyModel_t variable.
+    !Vec0 must be allocatable, to be able to deallocate with deallocate of the QML_Empty_t variable.
     TYPE (dnMat_t),     allocatable :: Vec0 ! to get the correct phase of the adiatic couplings
     CONTAINS
-      PROCEDURE :: Eval_QModel_Pot    => Eval_EmptyModel_Pot
-      PROCEDURE :: Eval_QModel_Func   => Eval_EmptyModel_Func
-      PROCEDURE :: Write_QModel       => Write_EmptyModel
-      PROCEDURE :: Write0_QModel      => Write0_EmptyModel
-     !PROCEDURE :: get2_Q0_QModel     => get2_Q0_EmptyModel
-      PROCEDURE :: get_d0GGdef_QModel => get_d0GGdef_EmptyModel
-      PROCEDURE :: Cart_TO_Q_QModel   => Cart_TO_Q_EmptyModel
+      PROCEDURE :: Eval_QModel_Pot    => Eval_QML_Empty_Pot
+      PROCEDURE :: Eval_QModel_Func   => Eval_QML_Empty_Func
+      PROCEDURE :: Write_QModel       => Write_QML_Empty
+      PROCEDURE :: Write0_QModel      => Write0_QML_Empty
+     !PROCEDURE :: get2_Q0_QModel     => get2_Q0_QML_Empty
+      PROCEDURE :: get_d0GGdef_QModel => get_d0GGdef_QML_Empty
+      PROCEDURE :: Cart_TO_Q_QModel   => Cart_TO_Q_QML_Empty
 
-  END TYPE EmptyModel_t
+  END TYPE QML_Empty_t
 
   INTERFACE get_Q0_QModel
-    MODULE PROCEDURE get_Q0_EmptyModel
+    MODULE PROCEDURE get_Q0_QML_Empty
   END INTERFACE
 
 
 CONTAINS
 
-  FUNCTION Init_EmptyModel(QModel_in) RESULT(QModel)
+  FUNCTION Init_QML_Empty(QModel_in) RESULT(QModel)
   USE QML_UtilLib_m
   IMPLICIT NONE
 
-    TYPE (EmptyModel_t)                  :: QModel
+    TYPE (QML_Empty_t)                  :: QModel
 
-    TYPE(EmptyModel_t),  intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),  intent(in)      :: QModel_in ! variable to transfer info to the init
 
 !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_EmptyModel'
+    character (len=*), parameter :: name_sub='Init_QML_Empty'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -111,7 +111,7 @@ CONTAINS
     END IF
 
 
-    CALL Init0_EmptyModel(QModel,QModel_in)
+    CALL Init0_QML_Empty(QModel,QModel_in)
 
     IF (debug) THEN
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
@@ -119,17 +119,17 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_EmptyModel
-  SUBROUTINE Init0_EmptyModel(QModel,QModel_in)
+  END FUNCTION Init_QML_Empty
+  SUBROUTINE Init0_QML_Empty(QModel,QModel_in)
   USE QML_UtilLib_m
   IMPLICIT NONE
 
-    TYPE (EmptyModel_t), intent(inout)   :: QModel
+    TYPE (QML_Empty_t), intent(inout)   :: QModel
 
-    TYPE(EmptyModel_t),  intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),  intent(in)      :: QModel_in ! variable to transfer info to the init
 
 !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init0_EmptyModel'
+    character (len=*), parameter :: name_sub='Init0_QML_Empty'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -168,7 +168,7 @@ CONTAINS
     END IF
 
     IF (allocated(QModel%pot_name)) deallocate(QModel%pot_name )
-    QModel%pot_name = 'emptymodel'
+    QModel%pot_name = 'QML_Empty'
 
     IF (allocated(QModel%Vec0)) THEN
       CALL QML_dealloc_dnMat(QModel%Vec0)
@@ -199,15 +199,15 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-  END SUBROUTINE Init0_EmptyModel
-  SUBROUTINE get2_Q0_EmptyModel(QModel,Q0)
+  END SUBROUTINE Init0_QML_Empty
+  SUBROUTINE get2_Q0_QML_Empty(QModel,Q0)
     IMPLICIT NONE
 
     real (kind=Rkind),    intent(inout)  :: Q0(:)
-    CLASS(EmptyModel_t),  intent(in)     :: QModel
+    CLASS(QML_Empty_t),  intent(in)     :: QModel
 
     IF (size(Q0) /= QModel%ndim) THEN
-      STOP 'STOP in get_Q0_EmptyModel, wrong ndim size.'
+      STOP 'STOP in get_Q0_QML_Empty, wrong ndim size.'
     END IF
 
     IF (allocated(QModel%Q0)) THEN
@@ -215,17 +215,17 @@ CONTAINS
     END IF
 
 
-  END SUBROUTINE get2_Q0_EmptyModel
+  END SUBROUTINE get2_Q0_QML_Empty
 
-  SUBROUTINE get_Q0_EmptyModel(QModel,Q0,err_Q0)
+  SUBROUTINE get_Q0_QML_Empty(QModel,Q0,err_Q0)
     IMPLICIT NONE
 
-    CLASS(EmptyModel_t),  intent(in)              :: QModel
+    CLASS(QML_Empty_t),  intent(in)              :: QModel
     real (kind=Rkind),    intent(inout)           :: Q0(:)
     integer,              intent(inout), optional ::  err_Q0
 
     IF (size(Q0) /= QModel%ndim) THEN
-      STOP 'STOP in get_Q0_EmptyModel, wrong ndim size.'
+      STOP 'STOP in get_Q0_QML_Empty, wrong ndim size.'
     END IF
 
     IF (allocated(QModel%Q0)) THEN
@@ -235,13 +235,13 @@ CONTAINS
       err_Q0 = 1
     END IF
 
-  END SUBROUTINE get_Q0_EmptyModel
+  END SUBROUTINE get_Q0_QML_Empty
 
-  FUNCTION get_d0GGdef_EmptyModel(QModel) RESULT(d0GGdef)
+  FUNCTION get_d0GGdef_QML_Empty(QModel) RESULT(d0GGdef)
     IMPLICIT NONE
 
     real (kind=Rkind),   allocatable               :: d0GGdef(:,:)
-    CLASS(EmptyModel_t),             intent(in)    :: QModel
+    CLASS(QML_Empty_t),             intent(in)    :: QModel
 
     integer :: i,nact
 
@@ -265,12 +265,12 @@ CONTAINS
 
     !write(6,*) 'alloc Q0',allocated(Q0)
 
-  END FUNCTION get_d0GGdef_EmptyModel
-  SUBROUTINE Eval_EmptyModel_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  END FUNCTION get_d0GGdef_QML_Empty
+  SUBROUTINE Eval_QML_Empty_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS (EmptyModel_t),   intent(in)     :: QModel
+    CLASS (QML_Empty_t),   intent(in)     :: QModel
     TYPE (dnS_t),           intent(in)     :: dnQ(:)
     TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,                intent(in)     :: nderiv
@@ -278,13 +278,13 @@ CONTAINS
 
     Mat_OF_PotDia(:,:) = ZERO
 
-  END SUBROUTINE Eval_EmptyModel_Pot
+  END SUBROUTINE Eval_QML_Empty_Pot
 
-  SUBROUTINE Eval_EmptyModel_Func(QModel,Func,dnQ,nderiv)
+  SUBROUTINE Eval_QML_Empty_Func(QModel,Func,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS (EmptyModel_t),   intent(in)     :: QModel
+    CLASS (QML_Empty_t),   intent(in)     :: QModel
     TYPE (dnS_t),           intent(in)     :: dnQ(:)
     TYPE (dnS_t),           intent(inout)  :: Func(:)
     integer,                intent(in)     :: nderiv
@@ -295,13 +295,13 @@ CONTAINS
       Func(i) = ZERO
     END DO
 
-  END SUBROUTINE Eval_EmptyModel_Func
+  END SUBROUTINE Eval_QML_Empty_Func
 
-  SUBROUTINE Write_EmptyModel(QModel,nio)
+  SUBROUTINE Write_QML_Empty(QModel,nio)
   !USE QML_UtilLib_m
   IMPLICIT NONE
 
-    CLASS (EmptyModel_t), intent(in)    :: QModel
+    CLASS (QML_Empty_t), intent(in)    :: QModel
     integer,              intent(in)    :: nio
 
 
@@ -342,12 +342,12 @@ CONTAINS
     flush(nio)
 
 
-  END SUBROUTINE Write_EmptyModel
-  SUBROUTINE Write0_EmptyModel(QModel,nio)
+  END SUBROUTINE Write_QML_Empty
+  SUBROUTINE Write0_QML_Empty(QModel,nio)
   !USE QML_UtilLib_m
   IMPLICIT NONE
 
-    CLASS (EmptyModel_t), intent(in)    :: QModel
+    CLASS (QML_Empty_t), intent(in)    :: QModel
     integer,              intent(in)    :: nio
 
 
@@ -379,13 +379,13 @@ CONTAINS
     flush(nio)
 
 
-  END SUBROUTINE Write0_EmptyModel
+  END SUBROUTINE Write0_QML_Empty
 
-  SUBROUTINE Cart_TO_Q_EmptyModel(QModel,dnX,dnQ,nderiv)
+  SUBROUTINE Cart_TO_Q_QML_Empty(QModel,dnX,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(EmptyModel_t),     intent(in)    :: QModel
+    CLASS(QML_Empty_t),     intent(in)    :: QModel
     TYPE (dnS_t),            intent(in)    :: dnX(:,:)
     TYPE (dnS_t),            intent(inout) :: dnQ(:)
     integer,                 intent(in)    :: nderiv
@@ -393,5 +393,5 @@ CONTAINS
 
     dnQ(:) = ZERO
 
-  END SUBROUTINE Cart_TO_Q_EmptyModel
-END MODULE mod_EmptyModel
+  END SUBROUTINE Cart_TO_Q_QML_Empty
+END MODULE QML_Empty_m

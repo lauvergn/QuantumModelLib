@@ -36,26 +36,26 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_HOO_DMBE_Model
+MODULE QML_HOO_DMBE_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the HOO_DMBE parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  HOO_DMBE_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_HOO_DMBE_t
 
    PRIVATE
 
    CONTAINS
     PROCEDURE :: Eval_QModel_Pot  => eval_HOO_DMBE_Pot
-    PROCEDURE :: Write_QModel     => Write_HOO_DMBE_Model
-    PROCEDURE :: Write0_QModel    => Write0_HOO_DMBE_Model
-    PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_HOO_DMBE_Model
-  END TYPE HOO_DMBE_Model_t
+    PROCEDURE :: Write_QModel     => Write_QML_HOO_DMBE
+    PROCEDURE :: Write0_QModel    => Write0_QML_HOO_DMBE
+    PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_HOO_DMBE
+  END TYPE QML_HOO_DMBE_t
 
-  PUBLIC :: HOO_DMBE_Model_t,Init_HOO_DMBE_Model
+  PUBLIC :: QML_HOO_DMBE_t,Init_QML_HOO_DMBE
 
 
     REAL (kind=Rkind), parameter :: C(52) = [                                                &
@@ -157,22 +157,22 @@ MODULE mod_HOO_DMBE_Model
   CONTAINS
 !> @brief Function which makes the initialization of the HOO_DMBE parameters.
 !!
-!! @param QModel             TYPE(HOO_DMBE_Model_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel             TYPE(QML_HOO_DMBE_t):   result derived type in which the parameters are set-up.
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_HOO_DMBE_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_HOO_DMBE(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (HOO_DMBE_Model_t)                           :: QModel ! RESULT
+    TYPE (QML_HOO_DMBE_t)                           :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_HOO_DMBE_Model'
+    character (len=*), parameter :: name_sub='Init_QML_HOO_DMBE'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -181,7 +181,7 @@ MODULE mod_HOO_DMBE_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf      = 1
     QModel%ndimQ      = 3
@@ -205,38 +205,38 @@ MODULE mod_HOO_DMBE_Model
 
 
     IF (debug) THEN
-      !CALL Write_HOO_DMBE_Model(QModel,nio=out_unitp)
+      !CALL Write_QML_HOO_DMBE(QModel,nio=out_unitp)
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_HOO_DMBE_Model
-!> @brief Subroutine wich prints the current HOO_DMBE_Model parameters.
+  END FUNCTION Init_QML_HOO_DMBE
+!> @brief Subroutine wich prints the current QML_HOO_DMBE parameters.
 !!
-!! @param QModel            CLASS(HOO_DMBE_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_HOO_DMBE_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_HOO_DMBE_Model(QModel,nio)
+  SUBROUTINE Write_QML_HOO_DMBE(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(HOO_DMBE_Model_t),   intent(in) :: QModel
+    CLASS(QML_HOO_DMBE_t),   intent(in) :: QModel
     integer,                   intent(in) :: nio
 
     write(nio,*) 'HOO_DMBE IV current parameters'
 
-    CALL Write_EmptyModel(QModel%EmptyModel_t,nio)
+    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
 
     write(nio,*) 'end HOO_DMBE IV current parameters'
 
-  END SUBROUTINE Write_HOO_DMBE_Model
-!> @brief Subroutine wich prints the default HOO_DMBE_Model parameters.
+  END SUBROUTINE Write_QML_HOO_DMBE
+!> @brief Subroutine wich prints the default QML_HOO_DMBE parameters.
 !!
-!! @param QModel            CLASS(HOO_DMBE_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_HOO_DMBE_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_HOO_DMBE_Model(QModel,nio)
+  SUBROUTINE Write0_QML_HOO_DMBE(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(HOO_DMBE_Model_t),   intent(in) :: QModel
+    CLASS(QML_HOO_DMBE_t),   intent(in) :: QModel
     integer,                   intent(in) :: nio
 
     write(nio,*) 'HOO_DMBE IV default parameters'
@@ -266,11 +266,11 @@ MODULE mod_HOO_DMBE_Model
     write(nio,*) 'end HOO_DMBE IV default parameters'
 
 
-  END SUBROUTINE Write0_HOO_DMBE_Model
+  END SUBROUTINE Write0_QML_HOO_DMBE
 
 !> @brief Subroutine wich calculates the HOO_DMBE potential with derivatives up to the 2d order.
 !!
-!! @param QModel             CLASS(HOO_DMBE_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_HOO_DMBE_t):   derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
@@ -279,7 +279,7 @@ MODULE mod_HOO_DMBE_Model
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(HOO_DMBE_Model_t), intent(in)    :: QModel
+    CLASS(QML_HOO_DMBE_t), intent(in)    :: QModel
     TYPE (dnS_t),            intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),            intent(in)    :: dnQ(:)
     integer,                 intent(in)    :: nderiv
@@ -295,11 +295,11 @@ MODULE mod_HOO_DMBE_Model
   END SUBROUTINE eval_HOO_DMBE_Pot
 
   ! here we suppose that the atom ordering: H1-O2-O3
-  SUBROUTINE Cart_TO_Q_HOO_DMBE_Model(QModel,dnX,dnQ,nderiv)
+  SUBROUTINE Cart_TO_Q_QML_HOO_DMBE(QModel,dnX,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(HOO_DMBE_Model_t), intent(in)    :: QModel
+    CLASS(QML_HOO_DMBE_t), intent(in)    :: QModel
     TYPE (dnS_t),            intent(in)    :: dnX(:,:)
     TYPE (dnS_t),            intent(inout) :: dnQ(:)
     integer,                 intent(in)    :: nderiv
@@ -310,7 +310,7 @@ MODULE mod_HOO_DMBE_Model
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Cart_TO_Q_HOO_DMBE_Model'
+    character (len=*), parameter :: name_sub='Cart_TO_Q_QML_HOO_DMBE'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -328,7 +328,7 @@ MODULE mod_HOO_DMBE_Model
     VecOO(:)  = dnX(:,3)-dnX(:,2)
     VecHO2(:) = dnX(:,2)-dnX(:,1)
     VecHO3(:) = dnX(:,3)-dnX(:,1)
-    IF (debug) write(out_unitp,*) 'Cart_TO_Q_HOO_DMBE_Model vect done'
+    IF (debug) write(out_unitp,*) 'Cart_TO_Q_QML_HOO_DMBE vect done'
 
     dnQ(1) = sqrt(dot_product(VecOO,VecOO))
     dnQ(2) = sqrt(dot_product(VecHO2,VecHO2))
@@ -345,7 +345,7 @@ MODULE mod_HOO_DMBE_Model
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
     END IF
-  END SUBROUTINE Cart_TO_Q_HOO_DMBE_Model
+  END SUBROUTINE Cart_TO_Q_QML_HOO_DMBE
 
 
   SUBROUTINE HOO_DMBE4_pes(X,F)
@@ -635,4 +635,4 @@ MODULE mod_HOO_DMBE_Model
       DISP_HOO_DMBE4 = -C6/R6*D6-C8/R8*D8-C10/R10*D10
 
   END FUNCTION DISP_HOO_DMBE4
-END MODULE mod_HOO_DMBE_Model
+END MODULE QML_HOO_DMBE_m

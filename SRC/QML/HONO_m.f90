@@ -36,15 +36,15 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_HONO_Model
+MODULE QML_HONO_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the HONO parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  HONO_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_HONO_t
    PRIVATE
 
       real(kind=Rkind) :: Qref(6)=[2.696732586_Rkind,1.822912197_Rkind,           &
@@ -60,32 +60,32 @@ MODULE mod_HONO_Model
                                               1.9315017_Rkind,ZERO]
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_HONO_Pot
-    PROCEDURE :: Write_QModel    => Write_HONO_Model
-    PROCEDURE :: Write0_QModel   => Write0_HONO_Model
-  END TYPE HONO_Model_t
+    PROCEDURE :: Eval_QModel_Pot => eval_QML_HONO_Pot
+    PROCEDURE :: Write_QModel    => Write_QML_HONO
+    PROCEDURE :: Write0_QModel   => Write0_QML_HONO
+  END TYPE QML_HONO_t
 
-  PUBLIC :: HONO_Model_t,Init_HONO_Model
+  PUBLIC :: QML_HONO_t,Init_QML_HONO
 
   CONTAINS
 !> @brief Function which makes the initialization of the HONO parameters.
 !!
-!! @param QModel             TYPE(HONO_Model_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel             TYPE(QML_HONO_t):   result derived type in which the parameters are set-up.
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_HONO_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_HONO(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (HONO_Model_t)                           :: QModel ! RESULT
+    TYPE (QML_HONO_t)                           :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_HONO_Model'
+    character (len=*), parameter :: name_sub='Init_QML_HONO'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -94,7 +94,7 @@ MODULE mod_HONO_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 1
     QModel%ndim     = 6
@@ -135,15 +135,15 @@ MODULE mod_HONO_Model
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_HONO_Model
-!> @brief Subroutine wich prints the HONO_Model parameters.
+  END FUNCTION Init_QML_HONO
+!> @brief Subroutine wich prints the QML_HONO parameters.
 !!
-!! @param QModel            CLASS(HONO_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_HONO_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_HONO_Model(QModel,nio)
+  SUBROUTINE Write_QML_HONO(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(HONO_Model_t),   intent(in) :: QModel
+    CLASS(QML_HONO_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*) 'HONO current parameters'
@@ -202,7 +202,7 @@ MODULE mod_HONO_Model
     CONTINUE
 
     CASE Default
-        write(out_unitp,*) ' ERROR in Write_HONO_Model '
+        write(out_unitp,*) ' ERROR in Write_QML_HONO '
         write(out_unitp,*) ' This option is not possible. option: ',QModel%option
         write(out_unitp,*) ' Its value MUST be 0,1,2'
 
@@ -212,11 +212,11 @@ MODULE mod_HONO_Model
     write(nio,*)
     write(nio,*) 'end HONO current parameters'
 
-  END SUBROUTINE Write_HONO_Model
-  SUBROUTINE Write0_HONO_Model(QModel,nio)
+  END SUBROUTINE Write_QML_HONO
+  SUBROUTINE Write0_QML_HONO(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(HONO_Model_t),   intent(in) :: QModel
+    CLASS(QML_HONO_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*) 'HONO default parameters'
@@ -225,20 +225,20 @@ MODULE mod_HONO_Model
     write(nio,*) 'end HONO default parameters'
 
 
-  END SUBROUTINE Write0_HONO_Model
+  END SUBROUTINE Write0_QML_HONO
 
 !> @brief Subroutine wich calculates the HONO potential with derivatives up to the 2d order.
 !!
-!! @param QModel             TYPE(HONO_Model_t):    derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_HONO_t):    derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_HONO_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE eval_QML_HONO_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(HONO_Model_t),  intent(in)    :: QModel
+    CLASS(QML_HONO_t),  intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -246,33 +246,33 @@ MODULE mod_HONO_Model
     SELECT CASE (QModel%option)
 
     CASE (0,1,2)
-      CALL eval_HONOPot1(Mat_OF_PotDia,dnQ,QModel,nderiv)
+      CALL eval_QML_HONO_Pot1(Mat_OF_PotDia,dnQ,QModel,nderiv)
 
     CASE Default
-      write(out_unitp,*) ' ERROR in eval_HONO_Pot '
+      write(out_unitp,*) ' ERROR in eval_QML_HONO_Pot '
       write(out_unitp,*) ' This option is not possible. option: ',QModel%option
       write(out_unitp,*) ' Its value MUST be 1'
 
       STOP
     END SELECT
 
-  END SUBROUTINE eval_HONO_Pot
+  END SUBROUTINE eval_QML_HONO_Pot
 
 !> @brief Subroutine wich calculates the HONO potential (Not published model) with derivatives up to the 2d order is required.
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param QModel             TYPE(HONO_Model_t):  derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_HONO_t):  derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
-  SUBROUTINE eval_HONOPot1(Mat_OF_PotDia,dnQ,QModel,nderiv)
+  SUBROUTINE eval_QML_HONO_Pot1(Mat_OF_PotDia,dnQ,QModel,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:)
-    TYPE(HONO_Model_t),  intent(in)    :: QModel
+    TYPE(QML_HONO_t),  intent(in)    :: QModel
     integer,             intent(in)     :: nderiv
 
 
@@ -731,6 +731,6 @@ Vtemp = Vtemp - &
    CALL QML_dealloc_dnS(t2)
    CALL QML_dealloc_dnS(Qw)
 
-  END SUBROUTINE eval_HONOPot1
+  END SUBROUTINE eval_QML_HONO_Pot1
 
-END MODULE mod_HONO_Model
+END MODULE QML_HONO_m

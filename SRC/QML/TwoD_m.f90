@@ -36,15 +36,15 @@
 !> @author David Lauvergnat
 !! @date 07/01/2020
 !!
-MODULE mod_TwoD_Model
+MODULE QML_TwoD_m
   USE QML_NumParameters_m
-  USE mod_EmptyModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
   PRIVATE
 
 !> @brief Derived type in which the TwoD parameters are set-up.
-  TYPE, EXTENDS (EmptyModel_t) ::  TwoD_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  TwoD_Model_t
    PRIVATE
 
    real(kind=Rkind)     :: KX    = 0.02_Rkind
@@ -65,9 +65,9 @@ MODULE mod_TwoD_Model
     PROCEDURE :: Write_QModel    => Write_TwoD_Model
     PROCEDURE :: Write0_QModel   => Write0_TwoD_Model
   END TYPE TwoD_Model_t
- 
+
   PUBLIC :: TwoD_Model_t,Init_TwoD_Model
- 
+
   CONTAINS
 !> @brief Subroutine which makes the initialization of the TwoD parameters.
 !!      Those parameters cannot be modified (PRIVATE).
@@ -76,7 +76,7 @@ MODULE mod_TwoD_Model
 !! @date 12/07/2019
 !!
 !! @param QModel             TYPE(TwoD_Model_t):   result derived type in which the parameters are set-up.
-!! @param QModel_in          TYPE(EmptyModel_t):  type to transfer ndim, nsurf ...
+!! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_TwoD_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
@@ -84,7 +84,7 @@ MODULE mod_TwoD_Model
 
     TYPE (TwoD_Model_t)                          :: QModel ! RESULT
 
-    TYPE(EmptyModel_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -99,7 +99,7 @@ MODULE mod_TwoD_Model
       flush(out_unitp)
     END IF
 
-    CALL Init0_EmptyModel(QModel%EmptyModel_t,QModel_in)
+    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 2
     QModel%ndim     = 2
@@ -247,4 +247,4 @@ MODULE mod_TwoD_Model
 
   END SUBROUTINE eval_TwoD_Pot
 
-END MODULE mod_TwoD_Model
+END MODULE QML_TwoD_m
