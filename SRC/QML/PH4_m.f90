@@ -59,7 +59,7 @@ MODULE QML_PH4_m
   character (len=*), parameter :: base_fit3_hess_fileName='InternalData/PH4/fit3/interHess_'
 
 !> @brief Derived type in which the PH4 parameters are set-up.
-  TYPE, EXTENDS (QML_Empty_t) ::  PH4_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_PH4_t
 
     PRIVATE
 
@@ -82,25 +82,25 @@ MODULE QML_PH4_m
     integer, allocatable :: iQjQHess_TO_ifunc(:,:)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot  => eval_PH4_Pot
-    PROCEDURE :: Eval_QModel_Func => Eval_PH4_Func
-    PROCEDURE :: Write_QModel     => Write_PH4_Model
-    PROCEDURE :: Write0_QModel    => Write0_PH4_Model
-  END TYPE PH4_Model_t
+    PROCEDURE :: Eval_QModel_Pot  => EvalPot_QML_PH4
+    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_PH4
+    PROCEDURE :: Write_QModel     => Write_QML_PH4
+    PROCEDURE :: Write0_QModel    => Write0_QML_PH4
+  END TYPE QML_PH4_t
 
-  PUBLIC :: PH4_Model_t,Init_PH4_Model
+  PUBLIC :: QML_PH4_t,Init_QML_PH4
 
   CONTAINS
 !> @brief Function which makes the initialization of the PH4 parameters.
 !!
-!! @param QModel             TYPE(PH4_Model_t):   result derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_PH4_t):   result derived type in which the parameters are set-up.
 !! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_PH4_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_PH4(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (PH4_Model_t)                           :: QModel ! RESULT
+    TYPE (QML_PH4_t)                           :: QModel ! RESULT
 
     TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -112,7 +112,7 @@ MODULE QML_PH4_m
     character (len=:), allocatable  :: FileName
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_PH4_Model'
+    character (len=*), parameter :: name_sub='Init_QML_PH4'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -135,7 +135,7 @@ MODULE QML_PH4_m
        CALL QModel%Write_QModel(out_unitp)
        write(out_unitp,*) ' ERROR in ',name_sub
        write(out_unitp,*) ' ndim MUST equal to 1 or 2 or 9. ndim: ',QModel%ndim
-       STOP 'ERROR in Init_PH4_Model: ndim MUST equal to 1 or 2 or 9'
+       STOP 'ERROR in Init_QML_PH4: ndim MUST equal to 1 or 2 or 9'
     END IF
 
     QModel%nsurf    = 1
@@ -293,26 +293,26 @@ MODULE QML_PH4_m
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_PH4_Model
-!> @brief Subroutine wich prints the current PH4_Model parameters.
+  END FUNCTION Init_QML_PH4
+!> @brief Subroutine wich prints the current QML_PH4 parameters.
 !!
-!! @param QModel            CLASS(PH4_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_PH4_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_PH4_Model(QModel,nio)
+  SUBROUTINE Write_QML_PH4(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(PH4_Model_t),   intent(in) :: QModel
+    CLASS(QML_PH4_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
-  END SUBROUTINE Write_PH4_Model
-!> @brief Subroutine wich prints the default PH4_Model parameters.
+  END SUBROUTINE Write_QML_PH4
+!> @brief Subroutine wich prints the default QML_PH4 parameters.
 !!
-!! @param QModel            CLASS(PH4_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_PH4_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_PH4_Model(QModel,nio)
+  SUBROUTINE Write0_QML_PH4(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(PH4_Model_t),   intent(in) :: QModel
+    CLASS(QML_PH4_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*) 'PH4 parameters'
@@ -359,21 +359,21 @@ MODULE QML_PH4_m
     write(nio,*)
     write(nio,*) 'end PH4 parameters'
 
-  END SUBROUTINE Write0_PH4_Model
+  END SUBROUTINE Write0_QML_PH4
 
 !> @brief Subroutine wich calculates the PH4 potential with derivatives up to the 2d order.
 !!
-!! @param QModel             CLASS(PH4_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_PH4_t):   derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_PH4_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_PH4(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   USE QML_dnPoly_m
   IMPLICIT NONE
 
-    CLASS(PH4_Model_t),   intent(in)    :: QModel
+    CLASS(QML_PH4_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -420,13 +420,13 @@ MODULE QML_PH4_m
     CALL QML_dealloc_dnS(dnDQ)
     deallocate(dnPoly)
 
-  END SUBROUTINE eval_PH4_Pot
+  END SUBROUTINE EvalPot_QML_PH4
 
-  SUBROUTINE eval_PH4_Func(QModel,Func,dnQ,nderiv)
+  SUBROUTINE EvalFunc_QML_PH4(QModel,Func,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(PH4_Model_t),   intent(in)    :: QModel
+    CLASS(QML_PH4_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -434,16 +434,16 @@ MODULE QML_PH4_m
     TYPE (dnS_t)    :: Rm
     integer         :: i1,i2,ifunc
 
-    CALL eval_PH4_Func_fit3(QModel,Func,dnQ,nderiv)
+    CALL EvalFunc_QML_PH4_fit3(QModel,Func,dnQ,nderiv)
 
-  END SUBROUTINE eval_PH4_Func
+  END SUBROUTINE EvalFunc_QML_PH4
 
-  SUBROUTINE eval_PH4_Func_fit3(QModel,Func,dnQ,nderiv)
+  SUBROUTINE EvalFunc_QML_PH4_fit3(QModel,Func,dnQ,nderiv)
   USE QML_dnS_m
   USE QML_dnPoly_m
   IMPLICIT NONE
 
-    CLASS(PH4_Model_t),   intent(in)    :: QModel
+    CLASS(QML_PH4_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -454,12 +454,12 @@ MODULE QML_PH4_m
     integer                     :: i,i1,i2,ifunc,ifunc2
 
 !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='eval_PH4_Func_fit3'
+    character (len=*), parameter :: name_sub='EvalFunc_QML_PH4_fit3'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING eval_PH4_Func_fit3'
+      write(out_unitp,*) 'BEGINNING EvalFunc_QML_PH4_fit3'
       write(out_unitp,*) 'Func',size(Func)
       DO i=1,size(Func)
         CALL QML_Write_dnS(Func(i),nio=out_unitp,all_type=.TRUE.)
@@ -493,7 +493,7 @@ MODULE QML_PH4_m
       flush(out_unitp)
     END IF
 
-  END SUBROUTINE eval_PH4_Func_fit3
+  END SUBROUTINE EvalFunc_QML_PH4_fit3
 
   FUNCTION QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly) RESULT(dnvfour)
   USE QML_dnS_m
@@ -501,7 +501,7 @@ MODULE QML_PH4_m
 
     TYPE (dnS_t)                        :: dnvfour
 
-    CLASS(PH4_Model_t),   intent(in)    :: QModel
+    CLASS(QML_PH4_t),   intent(in)    :: QModel
     integer,              intent(in)    :: ifunc
     TYPE (dnS_t),         intent(in)    :: Rm
     TYPE (dnS_t),         intent(in)    :: dnPoly(:)
@@ -546,7 +546,7 @@ MODULE QML_PH4_m
     TYPE (dnS_t),           intent(in)    :: x
     real(kind=Rkind),       intent(in)    :: a,b
 
-    QML_sc2_fit3 = dnSigmoid(-x,ONE)*(-x+a) + dnSigmoid(x,ONE)*(x+b)
+    QML_sc2_fit3 = QML_dnSigmoid_PH4(-x,ONE)*(-x+a) + QML_dnSigmoid_PH4(x,ONE)*(x+b)
 
   END FUNCTION QML_sc2_fit3
   SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist,read_ab)
@@ -594,16 +594,16 @@ MODULE QML_PH4_m
    END IF
 
   END SUBROUTINE QML_read_para4d
-  FUNCTION dnSigmoid(x,a)
+  FUNCTION QML_dnSigmoid_PH4(x,a)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    TYPE (dnS_t)                        :: dnSigmoid
+    TYPE (dnS_t)                        :: QML_dnSigmoid_PH4
 
     TYPE (dnS_t),         intent(in)    :: x
     real(kind=Rkind),     INTENT(IN)    :: a
 
-    dnSigmoid = (ONE+tanh(a*x))/TWO
+    QML_dnSigmoid_PH4 = (ONE+tanh(a*x))/TWO
 
-  END FUNCTION dnSigmoid
+  END FUNCTION QML_dnSigmoid_PH4
 END MODULE QML_PH4_m

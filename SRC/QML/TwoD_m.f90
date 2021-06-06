@@ -44,7 +44,7 @@ MODULE QML_TwoD_m
   PRIVATE
 
 !> @brief Derived type in which the TwoD parameters are set-up.
-  TYPE, EXTENDS (QML_Empty_t) ::  TwoD_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_TwoD_t
    PRIVATE
 
    real(kind=Rkind)     :: KX    = 0.02_Rkind
@@ -61,12 +61,12 @@ MODULE QML_TwoD_m
    real (kind=Rkind)    :: muY  = 6667._Rkind
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_TwoD_Pot
-    PROCEDURE :: Write_QModel    => Write_TwoD_Model
-    PROCEDURE :: Write0_QModel   => Write0_TwoD_Model
-  END TYPE TwoD_Model_t
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_TwoD
+    PROCEDURE :: Write_QModel    => Write_QML_TwoD
+    PROCEDURE :: Write0_QModel   => Write0_QML_TwoD
+  END TYPE QML_TwoD_t
 
-  PUBLIC :: TwoD_Model_t,Init_TwoD_Model
+  PUBLIC :: QML_TwoD_t,Init_QML_TwoD
 
   CONTAINS
 !> @brief Subroutine which makes the initialization of the TwoD parameters.
@@ -75,14 +75,14 @@ MODULE QML_TwoD_m
 !> @author David Lauvergnat
 !! @date 12/07/2019
 !!
-!! @param QModel             TYPE(TwoD_Model_t):   result derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_TwoD_t):   result derived type in which the parameters are set-up.
 !! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_TwoD_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_TwoD(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (TwoD_Model_t)                          :: QModel ! RESULT
+    TYPE (QML_TwoD_t)                          :: QModel ! RESULT
 
     TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -90,7 +90,7 @@ MODULE QML_TwoD_m
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_TwoD_Model'
+    character (len=*), parameter :: name_sub='Init_QML_TwoD'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -127,15 +127,15 @@ MODULE QML_TwoD_m
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_TwoD_Model
-!> @brief Subroutine wich prints the current TwoD_Model parameters.
+  END FUNCTION Init_QML_TwoD
+!> @brief Subroutine wich prints the current QML_TwoD parameters.
 !!
-!! @param QModel            CLASS(TwoD_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_TwoD_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_TwoD_Model(QModel,nio)
+  SUBROUTINE Write_QML_TwoD(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(TwoD_Model_t),  intent(in) :: QModel
+    CLASS(QML_TwoD_t),  intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*) 'TwoD current parameters'
@@ -170,15 +170,15 @@ MODULE QML_TwoD_m
     write(nio,*) '-----------------------------------------'
     write(nio,*) 'end TwoD parameters'
 
-  END SUBROUTINE Write_TwoD_Model
-!> @brief Subroutine wich prints the default TwoD_Model parameters.
+  END SUBROUTINE Write_QML_TwoD
+!> @brief Subroutine wich prints the default QML_TwoD parameters.
 !!
-!! @param QModel            CLASS(TwoD_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_TwoD_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_TwoD_Model(QModel,nio)
+  SUBROUTINE Write0_QML_TwoD(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(TwoD_Model_t),   intent(in) :: QModel
+    CLASS(QML_TwoD_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*) 'TwoD default parameters'
@@ -216,20 +216,20 @@ MODULE QML_TwoD_m
     write(nio,*) '-----------------------------------------'
     write(nio,*) 'end TwoD default parameters'
 
-  END SUBROUTINE Write0_TwoD_Model
+  END SUBROUTINE Write0_QML_TwoD
 
 !> @brief Subroutine wich calculates the TwoD potential with derivatives up to the 2d order.
 !!
-!! @param QModel             CLASS(TwoD_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_TwoD_t):   derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TwoD_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_TwoD(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(TwoD_Model_t),  intent(in)    :: QModel
+    CLASS(QML_TwoD_t),  intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -245,6 +245,6 @@ MODULE QML_TwoD_m
    Mat_OF_PotDia(1,2) = QModel%GAMMA * dnQ(2) * exp(-QModel%ALPHA*(dnQ(1)-QModel%X3)**2) * exp(-QModel%BETA*(dnQ(2))**2)
    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
-  END SUBROUTINE eval_TwoD_Pot
+  END SUBROUTINE EvalPot_QML_TwoD
 
 END MODULE QML_TwoD_m

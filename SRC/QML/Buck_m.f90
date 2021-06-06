@@ -61,7 +61,7 @@ MODULE QML_Buck_m
      ! C= 102 10^-12 erg A^-6 = 106.54483566475760255666 Hartree bohr^-6
      real (kind=Rkind) :: mu  = 36423.484024390622_Rkind        ! au
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => Eval_QML_BuckPot
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Buck
     PROCEDURE :: Write_QModel    => Write_QML_Buck
     PROCEDURE :: Write0_QModel   => Write0_QML_Buck
   END TYPE QML_Buck_t
@@ -292,7 +292,7 @@ CONTAINS
 !! @param QModel          TYPE(QML_Buck_t):    derived type with the Buckingham parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_QML_BuckPot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_Buck(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -301,14 +301,14 @@ CONTAINS
     TYPE(dnS_t),         intent(in)     :: dnQ(:)
     integer,             intent(in)     :: nderiv
 
-    !write(out_unitp,*) 'BEGINNING in Eval_QML_BuckPot'
+    !write(out_unitp,*) 'BEGINNING in EvalPot_QML_Buck'
 
     Mat_OF_PotDia(1,1) = QML_dnBuck(dnQ(1),QModel)
 
-    !write(out_unitp,*) 'END in Eval_QML_BuckPot'
+    !write(out_unitp,*) 'END in EvalPot_QML_Buck'
     !flush(out_unitp)
 
-  END SUBROUTINE Eval_QML_BuckPot
+  END SUBROUTINE EvalPot_QML_Buck
 
 !> @brief Function wich calculates the Buckingham potential with derivatives up to the 2d order is required.
 !> @brief V(R) = A.Exp(-B*r)-C/r^6

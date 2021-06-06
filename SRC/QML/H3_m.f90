@@ -257,7 +257,7 @@ MODULE QML_H3_m
    PRIVATE
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot  => eval_QML_H3_Pot
+    PROCEDURE :: Eval_QModel_Pot  => EvalPot_QML_H3
     PROCEDURE :: Write_QModel     => Write_QML_H3
     PROCEDURE :: Write0_QModel    => Write0_QML_H3
     PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_H3
@@ -387,7 +387,7 @@ MODULE QML_H3_m
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_QML_H3_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_H3(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -404,7 +404,7 @@ MODULE QML_H3_m
 
     CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0=V)
 
-  END SUBROUTINE eval_QML_H3_Pot
+  END SUBROUTINE EvalPot_QML_H3
 
   SUBROUTINE Cart_TO_Q_QML_H3(QModel,dnX,dnQ,nderiv)
   USE QML_dnS_m

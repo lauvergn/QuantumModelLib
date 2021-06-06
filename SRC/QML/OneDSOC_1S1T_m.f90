@@ -44,7 +44,7 @@ MODULE QML_OneDSOC_1S1T_m
   PRIVATE
 
 !> @brief Derived type in which the OneDSOC_1S1T parameters are set-up.
-  TYPE, EXTENDS (QML_Empty_t) ::  OneDSOC_1S1T_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_OneDSOC_1S1T_t
    PRIVATE
 
       real (kind=Rkind) :: a1     = 0.03452_Rkind
@@ -63,25 +63,25 @@ MODULE QML_OneDSOC_1S1T_m
      real (kind=Rkind), PUBLIC :: mu  = 20000._Rkind !< Reduced mass from Granucci et al. paper (in au)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_OneDSOC_1S1T_Pot
-    PROCEDURE :: Write_QModel    => Write_OneDSOC_1S1T_Model
-    PROCEDURE :: Write0_QModel   => Write0_OneDSOC_1S1T_Model
-  END TYPE OneDSOC_1S1T_Model_t
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_OneDSOC_1S1T
+    PROCEDURE :: Write_QModel    => Write_QML_OneDSOC_1S1T
+    PROCEDURE :: Write0_QModel   => Write0_QML_OneDSOC_1S1T
+  END TYPE QML_OneDSOC_1S1T_t
 
-  PUBLIC :: OneDSOC_1S1T_Model_t,Init_OneDSOC_1S1T_Model
+  PUBLIC :: QML_OneDSOC_1S1T_t,Init_QML_OneDSOC_1S1T
 
   CONTAINS
 !> @brief Function which makes the initialization of the OneDSOC_1S1T parameters.
 !!
-!! @param QModel             TYPE(OneDSOC_1S1T_Model_t):   result derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_OneDSOC_1S1T_t):   result derived type in which the parameters are set-up.
 !! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_OneDSOC_1S1T_Model(QModel_in,read_param,nio_param_file,&
+  FUNCTION Init_QML_OneDSOC_1S1T(QModel_in,read_param,nio_param_file,&
                                    Rsig_in) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (OneDSOC_1S1T_Model_t)                  :: QModel ! RESULT
+    TYPE (QML_OneDSOC_1S1T_t)                  :: QModel ! RESULT
 
     TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -96,7 +96,7 @@ MODULE QML_OneDSOC_1S1T_m
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_OneDSOC_1S1T_Model'
+    character (len=*), parameter :: name_sub='Init_QML_OneDSOC_1S1T'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -123,7 +123,7 @@ MODULE QML_OneDSOC_1S1T_m
        CALL QModel%Write_QModel(out_unitp)
        write(out_unitp,*) ' ERROR in ',name_sub
        write(out_unitp,*) ' nsurf MUST equal to 4 or 2. nusrf: ',QModel%nsurf
-       STOP 'ERROR in Init_OneDSOC_1S1T_Model: nsurf MUST equal to 4 or 2'
+       STOP 'ERROR in Init_QML_OneDSOC_1S1T: nsurf MUST equal to 4 or 2'
     END IF
 
     ! to be able to change the sigmoid function (default 1, the original one)
@@ -140,13 +140,13 @@ MODULE QML_OneDSOC_1S1T_m
         write(out_unitp,*) ' The namelist "OneD_SOC_Model" is probably absent'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,*)
-        STOP ' ERROR in Init_OneDSOC_1S1T_Model'
+        STOP ' ERROR in Init_QML_OneDSOC_1S1T'
       ELSE IF (err_read > 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' Some parameter names of the namelist "OneD_SOC_Model" are probaly wrong'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,nml=OneD_SOC_Model)
-        STOP ' ERROR in Init_OneDSOC_1S1T_Model'
+        STOP ' ERROR in Init_QML_OneDSOC_1S1T'
       END IF
 
       QModel%Rsig     = Rsig
@@ -173,15 +173,15 @@ MODULE QML_OneDSOC_1S1T_m
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_OneDSOC_1S1T_Model
-!> @brief Subroutine wich prints the current OneDSOC_1S1T_Model parameters.
+  END FUNCTION Init_QML_OneDSOC_1S1T
+!> @brief Subroutine wich prints the current QML_OneDSOC_1S1T parameters.
 !!
-!! @param QModel            CLASS(OneDSOC_1S1T_Model_t): derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_OneDSOC_1S1T_t): derived type in which the parameters are set-up.
 !! @param nio               integer:                     file unit to print the parameters.
-  SUBROUTINE Write_OneDSOC_1S1T_Model(QModel,nio)
+  SUBROUTINE Write_QML_OneDSOC_1S1T(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(OneDSOC_1S1T_Model_t), intent(in) :: QModel
+    CLASS(QML_OneDSOC_1S1T_t), intent(in) :: QModel
     integer,                     intent(in) :: nio
 
     write(nio,*) 'OneDSOC_1S1T current parameters:'
@@ -207,15 +207,15 @@ MODULE QML_OneDSOC_1S1T_m
     write(nio,*)
     write(nio,*) 'end OneDSOC_1S1T current parameters'
 
-  END SUBROUTINE Write_OneDSOC_1S1T_Model
-!> @brief Subroutine wich prints the default OneDSOC_1S1T_Model parameters.
+  END SUBROUTINE Write_QML_OneDSOC_1S1T
+!> @brief Subroutine wich prints the default QML_OneDSOC_1S1T parameters.
 !!
-!! @param QModel            CLASS(OneDSOC_1S1T_Model_t):  derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_OneDSOC_1S1T_t):  derived type in which the parameters are set-up.
 !! @param nio               integer:                      file unit to print the parameters.
-  SUBROUTINE Write0_OneDSOC_1S1T_Model(QModel,nio)
+  SUBROUTINE Write0_QML_OneDSOC_1S1T(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(OneDSOC_1S1T_Model_t),   intent(in) :: QModel
+    CLASS(QML_OneDSOC_1S1T_t),   intent(in) :: QModel
     integer,                       intent(in) :: nio
 
     write(nio,*) 'OneDSOC_1S1T default parameters, from reference:'
@@ -233,14 +233,14 @@ MODULE QML_OneDSOC_1S1T_m
     write(nio,*) '     -The second one, the function sigma(R) is defined as tanh(-4*(R-Rsig)/DRsig).'
     write(nio,*)
     write(nio,*) 'Values for the first option:'
-    write(nio,*) 'Diabatic Potential, OneDSOC_1S1T_Model (with Rsig=8.0)'
+    write(nio,*) 'Diabatic Potential, QML_OneDSOC_1S1T (with Rsig=8.0)'
     write(nio,*) 'Value at: R=10. Bohr'
     write(nio,*) 'Vdia (Hartree)   = [ 0.041042414      -0.000707107       0.000707107       0.001000000]'
     write(nio,*) '                   [-0.000707107       0.041042499       0.000000000       0.000000000]'
     write(nio,*) '                   [ 0.000707107       0.000000000       0.041042499       0.000000000]'
     write(nio,*) '                   [ 0.001000000       0.000000000       0.000000000       0.041042499]'
     write(nio,*)
-    write(nio,*) 'Adiabatic Potential, OneDSOC_1S1T_Model (with Rsig=8.0)'
+    write(nio,*) 'Adiabatic Potential, QML_OneDSOC_1S1T (with Rsig=8.0)'
     write(nio,*) 'Value at: R=10. Bohr'
     write(nio,*) 'Vadia (Hartree)   = [ 0.039628243      0.041042499       0.041042499       0.042456670]'
 
@@ -256,20 +256,20 @@ MODULE QML_OneDSOC_1S1T_m
     write(nio,*) 'end OneDSOC_1S1T default parameters'
 
 
-  END SUBROUTINE Write0_OneDSOC_1S1T_Model
+  END SUBROUTINE Write0_QML_OneDSOC_1S1T
 
 !> @brief Subroutine wich calculates the OneDSOC_1S1T potential with derivatives up to the 2d order.
 !!
-!! @param QModel             CLASS(OneDSOC_1S1T_Model_t): derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_OneDSOC_1S1T_t): derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):                derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)                 value for which the potential is calculated
 !! @param nderiv             integer:                     it enables to specify up to which derivatives the potential is calculated:
 !!                                                        the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_OneDSOC_1S1T_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_OneDSOC_1S1T(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(OneDSOC_1S1T_Model_t), intent(in)    :: QModel
+    CLASS(QML_OneDSOC_1S1T_t), intent(in)    :: QModel
     TYPE (dnS_t),                intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),                intent(in)    :: dnQ(:)
     integer,                     intent(in)    :: nderiv
@@ -361,6 +361,6 @@ MODULE QML_OneDSOC_1S1T_m
     CALL QML_dealloc_dnS(dnSig)
 
 
-  END SUBROUTINE eval_OneDSOC_1S1T_Pot
+  END SUBROUTINE EvalPot_QML_OneDSOC_1S1T
 
 END MODULE QML_OneDSOC_1S1T_m

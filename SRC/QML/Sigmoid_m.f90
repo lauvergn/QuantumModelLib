@@ -49,19 +49,19 @@ MODULE QML_Sigmoid_m
 !! @date 03/08/2017
 !!
 !! @param A,B,C,e        real: sigmoid parameters
-  TYPE, EXTENDS (QML_Empty_t) :: SigmoidModel_t
+  TYPE, EXTENDS (QML_Empty_t) :: QML_Sigmoid_t
      PRIVATE
      real (kind=Rkind) :: A   = ONE
      real (kind=Rkind) :: B   = ZERO ! equivalent to Req
      real (kind=Rkind) :: C   = ONE
      real (kind=Rkind) :: e   = ONE
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_SigmoidPot
-    PROCEDURE :: Write_QModel    => Write_SigmoidModel
-    PROCEDURE :: Write0_QModel   => Write0_SigmoidModel
-  END TYPE SigmoidModel_t
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Sigmoid
+    PROCEDURE :: Write_QModel    => Write_QML_Sigmoid
+    PROCEDURE :: Write0_QModel   => Write0_QML_Sigmoid
+  END TYPE QML_Sigmoid_t
 
-  PUBLIC :: SigmoidModel_t,Init_SigmoidModel,Init0_SigmoidModel,Write_SigmoidModel,dnSigmoid
+  PUBLIC :: QML_Sigmoid_t,Init_QML_Sigmoid,Init0_QML_Sigmoid,Write_QML_Sigmoid,QML_dnSigmoid
 CONTAINS
 
 !> @brief Subroutine which makes the initialization of the Sigmoid parameters.
@@ -69,14 +69,14 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param QModel             TYPE(SigmoidModel_t):   derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_Sigmoid_t):   derived type in which the parameters are set-up.
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param A,B,C,e            real (optional):    sigmoid parameters
-  FUNCTION Init_SigmoidModel(QModel_in,read_param,nio_param_file,A,B,C,e) RESULT(QModel)
+  FUNCTION Init_QML_Sigmoid(QModel_in,read_param,nio_param_file,A,B,C,e) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (SigmoidModel_t)                        :: QModel
+    TYPE (QML_Sigmoid_t)                        :: QModel
 
     TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -84,7 +84,7 @@ CONTAINS
     real (kind=Rkind), optional, intent(in)      :: A,B,C,e
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_SigmoidModel'
+    character (len=*), parameter :: name_sub='Init_QML_Sigmoid'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -101,10 +101,10 @@ CONTAINS
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     IF (debug) write(out_unitp,*) 'init default Sigmoid parameters'
-    CALL Init0_SigmoidModel(QModel,A=ONE,B=ZERO,C=ONE,e=ONE,model_name='sigmoid')
+    CALL Init0_QML_Sigmoid(QModel,A=ONE,B=ZERO,C=ONE,e=ONE,model_name='sigmoid')
 
     IF (read_param) THEN
-      CALL Read_SigmoidModel(QModel,nio_param_file)
+      CALL Read_QML_Sigmoid(QModel,nio_param_file)
     ELSE
       IF (debug) write(out_unitp,*) 'init Sigmoid parameters (A,B,C,e), if present'
       IF (present(A)) QModel%A = A
@@ -125,16 +125,16 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_SigmoidModel
-  SUBROUTINE Init0_SigmoidModel(QModel,A,B,C,e,model_name)
+  END FUNCTION Init_QML_Sigmoid
+  SUBROUTINE Init0_QML_Sigmoid(QModel,A,B,C,e,model_name)
   IMPLICIT NONE
 
-    TYPE (SigmoidModel_t),           intent(inout)   :: QModel
+    TYPE (QML_Sigmoid_t),           intent(inout)   :: QModel
     real (kind=Rkind),   optional,   intent(in)      :: A,B,C,e
     character (len=*),   optional,   intent(in)      :: model_name
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init0_SigmoidModel'
+    character (len=*), parameter :: name_sub='Init0_QML_Sigmoid'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -164,7 +164,7 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-  END SUBROUTINE Init0_SigmoidModel
+  END SUBROUTINE Init0_QML_Sigmoid
 
 
 !> @brief Subroutine wich reads the Sigmoid parameters with a namelist.
@@ -173,10 +173,10 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param QModel       TYPE(SigmoidModel_t):   derived type in which the parameters are set-up.
+!! @param QModel       TYPE(QML_Sigmoid_t):   derived type in which the parameters are set-up.
 !! @param nio                integer            :   file unit to read the parameters.
-  SUBROUTINE Read_SigmoidModel(QModel,nio)
-    TYPE (SigmoidModel_t), intent(inout) :: QModel
+  SUBROUTINE Read_QML_Sigmoid(QModel,nio)
+    TYPE (QML_Sigmoid_t), intent(inout) :: QModel
     integer, intent(in) :: nio
 
     real (kind=Rkind) :: A,B,C,e
@@ -192,18 +192,18 @@ CONTAINS
 
     read(nio,nml=Sigmoid,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_SigmoidModel'
+      write(out_unitp,*) ' ERROR in Read_QML_Sigmoid'
       write(out_unitp,*) ' End-of-file or End-of-record'
       write(out_unitp,*) ' The namelist "Sigmoid" is probably absent'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,*)
-      STOP ' ERROR in Read_SigmoidModel'
+      STOP ' ERROR in Read_QML_Sigmoid'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_SigmoidModel'
+      write(out_unitp,*) ' ERROR in Read_QML_Sigmoid'
       write(out_unitp,*) ' Some parameter names of the namelist "Sigmoid" are probaly wrong'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,nml=Sigmoid)
-      STOP ' ERROR in Read_SigmoidModel'
+      STOP ' ERROR in Read_QML_Sigmoid'
     END IF
     !write(out_unitp,nml=Sigmoid)
 
@@ -212,17 +212,17 @@ CONTAINS
     QModel%C = C
     QModel%e =e
 
-  END SUBROUTINE Read_SigmoidModel
+  END SUBROUTINE Read_QML_Sigmoid
 
 !> @brief Subroutine wich prints the Sigmoid parameters.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param QModel             CLASS(SigmoidModel_t):   derived type with the Sigmoid parameters.
+!! @param QModel             CLASS(QML_Sigmoid_t):   derived type with the Sigmoid parameters.
 !! @param nio                integer            :   file unit to print the parameters.
-  SUBROUTINE Write_SigmoidModel(QModel,nio)
-    CLASS(SigmoidModel_t),    intent(in) :: QModel
+  SUBROUTINE Write_QML_Sigmoid(QModel,nio)
+    CLASS(QML_Sigmoid_t),    intent(in) :: QModel
     integer,                  intent(in) :: nio
 
     write(nio,*) 'Sigmoid current parameters'
@@ -234,9 +234,9 @@ CONTAINS
     write(nio,*) '  e:   ',QModel%e
     write(nio,*) 'end Sigmoid current parameters'
 
-  END SUBROUTINE Write_SigmoidModel
-  SUBROUTINE Write0_SigmoidModel(QModel,nio)
-    CLASS(SigmoidModel_t),    intent(in) :: QModel
+  END SUBROUTINE Write_QML_Sigmoid
+  SUBROUTINE Write0_QML_Sigmoid(QModel,nio)
+    CLASS(QML_Sigmoid_t),    intent(in) :: QModel
     integer,                  intent(in) :: nio
 
     write(nio,*) 'Sigmoid default parameters'
@@ -247,7 +247,7 @@ CONTAINS
     write(nio,*) '  e:   1.'
     write(nio,*) 'end Sigmoid default parameters'
 
-  END SUBROUTINE Write0_SigmoidModel
+  END SUBROUTINE Write0_QML_Sigmoid
 !> @brief Subroutine wich calculates the Sigmoid potential with derivatives up to the 2d order is required.
 !!
 !> @author David Lauvergnat
@@ -255,45 +255,45 @@ CONTAINS
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param QModel             CLASS(SigmoidModel_t): derived type with the Sigmoid parameters.
+!! @param QModel             CLASS(QML_Sigmoid_t): derived type with the Sigmoid parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_SigmoidPot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_Sigmoid(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE QML_dnS_m
 
-    CLASS (SigmoidModel_t), intent(in)     :: QModel
+    CLASS (QML_Sigmoid_t), intent(in)     :: QModel
     TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),           intent(in)     :: dnQ(:)
     integer,                intent(in)     :: nderiv
 
 
-    !write(out_unitp,*) 'BEGINNING in Eval_SigmoidPot'
+    !write(out_unitp,*) 'BEGINNING in EvalPot_QML_Sigmoid'
     !flush(out_unitp)
 
-    Mat_OF_PotDia(1,1) = dnSigmoid(dnQ(1),QModel)
+    Mat_OF_PotDia(1,1) = QML_dnSigmoid(dnQ(1),QModel)
 
 
-    !write(out_unitp,*) 'END in Eval_SigmoidPot'
+    !write(out_unitp,*) 'END in EvalPot_QML_Sigmoid'
     !flush(out_unitp)
 
-  END SUBROUTINE Eval_SigmoidPot
+  END SUBROUTINE EvalPot_QML_Sigmoid
 
 !> @brief Function wich calculates the Sigmoid potential with derivatives up to the 2d order is required.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @return dnSigmoid         TYPE (dnS_t):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
+!! @return QML_dnSigmoid         TYPE (dnS_t):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
-!! @param SigmoidPot       TYPE(SigmoidModel_t): derived type with the Sigmoid parameters.
-  FUNCTION dnSigmoid(dnR,SigmoidPot) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
+!! @param SigmoidPot       TYPE(QML_Sigmoid_t): derived type with the Sigmoid parameters.
+  FUNCTION QML_dnSigmoid(dnR,SigmoidPot) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
     USE QML_dnMat_m
     USE QML_dnS_m
 
-    TYPE (dnS_t)                          :: dnSigmoid
+    TYPE (dnS_t)                          :: QML_dnSigmoid
     TYPE (dnS_t),          intent(in)     :: dnR
 
-    TYPE (SigmoidModel_t), intent(in)   :: SigmoidPot
+    TYPE (QML_Sigmoid_t), intent(in)   :: SigmoidPot
 
     !local variable
     TYPE (dnS_t)     :: dnbeta
@@ -305,14 +305,14 @@ CONTAINS
     dnbeta  = tanh((dnR-SigmoidPot%B)/SigmoidPot%C)
     !write(out_unitp,*) 'dnbeta'
     !CALL QML_Write_dnS(dnbeta)
-    dnSigmoid = (HALF*SigmoidPot%A) * (ONE+SigmoidPot%e*dnbeta)
+    QML_dnSigmoid = (HALF*SigmoidPot%A) * (ONE+SigmoidPot%e*dnbeta)
 
      CALL QML_dealloc_dnS(dnbeta)
 
     !write(out_unitp,*) 'Sigmoid at',get_d0_FROM_dnS(dnR)
-    !CALL QML_Write_dnS(dnSigmoid)
+    !CALL QML_Write_dnS(QML_dnSigmoid)
     !write(out_unitp,*) 'END in Sigmoid'
     !flush(out_unitp)
 
-  END FUNCTION dnSigmoid
+  END FUNCTION QML_dnSigmoid
 END MODULE QML_Sigmoid_m

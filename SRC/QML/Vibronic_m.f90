@@ -46,7 +46,7 @@ MODULE QML_Vibronic_m
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
-  TYPE, EXTENDS (QML_Empty_t) ::  VibronicPot_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_Vibronic_t
      PRIVATE
      ! Vij, the diabatic potentials (i=j) or couplings (i/=j), are
      !   expanded as a taylor expension at second order
@@ -62,10 +62,10 @@ MODULE QML_Vibronic_m
      !Q0(:,i,j) is the reference geometry for the diabatic (j=i) or compling (i/=j) terms
      real (kind=Rkind), allocatable     :: Q0(:,:,:)
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_VibronicPot
-    PROCEDURE :: Write_QModel    => Write_VibronicModel
-    PROCEDURE :: Write0_QModel   => Write0_VibronicModel
-  END TYPE VibronicPot_t
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Vibronic
+    PROCEDURE :: Write_QModel    => Write_QML_Vibronic
+    PROCEDURE :: Write0_QModel   => Write0_QML_Vibronic
+  END TYPE QML_Vibronic_t
 
 
 CONTAINS
@@ -77,8 +77,8 @@ CONTAINS
 !!
 !! @param Para_Phenol        TYPE(Param_Phenol):   derived type in which the parameters are set-up.
 !! @param PubliUnit          logical (optional):   when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
-  SUBROUTINE Init_Vibronic(VibronicPot,ndim,nsurf,nio,PubliUnit)
-    TYPE (VibronicPot_t),      intent(inout)   :: VibronicPot
+  SUBROUTINE Init_QML_Vibronic(VibronicPot,ndim,nsurf,nio,PubliUnit)
+    TYPE (QML_Vibronic_t),      intent(inout)   :: VibronicPot
      logical, optional,         intent(in)      :: PubliUnit
 
      integer :: i,j,IOerr,order,nbcol
@@ -89,9 +89,9 @@ CONTAINS
      IF (present(PubliUnit)) VibronicPot%PubliUnit = PubliUnit
 
      CALL QML_alloc_dnMat(VibronicPot%V,nsurf,ndim,nderiv, &
-             name_var='VibronicPot%V',name_sub='Init_Vibronic',IOerr)
+             name_var='VibronicPot%V',name_sub='Init_QML_Vibronic',IOerr)
      IF (IOerr /= 0 ) THEN
-       write(out_unitp,*) ' ERROR in Init_Vibronic'
+       write(out_unitp,*) ' ERROR in Init_QML_Vibronic'
        write(out_unitp,*) '  Problem with allocate of VibronicPot%V'
        STOP
      END IF
@@ -100,7 +100,7 @@ CONTAINS
 
      allocate(VibronicPot%Q0(ndim,nsurf,nsurf),stat=IOerr)
      IF (IOerr /= 0 .OR. nsurf < 1 .OR. ndim < 1) THEN
-       write(out_unitp,*) ' ERROR in Init_Vibronic'
+       write(out_unitp,*) ' ERROR in Init_QML_Vibronic'
        write(out_unitp,*) '  Problem with allocate of VibronicPot%Q0'
        write(out_unitp,*) '  nsurf > 0?',nsurf
        write(out_unitp,*) '  ndim > 0?',ndim
@@ -154,7 +154,7 @@ CONTAINS
      END DO
 
 
-  END SUBROUTINE Init_Vibronic
+  END SUBROUTINE Init_QML_Vibronic
 
 !> @brief Subroutine wich prints the Phenol potential parameters.
 !!

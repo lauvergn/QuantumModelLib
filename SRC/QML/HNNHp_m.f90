@@ -54,7 +54,7 @@ MODULE QML_HNNHp_m
      integer,          allocatable :: tab_func(:,:)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_QML_HNNHp_Pot
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_HNNHp
     PROCEDURE :: Write_QModel    => Write_QML_HNNHp
     PROCEDURE :: Write0_QModel   => Write0_QML_HNNHp
   END TYPE QML_HNNHp_t
@@ -252,7 +252,7 @@ MODULE QML_HNNHp_m
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_QML_HNNHp_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_HNNHp(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -264,7 +264,7 @@ MODULE QML_HNNHp_m
     SELECT CASE (QModel%option)
 
     CASE (1)
-      CALL eval_QML_HNNHp_Pot1(Mat_OF_PotDia,dnQ,QModel)
+      CALL EvalPot1_QML_HNNHp(Mat_OF_PotDia,dnQ,QModel)
 
     CASE Default
         write(out_unitp,*) ' ERROR in eval_HNNHpPot '
@@ -274,7 +274,7 @@ MODULE QML_HNNHp_m
         STOP
     END SELECT
 
-  END SUBROUTINE eval_QML_HNNHp_Pot
+  END SUBROUTINE EvalPot_QML_HNNHp
 
 !> @brief Subroutine wich calculates the HNNHp potential (Not published model) with derivatives up to the 2d order is required.
 !!
@@ -283,7 +283,7 @@ MODULE QML_HNNHp_m
 !! @param QModel             TYPE(QML_HNNHp_t): derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_QML_HNNHp_Pot1(Mat_OF_PotDia,dnQ,QModel)
+  SUBROUTINE EvalPot1_QML_HNNHp(Mat_OF_PotDia,dnQ,QModel)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -296,7 +296,7 @@ MODULE QML_HNNHp_m
     TYPE (dnS_t)        :: Vtemp
     integer             :: i,j
 
-    !write(6,*) ' sub eval_QML_HNNHp_Pot1' ; flush(6)
+    !write(6,*) ' sub EvalPot1_QML_HNNHp' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,1,4,3,5,6]) - QModel%Qref(:)
@@ -326,9 +326,9 @@ MODULE QML_HNNHp_m
    CALL QML_dealloc_dnS(Vtemp)
    CALL QML_dealloc_dnS(DQ)
 
-   !write(6,*) ' end eval_QML_HNNHp_Pot1' ; flush(6)
+   !write(6,*) ' end EvalPot1_QML_HNNHp' ; flush(6)
 
-  END SUBROUTINE eval_QML_HNNHp_Pot1
+  END SUBROUTINE EvalPot1_QML_HNNHp
 
   ! here we suppose that the atom ordering: N1-N2-H1-H2
   ! the bounds are N1-N2, N1-H1, n2-H2

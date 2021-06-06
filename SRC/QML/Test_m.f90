@@ -44,29 +44,29 @@ MODULE QML_Test_m
   PRIVATE
 
 !> @brief Derived type in which the test parameters are set-up.
-  TYPE, EXTENDS (QML_Empty_t) ::  TestModel_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_Test_t
 
    PRIVATE
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_TestPot
-    PROCEDURE :: Write_QModel    => Write_TestModel
-    PROCEDURE :: Write0_QModel   => Write0_TestModel
-  END TYPE TestModel_t
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Test
+    PROCEDURE :: Write_QModel    => Write_QML_Test
+    PROCEDURE :: Write0_QModel   => Write0_QML_Test
+  END TYPE QML_Test_t
 
-  PUBLIC :: TestModel_t,Init_TestModel
+  PUBLIC :: QML_Test_t,Init_QML_Test
 
   CONTAINS
 !> @brief Function which makes the initialization of the test parameters.
 !!
-!! @param QModel             TYPE(TestModel_t):   result derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_Test_t):   result derived type in which the parameters are set-up.
 !! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_TestModel(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_Test(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (TestModel_t)                           :: QModel ! RESULT
+    TYPE (QML_Test_t)                           :: QModel ! RESULT
 
     TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -74,7 +74,7 @@ MODULE QML_Test_m
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_TestModel'
+    character (len=*), parameter :: name_sub='Init_QML_Test'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -103,26 +103,26 @@ MODULE QML_Test_m
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_TestModel
-!> @brief Subroutine wich prints the current TestModel parameters.
+  END FUNCTION Init_QML_Test
+!> @brief Subroutine wich prints the current QML_Test parameters.
 !!
-!! @param QModel            CLASS(TestModel_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_Test_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_TestModel(QModel,nio)
+  SUBROUTINE Write_QML_Test(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(TestModel_t),   intent(in) :: QModel
+    CLASS(QML_Test_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
-  END SUBROUTINE Write_TestModel
-!> @brief Subroutine wich prints the default TestModel parameters.
+  END SUBROUTINE Write_QML_Test
+!> @brief Subroutine wich prints the default QML_Test parameters.
 !!
-!! @param QModel            CLASS(TestModel_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_Test_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_TestModel(QModel,nio)
+  SUBROUTINE Write0_QML_Test(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(TestModel_t),   intent(in) :: QModel
+    CLASS(QML_Test_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*) 'test default parameters'
@@ -131,20 +131,20 @@ MODULE QML_Test_m
     write(nio,*) 'end test default parameters'
 
 
-  END SUBROUTINE Write0_TestModel
+  END SUBROUTINE Write0_QML_Test
 
 !> @brief Subroutine wich calculates the test potential with derivatives up to the 2d order.
 !!
-!! @param QModel             CLASS(TestModel_t):   derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_Test_t):   derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TestPot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_Test(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(TestModel_t),   intent(in)    :: QModel
+    CLASS(QML_Test_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -165,6 +165,6 @@ MODULE QML_Test_m
 !
 !!Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1) + dnQ(1)*dnQ(2)*dnQ(3)
 
-  END SUBROUTINE eval_TestPot
+  END SUBROUTINE EvalPot_QML_Test
 
 END MODULE QML_Test_m

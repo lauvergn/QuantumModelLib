@@ -44,7 +44,7 @@ MODULE QML_Tully_m
   PRIVATE
 
 !> @brief Derived type in which the Tully parameters are set-up.
-  TYPE, EXTENDS (QML_Empty_t) ::  TullyModel_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_Tully_t
    PRIVATE
 
      real (kind=Rkind) :: A      = 0.01_Rkind
@@ -57,25 +57,25 @@ MODULE QML_Tully_m
 
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_TullyPot
-    PROCEDURE :: Write_QModel    => Write_TullyModel
-    PROCEDURE :: Write0_QModel   => Write0_TullyModel
-  END TYPE TullyModel_t
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Tully
+    PROCEDURE :: Write_QModel    => Write_QML_Tully
+    PROCEDURE :: Write0_QModel   => Write0_QML_Tully
+  END TYPE QML_Tully_t
 
-  PUBLIC :: TullyModel_t,Init_TullyModel
+  PUBLIC :: QML_Tully_t,Init_QML_Tully
 
   CONTAINS
 !> @brief Function which makes the initialization of the Tully parameters.
 !!
-!! @param QModel             TYPE(TullyModel_t):   result derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_Tully_t):   result derived type in which the parameters are set-up.
 !! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_TullyModel(QModel_in,read_param,nio_param_file,          &
+  FUNCTION Init_QML_Tully(QModel_in,read_param,nio_param_file,          &
                            A,B,C,D,E0) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (TullyModel_t)                           :: QModel ! RESULT
+    TYPE (QML_Tully_t)                           :: QModel ! RESULT
 
     TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -84,7 +84,7 @@ MODULE QML_Tully_m
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_TullyModel'
+    character (len=*), parameter :: name_sub='Init_QML_Tully'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -133,7 +133,7 @@ MODULE QML_Tully_m
 
 
     IF (read_param) THEN
-      CALL Read_TullyModel(Asub=QModel%A,Bsub=QModel%B,Csub=QModel%C,   &
+      CALL Read_QML_Tully(Asub=QModel%A,Bsub=QModel%B,Csub=QModel%C,   &
                        Dsub=QModel%D,E0sub=QModel%E0,nio=nio_param_file)
     ELSE
 
@@ -180,16 +180,16 @@ MODULE QML_Tully_m
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_TullyModel
+  END FUNCTION Init_QML_Tully
 !> @brief Subroutine wich reads the Tully parameters with a namelist.
-!!   This can be called only from the "Init_TullyModel" subroutine.
+!!   This can be called only from the "Init_QML_Tully" subroutine.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
 !! @param nio                       integer:   file unit to read the parameters.
 !! @param Asub,Bsub,Csub,Dsub,E0sub real:      model parameters.
-  SUBROUTINE Read_TullyModel(Asub,Bsub,Csub,Dsub,E0sub,nio)
+  SUBROUTINE Read_QML_Tully(Asub,Bsub,Csub,Dsub,E0sub,nio)
   IMPLICIT NONE
 
     real (kind=Rkind),    intent(inout) :: Asub,Bsub,Csub,Dsub,E0sub
@@ -209,18 +209,18 @@ MODULE QML_Tully_m
 
     read(nio,Tully,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_TullyModel'
+      write(out_unitp,*) ' ERROR in Read_QML_Tully'
       write(out_unitp,*) ' End-of-file or End-of-record'
       write(out_unitp,*) ' The namelist "Tully" is probably absent'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,*)
-      STOP ' ERROR in Read_TullyModel'
+      STOP ' ERROR in Read_QML_Tully'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_TullyModel'
+      write(out_unitp,*) ' ERROR in Read_QML_Tully'
       write(out_unitp,*) ' Some parameter names of the namelist "Tully" are probaly wrong'
       write(out_unitp,*) ' check your data!'
       write(out_unitp,nml=Tully)
-      STOP ' ERROR in Read_TullyModel'
+      STOP ' ERROR in Read_QML_Tully'
     END IF
 
     Asub       = A
@@ -229,15 +229,15 @@ MODULE QML_Tully_m
     Csub       = C
     Dsub       = D
 
-  END SUBROUTINE Read_TullyModel
-!> @brief Subroutine wich prints the current TullyModel parameters.
+  END SUBROUTINE Read_QML_Tully
+!> @brief Subroutine wich prints the current QML_Tully parameters.
 !!
-!! @param QModel            CLASS(TullyModel_t):  derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_Tully_t):  derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_TullyModel(QModel,nio)
+  SUBROUTINE Write_QML_Tully(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(TullyModel_t),  intent(in) :: QModel
+    CLASS(QML_Tully_t),  intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*) 'Tully current parameters:'
@@ -251,15 +251,15 @@ MODULE QML_Tully_m
     write(nio,*)
     write(nio,*) 'end Tully parameters'
 
-  END SUBROUTINE Write_TullyModel
-!> @brief Subroutine wich prints the default TullyModel parameters.
+  END SUBROUTINE Write_QML_Tully
+!> @brief Subroutine wich prints the default QML_Tully parameters.
 !!
-!! @param QModel            CLASS(TullyModel_t):  derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_Tully_t):  derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_TullyModel(QModel,nio)
+  SUBROUTINE Write0_QML_Tully(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(TullyModel_t),   intent(in) :: QModel
+    CLASS(QML_Tully_t),   intent(in) :: QModel
     integer,               intent(in) :: nio
 
     write(nio,*) 'Tully default parameters, from reference:'
@@ -308,39 +308,39 @@ MODULE QML_Tully_m
     write(nio,*) 'end Tully default parameters'
 
 
-  END SUBROUTINE Write0_TullyModel
+  END SUBROUTINE Write0_QML_Tully
 
 !> @brief Subroutine wich calculates the Tully potential (for the 3 models) with derivatives up to the 2d order is required.
 !!
-!! @param QModel             CLASS(TullyModel_t):  derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_Tully_t):  derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_Tully(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(TullyModel_t),  intent(in)    :: QModel
+    CLASS(QML_Tully_t),  intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
 
     SELECT CASE (QModel%option)
     CASE (1)
-      CALL eval_TullyPot1(Mat_OF_PotDia,dnQ(1),QModel,nderiv)
+      CALL EvalPot1_QML_Tully(Mat_OF_PotDia,dnQ(1),QModel,nderiv)
     CASE (2)
-      CALL eval_TullyPot2(Mat_OF_PotDia,dnQ(1),QModel,nderiv)
+      CALL EvalPot2_QML_Tully(Mat_OF_PotDia,dnQ(1),QModel,nderiv)
     CASE (3)
-      CALL eval_TullyPot3(Mat_OF_PotDia,dnQ(1),QModel,nderiv)
+      CALL EvalPot3_QML_Tully(Mat_OF_PotDia,dnQ(1),QModel,nderiv)
     CASE Default
-        write(out_unitp,*) 'ERROR in eval_TullyPot'
+        write(out_unitp,*) 'ERROR in EvalPot_QML_Tully'
         write(out_unitp,*) ' This option is not possible. option:',QModel%option
         write(out_unitp,*) ' Its value MUST be 1 or 3 or 3'
         STOP
     END SELECT
 
-  END SUBROUTINE eval_TullyPot
+  END SUBROUTINE EvalPot_QML_Tully
 !> @brief Subroutine wich calculates the Tully potential (for the 1st model) with derivatives up to the 2d order is required.
 !!
 !> @author David Lauvergnat
@@ -348,15 +348,15 @@ MODULE QML_Tully_m
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param QModel             TYPE(TullyModel_t):  derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_Tully_t):  derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot1(Mat_OF_PotDia,dnR,QModel,nderiv)
+  SUBROUTINE EvalPot1_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv)
   !A. Simple avoided crossing
   USE QML_dnS_m
   IMPLICIT NONE
 
-    TYPE (TullyModel_t), intent(in)     :: QModel
+    TYPE (QML_Tully_t), intent(in)     :: QModel
     TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)     :: dnR
     integer,             intent(in)     :: nderiv
@@ -375,7 +375,7 @@ MODULE QML_Tully_m
     Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
 
-  END SUBROUTINE eval_TullyPot1
+  END SUBROUTINE EvalPot1_QML_Tully
 !> @brief Subroutine wich calculates the Tully potential (for the 2d model) with derivatives up to the 2d order is required.
 !!
 !> @author David Lauvergnat
@@ -383,15 +383,15 @@ MODULE QML_Tully_m
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param QModel             TYPE(TullyModel_t):  derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_Tully_t):  derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot2(Mat_OF_PotDia,dnR,QModel,nderiv) !2d Tully's potential
+  SUBROUTINE EvalPot2_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv) !2d Tully's potential
   !B. Dual avoided crossing
   USE QML_dnS_m
   IMPLICIT NONE
 
-    TYPE (TullyModel_t), intent(in)     :: QModel
+    TYPE (QML_Tully_t), intent(in)     :: QModel
     TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)     :: dnR
     integer,             intent(in)     :: nderiv
@@ -405,7 +405,7 @@ MODULE QML_Tully_m
     Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
 
-  END SUBROUTINE eval_TullyPot2
+  END SUBROUTINE EvalPot2_QML_Tully
 !> @brief Subroutine wich calculates the Tully potential (for the 3d model) with derivatives up to the 2d order is required.
 !!
 !> @author David Lauvergnat
@@ -413,15 +413,15 @@ MODULE QML_Tully_m
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param QModel             TYPE(TullyModel_t):  derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_Tully_t):  derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_TullyPot3(Mat_OF_PotDia,dnR,QModel,nderiv) !3d Tully's potential
+  SUBROUTINE EvalPot3_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv) !3d Tully's potential
   !C. Extended coupling with reflection
   USE QML_dnS_m
   IMPLICIT NONE
 
-    TYPE (TullyModel_t), intent(in)     :: QModel
+    TYPE (QML_Tully_t), intent(in)     :: QModel
     TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)     :: dnR
     integer,             intent(in)     :: nderiv
@@ -439,6 +439,6 @@ MODULE QML_Tully_m
     Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
 
-  END SUBROUTINE eval_TullyPot3
+  END SUBROUTINE EvalPot3_QML_Tully
 
 END MODULE QML_Tully_m

@@ -59,7 +59,7 @@ MODULE QML_LinearHBond_m
      real (kind=Rkind)    :: muq = 1837.1526464003414_Rkind      ! reduced mass associated to q (H atom)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_QML_LinearHBond_Pot
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_LinearHBond
     PROCEDURE :: Write_QModel    => Write_QML_LinearHBond
     PROCEDURE :: Write0_QModel   => Write0_QML_LinearHBond
   END TYPE QML_LinearHBond_t
@@ -306,7 +306,7 @@ MODULE QML_LinearHBond_m
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_QML_LinearHBond_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_LinearHBond(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -326,7 +326,7 @@ MODULE QML_LinearHBond_m
     !logical, parameter :: debug=.TRUE.
     logical, parameter :: debug=.FALSE.
     IF (debug .OR. print_level > 0) THEN
-      write(out_unitp,*) 'BEGINNING eval_QML_LinearHBond_Pot'
+      write(out_unitp,*) 'BEGINNING EvalPot_QML_LinearHBond'
       write(out_unitp,*) 'r(:) or QQ,q: ',QML_get_d0_FROM_dnS(dnQ(:))
       write(out_unitp,*) 'nderiv',nderiv
       write(out_unitp,*) 'PubliUnit',QModel%PubliUnit
@@ -419,11 +419,11 @@ MODULE QML_LinearHBond_m
       write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
       CALL QML_Write_dnS(Mat_OF_PotDia(1,1))
       flush(out_unitp)
-      write(out_unitp,*) 'END eval_QML_LinearHBond_Pot'
+      write(out_unitp,*) 'END EvalPot_QML_LinearHBond'
       flush(out_unitp)
     END IF
 
 
-  END SUBROUTINE eval_QML_LinearHBond_Pot
+  END SUBROUTINE EvalPot_QML_LinearHBond
 
 END MODULE QML_LinearHBond_m

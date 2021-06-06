@@ -37,7 +37,7 @@ module QML_Template_m
 
   PRIVATE
 
-  TYPE, EXTENDS (QML_Empty_t) :: TemplateModel_t
+  TYPE, EXTENDS (QML_Empty_t) :: QML_Template_t
      PRIVATE
 
      TYPE (QML_Morse_t)  :: morseXpY
@@ -46,21 +46,21 @@ module QML_Template_m
      real(kind=Rkind)     :: kXmY=0.1_Rkind
 
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_TemplatePot
-    PROCEDURE :: Write_QModel    => Write_TemplateModel
-    PROCEDURE :: Write0_QModel   => Write0_TemplateModel
-  END TYPE TemplateModel_t
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Template
+    PROCEDURE :: Write_QModel    => Write_QML_Template
+    PROCEDURE :: Write0_QModel   => Write0_QML_Template
+  END TYPE QML_Template_t
 
-  PUBLIC :: TemplateModel_t,Init_TemplateModel
+  PUBLIC :: QML_Template_t,Init_QML_Template
 
 
 contains
 
-  FUNCTION Init_TemplateModel(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_Template(QModel_in,read_param,nio_param_file) RESULT(QModel)
   USE QML_UtilLib_m
   IMPLICIT NONE
 
-    TYPE (TemplateModel_t)             :: QModel
+    TYPE (QML_Template_t)             :: QModel
 
     TYPE(QML_Empty_t),   intent(in)   :: QModel_in ! variable to transfer info to the init
     logical,              intent(in)   :: read_param
@@ -70,7 +70,7 @@ contains
     integer               :: i
 
 !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_TemplateModel'
+    character (len=*), parameter :: name_sub='Init_QML_Template'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -113,14 +113,14 @@ contains
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_TemplateModel
+  END FUNCTION Init_QML_Template
 
 
-  SUBROUTINE Eval_TemplatePot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_Template(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS (TemplateModel_t),  intent(in)     :: QModel
+    CLASS (QML_Template_t),  intent(in)     :: QModel
     TYPE (dnS_t),             intent(in)     :: dnQ(:)
     TYPE (dnS_t),             intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,                  intent(in)     :: nderiv
@@ -129,7 +129,7 @@ contains
     integer       :: i
 
 !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Eval_TemplatePot'
+    character (len=*), parameter :: name_sub='EvalPot_QML_Template'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -166,16 +166,16 @@ contains
       flush(out_unitp)
     END IF
 
-  END SUBROUTINE Eval_TemplatePot
+  END SUBROUTINE EvalPot_QML_Template
 
-  SUBROUTINE Write_TemplateModel(QModel,nio)
+  SUBROUTINE Write_QML_Template(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(TemplateModel_t), intent(in) :: QModel
+    CLASS(QML_Template_t), intent(in) :: QModel
     integer,                intent(in) :: nio
 
     write(nio,*) '========================================'
-    write(nio,*) 'TemplateModel current parameters'
+    write(nio,*) 'QML_Template current parameters'
     CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
     write(nio,*)
     CALL Write_QML_Morse(QModel%morseXpY,nio)
@@ -184,18 +184,18 @@ contains
     write(nio,*)
     write(nio,*) ' kXmY:',QModel%kXmY
     write(nio,*)
-    write(nio,*) 'end TemplateModel current parameters'
+    write(nio,*) 'end QML_Template current parameters'
     write(nio,*) '========================================'
     flush(nio)
 
-  END SUBROUTINE Write_TemplateModel
-  SUBROUTINE Write0_TemplateModel(QModel,nio)
+  END SUBROUTINE Write_QML_Template
+  SUBROUTINE Write0_QML_Template(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(TemplateModel_t), intent(in) :: QModel
+    CLASS(QML_Template_t), intent(in) :: QModel
     integer,                intent(in) :: nio
 
-    write(nio,*) 'TemplateModel default parameters'
+    write(nio,*) 'QML_Template default parameters'
     write(nio,*)
     write(nio,*) 'V(X,Y,Z) = morez(Z) + morsexpy(X+Y) + 1/2.kXmY.(X-Y)^2'
     write(nio,*)
@@ -220,9 +220,9 @@ contains
     write(nio,*) '      2       -0.119740801       0.080259199       0.000000000'
     write(nio,*) '      3        0.000000000       0.000000000       0.160000000'
     write(nio,*)
-    write(nio,*) 'end TemplateModel default parameters'
+    write(nio,*) 'end QML_Template default parameters'
     flush(nio)
 
-  END SUBROUTINE Write0_TemplateModel
+  END SUBROUTINE Write0_QML_Template
 
 end module QML_Template_m

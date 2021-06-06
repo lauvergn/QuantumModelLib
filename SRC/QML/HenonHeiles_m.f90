@@ -50,8 +50,8 @@ MODULE QML_HenonHeiles_m
      real (kind=Rkind) :: lambda = 0.111803_Rkind
 
    CONTAINS
-    !PROCEDURE :: Eval_QModel_Pot => QML_HenonHeiles_Pot
-    PROCEDURE :: Eval_QModel_Pot => QML_HenonHeiles_Pot_new
+    !PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_HenonHeiles
+    PROCEDURE :: Eval_QModel_Pot => EvalPotnew_QML_HenonHeiles
     PROCEDURE :: Write_QModel    => Write_QML_HenonHeiles
     PROCEDURE :: Write0_QModel   => Write0_QML_HenonHeiles
   END TYPE QML_HenonHeiles_t
@@ -225,7 +225,7 @@ MODULE QML_HenonHeiles_m
 !! @param dnQ(:)             TYPE (dnS_t)              value for which the potential is calculated
 !! @param nderiv             integer:                  it enables to specify up to which derivatives the potential is calculated:
 !!                                                     the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE QML_HenonHeiles_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_HenonHeiles(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -297,9 +297,9 @@ MODULE QML_HenonHeiles_m
     IF (nderiv == 1) CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0,d1)
     IF (nderiv == 2) CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0,d1,d2)
 
-  END SUBROUTINE QML_HenonHeiles_Pot
+  END SUBROUTINE EvalPot_QML_HenonHeiles
 
-  SUBROUTINE QML_HenonHeiles_Pot_new(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPotnew_QML_HenonHeiles(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -327,6 +327,6 @@ MODULE QML_HenonHeiles_m
 
     CALL QML_dealloc_dnS(dnV)
 
-  END SUBROUTINE QML_HenonHeiles_Pot_new
+  END SUBROUTINE EvalPotnew_QML_HenonHeiles
 
 END MODULE QML_HenonHeiles_m

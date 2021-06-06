@@ -44,7 +44,7 @@ MODULE QML_Retinal_JPCB2000_m
   PRIVATE
 
 !> @brief Derived type in which the Retinal_JPCB2000 parameters are set-up.
-  TYPE, EXTENDS (QML_Empty_t) ::  Retinal_JPCB2000_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_Retinal_JPCB2000_t
 
    PRIVATE
 
@@ -72,24 +72,24 @@ MODULE QML_Retinal_JPCB2000_m
    real(kind=Rkind) :: ci(25)       = ZERO ! it will be initialized after
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_Retinal_JPCB2000_Pot
-    PROCEDURE :: Write_QModel    => Write_Retinal_JPCB2000_Model
-    PROCEDURE :: Write0_QModel   => Write0_Retinal_JPCB2000_Model
-  END TYPE Retinal_JPCB2000_Model_t
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_Retinal_JPCB2000
+    PROCEDURE :: Write_QModel    => Write_QML_Retinal_JPCB2000
+    PROCEDURE :: Write0_QModel   => Write0_QML_Retinal_JPCB2000
+  END TYPE QML_Retinal_JPCB2000_t
 
-  PUBLIC :: Retinal_JPCB2000_Model_t,Init_Retinal_JPCB2000_Model
+  PUBLIC :: QML_Retinal_JPCB2000_t,Init_QML_Retinal_JPCB2000
 
   CONTAINS
 !> @brief Function which makes the initialization of the Retinal_JPCB2000 parameters.
 !!
-!! @param QModel             TYPE(Retinal_JPCB2000_Model_t):   result derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_Retinal_JPCB2000_t):   result derived type in which the parameters are set-up.
 !! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_Retinal_JPCB2000_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_Retinal_JPCB2000(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (Retinal_JPCB2000_Model_t)              :: QModel ! RESULT
+    TYPE (QML_Retinal_JPCB2000_t)              :: QModel ! RESULT
 
     TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -101,7 +101,7 @@ MODULE QML_Retinal_JPCB2000_m
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_Retinal_JPCB2000_Model'
+    character (len=*), parameter :: name_sub='Init_QML_Retinal_JPCB2000'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -128,7 +128,7 @@ MODULE QML_Retinal_JPCB2000_m
        CALL QModel%Write_QModel(out_unitp)
        write(out_unitp,*) ' ERROR in ',name_sub
        write(out_unitp,*) ' ndim range MUST be [2:25]. ndim: ',QModel%ndim
-       STOP 'ERROR in Init_Retinal_JPCB2000_Model: ndim range MUST be [2:25]'
+       STOP 'ERROR in Init_QML_Retinal_JPCB2000: ndim range MUST be [2:25]'
     END IF
 
 
@@ -170,15 +170,15 @@ MODULE QML_Retinal_JPCB2000_m
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_Retinal_JPCB2000_Model
-!> @brief Subroutine wich prints the current Retinal_JPCB2000_Model parameters.
+  END FUNCTION Init_QML_Retinal_JPCB2000
+!> @brief Subroutine wich prints the current QML_Retinal_JPCB2000 parameters.
 !!
-!! @param QModel            CLASS(Retinal_JPCB2000_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_Retinal_JPCB2000_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_Retinal_JPCB2000_Model(QModel,nio)
+  SUBROUTINE Write_QML_Retinal_JPCB2000(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(Retinal_JPCB2000_Model_t),   intent(in) :: QModel
+    CLASS(QML_Retinal_JPCB2000_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*)
@@ -205,15 +205,15 @@ MODULE QML_Retinal_JPCB2000_m
     write(nio,*) 'end Retinal_JPCB2000 default parameters'
     write(nio,*)
 
-  END SUBROUTINE Write_Retinal_JPCB2000_Model
-!> @brief Subroutine wich prints the default Retinal_JPCB2000_Model parameters.
+  END SUBROUTINE Write_QML_Retinal_JPCB2000
+!> @brief Subroutine wich prints the default QML_Retinal_JPCB2000 parameters.
 !!
-!! @param QModel            CLASS(Retinal_JPCB2000_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_Retinal_JPCB2000_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_Retinal_JPCB2000_Model(QModel,nio)
+  SUBROUTINE Write0_QML_Retinal_JPCB2000(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(Retinal_JPCB2000_Model_t),   intent(in) :: QModel
+    CLASS(QML_Retinal_JPCB2000_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*)
@@ -233,20 +233,20 @@ MODULE QML_Retinal_JPCB2000_m
     write(nio,*) 'end Retinal_JPCB2000 default parameters'
     write(nio,*)
 
-  END SUBROUTINE Write0_Retinal_JPCB2000_Model
+  END SUBROUTINE Write0_QML_Retinal_JPCB2000
 
 !> @brief Subroutine wich calculates the Retinal_JPCB2000 potential with derivatives up to the 2d order.
 !!
-!! @param QModel             CLASS(Retinal_JPCB2000_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_Retinal_JPCB2000_t):   derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_Retinal_JPCB2000_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_Retinal_JPCB2000(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(Retinal_JPCB2000_Model_t), intent(in)    :: QModel
+    CLASS(QML_Retinal_JPCB2000_t), intent(in)    :: QModel
     TYPE (dnS_t),                    intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),                    intent(in)    :: dnQ(:)
     integer,                         intent(in)    :: nderiv
@@ -272,6 +272,6 @@ MODULE QML_Retinal_JPCB2000_m
     CALL QML_dealloc_dnS(VBath)
 
 
-  END SUBROUTINE eval_Retinal_JPCB2000_Pot
+  END SUBROUTINE EvalPot_Retinal_JPCB2000
 
 END MODULE QML_Retinal_JPCB2000_m

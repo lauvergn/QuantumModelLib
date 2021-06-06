@@ -49,7 +49,7 @@ MODULE QML_HOO_DMBE_m
    PRIVATE
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot  => eval_HOO_DMBE_Pot
+    PROCEDURE :: Eval_QModel_Pot  => EvalPot_QML_HOO_DMBE
     PROCEDURE :: Write_QModel     => Write_QML_HOO_DMBE
     PROCEDURE :: Write0_QModel    => Write0_QML_HOO_DMBE
     PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_HOO_DMBE
@@ -275,7 +275,7 @@ MODULE QML_HOO_DMBE_m
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_HOO_DMBE_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_HOO_DMBE(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -292,7 +292,7 @@ MODULE QML_HOO_DMBE_m
 
     CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0=V)
 
-  END SUBROUTINE eval_HOO_DMBE_Pot
+  END SUBROUTINE EvalPot_QML_HOO_DMBE
 
   ! here we suppose that the atom ordering: H1-O2-O3
   SUBROUTINE Cart_TO_Q_QML_HOO_DMBE(QModel,dnX,dnQ,nderiv)

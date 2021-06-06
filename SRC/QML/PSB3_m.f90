@@ -44,7 +44,7 @@ MODULE QML_PSB3_m
   PRIVATE
 
 !> @brief Derived type in which the PSB3 parameters are set-up.
-  TYPE, EXTENDS (QML_Empty_t) ::  PSB3_Model_t
+  TYPE, EXTENDS (QML_Empty_t) ::  QML_PSB3_t
     PRIVATE
 
     real (kind=Rkind) :: blamin   = 0.0912615_Rkind
@@ -81,24 +81,24 @@ MODULE QML_PSB3_m
     ! Warning the parameters are given as in the publication.
     !   Therefore, the BLA(=Q(1)) is in Angstrom and the energy is in kcal.mol^-1.
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_PSB3_Pot
-    PROCEDURE :: Write_QModel    => Write_PSB3_Model
-    PROCEDURE :: Write0_QModel   => Write0_PSB3_Model
-  END TYPE PSB3_Model_t
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_PSB3
+    PROCEDURE :: Write_QModel    => Write_QML_PSB3
+    PROCEDURE :: Write0_QModel   => Write0_QML_PSB3
+  END TYPE QML_PSB3_t
 
-  PUBLIC :: PSB3_Model_t,Init_PSB3_Model
+  PUBLIC :: QML_PSB3_t,Init_QML_PSB3
 
   CONTAINS
 !> @brief Function which makes the initialization of the PSB3 parameters.
 !!
-!! @param QModel             TYPE(PSB3_Model_t):   result derived type in which the parameters are set-up.
+!! @param QModel             TYPE(QML_PSB3_t):   result derived type in which the parameters are set-up.
 !! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_PSB3_Model(QModel_in,read_param,nio_param_file) RESULT(QModel)
+  FUNCTION Init_QML_PSB3(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (PSB3_Model_t)                          :: QModel ! RESULT
+    TYPE (QML_PSB3_t)                          :: QModel ! RESULT
 
     TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -106,7 +106,7 @@ MODULE QML_PSB3_m
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_PSB3_Model'
+    character (len=*), parameter :: name_sub='Init_QML_PSB3'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -188,15 +188,15 @@ MODULE QML_PSB3_m
       flush(out_unitp)
     END IF
 
-  END FUNCTION Init_PSB3_Model
-!> @brief Subroutine wich prints the PSB3_Model parameters.
+  END FUNCTION Init_QML_PSB3
+!> @brief Subroutine wich prints the QML_PSB3 parameters.
 !!
-!! @param QModel            CLASS(PSB3_Model_t):   derived type in which the parameters are set-up.
+!! @param QModel            CLASS(QML_PSB3_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write_PSB3_Model(QModel,nio)
+  SUBROUTINE Write_QML_PSB3(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(PSB3_Model_t),   intent(in) :: QModel
+    CLASS(QML_PSB3_t),   intent(in) :: QModel
     integer,               intent(in) :: nio
 
     write(nio,*) 'PSB3 current parameters'
@@ -248,7 +248,7 @@ MODULE QML_PSB3_m
     write(nio,*) '  k3       :      ',QModel%k3
 
     CASE Default
-        write(out_unitp,*) ' ERROR in Write_PSB3_Model '
+        write(out_unitp,*) ' ERROR in Write_QML_PSB3 '
         write(out_unitp,*) ' This option is not possible. option: ',QModel%option
         write(out_unitp,*) ' Its value MUST be 1 or 2 '
         STOP
@@ -257,11 +257,11 @@ MODULE QML_PSB3_m
     write(nio,*)
     write(nio,*) 'end PSB3 current parameters'
 
-  END SUBROUTINE Write_PSB3_Model
-  SUBROUTINE Write0_PSB3_Model(QModel,nio)
+  END SUBROUTINE Write_QML_PSB3
+  SUBROUTINE Write0_QML_PSB3(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(PSB3_Model_t),   intent(in) :: QModel
+    CLASS(QML_PSB3_t),   intent(in) :: QModel
     integer,               intent(in) :: nio
 
     write(nio,*) 'PSB3 default parameters'
@@ -272,20 +272,20 @@ MODULE QML_PSB3_m
     write(nio,*) 'end PSB3 default parameters'
 
 
-  END SUBROUTINE Write0_PSB3_Model
+  END SUBROUTINE Write0_QML_PSB3
 
 !> @brief Subroutine wich calculates the PSB3 potential with derivatives up to the 2d order.
 !!
-!! @param QModel             CLASS(PSB3_Model_t):  derived type in which the parameters are set-up.
+!! @param QModel             CLASS(QML_PSB3_t):  derived type in which the parameters are set-up.
 !! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_PSB3_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_PSB3(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
-    CLASS(PSB3_Model_t),  intent(in)    :: QModel
+    CLASS(QML_PSB3_t),  intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -293,20 +293,20 @@ MODULE QML_PSB3_m
     SELECT CASE (QModel%option)
 
     CASE (1)
-      CALL eval_PSB3Pot1(Mat_OF_PotDia,dnQ,QModel,nderiv)
+      CALL EvalPot1_QML_PSB3(Mat_OF_PotDia,dnQ,QModel,nderiv)
 
     CASE (2)
-      CALL eval_PSB3Pot2(Mat_OF_PotDia,dnQ,QModel,nderiv)
+      CALL EvalPot2_QML_PSB3(Mat_OF_PotDia,dnQ,QModel,nderiv)
 
     CASE Default
-        write(out_unitp,*) ' ERROR in eval_PSB3_Pot'
+        write(out_unitp,*) ' ERROR in EvalPot_QML_PSB3'
         write(out_unitp,*) ' This option is not possible. option: ',QModel%option
         write(out_unitp,*) ' Its value MUST be 1 or 2 '
 
         STOP
     END SELECT
 
-  END SUBROUTINE eval_PSB3_Pot
+  END SUBROUTINE EvalPot_QML_PSB3
 
 !> @brief Subroutine wich calculates the PSB3 potential (Not published model) with derivatives up to the 2d order is required.
 !!
@@ -315,14 +315,14 @@ MODULE QML_PSB3_m
 !! @param PSB3Pot          TYPE(PSB3Pot_t):    derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_PSB3Pot1(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv)
+  SUBROUTINE EvalPot1_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv)
     !Unpublished model potential (yet)
     USE QML_dnS_m
     IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:) ! BLA, Tors, HOOP
-    TYPE(PSB3_Model_t),  intent(in)    :: PSB3Pot
+    TYPE(QML_PSB3_t),  intent(in)    :: PSB3Pot
     integer,             intent(in)    :: nderiv
 
 
@@ -402,7 +402,7 @@ MODULE QML_PSB3_m
 
    CALL QML_dealloc_dnS(dnPot)
 
-  END SUBROUTINE eval_PSB3Pot1
+  END SUBROUTINE EvalPot1_QML_PSB3
 
 !> @brief Subroutine wich calculates the PSB3 potential (Published model) with derivatives up to the 2d order is required.
 !!
@@ -411,12 +411,12 @@ MODULE QML_PSB3_m
 !! @param PSB3Pot          TYPE(PSB3Pot_t):    derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_PSB3Pot2(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv) !Second PSB3's potential
+  SUBROUTINE EvalPot2_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv) !Second PSB3's potential
   ! Published potential
   USE QML_dnS_m
   IMPLICIT NONE
 
-    TYPE (PSB3_Model_t), intent(in)     :: PSB3Pot
+    TYPE (QML_PSB3_t), intent(in)     :: PSB3Pot
     TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)     :: dnQ(:) ! BLA, Tors, HOOP
     integer,             intent(in)     :: nderiv
@@ -492,6 +492,6 @@ MODULE QML_PSB3_m
 
    CALL QML_dealloc_dnS(dnPot)
 
-  END SUBROUTINE eval_PSB3Pot2
+  END SUBROUTINE EvalPot2_QML_PSB3
 
 END MODULE QML_PSB3_m

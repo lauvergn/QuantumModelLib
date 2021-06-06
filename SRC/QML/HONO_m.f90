@@ -60,7 +60,7 @@ MODULE QML_HONO_m
                                               1.9315017_Rkind,ZERO]
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_QML_HONO_Pot
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_HONO
     PROCEDURE :: Write_QModel    => Write_QML_HONO
     PROCEDURE :: Write0_QModel   => Write0_QML_HONO
   END TYPE QML_HONO_t
@@ -234,7 +234,7 @@ MODULE QML_HONO_m
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_QML_HONO_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_HONO(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -246,17 +246,17 @@ MODULE QML_HONO_m
     SELECT CASE (QModel%option)
 
     CASE (0,1,2)
-      CALL eval_QML_HONO_Pot1(Mat_OF_PotDia,dnQ,QModel,nderiv)
+      CALL EvalPot1_QML_HONO(Mat_OF_PotDia,dnQ,QModel,nderiv)
 
     CASE Default
-      write(out_unitp,*) ' ERROR in eval_QML_HONO_Pot '
+      write(out_unitp,*) ' ERROR in EvalPot_QML_HONO '
       write(out_unitp,*) ' This option is not possible. option: ',QModel%option
       write(out_unitp,*) ' Its value MUST be 1'
 
       STOP
     END SELECT
 
-  END SUBROUTINE eval_QML_HONO_Pot
+  END SUBROUTINE EvalPot_QML_HONO
 
 !> @brief Subroutine wich calculates the HONO potential (Not published model) with derivatives up to the 2d order is required.
 !!
@@ -266,7 +266,7 @@ MODULE QML_HONO_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
-  SUBROUTINE eval_QML_HONO_Pot1(Mat_OF_PotDia,dnQ,QModel,nderiv)
+  SUBROUTINE EvalPot1_QML_HONO(Mat_OF_PotDia,dnQ,QModel,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -731,6 +731,6 @@ Vtemp = Vtemp - &
    CALL QML_dealloc_dnS(t2)
    CALL QML_dealloc_dnS(Qw)
 
-  END SUBROUTINE eval_QML_HONO_Pot1
+  END SUBROUTINE EvalPot1_QML_HONO
 
 END MODULE QML_HONO_m

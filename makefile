@@ -304,8 +304,8 @@ test:$(TESTEXE)
 $(TESTEXE): $(OBJ_test) $(OBJ_all)
 	$(LYNK90)   -o $(TESTEXE) $(OBJ_test) $(OBJ_all) $(LYNKFLAGS)
 
-.PHONY: model testmodel
-model testmodel:$(MODEXE)
+.PHONY: model QML_Test
+model QML_Test:$(MODEXE)
 	echo "model (QML) compilation: OK"
 $(MODEXE): $(OBJ_testmod) $(OBJ_all)
 	$(LYNK90)   -o $(MODEXE) $(OBJ_testmod) $(OBJ_all) $(LYNKFLAGS)

@@ -2,12 +2,12 @@
   PSB3 potential
   With units: Atomic Units (Angstrom, Rad, Rad, kcal.mol^-1)
  ---------------------------------------------
- BEGINNING Init_PSB3_Model
+ BEGINNING Init_QML_PSB3
  Adiabatic potential . . .
  init Q0 of PSB3
  init d0GGdef of PSB3
  QModel%pot_name: psb3
- END Init_PSB3_Model
+ END Init_QML_PSB3
  PSB3 default parameters
 
   Warning the parameters are given as in the publication.
@@ -44,12 +44,12 @@
  == Initialization of the Model ==================
  Adiabatic potential . . .
  pot_name_loc: psb3
- BEGINNING Init_PSB3_Model
+ BEGINNING Init_QML_PSB3
  Adiabatic potential . . .
  init Q0 of PSB3
  init d0GGdef of PSB3
  QModel%pot_name: psb3
- END Init_PSB3_Model
+ END Init_QML_PSB3
  =================================================
   Quantum Model
  -----------------------------------------------

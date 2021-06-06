@@ -455,8 +455,8 @@ CONTAINS
 
     CASE ('sigmoid')
       !! sigmoid function: A * 1/2(1+e*tanh((x-B)/C))  remark: e=+/-1
-      allocate(SigmoidModel_t :: QModel%QM)
-      QModel%QM = Init_SigmoidModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+      allocate(QML_Sigmoid_t :: QModel%QM)
+      QModel%QM = Init_QML_Sigmoid(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('buck')
       !! === README ==
@@ -511,8 +511,8 @@ CONTAINS
       !! remark: three options are possible (option = 1,2,3)
       !! ref:  Tully, J. Chem. Phys. V93, pp15, 1990
       !! === END README ==
-      allocate(TullyModel_t :: QModel%QM)
-      QModel%QM = Init_TullyModel(QModel_in,read_param=read_nml,  &
+      allocate(QML_Tully_t :: QModel%QM)
+      QModel%QM = Init_QML_Tully(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
 
     CASE ('1dsoc','1dsoc_1s1t')
@@ -526,8 +526,8 @@ CONTAINS
       !!  or      1 singlet and 1 linear combibation of the triplet components => nsurf     = 2
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
       !! === END README ==
-      allocate(OneDSOC_1S1T_Model_t :: QModel%QM)
-      QModel%QM = Init_OneDSOC_1S1T_Model(QModel_in,                    &
+      allocate(QML_OneDSOC_1S1T_t :: QModel%QM)
+      QModel%QM = Init_QML_OneDSOC_1S1T(QModel_in,                    &
                        read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('1dsoc_2s1t')
@@ -540,8 +540,8 @@ CONTAINS
       !! remark: 2 singlets and 1 triplet (2 linear combinations of the triplet components are not included) => nsurf     = 4
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
       !! === END README ==
-      allocate(OneDSOC_2S1T_Model_t :: QModel%QM)
-      QModel%QM = Init_OneDSOC_2S1T_Model(QModel_in,                    &
+      allocate(QML_OneDSOC_2S1T_t :: QModel%QM)
+      QModel%QM = Init_QML_OneDSOC_2S1T(QModel_in,                    &
                        read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('phenol')
@@ -554,8 +554,8 @@ CONTAINS
       !! remark:
       !! ref: Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
       !! === END README ==
-      allocate(PhenolModel_t :: QModel%QM)
-      QModel%QM = Init_PhenolModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+      allocate(QML_Phenol_t :: QModel%QM)
+      QModel%QM = Init_QML_Phenol(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
 
     CASE ('twod')
@@ -568,8 +568,8 @@ CONTAINS
       !! remark: The parameter values have been modified
       !! ref: A. Ferretti, G. Granucci, A. Lami, M. Persico, G. Villani, J. Chem. Phys. 104, 5517 (1996); https://doi.org/10.1063/1.471791
       !! === END README ==
-      allocate(TwoD_Model_t :: QModel%QM)
-      QModel%QM = Init_TwoD_Model(QModel_in,read_param=read_nml,  &
+      allocate(QML_TwoD_t :: QModel%QM)
+      QModel%QM = Init_QML_TwoD(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
 
     CASE ('psb3')
@@ -586,8 +586,8 @@ CONTAINS
       !! ref2: 1 E. Marsili, M. Olivucci, D. Lauvergnat, and F. Agostini, JCTC 16, 6032 (2020).
       !!        https://pubs.acs.org/doi/10.1021/acs.jctc.0c00679
       !! === END README ==
-      allocate(PSB3_Model_t :: QModel%QM)
-      QModel%QM = Init_PSB3_Model(QModel_in,read_param=read_nml,  &
+      allocate(QML_PSB3_t :: QModel%QM)
+      QModel%QM = Init_QML_PSB3(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
 
     CASE ('retinal_jpcb2000','retinal_cp2000')
@@ -599,8 +599,8 @@ CONTAINS
       !! ref:  S. Hahn, G. Stock / Chemical Physics 259 (2000) 297-312.
       !!              doi: 10.1016/S0301-0104(00)00201-9'
       !! === END README ==
-      allocate(Retinal_JPCB2000_Model_t :: QModel%QM)
-      QModel%QM = Init_Retinal_JPCB2000_Model(QModel_in,                &
+      allocate(QML_Retinal_JPCB2000_t :: QModel%QM)
+      QModel%QM = Init_QML_Retinal_JPCB2000(QModel_in,                &
                        read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hono')
@@ -644,8 +644,8 @@ CONTAINS
       !! nsurf     = 1
       !! option = 4 (default)
       !! === END README ==
-      allocate(PH4_Model_t :: QModel%QM)
-      QModel%QM = Init_PH4_Model(QModel_in,read_param=read_nml,  &
+      allocate(QML_PH4_t :: QModel%QM)
+      QModel%QM = Init_QML_PH4(QModel_in,read_param=read_nml,  &
                                  nio_param_file=nio_loc)
 
     CASE ('hnnhp')
@@ -692,13 +692,13 @@ CONTAINS
 
     CASE ('template')
       !! 3D-potential with 1 surface
-      allocate(TemplateModel_t :: QModel%QM)
-      QModel%QM = Init_TemplateModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+      allocate(QML_Template_t :: QModel%QM)
+      QModel%QM = Init_QML_Template(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('test')
       !! test-potential
-      allocate(TemplateModel_t :: QModel%QM)
-      QModel%QM = Init_testModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+      allocate(QML_Template_t :: QModel%QM)
+      QModel%QM = Init_QML_Test(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE DEFAULT
         write(out_unitp,*) ' ERROR in Init_Model'

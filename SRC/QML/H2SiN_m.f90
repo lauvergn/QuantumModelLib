@@ -43,7 +43,7 @@ MODULE QML_H2SiN_m
      integer,          allocatable :: tab_func(:,:)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_QML_H2SiN_Pot
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_H2SiN
     PROCEDURE :: Write_QModel    => Write_QML_H2SiN
     PROCEDURE :: Write0_QModel   => Write0_QML_H2SiN
   END TYPE QML_H2SiN_t
@@ -317,7 +317,7 @@ MODULE QML_H2SiN_m
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_QML_H2SiN_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_H2SiN(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -329,10 +329,10 @@ MODULE QML_H2SiN_m
     SELECT CASE (QModel%option)
 
     CASE (1,2,3)
-      CALL eval_QML_H2SiN_Pot1(Mat_OF_PotDia,dnQ,QModel)
+      CALL EvalPot1_QML_H2SiN(Mat_OF_PotDia,dnQ,QModel)
 
     CASE Default
-        write(out_unitp,*) ' ERROR in eval_QML_H2SiN_Pot '
+        write(out_unitp,*) ' ERROR in EvalPot_QML_H2SiN '
         write(out_unitp,*) ' This option is not possible. option: ',QModel%option
         write(out_unitp,*) ' Its value MUST be 1, 2 or 3'
 
@@ -340,7 +340,7 @@ MODULE QML_H2SiN_m
     END SELECT
 
 
-  END SUBROUTINE eval_QML_H2SiN_Pot
+  END SUBROUTINE EvalPot_QML_H2SiN
 
 !> @brief Subroutine wich calculates the H2SiN potential (Not published model) with derivatives up to the 2d order is required.
 !!
@@ -349,7 +349,7 @@ MODULE QML_H2SiN_m
 !! @param QModel             TYPE(QML_H2SiN_t):  derived type in which the parameters are set-up.
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_QML_H2SiN_Pot1(Mat_OF_PotDia,dnQ,QModel)
+  SUBROUTINE EvalPot1_QML_H2SiN(Mat_OF_PotDia,dnQ,QModel)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -362,7 +362,7 @@ MODULE QML_H2SiN_m
     TYPE (dnS_t)        :: Vtemp
     integer             :: i,j
 
-    !write(6,*) ' sub eval_QML_H2SiN_Pot1' ; flush(6)
+    !write(6,*) ' sub EvalPot1_QML_H2SiN' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,4,1,3,5,6]) - QModel%Qref(:)
@@ -390,9 +390,9 @@ MODULE QML_H2SiN_m
    CALL QML_dealloc_dnS(Vtemp)
    CALL QML_dealloc_dnS(DQ)
 
-   !write(6,*) ' end eval_QML_H2SiN_Pot1' ; flush(6)
+   !write(6,*) ' end EvalPot1_QML_H2SiN' ; flush(6)
 
-  END SUBROUTINE eval_QML_H2SiN_Pot1
+  END SUBROUTINE EvalPot1_QML_H2SiN
 
 
 END MODULE QML_H2SiN_m

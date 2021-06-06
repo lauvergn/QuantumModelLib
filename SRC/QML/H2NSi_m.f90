@@ -58,7 +58,7 @@ MODULE QML_H2NSi_m
      integer, allocatable          :: tab_func(:,:)
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => eval_H2NSi_Pot
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_H2NSi
     PROCEDURE :: Write_QModel    => Write_QML_H2NSi
     PROCEDURE :: Write0_QModel   => Write_QML_H2NSi
   END TYPE QML_H2NSi_t
@@ -284,7 +284,7 @@ MODULE QML_H2NSi_m
 
   END SUBROUTINE Write_QML_H2NSi
 
-  SUBROUTINE get_Q0_H2NSi(Q0,QModel,option)
+  SUBROUTINE get_Q0_QML_H2NSi(Q0,QModel,option)
     IMPLICIT NONE
 
     real (kind=Rkind),           intent(inout) :: Q0(:)
@@ -292,7 +292,7 @@ MODULE QML_H2NSi_m
     integer,                     intent(in)    :: option
 
     IF (size(Q0) /= 6) THEN
-      write(out_unitp,*) ' ERROR in get_Q0_H2NSi '
+      write(out_unitp,*) ' ERROR in get_Q0_QML_H2NSi '
       write(out_unitp,*) ' The size of Q0 is not ndim=6: '
       write(out_unitp,*) ' size(Q0)',size(Q0)
       STOP
@@ -305,7 +305,7 @@ MODULE QML_H2NSi_m
       Q0(:) = QModel%Qref([3,1,4,2,5,6])
     END SELECT
 
-  END SUBROUTINE get_Q0_H2NSi
+  END SUBROUTINE get_Q0_QML_H2NSi
 !> @brief Subroutine wich calculates the H2NSi potential (for the 3 models) with derivatives up to the 2d order is required.
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
@@ -313,7 +313,7 @@ MODULE QML_H2NSi_m
 !! @param QModel         TYPE(QML_H2NSi_t):    derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_H2NSi_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_H2NSi(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE QML_dnS_m
 
     CLASS(QML_H2NSi_t), intent(in)    :: QModel
@@ -324,17 +324,17 @@ MODULE QML_H2NSi_m
     SELECT CASE (QModel%option)
 
     CASE (1,2)
-      CALL eval_H2NSi_Pot1(Mat_OF_PotDia,dnQ,QModel)
+      CALL EvalPot1_QML_H2NSi(Mat_OF_PotDia,dnQ,QModel)
 
     CASE Default
-        write(out_unitp,*) ' ERROR in eval_H2NSi_Pot '
+        write(out_unitp,*) ' ERROR in EvalPot_QML_H2NSi '
         write(out_unitp,*) ' This option is not possible. option: ',QModel%option
         write(out_unitp,*) ' Its value MUST be 1 or 2'
 
         STOP
     END SELECT
 
-  END SUBROUTINE eval_H2NSi_Pot
+  END SUBROUTINE EvalPot_QML_H2NSi
 
 !> @brief Subroutine wich calculates the H2NSi potential (Not published model) with derivatives up to the 2d order is required.
 !!
@@ -344,7 +344,7 @@ MODULE QML_H2NSi_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
-  SUBROUTINE eval_H2NSi_Pot1(Mat_OF_PotDia,dnQ,QModel)
+  SUBROUTINE EvalPot1_QML_H2NSi(Mat_OF_PotDia,dnQ,QModel)
     !Unpublished model potential
     USE QML_dnS_m
 
@@ -357,7 +357,7 @@ MODULE QML_H2NSi_m
     TYPE (dnS_t)        :: Vtemp
     integer            :: i,j
 
-    !write(6,*) ' sub eval_H2NSi_Pot1' ; flush(6)
+    !write(6,*) ' sub EvalPot1_QML_H2NSi' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,4,1,3,5,6]) - QModel%Qref(:)
@@ -385,8 +385,8 @@ MODULE QML_H2NSi_m
    CALL QML_dealloc_dnS(Vtemp)
    CALL QML_dealloc_dnS(DQ)
 
-   !write(6,*) ' end eval_H2NSi_Pot1' ; flush(6)
+   !write(6,*) ' end EvalPot1_QML_H2NSi' ; flush(6)
 
-  END SUBROUTINE eval_H2NSi_Pot1
+  END SUBROUTINE EvalPot1_QML_H2NSi
 
 END MODULE QML_H2NSi_m

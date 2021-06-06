@@ -79,8 +79,8 @@ MODULE QML_CH5_m
 
 
    CONTAINS
-    PROCEDURE :: Eval_QModel_Pot  => eval_QML_CH5_Pot
-    PROCEDURE :: Eval_QModel_Func => eval_QML_CH5_Func
+    PROCEDURE :: Eval_QModel_Pot  => EvalPot_QML_CH5
+    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_CH5
     PROCEDURE :: Write_QModel     => Write_QML_CH5
     PROCEDURE :: Write0_QModel    => Write0_QML_CH5
   END TYPE QML_CH5_t
@@ -351,7 +351,7 @@ MODULE QML_CH5_m
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE eval_QML_CH5_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_CH5(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -381,9 +381,9 @@ MODULE QML_CH5_m
     END DO
     Mat_OF_PotDia(1,1) = QML_dnvfour_fit3(Rm,0,0,QModel) + vh * HALF
 
-  END SUBROUTINE eval_QML_CH5_Pot
+  END SUBROUTINE EvalPot_QML_CH5
 
-  SUBROUTINE eval_QML_CH5_Func(QModel,Func,dnQ,nderiv)
+  SUBROUTINE EvalFunc_QML_CH5(QModel,Func,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -395,11 +395,11 @@ MODULE QML_CH5_m
     TYPE (dnS_t)    :: Rm
     integer         :: i1,i2,ifunc
 
-    CALL eval_QML_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
+    CALL EvalFunc_QML_CH5_fit3(QModel,Func,dnQ,nderiv)
 
-  END SUBROUTINE eval_QML_CH5_Func
+  END SUBROUTINE EvalFunc_QML_CH5
 
-  SUBROUTINE eval_QML_CH5_Func_fit3(QModel,Func,dnQ,nderiv)
+  SUBROUTINE EvalFunc_QML_CH5_fit3(QModel,Func,dnQ,nderiv)
   USE QML_dnS_m
   USE QML_dnPoly_m
   IMPLICIT NONE
@@ -455,7 +455,7 @@ MODULE QML_CH5_m
     deallocate(dnPoly)
 
 
-  END SUBROUTINE eval_QML_CH5_Func_fit3
+  END SUBROUTINE EvalFunc_QML_CH5_fit3
   FUNCTION QML_dnvfour_fit3(Rm,iq,jq,QModel) RESULT(dnvfour)
   USE QML_dnS_m
   USE QML_dnPoly_m

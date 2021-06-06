@@ -74,8 +74,8 @@ MODULE QML_Empty_m
     !Vec0 must be allocatable, to be able to deallocate with deallocate of the QML_Empty_t variable.
     TYPE (dnMat_t),     allocatable :: Vec0 ! to get the correct phase of the adiatic couplings
     CONTAINS
-      PROCEDURE :: Eval_QModel_Pot    => Eval_QML_Empty_Pot
-      PROCEDURE :: Eval_QModel_Func   => Eval_QML_Empty_Func
+      PROCEDURE :: Eval_QModel_Pot    => EvalPot_QML_Empty
+      PROCEDURE :: Eval_QModel_Func   => EvalFunc_QML_Empty
       PROCEDURE :: Write_QModel       => Write_QML_Empty
       PROCEDURE :: Write0_QModel      => Write0_QML_Empty
      !PROCEDURE :: get2_Q0_QModel     => get2_Q0_QML_Empty
@@ -266,7 +266,7 @@ CONTAINS
     !write(6,*) 'alloc Q0',allocated(Q0)
 
   END FUNCTION get_d0GGdef_QML_Empty
-  SUBROUTINE Eval_QML_Empty_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_Empty(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -278,9 +278,9 @@ CONTAINS
 
     Mat_OF_PotDia(:,:) = ZERO
 
-  END SUBROUTINE Eval_QML_Empty_Pot
+  END SUBROUTINE EvalPot_QML_Empty
 
-  SUBROUTINE Eval_QML_Empty_Func(QModel,Func,dnQ,nderiv)
+  SUBROUTINE EvalFunc_QML_Empty(QModel,Func,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -295,7 +295,7 @@ CONTAINS
       Func(i) = ZERO
     END DO
 
-  END SUBROUTINE Eval_QML_Empty_Func
+  END SUBROUTINE EvalFunc_QML_Empty
 
   SUBROUTINE Write_QML_Empty(QModel,nio)
   !USE QML_UtilLib_m

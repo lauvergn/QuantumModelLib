@@ -62,7 +62,7 @@ MODULE QML_Morse_m
      real (kind=Rkind) :: req = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
      real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
   CONTAINS
-    PROCEDURE :: Eval_QModel_Pot => Eval_QML_Morse_Pot
+    PROCEDURE :: Eval_QModel_Pot => EvalPot_QML_Morse
     PROCEDURE :: Write_QModel    => Write_QML_Morse
     PROCEDURE :: Write0_QModel   => Write0_QML_Morse
   END TYPE QML_Morse_t
@@ -291,7 +291,7 @@ CONTAINS
 !! @param QModel         TYPE(QML_Morse_t):   derived type with the Morse parameters.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE Eval_QML_Morse_Pot(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_Morse(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE QML_dnS_m
   IMPLICIT NONE
 
@@ -302,7 +302,7 @@ CONTAINS
 
     integer :: i
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Eval_QML_Morse_Pot'
+    character (len=*), parameter :: name_sub='EvalPot_QML_Morse'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -322,7 +322,7 @@ CONTAINS
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
     END IF
-  END SUBROUTINE Eval_QML_Morse_Pot
+  END SUBROUTINE EvalPot_QML_Morse
 
 !> @brief Function wich calculates the Morse potential with derivatives up to the 2d order is required.
 !!
