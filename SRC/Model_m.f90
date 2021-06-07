@@ -486,7 +486,7 @@ CONTAINS
       !! === END README ==
       allocate(QML_LinearHBond_t :: QModel%QM)
       QModel%QM = Init_QML_LinearHBond(QModel_in,read_param=read_nml,   &
-                                 nio_param_file=nio_loc)
+                                       nio_param_file=nio_loc)
 
     CASE ('henonheiles')
       !! === README ==
