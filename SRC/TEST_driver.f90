@@ -33,9 +33,12 @@
 PROGRAM main_pot
   IMPLICIT NONE
 
+  !CALL test_Vib_adia(0)
+
+!stop
+  CALL test_HBond()
   CALL test_1DSOC_1S1T()
   CALL test_PSB3()
-  CALL test_HBond()
   CALL test_Phenol_Dia(10**7)
   CALL test_Phenol_ADia()
   CALL test_henonheiles(10**7)
@@ -205,10 +208,19 @@ SUBROUTINE test_HBond
   allocate(V(nsurf,nsurf))
 
 
-  Q(:) = (/1.3_real64,0._real64/)
+  Q(:) = (/2._real64,0._real64/)
 
   CALL sub_Qmodel_V(V,Q)
   write(6,*) V
+
+
+  allocate(G(nsurf,nsurf,ndim))
+  allocate(h(nsurf,nsurf,ndim,ndim))
+
+  CALL sub_Qmodel_VGH(V,G,H,Q)
+  write(6,*) 'gradiant',G
+  write(6,*) 'hessian',H
+
 
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
 
@@ -497,6 +509,7 @@ SUBROUTINE test_Vib_adia(nb_eval)
 
   CALL  random_number(Q)
   Q = Q + 4.d0
+  !Q=7.d0
 
   ! calculation of the adiabatic potential (as a matrix)
   ! calculation of the gradient and the NAC

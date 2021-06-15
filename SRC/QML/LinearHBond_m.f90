@@ -83,7 +83,7 @@ MODULE QML_LinearHBond_m
 
     TYPE (QML_LinearHBond_t)                    :: QModel ! RESULT
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: D,a,req,Abuck,Bbuck,Cbuck,epsi

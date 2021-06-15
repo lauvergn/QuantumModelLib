@@ -1947,17 +1947,21 @@ CONTAINS
 
     !test DIAG_dnMat
     TYPE (dnMat_t)              :: dnVec,dnDiag,dnMat
+    !integer :: n
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='dia_TO_adia'
-    logical, parameter :: debug = .FALSE.
-    !logical, parameter :: debug = .TRUE.
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
 
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING ',name_sub
       IF (present(nderiv)) write(out_unitp,*) '   nderiv',nderiv
+      !n = size(PotVal_dia%d0,dim=1)
+      write(out_unitp,*) 'max Val odd-even',maxval(abs(PotVal_dia%d0(1::2,2::2)))
+      write(out_unitp,*) 'max Val even-odd',maxval(abs(PotVal_dia%d0(2::2,1::2)))
       flush(out_unitp)
     END IF
 
@@ -1967,7 +1971,6 @@ CONTAINS
     ELSE
       nderiv_loc = 0
     END IF
-
 
     IF ( QML_Check_NotAlloc_dnMat(PotVal_dia,nderiv_loc) ) THEN
       write(out_unitp,*) ' The diabatic potential MUST be allocated!'
@@ -2092,6 +2095,8 @@ CONTAINS
       CALL QML_sub_dnS_TO_dnMat(dnHij,dnH,jb,ib)
     END DO
   END DO
+    !dnH%d0(1::2,2::2) = ZERO
+    !dnH%d0(2::2,1::2) = ZERO
   !CALL Write_RMat(H,6,5,name_info='H')
 
   END SUBROUTINE Eval_dnHVib_ana

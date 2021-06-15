@@ -108,7 +108,6 @@ MODULE QMLLib_diago_m
       write(out_unitp,*) '  => CHECK the fortran!!'
       STOP 'ERROR in QML_diagonalization: Problem with non-symmetric matrix.'
     END IF
-
 #endif
 
     IF (count(list_type == type_diag_loc) == 0) THEN
@@ -418,13 +417,13 @@ MODULE QMLLib_diago_m
       IF(N.GT.1)THEN
         DO 18 I=N,2,-1
           L=I-1
-          H=0.
-          SCALE=0.
+          H=ZERO
+          SCALE=ZERO
           IF(L.GT.1)THEN
             DO 11 K=1,L
               SCALE=SCALE+ABS(A(I,K))
 11          CONTINUE
-            IF(SCALE.EQ.0.)THEN
+            IF(SCALE .EQ. ZERO)THEN
               E(I)=A(I,L)
             ELSE
               DO 12 K=1,L
@@ -436,10 +435,10 @@ MODULE QMLLib_diago_m
               E(I)=SCALE*G
               H=H-F*G
               A(I,L)=F-G
-              F=0.
+              F=ZERO
               DO 15 J=1,L
                 A(J,I)=A(I,J)/H
-                G=0.
+                G=ZERO
                 DO 13 K=1,J
                   G=G+A(J,K)*A(I,K)
 13              CONTINUE
@@ -467,13 +466,13 @@ MODULE QMLLib_diago_m
           D(I)=H
 18      CONTINUE
       ENDIF
-      D(1)=0.
-      E(1)=0.
+      D(1)=ZERO
+      E(1)=ZERO
       DO 23 I=1,N
         L=I-1
-        IF(D(I).NE.0.)THEN
+        IF(D(I).NE. ZERO)THEN
           DO 21 J=1,L
-            G=0.
+            G=ZERO
             DO 19 K=1,L
               G=G+A(I,K)*A(K,J)
 19          CONTINUE
@@ -483,11 +482,11 @@ MODULE QMLLib_diago_m
 21        CONTINUE
         ENDIF
         D(I)=A(I,I)
-        A(I,I)=1.
+        A(I,I)=ONE
         IF(L.GE.1)THEN
           DO 22 J=1,L
-            A(I,J)=0.
-            A(J,I)=0.
+            A(I,J)=ZERO
+            A(J,I)=ZERO
 22        CONTINUE
         ENDIF
 23    CONTINUE
@@ -509,7 +508,7 @@ MODULE QMLLib_diago_m
         DO 11 I=2,N
           E(I-1)=E(I)
 11      CONTINUE
-        E(N)=0.
+        E(N)=ZERO
         DO 15 L=1,N
           ITER=0
 1         DO 12 M=L,N-1
@@ -520,30 +519,30 @@ MODULE QMLLib_diago_m
 2         IF(M.NE.L)THEN
             IF(ITER.EQ.30) STOP 'too many iterations'
             ITER=ITER+1
-            G=(D(L+1)-D(L))/(2.*E(L))
-            R=SQRT(G**2+1.)
+            G=(D(L+1)-D(L))/(TWO*E(L))
+            R=SQRT(G**2+ONE)
             G=D(M)-D(L)+E(L)/(G+SIGN(R,G))
-            S=1.
-            C=1.
-            P=0.
+            S=ONE
+            C=ONE
+            P=ZERO
             DO 14 I=M-1,L,-1
               F=S*E(I)
               B=C*E(I)
               IF(ABS(F).GE.ABS(G))THEN
                 C=G/F
-                R=SQRT(C**2+1.)
+                R=SQRT(C**2+ONE)
                 E(I+1)=F*R
-                S=1./R
+                S=ONE/R
                 C=C*S
               ELSE
                 S=F/G
-                R=SQRT(S**2+1.)
+                R=SQRT(S**2+ONE)
                 E(I+1)=G*R
-                C=1./R
+                C=ONE/R
                 S=S*C
               ENDIF
               G=D(I+1)-P
-              R=(D(I)-G)*S+2.*C*B
+              R=(D(I)-G)*S+TWO*C*B
               P=S*R
               D(I+1)=G+P
               G=C*R-B
@@ -555,7 +554,7 @@ MODULE QMLLib_diago_m
 14          CONTINUE
             D(L)=D(L)-P
             E(L)=G
-            E(M)=0.
+            E(M)=ZERO
             GO TO 1
           ENDIF
 15      CONTINUE
