@@ -1,0 +1,11 @@
+&potential
+  pot_name='hbond' ! potential surface name
+  Vib_adia=t
+  list_act=1
+  read_nml=t
+  nb_channels=6
+  option=2
+/ 
+&LinearHBond epsi=0.9 QQcutm=1.6 QQcutp=3.2 /
+&basis_nD name='boxAB' nb=128 nq=256 A=-2.5 B=2.5 /
+5.0

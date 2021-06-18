@@ -1293,6 +1293,57 @@ CONTAINS
 
   END FUNCTION QML_TRANSPOSE_dnMat
 
+  FUNCTION QML_SYM_dnMat(dnMat)  RESULT(SymdnMat) ! check with t(t(dnmat))-dnMat
+    TYPE (dnMat_t)                :: SymdnMat
+    TYPE (dnMat_t), intent(in)    :: dnMat
+
+    integer :: nderiv,nsurf,ndim,id,jd,kd
+    integer :: err_dnMat_loc
+    character (len=*), parameter :: name_sub='QML_SYM_dnMat'
+
+    nderiv = QML_get_nderiv_FROM_dnMat(dnMat)
+    nsurf  = QML_get_nsurf_FROM_dnMat(dnMat)
+    ndim   = QML_get_ndim_FROM_dnMat(dnMat)
+
+    !write(out_unitp,*) 'in ',name_sub,' nsurf,ndim,nderiv',nsurf,ndim,nderiv
+
+    CALL QML_dealloc_dnMat(SymdnMat)
+
+    IF (nderiv < 0 .OR. nsurf < 1 .OR. (nderiv > 0  .AND. ndim < 1)) RETURN
+
+    CALL QML_alloc_dnMat(SymdnMat,nsurf,ndim,nderiv,                            &
+                         name_var='TransdnMat',name_sub=name_sub)
+
+    IF (nderiv >= 0) THEN
+      SymdnMat%d0(:,:) = HALF*(transpose(dnMat%d0) + dnMat%d0)
+    END IF
+
+    IF (nderiv >= 1) THEN
+      DO id=1,ndim
+        SymdnMat%d1(:,:,id) = HALF*(transpose(dnMat%d1(:,:,id)) + dnMat%d1(:,:,id))
+      END DO
+    END IF
+
+    IF (nderiv >= 2) THEN
+      DO id=1,ndim
+      DO jd=1,ndim
+        SymdnMat%d2(:,:,jd,id) = HALF*(transpose(dnMat%d2(:,:,jd,id)) + dnMat%d2(:,:,jd,id))
+      END DO
+      END DO
+    END IF
+
+    IF (nderiv >= 3) THEN
+      DO id=1,ndim
+      DO jd=1,ndim
+      DO kd=1,ndim
+        SymdnMat%d3(:,:,kd,jd,id) = HALF*(transpose(dnMat%d3(:,:,kd,jd,id)) + dnMat%d3(:,:,kd,jd,id))
+      END DO
+      END DO
+      END DO
+    END IF
+
+  END FUNCTION QML_SYM_dnMat
+
   FUNCTION QML_MATMUL_dnMat1_dnMat2(dnMat1,dnMat2)  RESULT(MatmuldnMat)
     TYPE (dnMat_t)                :: MatmuldnMat
     TYPE (dnMat_t), intent(in)    :: dnMat1,dnMat2
@@ -1732,7 +1783,7 @@ CONTAINS
 
   END FUNCTION QML_Check_NotAlloc_dnMat
 
-  SUBROUTINE QML_DIAG_dnMat(dnMat,dnMatDiag,dnVec,dnVecProj,dnVec0)
+  SUBROUTINE QML_DIAG_dnMat(dnMat,dnMatDiag,dnVec,dnVecProj,dnVec0,type_diag)
     USE QMLLib_UtilLib_m
     USE QMLLib_diago_m
     IMPLICIT NONE
@@ -1742,6 +1793,7 @@ CONTAINS
     TYPE (dnMat_t),     intent(inout)           :: dnVec
     TYPE (dnMat_t),     intent(inout), optional :: dnVecProj
     TYPE (dnMat_t),     intent(inout), optional :: dnVec0
+    integer,            intent(in),    optional :: type_diag
 
     integer                       :: ndim,nderiv,nsurf
     real(kind=Rkind), allocatable :: Vec(:,:),tVec(:,:),Eig(:),Mtemp(:,:)
@@ -1749,7 +1801,8 @@ CONTAINS
     integer                       :: i,j,k,id,jd,kd
     real (kind=Rkind)             :: ai,aj,aii,aij,aji,ajj,th,cc,ss
 
-    real (kind=Rkind)               :: epsi = ONETENTH**10
+    real (kind=Rkind)             :: epsi = ONETENTH**10
+    integer                       :: type_diag_loc
 
 
 !----- for debuging --------------------------------------------------
@@ -1762,6 +1815,10 @@ CONTAINS
       write(out_unitp,*) ' BEGINNING ',name_sub
       flush(out_unitp)
     END IF
+
+    type_diag_loc = 2
+    IF (present(type_diag)) type_diag_loc = type_diag
+    IF (debug) write(out_unitp,*) 'type_diag',type_diag_loc
 
     nderiv = QML_get_nderiv_FROM_dnMat(dnMat)
     ndim   = QML_get_ndim_FROM_dnMat(dnMat)
@@ -1784,7 +1841,7 @@ CONTAINS
     allocate(tVec(nsurf,nsurf))
     allocate(Mtemp(nsurf,nsurf))
 
-    CALL diagonalization(dnMat%d0,Eig,Vec,nsurf,sort=1,phase=.TRUE.)
+    CALL diagonalization(dnMat%d0,Eig,Vec,nsurf,type_diag=type_diag_loc,sort=1,phase=.TRUE.)
 
     IF (present(dnVec0)) THEN
        IF (debug) write(out_unitp,*) 'Change phase?'

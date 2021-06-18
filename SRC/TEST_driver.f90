@@ -33,9 +33,9 @@
 PROGRAM main_pot
   IMPLICIT NONE
 
-  !CALL test_Vib_adia(0)
+  CALL test2_Vib_adia(100)
 
-!stop
+stop
   CALL test_HBond()
   CALL test_1DSOC_1S1T()
   CALL test_PSB3()
@@ -45,7 +45,80 @@ PROGRAM main_pot
   CALL test_Vib_adia(1000)
 
 END PROGRAM main_pot
+SUBROUTINE test2_Vib_adia(nb_eval)
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  IMPLICIT NONE
 
+  real (kind=real64),      allocatable     :: Q(:)
+  real (kind=real64),      allocatable     :: V(:,:)
+  real (kind=real64),      allocatable     :: g(:,:,:)
+  real (kind=real64),      allocatable     :: NAC(:,:,:)
+
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
+
+  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
+
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+  maxth = 1
+  write(6,*) '============================================================'
+  write(6,*) '  Vibrational adiabatic separation'
+  write(6,*) 'TEST_driver. number of threads:',maxth
+
+  pot_name  = 'read_model'
+  ndim      = 0 ! it would be initialized
+  nsurf     = 0 ! it would be initialized
+  option    = -1
+  adiabatic = .FALSE.
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  write(6,*) 'ndim,nsurf',ndim,nsurf
+
+  write(6,*) ' Test V, G and NAC'
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+  allocate(G(nsurf,nsurf,ndim))
+  allocate(NAC(nsurf,nsurf,ndim))
+
+  read(5,*) Q
+
+  CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
+  write(6,*) 'Q',Q
+  write(6,*) 'Vadia',(V(i,i),i=1,nsurf)
+  write(6,*) 'Gadia',(G(i,i,1:ndim),i=1,nsurf)
+  write(6,*) 'NAC'
+  DO i=1,nsurf
+    write(6,*) i,NAC(:,i,1:ndim)
+  END DO
+
+  deallocate(Q)
+  deallocate(V)
+  deallocate(G)
+  deallocate(NAC)
+
+  write(6,*) ' Test of evaluations of the potential ',pot_name
+  CALL time_perso('Test ' // pot_name)
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+
+  Q = 2.5d0
+  DO i=1,nb_eval
+    Q = Q + 0.05d0
+
+    CALL sub_Qmodel_V(V,Q)
+
+    write(6,*) 'pot:',Q,(V(k,k),k=1,nsurf)
+  END DO
+
+  deallocate(Q)
+  deallocate(V)
+
+  CALL time_perso('Test ' // pot_name)
+  write(6,*) '============================================================'
+  write(6,*) '============================================================'
+
+END SUBROUTINE test2_Vib_adia
 SUBROUTINE test_1DSOC_1S1T
   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
 !$ USE omp_lib

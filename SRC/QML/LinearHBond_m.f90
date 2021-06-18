@@ -51,12 +51,20 @@ MODULE QML_LinearHBond_m
 
      TYPE (QML_Morse_t)  :: Morse1
      TYPE (QML_Morse_t)  :: Morse2
-     real (kind=Rkind)    :: Eref2 = ZERO  ! energy reference for the second morse (-D*epsi^2)
+     real (kind=Rkind)   :: Eref2 = ZERO  ! energy reference for the second morse (-D*epsi^2)
 
      TYPE (QML_Buck_t)   :: Buck
 
-     real (kind=Rkind)    :: muQQ= 29156.946380706224_Rkind/TWO  ! reduced mass associated to QQ (O---O)
-     real (kind=Rkind)    :: muq = 1837.1526464003414_Rkind      ! reduced mass associated to q (H atom)
+     real (kind=Rkind)   :: muQQ= 29156.946380706224_Rkind/TWO  ! reduced mass associated to QQ (O---O)
+     real (kind=Rkind)   :: muq = 1837.1526464003414_Rkind      ! reduced mass associated to q (H atom)
+
+     ! if option=2: add:     Dm.exp(-betam(QQ-QQcutm)) + Dp.exp(betap(QQ-QQcutp)) (here in atomic unit)
+     real (kind=Rkind)   :: QQcutm = 3.1_Rkind      ! Position of the exp for small ROO=QQ
+     real (kind=Rkind)   :: QQcutp = 6.5_Rkind      ! Position of the exp for large ROO=QQ
+     real (kind=Rkind)   :: betam  = 8._Rkind       ! scaling for the exp for small ROO=QQ
+     real (kind=Rkind)   :: betap  = 8._Rkind       ! scaling for the exp for large ROO=QQ
+     real (kind=Rkind)   :: Dm     = 0.1_Rkind     ! scaling for the exp for small ROO=QQ
+     real (kind=Rkind)   :: Dp     = 0.1_Rkind     ! scaling for the exp for large ROO=QQ
 
    CONTAINS
     PROCEDURE :: EvalPot_QModel => EvalPot_QML_LinearHBond
@@ -90,6 +98,9 @@ MODULE QML_LinearHBond_m
 
 
     real (kind=Rkind) :: D_loc,a_loc,req_loc,Abuck_loc,Bbuck_loc,Cbuck_loc,epsi_loc
+    real (kind=Rkind) :: QQcutm_loc,betam_loc,Dm_loc,QQcutp_loc,betap_loc,Dp_loc
+
+
     real (kind=Rkind), parameter  :: a0               = 0.52917720835354106_Rkind
     real (kind=Rkind), parameter  :: auTOkcalmol_inv  = 627.51_Rkind
     !----- for debuging --------------------------------------------------
@@ -119,10 +130,19 @@ MODULE QML_LinearHBond_m
     Bbuck_loc = 3.15_Rkind
     Cbuck_loc = 2.31e4_Rkind
 
+    QQcutm_loc = 3.1_Rkind*a0      ! Position of the exp for small ROO=QQ
+    QQcutp_loc = 6.5_Rkind*a0      ! Position of the exp for large ROO=QQ
+    betam_loc  = 8._Rkind/a0       ! scaling for the exp for small ROO=QQ
+    betap_loc  = 8._Rkind/a0       ! scaling for the exp for large ROO=QQ
+    Dm_loc     = 0.1_Rkind*auTOkcalmol_inv     ! scaling for the exp for small ROO=QQ
+    Dp_loc     = 0.1_Rkind*auTOkcalmol_inv     ! scaling for the exp for large ROO=QQ
+
     IF (read_param) THEN
-      CALL Read_QML_LinearHBond(nio_param_file,                                &
+      CALL Read_QML_LinearHBond(nio_param_file,                                 &
                                  D_loc,a_loc,req_loc,epsi_loc,                  &
-                                 Abuck_loc,Bbuck_loc,Cbuck_loc)
+                                 Abuck_loc,Bbuck_loc,Cbuck_loc,                 &
+                                 QQcutm_loc,betam_loc,Dm_loc,                   &
+                                 QQcutp_loc,betap_loc,Dp_loc)
     ELSE
 
       IF (present(D))       D_loc     = D
@@ -140,6 +160,18 @@ MODULE QML_LinearHBond_m
     CALL Init0_QML_Morse(QModel%Morse2,D=D_loc*epsi_loc**2,a=a_loc/epsi_loc,req=req_loc,model_name='Morse2')
     CALL Init0_QML_Buck(QModel%Buck,A=Abuck_loc,B=Bbuck_loc,C=Cbuck_loc,model_name='Buck')
     QModel%Eref2 = -D_loc*epsi_loc**2
+
+    write(out_unitp,*) 'option',QModel%option
+
+    QModel%QQcutm = QQcutm_loc
+    QModel%QQcutp = QQcutp_loc
+    QModel%betam  = betam_loc
+    QModel%betap  = betap_loc
+    QModel%Dm     = Dm_loc
+    QModel%Dp     = Dp_loc
+
+    write(out_unitp,*) 'D.exp( beta.(QQ-Q0))',QModel%Dp,QModel%betap,QModel%QQcutp
+    write(out_unitp,*) 'D.exp(-beta.(QQ-Q0))',QModel%Dm,QModel%betam,QModel%QQcutm
 
     IF (QModel%PubliUnit) THEN
       write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Angs,Angs], Energy: [kcal.mol^-1]'
@@ -174,17 +206,25 @@ MODULE QML_LinearHBond_m
 !! @param Dsub,asub,reqsub            real (optional):            parameters for the first Morse
 !! @param epsisub                     real (optional):            scaling parameters for the 2d Morse (using parameters of the first Morse)
 !! @param Abucksub,Bbucksub,Cbucksub  real (optional):            parameters for the Buckingham potential
-  SUBROUTINE Read_QML_LinearHBond(nio,Dsub,asub,reqsub,epsisub,        &
-                                   Abucksub,Bbucksub,Cbucksub)
+  SUBROUTINE Read_QML_LinearHBond(nio,Dsub,asub,reqsub,epsisub,                 &
+                                      Abucksub,Bbucksub,Cbucksub,               &
+                                      QQcutmsub,betamsub,Dmsub,                 &
+                                      QQcutpsub,betapsub,Dpsub)
 
     real (kind=Rkind),        intent(inout) :: Dsub,asub,reqsub,epsisub
     real (kind=Rkind),        intent(inout) :: Abucksub,Bbucksub,Cbucksub
+    real (kind=Rkind),        intent(inout) :: QQcutmsub,betamsub,Dmsub
+    real (kind=Rkind),        intent(inout) :: QQcutpsub,betapsub,Dpsub
     integer,                  intent(in)    :: nio
 
     real (kind=Rkind) :: D,a,req,epsi,Abuck,Bbuck,Cbuck ! for the namelist
+    real (kind=Rkind) :: QQcutm,betam,Dm ! for the namelist
+    real (kind=Rkind) :: QQcutp,betap,Dp ! for the namelist
+
     integer           :: err_read
 
-    namelist /LinearHBond/ D,a,req,epsi,Abuck,Bbuck,Cbuck
+    namelist /LinearHBond/ D,a,req,epsi,Abuck,Bbuck,Cbuck,                      &
+                          QQcutm,betam,Dm,QQcutp,betap,Dp
 
     ! to recover the default value
     D     = Dsub
@@ -194,6 +234,13 @@ MODULE QML_LinearHBond_m
     Abuck = Abucksub
     Bbuck = Bbucksub
     Cbuck = Cbucksub
+
+    QQcutm = QQcutmsub
+    betam  = betamsub
+    Dm     = Dmsub
+    QQcutp = QQcutpsub
+    betap  = betapsub
+    Dp     = Dpsub
 
     read(nio,nml=LinearHBond,IOSTAT=err_read)
     IF (err_read < 0) THEN
@@ -219,6 +266,13 @@ MODULE QML_LinearHBond_m
     Abucksub = Abuck
     Bbucksub = Bbuck
     Cbucksub = Cbuck
+
+    QQcutmsub = QQcutm
+    betamsub  = betam
+    Dmsub     = Dm
+    QQcutpsub = QQcutp
+    betapsub  = betap
+    Dpsub     = Dp
 
   END SUBROUTINE Read_QML_LinearHBond
 !> @brief Subroutine wich prints the current QML_LinearHBond parameters.
@@ -330,6 +384,7 @@ MODULE QML_LinearHBond_m
       write(out_unitp,*) 'r(:) or QQ,q: ',QML_get_d0_FROM_dnS(dnQ(:))
       write(out_unitp,*) 'nderiv',nderiv
       write(out_unitp,*) 'PubliUnit',QModel%PubliUnit
+      write(out_unitp,*) 'option',QModel%option
       flush(out_unitp)
     END IF
 
@@ -400,6 +455,11 @@ MODULE QML_LinearHBond_m
       write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
       CALL QML_Write_dnS(Mat_OF_PotDia(1,1))
       flush(out_unitp)
+    END IF
+
+    IF (QModel%option == 2) THEN
+      Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1) + QModel%Dp * exp( QModel%betap*(dnQQ-QModel%QQcutp))
+      Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1) + QModel%Dm * exp(-QModel%betam*(dnQQ-QModel%QQcutm))
     END IF
 
     IF (.NOT. QModel%PubliUnit) THEN

@@ -1947,12 +1947,12 @@ CONTAINS
 
     !test DIAG_dnMat
     TYPE (dnMat_t)              :: dnVec,dnDiag,dnMat
-    !integer :: n
+    integer                     :: type_diag = 2
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='dia_TO_adia'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
 
@@ -1962,6 +1962,7 @@ CONTAINS
       !n = size(PotVal_dia%d0,dim=1)
       write(out_unitp,*) 'max Val odd-even',maxval(abs(PotVal_dia%d0(1::2,2::2)))
       write(out_unitp,*) 'max Val even-odd',maxval(abs(PotVal_dia%d0(2::2,1::2)))
+      write(out_unitp,*) 'type_diag',type_diag
       flush(out_unitp)
     END IF
 
@@ -1993,7 +1994,7 @@ CONTAINS
 
        allocate(Eig(nsurf))
 
-       CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,nsurf,sort=1,phase=.TRUE.)
+       CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,nsurf,sort=1,phase=.TRUE.,type_diag=type_diag)
 
        deallocate(Eig)
 
@@ -2003,8 +2004,8 @@ CONTAINS
     END IF
 
 
-    CALL QML_DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,         &
-                        dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0)
+    CALL QML_DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,                 &
+                        dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag)
 
     IF (Phase_Following) Vec0%d0 = Vec%d0
 
@@ -2012,7 +2013,7 @@ CONTAINS
 
       write(out_unitp,*) 'Eig',(PotVal_adia%d0(i,i),i=1,nsurf)
 
-      write(out_unitp,*) 'PotVal_adia'
+      write(out_unitp,*) 'PotVal_adia',PotVal_adia%d0(1:2,1:2)
       CALL QML_Write_dnMat(PotVal_adia,nio=out_unitp)
 
       write(out_unitp,*) 'Vec'
@@ -2095,8 +2096,11 @@ CONTAINS
       CALL QML_sub_dnS_TO_dnMat(dnHij,dnH,jb,ib)
     END DO
   END DO
-    !dnH%d0(1::2,2::2) = ZERO
-    !dnH%d0(2::2,1::2) = ZERO
+
+  dnH = QML_SYM_dnMat(dnH)
+
+  !dnH%d0(1::2,2::2) = ZERO
+  !dnH%d0(2::2,1::2) = ZERO
   !CALL Write_RMat(H,6,5,name_info='H')
 
   END SUBROUTINE Eval_dnHVib_ana
