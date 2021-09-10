@@ -86,8 +86,8 @@ MODULE Model_m
     !   identical to QM%nsurf and QM%ndim ones respectively.
     integer                           :: nsurf       = 0
     integer                           :: ndim        = 0
-    CLASS (QML_Empty_t), allocatable :: QM
-    TYPE(QML_Basis_t),    allocatable :: Basis ! Basis for the adiabatic separation between coordinates
+    CLASS (QML_Empty_t),  allocatable :: QM
+    TYPE (QML_Basis_t),   allocatable :: Basis ! Basis for the adiabatic separation between coordinates
   END TYPE Model_t
 
   !real (kind=Rkind)                     :: step = ONETENTH**4 ! model TWOD => 0.4e-7 (nderiv=2)
@@ -482,10 +482,17 @@ CONTAINS
       !!    A--------------H-----X--------------------B
       !!     <--------------QQ----------------------->
       !!                    <-q->
+      !! ref: Dana Codruta Marinica, Marie-Pierre Gaigeot, Daniel Borgis,
+      !!    Chemical Physics Letters 423 (2006) 390–394
+      !!    DOI: 10.1016/j.cplett.2006.04.007
       !! ref:  Eq 3.79 of J. Beutier, thesis.
+      !!
+      !! remark: when option=2 is selected, a contribution is added along QQ:
+      !!    Dm.exp(-betam.(QQ-QQm)) + Dp.exp(+betap.(QQ-QQp))
+      !!
       !! === END README ==
       allocate(QML_LinearHBond_t :: QModel%QM)
-      QModel%QM = Init_QML_LinearHBond(QModel_in,read_param=read_nml,   &
+      QModel%QM = Init_QML_LinearHBond(QModel_in,read_param=read_nml,           &
                                        nio_param_file=nio_loc)
 
     CASE ('henonheiles')
@@ -498,8 +505,8 @@ CONTAINS
       !! ref:  parameters taken from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
       !! === END README ==
       allocate(QML_HenonHeiles_t :: QModel%QM)
-      QModel%QM = Init_QML_HenonHeiles(QModel_in,                      &
-                        read_param=read_nml,nio_param_file=nio_loc)
+      QModel%QM = Init_QML_HenonHeiles(QModel_in,                               &
+                                       read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('tully')
       !! === README ==
@@ -512,8 +519,7 @@ CONTAINS
       !! ref:  Tully, J. Chem. Phys. V93, pp15, 1990
       !! === END README ==
       allocate(QML_Tully_t :: QModel%QM)
-      QModel%QM = Init_QML_Tully(QModel_in,read_param=read_nml,  &
-                                  nio_param_file=nio_loc)
+      QModel%QM = Init_QML_Tully(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('1dsoc','1dsoc_1s1t')
       !! === README ==
@@ -527,8 +533,8 @@ CONTAINS
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
       !! === END README ==
       allocate(QML_OneDSOC_1S1T_t :: QModel%QM)
-      QModel%QM = Init_QML_OneDSOC_1S1T(QModel_in,                    &
-                       read_param=read_nml,nio_param_file=nio_loc)
+      QModel%QM = Init_QML_OneDSOC_1S1T(QModel_in,                              &
+                                        read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('1dsoc_2s1t')
       !! === README ==
@@ -541,8 +547,8 @@ CONTAINS
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
       !! === END README ==
       allocate(QML_OneDSOC_2S1T_t :: QModel%QM)
-      QModel%QM = Init_QML_OneDSOC_2S1T(QModel_in,                    &
-                       read_param=read_nml,nio_param_file=nio_loc)
+      QModel%QM = Init_QML_OneDSOC_2S1T(QModel_in,                              &
+                                        read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('phenol')
       !! === README ==
@@ -569,8 +575,7 @@ CONTAINS
       !! ref: A. Ferretti, G. Granucci, A. Lami, M. Persico, G. Villani, J. Chem. Phys. 104, 5517 (1996); https://doi.org/10.1063/1.471791
       !! === END README ==
       allocate(QML_TwoD_t :: QModel%QM)
-      QModel%QM = Init_QML_TwoD(QModel_in,read_param=read_nml,  &
-                                  nio_param_file=nio_loc)
+      QModel%QM = Init_QML_TwoD(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('psb3')
       !! === README ==
@@ -587,8 +592,7 @@ CONTAINS
       !!        https://pubs.acs.org/doi/10.1021/acs.jctc.0c00679
       !! === END README ==
       allocate(QML_PSB3_t :: QModel%QM)
-      QModel%QM = Init_QML_PSB3(QModel_in,read_param=read_nml,  &
-                                  nio_param_file=nio_loc)
+      QModel%QM = Init_QML_PSB3(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('retinal_jpcb2000','retinal_cp2000')
       !! === README ==
@@ -597,16 +601,28 @@ CONTAINS
       !! ndim      = 2
       !! nsurf     = 2
       !! ref:  S. Hahn, G. Stock / Chemical Physics 259 (2000) 297-312.
-      !!              doi: 10.1016/S0301-0104(00)00201-9'
+      !!              doi: 10.1016/S0301-0104(00)00201-9
       !! === END README ==
+
       allocate(QML_Retinal_JPCB2000_t :: QModel%QM)
-      QModel%QM = Init_QML_Retinal_JPCB2000(QModel_in,                &
-                       read_param=read_nml,nio_param_file=nio_loc)
+      QModel%QM = Init_QML_Retinal_JPCB2000(QModel_in,                          &
+                                            read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hono')
       allocate(QML_HONO_t :: QModel%QM)
-      QModel%QM = Init_QML_HONO(QModel_in,read_param=read_nml,  &
-                                  nio_param_file=nio_loc)
+      QModel%QM = Init_QML_HONO(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+      !! === README ==
+      !! Model for the HONO.
+      !! pot_name  = 'HONO'
+      !! ndim      = 6
+      !! nsurf     = 1
+      !! ref1:  F. Richter, M. Hochlaf, P. Rosmus, F. Gatti, and H.-D. Meyer,
+      !!        J. Chem. Phys. 120, 1306 (2004).
+      !!       doi: 10.1063/1.1632471
+      !! ref2: F. Richter, F. Gatti, C. Léonard, F. Le Quéré, and H.-D. Meyer,
+      !!       J. Chem. Phys. 127, 164315 (2007)
+      !!       doi: 10.1063/1.2784553
+      !! === END README ==
 
     CASE ('hno3')
       allocate(QML_HNO3_t :: QModel%QM)
@@ -1197,7 +1213,10 @@ CONTAINS
 !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING ',name_sub
-      write(out_unitp,*) '   nderiv    ',nderiv
+      write(out_unitp,*) '   nderiv:       ',nderiv
+      write(out_unitp,*) '   present(NAC): ',present(NAC)
+      write(out_unitp,*) '   present(Vec): ',present(Vec)
+
       flush(out_unitp)
     END IF
 
@@ -1249,7 +1268,6 @@ CONTAINS
     END IF
 
     CALL QModel%QM%EvalPot_QModel(Mat_OF_PotDia,dnQ,nderiv=nderiv)
-
 
     PotVal = Mat_OF_PotDia ! transfert the potential and its derivatives to the matrix form (PotVal)
 
@@ -1631,7 +1649,7 @@ CONTAINS
       CALL Eval_Pot_Numeric_adia_old(QModel,Q,PotVal,nderiv,Vec,NAC)
     CASE (3)
       CALL Eval_Pot_Numeric_adia_v3(QModel,Q,PotVal,nderiv,Vec,NAC)
-    CASE (4)
+    !CASE (4)
     !  CALL Eval_Pot_Numeric_adia_v4(QModel,Q,PotVal,nderiv,Vec,NAC)
     CASE Default
       CALL Eval_Pot_Numeric_adia_old(QModel,Q,PotVal,nderiv,Vec,NAC)
@@ -1797,8 +1815,6 @@ CONTAINS
 
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_adia_v3')
 
-    !write(6,*) 'coucou Eval_Pot_Numeric_adia_v3' ; flush(6)
-
 
     IF (QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
       CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
@@ -1826,6 +1842,8 @@ CONTAINS
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0,vec=Vec_loc0)
+
+
 
     CALL FiniteDiff_AddMat_TO_dnMat(PotVal,PotVal_loc0%d0,option=3)
     CALL FiniteDiff_AddMat_TO_dnMat(Vec,   Vec_loc0%d0,   option=3)
@@ -1995,6 +2013,8 @@ CONTAINS
        allocate(Eig(nsurf))
 
        CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,nsurf,sort=1,phase=.TRUE.,type_diag=type_diag)
+       !write(6,*) 'Eig (full diag)',Eig(1:2)
+       !CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,n=2,sort=1,phase=.TRUE.,type_diag=5)
 
        deallocate(Eig)
 

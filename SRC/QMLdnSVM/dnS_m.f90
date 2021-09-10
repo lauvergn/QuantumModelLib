@@ -480,14 +480,16 @@ CONTAINS
 
     CALL QML_dealloc_dnS(S1)
 
-    IF (allocated(S2%d1) .AND. (size(list_act) > size(S2%d1)) ) THEN
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' size(list_act) > size(S2%d1)'
-        write(out_unitp,*) ' size(list_act) ',size(list_act)
-        write(out_unitp,*) ' size(S2%d1)    ',size(S2%d1)
-        write(out_unitp,*) ' CHECK the fortran!!'
-        STOP 'ERROR in QML_ReduceDerivatives_dnS2_TO_dnS1'
-      END IF
+    IF (allocated(S2%d1)) THEN
+    IF (size(list_act) > size(S2%d1) ) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' size(list_act) > size(S2%d1)'
+      write(out_unitp,*) ' size(list_act) ',size(list_act)
+      write(out_unitp,*) ' size(S2%d1)    ',size(S2%d1)
+      write(out_unitp,*) ' CHECK the fortran!!'
+      STOP 'ERROR in QML_ReduceDerivatives_dnS2_TO_dnS1'
+    END IF
+    END IF
 
     S1%nderiv = S2%nderiv
 

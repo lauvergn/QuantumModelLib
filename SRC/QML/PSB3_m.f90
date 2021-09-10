@@ -121,10 +121,10 @@ MODULE QML_PSB3_m
     QModel%ndim     = 3
     QModel%pot_name = 'psb3'
 
-    IF (QModel%option < 1 .OR. QModel%option > 2) QModel%option = 1
+    IF (QModel%option < 1 .OR. QModel%option > 3) QModel%option = 1
 
     SELECT CASE (QModel%option)
-    CASE (1) ! unpublished model
+    CASE (1,3) ! published model (2020)
 
       QModel%blamin   = 0.0912615_Rkind
       QModel%blaTSdir = 0.025079167_Rkind
@@ -169,7 +169,7 @@ MODULE QML_PSB3_m
     CASE Default
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' This option is not possible. option:',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1 or 2'
+        write(out_unitp,*) ' Its value MUST be 1, 3 or 2'
         STOP
     END SELECT
 
@@ -209,7 +209,7 @@ MODULE QML_PSB3_m
 
     SELECT CASE (QModel%option)
 
-    CASE (1)
+    CASE (1,3)
 
     write(nio,*) '  ... for first Model:'
     write(nio,*) '  blamin   :      ',QModel%blamin
@@ -226,6 +226,8 @@ MODULE QML_PSB3_m
     write(nio,*) '  c5       :      ',QModel%c5
     write(nio,*) '  h1       :      ',QModel%h1
     write(nio,*) '  k1       :      ',QModel%k1
+
+    IF (QModel%option == 3) write(nio,*) 'Q(3) = Q(3)+2.Pi'
 
     CASE (2)
 
@@ -285,14 +287,14 @@ MODULE QML_PSB3_m
   USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
-    CLASS(QML_PSB3_t),  intent(in)    :: QModel
+    CLASS(QML_PSB3_t),    intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
 
     SELECT CASE (QModel%option)
 
-    CASE (1)
+    CASE (1,3)
       CALL EvalPot1_QML_PSB3(Mat_OF_PotDia,dnQ,QModel,nderiv)
 
     CASE (2)
@@ -301,7 +303,7 @@ MODULE QML_PSB3_m
     CASE Default
         write(out_unitp,*) ' ERROR in EvalPot_QML_PSB3'
         write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1 or 2 '
+        write(out_unitp,*) ' Its value MUST be 1,3 or 2 '
 
         STOP
     END SELECT
@@ -322,7 +324,7 @@ MODULE QML_PSB3_m
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:) ! BLA, Tors, HOOP
-    TYPE(QML_PSB3_t),  intent(in)    :: PSB3Pot
+    TYPE(QML_PSB3_t),    intent(in)    :: PSB3Pot
     integer,             intent(in)    :: nderiv
 
 
@@ -339,8 +341,11 @@ MODULE QML_PSB3_m
 
     BLA      = dnQ(1)
     Tors     = dnQ(2)
-    HOOP     = dnQ(3)
-
+    IF (PSB3Pot%option == 3) THEN
+      HOOP     = dnQ(3)+TWO*Pi
+    ELSE
+      HOOP     = dnQ(3)
+    END IF
     !If PubliUnit is False conversion must be done, the potential is expressed in Angstrom
     !and it requires the proper conversion into Bhor
     IF(.NOT. PSB3Pot%PubliUnit) THEN
