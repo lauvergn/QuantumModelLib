@@ -1798,8 +1798,8 @@ CONTAINS
     integer                       :: ndim,nderiv,nsurf
     real(kind=Rkind), allocatable :: Vec(:,:),tVec(:,:),Eig(:),Mtemp(:,:)
     TYPE (dnMat_t)                :: dnMat_OnVec
-    integer                       :: i,j,k,id,jd,kd
-    real (kind=Rkind)             :: ai,aj,aii,aij,aji,ajj,th,cc,ss
+    integer                       :: i,j,k,id,jd,kd,i_max
+    real (kind=Rkind)             :: ai,aj,aii,aij,aji,ajj,th,cc,ss,aii_max,max_diff
 
     real (kind=Rkind)             :: epsi = ONETENTH**10
     integer                       :: type_diag_loc
@@ -1874,6 +1874,7 @@ CONTAINS
 
            cc = cos(th)
            ss = sin(th)
+           IF (abs(cc) < epsi .OR. abs(ss) < epsi) CYCLE
 
            DO k=1,nsurf
              ai = Vec(k,i)
@@ -1883,6 +1884,22 @@ CONTAINS
            END DO
          END IF
        END DO
+
+       max_diff = -ONE
+       i_max    = 0
+       DO i=1,nsurf
+         aii = dot_product(dnVec0%d0(:,i),Vec(:,i))
+         IF (abs(aii-ONE) > max_diff) THEN
+           aii_max  = aii
+           max_diff = abs(aii-ONE)
+           i_max    = i
+         END IF
+         IF (debug) write(out_unitp,*) '<Vec0(:,i)|Vec(:,i)> :',i,aii
+       END DO
+       IF (max_diff > 0.2_Rkind .OR. debug) THEN
+         write(out_unitp,*) 'Largest difference to one of <Vec0(:,i)|Vec(:,i)> :',i_max,aii_max
+       END IF
+
     END IF
 
 

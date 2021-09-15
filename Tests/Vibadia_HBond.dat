@@ -5,5 +5,5 @@
   read_nml=f
   nb_channels=6
 / 
-&basis_nD name='boxAB' nb=64 nq=64 A=-2.5 B=2.5 /
+&basis_nD name='boxAB' nb=64 nq=64 A=-2.5 B=2.5 symab=1 /
 

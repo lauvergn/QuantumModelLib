@@ -46,6 +46,10 @@ MODULE AdiaChannels_Basis_m
     integer                         :: nb         = 0
     integer                         :: nq         = 0
 
+    integer                         :: symab   = 0
+    integer,  allocatable           :: tab_symab(:)
+
+
     character (len=:),  allocatable :: name
 
     real(kind=Rkind),   allocatable :: x(:)
@@ -76,11 +80,16 @@ MODULE AdiaChannels_Basis_m
       MODULE PROCEDURE QML_Scale_Basis
   END INTERFACE
 
+  INTERFACE Set_symab_Basis
+      MODULE PROCEDURE QML_Set_symab_Basis
+  END INTERFACE
+
+
 CONTAINS
   FUNCTION QML_Basis_IS_allocated(Basis) RESULT(alloc)
   USE QMLLib_UtilLib_m
 
-    TYPE(QML_Basis_t),       intent(in)  :: Basis
+    TYPE(QML_Basis_t),   intent(in)  :: Basis
     logical                          :: alloc
 
     alloc =             allocated(Basis%x)
@@ -100,6 +109,7 @@ CONTAINS
     write(out_unitp,*) '-------------------------------------------------'
     write(out_unitp,*) 'Write_Basis'
     write(out_unitp,*) 'nb,nq',Basis%nb,Basis%nq
+    write(out_unitp,*) 'Numero of the symmetry plan (symab):',Basis%symab
     IF (Basis_IS_allocated(Basis)) THEN
       CALL Write_RVec(Basis%x,out_unitp,5,name_info='x')
       write(out_unitp,*)
@@ -135,11 +145,12 @@ CONTAINS
 
     integer                         :: ib,err_io
 
-    integer                         :: nb,nq,nb_basis
+    integer                         :: nb,nq,nb_basis,symab
     character (len=Name_len)        :: name
     real(kind=Rkind)                :: A,B,scaleQ,Q0
 
-    NAMELIST /basis_nD/ name,nb_basis,nb,nq,A,B,scaleQ,Q0
+
+    NAMELIST /basis_nD/ name,nb_basis,nb,nq,A,B,scaleQ,Q0,symab
 
 
     nb_basis  = 0
@@ -150,6 +161,7 @@ CONTAINS
     Q0        = ZERO
     scaleQ    = ONE
     name      = '0'
+    symab     = -1
 
 
     read(nio,nml=basis_nD,IOSTAT=err_io)
@@ -186,6 +198,7 @@ CONTAINS
       Basis%nb_basis  = nb_basis
       Basis%nb        = nb
       Basis%nq        = nq
+      Basis%symab     = symab
       Basis%name      = trim(adjustl(name))
       CALL string_uppercase_TO_lowercase(Basis%name)
 
@@ -199,6 +212,7 @@ CONTAINS
       END SELECT
 
       CALL Scale_Basis(Basis,Q0,scaleQ)
+      CALL QML_Set_symab_Basis(Basis)
       CALL CheckOrtho_Basis(Basis,nderiv=-1)
 
       !CALL Write_Basis(Basis)
@@ -246,6 +260,44 @@ CONTAINS
     END IF
 
   END SUBROUTINE QML_Construct_Basis_Sin
+  SUBROUTINE QML_Set_symab_Basis(Basis)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnPoly_m
+
+    TYPE(QML_Basis_t),       intent(inout)  :: Basis
+
+
+    real(kind=Rkind)          :: dx,sx,x0
+    TYPE (dnS_t)              :: dnBox
+    TYPE (dnS_t)              :: dnx
+    integer                   :: iq,ib,jb,nb,nq
+
+    IF (.NOT. Basis_IS_allocated(Basis)) THEN
+      write(out_unitp,*) ' ERROR in QML_Set_symab_Basis'
+      write(out_unitp,*) ' the basis is not allocated.'
+      STOP 'ERROR in QML_Set_symab_Basis: the basis is not allocated'
+    END IF
+
+    allocate(Basis%tab_symab(Basis%nb))
+
+    SELECT CASE (Basis%symab)
+    CASE (-1)
+      Basis%tab_symab(:) = -1
+    CASE (0,1,2,3,4,5,6,7)
+      Basis%tab_symab(:) = 0
+      DO ib=2,Basis%nb,2  ! tab_symab = [0 s 0 s 0 s ....] with s=symab
+        Basis%tab_symab(ib) = Basis%symab
+      END DO
+    CASE DEFAULT
+      write(out_unitp,*) ' ERROR in QML_Set_symab_Basis'
+      write(out_unitp,*) '  Wrong symab value:',Basis%symab
+      write(out_unitp,*) ' Its values must be: [-1,0,1...,7]'
+      write(out_unitp,*) ' CHECK your data!!'
+      STOP 'ERROR in QML_Set_symab_Basis: Wrong symab value'
+    END SELECT
+
+  END SUBROUTINE QML_Set_symab_Basis
   SUBROUTINE QML_CheckOrtho_Basis(Basis,nderiv)
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnS_m

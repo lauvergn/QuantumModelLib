@@ -1099,7 +1099,8 @@ CONTAINS
     !CALL QML_Write_dnMat(PotVal_dia,nio=out_unitp)
 
     IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
-    CALL dia_TO_adia(PotVal_dia,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,PF,nderiv_loc)
+    CALL dia_TO_adia(PotVal_dia,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,      &
+                     PF,nderiv_loc,type_diag=1)
 
     CALL QML_sub_Reduced_dnMat2_TO_dnMat1(PotVal,PotVal_loc,lb=1,ub=QModel%QM%nb_Channels)
 
@@ -1943,7 +1944,7 @@ CONTAINS
     CALL QML_dealloc_dnMat(Vec_loc0)
 
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
-  SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,nderiv)
+  SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,nderiv,type_diag)
     USE QMLLib_diago_m
     IMPLICIT NONE
 
@@ -1953,6 +1954,7 @@ CONTAINS
     logical, intent(in)                      :: Phase_Following
 
     integer, intent(in), optional            :: nderiv
+    integer, intent(in), optional            :: type_diag
 
     ! local variable
     integer                        :: i,j,k,id,jd,kd,nderiv_loc,ndim,nsurf
@@ -1965,7 +1967,8 @@ CONTAINS
 
     !test DIAG_dnMat
     TYPE (dnMat_t)              :: dnVec,dnDiag,dnMat
-    integer                     :: type_diag = 2
+    integer                     :: type_diag_loc = 2    ! tred+tql
+    !integer                     :: type_diag_loc = 1 ! jacobi
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='dia_TO_adia'
@@ -1973,6 +1976,7 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
+    IF (present(type_diag))  type_diag_loc = type_diag
 
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING ',name_sub
@@ -1980,7 +1984,7 @@ CONTAINS
       !n = size(PotVal_dia%d0,dim=1)
       write(out_unitp,*) 'max Val odd-even',maxval(abs(PotVal_dia%d0(1::2,2::2)))
       write(out_unitp,*) 'max Val even-odd',maxval(abs(PotVal_dia%d0(2::2,1::2)))
-      write(out_unitp,*) 'type_diag',type_diag
+      write(out_unitp,*) 'type_diag_loc',type_diag_loc
       flush(out_unitp)
     END IF
 
@@ -2012,7 +2016,7 @@ CONTAINS
 
        allocate(Eig(nsurf))
 
-       CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,nsurf,sort=1,phase=.TRUE.,type_diag=type_diag)
+       CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,nsurf,sort=1,phase=.TRUE.,type_diag=type_diag_loc)
        !write(6,*) 'Eig (full diag)',Eig(1:2)
        !CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,n=2,sort=1,phase=.TRUE.,type_diag=5)
 
@@ -2025,7 +2029,7 @@ CONTAINS
 
 
     CALL QML_DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,                 &
-                        dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag)
+                        dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag_loc)
 
     IF (Phase_Following) Vec0%d0 = Vec%d0
 
@@ -2112,16 +2116,18 @@ CONTAINS
     !CALL QML_Write_dnS(dnHB(1),6,info='dnHB',all_type=.TRUE.)
     !write(6,*) 'coucou dnHB: done',ib ; flush(6)
     DO jb=1,nb
-      dnHij = dot_product(QModel%Basis%d0gb(:,jb),dnHB(:))
+      IF (QModel%Basis%tab_symab(ib) == QModel%Basis%tab_symab(jb)) THEN
+        dnHij = dot_product(QModel%Basis%d0gb(:,jb),dnHB(:))
+      ELSE
+        dnHij = ZERO
+      END IF
       CALL QML_sub_dnS_TO_dnMat(dnHij,dnH,jb,ib)
     END DO
   END DO
 
   dnH = QML_SYM_dnMat(dnH)
 
-  !dnH%d0(1::2,2::2) = ZERO
-  !dnH%d0(2::2,1::2) = ZERO
-  !CALL Write_RMat(H,6,5,name_info='H')
+  !CALL Write_RMat(dnH%d0,6,5,name_info='H')
 
   END SUBROUTINE Eval_dnHVib_ana
 

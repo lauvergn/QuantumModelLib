@@ -739,6 +739,7 @@ MODULE QMLLib_diago_m
           cc   = cc/norm
           ss   = ss/norm
           !write(6,*) i,j,'cos sin',cc,ss
+          IF (abs(cc) < epsi .OR. abs(ss) < epsi) CYCLE
 
           DO k=1,size(c,dim=1)
            ai = c(k,i)
