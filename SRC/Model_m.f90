@@ -160,14 +160,17 @@ CONTAINS
     ! local variable
     integer, parameter :: max_act = 10
     integer :: ndim,nsurf,nderiv,option,printlevel,nb_Channels
-    logical :: adiabatic,numeric,PubliUnit,read_nml,Vib_adia
+    logical :: adiabatic,numeric,PubliUnit,read_nml
+    logical :: Vib_adia,print_EigenVec_Grid,print_EigenVec_Basis
+
     character (len=20) :: pot_name
     integer :: err_read,nb_act
     integer :: list_act(max_act)
 
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
-                         read_nml,printlevel,Vib_adia,nb_Channels,list_act
+                         read_nml,printlevel,Vib_adia,nb_Channels,list_act,     &
+                         print_EigenVec_Grid,print_EigenVec_Basis
 
 !    ! Default values defined
     printlevel  = 0
@@ -178,6 +181,9 @@ CONTAINS
     Vib_adia    = QModel_inout%Vib_adia
     nb_Channels = 0
     list_act(:) = 0
+
+    print_EigenVec_Grid  = .FALSE.
+    print_EigenVec_Basis = .FALSE.
 
     pot_name    = 'morse'
     numeric     = .FALSE.
@@ -206,17 +212,20 @@ CONTAINS
 
     !write(out_unitp,nml=potential)
 
-    read_nml1                 = read_nml
+    read_nml1                         = read_nml
 
-    QModel_inout%option       = option
-    print_level  = printlevel ! from them module QMLLib_NumParameters_m.f90
-    QModel_inout%ndim         = ndim
-    QModel_inout%nsurf        = nsurf
-    QModel_inout%adiabatic    = adiabatic
-    QModel_inout%numeric      = numeric
-    QModel_inout%pot_name     = trim(pot_name)
-    !QModel_inout%pot_name    = strdup(pot_name) ! panic with nagfor !!!
-    QModel_inout%PubliUnit    = PubliUnit
+    QModel_inout%option               = option
+    print_level                       = printlevel ! from them module QMLLib_NumParameters_m.f90
+    QModel_inout%ndim                 = ndim
+    QModel_inout%nsurf                = nsurf
+    QModel_inout%adiabatic            = adiabatic
+    QModel_inout%numeric              = numeric
+    QModel_inout%pot_name             = trim(pot_name)
+    !QModel_inout%pot_name            = strdup(pot_name) ! panic with nagfor !!!
+    QModel_inout%PubliUnit            = PubliUnit
+
+    QModel_inout%print_EigenVec_Grid  = print_EigenVec_Grid
+    QModel_inout%print_EigenVec_Basis = print_EigenVec_Basis
 
 
     IF (Vib_adia) THEN
@@ -435,6 +444,9 @@ CONTAINS
     END IF
 
     !read_param_loc = (read_param_loc .AND. read_nml) ! this enables to not read the next namelist when read_param_loc=t
+
+    !CALL QModel_in%Write_QModel(nio=out_unitp)
+
 
     CALL string_uppercase_TO_lowercase(pot_name_loc)
     IF (Print_init_loc) write(out_unitp,*) 'pot_name_loc: ',pot_name_loc
@@ -721,6 +733,8 @@ CONTAINS
         write(out_unitp,*) ' This model/potential is unknown. pot_name: ',pot_name_loc
         STOP 'STOP in Init_Model: Other potentials have to be done'
     END SELECT
+
+    CALL QModel%QM%Write_QModel(nio=out_unitp)
 
     IF (present(ndim)) THEN
       IF (ndim > QModel%QM%ndim) THEN
@@ -1039,10 +1053,11 @@ CONTAINS
     logical,            intent(in),    optional  :: numeric
 
     ! local variables
-    integer                    :: nderiv_loc
+    integer                    :: i,nderiv_loc
     TYPE (dnMat_t)             :: Vec_loc,NAC_loc,PotVal_dia,PotVal_loc
     logical                    :: numeric_loc,adia_loc
     logical                    :: PF ! phase_following
+    !real (kind=Rkind), allocatable :: G(:,:)
 
     integer :: numeric_option = 3   ! 0 old (up to 2d derivatives
                                     ! 3 version up to 3d derivatives less points than 4
@@ -1112,6 +1127,9 @@ CONTAINS
     IF (present(NAC)) THEN
       CALL QML_sub_Reduced_dnMat2_TO_dnMat1(NAC,NAC_loc,lb=1,ub=QModel%QM%nb_Channels)
     END IF
+
+    ! print the Vec%d0 if required
+    CALL Write_Vec(Q,Vec_loc,QModel,nio=out_unitp)
 
     CALL QML_dealloc_dnMat(NAC_loc)
     CALL QML_dealloc_dnMat(Vec_loc)
@@ -2197,6 +2215,62 @@ CONTAINS
     END IF
 
   END SUBROUTINE Eval_Func
+
+  SUBROUTINE Write_Vec(Q,Vec,QModel,nio)
+  USE QMLLib_UtilLib_m
+  USE AdiaChannels_Basis_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in)              :: Q(:)
+    TYPE (dnMat_t),     intent(in)              :: Vec
+    TYPE (Model_t),     intent(in)              :: QModel
+    integer,            intent(in), optional    :: nio
+
+    integer :: i,nio_loc
+    real (kind=Rkind), allocatable :: G(:,:)
+
+    IF (present(nio)) THEN
+      nio_loc = nio
+    ELSE
+      nio_loc = out_unitp
+    END IF
+
+    CALL check_alloc_QM(QModel,'Write_Vec')
+
+    IF (.NOT. QModel%QM%print_EigenVec_Basis .AND. .NOT. QModel%QM%print_EigenVec_Grid) RETURN
+
+    IF (QML_Check_NotAlloc_dnMat(Vec,nderiv=0)) THEN
+        write(nio_loc,*) '-----------------------------------------------'
+        write(nio_loc,*) 'Vec%d0 cannot be printed, it is not allocated'
+        write(nio_loc,*) '-----------------------------------------------'
+    ELSE
+
+      IF (QModel%QM%print_EigenVec_Basis) THEN
+        write(nio_loc,*) '-----------------------------------------------'
+        DO i=1,QModel%Basis%nb
+          write(nio_loc,*) 'wfb',Q,i,Vec%d0(i,1:QModel%QM%nb_Channels)
+        END DO
+      END IF
+
+      IF (QModel%QM%print_EigenVec_Grid .AND. QModel%QM%Vib_adia) THEN
+        write(nio_loc,*) '-----------------------------------------------'
+        allocate(G(QModel%Basis%nq,QModel%QM%nb_Channels))
+        DO i=1,QModel%QM%nb_Channels
+          CALL BasisTOGrid_Basis(G(:,i),Vec%d0(:,i),QModel%Basis)
+        END DO
+        DO i=1,QModel%Basis%nq
+          write(nio_loc,*) 'wfg',Q,QModel%Basis%x(i),G(i,:)
+        END DO
+
+        deallocate(G)
+
+      END IF
+      write(nio_loc,*) '-----------------------------------------------'
+      flush(nio_loc)
+    END IF
+
+  END SUBROUTINE Write_Vec
+
 
   SUBROUTINE Write_Model(QModel,nio)
   USE QMLLib_UtilLib_m

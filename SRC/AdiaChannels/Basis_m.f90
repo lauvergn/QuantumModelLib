@@ -37,8 +37,8 @@ MODULE AdiaChannels_Basis_m
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: QML_Basis_t,Read_Basis,Write_Basis
-
+  PUBLIC :: QML_Basis_t,Read_Basis,Write_Basis, &
+            GridTOBasis_Basis,BasisTOGrid_Basis
 
   TYPE :: QML_Basis_t
     integer                         :: nb_basis   = 0
@@ -84,6 +84,13 @@ MODULE AdiaChannels_Basis_m
       MODULE PROCEDURE QML_Set_symab_Basis
   END INTERFACE
 
+  INTERFACE BasisTOGrid_Basis
+      MODULE PROCEDURE QML_BasisTOGrid_Basis
+  END INTERFACE
+
+  INTERFACE GridTOBasis_Basis
+      MODULE PROCEDURE QML_GridTOBasis_Basis
+  END INTERFACE
 
 CONTAINS
   FUNCTION QML_Basis_IS_allocated(Basis) RESULT(alloc)
@@ -369,5 +376,61 @@ CONTAINS
     END IF
 
   END SUBROUTINE QML_Scale_Basis
+
+  SUBROUTINE QML_BasisTOGrid_Basis(G,B,Basis)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnPoly_m
+
+    TYPE(QML_Basis_t),    intent(in)    :: Basis
+    real(kind=Rkind),     intent(in)    :: B(:)
+    real(kind=Rkind),     intent(inout) :: G(:)
+
+    IF (.NOT. Basis_IS_allocated(Basis)) THEN
+      write(out_unitp,*) ' ERROR in QML_BasisTOGrid_Basis'
+      write(out_unitp,*) ' the basis is not allocated.'
+      STOP 'ERROR in QML_BasisTOGrid_Basis: the basis is not allocated.'
+    END IF
+    IF (size(B) /= Basis%nb) THEN
+      write(out_unitp,*) ' ERROR in QML_BasisTOGrid_Basis'
+      write(out_unitp,*) ' the size of B is different from nb.'
+      write(out_unitp,*) ' size(B), Basis%nb',size(B),Basis%nb
+      STOP 'ERROR in QML_BasisTOGrid_Basis: wrong B size.'
+    END IF
+
+    G = matmul(Basis%d0gb,B)
+
+  END SUBROUTINE QML_BasisTOGrid_Basis
+
+  SUBROUTINE QML_GridTOBasis_Basis(B,G,Basis)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnPoly_m
+
+    TYPE(QML_Basis_t),   intent(in)    :: Basis
+    real(kind=Rkind),    intent(in)    :: G(:)
+    real(kind=Rkind),    intent(inout) :: B(:)
+
+    IF (.NOT. Basis_IS_allocated(Basis)) THEN
+      write(out_unitp,*) ' ERROR in QML_GridTOBasis_Basis'
+      write(out_unitp,*) ' the basis is not allocated.'
+      STOP 'ERROR in QML_GridTOBasis_Basis: the basis is not allocated.'
+    END IF
+    IF (size(B) /= Basis%nb) THEN
+      write(out_unitp,*) ' ERROR in QML_GridTOBasis_Basis'
+      write(out_unitp,*) ' the size of B is different from nb.'
+      write(out_unitp,*) ' size(B), Basis%nb',size(B),Basis%nb
+      STOP 'ERROR in QML_GridTOBasis_Basis: wrong B size.'
+    END IF
+    IF (size(G) /= Basis%nq) THEN
+      write(out_unitp,*) ' ERROR in QML_GridTOBasis_Basis'
+      write(out_unitp,*) ' the size of G is different from nq.'
+      write(out_unitp,*) ' size(G), Basis%nq',size(G),Basis%nq
+      STOP 'ERROR in QML_GridTOBasis_Basis: wrong G size.'
+    END IF
+
+    B(:) = matmul(transpose(Basis%d0gb),Basis%w*G)
+
+  END SUBROUTINE QML_GridTOBasis_Basis
 
 END MODULE AdiaChannels_Basis_m

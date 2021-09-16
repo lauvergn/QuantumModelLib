@@ -4,6 +4,8 @@
   list_act=1
   read_nml=f
   nb_channels=6
+  print_EigenVec_Basis=t
+  print_EigenVec_Grid=t
 / 
 &basis_nD name='boxAB' nb=64 nq=64 A=-2.5 B=2.5 symab=1 /
 

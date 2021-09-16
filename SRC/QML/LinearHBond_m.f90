@@ -283,9 +283,10 @@ MODULE QML_LinearHBond_m
   IMPLICIT NONE
 
     CLASS(QML_LinearHBond_t),   intent(in) :: QModel
-    integer,                     intent(in) :: nio
+    integer,                    intent(in) :: nio
 
     write(nio,*) 'LinearHBond current parameters:'
+    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
     write(nio,*)
     write(nio,*) 'PubliUnit: ',QModel%PubliUnit
     write(nio,*)
