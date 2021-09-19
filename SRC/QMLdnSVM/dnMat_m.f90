@@ -1796,10 +1796,12 @@ CONTAINS
     integer,            intent(in),    optional :: type_diag
 
     integer                       :: ndim,nderiv,nsurf
-    real(kind=Rkind), allocatable :: Vec(:,:),tVec(:,:),Eig(:),Mtemp(:,:)
+    real(kind=Rkind), allocatable :: Vec(:,:),tVec(:,:),Eig(:),Mtemp(:,:),Vi(:),Vj(:)
     TYPE (dnMat_t)                :: dnMat_OnVec
     integer                       :: i,j,k,id,jd,kd,i_max
     real (kind=Rkind)             :: ai,aj,aii,aij,aji,ajj,th,cc,ss,aii_max,max_diff
+    real (kind=Rkind)             :: err1,err2,Rot(2,2),Mij(2,2),RMij(2,2)
+
 
     real (kind=Rkind)             :: epsi = ONETENTH**10
     integer                       :: type_diag_loc
@@ -1844,6 +1846,72 @@ CONTAINS
     CALL diagonalization(dnMat%d0,Eig,Vec,nsurf,type_diag=type_diag_loc,sort=1,phase=.TRUE.)
 
     IF (present(dnVec0)) THEN
+
+       IF (debug) THEN
+         write(out_unitp,*) 'Vec before rotation'
+         CALL Write_RMat(Vec,nio=out_unitp,nbcol1=5)
+       END IF
+       !For degenerated eigenvectors (works only with 2 vectors)
+       DO i=1,nsurf-1
+         IF ( abs(Eig(i)-Eig(i+1)) < TEN*epsi) THEN
+           j = i+1
+           IF (debug) write(out_unitp,*) 'degenerated vectors',i,j
+
+           aii = dot_product(dnVec0%d0(:,i),Vec(:,i))
+           aji = dot_product(dnVec0%d0(:,j),Vec(:,i))
+           aij = dot_product(dnVec0%d0(:,i),Vec(:,j))
+           ajj = dot_product(dnVec0%d0(:,j),Vec(:,j))
+
+           !change the phase of one vector (i) if det(Mij)<0
+           IF ((aii*ajj-aij*aji) < 0) THEN
+             IF (debug) write(out_unitp,*) 'det < 0',(aii*ajj-aij*aji)
+             Vec(:,i) = -Vec(:,i)
+             aii = -aii
+             aji = -aji
+           ELSE
+             IF (debug) write(out_unitp,*) 'det > 0'
+           END IF
+           IF (debug) write(out_unitp,*) 'aii,ajj,aji,aij',aii,ajj,aji,aij
+
+           Mij(1,:) = [aii,aij]
+           Mij(2,:) = [aji,ajj]
+
+           th = atan2(aji-aij,aii+ajj) ! we have to test with +pi as well
+
+           cc = cos(th)
+           ss = sin(th)
+
+           Rot(1,:) = [ cc,ss]
+           Rot(2,:) = [-ss,cc]
+
+           RMij = matmul(Rot,Mij)
+           RMij(1,1) = RMij(1,1)-1 ; RMij(2,2) = RMij(2,2)-1
+           IF (debug) write(out_unitp,*) 'RMij',RMij
+           err1 = sqrt(sum(RMij**2))
+           IF (debug) write(out_unitp,*) 'Err, th',th,err1
+           ! th+pi => Rot=-Rot
+           RMij = -matmul(Rot,Mij) ; RMij(1,1) = RMij(1,1)-1 ; RMij(2,2) = RMij(2,2)-1
+           IF (debug) write(out_unitp,*) 'RMij',RMij
+           err2 = sqrt(sum(RMij**2))
+           IF (debug) write(out_unitp,*) 'Err, th+pi',th+pi,err2
+
+           IF (err2 < err1) THEN
+             th = th+pi
+             cc = -cc
+             ss = -ss
+           END IF
+
+           IF (debug) write(out_unitp,*) 'theta',th
+
+           IF (abs(th) < epsi) CYCLE
+
+           Vj       = Vec(:,j)
+           Vi       = Vec(:,i)
+           Vec(:,i) =  cc * Vi + ss * Vj
+           Vec(:,j) = -ss * Vi + cc * Vj
+         END IF
+       END DO
+
        IF (debug) write(out_unitp,*) 'Change phase?'
        flush(out_unitp)
 
@@ -1854,36 +1922,6 @@ CONTAINS
           END IF
        END DO
 
-       IF (debug) THEN
-         write(out_unitp,*) 'Vec before rotation'
-         CALL Write_RMat(Vec,nio=out_unitp,nbcol1=5)
-       END IF
-       !For degenerated eigenvectors (works only with 2 vectors)
-       DO i=1,nsurf-1
-         IF ( abs(Eig(i)-Eig(i+1)) < epsi) THEN
-           j = i+1
-           IF (debug) write(out_unitp,*) 'degenerated vectors',i,j
-
-           aii = dot_product(dnVec0%d0(:,i),Vec(:,i))
-           aji = dot_product(dnVec0%d0(:,j),Vec(:,i))
-           aij = dot_product(dnVec0%d0(:,i),Vec(:,j))
-           ajj = dot_product(dnVec0%d0(:,j),Vec(:,j))
-
-           th = ( atan2(aij,ajj) -atan2(aji,aii) ) * HALF
-           IF (debug) write(out_unitp,*) 'theta',th
-
-           cc = cos(th)
-           ss = sin(th)
-           IF (abs(cc) < epsi .OR. abs(ss) < epsi) CYCLE
-
-           DO k=1,nsurf
-             ai = Vec(k,i)
-             aj = Vec(k,j)
-             Vec(k,i) =  cc * ai + ss * aj
-             Vec(k,j) = -ss * ai + cc * aj
-           END DO
-         END IF
-       END DO
 
        max_diff = -ONE
        i_max    = 0
