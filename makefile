@@ -345,7 +345,7 @@ $(dnPolyEXE): $(OBJ_testdnPoly) $(OBJ_lib)
 .PHONY: driver
 driver:$(DriverEXE)
 $(DriverEXE): $(OBJ_testdriver) $(ModLib)
-	$(LYNK90)   -o $(DriverEXE) $(OBJ_testdriver) $(LYNKFLAGS) -L$(DIR0) -lpot
+	$(LYNK90)   -o $(DriverEXE) $(OBJ_testdriver) -L$(DIR0) -lpot $(LYNKFLAGS)
 #
 #readme
 .PHONY: readme
