@@ -65,7 +65,8 @@ MODULE QML_Empty_m
     integer, allocatable :: list_act(:)
     integer, allocatable :: list_inact(:)
 
-
+    logical :: print_EigenVec_Grid  = .FALSE.
+    logical :: print_EigenVec_Basis = .FALSE.
 
     character (len=:),  allocatable :: pot_name
     real (kind=Rkind),  allocatable :: d0GGdef(:,:)
@@ -178,7 +179,6 @@ CONTAINS
     IF (allocated(QModel%d0GGdef)) deallocate(QModel%d0GGdef)
     IF (allocated(QModel%Q0))      deallocate(QModel%Q0)
 
-
     QModel%ndimFunc     = QModel_in%ndimFunc
     QModel%nb_Func      = QModel_in%nb_Func
 
@@ -186,6 +186,9 @@ CONTAINS
 
     QModel%Vib_adia     = QModel_in%Vib_adia
     QModel%nb_Channels  = QModel_in%nb_Channels
+
+    QModel%print_EigenVec_Basis = QModel_in%print_EigenVec_Basis
+    QModel%print_EigenVec_Grid  = QModel_in%print_EigenVec_Grid
 
     IF (allocated(QModel_in%list_act)) THEN
       QModel%list_act     = QModel_in%list_act
@@ -326,6 +329,9 @@ CONTAINS
     write(nio,*) 'ndimCart:                  ',QModel%ndimCart
     write(nio,*) 'ndimFunc:                  ',QModel%ndimQ
     write(nio,*) 'nb_Func:                   ',QModel%ndimCart
+
+    write(nio,*) 'print_EigenVec Basis/Grid: ',QModel%print_EigenVec_Basis,QModel%print_EigenVec_Grid
+
 
     IF (allocated(QModel%pot_name)) write(nio,*) 'pot_name: ',QModel%pot_name
     write(nio,*)

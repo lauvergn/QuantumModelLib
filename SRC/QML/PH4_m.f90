@@ -584,7 +584,7 @@ MODULE QML_PH4_m
     TYPE (dnS_t),         intent(in)    :: Rm
     TYPE (dnS_t),         intent(in)    :: dnPoly(:)
 
-    integer         :: iq,np
+    integer                             :: iq,np
 
     !write(out_unitp,*) 'in QML_dnvfour_fit3_WITH_poly',ifunc
     !dnvfour = Rm
@@ -617,14 +617,14 @@ MODULE QML_PH4_m
     END IF
     !CALL QML_Write_dnS(dnvfour,nio=out_unitp,all_type=.TRUE.)
 
-
   END FUNCTION QML_dnvfour_fit3_WITH_poly
   FUNCTION QML_sc2_fit3(x,a,b)
     TYPE (dnS_t)                          :: QML_sc2_fit3
     TYPE (dnS_t),           intent(in)    :: x
     real(kind=Rkind),       intent(in)    :: a,b
 
-    QML_sc2_fit3 = QML_dnSigmoid_PH4(-x,ONE)*(-x+a) + QML_dnSigmoid_PH4(x,ONE)*(x+b)
+    QML_sc2_fit3 =  QML_dnSigmoid_PH4(-x,ONE)*(-x + a) +                        &
+                    QML_dnSigmoid_PH4( x,ONE)*( x + b)
 
   END FUNCTION QML_sc2_fit3
   SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,file_name,exist,read_ab)

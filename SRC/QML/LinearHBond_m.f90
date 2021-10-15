@@ -67,7 +67,7 @@ MODULE QML_LinearHBond_m
      real (kind=Rkind)   :: Dp     = 0.1_Rkind     ! scaling for the exp for large ROO=QQ
 
    CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_LinearHBond
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_LinearHBond
     PROCEDURE :: Write_QModel    => Write_QML_LinearHBond
     PROCEDURE :: Write0_QModel   => Write0_QML_LinearHBond
   END TYPE QML_LinearHBond_t
@@ -170,8 +170,8 @@ MODULE QML_LinearHBond_m
     QModel%Dm     = Dm_loc
     QModel%Dp     = Dp_loc
 
-    write(out_unitp,*) 'D.exp( beta.(QQ-Q0))',QModel%Dp,QModel%betap,QModel%QQcutp
-    write(out_unitp,*) 'D.exp(-beta.(QQ-Q0))',QModel%Dm,QModel%betam,QModel%QQcutm
+    !write(out_unitp,*) 'D.exp( beta.(QQ-Q0))',QModel%Dp,QModel%betap,QModel%QQcutp
+    !write(out_unitp,*) 'D.exp(-beta.(QQ-Q0))',QModel%Dm,QModel%betam,QModel%QQcutm
 
     IF (QModel%PubliUnit) THEN
       write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Angs,Angs], Energy: [kcal.mol^-1]'
@@ -283,9 +283,10 @@ MODULE QML_LinearHBond_m
   IMPLICIT NONE
 
     CLASS(QML_LinearHBond_t),   intent(in) :: QModel
-    integer,                     intent(in) :: nio
+    integer,                    intent(in) :: nio
 
     write(nio,*) 'LinearHBond current parameters:'
+    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
     write(nio,*)
     write(nio,*) 'PubliUnit: ',QModel%PubliUnit
     write(nio,*)

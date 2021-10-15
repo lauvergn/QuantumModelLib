@@ -187,8 +187,9 @@ endif
    ifeq ($(OPT),1)
       F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
    else
-      F90FLAGS = -Og -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -finit-real=nan -finit-integer=nan
+      #F90FLAGS = -Og -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -finit-real=nan -finit-integer=nan
       #F90FLAGS = -O0 -fbounds-check -Wuninitialized
+      F90FLAGS = -Og $(OMPFLAG) -Wall -Wextra -Wimplicit-interface -fPIC -fmax-errors=1 -g -fcheck=all -fbacktrace
    endif
 
    F90_VER = $(shell $(F90) --version | head -1 )

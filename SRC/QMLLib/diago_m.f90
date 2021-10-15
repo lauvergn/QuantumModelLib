@@ -47,15 +47,15 @@ MODULE QMLLib_diago_m
 !     phase:
 !============================================================
 !
-  SUBROUTINE QML_diagonalization(Mat,REig,Vec,n,type_diag,sort,phase,IEig)
+  RECURSIVE SUBROUTINE QML_diagonalization(Mat,REig,Vec,n,type_diag,sort,phase,IEig)
     USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64,int32
     USE QMLLib_NumParameters_m
     IMPLICIT NONE
 
-    integer,          intent(in)              :: n
-    real(kind=Rkind), intent(in)              :: Mat(n,n)
-    real(kind=Rkind), intent(inout)           :: REig(n),Vec(n,n)
-    real(kind=Rkind), intent(inout), optional :: IEig(n)
+    integer,          intent(in)              :: n ! when n < size(REig), only n eigenvectors and  eigenvectors are calculated
+    real(kind=Rkind), intent(in)              :: Mat(:,:)
+    real(kind=Rkind), intent(inout)           :: REig(:),Vec(:,:)
+    real(kind=Rkind), intent(inout), optional :: IEig(:)
 
     integer,          intent(in),    optional :: type_diag,sort
     logical,          intent(in),    optional :: phase
@@ -64,14 +64,15 @@ MODULE QMLLib_diago_m
     !local variables
     integer            :: type_diag_loc
     integer            :: type_diag_default = 2 ! tred+tql
-    !                                    Jacobi tred+tql DSYEV  DGEEV
-    integer, parameter :: list_type(6) = [1,    2,       3,377, 4,477]
+    !                                    Jacobi tred+tql DSYEV  DGEEV Lanczos
+    integer, parameter :: list_type(7) = [1,    2,       3,377, 4,477,   5]
 
     real(kind=Rkind), allocatable :: trav(:),Mat_save(:,:)
+    integer :: n_size,n_vect
 
     !for lapack
     integer              :: i
-    integer              ::    lwork ,lda ,ldvr ,ierr
+    integer              :: lwork ,lda ,ldvr ,ierr
     integer(kind=int32)  :: n4,lwork4,lda4,ldvr4,ierr4
     real(kind=Rkind), allocatable :: work(:)
     real(kind=Rkind), allocatable :: IEig_loc(:)
@@ -87,6 +88,26 @@ MODULE QMLLib_diago_m
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
+
+    n_size = size(REig)
+    IF (n_size /= size(Mat,dim=1) .OR. n_size /= size(Vec,dim=1)) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' The matrix or vector sizes are not consistant'
+      write(out_unitp,*) '   size(REig):     ',size(REig)
+      write(out_unitp,*) '   size(Mat):      ',size(Mat,dim=1)
+      write(out_unitp,*) '   size(Vec):      ',size(Vec,dim=1)
+      write(out_unitp,*) '  => CHECK the fortran!!'
+      STOP 'ERROR in QML_diagonalization: The matrix or vector sizes are not consistant.'
+    END IF
+    IF (n < 1) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,"(a,i0,a)") ' n < 1. It MUST be in the range [1,',n_size,']'
+      write(out_unitp,*) '   n:              ',n
+      write(out_unitp,*) '   size(REig):     ',size(REig)
+      write(out_unitp,*) '  => CHECK the fortran!!'
+      STOP 'ERROR in QML_diagonalization: The matrix or vector sizes are not consistant.'
+    END IF
+    n_vect = min(n,n_size)
 
     IF (present(type_diag)) THEN
       type_diag_loc = type_diag
@@ -242,6 +263,10 @@ MODULE QMLLib_diago_m
       STOP 'ERROR in QML_diagonalization: LAPACK case impossible'
 #endif
 
+    CASE(5) ! lanczos
+
+      CALL QML_Lanczos(Mat,n_vect,REig,Vec,epsi=ONETENTH**6,max_it=100)
+
     CASE DEFAULT
       write(out_unitp,*) ' ERROR in ',name_sub
       write(out_unitp,*) ' The default CASE is not defined.'
@@ -253,30 +278,27 @@ MODULE QMLLib_diago_m
     IF (present(sort)) THEN
         SELECT CASE (sort)
         CASE(1)
-          CALL QML_sort(n,REig,Vec,n)
-          CALL QML_rota_denerated(REig,Vec,n)
+          CALL QML_sort(REig,Vec)
+          CALL QML_rota_denerated(REig,Vec)
         CASE(-1)
           REig = -REig
-          CALL QML_sort(n,REig,Vec,n)
+          CALL QML_sort(REig,Vec)
           REig = -REig
-          CALL QML_rota_denerated(REig,Vec,n)
+          CALL QML_rota_denerated(REig,Vec)
         CASE(2)
-          CALL QML_sort_abs(n,REig,Vec,n)
+          CALL QML_sort_abs(REig,Vec)
         CASE DEFAULT ! no sort
           CONTINUE
         END SELECT
     ELSE
-      CALL QML_sort(n,REig,Vec,n)
-      CALL QML_rota_denerated(REig,Vec,n)
+      CALL QML_sort(REig,Vec)
+      CALL QML_rota_denerated(REig,Vec)
     END IF
 
     IF (present(phase)) THEN
-        !IF (phase) CALL QML_Unique_phase_old(n,Vec,n)
-        IF (phase) CALL QML_Unique_phase(Vec)
-
+      IF (phase) CALL QML_Unique_phase(Vec)
     ELSE
       CALL QML_Unique_phase(Vec)
-      !CALL QML_Unique_phase_old(n,Vec,n)
     END IF
 
   END SUBROUTINE QML_diagonalization
@@ -592,24 +614,23 @@ MODULE QMLLib_diago_m
 
   end subroutine QML_sort_tab
 
-  SUBROUTINE QML_sort(nb_niv,ene,psi,max_niv)
+  SUBROUTINE QML_sort(ene,psi)
       USE QMLLib_NumParameters_m
       IMPLICIT NONE
 
-      integer nb_niv,max_niv
-      real(kind=Rkind) ene(max_niv),psi(max_niv,max_niv)
-      real(kind=Rkind) a
+      real(kind=Rkind), intent(inout) :: ene(:),psi(:,:)
 
-        integer i,j,k
+      real(kind=Rkind) :: a
+      integer          :: i,j,k
 
-      DO i=1,nb_niv
-      DO j=i+1,nb_niv
-       IF (ene(i) .GT. ene(j)) THEN
+      DO i=1,size(ene)
+      DO j=i+1,size(ene)
+       IF (ene(i) > ene(j)) THEN
 !	      permutation
           a=ene(i)
           ene(i)=ene(j)
           ene(j)=a
-          DO k=1,nb_niv
+          DO k=1,size(psi,dim=1)
             a=psi(k,i)
             psi(k,i)=psi(k,j)
             psi(k,j)=a
@@ -619,24 +640,24 @@ MODULE QMLLib_diago_m
       END DO
 
   END SUBROUTINE QML_sort
-  SUBROUTINE QML_sort_abs(nb_niv,ene,psi,max_niv)
+  SUBROUTINE QML_sort_abs(ene,psi)
       USE QMLLib_NumParameters_m
       IMPLICIT NONE
 
-        integer nb_niv,max_niv
-        real(kind=Rkind) ene(max_niv),psi(max_niv,max_niv)
-        real(kind=Rkind) a
+      real(kind=Rkind), intent(inout) :: ene(:),psi(:,:)
 
-        integer i,j,k
+      real(kind=Rkind) :: a
+      integer          :: i,j,k
 
-        DO i=1,nb_niv
-          DO j=i+1,nb_niv
-            IF (abs(ene(i)) .GT. abs(ene(j))) THEN
+
+        DO i=1,size(ene)
+          DO j=i+1,size(ene)
+            IF (abs(ene(i)) > abs(ene(j))) THEN
 !             permutation
               a=ene(i)
               ene(i)=ene(j)
               ene(j)=a
-              DO k=1,nb_niv
+              DO k=1,size(psi,dim=1)
                 a=psi(k,i)
                 psi(k,i)=psi(k,j)
                 psi(k,j)=a
@@ -668,31 +689,6 @@ MODULE QMLLib_diago_m
       END DO
 
       END SUBROUTINE QML_Unique_phase
-      SUBROUTINE QML_Unique_phase_old(n,Vec,max_n)
-      USE QMLLib_NumParameters_m
-      IMPLICIT NONE
-
-      integer          :: n,max_n
-      real(kind=Rkind) :: Vec(max_n,max_n)
-
-      real(kind=Rkind) :: max_val
-      integer          :: ind_max_val(max_n),nb_max_val
-
-      integer          :: i,j,max_j
-
-      DO i=1,n
-        max_val        = maxval(abs(Vec(:,i)))
-        DO j=1,n
-          IF ( abs(abs(Vec(j,i))-max_val) < ONETENTH**6 ) THEN
-            IF (Vec(j,i) < ZERO) THEN
-              Vec(:,i) = -Vec(:,i)
-              EXIT
-            END IF
-          END IF
-        END DO
-      END DO
-
-  END SUBROUTINE QML_Unique_phase_old
 !=====================================================================
 !
 !   c_new(:,i) =  cos(th) c(:,i) + sin(th) c(:,j)
@@ -703,18 +699,13 @@ MODULE QMLLib_diago_m
 !      it is working only if 2 vectors are degenerated !!!!
 !
 !=====================================================================
-  SUBROUTINE QML_rota_denerated(v,c,n)
+  SUBROUTINE QML_rota_denerated(v,c)
       USE QMLLib_NumParameters_m
       IMPLICIT NONE
 
+      real (kind=Rkind), intent(in)    :: v(:)
+      real (kind=Rkind), intent(inout) :: c(:,:)
 
-      integer       :: n
-      real (kind=Rkind), intent(in)    :: v(n)
-      real (kind=Rkind), intent(inout) :: c(n,n)
-
-
-
-      real (kind=Rkind) :: cd(n)
       integer           :: i,j,k,kloc
       real (kind=Rkind) :: ai,aj,norm,cc,ss
 
@@ -730,17 +721,16 @@ MODULE QMLLib_diago_m
       !write(out_unitp,*) 'c',c
       END IF
 !---------------------------------------------------------------------
-      DO i=1,n-1
+      DO i=1,size(v)-1
 
         j = i+1
         IF ( abs(v(i)-v(j)) < epsi) THEN
           !write(6,*) 'i,j',i,j
           !write(6,*) 'vec i',c(:,i)
           !write(6,*) 'vec j',c(:,j)
-          cd(:) = c(:,i)**2+c(:,j)**2
 
 
-          kloc = maxloc(cd(:),dim=1)
+          kloc = maxloc((c(:,i)**2+c(:,j)**2),dim=1)
 
           cc   =  c(kloc,i)
           ss   = -c(kloc,j)
@@ -749,8 +739,9 @@ MODULE QMLLib_diago_m
           cc   = cc/norm
           ss   = ss/norm
           !write(6,*) i,j,'cos sin',cc,ss
+          IF (abs(cc) < epsi .OR. abs(ss) < epsi) CYCLE
 
-          DO k=1,n
+          DO k=1,size(c,dim=1)
            ai = c(k,i)
            aj = c(k,j)
 
@@ -761,8 +752,6 @@ MODULE QMLLib_diago_m
 
         END IF
       END DO
-
-
 
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -772,73 +761,6 @@ MODULE QMLLib_diago_m
 !---------------------------------------------------------------------
 
   end subroutine QML_rota_denerated
-  SUBROUTINE QML_rota_denerated_old(v,c,n)
-      USE QMLLib_NumParameters_m
-      IMPLICIT NONE
-
-
-      integer       :: n
-      real (kind=Rkind), intent(in)    :: v(n)
-      real (kind=Rkind), intent(inout) :: c(n,n)
-
-
-
-
-      integer       :: i,j,k,kloc
-      real (kind=Rkind) :: ai,aj,norm,cc,ss
-
-      real (kind=Rkind), parameter :: epsi = ONETENTH**10
-
-!---------------------------------------------------------------------
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
-!---------------------------------------------------------------------
-      IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING QML_rota_denerated_old'
-      write(out_unitp,*) 'v',v
-      !write(out_unitp,*) 'c',c
-      END IF
-!---------------------------------------------------------------------
-      DO i=1,n-1
-
-        j = i+1
-        IF ( abs(v(i)-v(j)) < epsi) THEN
-          !write(6,*) 'i,j',i,j
-          !write(6,*) 'vec i',c(:,i)
-          !write(6,*) 'vec j',c(:,j)
-
-          kloc = maxloc(abs(c(:,i)),dim=1)
-
-          cc   =  c(kloc,i)
-          ss   = -c(kloc,j)
-          !write(6,*) i,j,'cos sin',kloc,cc,ss
-          norm = sqrt(cc*cc+ss*ss)
-          cc   = cc/norm
-          ss   = ss/norm
-          !write(6,*) i,j,'cos sin',cc,ss
-
-          DO k=1,n
-           ai = c(k,i)
-           aj = c(k,j)
-
-           c(k,i) =  cc * ai + ss * aj
-           c(k,j) = -ss * ai + cc * aj
-
-          END DO
-
-        END IF
-      END DO
-
-
-
-!---------------------------------------------------------------------
-      IF (debug) THEN
-      write(out_unitp,*) 'new c',c
-      write(out_unitp,*) 'END QML_rota_denerated_old'
-      END IF
-!---------------------------------------------------------------------
-
-  end subroutine QML_rota_denerated_old
 
 !============================================================
 !
@@ -1070,5 +992,89 @@ MODULE QMLLib_diago_m
   500 CONTINUE
       RETURN
   end subroutine QML_cTred2
+
+  SUBROUTINE QML_Lanczos(A,n_vect,D,V,epsi,max_it)
+      USE QMLLib_NumParameters_m
+      USE QMLLib_UtilLib_m
+      IMPLICIT NONE
+
+      integer,          intent(in)    :: n_vect
+      real(kind=Rkind), intent(in)    :: A(:,:)
+      real(kind=Rkind), intent(inout) :: V(:,:),D(:)
+      real(kind=Rkind), intent(in)    :: epsi
+      integer,          intent(in)    :: max_it
+
+
+
+      real(kind=Rkind), allocatable :: Krylov_vectors(:,:)
+      real(kind=Rkind), allocatable :: M_Krylov(:,:)
+      real(kind=Rkind), allocatable :: V_Krylov(:,:)
+      real(kind=Rkind), allocatable :: E0_Krylov(:)
+      real(kind=Rkind), allocatable :: E1_Krylov(:)
+      real(kind=Rkind)              :: y,maxdiff
+
+      integer :: i,it,n_size
+
+      ! Begin Lanczos scheme
+      n_size = size(A,dim=1)
+      write(6,*) 'shape(A)',shape(A)
+      write(6,*) 'shape(V)',shape(V)
+      write(6,*) 'shape(D)',shape(D)
+      write(6,*) 'n_size',n_size
+      write(6,*) 'n_vect',n_vect
+      write(6,*) 'max_it',max_it
+      write(6,*) 'epsi',epsi
+
+      allocate(Krylov_vectors(n_size,0:max_it))
+      Krylov_vectors(:,:) = ZERO
+      CALL random_number(Krylov_vectors(1:n_vect,0))
+      Krylov_vectors(:,0) = Krylov_vectors(:,0) /                               &
+                      sqrt(dot_product(Krylov_vectors(:,0),Krylov_vectors(:,0)))
+      write(6,*) 'Krylov_vectors (guess)',Krylov_vectors(:,0)
+
+
+      allocate(M_Krylov(max_it,max_it))
+      allocate(V_Krylov(max_it,max_it))
+      allocate(E0_Krylov(max_it))
+      allocate(E1_Krylov(max_it))
+      maxdiff = huge(ONE)
+
+      DO it=1,max_it
+
+         Krylov_vectors(:,it) = matmul(A,Krylov_vectors(:,it-1))
+
+         DO i=0,it-1
+            M_Krylov(i+1, it) = dot_product(Krylov_vectors(:,i),Krylov_vectors(:,it))
+            M_Krylov(it, i+1) = M_Krylov(i+1,it)
+         END DO
+         CALL Write_RMat(M_Krylov(1:it,1:it),out_unitp,5)
+
+         ! Orthogonalize vectors
+         DO i=0,it-1
+            y = dot_product(Krylov_vectors(:,i),Krylov_vectors(:,it))
+            Krylov_vectors(:,it) = Krylov_vectors(:,it) - y * Krylov_vectors(:,i)
+         END DO
+         ! Normalize vector
+          Krylov_vectors(:,it) =   Krylov_vectors(:,it) /                      &
+                  sqrt(dot_product(Krylov_vectors(:,it),Krylov_vectors(:,it)))
+
+         IF (it >= n_vect) THEN
+            CALL diagonalization(M_Krylov(1:it,1:it),E1_Krylov(1:it),V_Krylov(1:it,1:it),it,3,1,.FALSE.)
+            write(6,*) 'it eig',it,E1_Krylov(1:n_vect)
+         END IF
+         IF (it > n_vect) THEN
+            maxdiff = maxval(abs(E1_Krylov(1:n_vect) - E0_Krylov(1:n_vect)))
+            E0_Krylov(1:n_vect) = E1_Krylov(1:n_vect)
+         ELSE
+            maxdiff = huge(ONE)
+         END IF
+         write(6,*) 'it maxdiff,epsi,exit?',it,maxdiff,epsi,(maxdiff < epsi)
+
+         IF (maxdiff < epsi) EXIT
+
+      END DO
+stop
+  end subroutine QML_Lanczos
+
 
 END MODULE QMLLib_diago_m

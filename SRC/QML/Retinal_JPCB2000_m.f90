@@ -130,6 +130,7 @@ MODULE QML_Retinal_JPCB2000_m
        write(out_unitp,*) ' ndim range MUST be [2:25]. ndim: ',QModel%ndim
        STOP 'ERROR in Init_QML_Retinal_JPCB2000: ndim range MUST be [2:25]'
     END IF
+    IF (debug) write(out_unitp,*) 'ndim',QModel%ndim
 
 
 
@@ -246,7 +247,7 @@ MODULE QML_Retinal_JPCB2000_m
   USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
-    CLASS(QML_Retinal_JPCB2000_t), intent(in)    :: QModel
+    CLASS(QML_Retinal_JPCB2000_t),   intent(in)    :: QModel
     TYPE (dnS_t),                    intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),                    intent(in)    :: dnQ(:)
     integer,                         intent(in)    :: nderiv
@@ -254,22 +255,31 @@ MODULE QML_Retinal_JPCB2000_m
     TYPE (dnS_t) :: VBath
     integer      :: i
 
+    IF (QModel%ndim > 2) THEN
+      VBath = HALF*sum( QModel%wi(3:QModel%ndim)*dnQ(3:QModel%ndim)**2 )
 
-    VBath = HALF*sum( QModel%wi(3:QModel%ndim)*dnQ(3:QModel%ndim)**2 )
+      Mat_OF_PotDia(1,1) = HALF*QModel%W0*(ONE-cos(dnQ(1))) +                   &
+                           HALF*QModel%W*dnQ(2)**2 + VBath
 
-
-    Mat_OF_PotDia(1,1) =             HALF*QModel%W0*(ONE-cos(dnQ(1))) + &
-                        HALF*QModel%W*dnQ(2)**2 + VBath
-
-    Mat_OF_PotDia(2,2) = QModel%E1 - HALF*QModel%W1*(ONE-cos(dnQ(1))) + &
-                        HALF*QModel%W*dnQ(2)**2 + QModel%kappa*dnQ(2) + &
+      Mat_OF_PotDia(2,2) = QModel%E1 - HALF*QModel%W1*(ONE-cos(dnQ(1))) +       &
+                           HALF*QModel%W*dnQ(2)**2 + QModel%kappa*dnQ(2) +      &
                         VBath + sum( QModel%ci(3:QModel%ndim)*dnQ(3:QModel%ndim) )
 
-    Mat_OF_PotDia(1,2) = QModel%lambda*dnQ(2)
-    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
+      Mat_OF_PotDia(1,2) = QModel%lambda*dnQ(2)
+      Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
+      CALL QML_dealloc_dnS(VBath)
 
-    CALL QML_dealloc_dnS(VBath)
+    ELSE
+      Mat_OF_PotDia(1,1) = HALF*QModel%W0*(ONE-cos(dnQ(1))) +                   &
+                           HALF*QModel%W*dnQ(2)**2
+
+      Mat_OF_PotDia(2,2) = QModel%E1 - HALF*QModel%W1*(ONE-cos(dnQ(1))) +       &
+                           HALF*QModel%W*dnQ(2)**2 + QModel%kappa*dnQ(2)
+
+      Mat_OF_PotDia(1,2) = QModel%lambda*dnQ(2)
+      Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
+    END IF
 
 
   END SUBROUTINE EvalPot_QML_Retinal_JPCB2000

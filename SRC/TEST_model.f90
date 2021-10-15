@@ -900,7 +900,7 @@ SUBROUTINE test_Vib_adia
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  Qact = [4.0_Rkind]
+  Qact = [4._Rkind]
   CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
   write(out_unitp,*) 'NAC'
   CALL Write_RMat(NAC%d1(:,:,1),out_unitp,6,name_info='NAC')
@@ -975,7 +975,7 @@ SUBROUTINE test2_Vib_adia
   DO iq=0,nq
     Qact = [4.0_Rkind+iq*dQ]
     CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
-    write(out_unitp,*) Qact,'Ene',PotVal%d0
+    write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i),i=1,QML_get_nsurf_FROM_dnMat(PotVal))
     write(out_unitp,*) Qact,'NAC1',NAC%d1
   END DO
 

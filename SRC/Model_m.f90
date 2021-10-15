@@ -87,8 +87,8 @@ MODULE Model_m
     !   identical to QM%nsurf and QM%ndim ones respectively.
     integer                           :: nsurf       = 0
     integer                           :: ndim        = 0
-    CLASS (QML_Empty_t), allocatable :: QM
-    TYPE(QML_Basis_t),    allocatable :: Basis ! Basis for the adiabatic separation between coordinates
+    CLASS (QML_Empty_t),  allocatable :: QM
+    TYPE (QML_Basis_t),   allocatable :: Basis ! Basis for the adiabatic separation between coordinates
   END TYPE Model_t
 
   !real (kind=Rkind)                     :: step = ONETENTH**4 ! model TWOD => 0.4e-7 (nderiv=2)
@@ -161,14 +161,17 @@ CONTAINS
     ! local variable
     integer, parameter :: max_act = 10
     integer :: ndim,nsurf,nderiv,option,printlevel,nb_Channels
-    logical :: adiabatic,numeric,PubliUnit,read_nml,Vib_adia
+    logical :: adiabatic,numeric,PubliUnit,read_nml
+    logical :: Vib_adia,print_EigenVec_Grid,print_EigenVec_Basis
+
     character (len=20) :: pot_name
     integer :: err_read,nb_act
     integer :: list_act(max_act)
 
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
-                         read_nml,printlevel,Vib_adia,nb_Channels,list_act
+                         read_nml,printlevel,Vib_adia,nb_Channels,list_act,     &
+                         print_EigenVec_Grid,print_EigenVec_Basis
 
 !    ! Default values defined
     printlevel  = 0
@@ -179,6 +182,9 @@ CONTAINS
     Vib_adia    = QModel_inout%Vib_adia
     nb_Channels = 0
     list_act(:) = 0
+
+    print_EigenVec_Grid  = .FALSE.
+    print_EigenVec_Basis = .FALSE.
 
     pot_name    = 'morse'
     numeric     = .FALSE.
@@ -207,17 +213,20 @@ CONTAINS
 
     !write(out_unitp,nml=potential)
 
-    read_nml1                 = read_nml
+    read_nml1                         = read_nml
 
-    QModel_inout%option       = option
-    print_level  = printlevel ! from them module QMLLib_NumParameters_m.f90
-    QModel_inout%ndim         = ndim
-    QModel_inout%nsurf        = nsurf
-    QModel_inout%adiabatic    = adiabatic
-    QModel_inout%numeric      = numeric
-    QModel_inout%pot_name     = trim(pot_name)
-    !QModel_inout%pot_name    = strdup(pot_name) ! panic with nagfor !!!
-    QModel_inout%PubliUnit    = PubliUnit
+    QModel_inout%option               = option
+    print_level                       = printlevel ! from them module QMLLib_NumParameters_m.f90
+    QModel_inout%ndim                 = ndim
+    QModel_inout%nsurf                = nsurf
+    QModel_inout%adiabatic            = adiabatic
+    QModel_inout%numeric              = numeric
+    QModel_inout%pot_name             = trim(pot_name)
+    !QModel_inout%pot_name            = strdup(pot_name) ! panic with nagfor !!!
+    QModel_inout%PubliUnit            = PubliUnit
+
+    QModel_inout%print_EigenVec_Grid  = print_EigenVec_Grid
+    QModel_inout%print_EigenVec_Basis = print_EigenVec_Basis
 
 
     IF (Vib_adia) THEN
@@ -438,6 +447,9 @@ CONTAINS
 
     !read_param_loc = (read_param_loc .AND. read_nml) ! this enables to not read the next namelist when read_param_loc=t
 
+    !CALL QModel_in%Write_QModel(nio=out_unitp)
+
+
     CALL string_uppercase_TO_lowercase(pot_name_loc)
     IF (Print_init_loc) write(out_unitp,*) 'pot_name_loc: ',pot_name_loc
 
@@ -484,10 +496,17 @@ CONTAINS
       !!    A--------------H-----X--------------------B
       !!     <--------------QQ----------------------->
       !!                    <-q->
+      !! ref: Dana Codruta Marinica, Marie-Pierre Gaigeot, Daniel Borgis,
+      !!    Chemical Physics Letters 423 (2006) 390–394
+      !!    DOI: 10.1016/j.cplett.2006.04.007
       !! ref:  Eq 3.79 of J. Beutier, thesis.
+      !!
+      !! remark: when option=2 is selected, a contribution is added along QQ:
+      !!    Dm.exp(-betam.(QQ-QQm)) + Dp.exp(+betap.(QQ-QQp))
+      !!
       !! === END README ==
       allocate(QML_LinearHBond_t :: QModel%QM)
-      QModel%QM = Init_QML_LinearHBond(QModel_in,read_param=read_nml,   &
+      QModel%QM = Init_QML_LinearHBond(QModel_in,read_param=read_nml,           &
                                        nio_param_file=nio_loc)
 
     CASE ('henonheiles')
@@ -500,8 +519,8 @@ CONTAINS
       !! ref:  parameters taken from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
       !! === END README ==
       allocate(QML_HenonHeiles_t :: QModel%QM)
-      QModel%QM = Init_QML_HenonHeiles(QModel_in,                      &
-                        read_param=read_nml,nio_param_file=nio_loc)
+      QModel%QM = Init_QML_HenonHeiles(QModel_in,                               &
+                                       read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('tully')
       !! === README ==
@@ -514,8 +533,7 @@ CONTAINS
       !! ref:  Tully, J. Chem. Phys. V93, pp15, 1990
       !! === END README ==
       allocate(QML_Tully_t :: QModel%QM)
-      QModel%QM = Init_QML_Tully(QModel_in,read_param=read_nml,  &
-                                  nio_param_file=nio_loc)
+      QModel%QM = Init_QML_Tully(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('1dsoc','1dsoc_1s1t')
       !! === README ==
@@ -529,8 +547,8 @@ CONTAINS
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
       !! === END README ==
       allocate(QML_OneDSOC_1S1T_t :: QModel%QM)
-      QModel%QM = Init_QML_OneDSOC_1S1T(QModel_in,                    &
-                       read_param=read_nml,nio_param_file=nio_loc)
+      QModel%QM = Init_QML_OneDSOC_1S1T(QModel_in,                              &
+                                        read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('1dsoc_2s1t')
       !! === README ==
@@ -543,8 +561,8 @@ CONTAINS
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
       !! === END README ==
       allocate(QML_OneDSOC_2S1T_t :: QModel%QM)
-      QModel%QM = Init_QML_OneDSOC_2S1T(QModel_in,                    &
-                       read_param=read_nml,nio_param_file=nio_loc)
+      QModel%QM = Init_QML_OneDSOC_2S1T(QModel_in,                              &
+                                        read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('phenol')
       !! === README ==
@@ -571,8 +589,7 @@ CONTAINS
       !! ref: A. Ferretti, G. Granucci, A. Lami, M. Persico, G. Villani, J. Chem. Phys. 104, 5517 (1996); https://doi.org/10.1063/1.471791
       !! === END README ==
       allocate(QML_TwoD_t :: QModel%QM)
-      QModel%QM = Init_QML_TwoD(QModel_in,read_param=read_nml,  &
-                                  nio_param_file=nio_loc)
+      QModel%QM = Init_QML_TwoD(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('psb3')
       !! === README ==
@@ -589,8 +606,7 @@ CONTAINS
       !!        https://pubs.acs.org/doi/10.1021/acs.jctc.0c00679
       !! === END README ==
       allocate(QML_PSB3_t :: QModel%QM)
-      QModel%QM = Init_QML_PSB3(QModel_in,read_param=read_nml,  &
-                                  nio_param_file=nio_loc)
+      QModel%QM = Init_QML_PSB3(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('retinal_jpcb2000','retinal_cp2000')
       !! === README ==
@@ -599,16 +615,28 @@ CONTAINS
       !! ndim      = 2
       !! nsurf     = 2
       !! ref:  S. Hahn, G. Stock / Chemical Physics 259 (2000) 297-312.
-      !!              doi: 10.1016/S0301-0104(00)00201-9'
+      !!              doi: 10.1016/S0301-0104(00)00201-9
       !! === END README ==
+
       allocate(QML_Retinal_JPCB2000_t :: QModel%QM)
-      QModel%QM = Init_QML_Retinal_JPCB2000(QModel_in,                &
-                       read_param=read_nml,nio_param_file=nio_loc)
+      QModel%QM = Init_QML_Retinal_JPCB2000(QModel_in,                          &
+                                            read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hono')
       allocate(QML_HONO_t :: QModel%QM)
-      QModel%QM = Init_QML_HONO(QModel_in,read_param=read_nml,  &
-                                  nio_param_file=nio_loc)
+      QModel%QM = Init_QML_HONO(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+      !! === README ==
+      !! Model for the HONO.
+      !! pot_name  = 'HONO'
+      !! ndim      = 6
+      !! nsurf     = 1
+      !! ref1:  F. Richter, M. Hochlaf, P. Rosmus, F. Gatti, and H.-D. Meyer,
+      !!        J. Chem. Phys. 120, 1306 (2004).
+      !!       doi: 10.1063/1.1632471
+      !! ref2: F. Richter, F. Gatti, C. Léonard, F. Le Quéré, and H.-D. Meyer,
+      !!       J. Chem. Phys. 127, 164315 (2007)
+      !!       doi: 10.1063/1.2784553
+      !! === END README ==
 
     CASE ('hno3')
       allocate(QML_HNO3_t :: QModel%QM)
@@ -710,6 +738,8 @@ CONTAINS
         write(out_unitp,*) ' This model/potential is unknown. pot_name: ',pot_name_loc
         STOP 'STOP in Init_Model: Other potentials have to be done'
     END SELECT
+
+    CALL QModel%QM%Write_QModel(nio=out_unitp)
 
     IF (present(ndim)) THEN
       IF (ndim > QModel%QM%ndim) THEN
@@ -1028,10 +1058,11 @@ CONTAINS
     logical,            intent(in),    optional  :: numeric
 
     ! local variables
-    integer                    :: nderiv_loc
+    integer                    :: i,nderiv_loc
     TYPE (dnMat_t)             :: Vec_loc,NAC_loc,PotVal_dia,PotVal_loc
     logical                    :: numeric_loc,adia_loc
     logical                    :: PF ! phase_following
+    !real (kind=Rkind), allocatable :: G(:,:)
 
     integer :: numeric_option = 3   ! 0 old (up to 2d derivatives
                                     ! 3 version up to 3d derivatives less points than 4
@@ -1088,7 +1119,8 @@ CONTAINS
     !CALL QML_Write_dnMat(PotVal_dia,nio=out_unitp)
 
     IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
-    CALL dia_TO_adia(PotVal_dia,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,PF,nderiv_loc)
+    CALL dia_TO_adia(PotVal_dia,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,      &
+                     PF,nderiv_loc,type_diag=1)
 
     CALL QML_sub_Reduced_dnMat2_TO_dnMat1(PotVal,PotVal_loc,lb=1,ub=QModel%QM%nb_Channels)
 
@@ -1100,6 +1132,9 @@ CONTAINS
     IF (present(NAC)) THEN
       CALL QML_sub_Reduced_dnMat2_TO_dnMat1(NAC,NAC_loc,lb=1,ub=QModel%QM%nb_Channels)
     END IF
+
+    ! print the Vec%d0 if required
+    CALL Write_Vec(Q,Vec_loc,QModel,nio=out_unitp)
 
     CALL QML_dealloc_dnMat(NAC_loc)
     CALL QML_dealloc_dnMat(Vec_loc)
@@ -1202,7 +1237,10 @@ CONTAINS
 !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING ',name_sub
-      write(out_unitp,*) '   nderiv    ',nderiv
+      write(out_unitp,*) '   nderiv:       ',nderiv
+      write(out_unitp,*) '   present(NAC): ',present(NAC)
+      write(out_unitp,*) '   present(Vec): ',present(Vec)
+
       flush(out_unitp)
     END IF
 
@@ -1254,7 +1292,6 @@ CONTAINS
     END IF
 
     CALL QModel%QM%EvalPot_QModel(Mat_OF_PotDia,dnQ,nderiv=nderiv)
-
 
     PotVal = Mat_OF_PotDia ! transfert the potential and its derivatives to the matrix form (PotVal)
 
@@ -1636,7 +1673,7 @@ CONTAINS
       CALL Eval_Pot_Numeric_adia_old(QModel,Q,PotVal,nderiv,Vec,NAC)
     CASE (3)
       CALL Eval_Pot_Numeric_adia_v3(QModel,Q,PotVal,nderiv,Vec,NAC)
-    CASE (4)
+    !CASE (4)
     !  CALL Eval_Pot_Numeric_adia_v4(QModel,Q,PotVal,nderiv,Vec,NAC)
     CASE Default
       CALL Eval_Pot_Numeric_adia_old(QModel,Q,PotVal,nderiv,Vec,NAC)
@@ -1802,8 +1839,6 @@ CONTAINS
 
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_adia_v3')
 
-    !write(6,*) 'coucou Eval_Pot_Numeric_adia_v3' ; flush(6)
-
 
     IF (QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
       CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
@@ -1831,6 +1866,8 @@ CONTAINS
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0,vec=Vec_loc0)
+
+
 
     CALL FiniteDiff_AddMat_TO_dnMat(PotVal,PotVal_loc0%d0,option=3)
     CALL FiniteDiff_AddMat_TO_dnMat(Vec,   Vec_loc0%d0,   option=3)
@@ -1930,7 +1967,7 @@ CONTAINS
     CALL QML_dealloc_dnMat(Vec_loc0)
 
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
-  SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,nderiv)
+  SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,nderiv,type_diag)
     USE QMLLib_diago_m
     IMPLICIT NONE
 
@@ -1940,6 +1977,7 @@ CONTAINS
     logical, intent(in)                      :: Phase_Following
 
     integer, intent(in), optional            :: nderiv
+    integer, intent(in), optional            :: type_diag
 
     ! local variable
     integer                        :: i,j,k,id,jd,kd,nderiv_loc,ndim,nsurf
@@ -1952,7 +1990,8 @@ CONTAINS
 
     !test DIAG_dnMat
     TYPE (dnMat_t)              :: dnVec,dnDiag,dnMat
-    integer                     :: type_diag = 2
+    integer                     :: type_diag_loc = 2    ! tred+tql
+    !integer                     :: type_diag_loc = 1 ! jacobi
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='dia_TO_adia'
@@ -1960,6 +1999,7 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
+    IF (present(type_diag))  type_diag_loc = type_diag
 
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING ',name_sub
@@ -1967,7 +2007,7 @@ CONTAINS
       !n = size(PotVal_dia%d0,dim=1)
       write(out_unitp,*) 'max Val odd-even',maxval(abs(PotVal_dia%d0(1::2,2::2)))
       write(out_unitp,*) 'max Val even-odd',maxval(abs(PotVal_dia%d0(2::2,1::2)))
-      write(out_unitp,*) 'type_diag',type_diag
+      write(out_unitp,*) 'type_diag_loc',type_diag_loc
       flush(out_unitp)
     END IF
 
@@ -1999,7 +2039,9 @@ CONTAINS
 
        allocate(Eig(nsurf))
 
-       CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,nsurf,sort=1,phase=.TRUE.,type_diag=type_diag)
+       CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,nsurf,sort=1,phase=.TRUE.,type_diag=type_diag_loc)
+       !write(6,*) 'Eig (full diag)',Eig(1:2)
+       !CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,n=2,sort=1,phase=.TRUE.,type_diag=5)
 
        deallocate(Eig)
 
@@ -2010,7 +2052,7 @@ CONTAINS
 
 
     CALL QML_DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,                 &
-                        dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag)
+                        dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag_loc)
 
     IF (Phase_Following) Vec0%d0 = Vec%d0
 
@@ -2097,16 +2139,18 @@ CONTAINS
     !CALL QML_Write_dnS(dnHB(1),6,info='dnHB',all_type=.TRUE.)
     !write(6,*) 'coucou dnHB: done',ib ; flush(6)
     DO jb=1,nb
-      dnHij = dot_product(QModel%Basis%d0gb(:,jb),dnHB(:))
+      IF (QModel%Basis%tab_symab(ib) == QModel%Basis%tab_symab(jb)) THEN
+        dnHij = dot_product(QModel%Basis%d0gb(:,jb),dnHB(:))
+      ELSE
+        dnHij = ZERO
+      END IF
       CALL QML_sub_dnS_TO_dnMat(dnHij,dnH,jb,ib)
     END DO
   END DO
 
   dnH = QML_SYM_dnMat(dnH)
 
-  !dnH%d0(1::2,2::2) = ZERO
-  !dnH%d0(2::2,1::2) = ZERO
-  !CALL Write_RMat(H,6,5,name_info='H')
+  !CALL Write_RMat(dnH%d0,6,5,name_info='H')
 
   END SUBROUTINE Eval_dnHVib_ana
 
@@ -2176,6 +2220,62 @@ CONTAINS
     END IF
 
   END SUBROUTINE Eval_Func
+
+  SUBROUTINE Write_Vec(Q,Vec,QModel,nio)
+  USE QMLLib_UtilLib_m
+  USE AdiaChannels_Basis_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in)              :: Q(:)
+    TYPE (dnMat_t),     intent(in)              :: Vec
+    TYPE (Model_t),     intent(in)              :: QModel
+    integer,            intent(in), optional    :: nio
+
+    integer :: i,nio_loc
+    real (kind=Rkind), allocatable :: G(:,:)
+
+    IF (present(nio)) THEN
+      nio_loc = nio
+    ELSE
+      nio_loc = out_unitp
+    END IF
+
+    CALL check_alloc_QM(QModel,'Write_Vec')
+
+    IF (.NOT. QModel%QM%print_EigenVec_Basis .AND. .NOT. QModel%QM%print_EigenVec_Grid) RETURN
+
+    IF (QML_Check_NotAlloc_dnMat(Vec,nderiv=0)) THEN
+        write(nio_loc,*) '-----------------------------------------------'
+        write(nio_loc,*) 'Vec%d0 cannot be printed, it is not allocated'
+        write(nio_loc,*) '-----------------------------------------------'
+    ELSE
+
+      IF (QModel%QM%print_EigenVec_Basis) THEN
+        write(nio_loc,*) '-----------------------------------------------'
+        DO i=1,QModel%Basis%nb
+          write(nio_loc,*) 'wfb',Q,i,Vec%d0(i,1:QModel%QM%nb_Channels)
+        END DO
+      END IF
+
+      IF (QModel%QM%print_EigenVec_Grid .AND. QModel%QM%Vib_adia) THEN
+        write(nio_loc,*) '-----------------------------------------------'
+        allocate(G(QModel%Basis%nq,QModel%QM%nb_Channels))
+        DO i=1,QModel%QM%nb_Channels
+          CALL BasisTOGrid_Basis(G(:,i),Vec%d0(:,i),QModel%Basis)
+        END DO
+        DO i=1,QModel%Basis%nq
+          write(nio_loc,*) 'wfg',Q,QModel%Basis%x(i),G(i,:)
+        END DO
+
+        deallocate(G)
+
+      END IF
+      write(nio_loc,*) '-----------------------------------------------'
+      flush(nio_loc)
+    END IF
+
+  END SUBROUTINE Write_Vec
+
 
   SUBROUTINE Write_Model(QModel,nio)
   USE QMLLib_UtilLib_m
