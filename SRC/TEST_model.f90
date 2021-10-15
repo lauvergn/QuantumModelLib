@@ -33,7 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  CALL test_NO3_test() ; stop
+  !CALL test_NO3_test() ; stop
 
   !CALL test_PH4() ; stop
 
