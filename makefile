@@ -10,7 +10,7 @@
 #F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -259,7 +259,7 @@ OBJ_QML   = $(DIROBJ)/Empty_m.o \
                  $(DIROBJ)/Template_m.o $(DIROBJ)/Test_m.o \
                  $(DIROBJ)/H2NSi_m.o $(DIROBJ)/H2SiN_m.o \
                  $(DIROBJ)/HNNHp_m.o $(DIROBJ)/HONO_m.o \
-                 $(DIROBJ)/HNO3_m.o \
+                 $(DIROBJ)/HNO3_m.o $(DIROBJ)/NO3_m.o \
                  $(DIROBJ)/CH5_m.o $(DIROBJ)/PH4_m.o \
                  $(DIROBJ)/HOO_DMBE_m.o \
                  $(DIROBJ)/H3_m.o \
@@ -411,6 +411,9 @@ $(DIROBJ)/HONO_m.o:$(DIRModel)/HONO_m.f90
 
 $(DIROBJ)/HNO3_m.o:$(DIRModel)/HNO3_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/HNO3_m.f90
+
+$(DIROBJ)/NO3_m.o:$(DIRModel)/NO3_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/NO3_m.f90
 
 $(DIROBJ)/CH5_m.o:$(DIRModel)/CH5_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/CH5_m.f90
@@ -575,6 +578,7 @@ $(DIROBJ)/PSB3_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/Retinal_JPCB2000_m.o:  $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/HONO_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/HNO3_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/NO3_m.o:               $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/HOO_DMBE_m.o:          $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/H3_m.o:                $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/CH5_m.o:               $(DIROBJ)/Empty_m.o $(OBJ_lib)

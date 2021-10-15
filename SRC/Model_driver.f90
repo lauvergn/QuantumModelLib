@@ -24,6 +24,7 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
+  !$ USE omp_lib
   IMPLICIT NONE
 
   integer,                intent(inout)     :: ndim,nsurf
@@ -53,6 +54,7 @@ SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
+  !$ USE omp_lib
   IMPLICIT NONE
 
   integer,                intent(inout)     :: ndim,nsurf
@@ -400,6 +402,7 @@ SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
+  !$ USE omp_lib
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -435,6 +438,7 @@ SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
+  !$ USE omp_lib
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -482,6 +486,7 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
+  !$ USE omp_lib
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -530,6 +535,7 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
   USE QMLLib_UtilLib_m
   USE Model_m
   USE QMLdnSVM_dnMat_m
+  !$ USE omp_lib
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -589,6 +595,7 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
+  !$ USE omp_lib
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -637,6 +644,7 @@ SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
+  !$ USE omp_lib
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -694,6 +702,7 @@ SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
+  !$ USE omp_lib
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf
@@ -742,6 +751,7 @@ SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
+  !$ USE omp_lib
   IMPLICIT NONE
 
   integer,                intent(in)        :: ndim,nsurf

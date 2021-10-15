@@ -53,6 +53,7 @@ MODULE Model_m
   USE QML_H2SiN_m
   USE QML_H2NSi_m
   USE QML_HNO3_m
+  USE QML_NO3_m
   USE QML_CH5_m
   USE QML_PH4_m
 
@@ -355,6 +356,7 @@ CONTAINS
     ELSE
       QModel_in%option = -1
     END IF
+    !IF (Print_init_loc) write(out_unitp,*) 'option: ',QModel_in%option
 
     IF (present(Vib_adia)) THEN
       QModel_in%Vib_adia = Vib_adia
@@ -612,7 +614,10 @@ CONTAINS
       allocate(QML_HNO3_t :: QModel%QM)
       QModel%QM = Init_QML_HNO3(QModel_in,read_param=read_nml,  &
                                   nio_param_file=nio_loc)
-
+    CASE ('no3')
+      allocate(QML_NO3_t :: QModel%QM)
+      QModel%QM = Init_QML_NO3(QModel_in,read_param=read_nml,  &
+                               nio_param_file=nio_loc)
     CASE ('ch5')
       !! === README ==
       !! H + CH4 -> H-H + CH3 potential
