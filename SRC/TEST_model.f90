@@ -33,6 +33,8 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test_NO3_test() ; stop
+
   !CALL test_PH4() ; stop
 
   !CALL test_Vib_adia() ; stop
@@ -2183,3 +2185,50 @@ SUBROUTINE test_PSB3_Retinal2000_test
   deallocate(q_PSB3)
 
 END SUBROUTINE test_PSB3_Retinal2000_test
+SUBROUTINE test_NO3_test
+
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: NAC ! for non adiabatic couplings
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' NO3 potential'
+  write(out_unitp,*) ' With units: Atomic Units  ??? '
+  write(out_unitp,*) '---------------------------------------------'
+  CALL Init_Model(QModel,pot_name='NO3',Print_init=.TRUE.)
+  CALL Write0_Model(QModel)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+STOP
+  CALL Init_Model(QModel,pot_name='NO3',PubliUnit=.FALSE.)
+
+  allocate(q(QModel%QM%ndim))
+
+  q(:) = ZERO
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  write(out_unitp,*) '---------------------------------------------'
+
+  QModel%QM%adiabatic = .TRUE.
+  write(out_unitp,*) 'ADIABATIC potential'
+  write(out_unitp,*) 'Evaluated in', q
+
+  CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(q)
+
+END SUBROUTINE test_NO3_test
