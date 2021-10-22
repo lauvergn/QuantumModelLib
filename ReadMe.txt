@@ -157,15 +157,31 @@
 =========================================
 =========================================
 =========================================
-      !! pot_name  = 'buck'
+      !! pot_name  = 'H2'
 =========================================
-      !! Buckingham potential: V(R) = A*exp(-B*R)-C/R^6
-      !! pot_name  = 'buck'
+      !! H2 potential: V(R) = Sum_i a_i * (R-Req)**(i-1)
+      !! pot_name  = 'H2'
       !! ndim      = 1
       !! nsurf     = 1
-      !! reduced mass      = 36423.484024390622 au
-      !! remark: default parameters for Ar2
-      !! ref:  R.A. Buckingham, Proc. R. Soc. A Math. Phys. Eng. Sci. 168 (1938) 264–283. doi:10.1098/rspa.1938.0173
+      !! reduced mass      = 1837.1526464003414/2 au
+      !! Level: CCSD(T)-F12B/VTZ-F12 (with molpro 2010)
+=========================================
+=========================================
+=========================================
+=========================================
+      !! pot_name  = 'PSB3'
+=========================================
+      !! Model for the photo-isomerization of the penta-2,4-dieniminium (PSB3) cation.
+      !! pot_name  = 'PSB3'
+      !! ndim      = 3
+      !! nsurf     = 2
+      !! remarks: two options are possible (option = 1,2)
+      !! The default is option=1 (ref2).
+      !! The parameters for option=2 come from the following reference.
+      !! ref1: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019).
+      !!         https://doi.org/10.1021/acs.jpca.8b10010
+      !! ref2: 1 E. Marsili, M. Olivucci, D. Lauvergnat, and F. Agostini, JCTC 16, 6032 (2020).
+      !!        https://pubs.acs.org/doi/10.1021/acs.jctc.0c00679
 =========================================
 =========================================
 =========================================
@@ -257,7 +273,15 @@
 =========================================
 =========================================
 =========================================
+      !! pot_name  = 'buck'
 =========================================
+      !! Buckingham potential: V(R) = A*exp(-B*R)-C/R^6
+      !! pot_name  = 'buck'
+      !! ndim      = 1
+      !! nsurf     = 1
+      !! reduced mass      = 36423.484024390622 au
+      !! remark: default parameters for Ar2
+      !! ref:  R.A. Buckingham, Proc. R. Soc. A Math. Phys. Eng. Sci. 168 (1938) 264–283. doi:10.1098/rspa.1938.0173
 =========================================
 =========================================
 =========================================
@@ -359,22 +383,5 @@
       !! Reduced masses(:)      = (/ 20000., 6667. /) au
       !! remark: The parameter values have been modified
       !! ref: A. Ferretti, G. Granucci, A. Lami, M. Persico, G. Villani, J. Chem. Phys. 104, 5517 (1996); https://doi.org/10.1063/1.471791
-=========================================
-=========================================
-=========================================
-=========================================
-      !! pot_name  = 'PSB3'
-=========================================
-      !! Model for the photo-isomerization of the penta-2,4-dieniminium (PSB3) cation.
-      !! pot_name  = 'PSB3'
-      !! ndim      = 3
-      !! nsurf     = 2
-      !! remarks: two options are possible (option = 1,2)
-      !! The default is option=1 (ref2).
-      !! The parameters for option=2 come from the following reference.
-      !! ref1: E. Marsili, M. H. Farag, X. Yang, L. De Vico, and M. Olivucci, JPCA, 123, 1710–1719 (2019).
-      !!         https://doi.org/10.1021/acs.jpca.8b10010
-      !! ref2: 1 E. Marsili, M. Olivucci, D. Lauvergnat, and F. Agostini, JCTC 16, 6032 (2020).
-      !!        https://pubs.acs.org/doi/10.1021/acs.jctc.0c00679
 =========================================
 =========================================

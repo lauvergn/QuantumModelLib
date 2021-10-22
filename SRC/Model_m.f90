@@ -41,6 +41,7 @@ MODULE Model_m
   USE QML_Template_m
   USE QML_Test_m
   USE QML_Morse_m
+  USE QML_H2_m
 
   USE QML_HenonHeiles_m
   USE QML_Tully_m
@@ -467,6 +468,19 @@ CONTAINS
       allocate(QML_Morse_t :: QModel%QM)
       QModel%QM = Init_QML_Morse(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
+    CASE ('h2')
+      !! === README ==
+      !! H2 potential: V(R) = Sum_i a_i * (R-Req)**(i-1)
+      !! pot_name  = 'H2'
+      !! ndim      = 1
+      !! nsurf     = 1
+      !! reduced mass      = 1837.1526464003414/2 au
+      !! Level: CCSD(T)-F12B/VTZ-F12 (with molpro 2010)
+      !! === END README ==
+
+      allocate(QML_H2_t :: QModel%QM)
+      QModel%QM = Init_QML_H2(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
     CASE ('sigmoid')
       !! sigmoid function: A * 1/2(1+e*tanh((x-B)/C))  remark: e=+/-1
       allocate(QML_Sigmoid_t :: QModel%QM)
@@ -838,7 +852,6 @@ CONTAINS
     IF (read_param_loc .AND. nio_loc /= in_unitp) THEN
        close(unit=nio_loc)
     END IF
-
 
   END SUBROUTINE Init_Model
 

@@ -10,7 +10,7 @@
 #F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -256,7 +256,7 @@ DIRModel  = $(DIRSRC)/QML
 DIRAdia   = $(DIRSRC)/AdiaChannels
 #
 OBJ_QML   = $(DIROBJ)/Empty_m.o \
-                 $(DIROBJ)/Sigmoid_m.o $(DIROBJ)/Morse_m.o $(DIROBJ)/Buck_m.o \
+                 $(DIROBJ)/Sigmoid_m.o $(DIROBJ)/Morse_m.o $(DIROBJ)/H2_m.o $(DIROBJ)/Buck_m.o \
                  $(DIROBJ)/Template_m.o $(DIROBJ)/Test_m.o \
                  $(DIROBJ)/H2NSi_m.o $(DIROBJ)/H2SiN_m.o \
                  $(DIROBJ)/HNNHp_m.o $(DIROBJ)/HONO_m.o \
@@ -388,6 +388,9 @@ $(DIROBJ)/Empty_m.o:$(DIRModel)/Empty_m.f90
 
 $(DIROBJ)/Morse_m.o:$(DIRModel)/Morse_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Morse_m.f90
+
+$(DIROBJ)/H2_m.o:$(DIRModel)/H2_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/H2_m.f90
 
 $(DIROBJ)/Template_m.o:$(DIRModel)/Template_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Template_m.f90
@@ -562,13 +565,14 @@ $(DIROBJ)/Model_m.o: $(DIROBJ)/Basis_m.o $(OBJ_lib) $(OBJ_QML)
 $(DIROBJ)/MakeHinact_m.o: $(DIROBJ)/Basis_m.o $(ModLib)
 
 
-$(DIROBJ)/Empty_m.o: $(OBJ_lib)
-$(DIROBJ)/Morse_m.o: $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/Buck_m.o: $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/Empty_m.o:   $(OBJ_lib)
+$(DIROBJ)/Morse_m.o:   $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/H2_m.o:      $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/Buck_m.o:    $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/Sigmoid_m.o: $(DIROBJ)/Empty_m.o $(OBJ_lib)
 
-$(DIROBJ)/Template_m.o: $(OBJ_lib) $(DIROBJ)/Empty_m.o $(DIROBJ)/Morse_m.o
-$(DIROBJ)/Test_m.o: $(OBJ_lib) $(DIROBJ)/Empty_m.o
+$(DIROBJ)/Template_m.o:          $(OBJ_lib) $(DIROBJ)/Empty_m.o $(DIROBJ)/Morse_m.o
+$(DIROBJ)/Test_m.o:              $(OBJ_lib) $(DIROBJ)/Empty_m.o
 
 $(DIROBJ)/HenonHeiles_m.o:       $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/Tully_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)

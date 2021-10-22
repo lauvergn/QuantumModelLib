@@ -595,8 +595,8 @@ MODULE QML_H3_m
   IMPLICIT NONE
 
         integer,          intent(in)    :: N,IJ
-        real(kind=Rkind), intent(in)    :: X(3)
-        real(kind=Rkind), intent(in)    :: Y,F(3),W(3)
+        real(kind=Rkind), intent(in)    :: X(N)
+        real(kind=Rkind), intent(in)    :: Y,F(N),W(N)
         real(kind=Rkind), intent(inout) :: TAB(3)
 
         INTEGER          :: I,K,MI,KI
@@ -629,6 +629,7 @@ MODULE QML_H3_m
           I = 1
         END IF
         MI=(I-1)*IJ+1
+
         KI=MI+IJ
         FLK=X(I+1)-X(I)
         AA=(W(MI)*(X(I+1)-Y)**3 + W(KI)*(Y-X(I))**3)/(SIX*FLK)
