@@ -33,6 +33,9 @@
 PROGRAM main_pot
   IMPLICIT NONE
 
+  !CALL test_Phenol_ADia() ; stop
+
+
   CALL test_PH4()
   CALL test_HBond()
   CALL test_1DSOC_1S1T()
@@ -444,11 +447,30 @@ SUBROUTINE test_Phenol_ADia
   allocate(NAC(nsurf,nsurf,ndim))
 
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
+  CALL set_Qmodel_Phase_Checking(.FALSE.)
 
-
-  Q = (/1._real64,-0.5_real64 /)
+  Q = [1._real64,-0.5_real64 ]
   CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
 
+  write(6,*) ' Q:',Q
+  write(6,*) ' Adiabatic potential as a 3x3 matrix:'
+  write(6,'(3f12.8)') V
+  write(6,*) ' Adiabatic gradient. Each component as a 3x3 matrix:'
+  DO i=1,ndim
+    write(6,*) ' Component:',i
+    write(6,'(3f12.8)') g(:,:,i)
+  END DO
+
+  write(6,*) ' NAC. Each component as a 3x3 matrix:'
+  DO i=1,ndim
+    write(6,*) ' Component:',i
+    write(6,'(3f12.8)') NAC(:,:,i)
+  END DO
+
+  Q = [1.1_real64,-0.5_real64 ]
+  CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
+
+  write(6,*) ' Q:',Q
   write(6,*) ' Adiabatic potential as a 3x3 matrix:'
   write(6,'(3f12.8)') V
   write(6,*) ' Adiabatic gradient. Each component as a 3x3 matrix:'

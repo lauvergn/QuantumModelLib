@@ -56,6 +56,7 @@ MODULE QML_Empty_m
     logical :: Cart_TO_Q        = .FALSE. ! to perform the Cartesian to model coordinates
 
     logical :: Phase_Following  = .TRUE.
+    logical :: Phase_Checking   = .TRUE.
     logical :: adiabatic        = .TRUE.
     integer :: option           = 0
     logical :: PubliUnit        = .FALSE. ! when PubliUnit=.TRUE., the units of a reference (publi ...) are used. Default (atomic unit)

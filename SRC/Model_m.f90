@@ -270,7 +270,8 @@ CONTAINS
 
   SUBROUTINE Init_Model(QModel,pot_name,ndim,nsurf,adiabatic,Cart_TO_Q,         &
                         read_param,param_file_name,nio_param_file,              &
-                        option,PubliUnit,Print_init,Vib_adia,Phase_Following)
+                        option,PubliUnit,Print_init,Vib_adia,                   &
+                        Phase_Following,Phase_checking)
   USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
@@ -291,6 +292,7 @@ CONTAINS
 
     logical,             intent(in),    optional :: Vib_adia
     logical,             intent(in),    optional :: Phase_Following
+    logical,             intent(in),    optional :: Phase_checking
 
 
     ! local variables
@@ -378,6 +380,12 @@ CONTAINS
       QModel_in%Phase_Following = Phase_Following
     ELSE
       QModel_in%Phase_Following = .TRUE.
+    END IF
+
+    IF (present(Phase_checking)) THEN
+      QModel_in%Phase_checking = Phase_checking
+    ELSE
+      QModel_in%Phase_checking = .TRUE.
     END IF
 
     IF (present(PubliUnit)) THEN
@@ -956,6 +964,7 @@ CONTAINS
 
   TYPE (dnMat_t)                 :: PotVal_dia,PotVal,Vec,NAC,Mat_diag
   LOGICAL                        :: PF ! phase_following
+  LOGICAL                        :: PC ! phase checking
   real (kind=Rkind), allocatable :: Q(:)
   real (kind=Rkind), allocatable :: d0GGdef_ii(:,:),d0GGdef_aa(:,:),d0GGdef_ai(:,:),d0GGdef_ia(:,:)
 
@@ -980,9 +989,10 @@ CONTAINS
   CALL check_alloc_QM(QModel,name_sub)
 
   PF = QModel%QM%Phase_Following
+  PC = QModel%QM%Phase_Checking
   CALL Eval_dnHVib_ana(QModel,Qact,PotVal_dia,nderiv=2)
   IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
-  CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,PF,nderiv=2)
+  CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,PF,PC,nderiv=2)
 
   !CALL QML_Write_dnMat(PotVal,nio=out_unitp,info='PotVal (adia)')
 
@@ -1075,6 +1085,8 @@ CONTAINS
     TYPE (dnMat_t)             :: Vec_loc,NAC_loc,PotVal_dia,PotVal_loc
     logical                    :: numeric_loc,adia_loc
     logical                    :: PF ! phase_following
+    logical                    :: PC ! phase_checking
+
     !real (kind=Rkind), allocatable :: G(:,:)
 
     integer :: numeric_option = 3   ! 0 old (up to 2d derivatives
@@ -1095,11 +1107,13 @@ CONTAINS
 
   CALL check_alloc_QM(QModel,name_sub)
   PF = QModel%QM%Phase_Following
+  PC = QModel%QM%Phase_Checking
   IF (debug) THEN
     write(out_unitp,*) '  QModel%QM%numeric         ',QModel%QM%numeric
     write(out_unitp,*) '  QModel%QM%adiabatic       ',QModel%QM%adiabatic
     write(out_unitp,*) '  QModel%QM%Vib_adia        ',QModel%QM%Vib_adia
     write(out_unitp,*) '  QModel%QM%Phase_Following ',QModel%QM%Phase_Following
+    write(out_unitp,*) '  QModel%QM%Phase_Checking  ',QModel%QM%Phase_Checking
     flush(out_unitp)
   END IF
 
@@ -1133,7 +1147,7 @@ CONTAINS
 
     IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
     CALL dia_TO_adia(PotVal_dia,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,      &
-                     PF,nderiv_loc,type_diag=1)
+                     PF,PC,nderiv_loc,type_diag=1)
 
     CALL QML_sub_Reduced_dnMat2_TO_dnMat1(PotVal,PotVal_loc,lb=1,ub=QModel%QM%nb_Channels)
 
@@ -1241,7 +1255,7 @@ CONTAINS
     TYPE (dnS_t), allocatable   :: dnQ(:)
     TYPE (dnS_t), allocatable   :: dnX(:,:)
     TYPE (dnS_t), allocatable   :: Mat_OF_PotDia(:,:)
-    logical                     :: PF ! phase_following
+    logical                     :: PF,PC ! phase_following,Phase_Checking
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Eval_Pot_ana'
@@ -1260,7 +1274,7 @@ CONTAINS
     CALL check_alloc_QM(QModel,name_sub)
 
     PF = QModel%QM%Phase_Following
-
+    PC = QModel%QM%Phase_Checking
     IF (debug) write(out_unitp,*) '   adiabatic ',QModel%QM%adiabatic
 
 
@@ -1334,16 +1348,16 @@ CONTAINS
 
       IF (present(Vec)) THEN
         IF (present(NAC)) THEN
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,PF,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,PF,PC,nderiv)
         ELSE
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC_loc,PF,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC_loc,PF,PC,nderiv)
           CALL QML_dealloc_dnMat(NAC_loc)
         END IF
       ELSE
         IF (present(NAC)) THEN
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC,PF,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC,PF,PC,nderiv)
         ELSE
-          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC_loc,PF,nderiv)
+          CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC_loc,PF,PC,nderiv)
           CALL QML_dealloc_dnMat(NAC_loc)
         END IF
         CALL QML_dealloc_dnMat(Vec_loc)
@@ -1980,14 +1994,15 @@ CONTAINS
     CALL QML_dealloc_dnMat(Vec_loc0)
 
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
-  SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,nderiv,type_diag)
+  SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,   &
+                         Phase_checking,nderiv,type_diag)
     USE QMLLib_diago_m
     IMPLICIT NONE
 
     TYPE (dnMat_t), intent(in)               :: PotVal_dia
     TYPE (dnMat_t), intent(inout)            :: PotVal_adia,Vec,Vec0,NAC
 
-    logical, intent(in)                      :: Phase_Following
+    logical, intent(in)                      :: Phase_Following,Phase_checking
 
     integer, intent(in), optional            :: nderiv
     integer, intent(in), optional            :: type_diag
@@ -2063,11 +2078,15 @@ CONTAINS
        !$OMP END CRITICAL (CRIT_dia_TO_adia)
     END IF
 
+    IF (Phase_checking) THEN
+      CALL QML_DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,               &
+                          dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag_loc)
 
-    CALL QML_DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,                 &
-                        dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag_loc)
-
-    IF (Phase_Following) Vec0%d0 = Vec%d0
+      IF (Phase_Following) Vec0%d0 = Vec%d0
+    ELSE
+      CALL QML_DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,               &
+                        dnVec=Vec,dnVecProj=NAC,type_diag=type_diag_loc)
+    END IF
 
     IF (debug) THEN
 

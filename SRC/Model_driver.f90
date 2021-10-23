@@ -398,6 +398,18 @@ SUBROUTINE set_Qmodel_Phase_Following(Phase_Following)
   QuantumModel%QM%Phase_Following = Phase_Following
 
 END SUBROUTINE set_Qmodel_Phase_Following
+SUBROUTINE set_Qmodel_Phase_Checking(Phase_Checking)
+  USE QMLLib_UtilLib_m
+  USE Model_m
+  IMPLICIT NONE
+
+  logical,                intent(in)        :: Phase_Checking
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='set_Qmodel_Phase_Checking in Model_driver.f90')
+
+  QuantumModel%QM%Phase_Checking = Phase_Checking
+
+END SUBROUTINE set_Qmodel_Phase_Checking
 SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m

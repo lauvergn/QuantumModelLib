@@ -1,7 +1,7 @@
 =========================================
 =========================================
  QuantumModelLib* is a free software under LGPL.
-  date: 11/04/2020
+  date: 23/10/2021
 
     Copyright 2016 David Lauvergnat [1]
       with contributions of:
@@ -34,16 +34,16 @@
 
 
  3) In your fortan code
- 3a) Initialization of the potential (see the list below)
+ 3a1) Initialization of the potential (see the list below)
 
         CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
         where
-           ndim       is the number of degree(s) of freedom
-           nsurf      is the number of electronic surface(s) (adiabatic or diabatic)
-           pot_name   is the name of the potential or model (phenol, Tully, HenonHeiles ...)
-           adiabatic  is a logical flag (.TRUE. or .FALSE.)
-           option     enables to select a model with several options (Tully ...)
+           ndim       : the number of degree(s) of freedom [integer]
+           nsurf      : the number of electronic surface(s) (adiabatic or diabatic) [integer]
+           pot_name   : the name of the potential or model (phenol, Tully, HenonHeiles ...) [string of characters]
+           adiabatic  : flag (.TRUE. or .FALSE.) [logical]
+           option     : option, to be able to select a model with several options (Tully ...) [integer]
 
      The list of available models is given below
 
@@ -53,11 +53,18 @@
         CALL sub_Init_Qmodel(ndim,nsurf,'phenol',.FALSE.,0)
 
         It initializes the phenol potential (2D and 3 PES).
+        => Computation of the diabatic surface
 
-        Some extra parameters can be initialized with specific procedures:
-          - Phase_Following (default: .TRUE. ) for the adiabatic calculations:
+ 3a2) Initialization (extra)
+    Some extra parameters can be initialized with specific procedures:
+
+    - Phase_Following (default: .TRUE. ) for the adiabatic calculations:
               CALL set_Qmodel_Phase_Following(Phase_Following)
-          - ...
+
+    - Phase_Checking (default: .TRUE. ) for the adiabatic calculations:
+              CALL set_Qmodel_Phase_Checking(Phase_Checking)
+
+    - ...
 
  3b) Potential energy surface(s), PES, evaluation
 
@@ -269,6 +276,11 @@
       !! refs (option=1):
       !! P. Siegbahn, B. Liu,  J. Chem. Phys. 68, 2457(1978).
       !! D.G. Truhlar and C.J. Horowitz, J. Chem. Phys. 68, 2466 (1978); https://doi.org/10.1063/1.436019
+=========================================
+=========================================
+=========================================
+=========================================
+=========================================
 =========================================
 =========================================
 =========================================
