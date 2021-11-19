@@ -14,7 +14,7 @@ OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 1
+LAPACK = 0
 ## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
 # NVHYP  = 1 : with intrinsic inverse hyperbolic functions
 # NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic ones)
@@ -116,7 +116,13 @@ ifeq ($(F90),ifort)
    else
       F90FLAGS = -O0 $(OMPFLAG) -check all -g -traceback
    endif
-   F90LIB = -mkl -lpthread
+
+   ifeq ($(LAPACK),1)
+     F90LIB = -mkl -lpthread
+     #F90LIB = $(MKLROOT)/lib/libmkl_lapack95_ilp64.a $(MKLROOT)/lib/libmkl_core.a $(MKLROOT)/lib/libmkl_blas95_ilp64.a -lpthread
+   else
+     F90LIB = -lpthread
+   endif
 
    F90_VER = $(shell $(F90) --version | head -1 )
 
@@ -170,17 +176,20 @@ endif
       OMPFLAG = -fopenmp
    endif
    # OS management
-   ifeq ($(OS),Darwin)    # OSX
-      # OSX libs (included lapack+blas)
-      F90LIB = -framework Accelerate
-   else                   # Linux
-      # linux libs
-      F90LIB = -llapack -lblas
-      #
-      # linux libs with mkl and with openmp
-      #F90LIB = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_gnu_thread
-      # linux libs with mkl and without openmp
-      #F90LIB = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_sequential
+   ifeq ($(LAPACK),1)
+     ifeq ($(OS),Darwin)    # OSX
+        # OSX libs (included lapack+blas)
+        F90LIB = -framework Accelerate
+     else                   # Linux
+        # linux libs
+        F90LIB = -llapack -lblas
+        # linux libs with mkl and with openmp
+        #F90LIB = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_gnu_thread
+        # linux libs with mkl and without openmp
+        #F90LIB = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_sequential
+     endif
+   else
+    F90LIB =
    endif
    #
    # opt management
@@ -230,7 +239,7 @@ CPPSHELL_DIAGO   = -D__LAPACK="$(LAPACK)"
 F90_FLAGS = $(F90) $(F90FLAGS)
 LYNK90 = $(F90_FLAGS)
 
- LIBS := $(PESLIB) $(F90LIB) $(ARPACKLIB)
+ LIBS := $(PESLIB) $(ARPACKLIB) $(F90LIB)
  LYNKFLAGS = $(LIBS)
 
 
