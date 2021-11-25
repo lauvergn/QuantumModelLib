@@ -162,10 +162,12 @@ CONTAINS
     real (kind=Rkind),allocatable :: coef(:)
     integer                       :: err_read
     real (kind=Rkind)             :: req
+    integer                       :: n
 
     namelist /Poly1D/ coef,req
 
     allocate(coef(0:max_order))
+    coef = huge(one)
     coef(0:Qmodel%norder)    = Qmodel%coef
     req     = QModel%req
     write(out_unitp,*) 'read Poly1D namelist ...'
@@ -188,9 +190,14 @@ CONTAINS
     END IF
     !write(out_unitp,nml=Poly1D)
 
-    Qmodel%coef   = coef
-    Qmodel%norder = size(coef)-1
-    QModel%req    = req
+    n = count(coef /= huge(one))
+
+    deallocate(Qmodel%coef)
+    allocate(Qmodel%coef(0:n-1))
+
+    Qmodel%coef(0:n-1) = coef(0:n-1)
+    Qmodel%norder      = n-1
+    QModel%req         = req
 
 
   END SUBROUTINE Read_QML_Poly1D
@@ -239,8 +246,9 @@ CONTAINS
     CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
     write(nio,*)
     write(nio,*) '    V(R) = Sum_i C_i * (R-Req)^i'
-    write(nio,*) '  req: ',QModel%coef(:)
-    write(nio,*) '  req: ',QModel%req
+    write(nio,*) '  norder: ',QModel%norder
+    write(nio,*) '  coef:   ',QModel%coef(:)
+    write(nio,*) '  req:    ',QModel%req
     write(nio,*)
     write(nio,*) 'end Poly1D current parameters'
 
