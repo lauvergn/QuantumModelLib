@@ -41,6 +41,7 @@ MODULE Model_m
   USE QML_Template_m
   USE QML_Test_m
   USE QML_Morse_m
+  USE QML_Poly1D_m
   USE QML_H2_m
 
   USE QML_HenonHeiles_m
@@ -475,6 +476,19 @@ CONTAINS
 
       allocate(QML_Morse_t :: QModel%QM)
       QModel%QM = Init_QML_Morse(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('poly1d')
+      !! === README ==
+      !! Polynomial potential: V(R) = sum_i coef(i) * (r-Req)**i
+      !! pot_name  = 'Poly1D'
+      !! ndim      = 1
+      !! nsurf     = 1
+      !! reduced mass      = 1744.60504565084306291455 au
+      !! remark: Default parameters for H-F
+      !! === END README ==
+
+      allocate(QML_Poly1D_t :: QModel%QM)
+      QModel%QM = Init_QML_Poly1D(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('h2')
       !! === README ==

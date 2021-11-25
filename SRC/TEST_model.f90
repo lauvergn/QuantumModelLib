@@ -54,6 +54,7 @@ PROGRAM TEST_model
   CALL test_HenonHeiles()
   CALL test_Buckingham()
   CALL test_Morse()
+  CALL test_Poly1D()
 
   ! Several electronic surfaces
   CALL test_Tully()
@@ -488,7 +489,61 @@ SUBROUTINE test_Morse
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_Morse
+SUBROUTINE test_Poly1D
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+  IMPLICIT NONE
 
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Polynomila potential (H-F parameters)'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  CALL Init_Model(QModel,pot_name='Poly1D',Print_init=.FALSE.)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(q(QModel%QM%ndim))
+  q(:) = QModel%QM%Q0
+
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,'(a,f12.6)') 'R (Bohr)',q(:)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  write(out_unitp,'(a,f12.6)') 'R (Bohr)',q(:)
+  write(out_unitp,*) 'Energy (Hartree)'
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Poly1D_HF')
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(q)
+
+END SUBROUTINE test_Poly1D
 SUBROUTINE test_Buckingham
   USE QMLdnSVM_dnMat_m
   USE Model_m

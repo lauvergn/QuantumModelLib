@@ -265,7 +265,8 @@ DIRModel  = $(DIRSRC)/QML
 DIRAdia   = $(DIRSRC)/AdiaChannels
 #
 OBJ_QML   = $(DIROBJ)/Empty_m.o \
-                 $(DIROBJ)/Sigmoid_m.o $(DIROBJ)/Morse_m.o $(DIROBJ)/H2_m.o $(DIROBJ)/Buck_m.o \
+                 $(DIROBJ)/Sigmoid_m.o $(DIROBJ)/Morse_m.o $(DIROBJ)/Poly1D_m.o \
+                 $(DIROBJ)/H2_m.o $(DIROBJ)/Buck_m.o \
                  $(DIROBJ)/Template_m.o $(DIROBJ)/Test_m.o \
                  $(DIROBJ)/H2NSi_m.o $(DIROBJ)/H2SiN_m.o \
                  $(DIROBJ)/HNNHp_m.o $(DIROBJ)/HONO_m.o \
@@ -397,6 +398,9 @@ $(DIROBJ)/Empty_m.o:$(DIRModel)/Empty_m.f90
 
 $(DIROBJ)/Morse_m.o:$(DIRModel)/Morse_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Morse_m.f90
+
+$(DIROBJ)/Poly1D_m.o:$(DIRModel)/Poly1D_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Poly1D_m.f90
 
 $(DIROBJ)/H2_m.o:$(DIRModel)/H2_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/H2_m.f90
@@ -576,6 +580,7 @@ $(DIROBJ)/MakeHinact_m.o: $(DIROBJ)/Basis_m.o $(ModLib)
 
 $(DIROBJ)/Empty_m.o:   $(OBJ_lib)
 $(DIROBJ)/Morse_m.o:   $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/Poly1D_m.o:   $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/H2_m.o:      $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/Buck_m.o:    $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/Sigmoid_m.o: $(DIROBJ)/Empty_m.o $(OBJ_lib)
