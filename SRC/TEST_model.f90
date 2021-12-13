@@ -37,7 +37,7 @@ PROGRAM TEST_model
 
   !CALL test_Vib_adia() ; stop
   !CALL test2_Vib_adia() ; stop
-  !CALL test_Retinal_JPCB2000() ; stop
+  CALL test_Retinal_JPCB2000() ; stop
   !CALL test_Tully_test() ; stop
   !CALL test_PSB3_test() ; stop
   !CALL test_H3 ; stop
