@@ -471,16 +471,17 @@ CONTAINS
   END SUBROUTINE QML_set_dnS
   SUBROUTINE QML_ReduceDerivatives_dnS2_TO_dnS1(S1,S2,list_act)
     USE QMLLib_NumParameters_m
-    CLASS (dnS_t), intent(inout) :: S1
-    CLASS (dnS_t), intent(in)    :: S2
-    integer,       intent(in)    :: list_act(:)
+    TYPE (dnS_t), intent(inout) :: S1
+    TYPE (dnS_t), intent(in)    :: S2
+    integer,       intent(in)   :: list_act(:)
 
     integer :: err_dnS_loc
     character (len=*), parameter :: name_sub='QML_ReduceDerivatives_dnS2_TO_dnS1'
 
     CALL QML_dealloc_dnS(S1)
 
-    IF (allocated(S2%d1) .AND. (size(list_act) > size(S2%d1)) ) THEN
+    IF (allocated(S2%d1)) THEN
+      IF (size(list_act) > size(S2%d1) ) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' size(list_act) > size(S2%d1)'
         write(out_unitp,*) ' size(list_act) ',size(list_act)
@@ -488,6 +489,7 @@ CONTAINS
         write(out_unitp,*) ' CHECK the fortran!!'
         STOP 'ERROR in QML_ReduceDerivatives_dnS2_TO_dnS1'
       END IF
+    END IF
 
     S1%nderiv = S2%nderiv
 

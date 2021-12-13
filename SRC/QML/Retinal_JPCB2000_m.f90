@@ -254,8 +254,11 @@ MODULE QML_Retinal_JPCB2000_m
     TYPE (dnS_t) :: VBath
     integer      :: i
 
-
-    VBath = HALF*sum( QModel%wi(3:QModel%ndim)*dnQ(3:QModel%ndim)**2 )
+    IF (QModel%ndim > 2) THEN
+      VBath = HALF*sum( QModel%wi(3:QModel%ndim)*dnQ(3:QModel%ndim)**2 )
+    ELSE
+      VBath = ZERO
+    END IF
 
 
     Mat_OF_PotDia(1,1) =             HALF*QModel%W0*(ONE-cos(dnQ(1))) + &
