@@ -34,8 +34,7 @@
 !> @brief Module which makes the initialization, calculation of the Poly1D potential (value, gradient and hessian).
 !!
 !> @author David Lauvergnat
-!> @author Félix MOUHAT
-!! @date 10/07/2019
+!! @date 30/11/2021
 !!
 MODULE QML_Poly1D_m
   USE QML_Empty_m
@@ -245,10 +244,10 @@ CONTAINS
     write(nio,*) 'Poly1D current parameters:'
     CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
     write(nio,*)
-    write(nio,*) '    V(R) = Sum_i C_i * (R-Req)^i'
+    write(nio,*) '    V(R) = Sum_i Coef_i * (R-Req)^i'
     write(nio,*) '  norder: ',QModel%norder
-    write(nio,*) '  coef:   ',QModel%coef(:)
-    write(nio,*) '  req:    ',QModel%req
+    write(nio,*) '  Coef:   ',QModel%coef(:)
+    write(nio,*) '  Req:    ',QModel%req
     write(nio,*)
     write(nio,*) 'end Poly1D current parameters'
 
