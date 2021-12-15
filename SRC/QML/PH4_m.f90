@@ -47,7 +47,7 @@ MODULE QML_PH4_m
   integer, parameter :: ndim      = 1 ! ????
   integer, parameter :: max_ndim  = 9 ! dimension of the system, here 9
 
-  integer, parameter :: max_fit   = 1 + (max_ndim-1) + (max_ndim-1) + (max_ndim-1)**2
+  integer, parameter :: max_fit   = 1 + (max_ndim-1) + (max_ndim-1) + (max_ndim-1)**2 + 5
   integer, parameter :: max_nn    = 20
                                             !Qopt  1  2  3  4  5  6  7  8  9
   integer, parameter :: listQop_fit3(max_ndim) = [-1, 2, 3,-1, 5,-1, 7,-1,-1]
@@ -57,6 +57,7 @@ MODULE QML_PH4_m
   character (len=*), parameter :: base_fit3_Qopt_fileName='InternalData/PH4/fit3/interQ_'
   character (len=*), parameter :: base_fit3_grad_fileName='InternalData/PH4/fit3/interGrad_'
   character (len=*), parameter :: base_fit3_hess_fileName='InternalData/PH4/fit3/interHess_'
+  character (len=*), parameter :: base_fit3_AnHar_fileName='InternalData/PH4/fit3/inter_anharCCSDT-F12_'
 
 !> @brief Derived type in which the PH4 parameters are set-up.
   TYPE, EXTENDS (QML_Empty_t) ::  QML_PH4_t
@@ -71,6 +72,8 @@ MODULE QML_PH4_m
     integer            :: ifunc_Qopt          = 0
     integer            :: ifunc_Grad          = 0
     integer            :: ifunc_Hess          = 0
+    integer            :: ifunc_AnHar         = 0
+
 
     real (kind=Rkind)  :: a(max_fit)          = ZERO
     real (kind=Rkind)  :: b(max_fit)          = ZERO
@@ -80,9 +83,10 @@ MODULE QML_PH4_m
     integer, allocatable :: iQopt_TO_ifunc(:)
     integer, allocatable :: iQgrad_TO_ifunc(:)
     integer, allocatable :: iQjQHess_TO_ifunc(:,:)
+    integer, allocatable :: AnHar_TO_ifunc(:)
 
    CONTAINS
-    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_PH4
+    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_PH4
     PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_PH4
     PROCEDURE :: Write_QModel     => Write_QML_PH4
     PROCEDURE :: Write0_QModel    => Write0_QML_PH4
@@ -100,9 +104,9 @@ MODULE QML_PH4_m
   FUNCTION Init_QML_PH4(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (QML_PH4_t)                           :: QModel ! RESULT
+    TYPE (QML_PH4_t)                             :: QModel ! RESULT
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -122,6 +126,8 @@ MODULE QML_PH4_m
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+
+    IF (debug) write(out_unitp,*) 'option',QModel%option
 
     IF (QModel%ndim == 0) THEN
       ! it means that ndim was not present in the CALL Init_Model().
@@ -143,18 +149,24 @@ MODULE QML_PH4_m
 
     QModel%ndimFunc  = 1
 
-                    !  ene
+    ! ene
     QModel%nb_Func    = 1
     QModel%ifunc_Ene  = QModel%nb_Func
-                              !          Qopt(i)
+    ! Qopt(i)
     QModel%ifunc_Qopt = QModel%nb_Func + 1
     QModel%nb_Func    = QModel%nb_Func + (max_ndim-1)
-                             !          grad(i)
+    ! grad(i)
     QModel%ifunc_Grad = QModel%nb_Func + 1
     QModel%nb_Func    = QModel%nb_Func + (max_ndim-1)
-                             !             hess(i,j)
+    ! hess(i,j)
     QModel%ifunc_Hess = QModel%nb_Func + 1
     QModel%nb_Func    = QModel%nb_Func + (max_ndim-1)**2
+
+    IF (QModel%option == 5) THEN
+      ! anharm on Rp
+      QModel%ifunc_AnHar= QModel%nb_Func + 1
+      QModel%nb_Func    = QModel%nb_Func + 5 ! DeltaE(DeltaRp) = sum_i=0,4 coef(s,i) DeltaRp^i
+    END IF
 
     !write(out_unitp,*) ' ifunc_Ene ',QModel%ifunc_Ene
     !write(out_unitp,*) ' ifunc_Qopt',QModel%ifunc_Qopt
@@ -167,6 +179,10 @@ MODULE QML_PH4_m
     QModel%iQgrad_TO_ifunc(:) = -1
     allocate(QModel%iQjQHess_TO_ifunc(max_ndim,max_ndim))
     QModel%iQjQHess_TO_ifunc(:,:) = -1
+    IF (QModel%option == 5) THEN
+      allocate(QModel%AnHar_TO_ifunc(5))
+      QModel%AnHar_TO_ifunc(:) = -1
+    END IF
 
     ! read the parameters
 
@@ -176,7 +192,7 @@ MODULE QML_PH4_m
     SELECT CASE (QModel%option)
     CASE (3)
       FileName = make_FileName(base_fit3_Ene1_fileName)
-    CASE (4)
+    CASE (4,5) ! 4 harmonic along the path, 5 harmonic + anharmonic(Rp) along the path
       FileName = make_FileName(base_fit3_Ene2_fileName)
     CASE Default
       FileName = make_FileName(base_fit3_Ene2_fileName)
@@ -267,6 +283,26 @@ MODULE QML_PH4_m
     END DO
     END DO
 
+    IF (QModel%option == 5) THEN
+      ! for the Anharmonic contribution along Rp
+      DO i=1,5
+        ifunc = ifunc + 1
+        QModel%AnHar_TO_ifunc(i) = ifunc
+
+        read_ab = .FALSE.
+
+        FileName = make_FileName(base_fit3_AnHar_fileName // int_TO_char(i-1))
+
+        !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
+        CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
+                       ndim,QModel%nt(ifunc),max_nn,FileName,QModel%file_exist(ifunc),read_ab)
+        !write(out_unitp,*) i,'Read done' ; flush(out_unitp)
+
+        QModel%largest_nn = max(QModel%largest_nn,QModel%nn(0,ifunc))
+
+      END DO
+    END IF
+
     deallocate(FileName)
 
     IF (debug) write(out_unitp,*) 'largest_nn',QModel%largest_nn
@@ -301,7 +337,7 @@ MODULE QML_PH4_m
   SUBROUTINE Write_QML_PH4(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(QML_PH4_t),   intent(in) :: QModel
+    CLASS(QML_PH4_t),     intent(in) :: QModel
     integer,              intent(in) :: nio
 
   END SUBROUTINE Write_QML_PH4
@@ -312,7 +348,7 @@ MODULE QML_PH4_m
   SUBROUTINE Write0_QML_PH4(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(QML_PH4_t),   intent(in) :: QModel
+    CLASS(QML_PH4_t),     intent(in) :: QModel
     integer,              intent(in) :: nio
 
     write(nio,*) 'PH4 parameters'
@@ -373,7 +409,7 @@ MODULE QML_PH4_m
   USE QMLdnSVM_dnPoly_m
   IMPLICIT NONE
 
-    CLASS(QML_PH4_t),   intent(in)    :: QModel
+    CLASS(QML_PH4_t),     intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -382,6 +418,8 @@ MODULE QML_PH4_m
     TYPE (dnS_t), allocatable   :: dnPoly(:)
     TYPE (dnS_t)    :: dnDQ(QModel%ndim),vh,Rm,tRm
     integer         :: i1,i2,i,ifunc
+
+    !write(6,*) 'coucou pot PH4 '
 
     Rm  = dnQ(1)
     tRm = tanh(Rm)
@@ -394,16 +432,56 @@ MODULE QML_PH4_m
     DO i1=2,QModel%ndim
       ifunc = QModel%iQopt_TO_ifunc(i1)
       dnDQ(i1) = dnQ(i1) - QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+      !write(6,*) 'DQ',i1,QML_get_d0_FROM_dnS(dnDQ(i1))
     END DO
 
     vh = ZERO
-    DO i1=2,QModel%ndim
-      ifunc = QModel%iQgrad_TO_ifunc(i1)
-      IF (QModel%file_exist(ifunc)) vh = vh + dnDQ(i1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
 
-      ifunc = QModel%iQjQHess_TO_ifunc(i1,i1)
-      IF (QModel%file_exist(ifunc)) vh = vh + dnDQ(i1)**2 * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-    END DO
+    SELECT CASE(QModel%option)
+    CASE(3,4)
+      DO i1=2,QModel%ndim
+        ifunc = QModel%iQgrad_TO_ifunc(i1)
+        IF (QModel%file_exist(ifunc)) THEN
+          vh = vh + dnDQ(i1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+        END IF
+        !write(6,*) 'vh grad',i1,QML_get_d0_FROM_dnS(vh)
+
+        ifunc = QModel%iQjQHess_TO_ifunc(i1,i1)
+        IF (QModel%file_exist(ifunc)) THEN
+          vh = vh + dnDQ(i1)**2 * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+        END IF
+        !write(6,*) 'vh hessii',i1,QML_get_d0_FROM_dnS(vh)
+      END DO
+    CASE(5) ! with anharmonicity along Rp (Q(2))
+      !write(6,*) 'coucou anhar'
+
+      ! function in DeltaQ2 (poly fourth order)
+      i1    = 2
+      DO i=1,5
+        ifunc = QModel%AnHar_TO_ifunc(i) ! DeltaQ2^(i-1)
+        IF (QModel%file_exist(ifunc)) THEN
+          vh = vh + dnDQ(i1)**(i-1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+        END IF
+        !write(6,*) 'vh anhar',i1,i,QML_get_d0_FROM_dnS(vh)
+      END DO
+
+      DO i1=3,QModel%ndim ! i1=2 is treated after
+        ifunc = QModel%iQgrad_TO_ifunc(i1)
+        IF (QModel%file_exist(ifunc)) THEN
+          vh = vh + dnDQ(i1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+        END IF
+        !write(6,*) 'vh grad',i1,QML_get_d0_FROM_dnS(vh)
+
+        ifunc = QModel%iQjQHess_TO_ifunc(i1,i1)
+        IF (QModel%file_exist(ifunc)) THEN
+          vh = vh + dnDQ(i1)**2 * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
+        END IF
+        !write(6,*) 'vh hessii',i1,QML_get_d0_FROM_dnS(vh)
+      END DO
+
+    END SELECT
+
+    ! off diagonal contribution
     DO i1=2,QModel%ndim
       DO i2=i1+1,QModel%ndim
         ifunc = QModel%iQjQHess_TO_ifunc(i1,i2)
@@ -426,7 +504,7 @@ MODULE QML_PH4_m
   USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
-    CLASS(QML_PH4_t),   intent(in)    :: QModel
+    CLASS(QML_PH4_t),     intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -443,7 +521,7 @@ MODULE QML_PH4_m
   USE QMLdnSVM_dnPoly_m
   IMPLICIT NONE
 
-    CLASS(QML_PH4_t),   intent(in)    :: QModel
+    CLASS(QML_PH4_t),     intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -501,7 +579,7 @@ MODULE QML_PH4_m
 
     TYPE (dnS_t)                        :: dnvfour
 
-    CLASS(QML_PH4_t),   intent(in)    :: QModel
+    CLASS(QML_PH4_t),     intent(in)    :: QModel
     integer,              intent(in)    :: ifunc
     TYPE (dnS_t),         intent(in)    :: Rm
     TYPE (dnS_t),         intent(in)    :: dnPoly(:)
@@ -549,30 +627,30 @@ MODULE QML_PH4_m
     QML_sc2_fit3 = QML_dnSigmoid_PH4(-x,ONE)*(-x+a) + QML_dnSigmoid_PH4(x,ONE)*(x+b)
 
   END FUNCTION QML_sc2_fit3
-  SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist,read_ab)
+  SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,file_name,exist,read_ab)
   IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim
    integer,           intent(inout) :: n(0:ndim),nt
    real (kind=Rkind), intent(inout) :: a,b,F(max_points)
-   character (len=*), intent(in)    :: nom1
+   character (len=*), intent(in)    :: file_name
    logical,           intent(inout) :: exist
    logical,           intent(in)    :: read_ab
 
    integer :: no,ios,kl,i
 
-   write(out_unitp,*) 'QML_read_para4d: nom1,max_points: ',nom1,max_points
+   write(out_unitp,*) 'QML_read_para4d: file_name,max_points: ',file_name,max_points
 
 
-   CALL file_open2(name_file=nom1,iunit=no,lformatted=.TRUE.,                   &
+   CALL file_open2(name_file=file_name,iunit=no,lformatted=.TRUE.,              &
                    old=.TRUE.,err_file=ios)
    IF (ios == 0) THEN
 
      read(no,*) i ! for nb_fit (not used)
 
-     write(out_unitp,*) 'nom1,nt,ndim: ',nom1,nt,ndim
+     write(out_unitp,*) 'file_name,nt,ndim: ',file_name,nt,ndim
      read(no,*) n(0:ndim)
-     write(out_unitp,*) 'nom1,n ',nom1,n(0:ndim)
+     write(out_unitp,*) 'file_name,n ',file_name,n(0:ndim)
      IF (n(0) > max_points) THEN
          write(out_unitp,*) ' ERROR : The number of coefficients (',n(0),') >'
          write(out_unitp,*) '         than max_points (',max_points,')'
@@ -589,7 +667,7 @@ MODULE QML_PH4_m
      CLOSE(no)
      exist = .TRUE.
    ELSE
-     write(out_unitp,*) 'The file (',nom1,') does not exist !!'
+     write(out_unitp,*) 'The file (',file_name,') does not exist !!'
      exist = .FALSE.
    END IF
 
