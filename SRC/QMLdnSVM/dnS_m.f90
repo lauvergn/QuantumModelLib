@@ -471,9 +471,9 @@ CONTAINS
   END SUBROUTINE QML_set_dnS
   SUBROUTINE QML_ReduceDerivatives_dnS2_TO_dnS1(S1,S2,list_act)
     USE QMLLib_NumParameters_m
-    CLASS (dnS_t), intent(inout) :: S1
-    CLASS (dnS_t), intent(in)    :: S2
-    integer,       intent(in)    :: list_act(:)
+    TYPE (dnS_t), intent(inout) :: S1
+    TYPE (dnS_t), intent(in)    :: S2
+    integer,       intent(in)   :: list_act(:)
 
     integer :: err_dnS_loc
     character (len=*), parameter :: name_sub='QML_ReduceDerivatives_dnS2_TO_dnS1'

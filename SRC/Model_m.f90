@@ -1297,6 +1297,7 @@ CONTAINS
                            nderiv=nderiv)
     END IF
     PotVal = ZERO
+    IF (debug) write(out_unitp,*) '   init PotVal  ' ; flush(out_unitp)
 
     ! allocate Mat_OF_PotDia
     allocate(Mat_OF_PotDia(QModel%QM%nsurf,QModel%QM%nsurf))
@@ -1305,6 +1306,7 @@ CONTAINS
         CALL QML_alloc_dnS(Mat_OF_PotDia(i,j),QModel%QM%ndim,nderiv)
     END DO
     END DO
+    IF (debug) write(out_unitp,*) '   alloc Mat_OF_PotDia  ' ; flush(out_unitp)
 
     ! intialization of the dnQ(:)
     IF (QModel%QM%Cart_TO_Q) THEN
@@ -1331,6 +1333,7 @@ CONTAINS
         dnQ(i) = QML_init_dnS(Q(i),ndim=QModel%QM%ndim,nderiv=nderiv,iQ=i) ! to set up the derivatives
       END DO
     END IF
+    IF (debug) write(out_unitp,*) '   init dnQ(:)  ' ; flush(out_unitp)
 
     CALL QModel%QM%EvalPot_QModel(Mat_OF_PotDia,dnQ,nderiv=nderiv)
 
@@ -1512,10 +1515,10 @@ CONTAINS
     END IF
     PotVal = ZERO
 
+
     allocate(Q_loc(QModel%QM%ndim))
     Q_loc(:) = Q
     CALL QML_alloc_dnMat(PotVal_loc0,QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
-    PotVal = ZERO
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0)
@@ -1714,7 +1717,8 @@ CONTAINS
       CALL Eval_Pot_Numeric_adia_old(QModel,Q,PotVal,nderiv,Vec,NAC)
     CASE (3)
       CALL Eval_Pot_Numeric_adia_v3(QModel,Q,PotVal,nderiv,Vec,NAC)
-    !CASE (4)
+    CASE (4)
+      STOP 'Eval_Pot_Numeric_adia: option=4, not yet'
     !  CALL Eval_Pot_Numeric_adia_v4(QModel,Q,PotVal,nderiv,Vec,NAC)
     CASE Default
       CALL Eval_Pot_Numeric_adia_old(QModel,Q,PotVal,nderiv,Vec,NAC)
@@ -1880,7 +1884,6 @@ CONTAINS
 
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_adia_v3')
 
-
     IF (QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
       CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
                            nderiv=nderiv)
@@ -1903,20 +1906,25 @@ CONTAINS
     Q_loc(:) = Q
     CALL QML_alloc_dnMat(PotVal_loc0,QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
     CALL QML_alloc_dnMat(Vec_loc0,   QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
+    !write(6,*) 'coucou1 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0,vec=Vec_loc0)
+    !write(6,*) 'coucou1.1 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
 
 
     CALL FiniteDiff_AddMat_TO_dnMat(PotVal,PotVal_loc0%d0,option=3)
     CALL FiniteDiff_AddMat_TO_dnMat(Vec,   Vec_loc0%d0,   option=3)
+    !write(6,*) 'coucou1.2 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     CALL Init_IdMat(NAC%d0,QModel%QM%nsurf)
+    !write(6,*) 'coucou1.3 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     allocate(tVec(QModel%QM%nsurf,QModel%QM%nsurf))
     tVec(:,:)      = transpose(Vec%d0)
+    !write(6,*) 'coucou2 0-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     IF (nderiv >= 1) THEN ! 1st derivatives
 
@@ -1939,6 +1947,7 @@ CONTAINS
 
       END DO
     END IF
+    !write(6,*) 'coucou2 1-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     IF (nderiv >= 2) THEN ! 2d derivatives
 
@@ -1969,6 +1978,7 @@ CONTAINS
       END DO
       END DO
     END IF
+    !write(6,*) 'coucou2 2-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     IF (nderiv >= 3) THEN ! 3d derivatives: d3/dQidQidQj
 
@@ -1997,15 +2007,18 @@ CONTAINS
       END DO
       END DO
     END IF
+    !write(6,*) 'coucou2 3-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     CALL FiniteDiff_Finalize_dnMat(PotVal,step)
     CALL FiniteDiff_Finalize_dnMat(Vec,step)
     CALL FiniteDiff_Finalize_dnMat(NAC,step)
+    !write(6,*) 'coucou3 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     deallocate(tVec)
     deallocate(Q_loc)
     CALL QML_dealloc_dnMat(PotVal_loc0)
     CALL QML_dealloc_dnMat(Vec_loc0)
+    !write(6,*) 'coucouf Eval_Pot_Numeric_adia_v3' ; flush(6)
 
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
   SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,   &
@@ -2566,9 +2579,9 @@ CONTAINS
     Mat_diff    = PotVal_num - PotVal_ana
     MaxDiffMat  = QML_get_maxval_OF_dnMat(Mat_diff)
 
-    write(out_unitp,'(3a,e9.2)') 'With ',QModel%QM%pot_name,            &
+    write(out_unitp,'(3a,e9.2)') 'With ',QModel%QM%pot_name,                    &
                ': max of the relative Potential diff:',MaxDiffMat/MaxMat
-    write(out_unitp,'(3a,l9)')   'With ',QModel%QM%pot_name,            &
+    write(out_unitp,'(3a,l9)')   'With ',QModel%QM%pot_name,                    &
      ': Potential diff (numer-ana), ZERO?  ',(MaxDiffMat/MaxMat <= step)
 
     IF (MaxDiffMat/MaxMat > step .OR. debug) THEN
@@ -2583,9 +2596,9 @@ CONTAINS
       Mat_diff    = NAC_num - NAC_ana
       MaxDiffMat  = QML_get_maxval_OF_dnMat(Mat_diff)
 
-      write(out_unitp,'(3a,e9.2)') 'With ',QModel%QM%pot_name,          &
+      write(out_unitp,'(3a,e9.2)') 'With ',QModel%QM%pot_name,                  &
                  ': max of the relative NAC diff:',MaxDiffMat/MaxMat
-      write(out_unitp,'(3a,l9)')   'With ',QModel%QM%pot_name,          &
+      write(out_unitp,'(3a,l9)')   'With ',QModel%QM%pot_name,                  &
        ': NAC diff (numer-ana), ZERO?  ',(MaxDiffMat/MaxMat <= step)
 
       IF (MaxDiffMat/MaxMat > step .OR. debug) THEN

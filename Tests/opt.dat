@@ -1,0 +1,4 @@
+&opt
+  icv = 2
+  hessian_method = 'ana'
+  Largest_disp   = 0.4 /

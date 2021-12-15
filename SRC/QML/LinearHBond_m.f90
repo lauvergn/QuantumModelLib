@@ -289,6 +289,8 @@ MODULE QML_LinearHBond_m
     CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
     write(nio,*)
     write(nio,*) 'PubliUnit: ',QModel%PubliUnit
+    write(nio,*) 'nsurf:     ',QModel%nsurf
+    write(nio,*) 'ndim:      ',QModel%ndim
     write(nio,*)
     write(nio,*) '   Morse parameters:   '
     CALL Write_QML_Morse(QModel%Morse1,nio)

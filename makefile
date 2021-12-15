@@ -234,7 +234,7 @@ CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
                -D__QML_VER='"$(QML_ver)"'
 
 CPPSHELL_INVHYP  = -D__INVHYP="$(INVHYP)"
-CPPSHELL_DIAGO   = -D__LAPACK="$(LAPACK)"
+CPPSHELL_MATRIX  = -D__LAPACK="$(LAPACK)"
 
 F90_FLAGS = $(F90) $(F90FLAGS)
 LYNK90 = $(F90_FLAGS)
@@ -263,6 +263,8 @@ DIRdnPoly = $(DIRSRC)/QMLdnSVM
 DIRdnMat  = $(DIRSRC)/QMLdnSVM
 DIRModel  = $(DIRSRC)/QML
 DIRAdia   = $(DIRSRC)/AdiaChannels
+DIROpt    = $(DIRSRC)/Opt
+
 #
 OBJ_QML   = $(DIROBJ)/Empty_m.o \
                  $(DIROBJ)/Sigmoid_m.o $(DIROBJ)/Morse_m.o $(DIROBJ)/Poly1D_m.o \
@@ -282,7 +284,7 @@ OBJ_QML   = $(DIROBJ)/Empty_m.o \
 
 OBJ_AdiaLib    = $(DIROBJ)/MakeHinact_m.o
 
-OBJ_Model      = $(DIROBJ)/Model_m.o $(DIROBJ)/Basis_m.o
+OBJ_Model      = $(DIROBJ)/Model_m.o $(DIROBJ)/Basis_m.o $(DIROBJ)/Opt_m.o
 
 OBJ_test       = $(DIROBJ)/TEST_OOP.o
 OBJ_driver     = $(DIROBJ)/Model_driver.o
@@ -296,7 +298,7 @@ OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 OBJ_lib        = $(DIROBJ)/FiniteDiff_m.o \
                  $(DIROBJ)/dnMat_m.o $(DIROBJ)/dnPoly_m.o $(DIROBJ)/dnS_m.o \
-                 $(DIROBJ)/UtilLib_m.o $(DIROBJ)/diago_m.o \
+                 $(DIROBJ)/UtilLib_m.o $(DIROBJ)/diago_m.o $(DIROBJ)/Matrix_m.o \
                  $(DIROBJ)/NumParameters_m.o
 
 OBJ_all        = $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
@@ -492,6 +494,14 @@ $(DIROBJ)/Basis_m.o:$(DIRAdia)/Basis_m.f90
 #
 ##################################################################################
 #
+##################################################################################
+### Optimization
+#
+$(DIROBJ)/Opt_m.o:$(DIROpt)/Opt_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIROpt)/Opt_m.f90
+#
+##################################################################################
+
 #
 ##################################################################################
 ### Main + driver + tests
@@ -553,7 +563,9 @@ $(DIROBJ)/FiniteDiff_m.o:$(DIRLib)/FiniteDiff_m.f90
 $(DIROBJ)/UtilLib_m.o:$(DIRLib)/UtilLib_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/UtilLib_m.f90
 $(DIROBJ)/diago_m.o:$(DIRLib)/diago_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DIRLib)/diago_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_MATRIX)  -c $(DIRLib)/diago_m.f90
+$(DIROBJ)/Matrix_m.o:$(DIRLib)/Matrix_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_MATRIX)  -c $(DIRLib)/Matrix_m.f90
 $(DIROBJ)/NumParameters_m.o:$(DIRLib)/NumParameters_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/NumParameters_m.f90
 #
@@ -572,6 +584,8 @@ $(DIROBJ)/TEST_Adia.o:   $(ModLib) $(OBJ_AdiaLib)
 
 
 $(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
+
+$(DIROBJ)/Opt_m.o: $(OBJ_lib) $(DIROBJ)/Model_m.o $(OBJ_QML)
 
 $(DIROBJ)/Model_m.o: $(DIROBJ)/Basis_m.o $(OBJ_lib) $(OBJ_QML)
 
@@ -616,6 +630,7 @@ $(DIROBJ)/dnS_m.o:        $(DIROBJ)/UtilLib_m.o $(DIROBJ)/NumParameters_m.o
 $(DIROBJ)/dnPoly_m.o:     $(DIROBJ)/dnS_m.o $(DIROBJ)/UtilLib_m.o $(DIROBJ)/NumParameters_m.o
 $(DIROBJ)/dnMat_m.o:      $(DIROBJ)/dnS_m.o $(DIROBJ)/diago_m.o $(DIROBJ)/UtilLib_m.o $(DIROBJ)/NumParameters_m.o
 $(DIROBJ)/diago_m.o:      $(DIROBJ)/NumParameters_m.o
+$(DIROBJ)/Matrix_m.o:     $(DIROBJ)/NumParameters_m.o
 $(DIROBJ)/FiniteDiff_m.o: $(DIROBJ)/dnMat_m.o $(DIROBJ)/dnS_m.o $(DIROBJ)/NumParameters_m.o
 #
 ############################################################################
