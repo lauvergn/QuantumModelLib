@@ -33,12 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-<<<<<<< HEAD
   !CALL test_Opt() ; stop
-=======
-  !CALL test_NO3_test() ; stop
-
->>>>>>> 5d24b544d5b0287fef6fb1c0f5e39caa26ea5d31
   !CALL test_PH4() ; stop
 
   !CALL test_Vib_adia() ; stop
