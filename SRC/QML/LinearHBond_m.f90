@@ -288,6 +288,8 @@ MODULE QML_LinearHBond_m
     write(nio,*) 'LinearHBond current parameters:'
     write(nio,*)
     write(nio,*) 'PubliUnit: ',QModel%PubliUnit
+    write(nio,*) 'nsurf:     ',QModel%nsurf
+    write(nio,*) 'ndim:      ',QModel%ndim
     write(nio,*)
     write(nio,*) '   Morse parameters:   '
     CALL Write_QML_Morse(QModel%Morse1,nio)

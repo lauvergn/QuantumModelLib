@@ -33,6 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test_Opt() ; stop
   !CALL test_PH4() ; stop
 
   !CALL test_Vib_adia() ; stop
@@ -82,6 +83,9 @@ PROGRAM TEST_model
   ! vibrational adiabatic separation (on HBond potential)
   CALL test_Vib_adia()
   CALL test2_Vib_adia()
+
+  ! Optimization on HBond potential
+  CALL test_Opt()
 
 END PROGRAM TEST_model
 
@@ -808,7 +812,7 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) '...the bottom left panel of figure 3.8 (Julien Beutier thesis)'
 
   CALL Eval_pot_ON_Grid(QModel, &
-                        Qmin=(/2.75_Rkind,-0.6_Rkind/),Qmax=(/2.75_Rkind,0.6_Rkind/),nb_points=1001,&
+                        Qmin=[2.75_Rkind,-0.6_Rkind],Qmax=[2.75_Rkind,0.6_Rkind],nb_points=1001,&
                         grid_file='grid_Hbond-sym')
 
   write(out_unitp,*) '---------------------------------------------'
@@ -829,7 +833,7 @@ SUBROUTINE test_LinearHBond
 
   allocate(q(QModel%QM%ndim))
 
-  q(:) = (/ 3._Rkind,0._Rkind /)
+  q(:) = [3._Rkind,0._Rkind]
   nderiv=2
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
@@ -861,7 +865,7 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) '...the bottom right panel of figure 3.8 (Julien Beutier thesis)'
 
   CALL Eval_pot_ON_Grid(QModel, &
-                        Qmin=(/3._Rkind,-0.8_Rkind/),Qmax=(/3._Rkind,0.7_Rkind/),nb_points=1001,&
+                        Qmin=[3._Rkind,-0.8_Rkind],Qmax=[3._Rkind,0.7_Rkind],nb_points=1001,&
                         grid_file='grid_Hbond-asym')
 
   write(out_unitp,*) '---------------------------------------------'
@@ -1967,6 +1971,59 @@ SUBROUTINE test_H3
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_H3
+SUBROUTINE test_Opt
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  TYPE (Opt_t)                   :: Opt_param
+
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Optimization with HBond potential'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+  CALL Init_Model(QModel,pot_name='HBond',PubliUnit=.FALSE.)
+
+  !CALL Eval_pot_ON_Grid(QModel, &
+  !                      Qmin=[3.5_Rkind,-2.0_Rkind],Qmax=[10.0_Rkind,2.0_Rkind],&
+  !                      nb_points=101, grid_file='grid_Hbond2D')
+
+
+  CALL Init_QML_Opt(Opt_param,QModel,read_param=.FALSE.,param_file_name='opt.dat')
+
+  allocate(Q(QModel%QM%ndim))
+
+  !CALL Init_QML_Opt(Opt_param,QModel,read_param=.TRUE.,param_file_name='opt.dat')
+
+  CALL QML_Opt(Q,QModel,Opt_param,Q0=[ 5._Rkind,0.1_Rkind ])
+
+  write(out_unitp,*) 'Q(:) (bohr):'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  write(out_unitp,*) 'Potential+derivatives:'
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_Opt
 SUBROUTINE test_Test
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
