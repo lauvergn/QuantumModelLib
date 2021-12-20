@@ -6,5 +6,6 @@
   list_act=3,9
  /
 &irc
- Max_it = 1000
+ Max_it = 5000
+ Delta_s = 0.001
  /

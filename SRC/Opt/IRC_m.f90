@@ -48,6 +48,17 @@ MODULE IRC_m
 
   END TYPE QML_IRC_t
 
+  TYPE :: QML_IRC_at_s
+
+    real (kind=Rkind)                    :: s
+    real (kind=Rkind)                    :: Ene
+    real (kind=Rkind), allocatable       :: Qact(:),DeltaQact(:),Grad_Qact(:)
+
+    real (kind=Rkind), allocatable       :: QTS(:)
+    real (kind=Rkind), allocatable       :: DeltaQact_TS(:)
+
+  END TYPE QML_IRC_at_s
+
 CONTAINS
 
   SUBROUTINE Init_QML_IRC(IRC_p,QModel,                                         &
@@ -198,19 +209,13 @@ CONTAINS
 
     real (kind=Rkind),  intent(in),    optional  :: Q0(:)
 
+
+
+    TYPE(QML_IRC_at_s)              :: IRC_at_s,IRC_at_s_old,IRC_at_TS
+
     TYPE (QML_Opt_t)                :: Opt_p
     TYPE (dnMat_t)                  :: PotVal
-    integer                         :: it,iq,i,nb_act
-    real (kind=Rkind), allocatable  :: Qit(:),QTS(:)
-    !real (kind=Rkind), allocatable  :: mDQit(:)   ! -DelatQ
-    real (kind=Rkind), allocatable  :: Qit_act(:),QTS_act(:)
-    real (kind=Rkind), allocatable  :: mDQit_act(:)   ! -DelatQ
-    real (kind=Rkind), allocatable  :: Thess(:,:),hess(:,:),grad(:)
-    real (kind=Rkind), allocatable  :: diag(:),Vec(:,:),tVec(:,:)
-
-    real (kind=Rkind)               :: max_grad,RMS_grad,s,Grad_Vec_Sign
-    real (kind=Rkind)               :: max_disp,RMS_disp,norm_disp
-    logical                         :: conv
+    integer                         :: it
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='QML_IRC'
@@ -230,6 +235,107 @@ CONTAINS
     write(out_unitp,*) ' ERROR in ',name_sub
     write(out_unitp,*) ' IRC_p is not initialized'
     STOP 'ERROR in QML_IRC: IRC_p is not initialized'
+  END IF
+
+  ! initialization of IRC_at_s%QTS
+  allocate(IRC_at_TS%QTS(QModel%ndim))
+  IF (present(Q0)) THEN
+    IRC_at_TS%QTS(:) = Q0
+  ELSE
+    CALL get_Q0_Model(IRC_at_TS%QTS,QModel,0)
+  END IF
+
+  CALL QML_Opt(IRC_at_TS%QTS,QModel,IRC_p%QML_Opt_t,Q0=IRC_at_TS%QTS)
+  !CALL Write_RVec(IRC_at_s%QTS,    out_unitp,3,name_info='Qit')
+
+  !first point + check if the geometry is a TS (s=0)
+  CALL QML_IRC_FirstPoint(IRC_at_TS,QModel,IRC_p)
+  write(out_unitp,*) 's,Qit,|grad|,E',IRC_at_TS%s,IRC_at_TS%Qact,               &
+                      norm2(IRC_at_TS%Grad_Qact),IRC_at_TS%Ene
+
+  IRC_at_s     = IRC_at_TS
+  IRC_at_s_old = IRC_at_s
+
+  DO it=1,IRC_p%IRC_Max_it
+
+    CALL QML_IRC_NewPoint(IRC_at_s,IRC_at_s_old,QModel,IRC_p,forward=.TRUE.)
+    write(out_unitp,*) 's,Qit,|grad|,E',IRC_at_s%s,IRC_at_s%Qact,               &
+                      norm2(IRC_at_s%Grad_Qact),IRC_at_s%Ene
+    flush(out_unitp)
+
+    IRC_at_s_old = IRC_at_s
+
+  END DO
+
+  IRC_at_s     = IRC_at_TS
+  IRC_at_s%DeltaQact = -IRC_at_s%DeltaQact_TS
+  IRC_at_s_old = IRC_at_s
+
+  DO it=1,IRC_p%IRC_Max_it
+
+    CALL QML_IRC_NewPoint(IRC_at_s,IRC_at_s_old,QModel,IRC_p,forward=.FALSE.)
+    write(out_unitp,*) 's,Qit,|grad|,E',IRC_at_s%s,IRC_at_s%Qact,               &
+                      norm2(IRC_at_s%Grad_Qact),IRC_at_s%Ene
+    flush(out_unitp)
+
+    IRC_at_s_old = IRC_at_s
+
+  END DO
+
+  IF (debug) THEN
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_IRC
+
+  SUBROUTINE QML_IRC_v0(Q,QModel,IRC_p,Q0)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE QMLLib_Matrix_m
+  USE QMLLib_diago_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(inout)            :: Q(:)
+    TYPE (Model_t),     intent(inout)            :: QModel
+    TYPE (QML_IRC_t),   intent(in)               :: IRC_p
+
+    real (kind=Rkind),  intent(in),    optional  :: Q0(:)
+
+    TYPE (QML_Opt_t)                :: Opt_p
+    TYPE (dnMat_t)                  :: PotVal
+    integer                         :: it,iq,i,nb_act
+    real (kind=Rkind), allocatable  :: Qit(:),QTS(:)
+    !real (kind=Rkind), allocatable  :: mDQit(:)   ! -DelatQ
+    real (kind=Rkind), allocatable  :: Qit_act(:),QTS_act(:)
+    real (kind=Rkind), allocatable  :: mDQit_act(:)   ! -DelatQ
+    real (kind=Rkind), allocatable  :: Thess(:,:),hess(:,:),grad(:)
+    real (kind=Rkind), allocatable  :: diag(:),Vec(:,:),tVec(:,:)
+
+    real (kind=Rkind)               :: max_grad,RMS_grad,s,Grad_Vec_Sign
+    real (kind=Rkind)               :: max_disp,RMS_disp,norm_disp
+    logical                         :: conv
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_IRC_v0'
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    IF (present(Q0)) write(out_unitp,*) '   Q0',Q0
+    CALL Write_QML_IRC(IRC_p)
+    CALL Write_Model(QModel)
+    flush(out_unitp)
+  END IF
+
+  IF (IRC_p%Max_it < 0) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' IRC_p is not initialized'
+    STOP 'ERROR in QML_IRC_v0: IRC_p is not initialized'
   END IF
 
   nb_act = size(IRC_p%list_act)
@@ -338,9 +444,9 @@ CONTAINS
     flush(out_unitp)
   END IF
 
-END SUBROUTINE QML_IRC
+END SUBROUTINE QML_IRC_v0
 
-  SUBROUTINE QML_IRC_FirstPoint(s,Qact,DeltaQact,QModel,IRC_p,QTS)
+  SUBROUTINE QML_IRC_FirstPoint(IRC_at_s,QModel,IRC_p)
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
   USE QMLLib_Matrix_m
@@ -349,23 +455,20 @@ END SUBROUTINE QML_IRC
   USE Opt_m
   IMPLICIT NONE
 
-    real (kind=Rkind),  intent(inout)            :: Qact(:),DeltaQact(:)
-    real (kind=Rkind),  intent(inout)            :: s
+    TYPE(QML_IRC_at_s), intent(inout)            :: IRC_at_s
 
     TYPE (Model_t),     intent(inout)            :: QModel
     TYPE (QML_IRC_t),   intent(in)               :: IRC_p
 
-    real (kind=Rkind),  intent(in)               :: QTS(:)
-
     TYPE (dnMat_t)                  :: PotVal
     integer                         :: nb_act
-    real (kind=Rkind), allocatable  :: hess(:,:),grad(:)
+    real (kind=Rkind), allocatable  :: hess(:,:)
     real (kind=Rkind), allocatable  :: diag(:),Vec(:,:)
 
 !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='QML_IRC_NewPoint'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    character (len=*), parameter :: name_sub='QML_IRC_FirstPoint'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
   IF (debug) THEN
@@ -381,38 +484,45 @@ END SUBROUTINE QML_IRC
 
   nb_act = size(IRC_p%list_act)
 
-  allocate(grad(nb_act))
   allocate(hess(nb_act,nb_act))
   allocate(vec(nb_act,nb_act))
   allocate(diag(nb_act))
 
 
   !first check if the geometry in Q0 is a TS
-  CALL Eval_Pot(QModel,QTS,PotVal,nderiv=2)
-  grad   = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
+  CALL Eval_Pot(QModel,IRC_at_s%QTS,PotVal,nderiv=2)
   hess   = PotVal%d2(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act,IRC_p%list_act)
+  IRC_at_s%Grad_Qact    = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
 
   CALL diagonalization(hess,diag,Vec,nb_act,sort=1)
-  write(out_unitp,*) 'grad',grad
+  write(out_unitp,*) 'grad',IRC_at_s%Grad_Qact
   write(out_unitp,*) 'diag',diag
   write(out_unitp,*) 'TS',(count(diag < ZERO) == 1)
   IF ((count(diag < ZERO) /= 1)) STOP 'STOP in QML_IRC_NewPoint: Not a TS at s=0'
 
   !s=0 (TS)
-  s            = ZERO
-  Qact(:)      = QTS(IRC_p%list_act)
-  DeltaQact(:) = Vec(:,1)
-  write(out_unitp,*) 's,Qit,|grad|,E',s,Qact,norm2(grad),PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
+  IRC_at_s%s            = ZERO
+  IRC_at_s%Ene          = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
+
+  IRC_at_s%Qact         = IRC_at_s%QTS(IRC_p%list_act)
+  IRC_at_s%DeltaQact    = Vec(:,1)
+
+  IRC_at_s%DeltaQact_TS = Vec(:,1)
+
+  deallocate(hess)
+  deallocate(vec)
+  deallocate(diag)
 
   IF (debug) THEN
-    write(out_unitp,*) 'Qact     ',Qact
-    write(out_unitp,*) 'DeltaQact',DeltaQact
+    write(out_unitp,*) 's,Ene    ',IRC_at_s%s,IRC_at_s%Ene
+    write(out_unitp,*) 'Qact     ',IRC_at_s%Qact
+    write(out_unitp,*) 'DeltaQact',IRC_at_s%DeltaQact
     write(out_unitp,*) ' END ',name_sub
     flush(out_unitp)
   END IF
 
 END SUBROUTINE QML_IRC_FirstPoint
-  SUBROUTINE QML_IRC_NewPoint(s,Qact,s_old,Qact_old,QModel,IRC_p,QTS,forward)
+  SUBROUTINE QML_IRC_NewPoint(IRC_at_s,IRC_at_s_old,QModel,IRC_p,forward)
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
   USE QMLLib_Matrix_m
@@ -421,31 +531,23 @@ END SUBROUTINE QML_IRC_FirstPoint
   USE Opt_m
   IMPLICIT NONE
 
-    real (kind=Rkind),  intent(inout)            :: Qact(:)
-    real (kind=Rkind),  intent(inout)            :: s
+    TYPE(QML_IRC_at_s), intent(inout)            :: IRC_at_s
+
+    TYPE(QML_IRC_at_s), intent(in)               :: IRC_at_s_old
 
     TYPE (Model_t),     intent(inout)            :: QModel
     TYPE (QML_IRC_t),   intent(in)               :: IRC_p
 
-    real (kind=Rkind),  intent(in)               :: s_old
-    real (kind=Rkind),  intent(in)               :: Qact_old(:)
-    real (kind=Rkind),  intent(in)               :: QTS(:)
     logical,            intent(in)               :: forward
 
     TYPE (dnMat_t)                  :: PotVal
-    integer                         :: it,iq,i,nb_act
+    integer                         :: nb_act
     real (kind=Rkind), allocatable  :: Qit(:)
-    real (kind=Rkind), allocatable  :: Qit_act(:),QTS_act(:)
-    real (kind=Rkind), allocatable  :: mDQit_act(:)   ! -DelatQ
-    real (kind=Rkind), allocatable  :: hess(:,:),grad(:)
-    real (kind=Rkind), allocatable  :: diag(:),Vec(:,:)
-
-    real (kind=Rkind)               :: Grad_Vec_Sign
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='QML_IRC_NewPoint'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
   IF (debug) THEN
@@ -461,91 +563,29 @@ END SUBROUTINE QML_IRC_FirstPoint
 
   nb_act = size(IRC_p%list_act)
 
-  allocate(Qit_act(nb_act))
-  allocate(mDQit_act(nb_act))
-
   allocate(Qit(QModel%ndim))
 
-  allocate(grad(nb_act))
-  allocate(hess(nb_act,nb_act))
-  allocate(vec(nb_act,nb_act))
-  allocate(diag(nb_act))
 
+  Qit(:) = IRC_at_s%QTS
 
-  IF (abs(s) < IRC_p%Delta_s/TEN) THEN
-    !first check if the geometry in Q0 is a TS
-    CALL Eval_Pot(QModel,QTS,PotVal,nderiv=2)
-    grad   = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
-    hess   = PotVal%d2(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act,IRC_p%list_act)
-
-    CALL diagonalization(hess,diag,Vec,nb_act,sort=1)
-    write(out_unitp,*) 'grad',grad
-    write(out_unitp,*) 'diag',diag
-    write(out_unitp,*) 'TS',(count(diag < ZERO) == 1)
-    IF ((count(diag < ZERO) /= 1)) STOP 'STOP in QML_IRC_NewPoint: Not a TS at s=0'
+  IF (forward) THEN
+    IRC_at_s%s      = IRC_at_s_old%s    + IRC_p%Delta_s
+  ELSE
+    IRC_at_s%s      = IRC_at_s_old%s    - IRC_p%Delta_s
   END IF
 
-  !s=0 (TS)
-  s = ZERO
-  Qact(:) = QTS(IRC_p%list_act)
-  write(out_unitp,*) 's,Qit,|grad|,E',s,Qact,norm2(grad),PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
+  IRC_at_s%Qact   = IRC_at_s_old%Qact + IRC_p%Delta_s * IRC_at_s_old%DeltaQact
+  CALL Qact_TO_Q(IRC_at_s%Qact,Qit,IRC_p%list_act)
 
-  ! forward along the TS vector
-  ! new point after the ts
-  Qit(:) = QTS
-  s = s + IRC_p%Delta_s
-  mDQit_act(:) = IRC_p%Delta_s * Vec(:,1)
-  Qit_act(:)   = Qit_act + mDQit_act
-  CALL Qact_TO_Q(Qit_act,Qit,IRC_p%list_act)
+  !CALL Write_RVec(Qit,    out_unitp,3,name_info='Qit')
+  CALL Eval_Pot(QModel,Qit,PotVal,nderiv=1)
+  IRC_at_s%Ene         = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
 
-  DO it=1,IRC_p%IRC_Max_it
+  IRC_at_s%Grad_Qact   = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
+  IRC_at_s%DeltaQact   = -IRC_at_s%Grad_Qact/norm2(IRC_at_s%Grad_Qact)
 
-    !CALL Write_RVec(Qit_act,out_unitp,3,name_info='Qit_act')
-    !CALL Write_RVec(Qit,    out_unitp,3,name_info='Qit')
-    CALL Eval_Pot(QModel,Qit,PotVal,nderiv=2)
-    grad   = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
-    IF (it == 1) Grad_Vec_Sign = sign(one,dot_product(Vec(:,1),grad))
-    !CALL Write_RVec(grad,out_unitp,3,name_info='grad')
-    hess   = PotVal%d2(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act,IRC_p%list_act)
-    write(out_unitp,*) 's,Qit,|grad|,E',s,Qit_act,norm2(grad),PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
 
-    s = s + IRC_p%Delta_s
-    mDQit_act(:) = Grad_Vec_Sign * IRC_p%Delta_s * grad/norm2(grad)
-    Qit_act(:)   = Qit_act + mDQit_act
-    !CALL Write_RVec(mDQit_act,out_unitp,3,name_info='mDQit_act')
-    CALL Qact_TO_Q(Qit_act,Qit,IRC_p%list_act)
-
-  END DO
-
-  ! backward along the TS vector
-  ! new point after the ts
-  Qit(:)       = QTS
-  Qit_act(:)   = QTS(IRC_p%list_act)
-  s            = -IRC_p%Delta_s
-  mDQit_act(:) = -IRC_p%Delta_s * Vec(:,1)
-  Qit_act(:)   = Qit_act + mDQit_act
-  CALL Qact_TO_Q(Qit_act,Qit,IRC_p%list_act)
-
-  DO it=1,IRC_p%IRC_Max_it
-
-    !CALL Write_RVec(Qit_act,out_unitp,3,name_info='Qit_act')
-    !CALL Write_RVec(Qit,    out_unitp,3,name_info='Qit')
-    CALL Eval_Pot(QModel,Qit,PotVal,nderiv=2)
-    grad   = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
-    IF (it == 1) Grad_Vec_Sign = -sign(one,dot_product(Vec(:,1),grad))
-    !CALL Write_RVec(grad,out_unitp,3,name_info='grad')
-    hess   = PotVal%d2(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act,IRC_p%list_act)
-    write(out_unitp,*) 's,Qit,|grad|,E',s,Qit_act,norm2(grad),PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
-
-    s = s - IRC_p%Delta_s
-    mDQit_act(:) = Grad_Vec_Sign * IRC_p%Delta_s * grad/norm2(grad)
-    Qit_act(:)   = Qit_act + mDQit_act
-    !CALL Write_RVec(mDQit_act,out_unitp,3,name_info='mDQit_act')
-    CALL Qact_TO_Q(Qit_act,Qit,IRC_p%list_act)
-
-  END DO
-
-  STOP
+  deallocate(Qit)
 
 
   IF (debug) THEN

@@ -2115,11 +2115,6 @@ SUBROUTINE test_IRC
 
   CALL QML_IRC(Q,QModel,IRC_p,Q0=[ZERO,ZERO,-TWO,ZERO,ZERO,ZERO,ZERO,ZERO,TWO])
 
-  write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
-  write(out_unitp,*) 'Potential+derivatives:'
-  CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   CALL QML_dealloc_dnMat(PotVal)
   deallocate(Q)
