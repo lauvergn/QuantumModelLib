@@ -284,7 +284,7 @@ OBJ_QML   = $(DIROBJ)/Empty_m.o \
 
 OBJ_AdiaLib    = $(DIROBJ)/MakeHinact_m.o
 
-OBJ_Model      = $(DIROBJ)/Model_m.o $(DIROBJ)/Basis_m.o $(DIROBJ)/Opt_m.o
+OBJ_Model      = $(DIROBJ)/Model_m.o $(DIROBJ)/Basis_m.o $(DIROBJ)/Opt_m.o $(DIROBJ)/IRC_m.o
 
 OBJ_test       = $(DIROBJ)/TEST_OOP.o
 OBJ_driver     = $(DIROBJ)/Model_driver.o
@@ -495,10 +495,12 @@ $(DIROBJ)/Basis_m.o:$(DIRAdia)/Basis_m.f90
 ##################################################################################
 #
 ##################################################################################
-### Optimization
+### Optimization + IRC
 #
 $(DIROBJ)/Opt_m.o:$(DIROpt)/Opt_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIROpt)/Opt_m.f90
+$(DIROBJ)/IRC_m.o:$(DIROpt)/IRC_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIROpt)/IRC_m.f90
 #
 ##################################################################################
 
@@ -586,6 +588,7 @@ $(DIROBJ)/TEST_Adia.o:   $(ModLib) $(OBJ_AdiaLib)
 $(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 
 $(DIROBJ)/Opt_m.o: $(OBJ_lib) $(DIROBJ)/Model_m.o $(OBJ_QML)
+$(DIROBJ)/IRC_m.o: $(OBJ_lib) $(DIROBJ)/Model_m.o $(DIROBJ)/Opt_m.o $(OBJ_QML)
 
 $(DIROBJ)/Model_m.o: $(DIROBJ)/Basis_m.o $(OBJ_lib) $(OBJ_QML)
 

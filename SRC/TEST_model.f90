@@ -33,7 +33,8 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  !CALL test_Opt() ; stop
+  CALL test_IRC() ; stop
+  CALL test_Opt() ; stop
   !CALL test_PH4() ; stop
 
   !CALL test_Vib_adia() ; stop
@@ -2034,7 +2035,7 @@ SUBROUTINE test_Opt
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
-  TYPE (Opt_t)                   :: Opt_param
+  TYPE (QML_Opt_t)               :: Opt_param
 
   real (kind=Rkind), allocatable :: Q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
@@ -2057,11 +2058,11 @@ SUBROUTINE test_Opt
   !                      nb_points=101, grid_file='grid_Hbond2D')
 
 
-  CALL Init_QML_Opt(Opt_param,QModel,read_param=.FALSE.,param_file_name='opt.dat')
+  !CALL Init_QML_Opt(Opt_param,QModel,read_param=.FALSE.,param_file_name='opt.dat')
+  CALL Init_QML_Opt(Opt_param,QModel,read_param=.TRUE.,param_file_name='opt.dat')
 
   allocate(Q(QModel%QM%ndim))
 
-  !CALL Init_QML_Opt(Opt_param,QModel,read_param=.TRUE.,param_file_name='opt.dat')
 
   CALL QML_Opt(Q,QModel,Opt_param,Q0=[ 5._Rkind,0.1_Rkind ])
 
@@ -2079,6 +2080,55 @@ SUBROUTINE test_Opt
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_Opt
+SUBROUTINE test_IRC
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+  USE Opt_m
+  USE IRC_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  TYPE (QML_IRC_t)               :: IRC_p
+
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' IRC with H3 potential'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+  CALL Init_Model(QModel,pot_name='H3_LSTH',Cart_TO_Q=.TRUE.,PubliUnit=.FALSE.)
+
+
+  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='irc.dat')
+
+  allocate(Q(QModel%QM%ndim))
+
+
+  CALL QML_IRC(Q,QModel,IRC_p,Q0=[ZERO,ZERO,-TWO,ZERO,ZERO,ZERO,ZERO,ZERO,TWO])
+
+  write(out_unitp,*) 'Q(:) (bohr):'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  write(out_unitp,*) 'Potential+derivatives:'
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_IRC
 SUBROUTINE test_Test
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m

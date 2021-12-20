@@ -81,7 +81,7 @@ MODULE Model_m
   PUBLIC :: Write0_Model,Write_Model,Write_QdnV_FOR_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
-  PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model
+  PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model,Qact_TO_Q
 
   TYPE :: Model_t
     ! add nsurf and ndim to avoid crash when using the driver without initialization

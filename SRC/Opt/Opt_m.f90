@@ -38,14 +38,17 @@ MODULE Opt_m
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: Opt_t,Init_QML_Opt,QML_Opt,Write_QML_Opt
+  PUBLIC :: QML_Opt_t,Init_QML_Opt,QML_Opt,Write_QML_Opt
 
-  TYPE :: Opt_t
+  TYPE :: QML_Opt_t
 
     integer                           :: Max_it       = -1 ! it will be set-up after
 
     integer                           :: nb_neg       = 0 ! 0=>minimum, 1=>TS, 2=>top ...
     integer                           :: i_surf       = 0 ! on which surface the optimization is performed (default 1)
+
+    integer, allocatable              :: list_act(:)      ! default all coordinates
+
 
     integer                           :: hessian_type = 0 ! 1=> analytical hessian
 
@@ -55,7 +58,7 @@ MODULE Opt_m
     real (kind=Rkind)                 :: Thresh_RMS_disp     = 0.001200_Rkind
     real (kind=Rkind)                 :: Largest_disp        = 0.5_Rkind
 
-  END TYPE Opt_t
+  END TYPE QML_Opt_t
 
 CONTAINS
 
@@ -66,7 +69,7 @@ CONTAINS
   USE Model_m
   IMPLICIT NONE
 
-    TYPE (Opt_t),       intent(inout)            :: Opt_param
+    TYPE (QML_Opt_t),   intent(inout)            :: Opt_param
     TYPE (Model_t),     intent(in)               :: QModel
     logical,            intent(in),    optional  :: read_param
     integer,            intent(in),    optional  :: nio_param_file
@@ -78,11 +81,12 @@ CONTAINS
     real(kind=Rkind)               :: Largest_disp
     character (len=Name_longlen)   :: hessian_method
 
-    integer                        :: err_read,nio_loc
+    integer                        :: err_read,nio_loc,i
     logical                        :: read_param_loc
     character (len=:), allocatable :: param_file_name_loc
+    integer,           allocatable :: list_act(:)      ! default all coordinates
 
-    namelist /opt/ icv,nb_neg,i_surf,TS,hessian_method,Largest_disp,max_it
+    namelist /opt/ icv,nb_neg,i_surf,TS,hessian_method,Largest_disp,max_it,list_act
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_Opt'
@@ -92,11 +96,17 @@ CONTAINS
 
   IF (debug) THEN
     write(out_unitp,*) ' BEGINNING ',name_sub
-    IF (present(read_param)) write(out_unitp,*) '   read_param',read_param
+    write(out_unitp,*) '   read_param      present?',present(read_param)
+    write(out_unitp,*) '   nio_param_file  present?',present(nio_param_file)
+    write(out_unitp,*) '   param_file_name present?',present(param_file_name)
+    IF (present(param_file_name)) write(out_unitp,*) '   param_file_name ',param_file_name
     flush(out_unitp)
   END IF
 
   CALL check_alloc_QM(QModel,name_sub)
+
+  allocate(list_act(QModel%ndim))
+  list_act(:) = 0
 
   IF (present(read_param)) THEN
     read_param_loc = read_param
@@ -118,7 +128,13 @@ CONTAINS
     nio_loc = in_unitp
     END IF
   END IF
-
+  IF (debug) THEN
+    write(out_unitp,*) '   read_param      ',read_param_loc
+    write(out_unitp,*) '   nio             ',nio_loc
+    write(out_unitp,*) '   allo param_file_name ',allocated(param_file_name_loc)
+    IF (allocated(param_file_name_loc)) write(out_unitp,*) '   param_file_name ',strdup(param_file_name_loc)
+    flush(out_unitp)
+  END IF
 
 
   icv             = -1 ! to be able to change the convergence criteria
@@ -133,7 +149,7 @@ CONTAINS
 
 
   IF (read_param_loc) THEN
-    IF (nio_loc /= in_unitp) THEN
+    IF (nio_loc /= in_unitp .AND. allocated(param_file_name_loc)) THEN
       open(unit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
     END IF
     IF (allocated(param_file_name_loc)) deallocate(param_file_name_loc)
@@ -154,6 +170,10 @@ CONTAINS
       STOP ' ERROR in Init_QML_Opt'
     END IF
 
+  END IF
+
+  IF (count(list_act /=0 ) == 0) THEN
+    list_act(:) = [(i,i=1,QModel%ndim)]
   END IF
 
   IF (icv < 0)      icv    = 0
@@ -192,13 +212,15 @@ CONTAINS
     STOP ' ERROR in Init_QML_Opt: Wrong hessian_method'
   END SELECT
 
-  Opt_param = Opt_t(Max_it=Max_it,nb_neg=nb_neg,i_surf=i_surf,                  &
-                    hessian_type=hessian_type,Largest_disp=Largest_disp)
+  Opt_param = QML_Opt_t(Max_it=Max_it,nb_neg=nb_neg,i_surf=i_surf,              &
+                        hessian_type=hessian_type,Largest_disp=Largest_disp)
 
   Opt_param%Thresh_max_grad = Opt_param%Thresh_max_grad/TEN**icv
   Opt_param%Thresh_RMS_grad = Opt_param%Thresh_RMS_grad/TEN**icv
   Opt_param%Thresh_max_disp = Opt_param%Thresh_max_disp/TEN**icv
   Opt_param%Thresh_RMS_disp = Opt_param%Thresh_RMS_disp/TEN**icv
+
+  Opt_param%list_act        = pack(list_act,mask=(list_act /= 0))
 
   IF (debug) THEN
     CALL Write_QML_Opt(Opt_param)
@@ -210,7 +232,7 @@ CONTAINS
   SUBROUTINE Write_QML_Opt(Opt_param)
   IMPLICIT NONE
 
-    TYPE (Opt_t),       intent(in)            :: Opt_param
+    TYPE (QML_Opt_t),       intent(in)            :: Opt_param
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Write_QML_Opt'
@@ -224,7 +246,9 @@ CONTAINS
     write(out_unitp,*) ' i_surf          ',Opt_param%i_surf
     write(out_unitp,*) ' nb_neg          ',Opt_param%nb_neg
     write(out_unitp,*) ' hessian_type    ',Opt_param%hessian_type
-
+    IF (allocated(Opt_param%list_act)) THEN
+    write(out_unitp,*) ' list_act        ',Opt_param%list_act
+    END IF
     write(out_unitp,*) ' Thresh_max_grad ',Opt_param%Thresh_max_grad
     write(out_unitp,*) ' Thresh_RMS_grad ',Opt_param%Thresh_RMS_grad
     write(out_unitp,*) ' Thresh_max_disp ',Opt_param%Thresh_max_disp
@@ -245,14 +269,14 @@ CONTAINS
 
     real (kind=Rkind),  intent(inout)            :: Q(:)
     TYPE (Model_t),     intent(inout)            :: QModel
-    TYPE (Opt_t),       intent(in)               :: Opt_param
+    TYPE (QML_Opt_t),   intent(in)               :: Opt_param
 
     real (kind=Rkind),  intent(in),    optional  :: Q0(:)
 
 
     TYPE (dnMat_t)                  :: PotVal
-    integer                         :: it,iq,i
-    real (kind=Rkind), allocatable  :: Qit(:)
+    integer                         :: it,iq,i,nb_act
+    real (kind=Rkind), allocatable  :: Qit(:),Qit_act(:)
     real (kind=Rkind), allocatable  :: mDQit(:)   ! -DelatQ
     real (kind=Rkind), allocatable  :: Thess(:,:),hess(:,:),grad(:)
     real (kind=Rkind), allocatable  :: diag(:),Vec(:,:),tVec(:,:)
@@ -281,28 +305,34 @@ CONTAINS
     STOP 'ERROR in QML_Opt: Opt_param is not initialized'
   END IF
 
-  allocate(Qit(QModel%ndim))
-  allocate(mDQit(QModel%ndim))
-  allocate(grad(QModel%ndim))
-  allocate(hess(QModel%ndim,QModel%ndim))
-  allocate(vec(QModel%ndim,QModel%ndim))
-  allocate(diag(QModel%ndim))
+  nb_act = count(Opt_param%list_act>0)
 
+  allocate(Qit_act(nb_act))
+  allocate(mDQit(nb_act))
+  allocate(grad(nb_act))
+  allocate(hess(nb_act,nb_act))
+  allocate(vec(nb_act,nb_act))
+  allocate(diag(nb_act))
+
+
+  allocate(Qit(QModel%ndim))
   IF (present(Q0)) THEN
     Qit(:) = Q0
   ELSE
     CALL get_Q0_Model(Qit,QModel,0)
   END IF
+  Qit_act(:) = Qit(Opt_param%list_act)
+
 
   write(out_unitp,*) '=================================================='
   DO it=0,Opt_param%Max_it
 
     CALL Eval_Pot(QModel,Qit,PotVal,nderiv=2)
 
-    grad(:)   = PotVal%d1(Opt_param%i_surf,Opt_param%i_surf,:)
-    hess(:,:) = PotVal%d2(Opt_param%i_surf,Opt_param%i_surf,:,:)
+    grad   = PotVal%d1(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act)
+    hess = PotVal%d2(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act,Opt_param%list_act)
 
-    CALL diagonalization(hess,diag,Vec,QModel%ndim)
+    CALL diagonalization(hess,diag,Vec,nb_act)
     write(out_unitp,*) 'diag',diag
 
     tvec = transpose(vec)
@@ -323,14 +353,14 @@ CONTAINS
     !write(out_unitp,*) 'hess',hess
     !write(out_unitp,*) 'hess?',matmul(Vec,tVec)
 
-    CALL Linear_Sys(hess,grad,mDQit,QModel%ndim)
+    CALL Linear_Sys(hess,grad,mDQit,nb_act)
 
 
 
     max_grad = maxval(abs(grad))
-    RMS_grad = sqrt(dot_product(grad,grad)/QModel%ndim)
+    RMS_grad = sqrt(dot_product(grad,grad)/nb_act)
     max_disp = maxval(abs(mDQit))
-    RMS_disp = sqrt(dot_product(mDQit,mDQit)/QModel%ndim)
+    RMS_disp = sqrt(dot_product(mDQit,mDQit)/nb_act)
 
     write(out_unitp,*) '--------------------------------------------------'
     write(out_unitp,*) 'it,E',it,PotVal%d0(Opt_param%i_surf,Opt_param%i_surf)
@@ -353,7 +383,7 @@ CONTAINS
       mDQit = mDQit * Opt_param%Largest_disp/norm_disp
     END IF
 
-    DO iq=1,QModel%ndim
+    DO iq=1,nb_act
       write(out_unitp,*) 'iq,Q(iq),grad(iq),DelatQ(iq)',iq,Qit(iq),grad(iq),-mDQit(iq)
     END DO
 
@@ -362,7 +392,11 @@ CONTAINS
            (max_disp <= Opt_param%Thresh_max_disp) .AND.                               &
            (RMS_disp <= Opt_param%Thresh_RMS_disp)
 
-    Qit(:) = Qit-mDQit
+    Qit_act(:) = Qit_act-mDQit
+    CALL Qact_TO_Q(Qit_act,Qit,Opt_param%list_act)
+    !DO i=1,nb_act
+    !  Qit(Opt_param%list_act(i)) = Qit_act(i)
+    !END DO
 
     IF (conv) EXIT
   END DO
@@ -379,6 +413,7 @@ CONTAINS
   END IF
   write(out_unitp,*) '=================================================='
 
+  deallocate(Qit_act)
   deallocate(Qit)
   deallocate(mDQit)
   deallocate(grad)

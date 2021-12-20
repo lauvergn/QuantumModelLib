@@ -83,13 +83,15 @@ MODULE QML_Empty_m
      !PROCEDURE :: get2_Q0_QModel     => get2_Q0_QML_Empty
       PROCEDURE :: get_d0GGdef_QModel => get_d0GGdef_QML_Empty
       PROCEDURE :: Cart_TO_Q_QModel   => Cart_TO_Q_QML_Empty
-
   END TYPE QML_Empty_t
 
   INTERFACE get_Q0_QModel
     MODULE PROCEDURE get_Q0_QML_Empty
   END INTERFACE
 
+  INTERFACE Qact_TO_Q
+    MODULE PROCEDURE Qact_TO_Q_QML_Empty
+  END INTERFACE
 
 CONTAINS
 
@@ -401,4 +403,20 @@ CONTAINS
     dnQ(:) = ZERO
 
   END SUBROUTINE Cart_TO_Q_QML_Empty
+  SUBROUTINE Qact_TO_Q_QML_Empty(Qact,Q,list_act)
+  USE QMLdnSVM_dnS_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),       intent(in)    :: Qact(:)
+    integer,                 intent(in)    :: list_act(:)
+    real (kind=Rkind),       intent(inout) :: Q(:)
+
+
+    integer    :: i
+
+    DO i=1,size(Qact)
+      Q(list_act(i)) = Qact(i)
+    END DO
+
+  END SUBROUTINE Qact_TO_Q_QML_Empty
 END MODULE QML_Empty_m

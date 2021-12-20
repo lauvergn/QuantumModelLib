@@ -1,6 +1,10 @@
 &opt
-  icv = 2
+  icv = 3
+  TS=t
   hessian_method = 'ana'
   Largest_disp   = 0.4
+  list_act=3,9
  /
-  list_act=2
+&irc
+ Max_it = 1000
+ /
