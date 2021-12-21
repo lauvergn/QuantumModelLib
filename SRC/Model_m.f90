@@ -66,6 +66,7 @@ MODULE Model_m
   USE QML_OneDSOC_2S1T_m
 
   USE QML_LinearHBond_m
+  USE QML_TwoD_MullerBrown_m
   USE QML_Buck_m
   USE QML_Phenol_m
   USE QML_Sigmoid_m
@@ -544,6 +545,26 @@ CONTAINS
       allocate(QML_LinearHBond_t :: QModel%QM)
       QModel%QM = Init_QML_LinearHBond(QModel_in,read_param=read_nml,           &
                                        nio_param_file=nio_loc)
+
+    CASE ('2d_mb','2d_mullerbrown','mullerbrown')
+      !! === README ==
+      !! 2D Müller-Brown potential:
+      !! pot_name  = '2d_mb'
+      !! ndim      = 2   (x,y)
+      !! nsurf     = 1
+      !! reduced masses      = [1000.,1000.]
+      !!
+      !! ref:   Klaus Müller and Leo D. Brown, ...
+      !!        ... Theoret. Chim. Acta (Berl.) 53, 75-93 (1979)
+      !!        https://doi.org/10.1007/BF00547608.
+      !!
+      !! remark: the option enables one to select among three minima and two TS.
+      !!         default (option=1), the first minimum (A in the reference)
+      !!
+      !! === END README ==
+      allocate(QML_TwoD_MullerBrown_t :: QModel%QM)
+      QModel%QM = Init_QML_TwoD_MullerBrown(QModel_in,read_param=read_nml,      &
+                                            nio_param_file=nio_loc)
 
     CASE ('henonheiles')
       !! === README ==

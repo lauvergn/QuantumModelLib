@@ -33,6 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  CALL test_Opt_MullerBrown() ; stop
   CALL test_IRC() ; stop
   CALL test_Opt() ; stop
   !CALL test_PH4() ; stop
@@ -2080,6 +2081,60 @@ SUBROUTINE test_Opt
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_Opt
+SUBROUTINE test_Opt_MullerBrown
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  TYPE (QML_Opt_t)               :: Opt_param
+
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Optimization with 2D Müller-Brown potential'
+  write(out_unitp,*) ' Assumed units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+  CALL Init_Model(QModel,pot_name='2D_MB',Print_init=.FALSE.)
+  CALL Write0_Model(QModel)
+
+  DO option=1,5
+
+    CALL Init_Model(QModel,pot_name='2D_MB',Print_init=.FALSE.,option=option)
+
+    Q = QModel%QM%Q0
+
+    CALL Init_QML_Opt(Opt_param,QModel,read_param=.FALSE.)
+    IF (option > 3) Opt_param%nb_neg = 1
+    CALL QML_Opt(Q,QModel,Opt_param,Q0=QModel%QM%Q0)
+
+    write(out_unitp,*) 'Potential+derivatives:'
+    CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
+    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+    ! For testing the model
+    CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Müller-Brown' // int_TO_char(option))
+
+  END DO
+
+  deallocate(Q)
+  CALL QML_dealloc_dnMat(PotVal)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_Opt_MullerBrown
 SUBROUTINE test_IRC
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m

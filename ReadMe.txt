@@ -176,6 +176,19 @@
 =========================================
 =========================================
 =========================================
+      !! pot_name  = 'Phenol'
+=========================================
+      !! Phenol model
+      !! pot_name  = 'Phenol'
+      !! ndim      = 2 (R=rOH, th=OH-torsion)
+      !! nsurf     = 3
+      !! Diagonal Metric Tensor(:)      = (/ 0.0005786177, 0.0002550307 /) au
+      !! remark:
+      !! ref: Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
+=========================================
+=========================================
+=========================================
+=========================================
       !! pot_name  = 'TwoD'
 =========================================
       !! 2D model
@@ -346,6 +359,25 @@
 =========================================
 =========================================
 =========================================
+      !! pot_name  = '2d_mb'
+=========================================
+      !! 2D Müller-Brown potential:
+      !! pot_name  = '2d_mb'
+      !! ndim      = 2   (x,y)
+      !! nsurf     = 1
+      !! reduced masses      = [1000.,1000.]
+      !!
+      !! ref:   Klaus Müller and Leo D. Brown, ...
+      !!        ... Theoret. Chim. Acta (Berl.) 53, 75-93 (1979)
+      !!        https://doi.org/10.1007/BF00547608.
+      !!
+      !! remark: the option enables one to select among three minima and two TS.
+      !!         default (option=1), the first minimum (A in the reference)
+      !!
+=========================================
+=========================================
+=========================================
+=========================================
       !! pot_name  = 'HenonHeiles'
 =========================================
       !! HenonHeiles potential
@@ -394,18 +426,5 @@
       !! reduced mass      = 20000. au
       !! remark: 2 singlets and 1 triplet (2 linear combinations of the triplet components are not included) => nsurf     = 4
       !! ref: Giovanni Granucci, Maurizio Persico, and Gloria Spighi, J. Chem. Phys. V137, p22A501 (2012)
-=========================================
-=========================================
-=========================================
-=========================================
-      !! pot_name  = 'Phenol'
-=========================================
-      !! Phenol model
-      !! pot_name  = 'Phenol'
-      !! ndim      = 2 (R=rOH, th=OH-torsion)
-      !! nsurf     = 3
-      !! Diagonal Metric Tensor(:)      = (/ 0.0005786177, 0.0002550307 /) au
-      !! remark:
-      !! ref: Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
 =========================================
 =========================================

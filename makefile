@@ -277,6 +277,7 @@ OBJ_QML   = $(DIROBJ)/Empty_m.o \
                  $(DIROBJ)/HOO_DMBE_m.o \
                  $(DIROBJ)/H3_m.o \
                  $(DIROBJ)/HenonHeiles_m.o $(DIROBJ)/LinearHBond_m.o \
+								 $(DIROBJ)/TwoD_MullerBrown_m.o \
                  $(DIROBJ)/Phenol_m.o $(DIROBJ)/TwoD_m.o \
                  $(DIROBJ)/PSB3_m.o $(DIROBJ)/Retinal_JPCB2000_m.o \
                  $(DIROBJ)/OneDSOC_1S1T_m.o $(DIROBJ)/OneDSOC_2S1T_m.o \
@@ -415,6 +416,9 @@ $(DIROBJ)/Test_m.o:$(DIRModel)/Test_m.f90
 
 $(DIROBJ)/LinearHBond_m.o:$(DIRModel)/LinearHBond_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/LinearHBond_m.f90
+
+$(DIROBJ)/TwoD_MullerBrown_m.o:$(DIRModel)/TwoD_MullerBrown_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/TwoD_MullerBrown_m.f90
 
 $(DIROBJ)/Phenol_m.o:$(DIRModel)/Phenol_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Phenol_m.f90
@@ -624,6 +628,7 @@ $(DIROBJ)/H2SiN_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/H2NSi_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/LinearHBond_m.o:       $(DIROBJ)/Empty_m.o $(OBJ_lib) \
                                           $(DIROBJ)/Morse_m.o $(DIROBJ)/Buck_m.o
+$(DIROBJ)/TwoD_MullerBrown_m.o:  $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/Phenol_m.o:            $(DIROBJ)/Empty_m.o $(OBJ_lib) \
                                        $(DIROBJ)/Morse_m.o $(DIROBJ)/Sigmoid_m.o
 #
