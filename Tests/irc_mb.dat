@@ -5,6 +5,16 @@
   Largest_disp   = 0.4
  /
 &irc
- Max_it = 100
- Delta_s = 0.01
+ Max_it = 10
+ Delta_s = 0.1
+ Method='BS'
+ order2=16
+ Method2='Euler'
  /
+ Method='Euler'
+ Method='MidPoint'
+
+ Method='BS'
+ order2=16
+ Method2='MidPoint'
+ Method2='Euler'

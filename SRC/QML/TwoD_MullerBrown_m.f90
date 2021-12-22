@@ -217,6 +217,8 @@ MODULE QML_TwoD_MullerBrown_m
     TYPE (dnS_t)     :: dnDX,dnDY
     integer :: i
 
+    real (kind=Rkind),   parameter     :: EnergyConv = 627.509_Rkind
+
 
     i = 1
     dnDX = dnQ(1)-QModel%x0(i)
@@ -232,6 +234,9 @@ MODULE QML_TwoD_MullerBrown_m
       Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1) +   QModel%AA(i) *                &
           exp(QModel%a(i)*dnDX**2 + QModel%b(i)*dnDX*dnDY + QModel%c(i)*dnDY**2)
     END DO
+
+   IF(.NOT. QModel%PubliUnit) Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1)/EnergyConv
+
 
     CALL QML_dealloc_dnS(dnDX)
     CALL QML_dealloc_dnS(dnDY)

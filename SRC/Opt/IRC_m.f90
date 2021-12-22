@@ -45,6 +45,10 @@ MODULE IRC_m
 
     integer                           :: IRC_Max_it       = -1 ! it will be set-up after
     real (kind=Rkind)                 :: Delta_s          = ONETENTH**2
+    character (len=:), allocatable    :: Method
+
+    integer                           :: order2           = 8  ! used only when Method='BS'
+    character (len=:), allocatable    :: Method2               ! used only when Method='BS'
 
     real (kind=Rkind)                 :: Ene_TS           = ZERO
     real (kind=Rkind), allocatable    :: Grad_QactTS(:)
@@ -86,10 +90,11 @@ CONTAINS
     logical                        :: read_param_loc
     character (len=:), allocatable :: param_file_name_loc
 
-    integer                        :: Max_it
+    integer                        :: Max_it,order2
     real (kind=Rkind)              :: Delta_s
+    character (len=Name_longlen)   :: Method,Method2
 
-    namelist /IRC/ max_it,Delta_s
+    namelist /IRC/ max_it,Delta_s,Method,Method2,order2
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_IRC'
@@ -138,6 +143,9 @@ CONTAINS
 
   Max_it          = -1
   Delta_s         = ONETENTH**2
+  Method          = 'BS'
+  Method2         = 'ModMidPoint'
+  order2          = 8
 
   IF (read_param_loc) THEN
     IF (nio_loc /= in_unitp) THEN
@@ -170,10 +178,18 @@ CONTAINS
 
   IF (max_it < 0)   Max_it = 10
 
-  IRC_p = QML_IRC_t(IRC_Max_it=Max_it,Delta_s=Delta_s,QML_Opt_t=IRC_p%QML_Opt_t)
+  CALL string_uppercase_TO_lowercase(method2,lower=.TRUE.)
+  CALL string_uppercase_TO_lowercase(method,lower=.TRUE.)
+
+  IRC_p = QML_IRC_t(IRC_Max_it=Max_it,Delta_s=Delta_s,                          &
+                    Method=trim(method),Method2=trim(method2),order2=order2,    &
+                    QML_Opt_t=IRC_p%QML_Opt_t)
+
+
+  CALL Write_QML_IRC(IRC_p)
 
   IF (debug) THEN
-    CALL Write_QML_IRC(IRC_p)
+    !CALL Write_QML_IRC(IRC_p)
     write(out_unitp,*) ' END ',name_sub
     flush(out_unitp)
   END IF
@@ -196,7 +212,9 @@ CONTAINS
 
     write(out_unitp,*) ' IRC_Maxt_it     ',IRC_p%IRC_Max_it
     write(out_unitp,*) ' Delta_s         ',IRC_p%Delta_s
-
+    write(out_unitp,*) ' Method          ',IRC_p%Method
+    write(out_unitp,*) ' Method2         ',IRC_p%Method2
+    write(out_unitp,*) ' order2          ',IRC_p%order2
     write(out_unitp,*) ' END ',name_sub
     flush(out_unitp)
 
@@ -219,14 +237,14 @@ CONTAINS
 
     TYPE (QML_Opt_t)                :: Opt_p
     integer                         :: it
-    real (kind=Rkind), allocatable  :: QactOld(:),QactNew(:)
+    real (kind=Rkind), allocatable  :: QactOld(:),QactNew(:),grad(:)
     real (kind=Rkind)               :: s,Ene_AT_s
-    logical                         :: forward
+    real (kind=Rkind)               :: forward
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='QML_IRC'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
   IF (debug) THEN
@@ -261,43 +279,45 @@ CONTAINS
   s       = ZERO
   QactOld = IRC_p%QactTS
   allocate(QactNew(size(QactOld)))
-  forward = .TRUE.
+  allocate(grad(size(QactOld)))
+  forward = ONE
 
   DO it=0,IRC_p%IRC_Max_it-1
 
-    CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m=100,forward=forward)
+    CALL QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward=forward,   &
+                     Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
 
-    write(out_unitp,*) 's,Qact,E',s,QactOld,Ene_AT_s
+    write(out_unitp,*) 's,Qact,|grad|,E',s,QactOld,norm2(grad),Ene_AT_s
     flush(out_unitp)
 
-    s       = s    +         IRC_p%Delta_s
+    s       = s + forward*IRC_p%Delta_s
     QactOld = QactNew
 
   END DO
-  CALL QML_IRC_fcn(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward)
-  write(out_unitp,*) 's,Qact,E',s,QactOld,Ene_AT_s
+  CALL QML_IRC_fcn(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward,grad)
+  write(out_unitp,*) 's,Qact,|grad|,E',s,QactOld,norm2(grad),Ene_AT_s
   flush(out_unitp)
 
   s       = ZERO
   QactOld = IRC_p%QactTS
-  forward = .FALSE.
+  forward = -ONE
 
   DO it=0,IRC_p%IRC_Max_it-1
 
-    CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m=100,forward=forward)
+    CALL QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward=forward,   &
+                     Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
 
-    write(out_unitp,*) 's,Qact,E',s,QactOld,Ene_AT_s
+    write(out_unitp,*) 's,Qact,|grad|,E',s,QactOld,norm2(grad),Ene_AT_s
     flush(out_unitp)
 
-    s       = s    -         IRC_p%Delta_s
+    s       = s + forward*IRC_p%Delta_s
     QactOld = QactNew
 
   END DO
-  CALL QML_IRC_fcn(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward)
-  write(out_unitp,*) 's,Qact,E',s,QactOld,Ene_AT_s
+  CALL QML_IRC_fcn(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward,grad)
+  write(out_unitp,*) 's,Qact,|grad|,E',s,QactOld,norm2(grad),Ene_AT_s
   flush(out_unitp)
 
-STOP
 
   IF (debug) THEN
     write(out_unitp,*) ' END ',name_sub
@@ -306,7 +326,87 @@ STOP
 
   END SUBROUTINE QML_IRC
 
-  SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m,forward)
+  SUBROUTINE QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward,       &
+                         grad_AT_s,Method,order)
+  USE QMLLib_UtilLib_m
+  USE Model_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in)               :: s
+    real (kind=Rkind),  intent(in)               :: QactOld(:)
+    real (kind=Rkind),  intent(inout)            :: QactNew(:)
+    real (kind=Rkind),  intent(inout), optional  :: grad_AT_s(:)
+    real (kind=Rkind),  intent(inout)            :: Ene_AT_s
+
+    TYPE (Model_t),     intent(inout)            :: QModel
+    TYPE (QML_IRC_t),   intent(in)               :: IRC_p
+    real (kind=Rkind),  intent(in)               :: forward
+    integer,            intent(in),    optional  :: order
+    character (len=*),  intent(in),    optional  :: Method
+
+
+    character (len=:), allocatable  :: Method_loc
+    integer                         :: order_loc
+
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_IRC_ODE'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    write(out_unitp,*) '   s      ',s
+    write(out_unitp,*) '   QactOld',QactOld
+    write(out_unitp,*) '   forward',forward
+    flush(out_unitp)
+  END IF
+
+  IF (present(order)) THEN
+    order_loc = order
+  ELSE
+    order_loc = IRC_p%order2
+  END IF
+
+  IF (present(Method)) THEN
+    Method_loc = Method
+  ELSE
+    Method_loc = IRC_p%Method
+  END IF
+
+  IF (present(grad_AT_s)) THEN
+    SELECT CASE (Method_loc)
+    CASE('midpoint','modmidpoint')
+      CALL QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward,grad_AT_s)
+    CASE('euler')
+      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward,grad_AT_s)
+    CASE('bs','bulirsch-stoer')
+      CALL QML_IRC_BS(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward,grad_AT_s)
+    CASE Default
+      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward,grad_AT_s)
+    END SELECT
+  ELSE
+    SELECT CASE (Method_loc)
+    CASE('midpoint','modmidpoint')
+      CALL QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward)
+    CASE('euler')
+      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward)
+    CASE('bs','bulirsch-stoer')
+      STOP 'ERROR in QML_IRC_ODE: bulirsch-stoer method sould be called with grad_AT_s(:)'
+    CASE Default
+      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward)
+    END SELECT
+  END IF
+
+  IF (debug) THEN
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_IRC_ODE
+
+  SUBROUTINE QML_IRC_BS(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order,forward,grad_AT_s)
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
   USE QMLLib_Matrix_m
@@ -318,11 +418,119 @@ STOP
     real (kind=Rkind),  intent(in)               :: s
     real (kind=Rkind),  intent(in)               :: QactOld(:)
     real (kind=Rkind),  intent(inout)            :: QactNew(:)
+    real (kind=Rkind),  intent(inout)            :: grad_AT_s(:)
     real (kind=Rkind),  intent(inout)            :: Ene_AT_s
 
     TYPE (Model_t),     intent(inout)            :: QModel
     TYPE (QML_IRC_t),   intent(in)               :: IRC_p
-    logical,            intent(in)               :: forward
+    real (kind=Rkind),  intent(in)               :: forward
+    integer,            intent(in)               :: order
+
+
+    integer                         :: nb_act
+    real (kind=Rkind)               :: Ene_loc
+
+    real (kind=Rkind), allocatable :: yt0(:,:),yt1(:,:)
+    real (kind=Rkind), allocatable :: yerr(:)
+    real(kind=Rkind)               :: x,err0,err1
+    integer                        :: i,j,m
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_IRC_BS'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    write(out_unitp,*) '   s      ',s
+    write(out_unitp,*) '   QactOld',QactOld
+    write(out_unitp,*) '   forward',forward
+    write(out_unitp,*) '   order  ',order
+
+    flush(out_unitp)
+  END IF
+
+  IF (order < 1) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' order < 1. order:',order
+    write(out_unitp,*) ' order MUST be larger than 0'
+    STOP 'ERROR in QML_IRC_BS: order < 1.'
+  END IF
+  nb_act = size(QactOld)
+  allocate(yt0(nb_act,0:0))
+  allocate(yerr(nb_act))
+
+  yerr     = ZERO
+  m        = 2
+  !yt0(:,0) = QactOld
+
+  CALL QML_IRC_ODE(s,QactOld,yt0(:,0),Ene_AT_s,QModel,IRC_p,forward,            &
+                   Method=IRC_p%Method2,order=m,grad_AT_s=grad_AT_s)
+
+  err0 = huge(ONE)
+
+  DO j=1,order
+    allocate(yt1(nb_act,0:j))
+    m = 2*j+2
+    !yt1(:,0) = QactOld
+
+    CALL QML_IRC_ODE(s,QactOld,yt1(:,0),Ene_loc,QModel,IRC_p,forward,           &
+                     Method=IRC_p%Method2,order=m)
+
+    !extrapolation
+    DO i=1,j
+      x = real(2*j+2,kind=Rkind)/real(2*(j-i)+2,kind=Rkind)
+      x = ONE/(x**2-ONE)
+      yerr(:)  = yt1(:,i-1) - yt0(:,i-1)
+      yt1(:,i) = yt1(:,i-1) + yerr(:)*x
+    END DO
+
+    yerr(:) = yt1(:,j) - yt0(:,j-1)
+    err1    = norm2(yerr)
+
+    deallocate(yt0)
+    allocate(yt0(nb_act,0:j))
+    DO i=lbound(yt1,dim=2),ubound(yt1,dim=2)
+      yt0(:,i) = yt1(:,i)
+    END DO
+    deallocate(yt1)
+
+    IF (err1 < 1.d-10) EXIT
+
+    err0 = err1
+  END DO
+  write(out_unitp,*) 'end QML_IRC_BS',min(j,order),err1
+
+  QactNew(:) = yt0(:,min(j,order))
+
+
+  IF (debug) THEN
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_IRC_BS
+
+
+  SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m,forward,grad)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE QMLLib_Matrix_m
+  USE QMLLib_diago_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in)               :: s
+    real (kind=Rkind),  intent(in)               :: QactOld(:)
+    real (kind=Rkind),  intent(inout)            :: QactNew(:)
+    real (kind=Rkind),  intent(inout), optional  :: grad(:)
+    real (kind=Rkind),  intent(inout)            :: Ene_AT_s
+
+    TYPE (Model_t),     intent(inout)            :: QModel
+    TYPE (QML_IRC_t),   intent(in)               :: IRC_p
+    real (kind=Rkind),  intent(in)               :: forward
     integer,            intent(in)               :: m
 
 
@@ -355,35 +563,24 @@ STOP
   allocate(dQact(size(QactOld)))
   Delta_s = IRC_p%Delta_s/m
 
-  IF (forward) THEN
-    DO it=1,m
+  DO it=1,m
 
-      CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_loc,QModel,IRC_p,forward=.TRUE.)
+    IF (it == 1) THEN
+      IF (present(grad)) THEN
+        CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_loc,QModel,IRC_p,forward,grad)
+      ELSE
+        CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_loc,QModel,IRC_p,forward)
+      END IF
+      Ene_AT_s = Ene_loc
+    ELSE
+      CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_loc,QModel,IRC_p,forward)
+    END IF
+    IF (debug) write(out_unitp,*) 's,Qact,E',s_loc,Qact,Ene_loc
+    IF (debug) flush(out_unitp)
 
-      IF (it == 1) Ene_AT_s = Ene_loc
-
-      IF (debug) write(out_unitp,*) 's,Qact,E',s_loc,Qact,Ene_loc
-      IF (debug) flush(out_unitp)
-
-      s_loc = s_loc +         Delta_s
-      Qact  = Qact  + dQact * Delta_s
-
-    END DO
-  ELSE
-    DO it=1,m
-
-      CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_loc,QModel,IRC_p,forward=.FALSE.)
-
-      IF (it == 1) Ene_AT_s = Ene_loc
-
-      IF (debug) write(out_unitp,*) 's,Qact,E',s_loc,Qact,Ene_loc
-      IF (debug) flush(out_unitp)
-
-      s_loc = s_loc -         Delta_s
-      Qact  = Qact  + dQact * Delta_s
-
-    END DO
-  END IF
+    s_loc = s_loc + forward * Delta_s
+    Qact  = Qact  +   dQact * Delta_s
+  END DO
 
   QactNew = Qact
 
@@ -393,9 +590,91 @@ STOP
     flush(out_unitp)
   END IF
 
-END SUBROUTINE QML_IRC_mEuler
+  END SUBROUTINE QML_IRC_mEuler
+  SUBROUTINE QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m,forward,grad)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE QMLLib_Matrix_m
+  USE QMLLib_diago_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
 
-SUBROUTINE QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward)
+    real (kind=Rkind),  intent(in)               :: s
+    real (kind=Rkind),  intent(in)               :: QactOld(:)
+    real (kind=Rkind),  intent(inout)            :: QactNew(:)
+    real (kind=Rkind),  intent(inout), optional  :: grad(:)
+    real (kind=Rkind),  intent(inout)            :: Ene_AT_s
+
+    TYPE (Model_t),     intent(inout)            :: QModel
+    TYPE (QML_IRC_t),   intent(in)               :: IRC_p
+    real (kind=Rkind),  intent(in)               :: forward
+    integer,            intent(in)               :: m
+
+
+    integer                         :: it
+    real (kind=Rkind), allocatable  :: Qact(:),dQact(:)
+    real (kind=Rkind)               :: s_loc,Ene_loc,Delta_s
+    real (kind=Rkind), allocatable  :: zkm(:),zk(:),zkp(:)
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_IRC_ModMidPoint'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    write(out_unitp,*) '   s      ',s
+    write(out_unitp,*) '   QactOld',QactOld
+    flush(out_unitp)
+  END IF
+
+  IF (m < 1) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' m < 1',m
+    write(out_unitp,*) ' m MUST be larger than 0'
+    STOP 'ERROR in QML_IRC_ModMidPoint: m < 1'
+  END IF
+
+  s_loc = s
+  Qact  = QactOld
+  allocate(dQact(size(QactOld)))
+  Delta_s = IRC_p%Delta_s/m
+
+  zkm = QactOld
+  IF (present(grad)) THEN
+    CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward,grad)
+  ELSE
+    CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward)
+  END IF
+  zk  = QactOld + dQact * Delta_s
+
+
+  DO it=1,m-1
+    CALL QML_IRC_fcn(s_loc,zk,dQact,Ene_loc,QModel,IRC_p,forward)
+    zkp = zkm + TWO*Delta_s * dQact
+    zkm = zk
+    zk  = zkp
+  END DO
+
+  CALL QML_IRC_fcn(s_loc,zk,zkp,Ene_loc,QModel,IRC_p,forward)
+  dQact = Delta_s * zkp
+
+  zkp = zk + zkm
+
+  zk =  zkp + dQact
+  QactNew = HALF * zk
+
+
+  IF (debug) THEN
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+  END SUBROUTINE QML_IRC_ModMidPoint
+
+  SUBROUTINE QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward,Grad)
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
   USE Model_m
@@ -408,7 +687,8 @@ SUBROUTINE QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward)
 
     TYPE (Model_t),     intent(inout)            :: QModel
     TYPE (QML_IRC_t),   intent(in)               :: IRC_p
-    logical,            intent(in)               :: forward
+    real (kind=Rkind),  intent(in)               :: forward
+    real (kind=Rkind),  intent(inout), optional  :: Grad(:)
 
     TYPE (dnMat_t)                  :: PotVal
     real (kind=Rkind), allocatable  :: Qit(:)
@@ -421,17 +701,16 @@ SUBROUTINE QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward)
 
   IF (debug) THEN
     write(out_unitp,*) ' BEGINNING ',name_sub
+    write(out_unitp,*) 's,forward  ',s,forward
+
     flush(out_unitp)
   END IF
 
   IF (s == ZERO) THEN
-    IF (forward) THEN
-       dQact =  IRC_p%EigenVec_QactTS
-    ELSE
-       dQact = -IRC_p%EigenVec_QactTS
-    END IF
+    dQact    =  forward * IRC_p%EigenVec_QactTS
     Ene_AT_s = IRC_p%Ene_TS
-  ELSE
+    IF (present(grad)) grad = IRC_p%Grad_QactTS
+   ELSE
     Qit = IRC_p%QTS
 
     CALL Qact_TO_Q(Qact,Qit,IRC_p%list_act)
@@ -440,8 +719,11 @@ SUBROUTINE QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward)
     CALL Eval_Pot(QModel,Qit,PotVal,nderiv=1)
 
     Ene_AT_s = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
+    !write(6,*) 's,Qact,|grad|',s,Qact,norm2(PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act))
 
     dQact    = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
+    IF (present(grad)) grad = dQact
+
     dQact    = -dQact/norm2(dQact)
 
     deallocate(Qit)
@@ -587,7 +869,7 @@ END SUBROUTINE QML_IRC_at_TS
 
   DO it=0,IRC_p%IRC_Max_it
 
-    CALL QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward=.TRUE.)
+    CALL QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward=ONE)
 
     write(out_unitp,*) 's,Qact,E',s,Qact,Ene_AT_s
     flush(out_unitp)
@@ -602,7 +884,7 @@ END SUBROUTINE QML_IRC_at_TS
 
   DO it=0,IRC_p%IRC_Max_it
 
-    CALL QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward=.FALSE.)
+    CALL QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward=-ONE)
 
     write(out_unitp,*) 's,Qact,E',s,Qact,Ene_AT_s
     flush(out_unitp)
