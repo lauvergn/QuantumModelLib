@@ -5,10 +5,11 @@
   Largest_disp   = 0.4
  /
 &irc
- Max_it = 10
- Delta_s = 0.1
+ Max_it = 50
+ Delta_s = 0.02
  Method='BS'
- order2=16
+ order2=10
+ m0_BS=8
  Method2='Euler'
  /
  Method='Euler'

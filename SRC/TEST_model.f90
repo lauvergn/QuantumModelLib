@@ -33,7 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  CALL test_IRC_MullerBrown() ; stop
+  !CALL test_IRC_MullerBrown() ; stop
   CALL test_IRC_H3() ; stop
   CALL test_Opt_H3() ; stop
   !CALL test_PH4() ; stop
