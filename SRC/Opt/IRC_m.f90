@@ -46,6 +46,12 @@ MODULE IRC_m
     integer                           :: IRC_Max_it       = -1 ! it will be set-up after
     real (kind=Rkind)                 :: Delta_s          = ONETENTH**2
 
+    real (kind=Rkind)                 :: Ene_TS           = ZERO
+    real (kind=Rkind), allocatable    :: Grad_QactTS(:)
+    real (kind=Rkind), allocatable    :: QTS(:)
+    real (kind=Rkind), allocatable    :: QactTS(:)
+    real (kind=Rkind), allocatable    :: EigenVec_QactTS(:)
+
   END TYPE QML_IRC_t
 
   TYPE :: QML_IRC_at_s
@@ -188,13 +194,433 @@ CONTAINS
 
     CALL Write_QML_Opt(IRC_p%QML_Opt_t)
 
-    write(out_unitp,*) ' IRC_Maxt_it         ',IRC_p%IRC_Max_it
+    write(out_unitp,*) ' IRC_Maxt_it     ',IRC_p%IRC_Max_it
+    write(out_unitp,*) ' Delta_s         ',IRC_p%Delta_s
 
     write(out_unitp,*) ' END ',name_sub
     flush(out_unitp)
 
   END SUBROUTINE Write_QML_IRC
   SUBROUTINE QML_IRC(Q,QModel,IRC_p,Q0)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE QMLLib_Matrix_m
+  USE QMLLib_diago_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(inout)            :: Q(:)
+    TYPE (Model_t),     intent(inout)            :: QModel
+    TYPE (QML_IRC_t),   intent(inout)            :: IRC_p
+
+    real (kind=Rkind),  intent(in),    optional  :: Q0(:)
+
+
+    TYPE (QML_Opt_t)                :: Opt_p
+    integer                         :: it
+    real (kind=Rkind), allocatable  :: QactOld(:),QactNew(:)
+    real (kind=Rkind)               :: s,Ene_AT_s
+    logical                         :: forward
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_IRC'
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    IF (present(Q0)) write(out_unitp,*) '   Q0',Q0
+    CALL Write_QML_IRC(IRC_p)
+    CALL Write_Model(QModel)
+    flush(out_unitp)
+  END IF
+
+  IF (IRC_p%Max_it < 0) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' IRC_p is not initialized'
+    STOP 'ERROR in QML_IRC: IRC_p is not initialized'
+  END IF
+
+  ! initialization of IRC_at_s%QTS
+  allocate(IRC_p%QTS(QModel%ndim))
+  IF (present(Q0)) THEN
+    IRC_p%QTS(:) = Q0
+  ELSE
+    CALL get_Q0_Model(IRC_p%QTS,QModel,0)
+  END IF
+
+  CALL QML_Opt(IRC_p%QTS,QModel,IRC_p%QML_Opt_t,Q0=IRC_p%QTS)
+  !CALL Write_RVec(IRC_at_s%QTS,    out_unitp,3,name_info='Qit')
+
+  !first point + check if the geometry is a TS (s=0)
+  CALL QML_IRC_at_TS(IRC_p,QModel)
+
+
+  s       = ZERO
+  QactOld = IRC_p%QactTS
+  allocate(QactNew(size(QactOld)))
+  forward = .TRUE.
+
+  DO it=0,IRC_p%IRC_Max_it-1
+
+    CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m=100,forward=forward)
+
+    write(out_unitp,*) 's,Qact,E',s,QactOld,Ene_AT_s
+    flush(out_unitp)
+
+    s       = s    +         IRC_p%Delta_s
+    QactOld = QactNew
+
+  END DO
+  CALL QML_IRC_fcn(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward)
+  write(out_unitp,*) 's,Qact,E',s,QactOld,Ene_AT_s
+  flush(out_unitp)
+
+  s       = ZERO
+  QactOld = IRC_p%QactTS
+  forward = .FALSE.
+
+  DO it=0,IRC_p%IRC_Max_it-1
+
+    CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m=100,forward=forward)
+
+    write(out_unitp,*) 's,Qact,E',s,QactOld,Ene_AT_s
+    flush(out_unitp)
+
+    s       = s    -         IRC_p%Delta_s
+    QactOld = QactNew
+
+  END DO
+  CALL QML_IRC_fcn(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward)
+  write(out_unitp,*) 's,Qact,E',s,QactOld,Ene_AT_s
+  flush(out_unitp)
+
+STOP
+
+  IF (debug) THEN
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+  END SUBROUTINE QML_IRC
+
+  SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m,forward)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE QMLLib_Matrix_m
+  USE QMLLib_diago_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in)               :: s
+    real (kind=Rkind),  intent(in)               :: QactOld(:)
+    real (kind=Rkind),  intent(inout)            :: QactNew(:)
+    real (kind=Rkind),  intent(inout)            :: Ene_AT_s
+
+    TYPE (Model_t),     intent(inout)            :: QModel
+    TYPE (QML_IRC_t),   intent(in)               :: IRC_p
+    logical,            intent(in)               :: forward
+    integer,            intent(in)               :: m
+
+
+    integer                         :: it
+    real (kind=Rkind), allocatable  :: Qact(:),dQact(:)
+    real (kind=Rkind)               :: s_loc,Ene_loc,Delta_s
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_IRC_mEuler'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    write(out_unitp,*) '   s      ',s
+    write(out_unitp,*) '   QactOld',QactOld
+    flush(out_unitp)
+  END IF
+
+  IF (m < 1) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' m < 1',m
+    write(out_unitp,*) ' m MUST be larger than 0'
+    STOP 'ERROR in QML_IRC_mEuler: m < 1'
+  END IF
+
+  s_loc = s
+  Qact = QactOld
+  allocate(dQact(size(QactOld)))
+  Delta_s = IRC_p%Delta_s/m
+
+  IF (forward) THEN
+    DO it=1,m
+
+      CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_loc,QModel,IRC_p,forward=.TRUE.)
+
+      IF (it == 1) Ene_AT_s = Ene_loc
+
+      IF (debug) write(out_unitp,*) 's,Qact,E',s_loc,Qact,Ene_loc
+      IF (debug) flush(out_unitp)
+
+      s_loc = s_loc +         Delta_s
+      Qact  = Qact  + dQact * Delta_s
+
+    END DO
+  ELSE
+    DO it=1,m
+
+      CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_loc,QModel,IRC_p,forward=.FALSE.)
+
+      IF (it == 1) Ene_AT_s = Ene_loc
+
+      IF (debug) write(out_unitp,*) 's,Qact,E',s_loc,Qact,Ene_loc
+      IF (debug) flush(out_unitp)
+
+      s_loc = s_loc -         Delta_s
+      Qact  = Qact  + dQact * Delta_s
+
+    END DO
+  END IF
+
+  QactNew = Qact
+
+
+  IF (debug) THEN
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_IRC_mEuler
+
+SUBROUTINE QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in)               :: s
+    real (kind=Rkind),  intent(in)               :: Qact(:)
+    real (kind=Rkind),  intent(inout)            :: dQact(:)
+    real (kind=Rkind),  intent(inout)            :: Ene_AT_s
+
+    TYPE (Model_t),     intent(inout)            :: QModel
+    TYPE (QML_IRC_t),   intent(in)               :: IRC_p
+    logical,            intent(in)               :: forward
+
+    TYPE (dnMat_t)                  :: PotVal
+    real (kind=Rkind), allocatable  :: Qit(:)
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_IRC_fcn'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    flush(out_unitp)
+  END IF
+
+  IF (s == ZERO) THEN
+    IF (forward) THEN
+       dQact =  IRC_p%EigenVec_QactTS
+    ELSE
+       dQact = -IRC_p%EigenVec_QactTS
+    END IF
+    Ene_AT_s = IRC_p%Ene_TS
+  ELSE
+    Qit = IRC_p%QTS
+
+    CALL Qact_TO_Q(Qact,Qit,IRC_p%list_act)
+
+    !CALL Write_RVec(Qit,    out_unitp,3,name_info='Qit')
+    CALL Eval_Pot(QModel,Qit,PotVal,nderiv=1)
+
+    Ene_AT_s = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
+
+    dQact    = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
+    dQact    = -dQact/norm2(dQact)
+
+    deallocate(Qit)
+  END IF
+
+  IF (debug) THEN
+    write(out_unitp,*) 's,Ene    ',s,Ene_AT_s
+    write(out_unitp,*) 'Qact     ',Qact
+    write(out_unitp,*) 'dQact    ',dQact
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_IRC_fcn
+
+  SUBROUTINE QML_IRC_at_TS(IRC_p,QModel)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE QMLLib_Matrix_m
+  USE QMLLib_diago_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+    TYPE (QML_IRC_t),   intent(inout)            :: IRC_p
+    TYPE (Model_t),     intent(inout)            :: QModel
+
+    TYPE (dnMat_t)                  :: PotVal
+    integer                         :: nb_act
+    real (kind=Rkind), allocatable  :: hess(:,:)
+    real (kind=Rkind), allocatable  :: diag(:),Vec(:,:)
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_IRC_at_TS'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    flush(out_unitp)
+  END IF
+
+  IF (IRC_p%Max_it < 0) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' IRC_p is not initialized'
+    STOP 'ERROR in QML_IRC_at_TS: IRC_p is not initialized'
+  END IF
+
+  nb_act = size(IRC_p%list_act)
+
+  allocate(hess(nb_act,nb_act))
+  allocate(vec(nb_act,nb_act))
+  allocate(diag(nb_act))
+
+
+  !first check if the geometry in Q0 is a TS
+  CALL Eval_Pot(QModel,IRC_p%QTS,PotVal,nderiv=2)
+  hess              = PotVal%d2(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act,IRC_p%list_act)
+  IRC_p%Grad_QactTS = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
+
+  CALL diagonalization(hess,diag,Vec,nb_act,sort=1)
+  write(out_unitp,*) 'grad',IRC_p%Grad_QactTS
+  write(out_unitp,*) 'diag',diag
+  write(out_unitp,*) 'TS',(count(diag < ZERO) == 1)
+  IF ((count(diag < ZERO) /= 1)) STOP 'STOP in QML_IRC_at_TS: Not a TS at s=0'
+
+  !s=0 (TS)
+  IRC_p%Ene_TS          = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
+  IRC_p%QactTS          = IRC_p%QTS(IRC_p%list_act)
+  IRC_p%EigenVec_QactTS = Vec(:,1)
+
+  deallocate(hess)
+  deallocate(vec)
+  deallocate(diag)
+
+  IF (debug) THEN
+    write(out_unitp,*) 's,Ene          ',ZERO,IRC_p%Ene_TS
+    write(out_unitp,*) 'Qact           ',IRC_p%QactTS
+    write(out_unitp,*) 'EigenVec_QactTS',IRC_p%EigenVec_QactTS
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_IRC_at_TS
+  SUBROUTINE QML_IRC_v2(Q,QModel,IRC_p,Q0)
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE QMLLib_Matrix_m
+  USE QMLLib_diago_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(inout)            :: Q(:)
+    TYPE (Model_t),     intent(inout)            :: QModel
+    TYPE (QML_IRC_t),   intent(inout)            :: IRC_p
+
+    real (kind=Rkind),  intent(in),    optional  :: Q0(:)
+
+
+    TYPE (QML_Opt_t)                :: Opt_p
+    integer                         :: it
+    real (kind=Rkind), allocatable  :: Qact(:),dQact(:)
+    real (kind=Rkind)               :: s,Ene_AT_s
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_IRC_v2'
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    IF (present(Q0)) write(out_unitp,*) '   Q0',Q0
+    CALL Write_QML_IRC(IRC_p)
+    CALL Write_Model(QModel)
+    flush(out_unitp)
+  END IF
+
+  IF (IRC_p%Max_it < 0) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' IRC_p is not initialized'
+    STOP 'ERROR in QML_IRC_v2: IRC_p is not initialized'
+  END IF
+
+  ! initialization of IRC_at_s%QTS
+  allocate(IRC_p%QTS(QModel%ndim))
+  IF (present(Q0)) THEN
+    IRC_p%QTS(:) = Q0
+  ELSE
+    CALL get_Q0_Model(IRC_p%QTS,QModel,0)
+  END IF
+
+  CALL QML_Opt(IRC_p%QTS,QModel,IRC_p%QML_Opt_t,Q0=IRC_p%QTS)
+  !CALL Write_RVec(IRC_at_s%QTS,    out_unitp,3,name_info='Qit')
+
+  !first point + check if the geometry is a TS (s=0)
+  CALL QML_IRC_at_TS(IRC_p,QModel)
+  s    = ZERO
+  Qact = IRC_p%QactTS
+  allocate(dQact(size(Qact)))
+
+  DO it=0,IRC_p%IRC_Max_it
+
+    CALL QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward=.TRUE.)
+
+    write(out_unitp,*) 's,Qact,E',s,Qact,Ene_AT_s
+    flush(out_unitp)
+
+    s    = s    +         IRC_p%Delta_s
+    Qact = Qact + dQact * IRC_p%Delta_s
+
+  END DO
+
+  s    = ZERO
+  Qact = IRC_p%QactTS
+
+  DO it=0,IRC_p%IRC_Max_it
+
+    CALL QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward=.FALSE.)
+
+    write(out_unitp,*) 's,Qact,E',s,Qact,Ene_AT_s
+    flush(out_unitp)
+
+    s    = s    -         IRC_p%Delta_s
+    Qact = Qact + dQact * IRC_p%Delta_s
+
+  END DO
+
+STOP
+
+  IF (debug) THEN
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_IRC_v2
+  SUBROUTINE QML_IRC_v1(Q,QModel,IRC_p,Q0)
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
   USE QMLLib_Matrix_m
@@ -218,7 +644,7 @@ CONTAINS
     integer                         :: it
 
 !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='QML_IRC'
+    character (len=*), parameter :: name_sub='QML_IRC_v1'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -287,7 +713,7 @@ CONTAINS
     flush(out_unitp)
   END IF
 
-END SUBROUTINE QML_IRC
+END SUBROUTINE QML_IRC_v1
 
   SUBROUTINE QML_IRC_v0(Q,QModel,IRC_p,Q0)
   USE QMLLib_UtilLib_m
@@ -522,7 +948,7 @@ END SUBROUTINE QML_IRC_v0
   END IF
 
 END SUBROUTINE QML_IRC_FirstPoint
-  SUBROUTINE QML_IRC_NewPoint(IRC_at_s,IRC_at_s_old,QModel,IRC_p,forward)
+SUBROUTINE QML_IRC_NewPoint(IRC_at_s,IRC_at_s_old,QModel,IRC_p,forward)
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
   USE QMLLib_Matrix_m
@@ -541,7 +967,6 @@ END SUBROUTINE QML_IRC_FirstPoint
     logical,            intent(in)               :: forward
 
     TYPE (dnMat_t)                  :: PotVal
-    integer                         :: nb_act
     real (kind=Rkind), allocatable  :: Qit(:)
 
 !----- for debuging --------------------------------------------------
@@ -560,8 +985,6 @@ END SUBROUTINE QML_IRC_FirstPoint
     write(out_unitp,*) ' IRC_p is not initialized'
     STOP 'ERROR in QML_IRC: IRC_p is not initialized'
   END IF
-
-  nb_act = size(IRC_p%list_act)
 
   allocate(Qit(QModel%ndim))
 
@@ -594,4 +1017,5 @@ END SUBROUTINE QML_IRC_FirstPoint
   END IF
 
 END SUBROUTINE QML_IRC_NewPoint
+
 END MODULE IRC_m

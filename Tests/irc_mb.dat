@@ -1,0 +1,10 @@
+&opt
+  icv = 3
+  TS=t
+  hessian_method = 'ana'
+  Largest_disp   = 0.4
+ /
+&irc
+ Max_it = 100
+ Delta_s = 0.01
+ /

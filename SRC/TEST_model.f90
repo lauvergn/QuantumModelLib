@@ -33,9 +33,9 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  CALL test_Opt_MullerBrown() ; stop
-  CALL test_IRC() ; stop
-  CALL test_Opt() ; stop
+  CALL test_IRC_MullerBrown() ; stop
+  CALL test_IRC_H3() ; stop
+  CALL test_Opt_H3() ; stop
   !CALL test_PH4() ; stop
 
   !CALL test_Vib_adia() ; stop
@@ -56,6 +56,9 @@ PROGRAM TEST_model
   CALL test_Buckingham()
   CALL test_Morse()
   CALL test_Poly1D()
+
+  ! One electronic surface + optimization
+  CALL test_Opt_MullerBrown()
 
   ! Several electronic surfaces
   CALL test_Tully()
@@ -2028,7 +2031,7 @@ SUBROUTINE test_H3
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_H3
-SUBROUTINE test_Opt
+SUBROUTINE test_Opt_H3
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
   USE Model_m
@@ -2080,7 +2083,51 @@ SUBROUTINE test_Opt
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-END SUBROUTINE test_Opt
+END SUBROUTINE test_Opt_H3
+SUBROUTINE test_IRC_H3
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+  USE Opt_m
+  USE IRC_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  TYPE (QML_IRC_t)               :: IRC_p
+
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' IRC with H3 potential'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+  CALL Init_Model(QModel,pot_name='H3_LSTH',Cart_TO_Q=.TRUE.,PubliUnit=.FALSE.)
+
+
+  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='irc.dat')
+
+  allocate(Q(QModel%QM%ndim))
+
+
+  CALL QML_IRC(Q,QModel,IRC_p,Q0=[ZERO,ZERO,-TWO,ZERO,ZERO,ZERO,ZERO,ZERO,TWO])
+
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_IRC_H3
 SUBROUTINE test_Opt_MullerBrown
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
@@ -2135,7 +2182,7 @@ SUBROUTINE test_Opt_MullerBrown
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_Opt_MullerBrown
-SUBROUTINE test_IRC
+SUBROUTINE test_IRC_MullerBrown
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
   USE Model_m
@@ -2160,15 +2207,15 @@ SUBROUTINE test_IRC
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   flush(out_unitp)
-  CALL Init_Model(QModel,pot_name='H3_LSTH',Cart_TO_Q=.TRUE.,PubliUnit=.FALSE.)
+  CALL Init_Model(QModel,pot_name='2D_MB',option=4) ! the first TS
 
 
-  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='irc.dat')
+  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='irc_mb.dat')
 
   allocate(Q(QModel%QM%ndim))
 
 
-  CALL QML_IRC(Q,QModel,IRC_p,Q0=[ZERO,ZERO,-TWO,ZERO,ZERO,ZERO,ZERO,ZERO,TWO])
+  CALL QML_IRC(Q,QModel,IRC_p,Q0=QModel%QM%Q0)
 
 
   CALL QML_dealloc_dnMat(PotVal)
@@ -2178,7 +2225,7 @@ SUBROUTINE test_IRC
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-END SUBROUTINE test_IRC
+END SUBROUTINE test_IRC_MullerBrown
 SUBROUTINE test_Test
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m

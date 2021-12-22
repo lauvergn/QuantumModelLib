@@ -394,9 +394,6 @@ CONTAINS
 
     Qit_act(:) = Qit_act-mDQit
     CALL Qact_TO_Q(Qit_act,Qit,Opt_param%list_act)
-    !DO i=1,nb_act
-    !  Qit(Opt_param%list_act(i)) = Qit_act(i)
-    !END DO
 
     IF (conv) EXIT
   END DO
