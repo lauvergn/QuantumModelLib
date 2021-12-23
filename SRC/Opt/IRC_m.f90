@@ -180,10 +180,18 @@ CONTAINS
   CALL string_uppercase_TO_lowercase(method2,lower=.TRUE.)
   CALL string_uppercase_TO_lowercase(method,lower=.TRUE.)
 
-  IRC_p = QML_IRC_t(IRC_Max_it=Max_it,Delta_s=Delta_s,                          &
-                    Method=trim(method),Method2=trim(method2),                  &
-                    order2=order2,m0_BS=m0_BS,                                  &
-                    QML_Opt_t=IRC_p%QML_Opt_t)
+  ! the initialisation with QML_Opt_t=IRC_p%QML_Opt_t does not work with ifort 18
+  ! IRC_p = QML_IRC_t(IRC_Max_it=Max_it,Delta_s=Delta_s,                          &
+  !                   Method=trim(method),Method2=trim(method2),                  &
+  !                   order2=order2,m0_BS=m0_BS,                                  &
+  !                   QML_Opt_t=IRC_p%QML_Opt_t)
+  IRC_p%IRC_Max_it = Max_it
+  IRC_p%Delta_s    = Delta_s
+  IRC_p%Method     = trim(method)
+  IRC_p%Method2    = trim(method2)
+  IRC_p%order2     = order2
+  IRC_p%m0_BS      = m0_BS
+
 
 
   CALL Write_QML_IRC(IRC_p)
