@@ -24,7 +24,7 @@ echo "   OPT: " $ExternalOPT
 echo "   OMP: " $ExternalOMP
 echo "=========================================="
 
-../ModLib.x < input.dat > res
+../ModLib.x < input.dat > res 2>error.log
 ../bin/Compare_QML > Test_QML.log
 
 #grep "The structure of both files are different" Test_QML.log
