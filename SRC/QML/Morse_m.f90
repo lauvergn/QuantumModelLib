@@ -159,9 +159,11 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-    QModel%ndim     = 1
-    QModel%nsurf    = 1
-    QModel%pot_name = 'morse'
+    QModel%In_a_Model = .TRUE.
+    QModel%ndim       = 1
+    QModel%nsurf      = 1
+    QModel%pot_name   = 'morse'
+
     IF (present(model_name)) QModel%pot_name = model_name
 
     IF (debug) write(out_unitp,*) 'init morse parameters (D,a,req), if present'
@@ -266,7 +268,7 @@ CONTAINS
   IMPLICIT NONE
 
     CLASS(QML_Morse_t),    intent(in) :: QModel
-    integer,                intent(in) :: nio
+    integer,               intent(in) :: nio
 
 
     write(nio,*) 'Morse current parameters:'

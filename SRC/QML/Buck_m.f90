@@ -150,9 +150,11 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-    QModel%ndim     = 1
-    QModel%nsurf    = 1
-    QModel%pot_name = 'Buck'
+    QModel%In_a_Model = .TRUE.
+
+    QModel%ndim       = 1
+    QModel%nsurf      = 1
+    QModel%pot_name   = 'Buck'
     IF (present(model_name)) QModel%pot_name = model_name
 
     IF (debug) write(out_unitp,*) 'init Buck parameters (A,B,C), if present'

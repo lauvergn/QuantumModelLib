@@ -287,8 +287,8 @@ CONTAINS
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='QML_Opt'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
   IF (debug) THEN
@@ -296,6 +296,14 @@ CONTAINS
     IF (present(Q0)) write(out_unitp,*) '   Q0',Q0
     CALL Write_QML_Opt(Opt_param)
     CALL Write_Model(QModel)
+    flush(out_unitp)
+  ELSE
+    write(out_unitp,*) '=================================================='
+    write(out_unitp,*) '=================================================='
+    write(out_unitp,*) '=== Optimization on the "',QModel%QM%pot_name,'" model.'
+    write(out_unitp,*) '=== model option:',QModel%QM%option
+    write(out_unitp,*) '=================================================='
+    write(out_unitp,*) '=================================================='
     flush(out_unitp)
   END IF
 
@@ -423,6 +431,13 @@ CONTAINS
     write(out_unitp,*) '   it',it
     write(out_unitp,*) '   Q',Q
     write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  ELSE
+    write(out_unitp,*) '=================================================='
+    write(out_unitp,*) '=================================================='
+    write(out_unitp,*) '=== End of the optimization'
+    write(out_unitp,*) '=================================================='
+    write(out_unitp,*) '=================================================='
     flush(out_unitp)
   END IF
 

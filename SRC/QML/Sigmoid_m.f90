@@ -144,8 +144,9 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-    QModel%ndim     = 1
-    QModel%nsurf    = 1
+    QModel%In_a_Model = .TRUE.
+    QModel%ndim       = 1
+    QModel%nsurf      = 1
 
     QModel%pot_name = 'sigmoid'
     IF (present(model_name)) QModel%pot_name = model_name

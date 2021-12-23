@@ -328,8 +328,9 @@ CONTAINS
 
   END SUBROUTINE QML_IRC
 
-  SUBROUTINE QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward,       &
-                         grad_AT_s,Method,order)
+  RECURSIVE SUBROUTINE QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,                  &
+                                   QModel,IRC_p,forward,                        &
+                                   grad_AT_s,Method,order)
   USE QMLLib_UtilLib_m
   USE Model_m
   IMPLICIT NONE

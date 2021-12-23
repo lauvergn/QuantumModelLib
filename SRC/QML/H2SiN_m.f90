@@ -72,8 +72,8 @@ MODULE QML_H2SiN_m
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_H2SiN'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub

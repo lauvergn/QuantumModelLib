@@ -77,17 +77,17 @@ MODULE QML_HONO_m
   FUNCTION Init_QML_HONO(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (QML_HONO_t)                           :: QModel ! RESULT
+    TYPE (QML_HONO_t)                            :: QModel ! RESULT
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_HONO'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
@@ -246,7 +246,7 @@ MODULE QML_HONO_m
     SELECT CASE (QModel%option)
 
     CASE (0,1,2)
-      CALL EvalPot1_QML_HONO(Mat_OF_PotDia,dnQ,QModel,nderiv)
+      CALL EvalPot1_QML_HONO(Mat_OF_PotDia,dnQ)
 
     CASE Default
       write(out_unitp,*) ' ERROR in EvalPot_QML_HONO '
@@ -262,18 +262,13 @@ MODULE QML_HONO_m
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param QModel             TYPE(QML_HONO_t):  derived type in which the parameters are set-up.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
-!!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
 
-  SUBROUTINE EvalPot1_QML_HONO(Mat_OF_PotDia,dnQ,QModel,nderiv)
+  SUBROUTINE EvalPot1_QML_HONO(Mat_OF_PotDia,dnQ)
   USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:)
-    TYPE(QML_HONO_t),  intent(in)    :: QModel
-    integer,             intent(in)     :: nderiv
 
 
     TYPE (dnS_t)        :: Qw(6)

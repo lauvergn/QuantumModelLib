@@ -456,11 +456,6 @@ CONTAINS
       write(out_unitp,*) 'You have decided to perform a numeric checking of the analytic formulas.'
     END IF
 
-    !read_param_loc = (read_param_loc .AND. read_nml) ! this enables to not read the next namelist when read_param_loc=t
-
-    !CALL QModel_in%Write_QModel(nio=out_unitp)
-
-
     CALL string_uppercase_TO_lowercase(pot_name_loc)
     IF (Print_init_loc) write(out_unitp,*) 'pot_name_loc: ',pot_name_loc
 
@@ -795,8 +790,6 @@ CONTAINS
         write(out_unitp,*) ' This model/potential is unknown. pot_name: ',pot_name_loc
         STOP 'STOP in Init_Model: Other potentials have to be done'
     END SELECT
-
-    CALL QModel%QM%Write_QModel(nio=out_unitp)
 
     IF (present(ndim)) THEN
       IF (ndim > QModel%QM%ndim) THEN
@@ -2571,7 +2564,7 @@ CONTAINS
                          ndim=QModel%QM%ndim,nderiv=nderiv)
 
 
-    IF (QModel%QM%adiabatic) THEN
+    IF (QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1) THEN
       CALL Eval_Pot(QModel,Q,PotVal_ana,nderiv,NAC_ana,Vec_ana,numeric=.FALSE.)
     ELSE
       CALL Eval_Pot(QModel,Q,PotVal_ana,nderiv,numeric=.FALSE.)
@@ -2583,7 +2576,7 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-    IF (QModel%QM%adiabatic) THEN
+    IF (QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1) THEN
       CALL Eval_Pot(QModel,Q,PotVal_num,nderiv,NAC_num,Vec_num,numeric=.TRUE.)
     ELSE
       CALL Eval_Pot(QModel,Q,PotVal_num,nderiv,numeric=.TRUE.)
@@ -2610,7 +2603,7 @@ CONTAINS
       CALL QML_Write_dnMat(Mat_diff,nio=out_unitp)
     END IF
 
-    IF (QModel%QM%adiabatic) THEN
+    IF (QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1) THEN
 
       MaxMat      = QML_get_maxval_OF_dnMat(NAC_ana)
       IF (MaxMat < ONETENTH**6) MaxMat = ONE

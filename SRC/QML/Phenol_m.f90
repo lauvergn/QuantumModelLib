@@ -189,7 +189,7 @@ CONTAINS
       IF (QModel%PubliUnit) THEN
         write(out_unitp,*) 'init Q0 of Phenol [Angs,Rad]'
       ELSE
-        write(out_unitp,*) 'init Q0 of Phenol [Bhor,Rad]'
+        write(out_unitp,*) 'init Q0 of Phenol [Bohr,Rad]'
       END IF
     END IF
     QModel%Q0 = [Req,ZERO]

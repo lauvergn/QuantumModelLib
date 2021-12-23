@@ -77,7 +77,7 @@ MODULE QML_Tully_m
 
     TYPE (QML_Tully_t)                           :: QModel ! RESULT
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: A,B,C,D,E0
@@ -85,8 +85,8 @@ MODULE QML_Tully_m
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_Tully'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub

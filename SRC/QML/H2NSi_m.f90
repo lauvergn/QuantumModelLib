@@ -58,7 +58,7 @@ MODULE QML_H2NSi_m
      integer, allocatable          :: tab_func(:,:)
 
    CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_H2NSi
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_H2NSi
     PROCEDURE :: Write_QModel    => Write_QML_H2NSi
     PROCEDURE :: Write0_QModel   => Write_QML_H2NSi
   END TYPE QML_H2NSi_t
@@ -87,8 +87,8 @@ MODULE QML_H2NSi_m
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_H2NSi'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub

@@ -110,8 +110,8 @@ MODULE QML_CH5_m
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_CH5'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
@@ -164,8 +164,9 @@ MODULE QML_CH5_m
     END SELECT
 
     !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
-    CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
-                     ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
+    CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),     &
+                         QModel%nn(:,ii,jj),ndim,QModel%nt(ii,jj),max_nn,       &
+                         FileName,QModel%file_exist(ii,jj),print_info=debug)
     !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
     IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 energy parameters'
     QModel%ifunc_TO_i1i2(:,ifunc) = [0,0]
@@ -192,8 +193,9 @@ MODULE QML_CH5_m
       END SELECT
 
       !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
-      CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
-                       ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
+      CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),   &
+                           QModel%nn(:,ii,jj),ndim,QModel%nt(ii,jj),max_nn,     &
+                           FileName,QModel%file_exist(ii,jj),print_info=debug)
       !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
 
       IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 Qop parameters'
@@ -230,8 +232,9 @@ MODULE QML_CH5_m
                              int_TO_char(ii) // '_' // int_TO_char(jj) )
       END SELECT
 
-      CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),QModel%nn(:,ii,jj),  &
-                      ndim,QModel%nt(ii,jj),max_nn,FileName,QModel%file_exist(ii,jj))
+      CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),   &
+                           QModel%nn(:,ii,jj),ndim,QModel%nt(ii,jj),max_nn,     &
+                           FileName,QModel%file_exist(ii,jj),print_info=debug)
 
       !IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 hessian parameters'
 
@@ -619,7 +622,7 @@ MODULE QML_CH5_m
 
   END FUNCTION QML_sc_fit3
 
-  SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist)
+  SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist,print_info)
   IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim
@@ -627,10 +630,11 @@ MODULE QML_CH5_m
    real (kind=Rkind), intent(inout) :: a,b,F(max_points)
    character (len=*), intent(in)    :: nom1
    logical,           intent(inout) :: exist
+   logical,           intent(in)    :: print_info
 
    integer :: no,ios,kl,i
 
-   write(out_unitp,*) 'QML_read_para4d: nom1,max_points: ',nom1,max_points
+   IF (print_info) write(out_unitp,*) 'QML_read_para4d: nom1,max_points: ',nom1,max_points
 
 
    CALL file_open2(name_file=nom1,iunit=no,lformatted=.TRUE.,                   &
@@ -639,9 +643,9 @@ MODULE QML_CH5_m
 
      read(no,*) i ! for nb_fit (not used)
 
-     write(out_unitp,*) 'nom1,nt,ndim: ',nom1,nt,ndim
+     IF (print_info) write(out_unitp,*) 'nom1,nt,ndim: ',nom1,nt,ndim
      read(no,*) n(0:ndim)
-     write(out_unitp,*) 'nom1,n ',nom1,n(0:ndim)
+     IF (print_info) write(out_unitp,*) 'nom1,n ',nom1,n(0:ndim)
      IF (n(0) > max_points) THEN
          write(out_unitp,*) ' ERROR : The number of coefficients (',n(0),') >'
          write(out_unitp,*) '         than max_points (',max_points,')'
@@ -658,7 +662,7 @@ MODULE QML_CH5_m
      CLOSE(no)
      exist = .TRUE.
    ELSE
-     write(out_unitp,*) 'The file (',nom1,') does not exist !!'
+     IF (print_info) write(out_unitp,*) 'The file (',nom1,') does not exist !!'
      exist = .FALSE.
    END IF
 

@@ -105,8 +105,8 @@ MODULE QML_LinearHBond_m
     real (kind=Rkind), parameter  :: auTOkcalmol_inv  = 627.51_Rkind
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_LinearHBond'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub

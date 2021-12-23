@@ -60,6 +60,8 @@ MODULE QML_Empty_m
     logical :: adiabatic        = .TRUE.
     integer :: option           = 0
     logical :: PubliUnit        = .FALSE. ! when PubliUnit=.TRUE., the units of a reference (publi ...) are used. Default (atomic unit)
+    logical :: In_a_Model       = .FALSE.
+
 
     logical :: Vib_adia         = .FALSE.
     integer :: nb_Channels      = 0
@@ -308,10 +310,12 @@ CONTAINS
   IMPLICIT NONE
 
     CLASS (QML_Empty_t), intent(in)    :: QModel
-    integer,              intent(in)    :: nio
+    integer,             intent(in)    :: nio
 
+    IF (QModel%In_a_Model) RETURN
 
     write(nio,*) 'Init:                      ',QModel%Init
+    write(nio,*) 'In_a_Model:                ',QModel%In_a_Model
 
     write(nio,*) 'nsurf:                     ',QModel%nsurf
     write(nio,*) 'ndim:                      ',QModel%ndim
@@ -319,6 +323,8 @@ CONTAINS
     write(nio,*) 'adiabatic:                 ',QModel%adiabatic
     write(nio,*) 'Vib_adia:                  ',QModel%Vib_adia
     write(nio,*) 'Phase_Following:           ',QModel%Phase_Following
+    write(nio,*) 'Phase_Checking:            ',QModel%Phase_Checking
+
     IF (QModel%Vib_adia) THEN
       write(nio,*) 'nb_Channels:                  ',QModel%nb_Channels
       IF (allocated(QModel%list_act)) &

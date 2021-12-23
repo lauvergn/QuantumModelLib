@@ -117,8 +117,8 @@ MODULE QML_PH4_m
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_PH4'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
@@ -199,8 +199,9 @@ MODULE QML_PH4_m
     END SELECT
 
     !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
-    CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
-                     ndim,QModel%nt(ifunc),max_nn,FileName,QModel%file_exist(ifunc),read_ab)
+    CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),     &
+                         QModel%nn(:,ifunc),ndim,QModel%nt(ifunc),max_nn,       &
+                         FileName,QModel%file_exist(ifunc),read_ab,print_info=debug)
     !write(out_unitp,*) i,'Read done' ; flush(out_unitp)
     IF ( .NOT. QModel%file_exist(ifunc)) STOP ' ERROR while reading PH4 energy parameters'
 
@@ -223,8 +224,9 @@ MODULE QML_PH4_m
       read_ab = (i == 2)
 
       !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
-      CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
-                     ndim,QModel%nt(ifunc),max_nn,FileName,QModel%file_exist(ifunc),read_ab)
+      CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),   &
+                           QModel%nn(:,ifunc),ndim,QModel%nt(ifunc),max_nn,     &
+                           FileName,QModel%file_exist(ifunc),read_ab,print_info=debug)
       !write(out_unitp,*) i,'Read done' ; flush(out_unitp)
 
       IF ( .NOT. QModel%file_exist(ifunc)) STOP ' ERROR while reading PH4 Qop parameters'
@@ -248,8 +250,9 @@ MODULE QML_PH4_m
       END SELECT
 
       !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
-      CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
-                       ndim,QModel%nt(ifunc),max_nn,FileName,QModel%file_exist(ifunc),read_ab)
+      CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),   &
+                           QModel%nn(:,ifunc),ndim,QModel%nt(ifunc),max_nn,     &
+                           FileName,QModel%file_exist(ifunc),read_ab,print_info=debug)
       !write(out_unitp,*) i,'Read done' ; flush(out_unitp)
 
        QModel%largest_nn = max(QModel%largest_nn,QModel%nn(0,ifunc))
@@ -274,8 +277,9 @@ MODULE QML_PH4_m
       END SELECT
 
       !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
-      CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
-                       ndim,QModel%nt(ifunc),max_nn,FileName,QModel%file_exist(ifunc),read_ab)
+      CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),   &
+                           QModel%nn(:,ifunc),ndim,QModel%nt(ifunc),max_nn,     &
+                           FileName,QModel%file_exist(ifunc),read_ab,print_info=debug)
       !write(out_unitp,*) i,'Read done' ; flush(out_unitp)
 
        QModel%largest_nn = max(QModel%largest_nn,QModel%nn(0,ifunc))
@@ -294,8 +298,9 @@ MODULE QML_PH4_m
         FileName = make_FileName(base_fit3_AnHar_fileName // int_TO_char(i-1))
 
         !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
-        CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc),QModel%nn(:,ifunc),  &
-                       ndim,QModel%nt(ifunc),max_nn,FileName,QModel%file_exist(ifunc),read_ab)
+        CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc), &
+                             QModel%nn(:,ifunc),ndim,QModel%nt(ifunc),max_nn,   &
+                             FileName,QModel%file_exist(ifunc),read_ab,print_info=debug)
         !write(out_unitp,*) i,'Read done' ; flush(out_unitp)
 
         QModel%largest_nn = max(QModel%largest_nn,QModel%nn(0,ifunc))
@@ -628,7 +633,8 @@ MODULE QML_PH4_m
                     QML_dnSigmoid_PH4( x,ONE)*( x + b)
 
   END FUNCTION QML_sc2_fit3
-  SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,file_name,exist,read_ab)
+
+  SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,file_name,exist,read_ab,print_info)
   IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim
@@ -637,10 +643,11 @@ MODULE QML_PH4_m
    character (len=*), intent(in)    :: file_name
    logical,           intent(inout) :: exist
    logical,           intent(in)    :: read_ab
+   logical,           intent(in)    :: print_info
 
    integer :: no,ios,kl,i
 
-   write(out_unitp,*) 'QML_read_para4d: file_name,max_points: ',file_name,max_points
+   IF (print_info) write(out_unitp,*) 'QML_read_para4d: file_name,max_points: ',file_name,max_points
 
 
    CALL file_open2(name_file=file_name,iunit=no,lformatted=.TRUE.,              &
@@ -649,9 +656,9 @@ MODULE QML_PH4_m
 
      read(no,*) i ! for nb_fit (not used)
 
-     write(out_unitp,*) 'file_name,nt,ndim: ',file_name,nt,ndim
+     IF (print_info) write(out_unitp,*) 'file_name,nt,ndim: ',file_name,nt,ndim
      read(no,*) n(0:ndim)
-     write(out_unitp,*) 'file_name,n ',file_name,n(0:ndim)
+     IF (print_info) write(out_unitp,*) 'file_name,n ',file_name,n(0:ndim)
      IF (n(0) > max_points) THEN
          write(out_unitp,*) ' ERROR : The number of coefficients (',n(0),') >'
          write(out_unitp,*) '         than max_points (',max_points,')'
@@ -668,7 +675,7 @@ MODULE QML_PH4_m
      CLOSE(no)
      exist = .TRUE.
    ELSE
-     write(out_unitp,*) 'The file (',file_name,') does not exist !!'
+     IF (print_info) write(out_unitp,*) 'The file (',file_name,') does not exist !!'
      exist = .FALSE.
    END IF
 
