@@ -34,8 +34,8 @@ PROGRAM TEST_model
   IMPLICIT NONE
 
   !CALL test_IRC_MullerBrown() ; stop
-  CALL test_IRC_H3() ; stop
-  CALL test_Opt_H3() ; stop
+  !CALL test_IRC_H3() ; stop
+  !CALL test_Opt_LinearHBond() ; stop
   !CALL test_PH4() ; stop
 
   !CALL test_Vib_adia() ; stop
@@ -52,13 +52,15 @@ PROGRAM TEST_model
 
   ! One electronic surface
   CALL test_LinearHBond()
+  CALL test_Opt_LinearHBond()
   CALL test_HenonHeiles()
   CALL test_Buckingham()
   CALL test_Morse()
   CALL test_Poly1D()
 
-  ! One electronic surface + optimization
+  ! One electronic surface + optimization + IRC
   CALL test_Opt_MullerBrown()
+  CALL test_IRC_MullerBrown()
 
   ! Several electronic surfaces
   CALL test_Tully()
@@ -89,9 +91,6 @@ PROGRAM TEST_model
   ! vibrational adiabatic separation (on HBond potential)
   CALL test_Vib_adia()
   CALL test2_Vib_adia()
-
-  ! Optimization on HBond potential
-  CALL test_Opt()
 
 END PROGRAM TEST_model
 
@@ -933,6 +932,58 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_LinearHBond
+SUBROUTINE test_Opt_LinearHBond
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  TYPE (QML_Opt_t)               :: Opt_param
+
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Optimization with HBond potential'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+  CALL Init_Model(QModel,pot_name='HBond',PubliUnit=.FALSE.)
+
+  !CALL Eval_pot_ON_Grid(QModel, &
+  !                      Qmin=[3.5_Rkind,-2.0_Rkind],Qmax=[10.0_Rkind,2.0_Rkind],&
+  !                      nb_points=101, grid_file='grid_Hbond2D')
+
+
+  CALL Init_QML_Opt(Opt_param,QModel,read_param=.TRUE.,param_file_name='opt_hbond.dat')
+
+  allocate(Q(QModel%ndim))
+
+
+  CALL QML_Opt(Q,QModel,Opt_param,Q0=[ 5._Rkind,0.1_Rkind ])
+
+  write(out_unitp,*) 'Q(:) (bohr):'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  write(out_unitp,*) 'Potential+derivatives:'
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_Opt_LinearHBond
 SUBROUTINE test_Vib_adia
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
@@ -941,8 +992,8 @@ SUBROUTINE test_Vib_adia
 
   TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: Qact(:)
-  integer                        :: ndim,nsurf,nderiv,option
   TYPE (dnMat_t)                 :: PotVal,NAC
+  integer                        :: nderiv
 
   real(kind=Rkind) :: dQ
   integer :: i,iq
@@ -1003,10 +1054,10 @@ SUBROUTINE test2_Vib_adia
 
   TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: Qact(:)
-  integer                        :: ndim,nsurf,nderiv,option
   real (kind=Rkind), allocatable :: tab_MatH(:,:,:)
 
   TYPE (dnMat_t)                 :: PotVal,NAC
+  integer                        :: nderiv
 
   integer            :: i,iq,iterm
   integer, parameter :: nq=100
@@ -1517,7 +1568,7 @@ SUBROUTINE test_template
 
   TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: Q(:)
-  integer                        :: ndim,nsurf,nderiv,i,option
+  integer                        :: nderiv
   TYPE (dnMat_t)                 :: PotVal
 
 
@@ -2031,59 +2082,6 @@ SUBROUTINE test_H3
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_H3
-SUBROUTINE test_Opt_H3
-  USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
-  USE Model_m
-  USE Opt_m
-  IMPLICIT NONE
-
-  TYPE (Model_t)                 :: QModel
-  TYPE (QML_Opt_t)               :: Opt_param
-
-  real (kind=Rkind), allocatable :: Q(:)
-  integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                 :: PotVal
-
-
-  write(out_unitp,*) '---------------------------------------------'
-  write(out_unitp,*) '---------------------------------------------'
-  write(out_unitp,*) '---------------------------------------------'
-  write(out_unitp,*) ' Optimization with HBond potential'
-  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
-  write(out_unitp,*) '---------------------------------------------'
-  write(out_unitp,*) '---------------------------------------------'
-  write(out_unitp,*) '---------------------------------------------'
-  flush(out_unitp)
-  CALL Init_Model(QModel,pot_name='HBond',PubliUnit=.FALSE.)
-
-  !CALL Eval_pot_ON_Grid(QModel, &
-  !                      Qmin=[3.5_Rkind,-2.0_Rkind],Qmax=[10.0_Rkind,2.0_Rkind],&
-  !                      nb_points=101, grid_file='grid_Hbond2D')
-
-
-  !CALL Init_QML_Opt(Opt_param,QModel,read_param=.FALSE.,param_file_name='opt.dat')
-  CALL Init_QML_Opt(Opt_param,QModel,read_param=.TRUE.,param_file_name='opt.dat')
-
-  allocate(Q(QModel%QM%ndim))
-
-
-  CALL QML_Opt(Q,QModel,Opt_param,Q0=[ 5._Rkind,0.1_Rkind ])
-
-  write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
-  write(out_unitp,*) 'Potential+derivatives:'
-  CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
-
-  CALL QML_dealloc_dnMat(PotVal)
-  deallocate(Q)
-
-  write(out_unitp,*) '---------------------------------------------'
-  write(out_unitp,*) '- END CHECK POT -----------------------------'
-  write(out_unitp,*) '---------------------------------------------'
-
-END SUBROUTINE test_Opt_H3
 SUBROUTINE test_IRC_H3
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
@@ -2112,7 +2110,7 @@ SUBROUTINE test_IRC_H3
   CALL Init_Model(QModel,pot_name='H3_LSTH',Cart_TO_Q=.TRUE.,PubliUnit=.FALSE.)
 
 
-  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='irc.dat')
+  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='irc_h3.dat')
 
   allocate(Q(QModel%QM%ndim))
 
@@ -2152,12 +2150,12 @@ SUBROUTINE test_Opt_MullerBrown
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   flush(out_unitp)
-  CALL Init_Model(QModel,pot_name='2D_MB',Print_init=.FALSE.)
+  CALL Init_Model(QModel,pot_name='2D_MB',PubliUnit=.TRUE.,Print_init=.FALSE.)
   CALL Write0_Model(QModel)
 
   DO option=1,5
 
-    CALL Init_Model(QModel,pot_name='2D_MB',Print_init=.FALSE.,option=option)
+    CALL Init_Model(QModel,pot_name='2D_MB',PubliUnit=.TRUE.,Print_init=.FALSE.,option=option)
 
     Q = QModel%QM%Q0
 
@@ -2372,7 +2370,7 @@ SUBROUTINE test_PSB3_Retinal2000_test
 
   real (kind=Rkind), allocatable :: q_PSB3(:)
   real (kind=Rkind), allocatable :: q_Retinal2000(:)
-  integer                        :: ndim,nsurf,nderiv,i,option
+  integer                        :: nderiv
 
   TYPE (dnMat_t)                 :: PotVal_PSB3,PotVal_Retinal2000
   TYPE (dnMat_t)                 :: NAC_PSB3,NAC_Retinal2000
@@ -2452,7 +2450,7 @@ SUBROUTINE test_NO3_test
 
   TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: q(:)
-  integer                        :: ndim,nsurf,nderiv,i,option
+  integer                        :: nderiv
   TYPE (dnMat_t)                 :: PotVal
   TYPE (dnMat_t)                 :: NAC ! for non adiabatic couplings
 

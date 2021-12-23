@@ -722,6 +722,8 @@ END SUBROUTINE QML_IRC_BS
     Ene_AT_s = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
 
     dQact    = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
+    !write(out_unitp,*) 'grad at s',s,norm2(dQact)
+    IF (norm2(dQact) < IRC_p%Thresh_RMS_grad*TEN) write(out_unitp,*) 'WARNING small grad at s',s
     IF (present(grad)) grad = dQact
 
     dQact    = -dQact/norm2(dQact)
