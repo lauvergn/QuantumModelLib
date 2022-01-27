@@ -3,6 +3,7 @@
 here=`pwd`
 
 cd ..
+ rm dnS.x
  make dnS > $here/comp.log 2>&1
 cd  $here
 

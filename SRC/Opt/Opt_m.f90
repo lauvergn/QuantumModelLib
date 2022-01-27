@@ -45,12 +45,12 @@ MODULE Opt_m
     integer                           :: Max_it       = -1 ! it will be set-up after
 
     integer                           :: nb_neg       = 0 ! 0=>minimum, 1=>TS, 2=>top ...
-    integer                           :: i_surf       = 0 ! on which surface the optimization is performed (default 1)
+    integer                           :: i_surf       = 1 ! on which surface the optimization is performed (default 1)
 
     integer, allocatable              :: list_act(:)      ! default all coordinates
 
 
-    integer                           :: hessian_type = 0 ! 1=> analytical hessian
+    integer                           :: hessian_type = 1 ! 1=> analytical hessian
 
     real (kind=Rkind)                 :: Thresh_max_grad     = 0.000450_Rkind
     real (kind=Rkind)                 :: Thresh_RMS_grad     = 0.000300_Rkind
@@ -63,7 +63,7 @@ MODULE Opt_m
 CONTAINS
 
   SUBROUTINE Init_QML_Opt(Opt_param,QModel,                                     &
-                          read_param,param_file_name,nio_param_file)
+                          read_param,param_file_name,nio_param_file,icv,list_act)
 
   USE QMLLib_UtilLib_m
   USE Model_m
@@ -74,19 +74,16 @@ CONTAINS
     logical,            intent(in),    optional  :: read_param
     integer,            intent(in),    optional  :: nio_param_file
     character (len=*),  intent(in),    optional  :: param_file_name
+    integer,            intent(in),    optional  :: icv
+    integer,            intent(in),    optional  :: list_act(:)
 
 
-    integer                        :: icv,nb_neg,i_surf,Max_it,hessian_type
-    logical                        :: TS
+    integer                        :: icv_loc,nb_neg,i_surf,Max_it,hessian_type
     real(kind=Rkind)               :: Largest_disp
-    character (len=Name_longlen)   :: hessian_method
 
     integer                        :: err_read,nio_loc,i
     logical                        :: read_param_loc
     character (len=:), allocatable :: param_file_name_loc
-    integer,           allocatable :: list_act(:)      ! default all coordinates
-
-    namelist /opt/ icv,nb_neg,i_surf,TS,hessian_method,Largest_disp,max_it,list_act
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_Opt'
@@ -105,8 +102,18 @@ CONTAINS
 
   CALL check_alloc_QM(QModel,name_sub)
 
-  allocate(list_act(QModel%ndim))
-  list_act(:) = 0
+  IF (present(list_act)) THEN
+    Opt_param%list_act = list_act
+  ELSE IF (allocated(Opt_param%list_act)) THEN
+    deallocate(Opt_param%list_act)
+  END IF
+
+
+  IF (present(icv)) THEN
+    icv_loc = icv
+  ELSE
+    icv_loc = -1
+  END IF
 
   IF (present(read_param)) THEN
     read_param_loc = read_param
@@ -136,8 +143,97 @@ CONTAINS
     flush(out_unitp)
   END IF
 
+  IF (read_param_loc) THEN
+    IF (nio_loc /= in_unitp .AND. allocated(param_file_name_loc)) THEN
+      open(unit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
+    END IF
+    IF (allocated(param_file_name_loc)) deallocate(param_file_name_loc)
 
-  icv             = -1 ! to be able to change the convergence criteria
+    CALL Read_QML_Opt(Opt_param,QModel,nio_loc,icv_loc)
+
+  END IF
+
+  IF (icv_loc < 0)          icv_loc = 0
+
+
+  IF (Opt_param%max_it < 0)   Opt_param%Max_it = (10+QModel%ndim)*(icv_loc+2)
+  Opt_param%Largest_disp  = abs(Opt_param%Largest_disp)
+
+  IF (Opt_param%i_surf < 0 .OR. Opt_param%i_surf > QModel%nsurf) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' i_surf',Opt_param%i_surf
+    write(out_unitp,*) ' i_surf is out-of-range ([1,',int_TO_char(QModel%nsurf),'])'
+    write(out_unitp,*) ' check your data!'
+    write(out_unitp,*)
+    STOP ' ERROR in Init_QML_Opt: i_surf is out-of-range'
+  END IF
+  IF (Opt_param%nb_neg < 0) Opt_param%nb_neg = 0
+
+
+  Opt_param%Thresh_max_grad = Opt_param%Thresh_max_grad/TEN**icv_loc
+  Opt_param%Thresh_RMS_grad = Opt_param%Thresh_RMS_grad/TEN**icv_loc
+  Opt_param%Thresh_max_disp = Opt_param%Thresh_max_disp/TEN**icv_loc
+  Opt_param%Thresh_RMS_disp = Opt_param%Thresh_RMS_disp/TEN**icv_loc
+
+  IF (allocated(Opt_param%list_act)) THEN
+    Opt_param%list_act        = pack(Opt_param%list_act,mask=(Opt_param%list_act /= 0))
+
+    IF (count(Opt_param%list_act /=0 ) == 0) THEN
+      Opt_param%list_act = [(i,i=1,QModel%ndim)]
+    END IF
+  ELSE
+    Opt_param%list_act = [(i,i=1,QModel%ndim)]
+  END IF
+
+  IF (debug) THEN
+    CALL Write_QML_Opt(Opt_param)
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+  END SUBROUTINE Init_QML_Opt
+
+  SUBROUTINE Read_QML_Opt(Opt_param,QModel,nio_param_file,icv_inout)
+
+  USE QMLLib_UtilLib_m
+  USE Model_m
+  IMPLICIT NONE
+
+    TYPE (QML_Opt_t),   intent(inout)   :: Opt_param
+    TYPE (Model_t),     intent(in)      :: QModel
+    integer,            intent(in)      :: nio_param_file
+    integer,            intent(inout)   :: icv_inout
+
+
+    integer                        :: icv,nb_neg,i_surf,Max_it,hessian_type
+    logical                        :: TS
+    real(kind=Rkind)               :: Largest_disp
+    character (len=Name_longlen)   :: hessian_method
+
+    integer                        :: err_read,i
+    integer,           allocatable :: list_act(:)      ! default all coordinates
+
+    namelist /opt/ Max_it,nb_neg,i_surf,list_act,Largest_disp,icv,TS,hessian_method
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Read_QML_Opt'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    write(out_unitp,*) '   nio_param_file  ',nio_param_file
+    flush(out_unitp)
+  END IF
+
+  allocate(list_act(QModel%ndim))
+  list_act(:) = 0
+  IF (allocated(Opt_param%list_act)) THEN
+    list_act(:) = Opt_param%list_act(1:size(Opt_param%list_act))
+  END IF
+
+  icv             = icv_inout ! to be able to change the convergence criteria
   Max_it          = -1
   Largest_disp    = 0.5_Rkind
 
@@ -148,53 +244,29 @@ CONTAINS
   hessian_method  = 'analytical'
 
 
-  IF (read_param_loc) THEN
-    IF (nio_loc /= in_unitp .AND. allocated(param_file_name_loc)) THEN
-      open(unit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
-    END IF
-    IF (allocated(param_file_name_loc)) deallocate(param_file_name_loc)
-
-    read(nio_loc,nml=opt,IOSTAT=err_read)
-    IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' End-of-file or End-of-record'
-      write(out_unitp,*) ' The namelist "Opt" is probably absent'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,*)
-      STOP ' ERROR in Init_QML_Opt'
-    ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' Some parameter names of the namelist "Opt" are probaly wrong'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,nml=Opt)
-      STOP ' ERROR in Init_QML_Opt'
-    END IF
-
-  END IF
-
-  IF (count(list_act /=0 ) == 0) THEN
-    list_act(:) = [(i,i=1,QModel%ndim)]
-  END IF
-
-  IF (icv < 0)      icv    = 0
-  IF (max_it < 0)   Max_it = (10+QModel%ndim)*(icv+2)
-  Largest_disp             = abs(Largest_disp)
-
-  IF (i_surf < 0 .OR. i_surf > QModel%nsurf) THEN
+  read(nio_param_file,nml=opt,IOSTAT=err_read)
+  IF (err_read < 0) THEN
     write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' i_surf',i_surf
-    write(out_unitp,*) ' i_surf is out-of-range ([1,',int_TO_char(QModel%nsurf),'])'
+    write(out_unitp,*) ' End-of-file or End-of-record'
+    write(out_unitp,*) ' The namelist "Opt" is probably absent'
     write(out_unitp,*) ' check your data!'
     write(out_unitp,*)
-    STOP ' ERROR in Set_Opt_param: i_surf is out-of-range'
+    STOP ' ERROR in Read_QML_Opt'
+  ELSE IF (err_read > 0) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Some parameter names of the namelist "Opt" are probaly wrong'
+    write(out_unitp,*) ' check your data!'
+    write(out_unitp,nml=Opt)
+    STOP ' ERROR in Read_QML_Opt'
   END IF
+
   IF (TS .AND. nb_neg /= 1 .AND. nb_neg /= -1) THEN
     write(out_unitp,*) ' ERROR in ',name_sub
     write(out_unitp,*) ' TS=.TRUE. and nb_neg /= 1',TS,nb_neg
     write(out_unitp,*) ' TS and nb_neg are not compatible'
     write(out_unitp,*) ' check your data!'
     write(out_unitp,*)
-    STOP ' ERROR in Init_QML_Opt: TS and nb_neg are not compatible'
+    STOP ' ERROR in Read_QML_Opt: TS and nb_neg are not compatible'
   END IF
   IF (TS)         nb_neg = 1
   IF (nb_neg < 0) nb_neg = 0
@@ -209,26 +281,24 @@ CONTAINS
     write(out_unitp,*) ' The posibilities: "analytical" or "ana"'
     write(out_unitp,*) ' check your data!'
     write(out_unitp,*)
-    STOP ' ERROR in Init_QML_Opt: Wrong hessian_method'
+    STOP ' ERROR in Read_QML_Opt: Wrong hessian_method'
   END SELECT
 
   Opt_param = QML_Opt_t(Max_it=Max_it,nb_neg=nb_neg,i_surf=i_surf,              &
-                        hessian_type=hessian_type,Largest_disp=Largest_disp)
+                        list_act=list_act,hessian_type=hessian_type,            &
+                        Largest_disp=Largest_disp)
 
-  Opt_param%Thresh_max_grad = Opt_param%Thresh_max_grad/TEN**icv
-  Opt_param%Thresh_RMS_grad = Opt_param%Thresh_RMS_grad/TEN**icv
-  Opt_param%Thresh_max_disp = Opt_param%Thresh_max_disp/TEN**icv
-  Opt_param%Thresh_RMS_disp = Opt_param%Thresh_RMS_disp/TEN**icv
-
-  Opt_param%list_act        = pack(list_act,mask=(list_act /= 0))
+  icv_inout = icv
 
   IF (debug) THEN
+    write(out_unitp,*) ' icv_inout ',icv_inout
     CALL Write_QML_Opt(Opt_param)
     write(out_unitp,*) ' END ',name_sub
     flush(out_unitp)
   END IF
 
-  END SUBROUTINE Init_QML_Opt
+END SUBROUTINE Read_QML_Opt
+
   SUBROUTINE Write_QML_Opt(Opt_param)
   IMPLICIT NONE
 
@@ -336,8 +406,9 @@ CONTAINS
   DO it=0,Opt_param%Max_it
 
     CALL Eval_Pot(QModel,Qit,PotVal,nderiv=2)
+    IF (debug) CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
-    grad   = PotVal%d1(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act)
+    grad = PotVal%d1(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act)
     hess = PotVal%d2(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act,Opt_param%list_act)
 
     CALL diagonalization(hess,diag,Vec,nb_act)
@@ -345,7 +416,7 @@ CONTAINS
 
     tvec = transpose(vec)
     IF (Opt_param%nb_neg == 0) THEN
-      DO i=1,QModel%ndim
+      DO i=1,nb_act
         Vec(:,i) = Vec(:,i) * abs(diag(i))
       END DO
       hess = matmul(Vec,tVec)
@@ -392,7 +463,8 @@ CONTAINS
     END IF
 
     DO iq=1,nb_act
-      write(out_unitp,*) 'iq,Q(iq),grad(iq),DelatQ(iq)',iq,Qit(iq),grad(iq),-mDQit(iq)
+      write(out_unitp,*) 'iq,Q(iq),grad(iq),DelatQ(iq)',iq,                     &
+                                                Qit_act(iq),grad(iq),-mDQit(iq)
     END DO
 
     conv = (max_grad <= Opt_param%Thresh_max_grad) .AND.                               &

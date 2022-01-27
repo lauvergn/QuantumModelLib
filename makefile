@@ -6,6 +6,7 @@
 #                gfortran (version: 6.3.0 linux and osx)
 #                pgf90 (version: 17.10-0, linux)
 #                nagfor (version 7.0, osx)
+#F90 = ifort
  F90 = gfortran
 #F90 = nagfor
 #
@@ -118,7 +119,8 @@ ifeq ($(F90),ifort)
    endif
 
    ifeq ($(LAPACK),1)
-     F90LIB = -mkl -lpthread
+     #F90LIB = -qmkl -lpthread
+     F90LIB = -framework Accelerate
      #F90LIB = $(MKLROOT)/lib/libmkl_lapack95_ilp64.a $(MKLROOT)/lib/libmkl_core.a $(MKLROOT)/lib/libmkl_blas95_ilp64.a -lpthread
    else
      F90LIB = -lpthread

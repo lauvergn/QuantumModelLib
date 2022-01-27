@@ -297,16 +297,14 @@ CONTAINS
     CALL QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward=forward,   &
                      Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
 
-    write(out_unitp,*) 's,Qact,|grad|,E',s,QactOld,norm2(grad),Ene_AT_s
-    flush(out_unitp)
+    CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s)
 
     s       = s + forward*IRC_p%Delta_s
     QactOld = QactNew
 
   END DO
   CALL QML_IRC_fcn(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward,grad)
-  write(out_unitp,*) 's,Qact,|grad|,E',s,QactOld,norm2(grad),Ene_AT_s
-  flush(out_unitp)
+  CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s)
 
   s       = ZERO
   QactOld = IRC_p%QactTS
@@ -317,17 +315,14 @@ CONTAINS
     CALL QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward=forward,   &
                      Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
 
-    write(out_unitp,*) 's,Qact,|grad|,E',s,QactOld,norm2(grad),Ene_AT_s
-    flush(out_unitp)
+    CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s)
 
     s       = s + forward*IRC_p%Delta_s
     QactOld = QactNew
 
   END DO
   CALL QML_IRC_fcn(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward,grad)
-  write(out_unitp,*) 's,Qact,|grad|,E',s,QactOld,norm2(grad),Ene_AT_s
-  flush(out_unitp)
-
+  CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s)
 
   IF (debug) THEN
     write(out_unitp,*) ' END ',name_sub
@@ -335,6 +330,38 @@ CONTAINS
   END IF
 
   END SUBROUTINE QML_IRC
+
+  SUBROUTINE QML_write_IRC_Res(Qact,s,grad,Ene)
+    real (kind=Rkind), allocatable  :: Qact(:),grad(:)
+    real (kind=Rkind)               :: s,Ene
+
+    real (kind=Rkind)               :: u,g_mtu
+    real (kind=Rkind), allocatable  :: grad_u(:)
+
+
+    write(out_unitp,*) 's,Qact,|grad|,E',s,Qact,norm2(grad),Ene
+    write(out_unitp,*) 's,grad',s,grad
+    write(out_unitp,*) 's,g_mt',s,dot_product(grad,grad)
+    flush(out_unitp)
+
+    IF (s > ZERO) THEN
+      u = s*s ! s=sqrt(u)
+      !ds/du = 1/2 u^(-1/2)
+      !dx/du = ds/du dx/gs
+      grad_u = HALF / sqrt(u) * grad
+      write(out_unitp,*) 'u,grad_u',u,grad_u
+      write(out_unitp,*) 'u,g_mtu',u,dot_product(grad_u,grad_u)
+      flush(out_unitp)
+    ELSE IF (s < ZERO) THEN
+      u = -s*s  ! s=-sqrt(-u)
+      !ds/du = 1/2 (-u)^(-1/2)
+      grad_u = HALF / sqrt(-u) * grad
+      write(out_unitp,*) 'u,grad_u',u,grad_u
+      write(out_unitp,*) 'u,g_mtu',u,dot_product(grad_u,grad_u)
+      flush(out_unitp)
+    END IF
+
+  END SUBROUTINE QML_write_IRC_Res
 
   RECURSIVE SUBROUTINE QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,                  &
                                    QModel,IRC_p,forward,                        &
@@ -419,9 +446,6 @@ END SUBROUTINE QML_IRC_ODE
 
   SUBROUTINE QML_IRC_BS(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order,forward,grad_AT_s)
   USE QMLLib_UtilLib_m
-  !USE QMLdnSVM_dnMat_m
-  !USE QMLLib_Matrix_m
-  !USE QMLLib_diago_m
   USE Model_m
   USE Opt_m
   IMPLICIT NONE
@@ -732,6 +756,7 @@ END SUBROUTINE QML_IRC_BS
 
     dQact    = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
     !write(out_unitp,*) 'grad at s',s,norm2(dQact)
+    !write(out_unitp,*) 'grad/s at s',s,norm2(dQact)/abs(s)
     IF (norm2(dQact) < IRC_p%Thresh_RMS_grad*TEN) write(out_unitp,*) 'WARNING small grad at s',s
     IF (present(grad)) grad = dQact
 

@@ -33,7 +33,9 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+
   !CALL test_IRC_MullerBrown() ; stop
+  !CALL test_H3() ; stop
   !CALL test_IRC_H3() ; stop
 
   !CALL test_LinearHBond() ; stop
@@ -61,6 +63,9 @@ PROGRAM TEST_model
   ! One electronic surface + optimization + IRC
   CALL test_Opt_MullerBrown()
   CALL test_IRC_MullerBrown()
+
+  ! One electronic surface + optimization
+  CALL test_H3()
 
   ! Several electronic surfaces
   CALL test_Tully()
@@ -2036,12 +2041,14 @@ SUBROUTINE test_H3
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
   USE Model_m
+  USE Opt_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: Q(:,:),x(:,:)
+  real (kind=Rkind), allocatable :: Q(:,:),x(:,:),Qcart(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
+  TYPE (QML_Opt_t)               :: Opt_p
 
 
   nderiv = 2
@@ -2080,13 +2087,31 @@ SUBROUTINE test_H3
     CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
     ! For testing the model
-    CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='H3_SLTH')
+    CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='H3_LSTH')
   END DO
   CALL QML_dealloc_dnMat(PotVal)
   deallocate(Q)
   write(out_unitp,*) ' END Potential and derivatives'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Optimization H2 ..... H'
+
+  CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,pot_name='H3_LSTH')
+  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=6,list_act=[9])
+  CALL Write_QML_Opt(Opt_p)
+  allocate(Qcart(QModel%ndim))
+
+  CALL QML_Opt(Qcart,QModel,Opt_p,Q0=[ZERO,ZERO,-1000._Rkind,ZERO,ZERO,ZERO,ZERO,ZERO,1.4_Rkind])
+
+  write(out_unitp,*) 'Potential+derivatives:'
+  CALL Eval_Pot(QModel,Qcart,PotVal,nderiv=2)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  CALL Write_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH')
+
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -2118,8 +2143,8 @@ SUBROUTINE test_IRC_H3
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   flush(out_unitp)
-  CALL Init_Model(QModel,pot_name='H3_LSTH',Cart_TO_Q=.TRUE.,PubliUnit=.FALSE.)
-
+  CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,                    &
+                  read_param=.TRUE.,param_file_name='DAT_files/irc_h3.dat')
 
   CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='DAT_files/irc_h3.dat')
 
@@ -2177,9 +2202,11 @@ SUBROUTINE test_Opt_MullerBrown
     write(out_unitp,*) 'Potential+derivatives:'
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
     CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+    flush(out_unitp)
 
     ! For testing the model
     CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Müller-Brown' // int_TO_char(option))
+    flush(out_unitp)
 
   END DO
 

@@ -92,6 +92,8 @@ MODULE Model_m
     integer                           :: ndim        = 0
     CLASS (QML_Empty_t),  allocatable :: QM
     TYPE (QML_Basis_t),   allocatable :: Basis ! Basis for the adiabatic separation between coordinates
+    logical                           :: opt         = .FALSE.
+    logical                           :: irc         = .FALSE.
   END TYPE Model_t
 
   !real (kind=Rkind)                     :: step = ONETENTH**4 ! model TWOD => 0.4e-7 (nderiv=2)
@@ -153,19 +155,20 @@ MODULE Model_m
 CONTAINS
 
 
-  SUBROUTINE Read_Model(QModel_inout,nio,read_nml1)
+  SUBROUTINE Read_Model(QModel_inout,nio,read_nml1,opt1,IRC1)
   USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
-    TYPE (QML_Empty_t), intent(inout) :: QModel_inout ! variable to transfer info to the init
+    TYPE (QML_Empty_t), intent(inout)  :: QModel_inout ! variable to transfer info to the init
     integer,             intent(in)    :: nio
-    logical,             intent(inout) :: read_nml1
+    logical,             intent(inout) :: read_nml1,opt1,IRC1
 
     ! local variable
     integer, parameter :: max_act = 10
     integer :: ndim,nsurf,nderiv,option,printlevel,nb_Channels
     logical :: adiabatic,numeric,PubliUnit,read_nml
     logical :: Vib_adia,print_EigenVec_Grid,print_EigenVec_Basis
+    logical :: opt,IRC
 
     character (len=20) :: pot_name
     integer :: err_read,nb_act
@@ -174,7 +177,7 @@ CONTAINS
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
                          read_nml,printlevel,Vib_adia,nb_Channels,list_act,     &
-                         print_EigenVec_Grid,print_EigenVec_Basis
+                         print_EigenVec_Grid,print_EigenVec_Basis,opt,IRC
 
 !    ! Default values defined
     printlevel  = 0
@@ -195,6 +198,9 @@ CONTAINS
     read_nml    = read_nml1 ! if T, read the namelist in PotLib (HenonHeiles ....)
     option      = -1 ! no option
 
+    !extra actions
+    opt         = .FALSE.
+    IRC         = .FALSE.
 
     write(out_unitp,*) 'Reading input file . . .'
     read(nio,nml=potential,IOSTAT=err_read)
@@ -217,6 +223,8 @@ CONTAINS
     !write(out_unitp,nml=potential)
 
     read_nml1                         = read_nml
+    opt1                              = opt
+    IRC1                              = IRC
 
     QModel_inout%option               = option
     print_level                       = printlevel ! from them module QMLLib_NumParameters_m.f90
@@ -438,11 +446,15 @@ CONTAINS
       IF (nio_loc /= in_unitp) THEN
         open(unit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
       END IF
-      CALL Read_Model(QModel_in,nio_loc,read_nml)
+      CALL Read_Model(QModel_in,nio_loc,read_nml,QModel%opt,QModel%IRC)
       pot_name_loc = QModel_in%pot_name
 
       IF (allocated(param_file_name_loc)) deallocate(param_file_name_loc)
     END IF
+
+    IF (QModel%opt) write(out_unitp,*) ' Geometry optimization will be performed'
+    IF (QModel%IRC) write(out_unitp,*) ' IRC will be performed'
+
 
     QModel_in%Init = .TRUE.
 
@@ -2383,6 +2395,10 @@ CONTAINS
     IF (allocated(QModel%QM%Q0)) CALL Write_RVec(QModel%QM%Q0,          &
                                nio_loc,5,name_info='Q0')
     write(nio_loc,*)
+    write(nio_loc,*) '-----------------------------------------------'
+    write(nio_loc,*) 'Extra action(s):'
+    write(nio_loc,*) 'opt',QModel%opt
+    write(nio_loc,*) 'irc',QModel%irc
     write(nio_loc,*) '-----------------------------------------------'
     flush(nio_loc)
 

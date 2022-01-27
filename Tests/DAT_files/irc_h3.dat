@@ -1,3 +1,8 @@
+&potential
+  pot_name='H3_LSTH' ! potential surface name
+  PubliUnit=F
+  IRC=T /
+
 &opt
   icv = 3
   TS=t

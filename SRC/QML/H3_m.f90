@@ -352,28 +352,6 @@ MODULE QML_H3_m
     integer,                   intent(in) :: nio
 
     write(nio,*) 'H3 IV default parameters'
-
-    write(nio,*) 'Ref: '
-    write(nio,*) '  M. R. Pastrana, L. A. M. Quintales, J. Brandão and A. J. C. Varandas'
-    write(nio,*) '  JCP, 1990, 94, 8073-8080, doi: 10.1021/j100384a019'
-    write(nio,*)
-    write(nio,*) ' Values from Table VII of the JCP paper:'
-    write(nio,*)
-    write(nio,*) '  OH...O '
-    write(nio,*) '    R1,R2,R3= [5.663,3.821,1.842] bohr'
-    write(nio,*) '    E = -0.1738 Hartree'
-    write(nio,*) '    E = -0.1737745714 Hartree (QML)'
-    write(nio,*)
-    write(nio,*) '  H...O-O '
-    write(nio,*) '    R1,R2,R3= [2.282,7.547,9.829] bohr'
-    write(nio,*) '    E = -0.1916 Hartree'
-    write(nio,*) '    E = -0.1916168740 Hartree (QML)'
-    write(nio,*)
-    write(nio,*) '  HO2 '
-    write(nio,*) '    R1,R2,R3= [2.806,2.271,2.271] bohr'
-    write(nio,*) '    E = -0.2141 Hartree'
-    write(nio,*) '    E = -0.2140801239 Hartree (QML)'
-
     write(nio,*)
     write(nio,*) 'end H3 IV default parameters'
 
