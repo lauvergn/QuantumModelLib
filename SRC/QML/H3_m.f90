@@ -261,6 +261,7 @@ MODULE QML_H3_m
     PROCEDURE :: Write_QModel     => Write_QML_H3
     PROCEDURE :: Write0_QModel    => Write0_QML_H3
     PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_H3
+    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_H3
   END TYPE QML_H3_t
 
   PUBLIC :: QML_H3_t,Init_QML_H3
@@ -296,17 +297,39 @@ MODULE QML_H3_m
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf      = 1
-    QModel%ndimQ      = 3
     QModel%ndimCart   = 9
 
-    IF (QModel%Cart_TO_Q) THEN
-      QModel%ndim       = QModel%ndimCart
-    ELSE
-      QModel%ndim       = QModel%ndimQ
-    END IF
+    IF (QModel%option == -1) QModel%option = 0
 
-    QModel%pot_name   = 'H3_LSTH'
-    QModel%no_ana_der = .TRUE.
+    SELECT CASE(QModel%option)
+    CASE (0) !
+
+      QModel%ndimQ      = 3
+      IF (QModel%Cart_TO_Q) THEN
+        QModel%ndim       = QModel%ndimCart
+      ELSE
+        QModel%ndim       = QModel%ndimQ
+      END IF
+
+      QModel%pot_name   = 'H3_LSTH'
+      QModel%no_ana_der = .TRUE.
+    CASE (1)
+      QModel%ndimQ    = 1
+      QModel%ndim     = 1
+
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 4 ! V, R1op,R2opt,R3opt
+
+      QModel%pot_name   = 'H3_LSTH_IRC'
+      QModel%no_ana_der = .FALSE.
+    CASE Default
+       write(out_unitp,*) 'Write_QModel'
+       CALL QModel%Write_QModel(out_unitp)
+       write(out_unitp,*) ' ERROR in ',name_sub
+       write(out_unitp,*) ' option: ',QModel%option
+       write(out_unitp,*) ' the possible option are: 0 (3D) or 1 (1D-IRC)'
+       STOP 'ERROR in Init_QML_H3: wrong option'
+    END SELECT
 
 
     IF (debug) write(out_unitp,*) 'init Q0 of H3 (H3 minimum)'
@@ -370,17 +393,26 @@ MODULE QML_H3_m
   IMPLICIT NONE
 
     CLASS(QML_H3_t),       intent(in)    :: QModel
-    TYPE (dnS_t),            intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE (dnS_t),            intent(in)    :: dnQ(:)
-    integer,                 intent(in)    :: nderiv
+    TYPE (dnS_t),          intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),          intent(in)    :: dnQ(:)
+    integer,               intent(in)    :: nderiv
 
     real(kind=Rkind) :: V,Q(3)
+    TYPE (dnS_t)    :: Func(QModel%nb_Func)
 
-    Q(:) = QML_get_d0_FROM_dnS(dnQ)
 
-    CALL QML_LSTH(Q,V)
+    SELECT CASE(QModel%option)
+    CASE (0) ! 3D
+      Q(:) = QML_get_d0_FROM_dnS(dnQ)
+      CALL QML_LSTH(Q,V)
+      CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0=V)
 
-    CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0=V)
+    CASE (1) ! IRC
+      CALL EvalFunc_QML_H3(QModel,Func,dnQ,nderiv)
+      Mat_OF_PotDia(1,1) = Func(1)
+
+    END SELECT
+
 
   END SUBROUTINE EvalPot_QML_H3
 
@@ -621,4 +653,94 @@ MODULE QML_H3_m
         TAB(3)=(W(MI)*(X(I+1)-Y)+W(KI)*(Y-X(I)))/FLK
   END SUBROUTINE QML_SPLID2
 
+  ! for IRC
+  SUBROUTINE EvalFunc_QML_H3(QModel,Func,dnQ,nderiv)
+  USE QMLdnSVM_dnS_m
+  USE QMLdnSVM_dnPoly_m
+  IMPLICIT NONE
+
+    CLASS(QML_H3_t),      intent(in)    :: QModel
+    TYPE (dnS_t),         intent(inout) :: Func(:)
+    TYPE (dnS_t),         intent(in)    :: dnQ(:)
+    integer,              intent(in)    :: nderiv
+
+    TYPE (dnS_t)    :: s,ts
+    integer         :: i
+    integer, parameter :: max_deg = 16
+    TYPE (dnS_t)       :: tab_Pl(0:max_deg)
+
+
+    s  = dnQ(1)
+    ts = tanh(s)
+
+    DO i=0,max_deg
+      tab_Pl(i) = QML_dnLegendre0(ts,i,ReNorm=.FALSE.)
+    END DO
+
+
+    ! potential
+    Func(1) = -0.17447440045043028_Rkind                          +             &
+              (0.010859006383401253_Rkind)    * tab_Pl(0)         +             &
+              (-0.009667679991355753_Rkind)   * tab_Pl(2)         +             &
+              (-0.0006089612297354226_Rkind)  * tab_Pl(4)         +             &
+              (-0.0005467137038786411_Rkind)  * tab_Pl(6)         +             &
+              (-7.681361110524162e-05_Rkind)  * tab_Pl(8)         +             &
+              (-1.828752905921963e-06_Rkind)  * tab_Pl(10)        +             &
+              (1.7442790373460883e-05_Rkind)  * tab_Pl(12)        +             &
+              (1.633659602378021e-05_Rkind)   * tab_Pl(14)        +             &
+              (-4.6033837152845924e-05_Rkind) * tab_Pl(16)
+   ! R1eq
+   Func(2) = 1.4010444_Rkind * QML_dnSigmoid_H3(-s,ONE)           +             &
+             QML_dnSigmoid_H3(s,ONE)*(s+1.6803643117748104_Rkind) +             &
+            (0.135717682405616_Rkind)      * tab_Pl(0)            +             &
+            (-0.0009647928498475703_Rkind) * tab_Pl(1)            +             &
+            (-0.14960721942361688_Rkind)   * tab_Pl(2)            +             &
+            (-0.004622944008638028_Rkind)  * tab_Pl(3)            +             &
+            (0.013899404906010182_Rkind)   * tab_Pl(4)            +             &
+            (0.004063799184701145_Rkind)   * tab_Pl(5)            +             &
+            (-0.001052823208516841_Rkind)  * tab_Pl(6)            +             &
+            (0.0006881469085736082_Rkind)  * tab_Pl(7)            +             &
+            (0.0009920029080177583_Rkind)  * tab_Pl(8)            +             &
+            (0.00014255050945269853_Rkind) * tab_Pl(9)            +             &
+            (2.495474739587226e-05_Rkind)  * tab_Pl(10)           +             &
+            (0.0004543931972376581_Rkind)  * tab_Pl(11)
+
+   ! R2eq(s) = R1eq(-s)
+   Func(3) = 1.4010444_Rkind * QML_dnSigmoid_H3(s,ONE)              +           &
+             QML_dnSigmoid_H3(-s,ONE)*(-s+1.6803643117748104_Rkind) +           &
+            (0.135717682405616_Rkind)      * tab_Pl(0)              +           &
+            (0.0009647928498475703_Rkind)  * tab_Pl(1)              +           &
+            (-0.14960721942361688_Rkind)   * tab_Pl(2)              +           &
+            (0.004622944008638028_Rkind)   * tab_Pl(3)              +           &
+            (0.013899404906010182_Rkind)   * tab_Pl(4)              +           &
+            (-0.004063799184701145_Rkind)  * tab_Pl(5)              +           &
+            (-0.001052823208516841_Rkind)  * tab_Pl(6)              +           &
+            (-0.0006881469085736082_Rkind) * tab_Pl(7)              +           &
+            (0.0009920029080177583_Rkind)  * tab_Pl(8)              +           &
+            (-0.00014255050945269853_Rkind)* tab_Pl(9)              +           &
+            (2.495474739587226e-05_Rkind)  * tab_Pl(10)             +           &
+            (-0.0004543931972376581_Rkind) * tab_Pl(11)
+
+    ! R3eq(s) = R1eq(s)+R2eq(s) (!linear HHH)
+    Func(4) = Func(2) + Func(3)
+
+    DO i=0,max_deg
+      CALL QML_dealloc_dnS(tab_Pl(i))
+    END DO
+    CALL QML_dealloc_dnS(s)
+    CALL QML_dealloc_dnS(ts)
+
+  END SUBROUTINE EvalFunc_QML_H3
+  FUNCTION QML_dnSigmoid_H3(x,a)
+  USE QMLdnSVM_dnS_m
+  IMPLICIT NONE
+
+    TYPE (dnS_t)                        :: QML_dnSigmoid_H3
+
+    TYPE (dnS_t),         intent(in)    :: x
+    real(kind=Rkind),     INTENT(IN)    :: a
+
+    QML_dnSigmoid_H3 = (ONE+tanh(a*x))/TWO
+
+  END FUNCTION QML_dnSigmoid_H3
 END MODULE QML_H3_m

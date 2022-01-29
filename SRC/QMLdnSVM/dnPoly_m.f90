@@ -123,12 +123,13 @@ CONTAINS
 
 
   END FUNCTION QML_dnFourier
-  ELEMENTAL FUNCTION QML_dnLegendre0(x,i) RESULT(Sres)
+  ELEMENTAL FUNCTION QML_dnLegendre0(x,i,ReNorm) RESULT(Sres)
     USE QMLLib_NumParameters_m
 
     TYPE (dnS_t)                       :: Sres
     TYPE (dnS_t),        intent(in)    :: x
     integer,             intent(in)    :: i
+    logical,   optional, intent(in)    :: ReNorm
 
     TYPE (dnS_t)     :: P2,P1,P0
     integer          :: j
@@ -150,8 +151,16 @@ CONTAINS
       END DO
       Sres = P2
     END IF
-    Pnorm2 = TWO/real(2*i+1,kind=Rkind)
-    Sres = Sres/sqrt(Pnorm2)
+
+    IF (present(ReNorm)) THEN
+      IF (ReNorm) THEN
+        Pnorm2 = TWO/real(2*i+1,kind=Rkind)
+        Sres = Sres/sqrt(Pnorm2)
+      END IF
+    ELSE ! if not present => normalization
+      Pnorm2 = TWO/real(2*i+1,kind=Rkind)
+      Sres = Sres/sqrt(Pnorm2)
+    END IF
 
   END FUNCTION QML_dnLegendre0
 !===================================================

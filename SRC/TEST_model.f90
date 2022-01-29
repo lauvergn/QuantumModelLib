@@ -2039,16 +2039,19 @@ SUBROUTINE test_HOO_DMBE
 END SUBROUTINE test_HOO_DMBE
 SUBROUTINE test_H3
   USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnS_m
   USE QMLdnSVM_dnMat_m
   USE Model_m
   USE Opt_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: Q(:,:),x(:,:),Qcart(:)
+  real (kind=Rkind), allocatable :: Q(:,:),x(:,:),Qcart(:),Q1D(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
   TYPE (QML_Opt_t)               :: Opt_p
+
+    TYPE (dnS_t),    allocatable :: Func(:)
 
 
   nderiv = 2
@@ -2112,6 +2115,33 @@ SUBROUTINE test_H3
 
   CALL Write_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH')
 
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(Qcart)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Optimization IRC'
+  CALL Init_Model(QModel,pot_name='H3_LSTH',option=1)
+
+  Q1D = [ZERO]
+  write(out_unitp,*) 'Potential+derivatives at:',Q1D
+  CALL Eval_Pot(QModel,Q1D,PotVal,nderiv=2)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-FOUR],Qmax=[FOUR],nb_points=801,          &
+                        grid_file='grid_H3_IRC')
+
+  allocate(Func(QModel%QM%nb_Func))
+
+  DO i=-400,400
+    Q1D = real(i,kind=Rkind)/100
+    CALL Eval_Func(QModel,Q1D,Func,nderiv=0)
+    write(6,*) 'grid_H3_IRC',Q1D,QML_get_d0_FROM_dnS(Func)
+    flush(6)
+  END DO
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(Q1D)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
