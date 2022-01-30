@@ -678,7 +678,7 @@ MODULE QML_H3_m
     END DO
 
     ! potential
-    Func(2) = -0.17447440045043028_Rkind                   +                    &
+    Func(1) = -0.17447440045043028_Rkind                   +                    &
               (0.01085897589385337_Rkind)     * tab_Pl(0)  +                    &
               (-0.00966749217922542_Rkind)    * tab_Pl(2)  +                    &
               (-0.000608958364909583_Rkind)   * tab_Pl(4)  +                    &
