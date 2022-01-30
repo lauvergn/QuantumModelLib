@@ -280,7 +280,6 @@ CONTAINS
   END IF
 
   CALL QML_Opt(IRC_p%QTS,QModel,IRC_p%QML_Opt_t,Q0=IRC_p%QTS)
-  !CALL Write_RVec(IRC_at_s%QTS,    out_unitp,3,name_info='Qit')
 
   !first point + check if the geometry is a TS (s=0)
   CALL QML_IRC_at_TS(IRC_p,QModel)
@@ -338,27 +337,31 @@ CONTAINS
     real (kind=Rkind)               :: u,g_mtu
     real (kind=Rkind), allocatable  :: grad_u(:)
 
+    logical,           parameter    :: Print_extral = .FALSE.
+
 
     write(out_unitp,*) 's,Qact,|grad|,E',s,Qact,norm2(grad),Ene
     write(out_unitp,*) 's,grad',s,grad
-    write(out_unitp,*) 's,g_mt',s,dot_product(grad,grad)
+    IF (Print_extral) write(out_unitp,*) 's,g_mt',s,dot_product(grad,grad)
     flush(out_unitp)
 
-    IF (s > ZERO) THEN
-      u = s*s ! s=sqrt(u)
-      !ds/du = 1/2 u^(-1/2)
-      !dx/du = ds/du dx/gs
-      grad_u = HALF / sqrt(u) * grad
-      write(out_unitp,*) 'u,grad_u',u,grad_u
-      write(out_unitp,*) 'u,g_mtu',u,dot_product(grad_u,grad_u)
-      flush(out_unitp)
-    ELSE IF (s < ZERO) THEN
-      u = -s*s  ! s=-sqrt(-u)
-      !ds/du = 1/2 (-u)^(-1/2)
-      grad_u = HALF / sqrt(-u) * grad
-      write(out_unitp,*) 'u,grad_u',u,grad_u
-      write(out_unitp,*) 'u,g_mtu',u,dot_product(grad_u,grad_u)
-      flush(out_unitp)
+    IF (Print_extral) THEN
+      IF (s > ZERO) THEN
+        u = s*s ! s=sqrt(u)
+        !ds/du = 1/2 u^(-1/2)
+        !dx/du = ds/du dx/gs
+        grad_u = HALF / sqrt(u) * grad
+        write(out_unitp,*) 'u,grad_u',u,grad_u
+        write(out_unitp,*) 'u,g_mtu',u,dot_product(grad_u,grad_u)
+        flush(out_unitp)
+      ELSE IF (s < ZERO) THEN
+        u = -s*s  ! s=-sqrt(-u)
+        !ds/du = 1/2 (-u)^(-1/2)
+        grad_u = HALF / sqrt(-u) * grad
+        write(out_unitp,*) 'u,grad_u',u,grad_u
+        write(out_unitp,*) 'u,g_mtu',u,dot_product(grad_u,grad_u)
+        flush(out_unitp)
+      END IF
     END IF
 
   END SUBROUTINE QML_write_IRC_Res

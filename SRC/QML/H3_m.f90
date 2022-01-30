@@ -677,18 +677,17 @@ MODULE QML_H3_m
       tab_Pl(i) = QML_dnLegendre0(ts,i,ReNorm=.FALSE.)
     END DO
 
-
     ! potential
-    Func(1) = -0.17447440045043028_Rkind                          +             &
-              (0.010859006383401253_Rkind)    * tab_Pl(0)         +             &
-              (-0.009667679991355753_Rkind)   * tab_Pl(2)         +             &
-              (-0.0006089612297354226_Rkind)  * tab_Pl(4)         +             &
-              (-0.0005467137038786411_Rkind)  * tab_Pl(6)         +             &
-              (-7.681361110524162e-05_Rkind)  * tab_Pl(8)         +             &
-              (-1.828752905921963e-06_Rkind)  * tab_Pl(10)        +             &
-              (1.7442790373460883e-05_Rkind)  * tab_Pl(12)        +             &
-              (1.633659602378021e-05_Rkind)   * tab_Pl(14)        +             &
-              (-4.6033837152845924e-05_Rkind) * tab_Pl(16)
+    Func(2) = -0.17447440045043028_Rkind                   +                    &
+              (0.01085897589385337_Rkind)     * tab_Pl(0)  +                    &
+              (-0.00966749217922542_Rkind)    * tab_Pl(2)  +                    &
+              (-0.000608958364909583_Rkind)   * tab_Pl(4)  +                    &
+              (-0.0005463286353325903_Rkind)  * tab_Pl(6)  +                    &
+              (-7.674511378388051e-05_Rkind)  * tab_Pl(8)  +                    &
+              (-1.2703773915173453e-06_Rkind) * tab_Pl(10) +                    &
+              (1.758821635592407e-05_Rkind)   * tab_Pl(12) +                    &
+              (1.705154432909527e-05_Rkind)   * tab_Pl(14) +                    &
+              (-3.748171912010247e-05_Rkind)  * tab_Pl(16)
    ! R1eq
    Func(2) = 1.4010444_Rkind * QML_dnSigmoid_H3(-s,ONE)           +             &
              QML_dnSigmoid_H3(s,ONE)*(s+1.6803643117748104_Rkind) +             &
