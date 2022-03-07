@@ -22,6 +22,7 @@
 !===========================================================================
 !===========================================================================
 PROGRAM Compare_txt
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : INPUT_UNIT,OUTPUT_UNIT
   IMPLICIT NONE
 
   character(len=:), allocatable :: arg,arg2
@@ -54,7 +55,7 @@ PROGRAM Compare_txt
     CASE("-n","-new")
       file_name_new = arg2
     CASE Default
-      write(6,*) 'Number of argument(s): ',COMMAND_ARGUMENT_COUNT()
+      write(OUTPUT_UNIT,*) 'Number of argument(s): ',COMMAND_ARGUMENT_COUNT()
       STOP 'ERROR in Compare_txt.f90: no default argument'
     END SELECT
 
@@ -63,32 +64,32 @@ PROGRAM Compare_txt
 
   END DO
 
-  write(6,*) '---------------------------------------------'
-  write(6,*) '   Differences between:'
-  write(6,*) 'file_name_old: "',file_name_old,'"'
-  write(6,*) 'file_name_new: "',file_name_new,'"'
-  write(6,*) '---------------------------------------------'
+  write(OUTPUT_UNIT,*) '---------------------------------------------'
+  write(OUTPUT_UNIT,*) '   Differences between:'
+  write(OUTPUT_UNIT,*) 'file_name_old: "',file_name_old,'"'
+  write(OUTPUT_UNIT,*) 'file_name_new: "',file_name_new,'"'
+  write(OUTPUT_UNIT,*) '---------------------------------------------'
 
   open(unit=nio_old,file=file_name_old,STATUS='old',IOSTAT=err_file_old)
   open(unit=nio_new,file=file_name_new,STATUS='old',IOSTAT=err_file_new)
 
   IF (err_file_old /= 0) THEN
-    write(6,*) ' WARNING while openning the old file. err_file_old: ',err_file_old
-    write(6,*) 'file_name_old: ',file_name_old
+    write(OUTPUT_UNIT,*) ' WARNING while openning the old file. err_file_old: ',err_file_old
+    write(OUTPUT_UNIT,*) 'file_name_old: ',file_name_old
   END IF
   IF (err_file_new /= 0) THEN
-    write(6,*) ' WARNING while openning the new file. err_file_new: ',err_file_new
-    write(6,*) 'file_name_new: ',file_name_new
+    write(OUTPUT_UNIT,*) ' WARNING while openning the new file. err_file_new: ',err_file_new
+    write(OUTPUT_UNIT,*) 'file_name_new: ',file_name_new
   END IF
 
   IF (err_file_old /= 0 .AND. err_file_new == 0 .OR. err_file_old == 0 .AND. err_file_new /= 0) THEN
-    write(6,*) ' Only ONE file can be open!!'
-    write(6,*) ' ERROR'
+    write(OUTPUT_UNIT,*) ' Only ONE file can be open!!'
+    write(OUTPUT_UNIT,*) ' ERROR'
     STOP
   END IF
   IF (err_file_old /= 0 .AND. err_file_new /= 0) THEN
-    write(6,*) ' No file can be open!!'
-    write(6,*) ' NO ERROR'
+    write(OUTPUT_UNIT,*) ' No file can be open!!'
+    write(OUTPUT_UNIT,*) ' NO ERROR'
     STOP
   END IF
 
@@ -107,7 +108,7 @@ PROGRAM Compare_txt
       DO
         read(nio_old,*,IOSTAT=err_file_old) name_old
         read(nio_new,*,IOSTAT=err_file_new) name_new
-        !write(6,*) 'name_old ',name_old
+        !write(OUTPUT_UNIT,*) 'name_old ',name_old
         CALL compa_name(name_old,name_new,err_file_old,err_file_new,err_sub)
         IF (err_sub /= 0 .OR. name_old == 'END_TEST') EXIT
 
@@ -120,13 +121,13 @@ PROGRAM Compare_txt
         read(nio_new,*) tab_new
         max_diff = maxval(abs(tab_old-tab_new))
         IF (max_diff > 1.d-6) THEN
-          write(6,*) name_old,n,'max_diff',max_diff,' large difference'
-          write(6,*) 'OLD values',n
-          write(6,*) tab_old
-          write(6,*) 'NEW values',n
-          write(6,*) tab_new
+          write(OUTPUT_UNIT,*) name_old,n,'max_diff',max_diff,' large difference'
+          write(OUTPUT_UNIT,*) 'OLD values',n
+          write(OUTPUT_UNIT,*) tab_old
+          write(OUTPUT_UNIT,*) 'NEW values',n
+          write(OUTPUT_UNIT,*) tab_new
         ELSE
-          write(6,*) name_old,n,'max_diff',max_diff
+          write(OUTPUT_UNIT,*) name_old,n,'max_diff',max_diff
         END IF
         deallocate(tab_old)
         deallocate(tab_new)
@@ -136,25 +137,28 @@ PROGRAM Compare_txt
       END DO
       IF (max_diff_test > 1.d-6) THEN
         nb_error = nb_error + 1
-        write(6,'(a,i0,a,a,a,e9.3,a)') 'TEST: ',itest,', file_name_new: "',file_name_new,'", max_diff: ',max_diff_test,' ERROR'
+        write(OUTPUT_UNIT,'(a,i0,a,a,a,e9.3,a)') 'TEST: ',itest,                &
+          ', file_name_new: "',file_name_new,'", max_diff: ',max_diff_test,' ERROR'
       ELSE
-        write(6,'(a,i0,a,a,a,e9.3)') 'TEST: ',itest,', file_name_new: "',file_name_new,'", max_diff: ',max_diff_test
+        write(OUTPUT_UNIT,'(a,i0,a,a,a,e9.3)') 'TEST: ',itest,                  &
+                ', file_name_new: "',file_name_new,'", max_diff: ',max_diff_test
       END IF
     END IF
   END DO
 
   IF (nb_error > 0) THEN
-    write(6,'(a,a,a,i0,a)') 'In file_name_new: "',file_name_new,'", ',nb_error,' PROBLEM(S)'
+    write(OUTPUT_UNIT,'(a,a,a,i0,a)') 'In file_name_new: "',file_name_new,'", ',nb_error,' PROBLEM(S)'
   ELSE
-    write(6,'(a,a,a)') 'In file_name_new: "',file_name_new,'", NO PROBLEM'
+    write(OUTPUT_UNIT,'(a,a,a)') 'In file_name_new: "',file_name_new,'", NO PROBLEM'
   END IF
-  write(6,*) '---------------------------------------------'
+  write(OUTPUT_UNIT,*) '---------------------------------------------'
 
   close(nio_old)
   close(nio_new)
 
 END PROGRAM Compare_txt
 SUBROUTINE compa_name(name_old,name_new,err_file_old,err_file_new,err_sub)
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : INPUT_UNIT,OUTPUT_UNIT
   IMPLICIT NONE
 
   character (len=*)               :: name_old,name_new
@@ -162,10 +166,10 @@ SUBROUTINE compa_name(name_old,name_new,err_file_old,err_file_new,err_sub)
 
   err_sub = 0
   IF (name_old /= name_new .OR. err_file_old /= err_file_new) THEN
-    write(6,*) ' The structure of both files are different!'
-    write(6,*) 'name_old,err_file_old: ',name_old,err_file_old
-    write(6,*) 'name_new,err_file_new: ',name_new,err_file_new
-    write(6,*) ' ERROR'
+    write(OUTPUT_UNIT,*) ' The structure of both files are different!'
+    write(OUTPUT_UNIT,*) 'name_old,err_file_old: ',name_old,err_file_old
+    write(OUTPUT_UNIT,*) 'name_new,err_file_new: ',name_new,err_file_new
+    write(OUTPUT_UNIT,*) ' ERROR'
     err_sub = 1
   END IF
 

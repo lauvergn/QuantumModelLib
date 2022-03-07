@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/bin/zsh
 
 gfortran -o Compare_txt.exe ../bin/Compare_txt.f90
 
 for new_file in *txt
 do
+  echo $new_file
   ./Compare_txt.exe -o RES_old/$new_file -new $new_file
 done
 

@@ -113,7 +113,7 @@ CONTAINS
 
     TYPE (QML_Phenol_t)               :: QModel
 
-    TYPE(QML_Empty_t),   intent(in)   :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),    intent(in)   :: QModel_in ! variable to transfer info to the init
     logical,              intent(in)   :: read_param
     integer,              intent(in)   :: nio_param_file
 

@@ -6,8 +6,8 @@
 #                gfortran (version: 6.3.0 linux and osx)
 #                pgf90 (version: 17.10-0, linux)
 #                nagfor (version 7.0, osx)
-#F90 = ifort
- F90 = gfortran
+ F90 = ifort
+#F90 = gfortran
 #F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
@@ -113,17 +113,18 @@ ifeq ($(F90),ifort)
    endif
    # opt management
    ifeq ($(OPT),1)
-      F90FLAGS = -O  $(OMPFLAG) -parallel -g -traceback
+      #F90FLAGS = -O  $(OMPFLAG) -parallel -g -traceback
+      F90FLAGS = -O  $(OMPFLAG) -g -traceback
    else
       F90FLAGS = -O0 $(OMPFLAG) -check all -g -traceback
    endif
 
+   F90LIB = -L/Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk/usr/lib/
    ifeq ($(LAPACK),1)
-     #F90LIB = -qmkl -lpthread
-     F90LIB = -framework Accelerate
-     #F90LIB = $(MKLROOT)/lib/libmkl_lapack95_ilp64.a $(MKLROOT)/lib/libmkl_core.a $(MKLROOT)/lib/libmkl_blas95_ilp64.a -lpthread
+     F90LIB += -qmkl -lpthread
+     #F90LIB += -qmkl
    else
-     F90LIB = -lpthread
+     F90LIB += -lpthread
    endif
 
    F90_VER = $(shell $(F90) --version | head -1 )

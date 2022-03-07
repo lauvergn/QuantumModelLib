@@ -257,7 +257,7 @@ MODULE QML_H3_m
    PRIVATE
 
    CONTAINS
-    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_H3
+    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_H3
     PROCEDURE :: Write_QModel     => Write_QML_H3
     PROCEDURE :: Write0_QModel    => Write0_QML_H3
     PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_H3
@@ -449,7 +449,19 @@ MODULE QML_H3_m
     Vec23(:) = dnX(:,3)-dnX(:,2)
     Vec12(:) = dnX(:,2)-dnX(:,1)
     Vec13(:) = dnX(:,3)-dnX(:,1)
-    IF (debug) write(out_unitp,*) 'Cart_TO_Q_QML_H3 vect done'
+    IF (debug) THEN
+      write(out_unitp,*) 'Cart_TO_Q_QML_H3 vect done'
+      DO j=1,size(Vec23,dim=1)
+        CALL QML_Write_dnS(Vec23(j),out_unitp,info='Vec23')
+      END DO
+      DO j=1,size(Vec12,dim=1)
+        CALL QML_Write_dnS(Vec23(j),out_unitp,info='Vec12')
+      END DO
+      DO j=1,size(Vec23,dim=1)
+        CALL QML_Write_dnS(Vec13(j),out_unitp,info='Vec13')
+      END DO
+      flush(out_unitp)
+    END IF
 
     dnQ(1) = sqrt(dot_product(Vec23,Vec23))
     dnQ(2) = sqrt(dot_product(Vec12,Vec12))
