@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 gfortran -o Compare_txt.exe ../bin/Compare_txt.f90
 
