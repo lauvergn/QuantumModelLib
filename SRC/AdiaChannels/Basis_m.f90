@@ -59,6 +59,8 @@ MODULE AdiaChannels_Basis_m
     real(kind=Rkind),   allocatable :: d2gb(:,:,:,:)  ! basis functions d2gb(nq,nb,1,1)
 
     TYPE (QML_Basis_t), pointer     :: tab_basis(:) => null()
+    !TYPE (QML_Basis_t), allocatable :: tab_basis(:)
+
   END TYPE QML_Basis_t
 
   INTERFACE Basis_IS_allocated
@@ -134,6 +136,7 @@ CONTAINS
     write(out_unitp,*)
     write(out_unitp,*)
     write(out_unitp,*) 'nb_basis',Basis%nb_basis
+    !IF (allocated(Basis%tab_basis)) THEN
     IF (associated(Basis%tab_basis)) THEN
       DO ib=1,size(Basis%tab_basis)
         CALL Write_Basis(Basis%tab_basis(ib))
