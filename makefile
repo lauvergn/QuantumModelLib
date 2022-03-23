@@ -6,8 +6,8 @@
 #                gfortran (version: 6.3.0 linux and osx)
 #                pgf90 (version: 17.10-0, linux)
 #                nagfor (version 7.0, osx)
- F90 = ifort
-#F90 = gfortran
+#F90 = ifort
+ F90 = gfortran
 #F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation

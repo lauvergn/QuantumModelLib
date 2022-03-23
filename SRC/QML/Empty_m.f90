@@ -400,7 +400,7 @@ CONTAINS
   USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
-    CLASS(QML_Empty_t),     intent(in)    :: QModel
+    CLASS(QML_Empty_t),      intent(in)    :: QModel
     TYPE (dnS_t),            intent(in)    :: dnX(:,:)
     TYPE (dnS_t),            intent(inout) :: dnQ(:)
     integer,                 intent(in)    :: nderiv

@@ -349,6 +349,9 @@ PROGRAM TEST_dnS
    write(out_unitp,'(a)') "============================================"
    write(out_unitp,'(a)') "new tests : Vec_OF_dnS(1:3), 2D, nderiv=2"
    write(out_unitp,'(a)') "============================================"
+   CALL QML_dealloc_dnS(Sana)
+   CALL QML_dealloc_dnS(dnXZ)
+
    nderiv = 2
    x=0.5_Rkind
    y=1.0_Rkind

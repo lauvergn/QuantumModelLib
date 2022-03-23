@@ -420,15 +420,15 @@ MODULE QML_H3_m
   USE QMLdnSVM_dnS_m
   IMPLICIT NONE
 
-    CLASS(QML_H3_t),       intent(in)    :: QModel
+    CLASS(QML_H3_t),         intent(in)    :: QModel
     TYPE (dnS_t),            intent(in)    :: dnX(:,:)
     TYPE (dnS_t),            intent(inout) :: dnQ(:)
     integer,                 intent(in)    :: nderiv
 
     ! local vector
     integer         :: i,j
-    TYPE (dnS_t)    :: Vec12(3),Vec13(3),Vec23(3)
-
+    !TYPE (dnS_t)    :: Vec12(3),Vec13(3),Vec23(3)
+    TYPE (dnS_t), allocatable :: Vec12(:),Vec13(:),Vec23(:)
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Cart_TO_Q_QML_H3'
@@ -437,6 +437,12 @@ MODULE QML_H3_m
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'size(dnQ)',size(dnQ)
+      write(out_unitp,*) 'dnQ:'
+      DO j=1,size(dnQ,dim=1)
+        CALL QML_Write_dnS(dnQ(j),out_unitp,info='dnQ('// int_to_char(j) // ')')
+      END DO
+      write(out_unitp,*) 'shape dnX',shape(dnX)
       write(out_unitp,*) 'dnX'
       DO i=1,size(dnX,dim=2)
       DO j=1,size(dnX,dim=1)
@@ -446,11 +452,17 @@ MODULE QML_H3_m
       flush(out_unitp)
     END IF
 
+    allocate(Vec23(3))
+    allocate(Vec12(3))
+    allocate(Vec13(3))
+
     Vec23(:) = dnX(:,3)-dnX(:,2)
     Vec12(:) = dnX(:,2)-dnX(:,1)
     Vec13(:) = dnX(:,3)-dnX(:,1)
+
     IF (debug) THEN
       write(out_unitp,*) 'Cart_TO_Q_QML_H3 vect done'
+      flush(out_unitp)
       DO j=1,size(Vec23,dim=1)
         CALL QML_Write_dnS(Vec23(j),out_unitp,info='Vec23')
       END DO
