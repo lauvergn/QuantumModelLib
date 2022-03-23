@@ -1,0 +1,17 @@
+TEST output: Poly1D_HF Adiabatic
+ Q
+           1
+   1.7329000000000001     
+ V
+           1
+   0.0000000000000000     
+ Grad
+           1
+   0.0000000000000000     
+ Hess
+           1
+  0.62032986449999994     
+ d0GGdef
+           1
+   5.7319563673905317E-004
+END_TEST output: Poly1D_HF Adiabatic

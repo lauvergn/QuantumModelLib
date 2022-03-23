@@ -492,6 +492,94 @@ MODULE QML_H3_m
     END IF
   END SUBROUTINE Cart_TO_Q_QML_H3
 
+  SUBROUTINE QML_LSTH_refactoring(X,VXD)
+  USE QMLLib_NumParameters_m
+  IMPLICIT NONE
+
+!       tag='LSTH PES of H2+H. [P. Siegbahn, B. Liu, D.G. Truhlar and C.J.Horowitz, JCP 68, 2457(1978)'
+!       X refers to the three hh distances.
+
+    real (kind=Rkind) :: X(3),VXD
+
+    real (kind=Rkind) :: S1(3),S2(3),S3(3)
+    real (kind=Rkind) :: EF1,EF2,EF3,X21,X22,X23,T1,T2,T3
+    real (kind=Rkind) :: XQ1,XQ2,XQ3,XJ1,XJ2,XJ3,XQ,XJ,ELOND
+    real (kind=Rkind) :: WNT,WN,WN2,WN3,WN4,WN5,R,R2,R3
+    real (kind=Rkind) :: EXNS,ENS,E,EB1,EB2,EB4,EB1T,EB3T,EB4A,EB4B,EQ,EXF1,EXF2,EXF3,RI,VX
+    real (kind=Rkind) :: WB,WB2,WB3,WB4
+
+    real (kind=Rkind) :: COS0,COS1,COS2,COS3
+    real (kind=Rkind), parameter :: autTOeV_SLTH = 627.510_Rkind/23.06_Rkind
+    real (kind=Rkind), parameter :: V0 = 4.7466_Rkind/autTOeV_SLTH
+
+!  E    LLONDON
+!       ***************************************************************
+!       TYPE 2
+2       FORMAT('ENTERING SLTH')
+        EF1=EXP(-F*X(1))   ! change in EXP(-F*X(:)) instead of EXP(F*X(:)) to avoid a possible overflow
+        EF2=EXP(-F*X(2))
+        EF3=EXP(-F*X(3))
+        X21=X(1)*X(1)
+        X22=X(2)*X(2)
+        X23=X(3)*X(3)
+        T1=C*(A+X(1)+A1*X21)*EF1 ! change the / by * to avoid a possible overflow (see above)
+        T2=C*(A+X(2)+A1*X22)*EF2
+        T3=C*(A+X(3)+A1*X23)*EF3
+        CALL QML_VH2(X,S1,S2,S3)
+        XQ1=S1(1)+T1
+        XQ2=S2(1)+T2
+        XQ3=S3(1)+T3
+        XJ1=S1(1)-T1
+        XJ2=S2(1)-T2
+        XJ3=S3(1)-T3
+        XQ=(XQ1+XQ2+XQ3)/TWO
+        XJ=SQRT(((XJ1-XJ2)**2+(XJ2-XJ3)**2+(XJ3-XJ1)**2)/EIGHT)
+        ELOND=XQ-XJ
+!       ENS
+        WNT=(X(1)-X(2))*(X(2)-X(3))*(X(3)-X(1))
+        WN=ABS(WNT)
+        WN2=WN*WN
+        WN3=WN2*WN
+        WN4=WN3*WN
+        WN5=WN4*WN
+        R=X(1)+X(2)+X(3)
+        R2=R*R
+        R3=R2*R
+!       EXNS=EXP(FNS*R3)
+!       ENS=(AN1*WN2+AN2*WN3+AN3*WN4+AN4*WN5)/EXNS
+        EXNS=EXP(-FNS*R3)
+        ENS=(AN1*WN2+AN2*WN3+AN3*WN4+AN4*WN5)*EXNS
+!CCCCC
+!CCCCC  NONLINEAR CORRECTIONS
+!CCCCC
+        COS0=(X21+X22+X23)/TWO
+        COS1=(X21-COS0)/X(2)/X(3)
+        COS2=(X22-COS0)/X(1)/X(3)
+        COS3=(X23-COS0)/X(1)/X(2)
+        WB=COS1+COS2+COS3+ONE
+        WB2=WB*WB
+        WB3=WB2*WB
+        WB4=WB3*WB
+        EXF1=EXP(-F1*R)
+        EXF2=EXP(-F2*R2)
+        EXF3=EXP(-F3*R)
+        EB1T=(B1+B2*R)*EXF1
+        EB3T=(XL1+XL2*R2)*EXF3
+        EB1=WB*(EB1T+EB3T)
+        EB2=(WB2*W1+WB3*W2+WB4*W3)*EXF2
+        EQ=(X(1)-X(2))**2+(X(2)-X(3))**2+(X(3)-X(1))**2
+        RI=ONE/X(1)+ONE/X(2)+ONE/X(3)
+        EB4A=WB*D1*EXF1+WB2*D2*EXF2
+        EB4B=D3*EXF1+D4*EXF2
+        EB4=EB4A*RI+EB4B*WB*EQ
+        E=ELOND+ENS+EB1+EB2+EB4
+        VXD = E ! in Hartree
+        !E=E*627.510
+        !VX=E/23.06+4.7466
+        !VXD=DBLE(VX)
+        !VXD = (E+V0)*autTOeV_SLTH
+  END SUBROUTINE QML_LSTH_refactoring
+
   SUBROUTINE QML_LSTH(X,VXD)
   USE QMLLib_NumParameters_m
   IMPLICIT NONE
