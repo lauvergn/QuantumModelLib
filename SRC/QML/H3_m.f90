@@ -404,7 +404,7 @@ MODULE QML_H3_m
     SELECT CASE(QModel%option)
     CASE (0) ! 3D
       Q(:) = QML_get_d0_FROM_dnS(dnQ)
-      CALL QML_LSTH(Q,V)
+      CALL QML_LSTH_refactoring(Q,V)
       CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0=V)
 
     CASE (1) ! IRC
