@@ -34,6 +34,7 @@ PROGRAM main_pot
   IMPLICIT NONE
 
   !CALL test_Phenol_ADia() ; stop
+  !CALL test_HBond() ; stop
 
 
   CALL test_PH4()
@@ -295,7 +296,7 @@ SUBROUTINE test_HBond
   write(6,*) 'gradiant',G
   write(6,*) 'hessian',H
 
-
+  CALL set_Qmodel_step(1.e-2_real64)
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
 
   deallocate(V)

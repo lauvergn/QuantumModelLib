@@ -83,6 +83,7 @@ MODULE Model_m
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
   PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model,Qact_TO_Q
+  PUBLIC :: set_step_epsi_Model
 
   TYPE :: Model_t
     ! add nsurf and ndim to avoid crash when using the driver without initialization
@@ -902,6 +903,42 @@ CONTAINS
     END IF
 
   END SUBROUTINE Init_Model
+  SUBROUTINE set_step_epsi_Model(step_in,epsi_in)
+  USE QMLLib_UtilLib_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in), optional  :: step_in,epsi_in
+
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='set_step_epsi_Model'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      flush(out_unitp)
+    END IF
+
+    IF (present(step_in)) THEN
+      write(out_unitp,*) ' WARNING: step has been changed.'
+      write(out_unitp,*) ' Old and new values',step,step_in
+      step = step_in
+    END IF
+
+    IF (present(epsi_in)) THEN
+      write(out_unitp,*) ' WARNING: epsi has been changed.'
+      write(out_unitp,*) ' Old and new values',epsi,epsi_in
+      epsi = epsi_in
+    END IF
+
+    IF (debug) THEN
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    END IF
+
+  END SUBROUTINE set_step_epsi_Model
 
   SUBROUTINE get_Q0_Model(Q0,QModel,option)
   USE QMLLib_UtilLib_m

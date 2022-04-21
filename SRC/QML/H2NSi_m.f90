@@ -74,9 +74,9 @@ MODULE QML_H2NSi_m
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_H2NSi(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
-    TYPE (QML_H2NSi_t)                         :: QModel
+    TYPE (QML_H2NSi_t)                           :: QModel
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -268,8 +268,6 @@ MODULE QML_H2NSi_m
     write(nio,*) '            0.0024132300,0.0000000000] '
     write(nio,*) '                                       '
     write(nio,*) ' Unpublished potential                 '
-
-    CONTINUE
 
     CASE Default
         write(out_unitp,*) ' ERROR in write_QModel '

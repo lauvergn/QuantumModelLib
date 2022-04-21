@@ -353,6 +353,16 @@ SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
   QuantumModel%QM%d0GGdef(:,:) = GGdef
 
 END SUBROUTINE set_Qmodel_GGdef
+SUBROUTINE set_Qmodel_step(step_in)
+  USE QMLLib_NumParameters_m
+  USE Model_m
+  IMPLICIT NONE
+
+  real (kind=Rkind),      intent(in)        :: step_in
+
+  CALL set_step_epsi_Model(step_in=step_in)
+
+END SUBROUTINE set_Qmodel_step
 SUBROUTINE set_Qmodel_Print_level(printlevel)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
@@ -361,7 +371,7 @@ SUBROUTINE set_Qmodel_Print_level(printlevel)
 
   integer,                intent(in)        :: printlevel
 
-  print_level = printlevel  ! from them module QMLLib_NumParameters_m.f90
+  print_level = printlevel  ! from the module QMLLib_NumParameters_m.f90
 
 END SUBROUTINE set_Qmodel_Print_level
 SUBROUTINE set_Qmodel_in_unitp(inunitp)
@@ -372,7 +382,7 @@ SUBROUTINE set_Qmodel_in_unitp(inunitp)
 
   integer,                intent(in)        :: inunitp
 
-  in_unitp = inunitp  ! from them module QMLLib_NumParameters_m.f90
+  in_unitp = inunitp  ! from the module QMLLib_NumParameters_m.f90
 
 END SUBROUTINE set_Qmodel_in_unitp
 SUBROUTINE set_Qmodel_out_unitp(outunitp)

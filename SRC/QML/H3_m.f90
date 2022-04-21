@@ -279,7 +279,7 @@ MODULE QML_H3_m
 
     TYPE (QML_H3_t)                           :: QModel ! RESULT
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -310,6 +310,10 @@ MODULE QML_H3_m
       ELSE
         QModel%ndim       = QModel%ndimQ
       END IF
+
+      ! so that, we can get the irc function with the 3D model
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 4 ! V, R1op,R2opt,R3opt
 
       QModel%pot_name   = 'H3_LSTH'
       QModel%no_ana_der = .TRUE.
