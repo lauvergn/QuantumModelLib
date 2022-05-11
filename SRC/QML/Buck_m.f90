@@ -81,9 +81,9 @@ CONTAINS
   FUNCTION Init_QML_Buck(QModel_in,read_param,nio_param_file,A,B,C) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (QML_Buck_t)                           :: QModel
+    TYPE (QML_Buck_t)                            :: QModel
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: A,B,C
@@ -295,10 +295,10 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Buck(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
-    CLASS(QML_Buck_t),  intent(in)     :: QModel
+    CLASS(QML_Buck_t),   intent(in)     :: QModel
     TYPE(dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)
     TYPE(dnS_t),         intent(in)     :: dnQ(:)
     integer,             intent(in)     :: nderiv
@@ -322,8 +322,7 @@ CONTAINS
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param BuckPot          TYPE(QML_Buck_t):    derived type with the Buckingham parameters.
   FUNCTION QML_dnBuck(dnR,BuckPot)
-    USE QMLdnSVM_dnMat_m
-    USE QMLdnSVM_dnS_m
+    USE ADdnSVM_m
 
 
     TYPE (dnS_t)                          :: QML_dnBuck
@@ -334,12 +333,12 @@ CONTAINS
 
     !write(out_unitp,*) 'BEGINNING in QML_dnBuck'
     !write(out_unitp,*) 'dnR'
-    !CALL QML_Write_dnS(dnR)
+    !CALL Write_dnS(dnR)
 
     QML_dnBuck = BuckPot%A * exp(-BuckPot%B*dnR) - BuckPot%C * dnR**(-6)
 
     !write(out_unitp,*) 'Buckingham at',get_d0_FROM_dnS(dnR)
-    !CALL QML_Write_dnS(QML_dnBuck)
+    !CALL Write_dnS(QML_dnBuck)
     !write(out_unitp,*) 'END in QML_dnBuck'
     !flush(out_unitp)
 

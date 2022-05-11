@@ -117,7 +117,7 @@ contains
 
 
   SUBROUTINE EvalPot_QML_Template(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS (QML_Template_t),  intent(in)     :: QModel
@@ -137,7 +137,7 @@ contains
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) ' QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) ' nderiv:',nderiv
-      write(out_unitp,*) ' Q(:):',(QML_get_d0_FROM_dnS(dnQ(i)),i=1,size(dnQ))
+      write(out_unitp,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
       flush(out_unitp)
     END IF
 
@@ -154,13 +154,13 @@ contains
 
     Mat_OF_PotDia(1,1) = mXpY+mZ+vXmY
 
-    CALL QML_dealloc_dnS(mXpY)
-    CALL QML_dealloc_dnS(mZ)
-    CALL QML_dealloc_dnS(vXmY)
+    CALL dealloc_dnS(mXpY)
+    CALL dealloc_dnS(mZ)
+    CALL dealloc_dnS(vXmY)
 
     IF (debug) THEN
       write(out_unitp,*) 'Mat_OF_PotDia'
-      CALL QML_Write_dnS( Mat_OF_PotDia(1,1),6)
+      CALL Write_dnS( Mat_OF_PotDia(1,1),6)
       write(out_unitp,*)
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)

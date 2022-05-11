@@ -364,7 +364,7 @@ MODULE QML_LinearHBond_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_LinearHBond(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_LinearHBond_t),  intent(in)    :: QModel
@@ -384,7 +384,7 @@ MODULE QML_LinearHBond_m
     logical, parameter :: debug=.FALSE.
     IF (debug .OR. print_level > 0) THEN
       write(out_unitp,*) 'BEGINNING EvalPot_QML_LinearHBond'
-      write(out_unitp,*) 'r(:) or QQ,q: ',QML_get_d0_FROM_dnS(dnQ(:))
+      write(out_unitp,*) 'r(:) or QQ,q: ',get_d0(dnQ(:))
       write(out_unitp,*) 'nderiv',nderiv
       write(out_unitp,*) 'PubliUnit',QModel%PubliUnit
       write(out_unitp,*) 'option',QModel%option
@@ -393,9 +393,9 @@ MODULE QML_LinearHBond_m
 
     IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'dnQQ'
-      CALL QML_Write_dnS(dnQ(1),all_type=.TRUE.)
+      CALL Write_dnS(dnQ(1),all_type=.TRUE.)
       write(out_unitp,*) 'dnsq'
-      CALL QML_Write_dnS(dnQ(2),all_type=.TRUE.)
+      CALL Write_dnS(dnQ(2),all_type=.TRUE.)
       flush(out_unitp)
     END IF
 
@@ -405,9 +405,9 @@ MODULE QML_LinearHBond_m
 
       IF (debug .OR. print_level > 1) THEN
         write(out_unitp,*) 'dnQQ in Angs'
-        CALL QML_Write_dnS(dnQQ,all_type=.TRUE.)
+        CALL Write_dnS(dnQQ,all_type=.TRUE.)
         write(out_unitp,*) 'dnsq in Angs'
-        CALL QML_Write_dnS(dnsq,all_type=.TRUE.)
+        CALL Write_dnS(dnsq,all_type=.TRUE.)
         flush(out_unitp)
       END IF
 
@@ -424,31 +424,31 @@ MODULE QML_LinearHBond_m
     IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'dnX'
       flush(out_unitp)
-      CALL QML_Write_dnS(dnX)
+      CALL Write_dnS(dnX)
       write(out_unitp,*) 'dnY'
       flush(out_unitp)
-      CALL QML_Write_dnS(dnY)
+      CALL Write_dnS(dnY)
       flush(out_unitp)
     END IF
 
     PotVal_m1 = QML_dnMorse(dnX,QModel%Morse1)
     IF (debug .OR. print_level > 1) THEN
-      write(out_unitp,*) 'PotVal_m1. x:',QML_get_d0_FROM_dnS(dnX)
-      CALL QML_Write_dnS(PotVal_m1)
+      write(out_unitp,*) 'PotVal_m1. x:',get_d0(dnX)
+      CALL Write_dnS(PotVal_m1)
       flush(out_unitp)
     END IF
 
     PotVal_m2 = QML_dnMorse(dnY,QModel%Morse2)+QModel%Eref2
     IF (debug .OR. print_level > 1) THEN
-      write(out_unitp,*) 'PotVal_m2. y:',QML_get_d0_FROM_dnS(dnY)
-      CALL QML_Write_dnS(PotVal_m2)
+      write(out_unitp,*) 'PotVal_m2. y:',get_d0(dnY)
+      CALL Write_dnS(PotVal_m2)
       flush(out_unitp)
     END IF
 
     PotVal_Buck = QML_dnBuck(dnQQ,QModel%Buck)
     IF (debug .OR. print_level > 1) THEN
-      write(out_unitp,*) 'PotVal_Buck. QQ:',QML_get_d0_FROM_dnS(dnQQ)
-      CALL QML_Write_dnS(PotVal_Buck)
+      write(out_unitp,*) 'PotVal_Buck. QQ:',get_d0(dnQQ)
+      CALL Write_dnS(PotVal_Buck)
       flush(out_unitp)
     END IF
 
@@ -456,7 +456,7 @@ MODULE QML_LinearHBond_m
 
     IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
-      CALL QML_Write_dnS(Mat_OF_PotDia(1,1))
+      CALL Write_dnS(Mat_OF_PotDia(1,1))
       flush(out_unitp)
     END IF
 
@@ -469,18 +469,18 @@ MODULE QML_LinearHBond_m
       Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1)/auTOkcalmol_inv ! to convert the kcal/mol into Hartree
     END IF
 
-    CALL QML_dealloc_dnS(dnX)
-    CALL QML_dealloc_dnS(dnY)
-    CALL QML_dealloc_dnS(dnQQ)
-    CALL QML_dealloc_dnS(dnsq)
+    CALL dealloc_dnS(dnX)
+    CALL dealloc_dnS(dnY)
+    CALL dealloc_dnS(dnQQ)
+    CALL dealloc_dnS(dnsq)
 
-    CALL QML_dealloc_dnS(PotVal_m1)
-    CALL QML_dealloc_dnS(PotVal_m2)
-    CALL QML_dealloc_dnS(PotVal_Buck)
+    CALL dealloc_dnS(PotVal_m1)
+    CALL dealloc_dnS(PotVal_m2)
+    CALL dealloc_dnS(PotVal_Buck)
 
     IF (debug .OR. print_level > 0) THEN
       write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
-      CALL QML_Write_dnS(Mat_OF_PotDia(1,1))
+      CALL Write_dnS(Mat_OF_PotDia(1,1))
       flush(out_unitp)
       write(out_unitp,*) 'END EvalPot_QML_LinearHBond'
       flush(out_unitp)

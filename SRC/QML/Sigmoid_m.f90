@@ -260,9 +260,9 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Sigmoid(QModel,Mat_OF_PotDia,dnQ,nderiv)
-    USE QMLdnSVM_dnS_m
+    USE ADdnSVM_m, ONLY :  dnS_t
 
-    CLASS (QML_Sigmoid_t), intent(in)     :: QModel
+    CLASS (QML_Sigmoid_t),  intent(in)     :: QModel
     TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),           intent(in)     :: dnQ(:)
     integer,                intent(in)     :: nderiv
@@ -288,8 +288,7 @@ CONTAINS
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param SigmoidPot       TYPE(QML_Sigmoid_t): derived type with the Sigmoid parameters.
   FUNCTION QML_dnSigmoid(dnR,SigmoidPot) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
-    USE QMLdnSVM_dnMat_m
-    USE QMLdnSVM_dnS_m
+    USE ADdnSVM_m, ONLY :  dnS_t,tanh,dealloc_dnS,Write_dnS
 
     TYPE (dnS_t)                          :: QML_dnSigmoid
     TYPE (dnS_t),          intent(in)     :: dnR
@@ -301,17 +300,17 @@ CONTAINS
 
     !write(out_unitp,*) 'BEGINNING in Sigmoid'
     !write(out_unitp,*) 'dnR'
-    !CALL QML_Write_dnS(dnR)
+    !CALL Write_dnS(dnR)
 
     dnbeta  = tanh((dnR-SigmoidPot%B)/SigmoidPot%C)
     !write(out_unitp,*) 'dnbeta'
-    !CALL QML_Write_dnS(dnbeta)
+    !CALL Write_dnS(dnbeta)
     QML_dnSigmoid = (HALF*SigmoidPot%A) * (ONE+SigmoidPot%e*dnbeta)
 
-     CALL QML_dealloc_dnS(dnbeta)
+     CALL dealloc_dnS(dnbeta)
 
     !write(out_unitp,*) 'Sigmoid at',get_d0_FROM_dnS(dnR)
-    !CALL QML_Write_dnS(QML_dnSigmoid)
+    !CALL Write_dnS(QML_dnSigmoid)
     !write(out_unitp,*) 'END in Sigmoid'
     !flush(out_unitp)
 

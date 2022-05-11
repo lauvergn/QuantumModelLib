@@ -235,7 +235,7 @@ CONTAINS
 
 
   SUBROUTINE QML_FiniteDiff_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ,option)
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
@@ -295,7 +295,7 @@ CONTAINS
   END SUBROUTINE QML_FiniteDiff_AddMat_TO_dnMat
 
   SUBROUTINE QML_FiniteDiff4_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
@@ -307,8 +307,8 @@ CONTAINS
     integer                            :: size_indQ,ndim,nderiv
     integer                            :: i,j,k,ip,jp,kp
 
-    nderiv = QML_get_nderiv_FROM_dnMat(dnMat)
-    ndim   = QML_get_ndim_FROM_dnMat(dnMat)
+    nderiv = get_nderiv(dnMat)
+    ndim   = get_nVar(dnMat)
 
     IF (nderiv < 0) THEN
       write(out_unitp,*) ' ERROR in QML_FiniteDiff4_AddMat_TO_dnMat'
@@ -360,7 +360,7 @@ CONTAINS
 
       IF (nderiv >= 2) THEN
         DO i=1,ndim
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,wDD(0),dnMat,ider=[i,i])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,wDD(0),dnMat,ider=[i,i])
         END DO
       END IF
 
@@ -368,31 +368,31 @@ CONTAINS
       i  = indQ(1)
       ip = indDQ(1)
 
-      CALL QML_Mat_wADDTO_dnMat2_ider(Mat,wD(ip)  ,dnMat,ider=[i])
+      CALL Mat_wADDTO_dnMat2_ider(Mat,wD(ip)  ,dnMat,ider=[i])
 
       IF (nderiv >= 2) THEN
-        CALL QML_Mat_wADDTO_dnMat2_ider(Mat,wDD(ip) ,dnMat,ider=[i,i])
+        CALL Mat_wADDTO_dnMat2_ider(Mat,wDD(ip) ,dnMat,ider=[i,i])
       END IF
 
       IF (nderiv >= 3) THEN
         ! d3/dQidQidQi
-        CALL QML_Mat_wADDTO_dnMat2_ider(Mat,wDDD(ip),dnMat,ider=[i,i,i])
+        CALL Mat_wADDTO_dnMat2_ider(Mat,wDDD(ip),dnMat,ider=[i,i,i])
 
         ! d3/dQjdQjdQi
         DO j=1,ndim
           IF (i == j) CYCLE
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w0aDDD(ip),dnMat,ider=[j,j,i])
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w0aDDD(ip),dnMat,ider=[j,i,j])
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w0aDDD(ip),dnMat,ider=[i,j,j])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w0aDDD(ip),dnMat,ider=[j,j,i])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w0aDDD(ip),dnMat,ider=[j,i,j])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w0aDDD(ip),dnMat,ider=[i,j,j])
         END DO
 
         ! d3/dQkdQjdQi
         DO j=1,ndim
         DO k=1,ndim
           IF (i == j .OR. i == k .OR. j == k) CYCLE
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[k,j,i])
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[k,i,j])
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[i,k,j])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[k,j,i])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[k,i,j])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[i,k,j])
         END DO
         END DO
 
@@ -407,35 +407,35 @@ CONTAINS
 
       IF (abs(ip) == 1 .AND. abs(jp) == 1) THEN
         ! d2/dQidQj
-        CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w11DD(jp,ip),dnMat,ider=[j,i])
+        CALL Mat_wADDTO_dnMat2_ider(Mat,w11DD(jp,ip),dnMat,ider=[j,i])
 
         IF (nderiv >= 3) THEN
           ! d3/dQidQidQj
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w11DDD(ip,jp),dnMat,ider=[i,i,j])
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w11DDD(ip,jp),dnMat,ider=[i,j,i])
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w11DDD(ip,jp),dnMat,ider=[j,i,i])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w11DDD(ip,jp),dnMat,ider=[i,i,j])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w11DDD(ip,jp),dnMat,ider=[i,j,i])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w11DDD(ip,jp),dnMat,ider=[j,i,i])
         END IF
 
         IF (nderiv >= 3 .AND. ndim > 2) THEN
           ! d3/dQidQjdQk
           DO k=1,ndim
             IF (k == i .OR. k == j) CYCLE
-            CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[k,j,i])
-            CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[j,k,i])
-            CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[j,i,k])
+            CALL Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[k,j,i])
+            CALL Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[j,k,i])
+            CALL Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[j,i,k])
           END DO
         END IF
 
       ELSE IF (abs(ip) == 2 .AND. abs(jp) == 2) THEN
 
         ! d2/dQidQj
-        CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w22DD(jp/2,ip/2),dnMat,ider=[j,i])
+        CALL Mat_wADDTO_dnMat2_ider(Mat,w22DD(jp/2,ip/2),dnMat,ider=[j,i])
 
         IF (nderiv >= 3) THEN
           ! d3/dQidQidQj
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w22DDD(ip/2,jp/2),dnMat,ider=[i,i,j])
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w22DDD(ip/2,jp/2),dnMat,ider=[i,j,i])
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w22DDD(ip/2,jp/2),dnMat,ider=[j,i,i])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w22DDD(ip/2,jp/2),dnMat,ider=[i,i,j])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w22DDD(ip/2,jp/2),dnMat,ider=[i,j,i])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w22DDD(ip/2,jp/2),dnMat,ider=[j,i,i])
         END IF
       END IF
 
@@ -449,14 +449,14 @@ CONTAINS
       jp = indDQ(2)
       kp = indDQ(3)
 
-      CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w111DDD(kp,jp,ip) ,dnMat,ider=[k,j,i])
+      CALL Mat_wADDTO_dnMat2_ider(Mat,w111DDD(kp,jp,ip) ,dnMat,ider=[k,j,i])
 
     CASE Default
     END SELECT
 
   END SUBROUTINE QML_FiniteDiff4_AddMat_TO_dnMat
   SUBROUTINE QML_FiniteDiff3_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
@@ -468,8 +468,8 @@ CONTAINS
     integer                            :: size_indQ,ndim,nderiv
     integer                            :: i,j,k,ip,jp,kp
 
-    nderiv = QML_get_nderiv_FROM_dnMat(dnMat)
-    ndim   = QML_get_ndim_FROM_dnMat(dnMat)
+    nderiv = get_nderiv(dnMat)
+    ndim   = get_nVar(dnMat)
 
     IF (nderiv < 0) THEN
       write(out_unitp,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_dnMat'
@@ -521,7 +521,7 @@ CONTAINS
 
       IF (nderiv >= 2) THEN
         DO i=1,ndim
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,wDD(0),dnMat,ider=[i,i])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,wDD(0),dnMat,ider=[i,i])
         END DO
       END IF
 
@@ -529,20 +529,20 @@ CONTAINS
       i  = indQ(1)
       ip = indDQ(1)
 
-       CALL QML_Mat_wADDTO_dnMat2_ider(Mat,wD(ip)  ,dnMat,ider=[i])
+       CALL Mat_wADDTO_dnMat2_ider(Mat,wD(ip)  ,dnMat,ider=[i])
 
        IF (nderiv >= 2) THEN
-         CALL QML_Mat_wADDTO_dnMat2_ider(Mat,wDD(ip) ,dnMat,ider=[i,i])
+         CALL Mat_wADDTO_dnMat2_ider(Mat,wDD(ip) ,dnMat,ider=[i,i])
        END IF
 
        IF (nderiv >= 3) THEN
         ! d3/dQidQidQi
-         CALL QML_Mat_wADDTO_dnMat2_ider(Mat,wDDD(ip),dnMat,ider=[i,i,i])
+         CALL Mat_wADDTO_dnMat2_ider(Mat,wDDD(ip),dnMat,ider=[i,i,i])
 
          ! d3/dQjdQjdQi
          DO j=1,ndim
            IF (i == j) CYCLE
-           CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w0aDDD(ip),dnMat,ider=[j,j,i])
+           CALL Mat_wADDTO_dnMat2_ider(Mat,w0aDDD(ip),dnMat,ider=[j,j,i])
          END DO
        END IF
 
@@ -552,17 +552,17 @@ CONTAINS
          DO j=1,ndim
          DO k=1,ndim
            IF (k > j .AND. j > i)  THEN
-             CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[k,j,i])
+             CALL Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[k,j,i])
            END IF
 
            !permutation between i and j (order: k,i,j)
            IF (k > i .AND. i > j)  THEN
-             CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[k,i,j])
+             CALL Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[k,i,j])
            END IF
 
            !permutation between i and k (order: i,k,j)
            IF (i > k .AND. k > j)  THEN
-             CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[i,k,j])
+             CALL Mat_wADDTO_dnMat2_ider(Mat,w100DDD(ip),dnMat,ider=[i,k,j])
            END IF
 
          END DO
@@ -578,25 +578,25 @@ CONTAINS
 
       IF (abs(ip) == 1 .AND. abs(jp) == 1) THEN
         ! d2/dQidQj
-        CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w11DD(jp,ip),dnMat,ider=[j,i])
+        CALL Mat_wADDTO_dnMat2_ider(Mat,w11DD(jp,ip),dnMat,ider=[j,i])
 
         IF (nderiv >= 3) THEN
           ! d3/dQidQidQj
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w11DDD(ip,jp),dnMat,ider=[i,i,j])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w11DDD(ip,jp),dnMat,ider=[i,i,j])
           ! d3/dQjdQjdQi
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w11DDD(jp,ip),dnMat,ider=[j,j,i])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w11DDD(jp,ip),dnMat,ider=[j,j,i])
 
           ! d3/dQidQjdQk
           DO k=1,ndim
             !IF (k == i .OR. k == j) CYCLE
             IF (k > j .AND. j > i) THEN ! remark: in this version, j>i always
-              CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[k,j,i])
+              CALL Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[k,j,i])
             END IF
             IF (j > k .AND. k > i) THEN
-              CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[j,k,i])
+              CALL Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[j,k,i])
             END IF
             IF (j > i .AND. i > k) THEN
-              CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[j,i,k])
+              CALL Mat_wADDTO_dnMat2_ider(Mat,w110DDD(ip,jp),dnMat,ider=[j,i,k])
             END IF
           END DO
         END IF
@@ -604,13 +604,13 @@ CONTAINS
       ELSE IF (abs(ip) == 2 .AND. abs(jp) == 2) THEN
 
         ! d2/dQidQj
-        CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w22DD(jp/2,ip/2),dnMat,ider=[j,i])
+        CALL Mat_wADDTO_dnMat2_ider(Mat,w22DD(jp/2,ip/2),dnMat,ider=[j,i])
 
         IF (nderiv >= 3) THEN
           ! d3/dQidQidQj
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w22DDD(ip/2,jp/2),dnMat,ider=[i,i,j])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w22DDD(ip/2,jp/2),dnMat,ider=[i,i,j])
           ! d3/dQjdQjdQi
-          CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w22DDD(jp/2,ip/2),dnMat,ider=[j,j,i])
+          CALL Mat_wADDTO_dnMat2_ider(Mat,w22DDD(jp/2,ip/2),dnMat,ider=[j,j,i])
         END IF
       END IF
 
@@ -624,7 +624,7 @@ CONTAINS
       jp = indDQ(2)
       kp = indDQ(3)
 
-      CALL QML_Mat_wADDTO_dnMat2_ider(Mat,w111DDD(kp,jp,ip) ,dnMat,ider=[k,j,i])
+      CALL Mat_wADDTO_dnMat2_ider(Mat,w111DDD(kp,jp,ip) ,dnMat,ider=[k,j,i])
 
     CASE Default
     END SELECT
@@ -632,7 +632,7 @@ CONTAINS
   END SUBROUTINE QML_FiniteDiff3_AddMat_TO_dnMat
 
   SUBROUTINE QML_FiniteDiff3_SymPerm_OF_dnMat(dnMat,indQ)
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)   :: dnMat
@@ -642,8 +642,8 @@ CONTAINS
     integer                            :: ndim,nderiv
     integer                            :: i,j,k
 
-    nderiv = QML_get_nderiv_FROM_dnMat(dnMat)
-    ndim   = QML_get_ndim_FROM_dnMat(dnMat)
+    nderiv = get_nderiv(dnMat)
+    ndim   = get_nVar(dnMat)
 
     IF (nderiv < 0) THEN
       write(out_unitp,*) ' ERROR in QML_FiniteDiff3_SymPerm_OF_dnMat'
@@ -692,7 +692,7 @@ CONTAINS
 
   END SUBROUTINE QML_FiniteDiff3_SymPerm_OF_dnMat
   SUBROUTINE QML_FiniteDiff_Finalize_dnMat(dnMat,step)
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
@@ -700,7 +700,7 @@ CONTAINS
 
     integer:: nderiv
 
-    nderiv = QML_get_nderiv_FROM_dnMat(dnMat)
+    nderiv = get_nderiv(dnMat)
 
     IF (nderiv < 0) THEN
       write(out_unitp,*) ' ERROR in QML_FiniteDiff_Finalize_dnMat'

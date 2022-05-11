@@ -100,8 +100,9 @@ PROGRAM TEST_model
 END PROGRAM TEST_model
 
 SUBROUTINE test_Tully
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -148,7 +149,7 @@ SUBROUTINE test_Tully
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
     write(out_unitp,'(a,f12.6)') 'R (Bohr)',q(:)
     write(out_unitp,*) 'Energy (Hartree)'
-    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
     ! For testing the model
     CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='TULLY ' // int_TO_char(option))
 
@@ -156,7 +157,7 @@ SUBROUTINE test_Tully
     write(out_unitp,*) '- END CHECK POT -----------------------------'
     write(out_unitp,*) '---------------------------------------------'
 
-    CALL QML_dealloc_dnMat(PotVal)
+    CALL dealloc_dnMat(PotVal)
     deallocate(q)
 
   END DO
@@ -205,8 +206,9 @@ SUBROUTINE test_Tully
 END SUBROUTINE test_Tully
 
 SUBROUTINE test_OneDSOC_1S1T
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -235,7 +237,7 @@ SUBROUTINE test_OneDSOC_1S1T
   write(out_unitp,*) ' ref Eigenvectors at Q:',Q
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=0)
   ! ref Eigenvectors
-  CALL QML_Write_dnMat(QModel%QM%vec0,nio=out_unitp)
+  CALL Write_dnMat(QModel%QM%vec0,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec=QModel%QM%vec0,info='1DSOC_1S1T')
@@ -256,10 +258,10 @@ SUBROUTINE test_OneDSOC_1S1T
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) 'Non adiatic couplings:'
-  CALL QML_Write_dnMat(NAC,nio=out_unitp)
+  CALL Write_dnMat(NAC,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='1DSOC_1S1T')
@@ -272,12 +274,12 @@ SUBROUTINE test_OneDSOC_1S1T
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='1DSOC_1S1T')
 
-  CALL QML_dealloc_dnMat(PotVal)
-  CALL QML_dealloc_dnMat(NAC)
+  CALL dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(NAC)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -303,7 +305,7 @@ SUBROUTINE test_OneDSOC_1S1T
 
   ! ref Eigenvectors
   write(out_unitp,*) ' ref Eigenvectors at Q:',Q
-  CALL QML_Write_dnMat(QModel%QM%vec0,nio=out_unitp)
+  CALL Write_dnMat(QModel%QM%vec0,nio=out_unitp)
 
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=(/3._Rkind/),Qmax=(/20._Rkind/), &
@@ -314,12 +316,13 @@ SUBROUTINE test_OneDSOC_1S1T
   write(out_unitp,*) '---------------------------------------------'
 
   deallocate(q)
-  CALL QML_dealloc_dnMat(PotVal)
-  CALL QML_dealloc_dnMat(NAC)
+  CALL dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(NAC)
 END SUBROUTINE test_OneDSOC_1S1T
 SUBROUTINE test_OneDSOC_2S1T
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -348,7 +351,7 @@ SUBROUTINE test_OneDSOC_2S1T
   write(out_unitp,*) ' ref Eigenvectors at Q:',Q
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=0)
   ! ref Eigenvectors
-  CALL QML_Write_dnMat(QModel%QM%vec0,nio=out_unitp)
+  CALL Write_dnMat(QModel%QM%vec0,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec=QModel%QM%vec0,info='1DSOC_2S1T')
@@ -369,10 +372,10 @@ SUBROUTINE test_OneDSOC_2S1T
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) 'Non adiatic couplings:'
-  CALL QML_Write_dnMat(NAC,nio=out_unitp)
+  CALL Write_dnMat(NAC,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='1DSOC_2S1T')
@@ -385,12 +388,12 @@ SUBROUTINE test_OneDSOC_2S1T
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='1DSOC_2S1T')
 
-  CALL QML_dealloc_dnMat(PotVal)
-  CALL QML_dealloc_dnMat(NAC)
+  CALL dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(NAC)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -414,7 +417,7 @@ SUBROUTINE test_OneDSOC_2S1T
 
   ! ref Eigenvectors
   write(out_unitp,*) ' ref Eigenvectors at Q:',Q
-  CALL QML_Write_dnMat(QModel%QM%vec0,nio=out_unitp)
+  CALL Write_dnMat(QModel%QM%vec0,nio=out_unitp)
 
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=(/3._Rkind/),Qmax=(/20._Rkind/), &
@@ -425,11 +428,12 @@ SUBROUTINE test_OneDSOC_2S1T
   write(out_unitp,*) '---------------------------------------------'
 
   deallocate(q)
-  CALL QML_dealloc_dnMat(PotVal)
-  CALL QML_dealloc_dnMat(NAC)
+  CALL dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(NAC)
 END SUBROUTINE test_OneDSOC_2S1T
 SUBROUTINE test_Morse
-  USE QMLdnSVM_dnMat_m
+  USE QMLLib_NumParameters_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -473,7 +477,7 @@ SUBROUTINE test_Morse
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   write(out_unitp,'(a,f12.6)') 'R (Bohr)',q(:)
   write(out_unitp,*) 'Energy (Hartree)'
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Morse_HF')
@@ -482,7 +486,7 @@ SUBROUTINE test_Morse
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -501,7 +505,8 @@ SUBROUTINE test_Morse
 
 END SUBROUTINE test_Morse
 SUBROUTINE test_Poly1D
-  USE QMLdnSVM_dnMat_m
+  USE QMLLib_NumParameters_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -542,7 +547,7 @@ SUBROUTINE test_Poly1D
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   write(out_unitp,'(a,f12.6)') 'R (Bohr)',Q(:)
   write(out_unitp,*) 'Energy (Hartree)'
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Poly1D_HF')
@@ -551,12 +556,13 @@ SUBROUTINE test_Poly1D
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(Q)
 
 END SUBROUTINE test_Poly1D
 SUBROUTINE test_Buckingham
-  USE QMLdnSVM_dnMat_m
+  USE QMLLib_NumParameters_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -599,7 +605,7 @@ SUBROUTINE test_Buckingham
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   write(out_unitp,'(a,f12.6)') 'R (Bohr)',q(:)
   write(out_unitp,*) 'Energy (Hartree)'
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Buckingham_Ar-Ar')
@@ -608,7 +614,7 @@ SUBROUTINE test_Buckingham
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -629,7 +635,8 @@ END SUBROUTINE test_Buckingham
 
 SUBROUTINE test_Phenol
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE QMLLib_NumParameters_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -678,10 +685,10 @@ SUBROUTINE test_Phenol
   CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) 'Non adiatic couplings:'
-  CALL QML_Write_dnMat(NAC,nio=out_unitp)
+  CALL Write_dnMat(NAC,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='Phenol')
@@ -694,7 +701,7 @@ SUBROUTINE test_Phenol
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Phenol')
@@ -706,7 +713,7 @@ SUBROUTINE test_Phenol
   write(out_unitp,'(a,2f12.6)') 'q (au)',q(:)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
@@ -714,8 +721,8 @@ SUBROUTINE test_Phenol
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL QML_dealloc_dnMat(PotVal)
-  CALL QML_dealloc_dnMat(NAC)
+  CALL dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(NAC)
   deallocate(q)
 
 
@@ -742,8 +749,9 @@ SUBROUTINE test_Phenol
 
 END SUBROUTINE test_Phenol
 SUBROUTINE test_HenonHeiles
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -784,12 +792,12 @@ SUBROUTINE test_HenonHeiles
   CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='4D-HenonHeiles')
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -797,7 +805,8 @@ SUBROUTINE test_HenonHeiles
 
 END SUBROUTINE test_HenonHeiles
 SUBROUTINE test_LinearHBond
-  USE QMLdnSVM_dnMat_m
+  USE QMLLib_NumParameters_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -841,7 +850,7 @@ SUBROUTINE test_LinearHBond
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   write(out_unitp,'(a,2f12.6)') 'QQ,q (Angs)',q(:)
   write(out_unitp,*) 'Energy (kcal.mol^-1)'
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Linear H-Bond (symmetric one)')
@@ -853,7 +862,7 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,'(a,2f12.6)') 'QQ,q (Bohr)',Q(:)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
@@ -861,7 +870,7 @@ SUBROUTINE test_LinearHBond
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
 
   deallocate(Q)
 
@@ -907,12 +916,12 @@ SUBROUTINE test_LinearHBond
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   write(out_unitp,'(a,2f12.6)') 'QQ,q (Angs)',q(:)
   write(out_unitp,*) 'Energy (kcal.mol^-1)'
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Linear H-Bond (asymmetric one)')
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
 
   deallocate(Q)
 
@@ -937,8 +946,9 @@ SUBROUTINE test_LinearHBond
 
 END SUBROUTINE test_LinearHBond
 SUBROUTINE test_Opt_LinearHBond
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   USE Opt_m
   IMPLICIT NONE
@@ -978,9 +988,9 @@ SUBROUTINE test_Opt_LinearHBond
   CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
   write(out_unitp,*) 'Potential+derivatives:'
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(Q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -989,8 +999,9 @@ SUBROUTINE test_Opt_LinearHBond
 
 END SUBROUTINE test_Opt_LinearHBond
 SUBROUTINE test_Vib_adia
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1021,7 +1032,7 @@ SUBROUTINE test_Vib_adia
   CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
   write(out_unitp,*) 'NAC'
   CALL Write_RMat(NAC%d1(:,:,1),out_unitp,6,name_info='NAC')
-  write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,QML_get_nsurf_FROM_dnMat(PotVal))
+  write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Qact,PotVal,QModel,info='Pot',name_file='Vib_adia.txt')
@@ -1041,18 +1052,19 @@ SUBROUTINE test_Vib_adia
   DO iq=0,nq
     Qact = [4.0_Rkind+iq*dQ]
     CALL Eval_Pot(QModel,Qact,PotVal,nderiv=0)
-    write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,QML_get_nsurf_FROM_dnMat(PotVal))
+    write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
   END DO
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(Qact)
 
 END SUBROUTINE test_Vib_adia
 SUBROUTINE test2_Vib_adia
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1092,7 +1104,7 @@ SUBROUTINE test2_Vib_adia
   DO iq=0,nq
     Qact = [4.0_Rkind+iq*dQ]
     CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
-    write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i),i=1,QML_get_nsurf_FROM_dnMat(PotVal))
+    write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i),i=1,get_nsurf(PotVal))
     write(out_unitp,*) Qact,'NAC1',NAC%d1
   END DO
 
@@ -1104,9 +1116,9 @@ SUBROUTINE test2_Vib_adia
 
 END SUBROUTINE test2_Vib_adia
 SUBROUTINE test_PSB3
-
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
 
   IMPLICIT NONE
@@ -1152,7 +1164,7 @@ SUBROUTINE test_PSB3
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
 
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='PSB3')
@@ -1162,10 +1174,10 @@ SUBROUTINE test_PSB3
   write(out_unitp,*) 'Evaluated in', q
 
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) 'Non adiatic couplings:'
-  CALL QML_Write_dnMat(NAC,nio=out_unitp)
+  CALL Write_dnMat(NAC,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='PSB3')
@@ -1178,20 +1190,20 @@ SUBROUTINE test_PSB3
     write(out_unitp,*) 'q (au)',q(:)
     CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
   END DO
   write(out_unitp,*) '---------- END CHECK POT --------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
 
   deallocate(q)
 
 END SUBROUTINE test_PSB3
 SUBROUTINE test_Retinal_JPCB2000
-
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
 
   IMPLICIT NONE
@@ -1238,7 +1250,7 @@ SUBROUTINE test_Retinal_JPCB2000
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
 
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Retinal_JPCB2000')
@@ -1249,10 +1261,10 @@ SUBROUTINE test_Retinal_JPCB2000
   write(out_unitp,*) 'Evaluated in', q
 
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) 'Non adiatic couplings:'
-  CALL QML_Write_dnMat(NAC,nio=out_unitp)
+  CALL Write_dnMat(NAC,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='Retinal_JPCB2000')
@@ -1270,7 +1282,7 @@ SUBROUTINE test_Retinal_JPCB2000
                         nb_points=101,grid_file='grid_Retinal_JPCB2000')
 
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -1294,10 +1306,10 @@ SUBROUTINE test_Retinal_JPCB2000
 
   QModel%QM%adiabatic = .TRUE.
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) 'Non adiatic couplings:'
-  CALL QML_Write_dnMat(NAC,nio=out_unitp)
+  CALL Write_dnMat(NAC,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='Retinal_JPCB2000')
@@ -1305,13 +1317,14 @@ SUBROUTINE test_Retinal_JPCB2000
   write(out_unitp,*) '---------- END CHECK POT --------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
 END SUBROUTINE test_Retinal_JPCB2000
 SUBROUTINE test_HONO
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1350,7 +1363,7 @@ SUBROUTINE test_HONO
   CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='HONO')
@@ -1364,12 +1377,12 @@ SUBROUTINE test_HONO
   CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='HONO')
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
 
@@ -1395,8 +1408,9 @@ SUBROUTINE test_HONO
 
 END SUBROUTINE test_HONO
 SUBROUTINE test_HNNHp
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1436,7 +1450,7 @@ SUBROUTINE test_HNNHp
   CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='HNNHp')
@@ -1447,8 +1461,9 @@ SUBROUTINE test_HNNHp
 
 END SUBROUTINE test_HNNHp
 SUBROUTINE test_H2SiN
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1494,12 +1509,12 @@ DO option=1,3
   CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='H2SiN')
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -1509,8 +1524,9 @@ END DO
 
 END SUBROUTINE test_H2SiN
 SUBROUTINE test_H2NSi
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1554,12 +1570,12 @@ DO option=1,2
   CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='H2NSi')
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -1569,8 +1585,9 @@ END DO
 
 END SUBROUTINE test_H2NSi
 SUBROUTINE test_template
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1618,12 +1635,12 @@ SUBROUTINE test_template
   write(out_unitp,*) 'Q(:) (bohr):'
   CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
   write(out_unitp,*) 'Energy (Hartree)'
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Template')
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -1634,8 +1651,9 @@ SUBROUTINE test_template
 
 END SUBROUTINE test_template
 SUBROUTINE test_TwoD
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1682,12 +1700,12 @@ SUBROUTINE test_TwoD
   write(out_unitp,*) 'Q(:) (bohr):'
   CALL Write_RVec(Q,out_unitp,QModel%ndim)
   write(out_unitp,*) 'Energy (Hartree)'
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='twod')
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -1698,9 +1716,9 @@ SUBROUTINE test_TwoD
 
 END SUBROUTINE test_TwoD
 SUBROUTINE test_HNO3
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1742,7 +1760,7 @@ SUBROUTINE test_HNO3
   CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='HNO3')
@@ -1756,7 +1774,7 @@ SUBROUTINE test_HNO3
   CALL Eval_Func(QModel,Q,Func,nderiv=nderiv)
 
   DO i=1,size(Func)
-    CALL QML_Write_dnS(Func(i))
+    CALL Write_dnS(Func(i))
   END DO
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -1764,9 +1782,10 @@ SUBROUTINE test_HNO3
 
 END SUBROUTINE test_HNO3
 SUBROUTINE test_PH4
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1809,7 +1828,7 @@ SUBROUTINE test_PH4
   CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='PH4')
@@ -1823,18 +1842,18 @@ SUBROUTINE test_PH4
   DO i=0,200
     Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
     CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-    write(6,*) Q(1:1),QML_get_d0_FROM_dnS(Func)
+    write(6,*) Q(1:1),get_d0(Func)
     flush(6)
   END DO
 
   Q(1)= 0.5_Rkind
   CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-  write(6,*) Q(1),'Energy',QML_get_d0_FROM_dnS(Func(1))
-  write(6,*) Q(1),'Qopt',QML_get_d0_FROM_dnS(Func(2:9))
-  write(6,*) Q(1),'Grad',QML_get_d0_FROM_dnS(Func(10:17))
+  write(6,*) Q(1),'Energy',get_d0(Func(1))
+  write(6,*) Q(1),'Qopt',get_d0(Func(2:9))
+  write(6,*) Q(1),'Grad',get_d0(Func(10:17))
   write(6,*) Q(1),'hessian'
   DO i=1,64
-    write(6,*) '                       ',QML_get_d0_FROM_dnS(Func(17+i)),',     &'
+    write(6,*) '                       ',get_d0(Func(17+i)),',     &'
   END DO
 
   deallocate(Q)
@@ -1846,12 +1865,12 @@ SUBROUTINE test_PH4
   allocate(Q(QModel%ndim))
   Q(1)= 10._Rkind
   CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-  Q(2:9) = QML_get_d0_FROM_dnS(Func(2:9))
+  Q(2:9) = get_d0(Func(2:9))
 
   write(out_unitp,*) 'Q:'
   CALL Write_RVec(Q,out_unitp,QModel%ndim)
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -1859,9 +1878,10 @@ SUBROUTINE test_PH4
 
 END SUBROUTINE test_PH4
 SUBROUTINE test_CH5
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1904,7 +1924,7 @@ SUBROUTINE test_CH5
   CALL Write_RVec(Q,out_unitp,QModel%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='CH5')
@@ -1918,17 +1938,17 @@ SUBROUTINE test_CH5
   DO i=0,200
     Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
     CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-    write(6,*) Q,QML_get_d0_FROM_dnS(Func)
+    write(6,*) Q,get_d0(Func)
     flush(6)
   END DO
 
   Q(1)= 0.5_Rkind
   CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-  write(6,*) Q(1),'Energy',QML_get_d0_FROM_dnS(Func(1))
-  write(6,*) Q(1),'Qopt',QML_get_d0_FROM_dnS(Func(2:12))
+  write(6,*) Q(1),'Energy',get_d0(Func(1))
+  write(6,*) Q(1),'Qopt',get_d0(Func(2:12))
   write(6,*) Q(1),'hessian'
   DO i=1,121
-    write(6,*) '                       ',QML_get_d0_FROM_dnS(Func(12+i)),',     &'
+    write(6,*) '                       ',get_d0(Func(12+i)),',     &'
   END DO
 
   deallocate(Q)
@@ -1940,12 +1960,12 @@ SUBROUTINE test_CH5
   allocate(Q(QModel%ndim))
   Q(1)= 5._Rkind
   CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-  Q(2:12) = QML_get_d0_FROM_dnS(Func(2:12))
+  Q(2:12) = get_d0(Func(2:12))
 
   write(out_unitp,*) 'Q:'
   CALL Write_RVec(Q,out_unitp,QModel%ndim)
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -1953,8 +1973,9 @@ SUBROUTINE test_CH5
 
 END SUBROUTINE test_CH5
 SUBROUTINE test_HOO_DMBE
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1999,12 +2020,12 @@ SUBROUTINE test_HOO_DMBE
     CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
 
     CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
-    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
 
     ! For testing the model
     CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HOO_DMBE')
   END DO
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(Q)
   write(out_unitp,*) ' END Potential and derivatives'
   write(out_unitp,*) '---------------------------------------------'
@@ -2025,7 +2046,7 @@ SUBROUTINE test_HOO_DMBE
   x(:,3) = [ZERO,ZERO,2.282_Rkind]  ! O3
 
   CALL Eval_Pot(QModel,reshape(x,shape=[9]),PotVal,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   deallocate(x)
   write(out_unitp,*) ' END Potential and derivatives'
@@ -2038,9 +2059,9 @@ SUBROUTINE test_HOO_DMBE
 
 END SUBROUTINE test_HOO_DMBE
 SUBROUTINE test_H3
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   USE Opt_m
   IMPLICIT NONE
@@ -2087,12 +2108,12 @@ SUBROUTINE test_H3
     CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
 
     CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
-    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
 
     ! For testing the model
     CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='H3_LSTH')
   END DO
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(Q)
   write(out_unitp,*) ' END Potential and derivatives'
   write(out_unitp,*) '---------------------------------------------'
@@ -2111,11 +2132,11 @@ SUBROUTINE test_H3
 
   write(out_unitp,*) 'Potential+derivatives:'
   CALL Eval_Pot(QModel,Qcart,PotVal,nderiv=2)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   CALL Write_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH')
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(Qcart)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -2126,7 +2147,7 @@ SUBROUTINE test_H3
   Q1D = [ZERO]
   write(out_unitp,*) 'Potential+derivatives at:',Q1D
   CALL Eval_Pot(QModel,Q1D,PotVal,nderiv=2)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[-FOUR],Qmax=[FOUR],nb_points=801,          &
                         grid_file='grid_H3_IRC')
@@ -2136,11 +2157,11 @@ SUBROUTINE test_H3
   DO i=-400,400
     Q1D = real(i,kind=Rkind)/100
     CALL Eval_Func(QModel,Q1D,Func,nderiv=0)
-    write(6,*) 'grid_H3_IRC',Q1D,QML_get_d0_FROM_dnS(Func)
+    write(6,*) 'grid_H3_IRC',Q1D,get_d0(Func)
     flush(6)
   END DO
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(Q1D)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -2149,8 +2170,9 @@ SUBROUTINE test_H3
 
 END SUBROUTINE test_H3
 SUBROUTINE test_IRC_H3
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   USE Opt_m
   USE IRC_m
@@ -2184,7 +2206,7 @@ SUBROUTINE test_IRC_H3
   CALL QML_IRC(Q,QModel,IRC_p,Q0=[ZERO,ZERO,-TWO,ZERO,ZERO,ZERO,ZERO,ZERO,TWO])
 
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(Q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -2193,8 +2215,9 @@ SUBROUTINE test_IRC_H3
 
 END SUBROUTINE test_IRC_H3
 SUBROUTINE test_Opt_MullerBrown
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   USE Opt_m
   IMPLICIT NONE
@@ -2231,7 +2254,7 @@ SUBROUTINE test_Opt_MullerBrown
 
     write(out_unitp,*) 'Potential+derivatives:'
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
-    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
     flush(out_unitp)
 
     ! For testing the model
@@ -2241,7 +2264,7 @@ SUBROUTINE test_Opt_MullerBrown
   END DO
 
   deallocate(Q)
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -2249,8 +2272,9 @@ SUBROUTINE test_Opt_MullerBrown
 
 END SUBROUTINE test_Opt_MullerBrown
 SUBROUTINE test_IRC_MullerBrown
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   USE Opt_m
   USE IRC_m
@@ -2284,7 +2308,7 @@ SUBROUTINE test_IRC_MullerBrown
   CALL QML_IRC(Q,QModel,IRC_p,Q0=QModel%QM%Q0)
 
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(Q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -2293,8 +2317,9 @@ SUBROUTINE test_IRC_MullerBrown
 
 END SUBROUTINE test_IRC_MullerBrown
 SUBROUTINE test_Test
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -2330,7 +2355,7 @@ SUBROUTINE test_Test
   CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -2339,8 +2364,9 @@ SUBROUTINE test_Test
 
 END SUBROUTINE test_Test
 SUBROUTINE test_Tully_test
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -2379,9 +2405,9 @@ SUBROUTINE test_Tully_test
 
 END SUBROUTINE test_Tully_test
 SUBROUTINE test_PSB3_test
-
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
 
   IMPLICIT NONE
@@ -2418,17 +2444,17 @@ SUBROUTINE test_PSB3_test
   write(out_unitp,*) 'Evaluated in', q
 
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
 END SUBROUTINE test_PSB3_test
 SUBROUTINE test_PSB3_Retinal2000_test
-
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
 
   IMPLICIT NONE
@@ -2477,7 +2503,7 @@ SUBROUTINE test_PSB3_Retinal2000_test
 
   write(out_unitp,*) 'Evaluated in', q_PSB3
   CALL Eval_Pot(QModel_PSB3,q_PSB3,PotVal_PSB3,NAC=NAC_PSB3,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal_PSB3,nio=out_unitp)
+  CALL Write_dnMat(PotVal_PSB3,nio=out_unitp)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -2485,7 +2511,7 @@ SUBROUTINE test_PSB3_Retinal2000_test
   write(out_unitp,*) 'Evaluated in', q_Retinal2000
   CALL Eval_Pot(QModel_Retinal2000,q_Retinal2000,PotVal_Retinal2000,            &
                     NAC=NAC_Retinal2000,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal_Retinal2000,nio=out_unitp)
+  CALL Write_dnMat(PotVal_Retinal2000,nio=out_unitp)
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
@@ -2499,19 +2525,19 @@ SUBROUTINE test_PSB3_Retinal2000_test
                                            Qmax=[PI,ZERO],nb_points=1001, &
                         grid_file='grid_Retinal2000')
 
-  CALL QML_dealloc_dnMat(PotVal_Retinal2000)
-  CALL QML_dealloc_dnMat(NAC_Retinal2000)
+  CALL dealloc_dnMat(PotVal_Retinal2000)
+  CALL dealloc_dnMat(NAC_Retinal2000)
   deallocate(q_Retinal2000)
 
-  CALL QML_dealloc_dnMat(PotVal_PSB3)
-  CALL QML_dealloc_dnMat(NAC_PSB3)
+  CALL dealloc_dnMat(PotVal_PSB3)
+  CALL dealloc_dnMat(NAC_PSB3)
   deallocate(q_PSB3)
 
 END SUBROUTINE test_PSB3_Retinal2000_test
 SUBROUTINE test_NO3_test
-
+  USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
 
   IMPLICIT NONE
@@ -2548,10 +2574,10 @@ STOP
   write(out_unitp,*) 'Evaluated in', q
 
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
-  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
 
 
-  CALL QML_dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal)
   deallocate(q)
 
 END SUBROUTINE test_NO3_test

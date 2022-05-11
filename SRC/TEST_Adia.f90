@@ -33,7 +33,7 @@
 PROGRAM TEST_adia
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   USE mod_AdiaChannels
   IMPLICIT NONE

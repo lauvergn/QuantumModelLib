@@ -34,7 +34,8 @@
 MODULE Model_m
 !$ USE omp_lib
   USE QMLLib_NumParameters_m
-  USE QMLdnSVM_dnMat_m
+
+  !USE ADdnSVM_m
 
   USE QML_Empty_m
 
@@ -1026,7 +1027,7 @@ CONTAINS
   END FUNCTION check_Init_QModel
 
   SUBROUTINE Eval_tab_HMatVibAdia(QModel,Qact,tab_MatH)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
   TYPE (Model_t),                 intent(inout)            :: QModel
@@ -1071,10 +1072,10 @@ CONTAINS
   IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
   CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,PF,PC,nderiv=2)
 
-  !CALL QML_Write_dnMat(PotVal,nio=out_unitp,info='PotVal (adia)')
+  !CALL Write_dnMat(PotVal,nio=out_unitp,info='PotVal (adia)')
 
   !Mat_diag = matmul(transpose(Vec),matmul(PotVal_dia,Vec))
-  !CALL QML_Write_dnMat(Mat_diag,nio=out_unitp,info='Mat_diag')
+  !CALL Write_dnMat(Mat_diag,nio=out_unitp,info='Mat_diag')
 
   !write(6,*) 'nsurf,ndim',QModel%nsurf,QModel%ndim
   nsurf    = QModel%nsurf
@@ -1147,7 +1148,7 @@ CONTAINS
   END SUBROUTINE Eval_tab_HMatVibAdia
 
   SUBROUTINE Eval_Pot(QModel,Q,PotVal,nderiv,NAC,Vec,numeric)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (Model_t),     intent(inout)            :: QModel
@@ -1220,30 +1221,30 @@ CONTAINS
     CALL Eval_dnHVib_ana(QModel,Q,PotVal_dia,nderiv_loc)
 
     !write(out_unitp,*) 'PotVal (Vib_dia)'
-    !CALL QML_Write_dnMat(PotVal_dia,nio=out_unitp)
+    !CALL Write_dnMat(PotVal_dia,nio=out_unitp)
 
     IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
     CALL dia_TO_adia(PotVal_dia,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,      &
                      PF,PC,nderiv_loc,type_diag=1)
 
-    CALL QML_sub_Reduced_dnMat2_TO_dnMat1(PotVal,PotVal_loc,lb=1,ub=QModel%QM%nb_Channels)
+    CALL submatrix_dnMat2_TO_dnMat1(PotVal,PotVal_loc,lb=1,ub=QModel%QM%nb_Channels)
 
     IF (present(Vec)) THEN
       ! it needs dnMat as a rectangular matrix !!
-      CALL QML_sub_Reduced_dnMat2_TO_dnMat1(Vec,Vec_loc,lb=1,ub=QModel%QM%nb_Channels)
+      CALL submatrix_dnMat2_TO_dnMat1(Vec,Vec_loc,lb=1,ub=QModel%QM%nb_Channels)
     END IF
 
     IF (present(NAC)) THEN
-      CALL QML_sub_Reduced_dnMat2_TO_dnMat1(NAC,NAC_loc,lb=1,ub=QModel%QM%nb_Channels)
+      CALL submatrix_dnMat2_TO_dnMat1(NAC,NAC_loc,lb=1,ub=QModel%QM%nb_Channels)
     END IF
 
     ! print the Vec%d0 if required
     CALL Write_Vec(Q,Vec_loc,QModel,nio=out_unitp)
 
-    CALL QML_dealloc_dnMat(NAC_loc)
-    CALL QML_dealloc_dnMat(Vec_loc)
-    CALL QML_dealloc_dnMat(PotVal_loc)
-    CALL QML_dealloc_dnMat(PotVal_dia)
+    CALL dealloc_dnMat(NAC_loc)
+    CALL dealloc_dnMat(Vec_loc)
+    CALL dealloc_dnMat(PotVal_loc)
+    CALL dealloc_dnMat(PotVal_dia)
 
   ELSE
 
@@ -1270,7 +1271,7 @@ CONTAINS
           ELSE
             CALL Eval_Pot_Numeric_adia(QModel,Q,PotVal,nderiv_loc,      &
                                              Vec,NAC_loc,numeric_option)
-            CALL QML_dealloc_dnMat(NAC_loc)
+            CALL dealloc_dnMat(NAC_loc)
           END IF
         ELSE
           IF (present(NAC)) THEN
@@ -1279,9 +1280,9 @@ CONTAINS
           ELSE
             CALL Eval_Pot_Numeric_adia(QModel,Q,PotVal,nderiv_loc,      &
                                          Vec_loc,NAC_loc,numeric_option)
-            CALL QML_dealloc_dnMat(NAC_loc)
+            CALL dealloc_dnMat(NAC_loc)
           END IF
-          CALL QML_dealloc_dnMat(Vec_loc)
+          CALL dealloc_dnMat(Vec_loc)
         END IF
       END IF
     ELSE ! analytical calculation
@@ -1308,7 +1309,7 @@ CONTAINS
     ELSE
       write(out_unitp,*) 'PotVal (dia)'
     END IF
-    CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
     write(out_unitp,*) ' END ',name_sub
     flush(out_unitp)
   END IF
@@ -1316,7 +1317,8 @@ CONTAINS
   END SUBROUTINE Eval_Pot
 
   SUBROUTINE Eval_Pot_ana(QModel,Q,PotVal,nderiv,NAC,Vec)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m, ONLY : dnS_t,alloc_dnS,dealloc_dnS,Variable, &
+     dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat,Write_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),        intent(inout)            :: QModel
@@ -1355,8 +1357,8 @@ CONTAINS
     IF (debug) write(out_unitp,*) '   adiabatic ',QModel%QM%adiabatic
 
 
-    IF ( QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
-      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+    IF ( Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
+      CALL alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,     &
                            nderiv=nderiv)
     END IF
     PotVal = ZERO
@@ -1366,7 +1368,7 @@ CONTAINS
     allocate(Mat_OF_PotDia(QModel%QM%nsurf,QModel%QM%nsurf))
     DO j=1,size(Mat_OF_PotDia(1,:))
     DO i=1,size(Mat_OF_PotDia(:,1))
-        CALL QML_alloc_dnS(Mat_OF_PotDia(i,j),QModel%QM%ndim,nderiv)
+        CALL alloc_dnS(Mat_OF_PotDia(i,j),QModel%QM%ndim,nderiv)
     END DO
     END DO
     IF (debug) write(out_unitp,*) '   alloc Mat_OF_PotDia  ' ; flush(out_unitp)
@@ -1381,19 +1383,19 @@ CONTAINS
       DO i=1,nat
       DO j=1,3
         ij = ij + 1
-        dnX(j,i) = QML_init_dnS(Q(ij),ndim=QModel%QM%ndim,nderiv=nderiv,iQ=ij) ! to set up the derivatives
+        dnX(j,i) = Variable(Q(ij),nVar=QModel%QM%ndim,nderiv=nderiv,iVar=ij) ! to set up the derivatives
       END DO
       END DO
 
       CALL QModel%QM%Cart_TO_Q_QModel(dnX,dnQ,nderiv=nderiv)
 
-      CALL QML_dealloc_dnS(dnX)
+      CALL dealloc_dnS(dnX)
       deallocate(dnX)
 
     ELSE
       allocate(dnQ(QModel%QM%ndim))
       DO i=1,QModel%QM%ndim
-        dnQ(i) = QML_init_dnS(Q(i),ndim=QModel%QM%ndim,nderiv=nderiv,iQ=i) ! to set up the derivatives
+        dnQ(i) = Variable(Q(i),nVar=QModel%QM%ndim,nderiv=nderiv,iVar=i) ! to set up the derivatives
       END DO
     END IF
     IF (debug) write(out_unitp,*) '   init dnQ(:)  ' ; flush(out_unitp)
@@ -1404,13 +1406,13 @@ CONTAINS
 
     ! deallocation
     DO i=1,size(dnQ)
-      CALL QML_dealloc_dnS(dnQ(i))
+      CALL dealloc_dnS(dnQ(i))
     END DO
     deallocate(dnQ)
 
     DO j=1,size(Mat_OF_PotDia(1,:))
     DO i=1,size(Mat_OF_PotDia(:,1))
-      CALL QML_dealloc_dnS(Mat_OF_PotDia(i,j))
+      CALL dealloc_dnS(Mat_OF_PotDia(i,j))
     END DO
     END DO
     deallocate(Mat_OF_PotDia)
@@ -1419,7 +1421,7 @@ CONTAINS
     IF ( QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1) THEN
       IF (debug) THEN
         write(out_unitp,*) 'PotVal (dia)'
-        CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+        CALL Write_dnMat(PotVal,nio=out_unitp)
         flush(out_unitp)
       END IF
       IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
@@ -1431,18 +1433,18 @@ CONTAINS
           CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC,PF,PC,nderiv)
         ELSE
           CALL dia_TO_adia(PotVal_dia,PotVal,Vec,QModel%QM%Vec0,NAC_loc,PF,PC,nderiv)
-          CALL QML_dealloc_dnMat(NAC_loc)
+          CALL dealloc_dnMat(NAC_loc)
         END IF
       ELSE
         IF (present(NAC)) THEN
           CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC,PF,PC,nderiv)
         ELSE
           CALL dia_TO_adia(PotVal_dia,PotVal,Vec_loc,QModel%QM%Vec0,NAC_loc,PF,PC,nderiv)
-          CALL QML_dealloc_dnMat(NAC_loc)
+          CALL dealloc_dnMat(NAC_loc)
         END IF
-        CALL QML_dealloc_dnMat(Vec_loc)
+        CALL dealloc_dnMat(Vec_loc)
       END IF
-      CALL QML_dealloc_dnMat(PotVal_dia)
+      CALL dealloc_dnMat(PotVal_dia)
     END IF
 
 
@@ -1452,7 +1454,7 @@ CONTAINS
       ELSE
         write(out_unitp,*) 'PotVal (dia)'
       END IF
-      CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+      CALL Write_dnMat(PotVal,nio=out_unitp)
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)
     END IF
@@ -1461,6 +1463,7 @@ CONTAINS
 
   SUBROUTINE Eval_Pot_Numeric_dia_v4(QModel,Q,PotVal,nderiv)
   USE QMLLib_FiniteDiff_m
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -1477,15 +1480,15 @@ CONTAINS
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_dia_v4')
 
 
-    IF (QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
-      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+    IF (Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
+      CALL alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     PotVal = ZERO
 
     allocate(Q_loc(QModel%QM%ndim))
     Q_loc(:) = Q
-    CALL QML_alloc_dnMat(PotVal_loc0,QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
+    CALL alloc_dnMat(PotVal_loc0,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,nderiv=0)
     PotVal = ZERO
 
     ! no derivative : PotVal%d0
@@ -1550,11 +1553,12 @@ CONTAINS
     CALL FiniteDiff_Finalize_dnMat(PotVal,step)
 
     deallocate(Q_loc)
-    CALL QML_dealloc_dnMat(PotVal_loc0)
+    CALL dealloc_dnMat(PotVal_loc0)
 
   END SUBROUTINE Eval_Pot_Numeric_dia_v4
   SUBROUTINE Eval_Pot_Numeric_dia_v3(QModel,Q,PotVal,nderiv)
   USE QMLLib_FiniteDiff_m
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -1572,8 +1576,8 @@ CONTAINS
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_dia_v3')
 
 
-    IF (QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
-      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+    IF (Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
+      CALL alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     PotVal = ZERO
@@ -1581,7 +1585,7 @@ CONTAINS
 
     allocate(Q_loc(QModel%QM%ndim))
     Q_loc(:) = Q
-    CALL QML_alloc_dnMat(PotVal_loc0,QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
+    CALL alloc_dnMat(PotVal_loc0,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,nderiv=0)
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0)
@@ -1649,11 +1653,12 @@ CONTAINS
     CALL FiniteDiff_Finalize_dnMat(PotVal,step)
 
     deallocate(Q_loc)
-    CALL QML_dealloc_dnMat(PotVal_loc0)
+    CALL dealloc_dnMat(PotVal_loc0)
 
   END SUBROUTINE Eval_Pot_Numeric_dia_v3
 
   SUBROUTINE Eval_Pot_Numeric_dia_old(QModel,Q,PotVal,nderiv)
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -1669,15 +1674,15 @@ CONTAINS
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_dia_old')
 
 
-    IF (QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
-      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+    IF (Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
+      CALL alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     PotVal = ZERO
 
     allocate(Q_loc(QModel%QM%ndim))
     Q_loc(:) = Q
-    CALL QML_alloc_dnMat(PotVal_loc0,QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
+    CALL alloc_dnMat(PotVal_loc0,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,nderiv=0)
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0)
@@ -1747,11 +1752,12 @@ CONTAINS
     END IF
 
     deallocate(Q_loc)
-    CALL QML_dealloc_dnMat(PotVal_loc0)
+    CALL dealloc_dnMat(PotVal_loc0)
 
   END SUBROUTINE Eval_Pot_Numeric_dia_old
 
   SUBROUTINE Eval_Pot_Numeric_adia(QModel,Q,PotVal,nderiv,Vec,NAC,option)
+  USE ADdnSVM_m, ONLY : dnMat_t
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -1793,6 +1799,7 @@ CONTAINS
     END IF
   END SUBROUTINE Eval_Pot_Numeric_adia
   SUBROUTINE Eval_Pot_Numeric_adia_old(QModel,Q,PotVal,nderiv,Vec,NAC)
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -1810,28 +1817,28 @@ CONTAINS
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_adia_old')
 
 
-    IF (QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
-      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+    IF (Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
+      CALL alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,&
                            nderiv=nderiv)
     END IF
     PotVal = ZERO
 
-    IF (QML_Check_NotAlloc_dnMat(Vec,nderiv) ) THEN
-      CALL QML_alloc_dnMat(Vec,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+    IF (Check_NotAlloc_dnMat(Vec,nderiv) ) THEN
+      CALL alloc_dnMat(Vec,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     Vec = ZERO
 
-    IF (QML_Check_NotAlloc_dnMat(NAC,nderiv) ) THEN
-      CALL QML_alloc_dnMat(NAC,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+    IF (Check_NotAlloc_dnMat(NAC,nderiv) ) THEN
+      CALL alloc_dnMat(NAC,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     NAC = ZERO
 
     allocate(Q_loc(QModel%QM%ndim))
     Q_loc(:) = Q
-    CALL QML_alloc_dnMat(PotVal_loc0,QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
-    CALL QML_alloc_dnMat(Vec_loc0,   QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
+    CALL alloc_dnMat(PotVal_loc0,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,nderiv=0)
+    CALL alloc_dnMat(Vec_loc0,   nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,nderiv=0)
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0,vec=Vec_loc0)
@@ -1921,12 +1928,13 @@ CONTAINS
 
     deallocate(tVec)
     deallocate(Q_loc)
-    CALL QML_dealloc_dnMat(PotVal_loc0)
-    CALL QML_dealloc_dnMat(Vec_loc0)
+    CALL dealloc_dnMat(PotVal_loc0)
+    CALL dealloc_dnMat(Vec_loc0)
 
   END SUBROUTINE Eval_Pot_Numeric_adia_old
   SUBROUTINE Eval_Pot_Numeric_adia_v3(QModel,Q,PotVal,nderiv,Vec,NAC)
   USE QMLLib_FiniteDiff_m
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -1947,28 +1955,28 @@ CONTAINS
 
     CALL check_alloc_QM(QModel,'Eval_Pot_Numeric_adia_v3')
 
-    IF (QML_Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
-      CALL QML_alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+    IF (Check_NotAlloc_dnMat(PotVal,nderiv) ) THEN
+      CALL alloc_dnMat(PotVal,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,&
                            nderiv=nderiv)
     END IF
     PotVal = ZERO
 
-    IF (QML_Check_NotAlloc_dnMat(Vec,nderiv) ) THEN
-      CALL QML_alloc_dnMat(Vec,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+    IF (Check_NotAlloc_dnMat(Vec,nderiv) ) THEN
+      CALL alloc_dnMat(Vec,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     Vec = ZERO
 
-    IF (QML_Check_NotAlloc_dnMat(NAC,nderiv) ) THEN
-      CALL QML_alloc_dnMat(NAC,nsurf=QModel%QM%nsurf,ndim=QModel%QM%ndim,&
+    IF (Check_NotAlloc_dnMat(NAC,nderiv) ) THEN
+      CALL alloc_dnMat(NAC,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,&
                           nderiv=nderiv)
     END IF
     NAC = ZERO
 
     allocate(Q_loc(QModel%QM%ndim))
     Q_loc(:) = Q
-    CALL QML_alloc_dnMat(PotVal_loc0,QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
-    CALL QML_alloc_dnMat(Vec_loc0,   QModel%QM%nsurf,QModel%QM%ndim,nderiv=0)
+    CALL alloc_dnMat(PotVal_loc0,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,nderiv=0)
+    CALL alloc_dnMat(Vec_loc0,   nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,nderiv=0)
     !write(6,*) 'coucou1 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
 
@@ -2079,14 +2087,16 @@ CONTAINS
 
     deallocate(tVec)
     deallocate(Q_loc)
-    CALL QML_dealloc_dnMat(PotVal_loc0)
-    CALL QML_dealloc_dnMat(Vec_loc0)
+    CALL dealloc_dnMat(PotVal_loc0)
+    CALL dealloc_dnMat(Vec_loc0)
     !write(6,*) 'coucouf Eval_Pot_Numeric_adia_v3' ; flush(6)
 
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
   SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,   &
                          Phase_checking,nderiv,type_diag)
     USE QMLLib_diago_m
+    USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,Write_dnMat,DIAG_dnMat,  &
+      Check_NotAlloc_dnMat,get_nsurf,get_nVar
     IMPLICIT NONE
 
     TYPE (dnMat_t), intent(in)               :: PotVal_dia
@@ -2136,24 +2146,24 @@ CONTAINS
       nderiv_loc = 0
     END IF
 
-    IF ( QML_Check_NotAlloc_dnMat(PotVal_dia,nderiv_loc) ) THEN
+    IF ( Check_NotAlloc_dnMat(PotVal_dia,nderiv_loc) ) THEN
       write(out_unitp,*) ' The diabatic potential MUST be allocated!'
-      CALL QML_Write_dnMat(PotVal_dia)
+      CALL Write_dnMat(PotVal_dia)
       STOP 'PotVal_dia%dn NOT allocated in "dia_TO_adia"'
     END IF
     IF (debug) THEN
       write(out_unitp,*) 'PotVal_dia'
-      CALL QML_Write_dnMat(PotVal_dia,nio=out_unitp)
+      CALL Write_dnMat(PotVal_dia,nio=out_unitp)
       flush(out_unitp)
     END IF
 
-    nsurf = QML_get_nsurf_FROM_dnMat(PotVal_dia)
-    ndim  = QML_get_ndim_FROM_dnMat(PotVal_dia)
+    nsurf = get_nsurf(PotVal_dia)
+    ndim  = get_nVar(PotVal_dia)
 
 
-    IF (QML_Check_NotAlloc_dnMat(Vec0,nderiv=0)) THEN
+    IF (Check_NotAlloc_dnMat(Vec0,nderiv=0)) THEN
        !$OMP CRITICAL (CRIT_dia_TO_adia)
-       CALL QML_alloc_dnMat(Vec0,nsurf=nsurf,ndim=ndim,nderiv=0)
+       CALL alloc_dnMat(Vec0,nsurf=nsurf,nVar=ndim,nderiv=0)
 
        allocate(Eig(nsurf))
 
@@ -2169,13 +2179,13 @@ CONTAINS
     END IF
 
     IF (Phase_checking) THEN
-      CALL QML_DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,               &
-                          dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag_loc)
+      CALL DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,                &
+                         dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag_loc)
 
       IF (Phase_Following) Vec0%d0 = Vec%d0
     ELSE
-      CALL QML_DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,               &
-                        dnVec=Vec,dnVecProj=NAC,type_diag=type_diag_loc)
+      CALL DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,                &
+                         dnVec=Vec,dnVecProj=NAC,type_diag=type_diag_loc)
     END IF
 
     IF (debug) THEN
@@ -2183,13 +2193,13 @@ CONTAINS
       write(out_unitp,*) 'Eig',(PotVal_adia%d0(i,i),i=1,nsurf)
 
       write(out_unitp,*) 'PotVal_adia',PotVal_adia%d0(1:2,1:2)
-      CALL QML_Write_dnMat(PotVal_adia,nio=out_unitp)
+      CALL Write_dnMat(PotVal_adia,nio=out_unitp)
 
       write(out_unitp,*) 'Vec'
-      CALL QML_Write_dnMat(Vec,nio=out_unitp)
+      CALL Write_dnMat(Vec,nio=out_unitp)
 
       write(out_unitp,*) 'NAC'
-      CALL QML_Write_dnMat(NAC,nio=out_unitp)
+      CALL Write_dnMat(NAC,nio=out_unitp)
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)
     END IF
@@ -2199,8 +2209,9 @@ CONTAINS
   SUBROUTINE Eval_dnHVib_ana(QModel,Qact,dnH,nderiv)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m, ONLY : dnMat_t,dnS_t,alloc_dnMat,dnMat_TO_dnS,dot_product,       &
+    ReduceDerivatives_dnS2_TO_dnS1,Write_dnMat,Write_dnS,ReduceDerivatives_dnS2_TO_dnS1, &
+    dnS_TO_dnMat,SYM_dnMat
   USE AdiaChannels_Basis_m
   IMPLICIT NONE
 
@@ -2226,7 +2237,7 @@ CONTAINS
   nq = QModel%Basis%nq
 
 
-  CALL QML_alloc_dnMat(dnH,      nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnH')
+  CALL alloc_dnMat(dnH,nsurf=nb,nVar=ndim_act,nderiv=nderiv,name_var='dnH')
 
   allocate(dnV(nq))
   allocate(dnHB(nq))
@@ -2243,12 +2254,12 @@ CONTAINS
     END DO
 
     CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv=nderiv)
-    CALL QML_sub_dnMat_TO_dnS(PotVal,dnVfull,i=1,j=1)
-    CALL QML_ReduceDerivatives_dnS2_TO_dnS1(dnV(iq),dnVfull,QModel%QM%list_act)
+    CALL dnMat_TO_dnS(PotVal,dnVfull,i=1,j=1)
+    CALL ReduceDerivatives_dnS2_TO_dnS1(dnV(iq),dnVfull,QModel%QM%list_act)
   END DO
 
-  !CALL QML_Write_dnMat(PotVal,6,info='PotVal')
-  !CALL QML_Write_dnS(dnV(nq),6,info='dnV',all_type=.TRUE.)
+  !CALL Write_dnMat(PotVal,6,info='PotVal')
+  !CALL Write_dnS(dnV(nq),6,info='dnV',all_type=.TRUE.)
 
   d0GGdef = QModel%QM%d0GGdef(QModel%QM%list_inact,QModel%QM%list_inact)
   DO ib=1,nb
@@ -2258,7 +2269,7 @@ CONTAINS
                  dnV(iq)*QModel%Basis%d0gb(iq,ib)
       dnHB(iq) = dnHB(iq) * QModel%Basis%w(iq)
     END DO
-    !CALL QML_Write_dnS(dnHB(1),6,info='dnHB',all_type=.TRUE.)
+    !CALL Write_dnS(dnHB(1),6,info='dnHB',all_type=.TRUE.)
     !write(6,*) 'coucou dnHB: done',ib ; flush(6)
     DO jb=1,nb
       IF (QModel%Basis%tab_symab(ib) == QModel%Basis%tab_symab(jb)) THEN
@@ -2266,18 +2277,18 @@ CONTAINS
       ELSE
         dnHij = ZERO
       END IF
-      CALL QML_sub_dnS_TO_dnMat(dnHij,dnH,jb,ib)
+      CALL dnS_TO_dnMat(dnHij,dnH,jb,ib)
     END DO
   END DO
 
-  dnH = QML_SYM_dnMat(dnH)
+  dnH = SYM_dnMat(dnH)
 
   !CALL Write_RMat(dnH%d0,6,5,name_info='H')
 
   END SUBROUTINE Eval_dnHVib_ana
 
   SUBROUTINE Eval_Func(QModel,Q,Func,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m, ONLY : dnS_t,dealloc_dnS,alloc_dnS,Variable,Write_dnS
   IMPLICIT NONE
 
     TYPE (Model_t),                 intent(inout)            :: QModel
@@ -2307,25 +2318,25 @@ CONTAINS
     IF (QModel%QM%nb_Func > 0) THEN
       IF (allocated(Func)) THEN
         DO i=1,size(Func)
-          CALL QML_dealloc_dnS(Func(i))
+          CALL dealloc_dnS(Func(i))
         END DO
         deallocate(Func)
       END IF
       allocate(Func(QModel%QM%nb_Func))
       DO i=1,size(Func)
-        CALL QML_alloc_dnS(Func(i),QModel%QM%ndimFunc,nderiv)
+        CALL alloc_dnS(Func(i),QModel%QM%ndimFunc,nderiv)
       END DO
 
       allocate(dnQ(QModel%QM%ndimFunc))
       DO i=1,QModel%QM%ndimFunc
-        dnQ(i) = QML_init_dnS(Q(i),ndim=QModel%QM%ndimFunc,nderiv=nderiv,iQ=i) ! to set up the derivatives
+        dnQ(i) = Variable(Q(i),nVar=QModel%QM%ndimFunc,nderiv=nderiv,iVar=i) ! to set up the derivatives
       END DO
 
       CALL QModel%QM%Eval_QModel_Func(Func,dnQ,nderiv=nderiv)
 
       ! deallocation
       DO i=1,size(dnQ)
-        CALL QML_dealloc_dnS(dnQ(i))
+        CALL dealloc_dnS(dnQ(i))
       END DO
       deallocate(dnQ)
       ! end deallocation
@@ -2335,7 +2346,7 @@ CONTAINS
     IF (debug) THEN
       write(out_unitp,*) 'Func',size(Func)
       DO i=1,size(Func)
-        CALL QML_Write_dnS(Func(i),nio=out_unitp,all_type=.TRUE.)
+        CALL Write_dnS(Func(i),nio=out_unitp,all_type=.TRUE.)
       END DO
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)
@@ -2346,6 +2357,7 @@ CONTAINS
   SUBROUTINE Write_Vec(Q,Vec,QModel,nio)
   USE QMLLib_UtilLib_m
   USE AdiaChannels_Basis_m
+  USE ADdnSVM_m, ONLY : dnMat_t,Check_NotAlloc_dnMat
   IMPLICIT NONE
 
     real (kind=Rkind),  intent(in)              :: Q(:)
@@ -2366,7 +2378,7 @@ CONTAINS
 
     IF (.NOT. QModel%QM%print_EigenVec_Basis .AND. .NOT. QModel%QM%print_EigenVec_Grid) RETURN
 
-    IF (QML_Check_NotAlloc_dnMat(Vec,nderiv=0)) THEN
+    IF (Check_NotAlloc_dnMat(Vec,nderiv=0)) THEN
         write(nio_loc,*) '-----------------------------------------------'
         write(nio_loc,*) 'Vec%d0 cannot be printed, it is not allocated'
         write(nio_loc,*) '-----------------------------------------------'
@@ -2579,6 +2591,8 @@ CONTAINS
 
   END SUBROUTINE Write_QdnV_FOR_Model
   SUBROUTINE Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Write_dnMat, &
+    get_maxval_OF_dnMat, operator(-)
   IMPLICIT NONE
 
     TYPE (Model_t),       intent(inout)   :: QModel
@@ -2610,11 +2624,11 @@ CONTAINS
     CALL check_alloc_QM(QModel,name_sub)
 
 
-    CALL QML_alloc_dnMat(PotVal_ana,nsurf=QModel%QM%nsurf,              &
-                         ndim=QModel%QM%ndim,nderiv=nderiv)
+    CALL alloc_dnMat(PotVal_ana,nsurf=QModel%QM%nsurf,              &
+                         nVar=QModel%QM%ndim,nderiv=nderiv)
 
-    CALL QML_alloc_dnMat(PotVal_num,nsurf=QModel%QM%nsurf,              &
-                         ndim=QModel%QM%ndim,nderiv=nderiv)
+    CALL alloc_dnMat(PotVal_num,nsurf=QModel%QM%nsurf,              &
+                         nVar=QModel%QM%ndim,nderiv=nderiv)
 
 
     IF (QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1) THEN
@@ -2625,7 +2639,7 @@ CONTAINS
 
     IF (debug) THEN
       write(out_unitp,*)   'PotVal_ana'
-      CALL QML_Write_dnMat(PotVal_ana,nio=out_unitp)
+      CALL Write_dnMat(PotVal_ana,nio=out_unitp)
       flush(out_unitp)
     END IF
 
@@ -2636,15 +2650,15 @@ CONTAINS
     END IF
     IF (debug) THEN
       write(out_unitp,*)   'PotVal_num'
-      CALL QML_Write_dnMat(PotVal_num,nio=out_unitp)
+      CALL Write_dnMat(PotVal_num,nio=out_unitp)
       flush(out_unitp)
     END IF
 
 
-    MaxMat      = QML_get_maxval_OF_dnMat(PotVal_ana)
+    MaxMat      = get_maxval_OF_dnMat(PotVal_ana)
     IF (MaxMat < ONETENTH**6) MaxMat = ONE
     Mat_diff    = PotVal_num - PotVal_ana
-    MaxDiffMat  = QML_get_maxval_OF_dnMat(Mat_diff)
+    MaxDiffMat  = get_maxval_OF_dnMat(Mat_diff)
 
     write(out_unitp,'(3a,e9.2)') 'With ',QModel%QM%pot_name,                    &
                ': max of the relative Potential diff:',MaxDiffMat/MaxMat
@@ -2653,15 +2667,15 @@ CONTAINS
 
     IF (MaxDiffMat/MaxMat > step .OR. debug) THEN
       write(out_unitp,*)   'Potential diff (ana-numer)'
-      CALL QML_Write_dnMat(Mat_diff,nio=out_unitp)
+      CALL Write_dnMat(Mat_diff,nio=out_unitp)
     END IF
 
     IF (QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1) THEN
 
-      MaxMat      = QML_get_maxval_OF_dnMat(NAC_ana)
+      MaxMat      = get_maxval_OF_dnMat(NAC_ana)
       IF (MaxMat < ONETENTH**6) MaxMat = ONE
       Mat_diff    = NAC_num - NAC_ana
-      MaxDiffMat  = QML_get_maxval_OF_dnMat(Mat_diff)
+      MaxDiffMat  = get_maxval_OF_dnMat(Mat_diff)
 
       write(out_unitp,'(3a,e9.2)') 'With ',QModel%QM%pot_name,                  &
                  ': max of the relative NAC diff:',MaxDiffMat/MaxMat
@@ -2670,17 +2684,17 @@ CONTAINS
 
       IF (MaxDiffMat/MaxMat > step .OR. debug) THEN
         write(out_unitp,*)   'NAC diff (ana-numer)'
-        CALL QML_Write_dnMat(Mat_diff,nio=out_unitp)
+        CALL Write_dnMat(Mat_diff,nio=out_unitp)
         write(out_unitp,*)   'NAC_ana'
-        CALL QML_Write_dnMat(NAC_ana,nio=out_unitp)
+        CALL Write_dnMat(NAC_ana,nio=out_unitp)
         write(out_unitp,*)   'NAC_num'
-        CALL QML_Write_dnMat(NAC_num,nio=out_unitp)
+        CALL Write_dnMat(NAC_num,nio=out_unitp)
       END IF
 
-      MaxMat      = QML_get_maxval_OF_dnMat(Vec_ana)
+      MaxMat      = get_maxval_OF_dnMat(Vec_ana)
       IF (MaxMat < ONETENTH**6) MaxMat = ONE
       Mat_diff    = Vec_num - Vec_ana
-      MaxDiffMat  = QML_get_maxval_OF_dnMat(Mat_diff)
+      MaxDiffMat  = get_maxval_OF_dnMat(Mat_diff)
 
       write(out_unitp,'(3a,e9.2)') 'With ',QModel%QM%pot_name,            &
                  ': max of the relative Vec diff:',MaxDiffMat/MaxMat
@@ -2689,22 +2703,22 @@ CONTAINS
 
       IF (MaxDiffMat/MaxMat > step .OR. debug) THEN
         write(out_unitp,*)   'Vec diff (ana-numer)'
-        CALL QML_Write_dnMat(Mat_diff,nio=out_unitp)
+        CALL Write_dnMat(Mat_diff,nio=out_unitp)
         write(out_unitp,*)   'Vec_ana'
-        CALL QML_Write_dnMat(Vec_ana,nio=out_unitp)
+        CALL Write_dnMat(Vec_ana,nio=out_unitp)
         write(out_unitp,*)   'Vec_num'
-        CALL QML_Write_dnMat(Vec_num,nio=out_unitp)
+        CALL Write_dnMat(Vec_num,nio=out_unitp)
       END IF
 
     END IF
 
-    CALL QML_dealloc_dnMat(PotVal_ana)
-    CALL QML_dealloc_dnMat(PotVal_num)
-    CALL QML_dealloc_dnMat(NAC_ana)
-    CALL QML_dealloc_dnMat(NAC_num)
-    CALL QML_dealloc_dnMat(Vec_ana)
-    CALL QML_dealloc_dnMat(Vec_num)
-    CALL QML_dealloc_dnMat(Mat_diff)
+    CALL dealloc_dnMat(PotVal_ana)
+    CALL dealloc_dnMat(PotVal_num)
+    CALL dealloc_dnMat(NAC_ana)
+    CALL dealloc_dnMat(NAC_num)
+    CALL dealloc_dnMat(Vec_ana)
+    CALL dealloc_dnMat(Vec_num)
+    CALL dealloc_dnMat(Mat_diff)
 
     IF (debug) THEN
       write(out_unitp,*) ' END ',name_sub
@@ -2714,6 +2728,7 @@ CONTAINS
   END SUBROUTINE Check_analytical_numerical_derivatives
 
   SUBROUTINE Eval_pot_ON_Grid(QModel,Qmin,Qmax,nb_points,nderiv,grid_file)
+  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),               intent(inout)   :: QModel
@@ -2777,10 +2792,11 @@ CONTAINS
         i_Q(ndim_loc) = i
       END IF
     END DO
-    write(out_unitp,*) 'QModel%QM%ndim',QModel%QM%ndim
-    write(out_unitp,*) 'QModel%QM%numeric',QModel%QM%numeric
-    write(out_unitp,*) 'ndim for the grid',ndim_loc
-    write(out_unitp,*) 'i_Q',i_Q(1:ndim_loc)
+    write(out_unitp,*) 'Grid. File name: "',trim(grid_file),'"'
+    !write(out_unitp,*) 'Coordinates indices, i_Q: ',i_Q(1:ndim_loc)
+    !write(out_unitp,*) 'QModel%QM%ndim',QModel%QM%ndim
+    !write(out_unitp,*) 'QModel%QM%numeric',QModel%QM%numeric
+    !write(out_unitp,*) 'ndim for the grid',ndim_loc
 
 
     Q(:) = Qmin
@@ -2840,8 +2856,8 @@ CONTAINS
 
     END IF
 
-    CALL QML_dealloc_dnMat(PotVal)
-    CALL QML_dealloc_dnMat(NAC)
+    CALL dealloc_dnMat(PotVal)
+    CALL dealloc_dnMat(NAC)
     deallocate(dQ)
     deallocate(Q)
     deallocate(i_Q)
@@ -2855,6 +2871,7 @@ CONTAINS
 
 
   SUBROUTINE calc_pot(V,QModel,Q)
+  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),         intent(inout)   :: QModel
@@ -2869,11 +2886,12 @@ CONTAINS
 
     V = PotVal%d0
 
-    CALL QML_dealloc_dnMat(PotVal)
+    CALL dealloc_dnMat(PotVal)
 
 
   END SUBROUTINE calc_pot
   SUBROUTINE calc_pot_grad(V,g,QModel,Q)
+  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),         intent(inout)   :: QModel
@@ -2890,11 +2908,12 @@ CONTAINS
     V = PotVal%d0
     g = PotVal%d1
 
-    CALL QML_dealloc_dnMat(PotVal)
+    CALL dealloc_dnMat(PotVal)
 
 
   END SUBROUTINE calc_pot_grad
   SUBROUTINE calc_grad(g,QModel,Q)
+  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),         intent(inout)   :: QModel
@@ -2909,11 +2928,12 @@ CONTAINS
 
     g = PotVal%d1
 
-    CALL QML_dealloc_dnMat(PotVal)
+    CALL dealloc_dnMat(PotVal)
 
 
   END SUBROUTINE calc_grad
   SUBROUTINE calc_pot_grad_hess(V,g,h,QModel,Q)
+  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),         intent(inout)   :: QModel
@@ -2933,11 +2953,12 @@ CONTAINS
     g = PotVal%d1
     h = PotVal%d2
 
-    CALL QML_dealloc_dnMat(PotVal)
+    CALL dealloc_dnMat(PotVal)
 
 
   END SUBROUTINE calc_pot_grad_hess
   SUBROUTINE calc_hess(h,QModel,Q)
+  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),     intent(inout)     :: QModel
@@ -2953,7 +2974,7 @@ CONTAINS
 
     h = PotVal%d2
 
-    CALL QML_dealloc_dnMat(PotVal)
+    CALL dealloc_dnMat(PotVal)
 
 
   END SUBROUTINE calc_hess

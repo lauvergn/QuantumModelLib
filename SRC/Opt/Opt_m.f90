@@ -331,7 +331,7 @@ END SUBROUTINE Read_QML_Opt
 
   END SUBROUTINE Write_QML_Opt
   SUBROUTINE QML_Opt(Q,QModel,Opt_param,Q0)
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE QMLLib_Matrix_m
   USE QMLLib_diago_m
   USE Model_m
@@ -406,7 +406,7 @@ END SUBROUTINE Read_QML_Opt
   DO it=0,Opt_param%Max_it
 
     CALL Eval_Pot(QModel,Qit,PotVal,nderiv=2)
-    IF (debug) CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+    IF (debug) CALL Write_dnMat(PotVal,nio=out_unitp)
 
     grad = PotVal%d1(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act)
     hess = PotVal%d2(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act,Opt_param%list_act)

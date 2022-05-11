@@ -276,7 +276,7 @@ MODULE QML_HOO_DMBE_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HOO_DMBE(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_HOO_DMBE_t), intent(in)    :: QModel
@@ -286,17 +286,17 @@ MODULE QML_HOO_DMBE_m
 
     real(kind=Rkind) :: V,Q(3)
 
-    Q(:) = QML_get_d0_FROM_dnS(dnQ)
+    Q(:) = get_d0(dnQ)
 
     CALL HOO_DMBE4_pes(Q,V)
 
-    CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0=V)
+    CALL set_dnS(Mat_OF_PotDia(1,1),d0=V)
 
   END SUBROUTINE EvalPot_QML_HOO_DMBE
 
   ! here we suppose that the atom ordering: H1-O2-O3
   SUBROUTINE Cart_TO_Q_QML_HOO_DMBE(QModel,dnX,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_HOO_DMBE_t), intent(in)    :: QModel
@@ -319,7 +319,7 @@ MODULE QML_HOO_DMBE_m
       write(out_unitp,*) 'dnX'
       DO i=1,size(dnX,dim=2)
       DO j=1,size(dnX,dim=1)
-        CALL QML_Write_dnS(dnX(j,i),out_unitp)
+        CALL Write_dnS(dnX(j,i),out_unitp)
       END DO
       END DO
       flush(out_unitp)
@@ -334,14 +334,14 @@ MODULE QML_HOO_DMBE_m
     dnQ(2) = sqrt(dot_product(VecHO2,VecHO2))
     dnQ(3) = sqrt(dot_product(VecHO3,VecHO3))
 
-    CALL QML_dealloc_dnS(VecOO)
-    CALL QML_dealloc_dnS(VecHO2)
-    CALL QML_dealloc_dnS(VecHO3)
+    CALL dealloc_dnS(VecOO)
+    CALL dealloc_dnS(VecHO2)
+    CALL dealloc_dnS(VecHO3)
 
     IF (debug) THEN
-      CALL QML_Write_dnS(dnQ(1),out_unitp,info='dnQ(1)')
-      CALL QML_Write_dnS(dnQ(2),out_unitp,info='dnQ(2)')
-      CALL QML_Write_dnS(dnQ(3),out_unitp,info='dnQ(3)')
+      CALL Write_dnS(dnQ(1),out_unitp,info='dnQ(1)')
+      CALL Write_dnS(dnQ(2),out_unitp,info='dnQ(2)')
+      CALL Write_dnS(dnQ(3),out_unitp,info='dnQ(3)')
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
     END IF

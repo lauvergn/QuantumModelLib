@@ -205,7 +205,7 @@ MODULE QML_TwoD_MullerBrown_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_TwoD_MullerBrown(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_TwoD_MullerBrown_t),  intent(in)    :: QModel
@@ -238,8 +238,8 @@ MODULE QML_TwoD_MullerBrown_m
    IF(.NOT. QModel%PubliUnit) Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1)/EnergyConv
 
 
-    CALL QML_dealloc_dnS(dnDX)
-    CALL QML_dealloc_dnS(dnDY)
+    CALL dealloc_dnS(dnDX)
+    CALL dealloc_dnS(dnDY)
 
   END SUBROUTINE EvalPot_QML_TwoD_MullerBrown
 

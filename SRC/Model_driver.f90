@@ -164,7 +164,7 @@ END SUBROUTINE sub_Qmodel_V
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
   USE Model_m
   IMPLICIT NONE
 
@@ -178,16 +178,16 @@ SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VVec in Model_driver.f90')
 
 
-  CALL QML_alloc_dnMat(Vec_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=0)
-  CALL QML_alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=0)
+  CALL alloc_dnMat(Vec_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
+  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
 
   CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=0,Vec=Vec_loc)
 
   V(:,:)   = PotVal_loc%d0
   Vec(:,:) = Vec_loc%d0
 
-  CALL QML_dealloc_dnMat(PotVal_loc)
-  CALL QML_dealloc_dnMat(Vec_loc)
+  CALL dealloc_dnMat(PotVal_loc)
+  CALL dealloc_dnMat(Vec_loc)
 
 END SUBROUTINE sub_Qmodel_VVec
 SUBROUTINE sub_Qmodel_VG(V,G,Q)
@@ -209,7 +209,7 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)       :: Q(QuantumModel%ndim)
@@ -226,8 +226,8 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VG_NAC in Model_driver.f90')
 
 
-  CALL QML_alloc_dnMat(NAC_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
-  CALL QML_alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
+  CALL alloc_dnMat(NAC_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
+  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
 
   CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc)
 
@@ -235,8 +235,8 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   G(:,:,:)   = PotVal_loc%d1
   NAC(:,:,:) = NAC_loc%d1
 
-  CALL QML_dealloc_dnMat(PotVal_loc)
-  CALL QML_dealloc_dnMat(NAC_loc)
+  CALL dealloc_dnMat(PotVal_loc)
+  CALL dealloc_dnMat(NAC_loc)
 
 END SUBROUTINE sub_Qmodel_VG_NAC
 SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
@@ -556,7 +556,7 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
   !$ USE omp_lib
   IMPLICIT NONE
 
@@ -600,7 +600,7 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
   END IF
 !$OMP END CRITICAL (CRIT_sub_model1_VG)
 
-  CALL QML_alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,ndim=QuantumModel%ndim,nderiv=1)
+  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
 
   CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc)
 
@@ -608,8 +608,8 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
   G(:,:,:)   = PotVal_loc%d1
   NAC(:,:,:) = NAC_loc%d1
 
-  CALL QML_dealloc_dnMat(PotVal_loc)
-  CALL QML_dealloc_dnMat(NAC_loc)
+  CALL dealloc_dnMat(PotVal_loc)
+  CALL dealloc_dnMat(NAC_loc)
 
 
 END SUBROUTINE sub_model1_VG_NAC
@@ -836,7 +836,7 @@ SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
 
   integer,          intent(in)      :: nb_Func,ndimFunc
@@ -853,11 +853,11 @@ SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
   CALL Eval_Func(QuantumModel,Q,Func,nderiv=0)
 
   DO i=1,size(Func)
-    CALL QML_sub_get_dn_FROM_dnS(Func(i),d0=d0Func(i))
+    CALL sub_get_dn(Func(i),d0=d0Func(i))
   END DO
 
   DO i=1,size(Func)
-    CALL QML_dealloc_dnS(Func(i))
+    CALL dealloc_dnS(Func(i))
   END DO
   deallocate(Func)
 
@@ -866,7 +866,7 @@ SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
 
   integer,          intent(in)      :: nb_Func,ndimFunc
@@ -886,11 +886,11 @@ SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
   CALL Eval_Func(QuantumModel,Q,Func,nderiv=1)
 
   DO i=1,size(Func)
-    CALL QML_sub_get_dn_FROM_dnS(Func(i),d0=d0Func(i),d1=d1Func(:,i))
+    CALL sub_get_dn(Func(i),d0=d0Func(i),d1=d1Func(:,i))
   END DO
 
   DO i=1,size(Func)
-    CALL QML_dealloc_dnS(Func(i))
+    CALL dealloc_dnS(Func(i))
   END DO
   deallocate(Func)
 
@@ -899,7 +899,7 @@ SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
 
   integer,          intent(in)      :: nb_Func,ndimFunc
@@ -918,12 +918,12 @@ SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
   CALL Eval_Func(QuantumModel,Q,Func,nderiv=2)
 
   DO i=1,size(Func)
-    CALL QML_sub_get_dn_FROM_dnS(Func(i),d0=d0Func(i),d1=d1Func(:,i),           &
+    CALL sub_get_dn(Func(i),d0=d0Func(i),d1=d1Func(:,i),           &
                                          d2=d2Func(:,:,i))
   END DO
 
   DO i=1,size(Func)
-    CALL QML_dealloc_dnS(Func(i))
+    CALL dealloc_dnS(Func(i))
   END DO
   deallocate(Func)
 
@@ -932,7 +932,7 @@ SUBROUTINE get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Q,nb_Func,ndimFun
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE Model_m
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
 
   integer,          intent(in)      :: nb_Func,ndimFunc
@@ -952,12 +952,12 @@ SUBROUTINE get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Q,nb_Func,ndimFun
   CALL Eval_Func(QuantumModel,Q,Func,nderiv=3)
 
   DO i=1,size(Func)
-    CALL QML_sub_get_dn_FROM_dnS(Func(i),d0=d0Func(i),d1=d1Func(:,i),           &
+    CALL sub_get_dn(Func(i),d0=d0Func(i),d1=d1Func(:,i),           &
                                          d2=d2Func(:,:,i),d3=d3Func(:,:,:,i))
   END DO
 
   DO i=1,size(Func)
-    CALL QML_dealloc_dnS(Func(i))
+    CALL dealloc_dnS(Func(i))
   END DO
   deallocate(Func)
 

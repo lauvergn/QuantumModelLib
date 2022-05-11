@@ -235,7 +235,7 @@ MODULE QML_HONO_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HONO(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_HONO_t),  intent(in)    :: QModel
@@ -264,7 +264,7 @@ MODULE QML_HONO_m
 !! @param r                  real:                value for which the potential is calculated
 
   SUBROUTINE EvalPot1_QML_HONO(Mat_OF_PotDia,dnQ)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
@@ -716,15 +716,15 @@ Vtemp = Vtemp - &
             0.25_Rkind*Qw(3)**2 - 0.25_Rkind*Qw(5)**2)* Vtemp
 !-----------------------------------------------------------------------!
 
-   CALL QML_dealloc_dnS(Vtemp)
+   CALL dealloc_dnS(Vtemp)
 
-   CALL QML_dealloc_dnS(d6)
-   CALL QML_dealloc_dnS(q1)
-   CALL QML_dealloc_dnS(q2)
-   CALL QML_dealloc_dnS(q3)
-   CALL QML_dealloc_dnS(t1)
-   CALL QML_dealloc_dnS(t2)
-   CALL QML_dealloc_dnS(Qw)
+   CALL dealloc_dnS(d6)
+   CALL dealloc_dnS(q1)
+   CALL dealloc_dnS(q2)
+   CALL dealloc_dnS(q3)
+   CALL dealloc_dnS(t1)
+   CALL dealloc_dnS(t2)
+   CALL dealloc_dnS(Qw)
 
   END SUBROUTINE EvalPot1_QML_HONO
 

@@ -410,8 +410,7 @@ MODULE QML_PH4_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_PH4(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_PH4_t),     intent(in)    :: QModel
@@ -431,13 +430,13 @@ MODULE QML_PH4_m
 
     allocate(dnPoly(QModel%largest_nn))
     DO i=1,QModel%largest_nn
-        dnPoly(i) = QML_dnLegendre0(tRm,i-1)
+        dnPoly(i) = dnLegendre0(tRm,i-1)
     END DO
 
     DO i1=2,QModel%ndim
       ifunc = QModel%iQopt_TO_ifunc(i1)
       dnDQ(i1) = dnQ(i1) - QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-      !write(6,*) 'DQ',i1,QML_get_d0_FROM_dnS(dnDQ(i1))
+      !write(6,*) 'DQ',i1,get_d0(dnDQ(i1))
     END DO
 
     vh = ZERO
@@ -448,13 +447,13 @@ MODULE QML_PH4_m
         ifunc = QModel%iQgrad_TO_ifunc(i1)
         IF (QModel%file_exist(ifunc)) THEN
           vh = vh + dnDQ(i1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-          !write(6,*) 'vh grad',i1,QML_get_d0_FROM_dnS(vh)
+          !write(6,*) 'vh grad',i1,get_d0(vh)
         END IF
 
         ifunc = QModel%iQjQHess_TO_ifunc(i1,i1)
         IF (QModel%file_exist(ifunc)) THEN
           vh = vh + HALF * dnDQ(i1)**2 * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-          !write(6,*) 'vh hessii',i1,QML_get_d0_FROM_dnS(vh)
+          !write(6,*) 'vh hessii',i1,get_d0(vh)
         END IF
       END DO
     CASE(5) ! with anharmonicity along Rp (Q(2))
@@ -466,7 +465,7 @@ MODULE QML_PH4_m
         ifunc = QModel%AnHar_TO_ifunc(i) ! DeltaQ2^(i-1)
         IF (QModel%file_exist(ifunc)) THEN
           vh = vh + dnDQ(i1)**(i-1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-          !write(6,*) 'vh anhar',i1,i,QML_get_d0_FROM_dnS(vh)
+          !write(6,*) 'vh anhar',i1,i,get_d0(vh)
         END IF
       END DO
 
@@ -474,14 +473,14 @@ MODULE QML_PH4_m
         ifunc = QModel%iQgrad_TO_ifunc(i1)
         IF (QModel%file_exist(ifunc)) THEN
           vh = vh + dnDQ(i1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-          !write(6,*) 'vh grad',i1,QML_get_d0_FROM_dnS(vh)
+          !write(6,*) 'vh grad',i1,get_d0(vh)
         END IF
 
         ifunc = QModel%iQjQHess_TO_ifunc(i1,i1)
         IF (QModel%file_exist(ifunc)) THEN
           vh = vh + HALF * dnDQ(i1)**2 * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
         END IF
-        !write(6,*) 'vh hessii',i1,i1,QML_get_d0_FROM_dnS(vh)
+        !write(6,*) 'vh hessii',i1,i1,get_d0(vh)
       END DO
 
     END SELECT
@@ -492,22 +491,22 @@ MODULE QML_PH4_m
         ifunc = QModel%iQjQHess_TO_ifunc(i1,i2)
         IF (.NOT. QModel%file_exist(ifunc)) CYCLE
         vh = vh + dnDQ(i1)*dnDQ(i2) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-        !write(6,*) 'vh hessij',i1,i2,QML_get_d0_FROM_dnS(vh)
+        !write(6,*) 'vh hessij',i1,i2,get_d0(vh)
       END DO
     END DO
     ifunc = QModel%ifunc_Ene
     Mat_OF_PotDia(1,1) = QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly) + vh
 
-    CALL QML_dealloc_dnS(Rm)
-    CALL QML_dealloc_dnS(tRm)
-    CALL QML_dealloc_dnS(dnPoly)
-    CALL QML_dealloc_dnS(dnDQ)
+    CALL dealloc_dnS(Rm)
+    CALL dealloc_dnS(tRm)
+    CALL dealloc_dnS(dnPoly)
+    CALL dealloc_dnS(dnDQ)
     deallocate(dnPoly)
 
   END SUBROUTINE EvalPot_QML_PH4
 
   SUBROUTINE EvalFunc_QML_PH4(QModel,Func,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_PH4_t),     intent(in)    :: QModel
@@ -523,8 +522,7 @@ MODULE QML_PH4_m
   END SUBROUTINE EvalFunc_QML_PH4
 
   SUBROUTINE EvalFunc_QML_PH4_fit3(QModel,Func,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_PH4_t),     intent(in)    :: QModel
@@ -546,7 +544,7 @@ MODULE QML_PH4_m
       write(out_unitp,*) 'BEGINNING EvalFunc_QML_PH4_fit3'
       write(out_unitp,*) 'Func',size(Func)
       DO i=1,size(Func)
-        CALL QML_Write_dnS(Func(i),nio=out_unitp,all_type=.TRUE.)
+        CALL Write_dnS(Func(i),nio=out_unitp,all_type=.TRUE.)
       END DO
       flush(out_unitp)
     END IF
@@ -557,21 +555,21 @@ MODULE QML_PH4_m
 
     allocate(dnPoly(QModel%largest_nn))
     DO i=1,QModel%largest_nn
-        dnPoly(i) = QML_dnLegendre0(tRm,i-1)
+        dnPoly(i) = dnLegendre0(tRm,i-1)
     END DO
 
     DO ifunc=1,QModel%nb_Func
       Func(ifunc) = QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
     END DO
 
-    CALL QML_dealloc_dnS(Rm)
-    CALL QML_dealloc_dnS(tRm)
-    CALL QML_dealloc_dnS(dnPoly)
+    CALL dealloc_dnS(Rm)
+    CALL dealloc_dnS(tRm)
+    CALL dealloc_dnS(dnPoly)
     deallocate(dnPoly)
 
     IF (debug) THEN
       DO i=1,size(Func)
-        CALL QML_Write_dnS(Func(i),nio=out_unitp,all_type=.TRUE.)
+        CALL Write_dnS(Func(i),nio=out_unitp,all_type=.TRUE.)
       END DO
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)
@@ -580,7 +578,7 @@ MODULE QML_PH4_m
   END SUBROUTINE EvalFunc_QML_PH4_fit3
 
   FUNCTION QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly) RESULT(dnvfour)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
@@ -602,7 +600,7 @@ MODULE QML_PH4_m
       STOP ' ERROR in QML_dnvfour_fit3_WITH_poly: wrong value for ifunc'
     END IF
 
-    !CALL QML_Write_dnS(dnvfour,nio=out_unitp,all_type=.TRUE.)
+    !CALL Write_dnS(dnvfour,nio=out_unitp,all_type=.TRUE.)
 
 
     np = QModel%nn(0,ifunc)
@@ -621,10 +619,12 @@ MODULE QML_PH4_m
     ELSE
       IF (np > 1) dnvfour = dot_product(QModel%F(1:np,ifunc),dnPoly(1:np))
     END IF
-    !CALL QML_Write_dnS(dnvfour,nio=out_unitp,all_type=.TRUE.)
+    !CALL Write_dnS(dnvfour,nio=out_unitp,all_type=.TRUE.)
 
   END FUNCTION QML_dnvfour_fit3_WITH_poly
   FUNCTION QML_sc2_fit3(x,a,b)
+    USE ADdnSVM_m
+
     TYPE (dnS_t)                          :: QML_sc2_fit3
     TYPE (dnS_t),           intent(in)    :: x
     real(kind=Rkind),       intent(in)    :: a,b
@@ -681,7 +681,7 @@ MODULE QML_PH4_m
 
   END SUBROUTINE QML_read_para4d
   FUNCTION QML_dnSigmoid_PH4(x,a)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnSigmoid_PH4

@@ -34,8 +34,7 @@ program prog
   USE QML_Empty_m
   USE QML_Template_m
   USE QML_Morse_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -66,7 +65,7 @@ program prog
   Q(:) = [ 1.2_Rkind,0.2_Rkind ]
   CALL Eval_Pot(QModel,Q,PotVal,nderiv)
   write(out_unitp,*) 'PotVal'
-  CALL QML_Write_dnMat(PotVal,6)
+  CALL Write_dnMat(PotVal,6)
 
   CALL QML_dealloc_dnMat(PotVal)
 
@@ -93,7 +92,7 @@ stop
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv)
   write(out_unitp,*) 'PotVal'
-  CALL QML_Write_dnMat(PotVal,6)
+  CALL Write_dnMat(PotVal,6)
 
   CALL QML_dealloc_dnMat(PotVal)
   deallocate(QModel%QM)
@@ -116,7 +115,7 @@ stop
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv)
   write(out_unitp,*) 'PotVal'
-  CALL QML_Write_dnMat(PotVal,6)
+  CALL Write_dnMat(PotVal,6)
 
   CALL QML_dealloc_dnMat(PotVal)
 

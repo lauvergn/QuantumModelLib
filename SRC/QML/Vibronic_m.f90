@@ -36,7 +36,7 @@
 !!
 MODULE QML_Vibronic_m
   USE QMLLib_NumParameters_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m, ONLY : dnMat_t
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -88,7 +88,7 @@ CONTAINS
 
      IF (present(PubliUnit)) VibronicPot%PubliUnit = PubliUnit
 
-     CALL QML_alloc_dnMat(VibronicPot%V,nsurf,ndim,nderiv, &
+     CALL alloc_dnMat(VibronicPot%V,nsurf,ndim,nderiv, &
              name_var='VibronicPot%V',name_sub='Init_QML_Vibronic',IOerr)
      IF (IOerr /= 0 ) THEN
        write(out_unitp,*) ' ERROR in Init_QML_Vibronic'
@@ -239,8 +239,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE eval_Vibronic(PotVal,Q,Para_Phenol,nderiv)
-    USE QMLdnSVM_dnMat_m
-    USE QMLdnSVM_dnS_m
+    USE ADdnSVM_m
 
     TYPE (Param_Phenol), intent(in)     :: Para_Phenol
     real (kind=Rkind),   intent(in)     :: Q(2)
@@ -276,14 +275,14 @@ CONTAINS
    ! for V(1,1): first diabatic state
    !write(out_unitp,*) 'morse:'
    v10R = QML_dnMorse(dnR,Para_Phenol%v10)
-   !CALL QML_Write_dnS(v10R,6)
+   !CALL Write_dnS(v10R,6)
    !write(out_unitp,*) 'sigmoid:'
    v11R = dnSigmoid(dnR,Para_Phenol%v11)
-   !CALL QML_Write_dnS(v11R,6)
+   !CALL Write_dnS(v11R,6)
 
    !write(out_unitp,*) 'f(th):'
    v11th = ONE-cos(dnth+dnth)
-   !CALL QML_Write_dnS(v11th,6)
+   !CALL Write_dnS(v11th,6)
 
    CALL sub_dnS_TO_dnMat(v10R+v11R*v11th,PotVal,i=1,j=1)
 
@@ -352,7 +351,7 @@ CONTAINS
 
    !write(out_unitp,*) 'f(th):'
    v31th = ONE-cos(dnth+dnth)
-   !CALL QML_Write_dnS(v11th,6)
+   !CALL Write_dnS(v11th,6)
 
    CALL sub_dnS_TO_dnMat(v30R+v31R*v31th,PotVal,i=3,j=3)
 
@@ -365,7 +364,7 @@ CONTAINS
 
 
    lambda12R = dnSigmoid(dnR,Para_Phenol%lambda12) * sin(dnth)
-   !CALL QML_Write_dnS(lambda12R,6)
+   !CALL Write_dnS(lambda12R,6)
 
    CALL sub_dnS_TO_dnMat(lambda12R,PotVal,i=1,j=2)
    CALL sub_dnS_TO_dnMat(lambda12R,PotVal,i=2,j=1)

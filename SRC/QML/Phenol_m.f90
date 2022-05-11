@@ -312,7 +312,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Phenol(QModel,Mat_OF_PotDia,dnQ,nderiv)
-    USE QMLdnSVM_dnS_m
+    USE ADdnSVM_m
     CLASS(QML_Phenol_t),    intent(in) :: QModel
 
     TYPE (dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)
@@ -348,20 +348,20 @@ CONTAINS
    ! for V(1,1): first diabatic state
    !write(out_unitp,*) 'morse:'
    v10R = QML_dnMorse(dnR,QModel%v10)
-   !CALL QML_Write_dnS(v10R,6)
+   !CALL Write_dnS(v10R,6)
    !write(out_unitp,*) 'sigmoid:'
    v11R = QML_dnSigmoid(dnR,QModel%v11)
-   !CALL QML_Write_dnS(v11R,6)
+   !CALL Write_dnS(v11R,6)
 
    !write(out_unitp,*) 'f(th):'
    v11th = ONE-cos(dnth+dnth)
-   !CALL QML_Write_dnS(v11th,6)
+   !CALL Write_dnS(v11th,6)
 
    Mat_OF_PotDia(1,1) = v10R+v11R*v11th
 
-   CALL QML_dealloc_dnS(v10R)
-   CALL QML_dealloc_dnS(v11R)
-   CALL QML_dealloc_dnS(v11th)
+   CALL dealloc_dnS(v10R)
+   CALL dealloc_dnS(v11R)
+   CALL dealloc_dnS(v11th)
    !--------------------------------------------------------------------
 
    !--------------------------------------------------------------------
@@ -392,25 +392,25 @@ CONTAINS
    Mat_OF_PotDia(2,2) = v20R+v21R*v21th+v22R*v22th
 
 
-   CALL QML_dealloc_dnS(v20R)
-   CALL QML_dealloc_dnS(v20pR)
-   CALL QML_dealloc_dnS(v20mR)
-   CALL QML_dealloc_dnS(v201R)
-   CALL QML_dealloc_dnS(v202R)
+   CALL dealloc_dnS(v20R)
+   CALL dealloc_dnS(v20pR)
+   CALL dealloc_dnS(v20mR)
+   CALL dealloc_dnS(v201R)
+   CALL dealloc_dnS(v202R)
 
-   CALL QML_dealloc_dnS(v21R)
-   CALL QML_dealloc_dnS(v21th)
-   CALL QML_dealloc_dnS(v21pR)
-   CALL QML_dealloc_dnS(v21mR)
-   CALL QML_dealloc_dnS(v211R)
-   CALL QML_dealloc_dnS(v212R)
+   CALL dealloc_dnS(v21R)
+   CALL dealloc_dnS(v21th)
+   CALL dealloc_dnS(v21pR)
+   CALL dealloc_dnS(v21mR)
+   CALL dealloc_dnS(v211R)
+   CALL dealloc_dnS(v212R)
 
-   CALL QML_dealloc_dnS(v22R)
-   CALL QML_dealloc_dnS(v22th)
-   CALL QML_dealloc_dnS(v22pR)
-   CALL QML_dealloc_dnS(v22mR)
-   CALL QML_dealloc_dnS(v221R)
-   CALL QML_dealloc_dnS(v222R)
+   CALL dealloc_dnS(v22R)
+   CALL dealloc_dnS(v22th)
+   CALL dealloc_dnS(v22pR)
+   CALL dealloc_dnS(v22mR)
+   CALL dealloc_dnS(v221R)
+   CALL dealloc_dnS(v222R)
    !--------------------------------------------------------------------
 
    !--------------------------------------------------------------------
@@ -424,22 +424,22 @@ CONTAINS
 
    !write(out_unitp,*) 'f(th):'
    v31th = ONE-cos(dnth+dnth)
-   !CALL QML_Write_dnS(v11th,6)
+   !CALL Write_dnS(v11th,6)
 
    Mat_OF_PotDia(3,3) = v30R+v31R*v31th
 
    !write(out_unitp,*) 'phenol pot diabatic:',nderiv
    !CALL QML_Write_dnMat(PotVal,6)
 
-   CALL QML_dealloc_dnS(v30R)
-   CALL QML_dealloc_dnS(v31R)
-   CALL QML_dealloc_dnS(v31th)
+   CALL dealloc_dnS(v30R)
+   CALL dealloc_dnS(v31R)
+   CALL dealloc_dnS(v31th)
    !--------------------------------------------------------------------
 
 
    !--------------------------------------------------------------------
    lambda12R = QML_dnSigmoid(dnR,QModel%lambda12) * sin(dnth)
-   !CALL QML_Write_dnS(lambda12R,6)
+   !CALL Write_dnS(lambda12R,6)
 
    Mat_OF_PotDia(1,2) = lambda12R
    Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
@@ -455,13 +455,13 @@ CONTAINS
    Mat_OF_PotDia(3,2) = ZERO
 
 
-   CALL QML_dealloc_dnS(lambda12R)
-   CALL QML_dealloc_dnS(lambda13R)
+   CALL dealloc_dnS(lambda12R)
+   CALL dealloc_dnS(lambda13R)
    !--------------------------------------------------------------------
 
 
-   CALL QML_dealloc_dnS(dnth)
-   CALL QML_dealloc_dnS(dnR)
+   CALL dealloc_dnS(dnth)
+   CALL dealloc_dnS(dnR)
 
    IF (.NOT. QModel%PubliUnit) THEN ! to convert the eV into Hartree
      DO i=1,3
