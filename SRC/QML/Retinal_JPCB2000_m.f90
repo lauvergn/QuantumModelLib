@@ -203,6 +203,11 @@ MODULE QML_Retinal_JPCB2000_m
     write(nio,*) '   kappa  = ',QModel%kappa
     write(nio,*) '   lambda = ',QModel%lambda
     write(nio,*)
+    IF (QModel%ndim > 2) THEN
+      write(nio,*) '    wi    =',QModel%wi(3:QModel%ndim)
+      write(nio,*) '    ci/wi =',QModel%ciwi_inv(3:QModel%ndim)
+      write(nio,*) '    ci    =',QModel%ci(3:QModel%ndim)
+    END IF
     write(nio,*) 'end Retinal_JPCB2000 default parameters'
     write(nio,*)
 
