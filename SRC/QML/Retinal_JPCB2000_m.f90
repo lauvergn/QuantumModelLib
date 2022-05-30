@@ -59,16 +59,18 @@ MODULE QML_Retinal_JPCB2000_m
    real(kind=Rkind) :: kappa  = 0.1_Rkind
    real(kind=Rkind) :: lambda = 0.19_Rkind
 
-   real(kind=Rkind) :: wi(25)       = real([   0.0,   0.0,  792.8,  842.8,  866.2,  &
-                                             882.4, 970.3,   976.0,  997.0, 1017.1, &
-                                            1089.6, 1189.0, 1214.7, 1238.1, 1267.9, &
-                                            1317.0, 1359.0, 1389.0, 1428.4, 1434.9, &
-                                            1451.8, 1572.8, 1612.1, 1629.2, 1659.1],kind=Rkind)
-   real(kind=Rkind) :: ciwi_inv(25) = real([ 0.0,   0.0,    0.175,  0.2,    0.175, &
-                                             0.225, 0.55,   0.3,    0.33,   0.45,  &
-                                             0.125,  0.175, 0.44,   0.5,    0.475, &
-                                             0.238,  0.25,  0.25,   0.25,   0.225, &
-                                             0.225,  0.25,  0.225,  0.125,  0.225],kind=Rkind)
+   real(kind=Rkind) :: wi(25)       =                                           &
+         [   0.0_Rkind,   0.0_Rkind,  792.8_Rkind,  842.8_Rkind,  866.2_Rkind,  &
+           882.4_Rkind, 970.3_Rkind,   976.0_Rkind,  997.0_Rkind, 1017.1_Rkind, &
+          1089.6_Rkind, 1189.0_Rkind, 1214.7_Rkind, 1238.1_Rkind, 1267.9_Rkind, &
+          1317.0_Rkind, 1359.0_Rkind, 1389.0_Rkind, 1428.4_Rkind, 1434.9_Rkind, &
+          1451.8_Rkind, 1572.8_Rkind, 1612.1_Rkind, 1629.2_Rkind, 1659.1_Rkind]
+   real(kind=Rkind) :: ciwi_inv(25) =                                           &
+           [0.0_Rkind,    0.0_Rkind,   0.175_Rkind,  0.2_Rkind,    0.175_Rkind, &
+            0.225_Rkind,  0.55_Rkind,  0.3_Rkind,    0.33_Rkind,   0.45_Rkind,  &
+            0.125_Rkind,  0.175_Rkind, 0.44_Rkind,   0.5_Rkind,    0.475_Rkind, &
+            0.238_Rkind,  0.25_Rkind,  0.25_Rkind,   0.25_Rkind,   0.225_Rkind, &
+            0.225_Rkind,  0.25_Rkind,  0.225_Rkind,  0.125_Rkind,  0.225_Rkind]
    real(kind=Rkind) :: ci(25)       = ZERO ! it will be initialized after
 
    CONTAINS
