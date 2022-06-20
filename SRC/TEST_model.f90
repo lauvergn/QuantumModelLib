@@ -33,7 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-
+  !CALL test_Retinal_CP2000() ; stop
   !CALL test_IRC_MullerBrown() ; stop
   !CALL test_H3() ; stop
   !CALL test_IRC_H3() ; stop
@@ -1188,6 +1188,73 @@ SUBROUTINE test_PSB3
   deallocate(q)
 
 END SUBROUTINE test_PSB3
+SUBROUTINE test_Retinal_CP2000
+
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: NAC ! for non adiabatic couplings
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Retinal_CB2000 potential (2+nD)'
+  write(out_unitp,*) ' With units: Atomic Units'
+  write(out_unitp,*) '---------------------------------------------'
+
+
+  CALL Init_Model(QModel,pot_name='Retinal_JPCB2000',PubliUnit=.FALSE.,ndim=3,  &
+                  read_param=.TRUE.,param_file_name='DAT_files/retinal_cp2000.dat')
+
+  allocate(q(QModel%QM%ndim))
+
+  q(:) = [HALF,ONE,-ONE]
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Evaluated in',q
+  CALL Check_analytical_numerical_derivatives(QModel,q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  write(out_unitp,*) '---------------------------------------------'
+
+  QModel%QM%adiabatic = .FALSE.
+  write(out_unitp,*) 'DIABATIC potential'
+  write(out_unitp,*) 'Evaluated in', q
+
+  CALL Eval_Pot(QModel,q,PotVal,nderiv=nderiv)
+
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+
+  QModel%QM%adiabatic = .TRUE.
+  q(:) = [ZERO,ZERO,ZERO]
+  write(out_unitp,*) 'ADIABATIC potential'
+  write(out_unitp,*) 'Evaluated in', q
+
+  CALL Eval_Pot(QModel,q,PotVal,NAC=NAC,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  write(out_unitp,*) 'Non adiatic couplings:'
+  CALL QML_Write_dnMat(NAC,nio=out_unitp)
+
+
+  CALL QML_dealloc_dnMat(PotVal)
+  CALL QML_dealloc_dnMat(NAC)
+  deallocate(q)
+
+END SUBROUTINE test_Retinal_CP2000
 SUBROUTINE test_Retinal_JPCB2000
 
   USE QMLLib_UtilLib_m

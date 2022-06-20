@@ -49,7 +49,7 @@ MODULE QML_Retinal_JPCB2000_m
    PRIVATE
 
    !The parameters of the model are in eV:
-   !  m􏰂=4.84E-4,E1=􏰌2.48,W0=􏰌3.6,W1=1.09,w=0.19,kappa=􏰌0.1,and lambda=􏰌0.19.
+   !  m=4.84E-4,E1=2.48,W0=3.6,W1=1.09,w=0.19,kappa=0.1,and lambda=0.19.
 
    real(kind=Rkind) :: m      = ONE/4.84e-4_Rkind
    real(kind=Rkind) :: E1     = 2.48_Rkind
@@ -58,20 +58,28 @@ MODULE QML_Retinal_JPCB2000_m
    real(kind=Rkind) :: w      = 0.19_Rkind
    real(kind=Rkind) :: kappa  = 0.1_Rkind
    real(kind=Rkind) :: lambda = 0.19_Rkind
+   real(kind=Rkind) :: Cbs    = 0.0_Rkind
 
-   real(kind=Rkind) :: wi(25)       =                                           &
+   real(kind=Rkind) :: wi_pub(25)       =                                       &
          [   0.0_Rkind,   0.0_Rkind,  792.8_Rkind,  842.8_Rkind,  866.2_Rkind,  &
            882.4_Rkind, 970.3_Rkind,   976.0_Rkind,  997.0_Rkind, 1017.1_Rkind, &
           1089.6_Rkind, 1189.0_Rkind, 1214.7_Rkind, 1238.1_Rkind, 1267.9_Rkind, &
           1317.0_Rkind, 1359.0_Rkind, 1389.0_Rkind, 1428.4_Rkind, 1434.9_Rkind, &
           1451.8_Rkind, 1572.8_Rkind, 1612.1_Rkind, 1629.2_Rkind, 1659.1_Rkind]
-   real(kind=Rkind) :: ciwi_inv(25) =                                           &
-           [0.0_Rkind,    0.0_Rkind,   0.175_Rkind,  0.2_Rkind,    0.175_Rkind, &
-            0.225_Rkind,  0.55_Rkind,  0.3_Rkind,    0.33_Rkind,   0.45_Rkind,  &
-            0.125_Rkind,  0.175_Rkind, 0.44_Rkind,   0.5_Rkind,    0.475_Rkind, &
-            0.238_Rkind,  0.25_Rkind,  0.25_Rkind,   0.25_Rkind,   0.225_Rkind, &
-            0.225_Rkind,  0.25_Rkind,  0.225_Rkind,  0.125_Rkind,  0.225_Rkind]
-   real(kind=Rkind) :: ci(25)       = ZERO ! it will be initialized after
+   real(kind=Rkind) :: ciwi_inv_pub(25) =                                       &
+     [0.0_Rkind,    0.0_Rkind,   0.175_Rkind,  0.2_Rkind,    0.175_Rkind, &
+     0.225_Rkind,  0.55_Rkind,  0.3_Rkind,    0.33_Rkind,   0.45_Rkind,  &
+     0.125_Rkind,  0.175_Rkind, 0.44_Rkind,   0.5_Rkind,    0.475_Rkind, &
+     0.238_Rkind,  0.25_Rkind,  0.25_Rkind,   0.25_Rkind,   0.225_Rkind, &
+     0.225_Rkind,  0.25_Rkind,  0.225_Rkind,  0.125_Rkind,  0.225_Rkind]
+
+
+   real(kind=Rkind), allocatable :: wi(:)
+   real(kind=Rkind), allocatable :: ci(:)
+   integer,          allocatable :: BathMode_Order(:)
+
+   !integer :: BathMode_Order(25) = [ 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,     &
+   !                                 14,15,16,17,18,19,20,21,22,23,24,25]
 
    CONTAINS
     PROCEDURE :: EvalPot_QModel => EvalPot_QML_Retinal_JPCB2000
@@ -91,15 +99,16 @@ MODULE QML_Retinal_JPCB2000_m
   FUNCTION Init_QML_Retinal_JPCB2000(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (QML_Retinal_JPCB2000_t)              :: QModel ! RESULT
+    TYPE (QML_Retinal_JPCB2000_t)                :: QModel ! RESULT
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
     real (kind=Rkind), parameter :: auTOeV      = 27.211384_Rkind
     real (kind=Rkind), parameter :: auTOcm_inv  = 219474.631443_Rkind
     integer :: i
+    character(len=Name_longlen)  :: Temp_string
 
 
     !----- for debuging --------------------------------------------------
@@ -134,6 +143,24 @@ MODULE QML_Retinal_JPCB2000_m
     END IF
     IF (debug) write(out_unitp,*) 'ndim',QModel%ndim
 
+    IF (allocated(QModel%BathMode_Order)) deallocate(QModel%BathMode_Order)
+    IF (allocated(QModel%wi))             deallocate(QModel%wi)
+    IF (allocated(QModel%ci))             deallocate(QModel%ci)
+
+    allocate(QModel%BathMode_Order(QModel%ndim))
+    allocate(QModel%wi(QModel%ndim))
+    allocate(QModel%ci(QModel%ndim))
+
+    IF (read_param) THEN
+      QModel%BathMode_Order(:)   = 0
+      QModel%BathMode_Order(1:2) = [1,2]
+      read(nio_param_file,*) Temp_string,QModel%BathMode_Order(3:QModel%ndim)
+      QModel%BathMode_Order(3:QModel%ndim) = QModel%BathMode_Order(3:QModel%ndim) + 2
+    ELSE
+      QModel%BathMode_Order(:) = [(i,i=1,QModel%ndim)]
+    END IF
+    write(out_unitp,*) 'BathMode_Order (internal)',QModel%BathMode_Order(3:QModel%ndim)
+    write(out_unitp,*) 'BathMode_Order (read    )',QModel%BathMode_Order(3:QModel%ndim)-2
 
 
     IF (.NOT. QModel%PubliUnit) THEN
@@ -145,13 +172,19 @@ MODULE QML_Retinal_JPCB2000_m
       QModel%kappa  = QModel%kappa  / auTOeV
       QModel%lambda = QModel%lambda / auTOeV
 
-      QModel%wi     = QModel%wi     / auTOcm_inv
+      IF (QModel%ndim > 2) THEN
+        QModel%wi(:) = QModel%wi_pub(QModel%BathMode_Order) / auTOcm_inv
+      END IF
 
     ELSE ! if PubliUnit the wi must be convert in eV
-      QModel%wi     = QModel%wi     / auTOcm_inv*auTOeV
+      IF (QModel%ndim > 2) THEN
+        QModel%wi(:) = QModel%wi_pub(QModel%BathMode_Order) / auTOcm_inv*auTOeV
+      END IF
     END IF
 
-    QModel%ci       = QModel%ciwi_inv * QModel%wi
+    IF (QModel%ndim > 2) THEN
+      QModel%ci(:) = QModel%ciwi_inv_pub(QModel%BathMode_Order) * QModel%wi
+    END IF
 
     IF (debug) write(out_unitp,*) 'init Q0 of Retinal_JPCB2000'
     allocate(QModel%Q0(QModel%ndim))
@@ -207,7 +240,7 @@ MODULE QML_Retinal_JPCB2000_m
     write(nio,*)
     IF (QModel%ndim > 2) THEN
       write(nio,*) '    wi    =',QModel%wi(3:QModel%ndim)
-      write(nio,*) '    ci/wi =',QModel%ciwi_inv(3:QModel%ndim)
+      write(nio,*) '    ci/wi =',QModel%ci(3:QModel%ndim)/QModel%wi(3:QModel%ndim)
       write(nio,*) '    ci    =',QModel%ci(3:QModel%ndim)
     END IF
     write(nio,*) 'end Retinal_JPCB2000 default parameters'
@@ -263,7 +296,9 @@ MODULE QML_Retinal_JPCB2000_m
     integer      :: i
 
     IF (QModel%ndim > 2) THEN
-      VBath = HALF*sum( QModel%wi(3:QModel%ndim)*dnQ(3:QModel%ndim)**2 )
+      VBath = HALF*sum( QModel%wi(3:QModel%ndim)*dnQ(3:QModel%ndim)**2 ) + &
+              QModel%Cbs * dnQ(2) * sum(dnQ(3:QModel%ndim) )
+
 
       Mat_OF_PotDia(1,1) = HALF*QModel%W0*(ONE-cos(dnQ(1))) +                   &
                            HALF*QModel%W*dnQ(2)**2 + VBath
