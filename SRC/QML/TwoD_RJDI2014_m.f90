@@ -49,8 +49,8 @@ MODULE QML_TwoD_RJDI2014_m
 
    real(kind=Rkind)     :: w1    = 9.557e-3_Rkind
    real(kind=Rkind)     :: w2    = 3.3515e-3_Rkind
-   real(kind=Rkind)     :: DELTA = 20.07_Rkind
-   real(kind=Rkind)     :: a     = 6._Rkind
+   real(kind=Rkind)     :: Delta = 0.01984_Rkind
+   real(kind=Rkind)     :: a     = 20.07_Rkind
    real(kind=Rkind)     :: c     = 6.127e-4_Rkind
 
    real (kind=Rkind)    :: muX  = 1._Rkind
