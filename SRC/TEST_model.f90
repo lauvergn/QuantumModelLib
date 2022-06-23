@@ -33,6 +33,8 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test_TwoD_RJDI2014() ; stop
+
   !CALL test_Retinal_CP2000() ; stop
   !CALL test_IRC_MullerBrown() ; stop
   !CALL test_H3() ; stop
@@ -75,6 +77,7 @@ PROGRAM TEST_model
   CALL test_Phenol()
   CALL test_PSB3()
   CALL test_TwoD()
+  CALL test_TwoD_RJDI2014()
   CALL test_Retinal_JPCB2000()
 
   ! 6D (full-D), One electronic surface
@@ -1764,6 +1767,64 @@ SUBROUTINE test_TwoD
 
 
 END SUBROUTINE test_TwoD
+SUBROUTINE test_TwoD_RJDI2014
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' TwoD_RJDI2014 potential'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+  CALL Init_Model(QModel,pot_name='TwoD_RJDI2014',adiabatic=.FALSE.,Print_init=.TRUE.)
+
+  Q = [ZERO,HALF]
+
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q(:) (bohr):'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives',nderiv
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+
+  write(out_unitp,*) 'Q(:) (bohr):'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  write(out_unitp,*) 'Energy (Hartree)'
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='twod')
+
+  CALL QML_dealloc_dnMat(PotVal)
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+
+
+END SUBROUTINE test_TwoD_RJDI2014
 SUBROUTINE test_HNO3
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnS_m

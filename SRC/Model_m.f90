@@ -71,6 +71,7 @@ MODULE Model_m
   USE QML_Phenol_m
   USE QML_Sigmoid_m
   USE QML_TwoD_m
+  USE QML_TwoD_RJDI2014_m
 
   USE AdiaChannels_Basis_m
 
@@ -655,6 +656,19 @@ CONTAINS
       !! === END README ==
       allocate(QML_TwoD_t :: QModel%QM)
       QModel%QM = Init_QML_TwoD(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('twod_rjdi2014')
+      !! === README ==
+      !! 2D model
+      !! pot_name  = 'TwoD_RJDI2014'
+      !! ndim      = 2 (X,Y)
+      !! nsurf     = 2
+      !! Reduced masses(:)      = [1. , 1.] au
+      !! ref:  Ilya G. Ryabinkin, Loïc Joubert-Doriol, and Artur F. Izmaylov, ...
+      !!       ... J. Chem. Phys. 140, 214116 (2014); https://doi.org/10.1063/1.4881147
+      !! === END README ==
+      allocate(QML_TwoD_RJDI2014_t :: QModel%QM)
+      QModel%QM = Init_QML_TwoD_RJDI2014(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('psb3')
       !! === README ==
