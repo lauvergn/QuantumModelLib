@@ -33,7 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  CALL test_TwoD_RJDI2014() ; stop
+  !CALL test_TwoD_RJDI2014() ; stop
 
   !CALL test_Retinal_CP2000() ; stop
   !CALL test_IRC_MullerBrown() ; stop
