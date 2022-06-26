@@ -156,6 +156,7 @@ CONTAINS
     QModel%numeric          = QModel_in%numeric
     QModel%adiabatic        = QModel_in%adiabatic
     QModel%Phase_Following  = QModel_in%Phase_Following
+    QModel%Phase_Checking   = QModel_in%Phase_Checking
     QModel%option           = QModel_in%option
     QModel%PubliUnit        = QModel_in%PubliUnit
 

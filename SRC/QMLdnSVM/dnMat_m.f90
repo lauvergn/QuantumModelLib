@@ -1936,6 +1936,10 @@ CONTAINS
        END DO
        IF (max_diff > 0.2_Rkind .OR. debug) THEN
          write(out_unitp,*) 'Largest difference to one of <Vec0(:,i)|Vec(:,i)> :',i_max,aii_max
+         write(out_unitp,*) 'Vec:'
+         CALL Write_RMat(Vec,nio=out_unitp,nbcol1=5)
+         write(out_unitp,*) 'Vec0:'
+         CALL Write_RMat(dnVec0%d0,nio=out_unitp,nbcol1=5)
        END IF
 
     END IF

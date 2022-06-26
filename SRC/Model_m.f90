@@ -171,6 +171,7 @@ CONTAINS
     logical :: adiabatic,numeric,PubliUnit,read_nml
     logical :: Vib_adia,print_EigenVec_Grid,print_EigenVec_Basis
     logical :: opt,IRC
+    logical :: Phase_checking,Phase_Following
 
     character (len=20) :: pot_name
     integer :: err_read,nb_act
@@ -178,18 +179,22 @@ CONTAINS
 
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
+                         Phase_Checking,Phase_Following,                        &
                          read_nml,printlevel,Vib_adia,nb_Channels,list_act,     &
                          print_EigenVec_Grid,print_EigenVec_Basis,opt,IRC
 
 !    ! Default values defined
-    printlevel  = 0
-    ndim        = QModel_inout%ndim
-    nsurf       = QModel_inout%nsurf
-    adiabatic   = QModel_inout%adiabatic
+    printlevel      = 0
+    ndim            = QModel_inout%ndim
+    nsurf           = QModel_inout%nsurf
+    adiabatic       = QModel_inout%adiabatic
 
-    Vib_adia    = QModel_inout%Vib_adia
-    nb_Channels = 0
-    list_act(:) = 0
+    Phase_Checking  = QModel_inout%Phase_Checking
+    Phase_Following = QModel_inout%Phase_Following
+
+    Vib_adia        = QModel_inout%Vib_adia
+    nb_Channels     = 0
+    list_act(:)     = 0
 
     print_EigenVec_Grid  = .FALSE.
     print_EigenVec_Basis = .FALSE.
@@ -234,8 +239,10 @@ CONTAINS
     QModel_inout%nsurf                = nsurf
     QModel_inout%adiabatic            = adiabatic
     QModel_inout%numeric              = numeric
+    QModel_inout%Phase_Checking       = (adiabatic .AND. Phase_Checking)
+    QModel_inout%Phase_Following      = (adiabatic .AND. Phase_Following)
+
     QModel_inout%pot_name             = trim(pot_name)
-    !QModel_inout%pot_name            = strdup(pot_name) ! panic with nagfor !!!
     QModel_inout%PubliUnit            = PubliUnit
 
     QModel_inout%print_EigenVec_Grid  = print_EigenVec_Grid
@@ -461,7 +468,11 @@ CONTAINS
     QModel_in%Init = .TRUE.
 
     IF (QModel_in%adiabatic) THEN
-      IF (Print_init_loc) write(out_unitp,*) 'Adiabatic potential . . .'
+      IF (Print_init_loc) THEN
+        write(out_unitp,*) 'Adiabatic potential . . .'
+        write(out_unitp,*) 'Phase_Checking',QModel_in%Phase_Checking
+        write(out_unitp,*) 'Phase_Following',QModel_in%Phase_Following
+      END IF
     ELSE
       IF (Print_init_loc) write(out_unitp,*) 'Non-adiabatic potential . . .'
     END IF
@@ -2140,6 +2151,8 @@ CONTAINS
       write(out_unitp,*) 'max Val odd-even',maxval(abs(PotVal_dia%d0(1::2,2::2)))
       write(out_unitp,*) 'max Val even-odd',maxval(abs(PotVal_dia%d0(2::2,1::2)))
       write(out_unitp,*) 'type_diag_loc',type_diag_loc
+      write(out_unitp,*) 'Phase_Checking',Phase_Checking
+      write(out_unitp,*) 'Phase_Following',Phase_Following
       flush(out_unitp)
     END IF
 

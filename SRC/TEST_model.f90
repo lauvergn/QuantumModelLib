@@ -33,7 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  !CALL test_TwoD_RJDI2014() ; stop
+  CALL test_TwoD_RJDI2014() ; stop
 
   !CALL test_Retinal_CP2000() ; stop
   !CALL test_IRC_MullerBrown() ; stop
@@ -1210,14 +1210,13 @@ SUBROUTINE test_Retinal_CP2000
   write(out_unitp,*) ' With units: Atomic Units'
   write(out_unitp,*) '---------------------------------------------'
 
-
-  CALL Init_Model(QModel,pot_name='Retinal_JPCB2000',PubliUnit=.FALSE.,ndim=3,  &
-                  read_param=.TRUE.,param_file_name='DAT_files/retinal_cp2000.dat')
+  CALL Init_Model(QModel,PubliUnit=.FALSE.,read_param=.TRUE.,  &
+                  param_file_name='DAT_files/retinal_cp2000.dat')
 
   allocate(q(QModel%QM%ndim))
 
   q(:) = [HALF,ONE,-ONE]
-  nderiv=2
+  nderiv=1
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -1252,6 +1251,11 @@ SUBROUTINE test_Retinal_CP2000
   write(out_unitp,*) 'Non adiatic couplings:'
   CALL QML_Write_dnMat(NAC,nio=out_unitp)
 
+  q(:) = [THREE,ZERO,ZERO]
+  write(out_unitp,*) 'ADIABATIC potential'
+  write(out_unitp,*) 'Evaluated in', q
+  CALL Eval_Pot(QModel,q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
 
   CALL QML_dealloc_dnMat(PotVal)
   CALL QML_dealloc_dnMat(NAC)
@@ -1786,7 +1790,7 @@ SUBROUTINE test_TwoD_RJDI2014
   write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
   write(out_unitp,*) '---------------------------------------------'
   flush(out_unitp)
-  CALL Init_Model(QModel,pot_name='TwoD_RJDI2014',adiabatic=.FALSE.,Print_init=.TRUE.)
+  CALL Init_Model(QModel,pot_name='TwoD_RJDI2014',adiabatic=.TRUE.,Print_init=.TRUE.)
 
   Q = [ZERO,HALF]
 
@@ -1814,6 +1818,15 @@ SUBROUTINE test_TwoD_RJDI2014
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='twod')
+
+  Q = [TWO,HALF]
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+
+  write(out_unitp,*) 'Q(:) (bohr):'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  write(out_unitp,*) 'Energy (Hartree)'
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
 
   CALL QML_dealloc_dnMat(PotVal)
   deallocate(Q)
