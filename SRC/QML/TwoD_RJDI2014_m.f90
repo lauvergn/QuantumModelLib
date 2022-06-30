@@ -108,8 +108,23 @@ MODULE QML_TwoD_RJDI2014_m
       QModel%Q0 = [-QModel%a/TWO,ZERO]
     CASE (2)  ! minimum of V(2,2)
       QModel%Q0 = [QModel%a/TWO,ZERO]
-    CASE Default ! minimum of V(1,1)
-      QModel%Q0 = [-QModel%a/TWO,ZERO]
+    CASE (0)  ! minimum of V(1,1), other parameters
+      QModel%w1    = 0.007743_Rkind
+      QModel%w2    = 0.00668_Rkind
+      QModel%Delta = ZERO
+      QModel%a     = 51.05_Rkind
+      QModel%c     = 0.00008092_Rkind
+
+      QModel%Q0    = [-QModel%a/TWO,ZERO]
+    CASE Default ! ! minimum of V(1,1), other parameters
+      QModel%w1    = 0.007743_Rkind
+      QModel%w2    = 0.00668_Rkind
+      QModel%Delta = ZERO
+      QModel%a     = 51.05_Rkind
+      QModel%c     = 0.00008092_Rkind
+
+      QModel%Q0    = [-QModel%a/TWO,ZERO]
+
     END SELECT
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of TwoD_RJDI2014'
@@ -141,11 +156,18 @@ MODULE QML_TwoD_RJDI2014_m
     write(nio,*) '  .... J. Chem. Phys. 140, 214116 (2014); https://doi.org/10.1063/1.4881147'
     write(nio,*) 'with the X=Q(1), Y=Q(2) in bohr.'
     write(nio,*) '     and the energy in Hartree.'
-
-
     write(nio,*) 'PubliUnit: ',QModel%PubliUnit
     write(nio,*)
-    write(nio,*) 'Current parameters:'
+
+    SELECT CASE (QModel%option)
+    CASE (1,2)
+      write(nio,*) 'Current parameters (from the publication):'
+    CASE (0)
+      write(nio,*) 'Current parameters (unpublished):'
+    CASE DEFAULT
+      write(nio,*) 'Current parameters (unpublished):'
+    END SELECT
+
     write(nio,*) '-----------------------------------------'
     write(nio,*) '-----------------------------------------'
     write(nio,*) 'w1 (X) =',QModel%w1
@@ -179,32 +201,6 @@ MODULE QML_TwoD_RJDI2014_m
     write(nio,*) '  .... J. Chem. Phys. 140, 214116 (2014); https://doi.org/10.1063/1.4881147'
     write(nio,*) 'with the X=Q(1), Y=Q(2) in bohr.'
     write(nio,*) '     and the energy in Hartree.'
-
-    write(nio,*)
-    write(nio,*) 'Diabatic Potential Values (in Hartree) at: X=5.0 bohr and Y=1.0 bohr'
-    write(nio,*) '1        0.05765625  0.00343645'
-    write(nio,*) '2        0.00343645  0.05765625'
-
-
-    write(nio,*) 'PubliUnit: ',QModel%PubliUnit
-
-    write(nio,*)
-    write(nio,*) 'Default parameters:'
-    write(nio,*) 'KX    = 0.02'
-    write(nio,*) 'KY    = 0.1'
-    write(nio,*) 'DELTA =0.01'
-    write(nio,*) 'X1    = 6.'
-    write(nio,*) 'X2    = 2.'
-    write(nio,*) 'X3    = 31./8.'
-    write(nio,*) 'GAMMA = 0.01'
-    write(nio,*) 'ALPHA = 3.'
-    write(nio,*) 'BETA  = 1.5'
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) 'MuX = 20000.'
-    write(nio,*) 'MuY = 6667.'
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) 'Q0  = [6.,0.]'
-    write(nio,*) '-----------------------------------------'
     write(nio,*) 'end TwoD_RJDI2014 default parameters'
 
   END SUBROUTINE Write0_QML_TwoD_RJDI2014
