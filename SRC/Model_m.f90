@@ -54,6 +54,7 @@ MODULE Model_m
   USE QML_HNNHp_m
   USE QML_H2SiN_m
   USE QML_H2NSi_m
+  USE QML_ClH2p_m
   USE QML_HNO3_m
   USE QML_NO3_m
   USE QML_CH5_m
@@ -812,6 +813,18 @@ CONTAINS
       !! === END README ==
       allocate(QML_H3_t :: QModel%QM)
       QModel%QM = Init_QML_H3(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('clh2+','clh2p')
+      !! === README ==
+      !! ClH2+ potential:
+      !! pot_name  = 'ClH2+'
+      !! option    = 1
+      !! ndim      = 3   (angle, R+, R-)
+      !! nsurf     = 1
+      !! refs (option=1): unpublished
+      !! === END README ==
+      allocate(QML_ClH2p_t :: QModel%QM)
+      QModel%QM = Init_QML_ClH2p(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('template')
       !! 3D-potential with 1 surface

@@ -33,7 +33,8 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
-  !CALL test_TwoD_RJDI2014() ; stop
+
+  !CALL test_ClH2p() ; stop
 
   !CALL test_Retinal_CP2000() ; stop
   !CALL test_IRC_MullerBrown() ; stop
@@ -80,12 +81,15 @@ PROGRAM TEST_model
   CALL test_TwoD_RJDI2014()
   CALL test_Retinal_JPCB2000()
 
-  ! 6D (full-D), One electronic surface
+  ! 6D (full-D), One electronic surface (spectro)
   CALL test_HONO()
   CALL test_HNNHp()
 
   CALL test_H2SiN()
   CALL test_H2NSi()
+
+  ! 3D (full-D), One electronic surface (spectro)
+  CALL test_ClH2p()
 
   ! 3D (full-D), One electronic surface for collision
   CALL test_HOO_DMBE()
@@ -1642,6 +1646,62 @@ DO option=1,2
 END DO
 
 END SUBROUTINE test_H2NSi
+SUBROUTINE test_ClH2p
+  USE QMLLib_UtilLib_m
+  USE QMLdnSVM_dnMat_m
+  USE Model_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-ClH2+ -----------------------'
+  CALL Init_Model(QModel,pot_name='ClH2p',Print_init=.TRUE.)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(q(QModel%QM%ndim))
+  CALL get_Q0_Model(Q,QModel,option=0)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL QML_Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='ClH2p')
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_ClH2p
 SUBROUTINE test_template
   USE QMLLib_UtilLib_m
   USE QMLdnSVM_dnMat_m
@@ -1790,7 +1850,7 @@ SUBROUTINE test_TwoD_RJDI2014
   write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
   write(out_unitp,*) '---------------------------------------------'
   flush(out_unitp)
-  CALL Init_Model(QModel,pot_name='TwoD_RJDI2014',adiabatic=.TRUE.,Print_init=.TRUE.)
+  CALL Init_Model(QModel,pot_name='TwoD_RJDI2014',adiabatic=.TRUE.,Print_init=.TRUE.,option=1)
 
   Q = [ZERO,HALF]
 
