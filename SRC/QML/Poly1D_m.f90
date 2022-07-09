@@ -264,7 +264,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Poly1D(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_Poly1D_t), intent(in)     :: QModel
@@ -284,7 +284,7 @@ CONTAINS
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) ' QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) ' nderiv:',nderiv
-      write(out_unitp,*) ' Q(:):',(QML_get_d0_FROM_dnS(dnQ(i)),i=1,size(dnQ))
+      write(out_unitp,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
     END IF
 
     dnDR  = dnQ(1)-QModel%req
@@ -297,7 +297,7 @@ CONTAINS
 
     IF (debug) THEN
       write(out_unitp,*) 'Mat_OF_PotDia'
-      CALL QML_Write_dnS( Mat_OF_PotDia(1,1),6)
+      CALL Write_dnS( Mat_OF_PotDia(1,1),6)
       write(out_unitp,*)
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)

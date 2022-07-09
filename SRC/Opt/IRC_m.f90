@@ -231,7 +231,6 @@ CONTAINS
   END SUBROUTINE Write_QML_IRC
   SUBROUTINE QML_IRC(Q,QModel,IRC_p,Q0)
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
   USE QMLLib_Matrix_m
   USE QMLLib_diago_m
   USE Model_m
@@ -553,9 +552,6 @@ END SUBROUTINE QML_IRC_BS
 
   SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m,forward,grad)
   USE QMLLib_UtilLib_m
-  !USE QMLdnSVM_dnMat_m
-  !USE QMLLib_Matrix_m
-  !USE QMLLib_diago_m
   USE Model_m
   USE Opt_m
   IMPLICIT NONE
@@ -631,9 +627,6 @@ END SUBROUTINE QML_IRC_BS
   END SUBROUTINE QML_IRC_mEuler
   SUBROUTINE QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m,forward,grad)
   USE QMLLib_UtilLib_m
-  !USE QMLdnSVM_dnMat_m
-  !USE QMLLib_Matrix_m
-  !USE QMLLib_diago_m
   USE Model_m
   USE Opt_m
   IMPLICIT NONE
@@ -714,7 +707,7 @@ END SUBROUTINE QML_IRC_BS
 
   SUBROUTINE QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward,Grad)
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -780,7 +773,7 @@ END SUBROUTINE QML_IRC_fcn
 
   SUBROUTINE QML_IRC_at_TS(IRC_p,QModel)
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE QMLLib_Matrix_m
   USE QMLLib_diago_m
   USE Model_m

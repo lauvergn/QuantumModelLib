@@ -266,7 +266,7 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H2(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_H2_t), intent(in)     :: QModel
@@ -284,14 +284,14 @@ CONTAINS
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) ' QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) ' nderiv:',nderiv
-      write(out_unitp,*) ' Q(:):',(QML_get_d0_FROM_dnS(dnQ(i)),i=1,size(dnQ))
+      write(out_unitp,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
     END IF
 
     Mat_OF_PotDia(1,1) = QML_dnH2(dnQ(1),QModel)
 
     IF (debug) THEN
       write(out_unitp,*) 'Mat_OF_PotDia'
-      CALL QML_Write_dnS( Mat_OF_PotDia(1,1),6)
+      CALL Write_dnS( Mat_OF_PotDia(1,1),6)
       write(out_unitp,*)
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
@@ -307,7 +307,7 @@ CONTAINS
 !! @param dnQ            TYPE (dnS_t):     derived type with the value of "r" and,if required, its derivatives.
 !! @param QModel         TYPE(QML_H2_t):   derived type with the H2 parameters.
   FUNCTION QML_dnH2(dnQ,QModel)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                     :: QML_dnH2
@@ -323,7 +323,7 @@ CONTAINS
 
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING in QML_dnH2'
-      CALL QML_Write_dnS(dnQ,info='dnQ')
+      CALL Write_dnS(dnQ,info='dnQ')
     END IF
 
     SELECT CASE (QModel%option)
@@ -332,18 +332,18 @@ CONTAINS
     CASE(2)
       dnDeltaQ  = dnQ-ONE
     END SELECT
-    IF (debug) CALL QML_Write_dnS(dnDeltaQ,info='dnDeltaQ')
+    IF (debug) CALL Write_dnS(dnDeltaQ,info='dnDeltaQ')
 
     QML_dnH2 = QModel%E0
     DO i=1,size(QModel%TaylorPot)
       QML_dnH2 = QML_dnH2 + QModel%TaylorPot(i)*dnDeltaQ**i
     END DO
 
-    CALL QML_dealloc_dnS(dnDeltaQ)
+    CALL dealloc_dnS(dnDeltaQ)
 
     IF (debug) THEN
-      write(out_unitp,*) 'H2 at',QML_get_d0_FROM_dnS(dnQ)
-      CALL QML_Write_dnS(QML_dnH2)
+      write(out_unitp,*) 'H2 at',get_d0(dnQ)
+      CALL Write_dnS(QML_dnH2)
       write(out_unitp,*) 'END in QML_dnH2'
       flush(out_unitp)
     END IF

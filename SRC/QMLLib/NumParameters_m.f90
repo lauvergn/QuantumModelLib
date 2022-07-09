@@ -77,8 +77,6 @@
       character (len=Name_longlen) :: RMatIO_format = "f18.10"
       character (len=Name_longlen) :: CMatIO_format = "'(',f15.7,' +i',f15.7,')'"
 
-      !integer :: in_unitp  = 5 ! Unit for input and the ouptput files
-      !integer :: out_unitp = 6 ! Unit for input and the ouptput files
       integer :: in_unitp  = INPUT_UNIT  ! Unit for the ouptput files, with the ISO_FORTRAN_ENV
       integer :: out_unitp = OUTPUT_UNIT ! Unit for the input, with the ISO_FORTRAN_ENV
 

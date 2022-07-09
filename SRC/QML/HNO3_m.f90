@@ -197,7 +197,7 @@ MODULE QML_HNO3_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HNO3(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_HNO3_t),  intent(in)    :: QModel
@@ -227,7 +227,7 @@ MODULE QML_HNO3_m
   END SUBROUTINE EvalPot_QML_HNO3
 
   SUBROUTINE EvalFunc_QML_HNO3(QModel,Func,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_HNO3_t),  intent(in)    :: QModel
@@ -258,8 +258,7 @@ MODULE QML_HNO3_m
   END SUBROUTINE EvalFunc_QML_HNO3
 
   FUNCTION QML_dnvfour_HNO3(rot,iq,jq,QModel)
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnvfour_HNO3
@@ -283,7 +282,7 @@ MODULE QML_HNO3_m
       IF (QModel%nt(iq,jq) == 51) kl = 2*i-0    ! sin(kl.x)
       IF (QModel%nt(iq,jq) == 52) kl = 4*i-0    ! sin(2.kl.x)
 
-      QML_dnvfour_HNO3 = QML_dnvfour_HNO3 + QModel%F(i,iq,jq)*QML_dnFourier(rot,kl)
+      QML_dnvfour_HNO3 = QML_dnvfour_HNO3 + QModel%F(i,iq,jq)*dnFourier(rot,kl)
 
     END DO
 

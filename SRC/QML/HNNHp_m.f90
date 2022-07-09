@@ -253,7 +253,7 @@ MODULE QML_HNNHp_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HNNHp(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_HNNHp_t), intent(in)    :: QModel
@@ -284,7 +284,7 @@ MODULE QML_HNNHp_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_HNNHp(Mat_OF_PotDia,dnQ,QModel)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
@@ -323,8 +323,8 @@ MODULE QML_HNNHp_m
 
 !-----------------------------------------------------------------------!
 
-   CALL QML_dealloc_dnS(Vtemp)
-   CALL QML_dealloc_dnS(DQ)
+   CALL dealloc_dnS(Vtemp)
+   CALL dealloc_dnS(DQ)
 
    !write(6,*) ' end EvalPot1_QML_HNNHp' ; flush(6)
 
@@ -333,7 +333,7 @@ MODULE QML_HNNHp_m
   ! here we suppose that the atom ordering: N1-N2-H1-H2
   ! the bounds are N1-N2, N1-H1, n2-H2
   SUBROUTINE Cart_TO_Q_QML_HNNHp(dnX,dnQ,QModel,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t),        intent(in)    :: dnX(:,:)

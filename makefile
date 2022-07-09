@@ -21,8 +21,20 @@ LAPACK = 1
 # NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic ones)
 INVHYP  = 1
 #=================================================================================
+QML_ver=$(shell awk '/QML/ {print $$3}' version-QML)
+QML_path:=$(shell pwd)
 
-#=================================================================================
+# External Libraries directory (dnSVM ...)
+ExternalLibDIR=$(QML_path)/Ext_Lib
+
+# dnSVM Lib
+dnSVMLibDIR := $(ExternalLibDIR)/dnSVMLib
+dnSVMDIRLIB += -L$(dnSVMLibDIR)
+dnSVMLIB := -lAD_dnSVM
+dnSVMLibDIR_full := $(dnSVMLibDIR)/libAD_dnSVM.a
+#===============================================================================
+
+#===============================================================================
 # If ExternalF90 is empty, F90 is unchanged
 ifeq  ($(strip $(ExternalF90)),)
 else
@@ -208,8 +220,6 @@ endif
 
 endif
 
-QML_ver=$(shell awk '/QML/ {print $$3}' version-QML)
-QML_path:=$(shell pwd)
 #=================================================================================
 #=================================================================================
 $(info ***********************************************************************)
@@ -219,6 +229,9 @@ $(info ***********COMPILER_VER: $(F90_VER))
 $(info ***********OPTIMIZATION: $(OPT))
 $(info ***********OpenMP:       $(OMPFLAG))
 $(info ***********Arpack:       $(ARPACK))
+$(info ***********dnSVMLibDIR:  $(dnSVMLibDIR))
+$(info ***********dnSVMLIB:     $(dnSVMLIB))
+$(info ***********dnSVMDIRLIB:  $(dnSVMDIRLIB))
 $(info ***********F90FLAGS:     $(F90FLAGS))
 $(info ***********F90LIB:       $(F90LIB))
 $(info ***********INVHYP:       $(INVHYP))
@@ -236,22 +249,18 @@ CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
                -D__QMLPATH="'$(QML_path)'" \
                -D__QML_VER='"$(QML_ver)"'
 
-CPPSHELL_INVHYP  = -D__INVHYP="$(INVHYP)"
 CPPSHELL_MATRIX  = -D__LAPACK="$(LAPACK)"
 
 F90_FLAGS = $(F90) $(F90FLAGS)
 LYNK90 = $(F90_FLAGS)
 
- LIBS := $(PESLIB) $(ARPACKLIB) $(F90LIB)
+ LIBS := $(PESLIB) $(ARPACKLIB) $(F90LIB) -L$(dnSVMLibDIR) -lAD_dnSVM
  LYNKFLAGS = $(LIBS)
-
 
 #
 GRIDEXE   = Grid.x
 ADIAEXE   = Adia.x
 MODEXE    = ModLib.x
-dnSEXE    = dnS.x
-dnPolyEXE = dnPoly.x
 TESTEXE   = testOOP.x
 DriverEXE = Driver.x
 ModLib    = libpot.a
@@ -261,12 +270,10 @@ DIR0      = $(QML_path)
 DIROBJ    = $(DIR0)/OBJ
 DIRSRC    = $(DIR0)/SRC
 DIRLib    = $(DIRSRC)/QMLLib
-DIRdnS    = $(DIRSRC)/QMLdnSVM
-DIRdnPoly = $(DIRSRC)/QMLdnSVM
-DIRdnMat  = $(DIRSRC)/QMLdnSVM
 DIRModel  = $(DIRSRC)/QML
 DIRAdia   = $(DIRSRC)/AdiaChannels
 DIROpt    = $(DIRSRC)/Opt
+
 
 #
 OBJ_QML   = $(DIROBJ)/Empty_m.o \
@@ -296,13 +303,10 @@ OBJ_driver     = $(DIROBJ)/Model_driver.o
 OBJ_grid       = $(DIROBJ)/TEST_grid.o
 OBJ_adia       = $(DIROBJ)/TEST_Adia.o
 OBJ_testmod    = $(DIROBJ)/TEST_model.o
-OBJ_testdnS    = $(DIROBJ)/TEST_dnS.o
-OBJ_testdnPoly = $(DIROBJ)/TEST_dnPoly.o
 OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 
 OBJ_lib        = $(DIROBJ)/FiniteDiff_m.o \
-                 $(DIROBJ)/dnMat_m.o $(DIROBJ)/dnPoly_m.o $(DIROBJ)/dnS_m.o \
                  $(DIROBJ)/UtilLib_m.o $(DIROBJ)/diago_m.o $(DIROBJ)/Matrix_m.o \
                  $(DIROBJ)/NumParameters_m.o
 
@@ -340,24 +344,6 @@ adia testadia:$(ADIAEXE)
 $(ADIAEXE): $(OBJ_adia) $(OBJ_AdiaLib) $(OBJ_all)
 	$(LYNK90)   -o $(ADIAEXE) $(OBJ_adia) $(OBJ_AdiaLib) $(OBJ_all) $(LYNKFLAGS)
 #
-# dnS
-.PHONY: dns dnS testdns testdnS
-dns dnS testdns testdnS:$(dnSEXE)
-		echo "dnS compilation: OK"
-
-$(dnSEXE): $(OBJ_testdnS) $(OBJ_lib)
-	$(LYNK90)   -o $(dnSEXE) $(OBJ_testdnS) $(OBJ_lib) $(LYNKFLAGS)
-	echo "dnS compilation: OK"
-
-# dnS
-.PHONY: dnpoly dnPoly testdnpoly testdnPoly
-dnpoly dnPoly testdnpoly testdnPoly: $(dnPolyEXE)
-		echo "OBJ_testdnPoly compilation: OK"
-
-$(dnPolyEXE): $(OBJ_testdnPoly) $(OBJ_lib)
-	$(LYNK90)   -o $(dnPolyEXE) $(OBJ_testdnPoly) $(OBJ_lib) $(LYNKFLAGS)
-	echo "dnPoly compilation: OK"
-
 #
 #driver
 .PHONY: driver
@@ -385,8 +371,8 @@ $(ModLib): $(OBJ_driver) $(OBJ_all)
 #===============================================
 #===============================================
 .PHONY: clean
-clean:
-	rm -f  $(MODEXE) $(GRIDEXE) $(ADIAEXE) $(dnSEXE) $(DriverEXE) $(TESTEXE) $(dnPolyEXE)
+clean: clean_dnS
+	rm -f  $(MODEXE) $(GRIDEXE) $(ADIAEXE) $(DriverEXE) $(TESTEXE)
 	rm -f  $(ModLib) libQMLib.a
 	rm -fr *.dSYM comp.log
 	cd $(DIROBJ) ; rm -f *.o *.mod *.MOD
@@ -542,40 +528,27 @@ $(DIROBJ)/TEST_Adia.o:$(DIRSRC)/TEST_Adia.f90
 ##################################################################################
 ### dnS libraries
 #
-$(DIROBJ)/dnS_m.o:$(DIRdnS)/dnS_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRdnS)/dnS_m.f90
-$(DIROBJ)/TEST_dnS.o:$(DIRSRC)/TEST_dnS.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DIRSRC)/TEST_dnS.f90
-#
-##################################################################################
-#
-##################################################################################
-### dnPoly libraries
-#
-$(DIROBJ)/dnPoly_m.o:$(DIRdnPoly)/dnPoly_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS) -c $(DIRdnPoly)/dnPoly_m.f90
-$(DIROBJ)/TEST_dnPoly.o:$(DIRSRC)/TEST_dnPoly.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)  -c $(DIRSRC)/TEST_dnPoly.f90
-#
-##################################################################################
-#
-#
-#
-##################################################################################
-### dnMat libraries
-#
-$(DIROBJ)/dnMat_m.o:$(DIRdnMat)/dnMat_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRdnMat)/dnMat_m.f90
-#
-##################################################################################
-#
-#
+dnSMODFILE= $(dnSVMLibDIR)/OBJ/addnsvm_m.mod $(dnSVMLibDIR)/OBJ/addnsvm_dns_m.mod \
+            $(dnSVMLibDIR)/OBJ/addnsvm_dnmat_m.mod $(dnSVMLibDIR)/OBJ/addnsvm_dnpoly_m.mod
+.PHONY: dns dnS
+dns dnS: $(dnSVMLibDIR) $(dnSVMLibDIR_full)
+	@echo "make dnS library"
+$(dnSVMLibDIR_full): $(dnSVMLibDIR)
+	@echo "make dnS library"
+	cd $(dnSVMLibDIR) ; make lib ; cp $(dnSMODFILE) $(DIR0)/OBJ
+$(dnSVMLibDIR):
+	cd $(ExternalLibDIR) ; ./get_dnSVM.sh
+	test -d $(dnSVMLibDIR) || exit 1
+
+.PHONY: clean_dns clean_dnS
+clean_dns clean_dnS:
+	cd $(ExternalLibDIR) ; rm -rf AD_dnSVM* dnSVMLib
 #
 ##################################################################################
 ### libraries
 #
 $(DIROBJ)/FiniteDiff_m.o:$(DIRLib)/FiniteDiff_m.f90
-	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/FiniteDiff_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS) -c $(DIRLib)/FiniteDiff_m.f90
 $(DIROBJ)/UtilLib_m.o:$(DIRLib)/UtilLib_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRLib)/UtilLib_m.f90
 $(DIROBJ)/diago_m.o:$(DIRLib)/diago_m.f90
@@ -593,8 +566,6 @@ $(DIROBJ)/NumParameters_m.o:$(DIRLib)/NumParameters_m.f90
 #
 $(DIROBJ)/TEST_OOP.o:    $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 $(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
-$(DIROBJ)/TEST_dnS.o:    $(OBJ_lib)
-$(DIROBJ)/TEST_dnPoly.o: $(OBJ_lib)
 $(DIROBJ)/TEST_driver.o: $(ModLib)
 $(DIROBJ)/TEST_Adia.o:   $(ModLib) $(OBJ_AdiaLib)
 
@@ -640,18 +611,15 @@ $(DIROBJ)/H2SiN_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/H2NSi_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/LinearHBond_m.o:       $(DIROBJ)/Empty_m.o $(OBJ_lib) \
                                           $(DIROBJ)/Morse_m.o $(DIROBJ)/Buck_m.o
-$(DIROBJ)/TwoD_MullerBrown_m.o:  $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/Phenol_m.o:            $(DIROBJ)/Empty_m.o $(OBJ_lib) \
+$(DIROBJ)/TwoD_MullerBrown_m.o:  $(DIROBJ)/Empty_m.o $(dnSVMLibDIR_full) $(OBJ_lib)
+$(DIROBJ)/Phenol_m.o:            $(DIROBJ)/Empty_m.o $(dnSVMLibDIR_full) $(OBJ_lib) \
                                        $(DIROBJ)/Morse_m.o $(DIROBJ)/Sigmoid_m.o
 #
 #
 $(DIROBJ)/UtilLib_m.o:    $(DIROBJ)/NumParameters_m.o
-$(DIROBJ)/dnS_m.o:        $(DIROBJ)/UtilLib_m.o $(DIROBJ)/NumParameters_m.o
-$(DIROBJ)/dnPoly_m.o:     $(DIROBJ)/dnS_m.o $(DIROBJ)/UtilLib_m.o $(DIROBJ)/NumParameters_m.o
-$(DIROBJ)/dnMat_m.o:      $(DIROBJ)/dnS_m.o $(DIROBJ)/diago_m.o $(DIROBJ)/UtilLib_m.o $(DIROBJ)/NumParameters_m.o
 $(DIROBJ)/diago_m.o:      $(DIROBJ)/NumParameters_m.o
 $(DIROBJ)/Matrix_m.o:     $(DIROBJ)/NumParameters_m.o
-$(DIROBJ)/FiniteDiff_m.o: $(DIROBJ)/dnMat_m.o $(DIROBJ)/dnS_m.o $(DIROBJ)/NumParameters_m.o
+$(DIROBJ)/FiniteDiff_m.o: $(dnSVMLibDIR_full) $(DIROBJ)/NumParameters_m.o
 #
 ############################################################################
 ### Documentation with doxygen

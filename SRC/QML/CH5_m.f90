@@ -355,7 +355,7 @@ MODULE QML_CH5_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_CH5(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_CH5_t),   intent(in)    :: QModel
@@ -387,10 +387,10 @@ MODULE QML_CH5_m
   END SUBROUTINE EvalPot_QML_CH5
 
   SUBROUTINE EvalFunc_QML_CH5(QModel,Func,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
-    CLASS(QML_CH5_t),   intent(in)    :: QModel
+    CLASS(QML_CH5_t),     intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -403,11 +403,10 @@ MODULE QML_CH5_m
   END SUBROUTINE EvalFunc_QML_CH5
 
   SUBROUTINE EvalFunc_QML_CH5_fit3(QModel,Func,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
-    CLASS(QML_CH5_t),   intent(in)    :: QModel
+    CLASS(QML_CH5_t),     intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -423,7 +422,7 @@ MODULE QML_CH5_m
 
     allocate(dnPoly(QModel%largest_nn))
     DO i=1,QModel%largest_nn
-        dnPoly(i) = QML_dnLegendre0(tRm,i-1)
+        dnPoly(i) = dnLegendre0(tRm,i-1)
     END DO
 
     ! energy
@@ -452,21 +451,20 @@ MODULE QML_CH5_m
     END DO
     END DO
 
-    CALL QML_dealloc_dnS(Rm)
-    CALL QML_dealloc_dnS(tRm)
-    CALL QML_dealloc_dnS(dnPoly)
+    CALL dealloc_dnS(Rm)
+    CALL dealloc_dnS(tRm)
+    CALL dealloc_dnS(dnPoly)
     deallocate(dnPoly)
 
 
   END SUBROUTINE EvalFunc_QML_CH5_fit3
   FUNCTION QML_dnvfour_fit3(Rm,iq,jq,QModel) RESULT(dnvfour)
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
 
-    CLASS(QML_CH5_t),   intent(in)    :: QModel
+    CLASS(QML_CH5_t),     intent(in)    :: QModel
     integer,              intent(in)    :: iq,jq
     TYPE (dnS_t),         intent(in)    :: Rm
 
@@ -488,10 +486,10 @@ MODULE QML_CH5_m
 
       dnvfour = ZERO
       DO i=1,QModel%nn(0,iq,jq)
-        dnvfour = dnvfour + QModel%F(i,iq,jq)*QML_dnLegendre0(tRm,i-1)
+        dnvfour = dnvfour + QModel%F(i,iq,jq)*dnLegendre0(tRm,i-1)
       END DO
 
-      CALL QML_dealloc_dnS(tRm)
+      CALL dealloc_dnS(tRm)
 
     END IF
 
@@ -514,11 +512,11 @@ MODULE QML_CH5_m
 
       dnvfour = ZERO
       DO i=1,QModel%nn(0,iiq,iiq)
-        dnvfour = dnvfour + QModel%F(i,iiq,iiq)*QML_dnLegendre0(tRm,i-1)
+        dnvfour = dnvfour + QModel%F(i,iiq,iiq)*dnLegendre0(tRm,i-1)
       END DO
       dnvfour = dnvfour + QML_sc_fit3(Rm,QModel%a(iiq,iiq),QModel%b(iiq,iiq))
 
-      CALL QML_dealloc_dnS(tRm)
+      CALL dealloc_dnS(tRm)
     ELSE IF (jq > 0 .AND. iq > 0 .AND. iq < jq) THEN
       tRm = tanh(Rm)
       iiq = iq
@@ -526,11 +524,11 @@ MODULE QML_CH5_m
 
       dnvfour = ZERO
       DO i=1,QModel%nn(0,iiq,jjq)
-        dnvfour = dnvfour + QModel%F(i,iiq,jjq)*QML_dnLegendre0(tRm,i-1)
+        dnvfour = dnvfour + QModel%F(i,iiq,jjq)*dnLegendre0(tRm,i-1)
       END DO
       dnvfour = dnvfour + QML_sc_fit3(Rm,QModel%a(iiq,jjq),QModel%b(iiq,jjq))
 
-      CALL QML_dealloc_dnS(tRm)
+      CALL dealloc_dnS(tRm)
     END IF
 
     IF (iq == 6 .AND. jq == 0 .AND. QModel%option == 5) THEN
@@ -539,7 +537,7 @@ MODULE QML_CH5_m
 
   END FUNCTION QML_dnvfour_fit3
   FUNCTION QML_dnvfour_fit3_WITH_poly(Rm,iq,jq,QModel,dnPoly) RESULT(dnvfour)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
@@ -606,6 +604,8 @@ MODULE QML_CH5_m
 
   END FUNCTION QML_dnvfour_fit3_WITH_poly
   FUNCTION QML_sc2_fit3(x,a,b)
+    USE ADdnSVM_m
+
     TYPE (dnS_t)                          :: QML_sc2_fit3
     TYPE (dnS_t),           intent(in)    :: x
     real(kind=Rkind),       intent(in)    :: a,b
@@ -614,6 +614,8 @@ MODULE QML_CH5_m
 
   END FUNCTION QML_sc2_fit3
   FUNCTION QML_sc_fit3(x,a,b)
+    USE ADdnSVM_m
+
     TYPE (dnS_t)                          :: QML_sc_fit3
     TYPE (dnS_t),           intent(in)    :: x
     real(kind=Rkind),       intent(in)    :: a,b
@@ -668,7 +670,7 @@ MODULE QML_CH5_m
 
   END SUBROUTINE QML_read_para4d
   FUNCTION QML_dnSigmoid_CH5(x,a)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnSigmoid_CH5

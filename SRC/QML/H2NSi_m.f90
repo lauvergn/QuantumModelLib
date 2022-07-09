@@ -312,7 +312,7 @@ MODULE QML_H2NSi_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H2NSi(QModel,Mat_OF_PotDia,dnQ,nderiv)
-    USE QMLdnSVM_dnS_m
+    USE ADdnSVM_m
 
     CLASS(QML_H2NSi_t), intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -344,7 +344,7 @@ MODULE QML_H2NSi_m
 
   SUBROUTINE EvalPot1_QML_H2NSi(Mat_OF_PotDia,dnQ,QModel)
     !Unpublished model potential
-    USE QMLdnSVM_dnS_m
+    USE ADdnSVM_m
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:)
@@ -380,8 +380,8 @@ MODULE QML_H2NSi_m
 
 !-----------------------------------------------------------------------!
 
-   CALL QML_dealloc_dnS(Vtemp)
-   CALL QML_dealloc_dnS(DQ)
+   CALL dealloc_dnS(Vtemp)
+   CALL dealloc_dnS(DQ)
 
    !write(6,*) ' end EvalPot1_QML_H2NSi' ; flush(6)
 

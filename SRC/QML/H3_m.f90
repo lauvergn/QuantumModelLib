@@ -393,7 +393,7 @@ MODULE QML_H3_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H3(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_H3_t),       intent(in)    :: QModel
@@ -407,9 +407,9 @@ MODULE QML_H3_m
 
     SELECT CASE(QModel%option)
     CASE (0) ! 3D
-      Q(:) = QML_get_d0_FROM_dnS(dnQ)
+      Q(:) = get_d0(dnQ)
       CALL QML_LSTH_refactoring(Q,V)
-      CALL QML_set_dnS(Mat_OF_PotDia(1,1),d0=V)
+      CALL set_dnS(Mat_OF_PotDia(1,1),d0=V)
 
     CASE (1) ! IRC
       CALL EvalFunc_QML_H3(QModel,Func,dnQ,nderiv)
@@ -421,7 +421,7 @@ MODULE QML_H3_m
   END SUBROUTINE EvalPot_QML_H3
 
   SUBROUTINE Cart_TO_Q_QML_H3(QModel,dnX,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_H3_t),         intent(in)    :: QModel
@@ -444,13 +444,13 @@ MODULE QML_H3_m
       write(out_unitp,*) 'size(dnQ)',size(dnQ)
       write(out_unitp,*) 'dnQ:'
       DO j=1,size(dnQ,dim=1)
-        CALL QML_Write_dnS(dnQ(j),out_unitp,info='dnQ('// int_to_char(j) // ')')
+        CALL Write_dnS(dnQ(j),out_unitp,info='dnQ('// int_to_char(j) // ')')
       END DO
       write(out_unitp,*) 'shape dnX',shape(dnX)
       write(out_unitp,*) 'dnX'
       DO i=1,size(dnX,dim=2)
       DO j=1,size(dnX,dim=1)
-        CALL QML_Write_dnS(dnX(j,i),out_unitp)
+        CALL Write_dnS(dnX(j,i),out_unitp)
       END DO
       END DO
       flush(out_unitp)
@@ -468,13 +468,13 @@ MODULE QML_H3_m
       write(out_unitp,*) 'Cart_TO_Q_QML_H3 vect done'
       flush(out_unitp)
       DO j=1,size(Vec23,dim=1)
-        CALL QML_Write_dnS(Vec23(j),out_unitp,info='Vec23')
+        CALL Write_dnS(Vec23(j),out_unitp,info='Vec23')
       END DO
       DO j=1,size(Vec12,dim=1)
-        CALL QML_Write_dnS(Vec23(j),out_unitp,info='Vec12')
+        CALL Write_dnS(Vec23(j),out_unitp,info='Vec12')
       END DO
       DO j=1,size(Vec23,dim=1)
-        CALL QML_Write_dnS(Vec13(j),out_unitp,info='Vec13')
+        CALL Write_dnS(Vec13(j),out_unitp,info='Vec13')
       END DO
       flush(out_unitp)
     END IF
@@ -483,14 +483,14 @@ MODULE QML_H3_m
     dnQ(2) = sqrt(dot_product(Vec12,Vec12))
     dnQ(3) = sqrt(dot_product(Vec13,Vec13))
 
-    CALL QML_dealloc_dnS(Vec23)
-    CALL QML_dealloc_dnS(Vec12)
-    CALL QML_dealloc_dnS(Vec13)
+    CALL dealloc_dnS(Vec23)
+    CALL dealloc_dnS(Vec12)
+    CALL dealloc_dnS(Vec13)
 
     IF (debug) THEN
-      CALL QML_Write_dnS(dnQ(1),out_unitp,info='dnQ(1)')
-      CALL QML_Write_dnS(dnQ(2),out_unitp,info='dnQ(2)')
-      CALL QML_Write_dnS(dnQ(3),out_unitp,info='dnQ(3)')
+      CALL Write_dnS(dnQ(1),out_unitp,info='dnQ(1)')
+      CALL Write_dnS(dnQ(2),out_unitp,info='dnQ(2)')
+      CALL Write_dnS(dnQ(3),out_unitp,info='dnQ(3)')
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
     END IF
@@ -771,8 +771,7 @@ MODULE QML_H3_m
 
   ! for IRC
   SUBROUTINE EvalFunc_QML_H3(QModel,Func,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_H3_t),      intent(in)    :: QModel
@@ -790,7 +789,7 @@ MODULE QML_H3_m
     ts = tanh(s)
 
     DO i=0,max_deg
-      tab_Pl(i) = QML_dnLegendre0(ts,i,ReNorm=.FALSE.)
+      tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
     END DO
 
     ! potential
@@ -840,14 +839,14 @@ MODULE QML_H3_m
     Func(4) = Func(2) + Func(3)
 
     DO i=0,max_deg
-      CALL QML_dealloc_dnS(tab_Pl(i))
+      CALL dealloc_dnS(tab_Pl(i))
     END DO
-    CALL QML_dealloc_dnS(s)
-    CALL QML_dealloc_dnS(ts)
+    CALL dealloc_dnS(s)
+    CALL dealloc_dnS(ts)
 
   END SUBROUTINE EvalFunc_QML_H3
   FUNCTION QML_dnSigmoid_H3(x,a)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnSigmoid_H3

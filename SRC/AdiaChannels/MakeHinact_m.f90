@@ -42,8 +42,7 @@ CONTAINS
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
   USE QMLLib_diago_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnMat_m
+  USE ADdnSVM_m
   USE Model_m
   USE AdiaChannels_Basis_m
   IMPLICIT NONE
@@ -83,14 +82,14 @@ CONTAINS
   allocate(Ene(nb))
 
 
-  CALL QML_alloc_dnMat(dnVec,    nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnVec')
-  CALL QML_alloc_dnMat(dnHdiag,  nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnHdiag')
-  CALL QML_alloc_dnMat(dnVecProj,nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnVecProj')
+  CALL alloc_dnMat(dnVec,    nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnVec')
+  CALL alloc_dnMat(dnHdiag,  nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnHdiag')
+  CALL alloc_dnMat(dnVecProj,nsurf=nb,ndim=ndim_act,nderiv=nderiv,name_var='dnVecProj')
 
   IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
   IF (QML_Check_NotAlloc_dnMat(QModel%QM%Vec0,nderiv=0)) THEN
 !$OMP CRITICAL (CRIT_QML_MakeHinact)
-    CALL QML_alloc_dnMat(QModel%QM%Vec0,nsurf=nb,ndim=ndim_act,nderiv=0)
+    CALL alloc_dnMat(QModel%QM%Vec0,nsurf=nb,ndim=ndim_act,nderiv=0)
     CALL diagonalization(dnH%d0,Ene,QModel%QM%Vec0%d0,nb,sort=1,phase=.TRUE.)
     write(out_unitp,*) 'init Vec0 done'
 !$OMP END CRITICAL (CRIT_QML_MakeHinact)
@@ -99,7 +98,7 @@ CONTAINS
   CALL QML_DIAG_dnMat(dnH,dnHdiag,dnVec,dnVecProj,dnVec0=QModel%QM%Vec0)
   !CALL Write_RMat(dnVec%d0(:,1:QModel%QM%nb_Channels),6,6,name_info='Vec')
   write(out_unitp,*) 'NAC'
-  !CALL QML_Write_dnMat(dnVecProj,nio=out_unitp)
+  !CALL Write_dnMat(dnVecProj,nio=out_unitp)
   CALL Write_RMat(dnVecProj%d1(1:QModel%QM%nb_Channels,1:QModel%QM%nb_Channels,1),out_unitp,6,name_info='NAC')
 
   DO ib=1,nb

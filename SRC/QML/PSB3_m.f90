@@ -284,7 +284,7 @@ MODULE QML_PSB3_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_PSB3(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_PSB3_t),    intent(in)    :: QModel
@@ -319,7 +319,7 @@ MODULE QML_PSB3_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv)
     !Unpublished model potential (yet)
-    USE QMLdnSVM_dnS_m
+    USE ADdnSVM_m
     IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
@@ -395,17 +395,17 @@ MODULE QML_PSB3_m
 
 
 !-----------------------------------------------------------------------!
-   CALL QML_dealloc_dnS(BLA)
-   CALL QML_dealloc_dnS(Tors)
-   CALL QML_dealloc_dnS(HOOP)
+   CALL dealloc_dnS(BLA)
+   CALL dealloc_dnS(Tors)
+   CALL dealloc_dnS(HOOP)
 
-   CALL QML_dealloc_dnS(Overlap)
-   CALL QML_dealloc_dnS(MorseBLAP)
-   CALL QML_dealloc_dnS(Morsemin)
-   CALL QML_dealloc_dnS(Hdir2D)
-   CALL QML_dealloc_dnS(Hct2D)
+   CALL dealloc_dnS(Overlap)
+   CALL dealloc_dnS(MorseBLAP)
+   CALL dealloc_dnS(Morsemin)
+   CALL dealloc_dnS(Hdir2D)
+   CALL dealloc_dnS(Hct2D)
 
-   CALL QML_dealloc_dnS(dnPot)
+   CALL dealloc_dnS(dnPot)
 
   END SUBROUTINE EvalPot1_QML_PSB3
 
@@ -418,7 +418,7 @@ MODULE QML_PSB3_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot2_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv) !Second PSB3's potential
   ! Published potential
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (QML_PSB3_t), intent(in)     :: PSB3Pot
@@ -487,15 +487,15 @@ MODULE QML_PSB3_m
 
 
 !-----------------------------------------------------------------------!
-   CALL QML_dealloc_dnS(BLA)
-   CALL QML_dealloc_dnS(Tors)
-   CALL QML_dealloc_dnS(HOOP)
+   CALL dealloc_dnS(BLA)
+   CALL dealloc_dnS(Tors)
+   CALL dealloc_dnS(HOOP)
 
-   CALL QML_dealloc_dnS(Overlap)
-   CALL QML_dealloc_dnS(Hdir2D)
-   CALL QML_dealloc_dnS(Hct2D)
+   CALL dealloc_dnS(Overlap)
+   CALL dealloc_dnS(Hdir2D)
+   CALL dealloc_dnS(Hct2D)
 
-   CALL QML_dealloc_dnS(dnPot)
+   CALL dealloc_dnS(dnPot)
 
   END SUBROUTINE EvalPot2_QML_PSB3
 

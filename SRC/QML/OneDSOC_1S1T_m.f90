@@ -266,7 +266,7 @@ MODULE QML_OneDSOC_1S1T_m
 !! @param nderiv             integer:                     it enables to specify up to which derivatives the potential is calculated:
 !!                                                        the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_OneDSOC_1S1T(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_OneDSOC_1S1T_t), intent(in)    :: QModel
@@ -357,8 +357,8 @@ MODULE QML_OneDSOC_1S1T_m
    END IF
 
 
-    CALL QML_dealloc_dnS(dnx)
-    CALL QML_dealloc_dnS(dnSig)
+    CALL dealloc_dnS(dnx)
+    CALL dealloc_dnS(dnSig)
 
 
   END SUBROUTINE EvalPot_QML_OneDSOC_1S1T

@@ -697,7 +697,7 @@ MODULE QML_NO3_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_NO3(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_NO3_t),  intent(in)    :: QModel
@@ -728,7 +728,7 @@ MODULE QML_NO3_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_NO3(Mat_OF_PotDia,dnQ,NO3Pot,nderiv)
     !Unpublished model potential (yet)
-    USE QMLdnSVM_dnS_m
+    USE ADdnSVM_m
     IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)

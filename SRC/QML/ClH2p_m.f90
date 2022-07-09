@@ -294,7 +294,7 @@ MODULE QML_ClH2p_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_ClH2p(QModel,Mat_OF_PotDia,dnQ,nderiv)
-    USE QMLdnSVM_dnS_m
+    USE ADdnSVM_m
 
     CLASS(QML_ClH2p_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -333,13 +333,13 @@ MODULE QML_ClH2p_m
         END DO
         Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1) + Vtemp
       END DO
-      !CALL QML_Write_dnS(Mat_OF_PotDia(1,1),nio=out_unitp)
+      !CALL Write_dnS(Mat_OF_PotDia(1,1),nio=out_unitp)
 
 
 !-----------------------------------------------------------------------!
 
-   CALL QML_dealloc_dnS(Vtemp)
-   CALL QML_dealloc_dnS(DQ)
+   CALL dealloc_dnS(Vtemp)
+   CALL dealloc_dnS(DQ)
 
    !write(6,*) ' end EvalPot1_QML_ClH2p' ; flush(6)
 

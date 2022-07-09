@@ -284,7 +284,7 @@ MODULE QML_Retinal_JPCB2000_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Retinal_JPCB2000(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     CLASS(QML_Retinal_JPCB2000_t),   intent(in)    :: QModel
@@ -310,7 +310,7 @@ MODULE QML_Retinal_JPCB2000_m
       Mat_OF_PotDia(1,2) = QModel%lambda*dnQ(2)
       Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
 
-      CALL QML_dealloc_dnS(VBath)
+      CALL dealloc_dnS(VBath)
 
     ELSE
       Mat_OF_PotDia(1,1) = HALF*QModel%W0*(ONE-cos(dnQ(1))) +                   &

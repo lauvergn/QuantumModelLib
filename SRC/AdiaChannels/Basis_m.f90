@@ -232,14 +232,13 @@ CONTAINS
   END SUBROUTINE QML_Read_Basis
   SUBROUTINE QML_Construct_Basis_Sin(Basis) ! sin : boxAB with A=0 and B=pi
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
+  USE ADdnSVM_m, ONLY : dnS_t,Variable,sub_get_dn,dnBox
 
     TYPE(QML_Basis_t),       intent(inout)  :: Basis
 
 
     real(kind=Rkind)          :: dx,sx,x0
-    TYPE (dnS_t)              :: dnBox
+    TYPE (dnS_t)              :: dnBasis
     TYPE (dnS_t)              :: dnx
     integer                   :: iq,ib,jb,nb,nq
 
@@ -256,11 +255,11 @@ CONTAINS
     allocate(Basis%d2gb(nq,nb,1,1))
 
     DO iq=1,nq
-      dnx = QML_init_dnS(Basis%x(iq),ndim=1,nderiv=2,iQ=1) ! to set up the derivatives
+      dnx = Variable(Basis%x(iq),nVar=1,nderiv=2,iVar=1) ! to set up the derivatives
       DO ib=1,nb
-        dnBox = QML_dnBox(dnx,ib)
-        CALL QML_sub_get_dn_FROM_dnS(dnBox,Basis%d0gb(iq,ib),               &
-                              Basis%d1gb(iq,ib,:),Basis%d2gb(iq,ib,:,:))
+        dnBasis = dnBox(dnx,ib)
+        CALL sub_get_dn(dnBasis,Basis%d0gb(iq,ib),               &
+                        Basis%d1gb(iq,ib,:),Basis%d2gb(iq,ib,:,:))
       END DO
     END DO
     IF (nb == nq) THEN
@@ -272,15 +271,13 @@ CONTAINS
   END SUBROUTINE QML_Construct_Basis_Sin
   SUBROUTINE QML_Set_symab_Basis(Basis)
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
 
     TYPE(QML_Basis_t),       intent(inout)  :: Basis
 
 
     real(kind=Rkind)          :: dx,sx,x0
-    TYPE (dnS_t)              :: dnBox
-    TYPE (dnS_t)              :: dnx
+    !TYPE (dnS_t)              :: dnBox
+    !TYPE (dnS_t)              :: dnx
     integer                   :: iq,ib,jb,nb,nq
 
     IF (.NOT. Basis_IS_allocated(Basis)) THEN
@@ -310,10 +307,8 @@ CONTAINS
   END SUBROUTINE QML_Set_symab_Basis
   SUBROUTINE QML_CheckOrtho_Basis(Basis,nderiv)
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
 
-    TYPE(QML_Basis_t),           intent(in)     :: Basis
+    TYPE(QML_Basis_t),       intent(in)     :: Basis
     integer,                 intent(in)     :: nderiv
 
     integer                         :: iq,ib,jb
@@ -382,8 +377,7 @@ CONTAINS
 
   SUBROUTINE QML_BasisTOGrid_Basis(G,B,Basis)
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
+
 
     TYPE(QML_Basis_t),    intent(in)    :: Basis
     real(kind=Rkind),     intent(in)    :: B(:)
@@ -407,8 +401,6 @@ CONTAINS
 
   SUBROUTINE QML_GridTOBasis_Basis(B,G,Basis)
   USE QMLLib_UtilLib_m
-  USE QMLdnSVM_dnS_m
-  USE QMLdnSVM_dnPoly_m
 
     TYPE(QML_Basis_t),   intent(in)    :: Basis
     real(kind=Rkind),    intent(in)    :: G(:)

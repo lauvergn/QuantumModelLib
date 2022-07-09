@@ -294,10 +294,10 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Morse(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m, ONLY :  dnS_t,Write_dnS,get_d0
   IMPLICIT NONE
 
-    CLASS(QML_Morse_t), intent(in)     :: QModel
+    CLASS(QML_Morse_t), intent(in)      :: QModel
     TYPE(dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)
     TYPE(dnS_t),         intent(in)     :: dnQ(:)
     integer,             intent(in)     :: nderiv
@@ -312,14 +312,14 @@ CONTAINS
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) ' QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) ' nderiv:',nderiv
-      write(out_unitp,*) ' Q(:):',(QML_get_d0_FROM_dnS(dnQ(i)),i=1,size(dnQ))
+      write(out_unitp,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
     END IF
 
     Mat_OF_PotDia(1,1) = QML_dnMorse(dnQ(1),QModel)
 
     IF (debug) THEN
       write(out_unitp,*) 'Mat_OF_PotDia'
-      CALL QML_Write_dnS( Mat_OF_PotDia(1,1),6)
+      CALL Write_dnS( Mat_OF_PotDia(1,1),6)
       write(out_unitp,*)
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
@@ -335,12 +335,12 @@ CONTAINS
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param QModel         TYPE(QML_Morse_t):   derived type with the Morse parameters.
   FUNCTION QML_dnMorse(dnR,QModel)
-  USE QMLdnSVM_dnS_m
+  USE ADdnSVM_m, ONLY :  dnS_t,exp,Write_dnS,get_d0,dealloc_dnS
   IMPLICIT NONE
 
-    TYPE (dnS_t)                         :: QML_dnMorse
+    TYPE (dnS_t)                        :: QML_dnMorse
 
-    TYPE (dnS_t),          intent(in)    :: dnR
+    TYPE (dnS_t),         intent(in)    :: dnR
     TYPE (QML_Morse_t),   intent(in)    :: QModel
 
     !local variable
@@ -348,18 +348,18 @@ CONTAINS
 
     !write(out_unitp,*) 'BEGINNING in QML_dnMorse'
     !write(out_unitp,*) 'dnR'
-    !CALL QML_Write_dnS(dnR)
+    !CALL Write_dnS(dnR)
 
     dnbeta  = exp(-QModel%a*(dnR-QModel%req))
     !write(out_unitp,*) 'dnbeta'
-    !CALL QML_Write_dnS(dnbeta)
+    !CALL Write_dnS(dnbeta)
 
     QML_dnMorse = QModel%D * (ONE-dnbeta)**2
 
-     CALL QML_dealloc_dnS(dnbeta)
+     CALL dealloc_dnS(dnbeta)
 
-    !write(out_unitp,*) 'Morse at',QML_get_d0_FROM_dnS(dnR)
-    !CALL QML_Write_dnS(QML_dnMorse)
+    !write(out_unitp,*) 'Morse at',get_d0(dnR)
+    !CALL Write_dnS(QML_dnMorse)
     !write(out_unitp,*) 'END in QML_dnMorse'
     !flush(out_unitp)
 
