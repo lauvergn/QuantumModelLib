@@ -322,7 +322,7 @@ MODULE QML_H3_m
       QModel%ndim     = 1
 
       QModel%ndimFunc = 1
-      QModel%nb_Func  = 4 ! V, R1op,R2opt,R3opt
+      QModel%nb_Func  = 6 ! V, R1op,R2opt,R3opt,RPH_r,RPH_th
 
       QModel%pot_name   = 'H3_LSTH_IRC'
       QModel%no_ana_der = .FALSE.
@@ -781,7 +781,7 @@ MODULE QML_H3_m
 
     TYPE (dnS_t)    :: s,ts
     integer         :: i
-    integer, parameter :: max_deg = 16
+    integer, parameter :: max_deg = 29
     TYPE (dnS_t)       :: tab_Pl(0:max_deg)
     real (kind=Rkind), parameter :: betaQ = 1.4_Rkind
 
@@ -839,6 +839,73 @@ MODULE QML_H3_m
 
     ! R3eq(s) = R1eq(s)+R2eq(s) (!linear HHH)
     Func(4) = Func(2) + Func(3)
+
+
+    ! RPH parameters r
+    Func(5)  =                                                                  &
+              (0.26766607524797303_Rkind)     * tab_Pl(0)  +                    &
+              (6.806052032746861e-09_Rkind)   * tab_Pl(1)  +                    &
+              (-0.0015535754772908871_Rkind)  * tab_Pl(2)  +                    &
+              (2.0009552260491068e-08_Rkind)  * tab_Pl(3)  +                    &
+              (-0.012582288956034828_Rkind)   * tab_Pl(4)  +                    &
+              (-2.8073095955518356e-08_Rkind) * tab_Pl(5)  +                    &
+              (0.010502145645054565_Rkind)    * tab_Pl(6)  +                    &
+              (2.5402220408683394e-08_Rkind)  * tab_Pl(7)  +                    &
+              (-0.00678496091874973_Rkind)    * tab_Pl(8)  +                    &
+              (-1.847484282317999e-08_Rkind)  * tab_Pl(9)  +                    &
+              (0.003474989262273117_Rkind)    * tab_Pl(10) +                    &
+              (1.2017866799932617e-08_Rkind)  * tab_Pl(11) +                    &
+              (-0.0019395131094161956_Rkind)  * tab_Pl(12) +                    &
+              (-7.233204033268473e-09_Rkind)  * tab_Pl(13) +                    &
+              (0.0013262986972957342_Rkind)   * tab_Pl(14) +                    &
+              (4.2016095723736e-09_Rkind)     * tab_Pl(15) +                    &
+              (-0.0007299784927963528_Rkind)  * tab_Pl(16) +                    &
+              (-2.401414821263817e-09_Rkind)  * tab_Pl(17) +                    &
+              (0.00044078321280719524_Rkind)  * tab_Pl(18) +                    &
+              (1.3108656875294227e-09_Rkind)  * tab_Pl(19) +                    &
+              (0.00022352966903015168_Rkind)  * tab_Pl(20) +                    &
+              (-7.518732295064561e-10_Rkind)  * tab_Pl(21) +                    &
+              (-0.00036549376491577264_Rkind) * tab_Pl(22) +                    &
+              (4.1612329783873094e-10_Rkind)  * tab_Pl(23) +                    &
+              (0.0004459035924032867_Rkind)   * tab_Pl(24) +                    &
+              (-2.6223332018163205e-10_Rkind) * tab_Pl(25) +                    &
+              (2.273672442589093e-05_Rkind)   * tab_Pl(26) +                    &
+              (1.447938227854266e-10_Rkind)   * tab_Pl(27) +                    &
+              (-1.855501791553842e-05_Rkind)  * tab_Pl(28) +                    &
+              (-9.176168686383644e-11_Rkind)  * tab_Pl(29)
+
+    ! RPH paramter: th
+    Func(6)  =                                                                  &
+              (0.7853980834870691_Rkind)      * tab_Pl(0)  +                    &
+              (1.6556773456797165_Rkind)      * tab_Pl(1)  +                    &
+              (3.4626851455522983e-07_Rkind)  * tab_Pl(2)  +                    &
+              (-0.5731854583939033_Rkind)     * tab_Pl(3)  +                    &
+              (-2.8771835705821473e-07_Rkind) * tab_Pl(4)  +                    &
+              (0.2350158022234596_Rkind)      * tab_Pl(5)  +                    &
+              (1.989230244253878e-07_Rkind)   * tab_Pl(6)  +                    &
+              (-0.10219520909830185_Rkind)    * tab_Pl(7)  +                    &
+              (-1.2621208480613884e-07_Rkind) * tab_Pl(8)  +                    &
+              (0.048468715568805845_Rkind)    * tab_Pl(9)  +                    &
+              (7.696291823409225e-08_Rkind)   * tab_Pl(10) +                    &
+              (-0.024524927534999522_Rkind)   * tab_Pl(11) +                    &
+              (-4.58667842666333e-08_Rkind)   * tab_Pl(12) +                    &
+              (0.014023814755791649_Rkind)    * tab_Pl(13) +                    &
+              (2.773916912783092e-08_Rkind)   * tab_Pl(14) +                    &
+              (-0.006958147875138725_Rkind)   * tab_Pl(15) +                    &
+              (-1.639868076367661e-08_Rkind)  * tab_Pl(16) +                    &
+              (0.003770984041691324_Rkind)    * tab_Pl(17) +                    &
+              (9.721641212735887e-09_Rkind)   * tab_Pl(18) +                    &
+              (-0.0019178090260791802_Rkind)  * tab_Pl(19) +                    &
+              (-5.691839285240476e-09_Rkind)  * tab_Pl(20) +                    &
+              (0.001074145733356513_Rkind)    * tab_Pl(21) +                    &
+              (3.3623843187612974e-09_Rkind)  * tab_Pl(22) +                    &
+              (-0.0005259206048766796_Rkind)  * tab_Pl(23) +                    &
+              (-1.9704799248725513e-09_Rkind) * tab_Pl(24) +                    &
+              (0.0003092457483074583_Rkind)   * tab_Pl(25) +                    &
+              (1.2005965897009222e-09_Rkind)  * tab_Pl(26) +                    &
+              (-0.00013246994648197604_Rkind) * tab_Pl(27) +                    &
+              (-4.627433514270627e-10_Rkind)  * tab_Pl(28) +                    &
+              (9.114113633803292e-05_Rkind)   * tab_Pl(29)
 
     DO i=0,max_deg
       CALL dealloc_dnS(tab_Pl(i))
