@@ -313,7 +313,7 @@ MODULE QML_H3_m
 
       ! so that, we can get the irc function with the 3D model
       QModel%ndimFunc = 1
-      QModel%nb_Func  = 4 ! V, R1op,R2opt,R3opt
+      QModel%nb_Func  = 6 ! V, R1op,R2opt,R3opt,RPH_r,RPH_th
 
       QModel%pot_name   = 'H3_LSTH'
       QModel%no_ana_der = .TRUE.
