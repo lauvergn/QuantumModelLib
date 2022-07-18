@@ -300,11 +300,16 @@ MODULE QML_H3_m
     QModel%ndimCart   = 9
 
     IF (QModel%option == -1) QModel%option = 0
+    write(6,*) 'ndim ?',QModel%ndim
 
     SELECT CASE(QModel%option)
     CASE (0) !
 
-      QModel%ndimQ      = 3
+      IF (QModel%ndim == 2) THEN
+        QModel%ndimQ      = 2
+      ELSE
+        QModel%ndimQ      = 3
+      END IF
       IF (QModel%Cart_TO_Q) THEN
         QModel%ndim       = QModel%ndimCart
       ELSE
@@ -406,8 +411,13 @@ MODULE QML_H3_m
 
 
     SELECT CASE(QModel%option)
-    CASE (0) ! 3D
-      Q(:) = get_d0(dnQ)
+    CASE (0) ! 2D or 3D
+      IF (size(dnQ) == 2) THEN
+        Q(1:2) = get_d0(dnQ)
+        Q(3)   = Q(1) + Q(2)
+      ELSE
+        Q(:) = get_d0(dnQ)
+      END IF
       CALL QML_LSTH_refactoring(Q,V)
       CALL set_dnS(Mat_OF_PotDia(1,1),d0=V)
 
@@ -716,13 +726,13 @@ MODULE QML_H3_m
 
   END SUBROUTINE QML_VBIGR
 
-  SUBROUTINE QML_SPLID2(N,X,F,W,IJ,Y,TAB)
+  SUBROUTINE QML_SPLID2(N,X,FF,W,IJ,Y,TAB)
   USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
         integer,          intent(in)    :: N,IJ
         real(kind=Rkind), intent(in)    :: X(N)
-        real(kind=Rkind), intent(in)    :: Y,F(N),W(N)
+        real(kind=Rkind), intent(in)    :: Y,FF(N),W(N)
         real(kind=Rkind), intent(inout) :: TAB(3)
 
         INTEGER          :: I,K,MI,KI
@@ -759,17 +769,17 @@ MODULE QML_H3_m
         KI=MI+IJ
         FLK=X(I+1)-X(I)
         AA=(W(MI)*(X(I+1)-Y)**3 + W(KI)*(Y-X(I))**3)/(SIX*FLK)
-        BB=(F(KI)/FLK-W(KI)*FLK/SIX)*(Y-X(I))
-        CC=(F(MI)/FLK-FLK*W(MI)/SIX)*(X(I+1)-Y)
+        BB=(FF(KI)/FLK-W(KI)*FLK/SIX)*(Y-X(I))
+        CC=(FF(MI)/FLK-FLK*W(MI)/SIX)*(X(I+1)-Y)
         TAB(1)=AA+BB+CC
         AA=(W(KI)*(Y-X(I))**2-W(MI)*(X(I+1)-Y)**2)/(TWO*FLK)
-        BB=(F(KI)-F(MI))/FLK
+        BB=(FF(KI)-FF(MI))/FLK
         CC=FLK*(W(MI)-W(KI))/SIX
         TAB(2)=AA+BB+CC
         TAB(3)=(W(MI)*(X(I+1)-Y)+W(KI)*(Y-X(I)))/FLK
   END SUBROUTINE QML_SPLID2
 
-  ! for IRC
+  ! for IRC, RPH
   SUBROUTINE EvalFunc_QML_H3(QModel,Func,dnQ,nderiv)
   USE ADdnSVM_m
   IMPLICIT NONE
@@ -779,11 +789,11 @@ MODULE QML_H3_m
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
 
-    TYPE (dnS_t)    :: s,ts
-    integer         :: i
-    integer, parameter :: max_deg = 29
-    TYPE (dnS_t)       :: tab_Pl(0:max_deg)
-    real (kind=Rkind), parameter :: betaQ = 1.4_Rkind
+    TYPE (dnS_t)                  :: s,ts,dnR,dnTh
+    integer                       :: i
+    integer,           parameter  :: max_deg = 29
+    TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
+    real (kind=Rkind), parameter  :: betaQ = 1.4_Rkind
 
 
     s  = dnQ(1)
@@ -842,7 +852,7 @@ MODULE QML_H3_m
 
 
     ! RPH parameters r
-    Func(5)  =                                                                  &
+    dnR      =                                                                  &
               (0.26766607524797303_Rkind)     * tab_Pl(0)  +                    &
               (6.806052032746861e-09_Rkind)   * tab_Pl(1)  +                    &
               (-0.0015535754772908871_Rkind)  * tab_Pl(2)  +                    &
@@ -875,7 +885,7 @@ MODULE QML_H3_m
               (-9.176168686383644e-11_Rkind)  * tab_Pl(29)
 
     ! RPH paramter: th
-    Func(6)  =                                                                  &
+    dnTh     =                                                                  &
               (0.7853980834870691_Rkind)      * tab_Pl(0)  +                    &
               (1.6556773456797165_Rkind)      * tab_Pl(1)  +                    &
               (3.4626851455522983e-07_Rkind)  * tab_Pl(2)  +                    &
@@ -907,6 +917,9 @@ MODULE QML_H3_m
               (-4.627433514270627e-10_Rkind)  * tab_Pl(28) +                    &
               (9.114113633803292e-05_Rkind)   * tab_Pl(29)
 
+    Func(5) = dnR * cos(dnTh)
+    Func(6) = dnR * sin(dnTh)
+
     DO i=0,max_deg
       CALL dealloc_dnS(tab_Pl(i))
     END DO
@@ -914,16 +927,16 @@ MODULE QML_H3_m
     CALL dealloc_dnS(ts)
 
   END SUBROUTINE EvalFunc_QML_H3
-  FUNCTION QML_dnSigmoid_H3(x,a)
+  FUNCTION QML_dnSigmoid_H3(x,sc)
   USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnSigmoid_H3
 
     TYPE (dnS_t),         intent(in)    :: x
-    real(kind=Rkind),     INTENT(IN)    :: a
+    real(kind=Rkind),     INTENT(IN)    :: sc
 
-    QML_dnSigmoid_H3 = (ONE+tanh(a*x))/TWO
+    QML_dnSigmoid_H3 = (ONE+tanh(sc*x))/TWO
 
   END FUNCTION QML_dnSigmoid_H3
 END MODULE QML_H3_m
