@@ -33,6 +33,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test_HCN_Murrell ; stop
 
   !CALL test_ClH2p() ; stop
 
@@ -88,8 +89,11 @@ PROGRAM TEST_model
   CALL test_H2SiN()
   CALL test_H2NSi()
 
-  ! 3D (full-D), One electronic surface (spectro)
+  ! 3D (full-D), One electronic surface (spectro); ClH2+ (unpublished)
   CALL test_ClH2p()
+
+  ! 3D (full-D), One electronic surface (spectro): HCN Murrell
+  CALL test_HCN_Murrell
 
   ! 3D (full-D), One electronic surface for collision
   CALL test_HOO_DMBE()
@@ -2417,6 +2421,158 @@ SUBROUTINE test_IRC_H3
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_IRC_H3
+
+SUBROUTINE test_HCN_Murrell
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE ADdnSVM_m
+  USE Model_m
+  USE Opt_m
+  USE IRC_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:,:),Qopt(:),Q1D(:),Qcart(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (QML_Opt_t)               :: Opt_p
+  TYPE (QML_IRC_t)               :: IRC_p
+
+
+  TYPE (dnS_t),    allocatable :: Func(:)
+
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-HCN ------------------------'
+  CALL Init_Model(QModel,pot_name='HCN_Murrell',option=1) ! jacobi
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(Q(QModel%ndim,3))
+
+
+  Q(:,1) = [ZERO,         3.18722_Rkind,2.17926_Rkind]
+  Q(:,2) = [Pi,           2.89321_Rkind,2.20061_Rkind]
+  Q(:,3) = [1.16809_Rkind,2.28376_Rkind,2.15316_Rkind]
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  DO i=1,size(Q,dim=2)
+    write(out_unitp,*) 'Q:'
+    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+
+    CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
+
+    ! For testing the model
+    CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HCN_Murrell')
+  END DO
+  CALL dealloc_dnMat(PotVal)
+  write(out_unitp,*) ' END Potential and derivatives'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  allocate(Qopt(QModel%ndim))
+  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=10,list_act=[2,3])
+  CALL Write_QML_Opt(Opt_p)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Optimization H-CN'
+  CALL QML_Opt(Qopt,QModel,Opt_p,Q0=Q(:,1))
+
+  write(out_unitp,*) 'Potential+derivatives:'
+  CALL Eval_Pot(QModel,Qopt,PotVal,nderiv=2)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  CALL Write_QdnV_FOR_Model(Qopt,PotVal,QModel,info='HCN_Murrell')
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Optimization CN-H'
+  flush(out_unitp)
+
+  CALL QML_Opt(Qopt,QModel,Opt_p,Q0=Q(:,2))
+
+  write(out_unitp,*) 'Potential+derivatives:'
+  CALL Eval_Pot(QModel,Qopt,PotVal,nderiv=2)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+  flush(out_unitp)
+
+  CALL Write_QdnV_FOR_Model(Qopt,PotVal,QModel,info='HCN_Murrell')
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Optimization CNH (TS)'
+  Opt_p%nb_neg = 1
+  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=10,list_act=[1,2,3])
+  CALL QML_Opt(Qopt,QModel,Opt_p,Q0=Q(:,3))
+
+  write(out_unitp,*) 'Potential+derivatives:'
+  CALL Eval_Pot(QModel,Qopt,PotVal,nderiv=2)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  CALL Write_QdnV_FOR_Model(Qopt,PotVal,QModel,info='HCN_Murrell')
+
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Qopt)
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' IRC with the HCN Murrell potential'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+  !CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,                    &
+  !                read_param=.TRUE.,param_file_name='DAT_files/irc_h3.dat')
+  CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,pot_name='HCN_Murrell')
+
+  Opt_p%nb_neg = 0
+  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=10,list_act=[6,7,9])
+
+  allocate(Qcart(QModel%QM%ndim))
+  allocate(Qopt(QModel%QM%ndim))
+
+  Qcart(:) = [ZERO,             ZERO, ZERO,              &
+              ZERO,             ZERO, 2.14864946_Rkind, &
+              1.925191385_Rkind,ZERO, 2.017487565_Rkind]
+  CALL QML_Opt(Qopt,QModel,Opt_p,Q0=Qcart)
+stop
+
+  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='DAT_files/irc_hcn.dat')
+
+  Qcart(:) = [ZERO,             ZERO, ZERO,              &
+              ZERO,             ZERO, 2.153159998_Rkind, &
+              2.101067716_Rkind,ZERO, 0.264483773_Rkind]
+
+
+  CALL QML_IRC(Qcart,QModel,IRC_p,Q0=Qcart)
+
+
+  deallocate(Qcart)
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_HCN_Murrell
+
 SUBROUTINE test_Opt_MullerBrown
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
@@ -2488,13 +2644,12 @@ SUBROUTINE test_IRC_MullerBrown
 
   real (kind=Rkind), allocatable :: Q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                 :: PotVal
 
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
-  write(out_unitp,*) ' IRC with H3 potential'
+  write(out_unitp,*) ' IRC with the 2D-MullerBrown potential'
   write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -2511,7 +2666,6 @@ SUBROUTINE test_IRC_MullerBrown
   CALL QML_IRC(Q,QModel,IRC_p,Q0=QModel%QM%Q0)
 
 
-  CALL dealloc_dnMat(PotVal)
   deallocate(Q)
 
   write(out_unitp,*) '---------------------------------------------'

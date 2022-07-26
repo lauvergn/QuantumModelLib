@@ -63,6 +63,7 @@ MODULE Model_m
 
   USE QML_HOO_DMBE_m
   USE QML_H3_m
+  USE QML_HCN_Murrell_m
 
   USE QML_OneDSOC_1S1T_m
   USE QML_OneDSOC_2S1T_m
@@ -814,6 +815,19 @@ CONTAINS
       !! === END README ==
       allocate(QML_H3_t :: QModel%QM)
       QModel%QM = Init_QML_H3(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('hcn_murrell')
+      !! === README ==
+      !! H3 potential:
+      !! pot_name  = 'HCN_Murrell'
+      !! option    = 0 (3D-3distances), 1 (3D-Jacobi), 3 IRC+RPH
+      !! ndim      = 3
+      !! nsurf     = 1
+      !! J. N. Murrell, S. Carter and L. O. Halonene, J. Mol. Spectrosc. vo93 p307 1982
+      !!  doi: https://doi.org/10.1016/0022-2852(82)90170-9
+      !! === END README ==
+      allocate(QML_HCN_Murrell_t :: QModel%QM)
+      QModel%QM = Init_QML_HCN_Murrell(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('clh2+','clh2p')
       !! === README ==

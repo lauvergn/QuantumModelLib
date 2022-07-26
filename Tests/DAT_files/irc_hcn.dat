@@ -1,0 +1,22 @@
+&opt
+  icv = 10
+  TS=t
+  hessian_method = 'ana'
+  Largest_disp   = 0.4
+  list_act=6,7,9
+ /
+&irc
+ Max_it = 50
+ Delta_s = 0.1
+ Method='BS'
+ order2=16
+ m0_BS=8
+ Method2='Euler'
+ /
+ Method='Euler'
+ Method='MidPoint'
+
+ Method='BS'
+ order2=16
+ Method2='MidPoint'
+ Method2='Euler'

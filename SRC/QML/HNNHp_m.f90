@@ -287,8 +287,8 @@ MODULE QML_HNNHp_m
   USE ADdnSVM_m
   IMPLICIT NONE
 
-    TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
-    TYPE (dnS_t),        intent(in)    :: dnQ(:)
+    TYPE (dnS_t),      intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),      intent(in)    :: dnQ(:)
     TYPE(QML_HNNHp_t), intent(in)    :: QModel
 
 

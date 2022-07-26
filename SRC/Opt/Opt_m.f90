@@ -78,8 +78,14 @@ CONTAINS
     integer,            intent(in),    optional  :: list_act(:)
 
 
+    real (kind=Rkind), parameter      :: Thresh_max_grad     = 0.000450_Rkind
+    real (kind=Rkind), parameter      :: Thresh_RMS_grad     = 0.000300_Rkind
+    real (kind=Rkind), parameter      :: Thresh_max_disp     = 0.001800_Rkind
+    real (kind=Rkind), parameter      :: Thresh_RMS_disp     = 0.001200_Rkind
+    real (kind=Rkind), parameter      :: Largest_disp        = 0.5_Rkind
+
+
     integer                        :: icv_loc,nb_neg,i_surf,Max_it,hessian_type
-    real(kind=Rkind)               :: Largest_disp
 
     integer                        :: err_read,nio_loc,i
     logical                        :: read_param_loc
@@ -157,7 +163,7 @@ CONTAINS
 
 
   IF (Opt_param%max_it < 0)   Opt_param%Max_it = (10+QModel%ndim)*(icv_loc+2)
-  Opt_param%Largest_disp  = abs(Opt_param%Largest_disp)
+  Opt_param%Largest_disp  = abs(Largest_disp)
 
   IF (Opt_param%i_surf < 0 .OR. Opt_param%i_surf > QModel%nsurf) THEN
     write(out_unitp,*) ' ERROR in ',name_sub
@@ -170,10 +176,10 @@ CONTAINS
   IF (Opt_param%nb_neg < 0) Opt_param%nb_neg = 0
 
 
-  Opt_param%Thresh_max_grad = Opt_param%Thresh_max_grad/TEN**icv_loc
-  Opt_param%Thresh_RMS_grad = Opt_param%Thresh_RMS_grad/TEN**icv_loc
-  Opt_param%Thresh_max_disp = Opt_param%Thresh_max_disp/TEN**icv_loc
-  Opt_param%Thresh_RMS_disp = Opt_param%Thresh_RMS_disp/TEN**icv_loc
+  Opt_param%Thresh_max_grad = Thresh_max_grad/TEN**icv_loc
+  Opt_param%Thresh_RMS_grad = Thresh_RMS_grad/TEN**icv_loc
+  Opt_param%Thresh_max_disp = Thresh_max_disp/TEN**icv_loc
+  Opt_param%Thresh_RMS_disp = Thresh_RMS_disp/TEN**icv_loc
 
   IF (allocated(Opt_param%list_act)) THEN
     Opt_param%list_act        = pack(Opt_param%list_act,mask=(Opt_param%list_act /= 0))
@@ -346,7 +352,7 @@ END SUBROUTINE Read_QML_Opt
 
     TYPE (dnMat_t)                  :: PotVal
     integer                         :: it,iq,i,nb_act
-    real (kind=Rkind), allocatable  :: Qit(:),Qit_act(:)
+    real (kind=Rkind), allocatable  :: Qit(:),Qit_act(:),Q0_loc(:)
     real (kind=Rkind), allocatable  :: mDQit(:)   ! -DelatQ
     real (kind=Rkind), allocatable  :: Thess(:,:),hess(:,:),grad(:)
     real (kind=Rkind), allocatable  :: diag(:),Vec(:,:),tVec(:,:)
@@ -392,13 +398,15 @@ END SUBROUTINE Read_QML_Opt
   allocate(vec(nb_act,nb_act))
   allocate(diag(nb_act))
 
+  allocate(Q0_loc(QModel%ndim))
+  IF (present(Q0)) THEN
+    Q0_loc(:) = Q0
+  ELSE
+    CALL get_Q0_Model(Q0_loc,QModel,0)
+  END IF
 
   allocate(Qit(QModel%ndim))
-  IF (present(Q0)) THEN
-    Qit(:) = Q0
-  ELSE
-    CALL get_Q0_Model(Qit,QModel,0)
-  END IF
+  Qit(:)     = Q0_loc
   Qit_act(:) = Qit(Opt_param%list_act)
 
 
@@ -486,12 +494,14 @@ END SUBROUTINE Read_QML_Opt
     Q(:) = Qit(:)
   ELSE
     write(out_unitp,*) 'No optimization (Max_it=0)'
-    Q(:) = Q0(:)
+    Q(:) = Q0_loc(:)
   END IF
   write(out_unitp,*) '=================================================='
+  flush(out_unitp)
 
   deallocate(Qit_act)
   deallocate(Qit)
+  deallocate(Q0_loc)
   deallocate(mDQit)
   deallocate(grad)
   deallocate(hess)
