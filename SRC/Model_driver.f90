@@ -20,6 +20,33 @@
 !
 !===========================================================================
 !===========================================================================
+SUBROUTINE sub_Read_Qmodel(ndim,nsurf,nio)
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE Model_m
+  !$ USE omp_lib
+  IMPLICIT NONE
+
+  integer,                intent(inout)     :: ndim,nsurf
+  integer,                intent(in)        :: nio
+
+!$OMP CRITICAL (CRIT_sub_Read_Qmodel)
+    !$ write(out_unitp,*) 'begining: max threads?',omp_get_max_threads()
+    write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
+    write(out_unitp,*) 'nio            : ',nio
+    flush(out_unitp)
+
+    CALL Init_Model(QuantumModel,ndim=ndim,nsurf=nsurf,                         &
+                    read_param=.TRUE.,nio_param_file=nio)
+
+    CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Init_Qmodel in Model_driver.f90')
+
+    ndim  = QuantumModel%ndim
+    nsurf = QuantumModel%nsurf
+
+!$OMP END CRITICAL (CRIT_sub_Read_Qmodel)
+
+END SUBROUTINE sub_Read_Qmodel
 SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m

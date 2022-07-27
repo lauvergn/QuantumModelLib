@@ -273,7 +273,7 @@ CONTAINS
       END DO
     END IF
 
-    !write(6,*) 'alloc Q0',allocated(Q0)
+    !write(out_unitp,*) 'alloc Q0',allocated(Q0)
 
   END FUNCTION get_d0GGdef_QML_Empty
   SUBROUTINE EvalPot_QML_Empty(QModel,Mat_OF_PotDia,dnQ,nderiv)

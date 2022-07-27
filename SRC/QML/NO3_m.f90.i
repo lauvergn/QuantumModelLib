@@ -829,7 +829,7 @@ MODULE QML_NO3_m
 
 ! compute symmetrized internal coordinate for PES
    call trans_coord(x,qinter,QModel)
-   !write(6,99)(qinter(i),i=1,7)
+   !write(out_unitp,99)(qinter(i),i=1,7)
 99   format(7g20.10)
 
 ! PES computation
@@ -861,85 +861,85 @@ STOP 'DML'
 !..   a1 symmetric stretch:
 !      call Epolynom(dum,itd, p(pst(1,1)), pst(2,1), itemp)
   dum=pa(1,itd) * QModel%p(QModel%pst(1,1))+pa(2,itd) * QModel%p(QModel%pst(1,1)+1)
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref=eref+dum
 
 ! umbrella mode
 !..   a2 umbrella:
 !      call Epolynom2(dum,itd, p(pst(1,2)), pst(2,2), itemp)
   dum=pb(1,itd) * QModel%p(QModel%pst(1,2))
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref=eref+dum*damp
 
 ! e stretching mode:
 ! e bending mode:
 !      call Evjt6a(dum,itd, p(pst(1,3)), pst(2,3), itemp)
   dum= QModel%p(QModel%pst(1,3)) * va(1,itd)
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum
 !      call Evjt6b(dum,itd, p(pst(1,4)), pst(2,4), itemp)
   dum= QModel%p(QModel%pst(1,4)) * vb(1,itd)
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum
 
 !..   mode-mode coupling of a1-e
 !      call Evcoup_e1a(dum,itd, p(pst(1,6)), pst(2,6), itemp)  ! e-a coupling 1. e mode
   dum= (QModel%p(QModel%pst(1,6))*pa(1,itd)*va(1,itd))
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum
 !      call Evcoup_e2a(dum,itd, p(pst(1,7)), pst(2,7), itemp)  ! e-a coupling 2. e mode
   dum=(QModel%p(QModel%pst(1,7))*pa(1,itd)*vb(1,itd))
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum
 
 !..   mode-mode coupling of a2-e
 !      call Evcoup_e1a2(dum,itd, p(pst(1,13)), pst(2,13), itemp)     !  coupling with asym. str.
   dum=QModel%p(QModel%pst(1,13))*pb(1,itd)*va(1,itd)
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum*damp
 !      call Evcoup_e2a2(dum,itd, p(pst(1,14)), pst(2,14), itemp)     !  coupling with asym. bend
   dum=QModel%p(QModel%pst(1,14))*pb(1,itd)*vb(1,itd)
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum*damp
 
 
 !..   mode-mode coupling of a1-a2
 !      call Evcoup_aa(dum,itd,p(pst(1,17)),pst(2,17), itemp)         !  coupling of a1 and a2
   dum=QModel%p(QModel%pst(1,17)) * pa(1,itd) * pb(1,itd)
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum*damp
 
 
 !..   mode-mode coupling e-e
 !      call Evcoup_ee(dum,itd, p(pst(1,5)), pst(2,5), itemp)        ! e-e coupling
   dum=QModel%p(QModel%pst(1,5)) * vee(1,itd)
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum
 
 
 !..   3-mode coupling e-e-a2
 !      call Evcoup_eea2(dum,itd,p(pst(1,18)),pst(2,18),itemp)        !  e-e-a2 coupling
   dum=QModel%p(QModel%pst(1,18)) * pb(1,itd) * vee(1,itd)
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum*damp
 
 
 !..   3-mode coupling e-a1-a2
 !      call Evcoup_e1aa2(dum,itd,p(pst(1,20)),pst(2,20),itemp)        !  e-a1-a2 coupling (asym. stretch)
   dum=(QModel%p(QModel%pst(1,20)) * pa(1,itd) * pb(1,itd) * va(1,itd))
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
 !      eref = eref + dum BUG detected 30.09.2015
   eref = eref + dum*damp
 !      call Evcoup_e2aa2(dum,itd,p(pst(1,21)),pst(2,21),itemp)        !  e-a1-a2 coupling (asym. bend)
   dum=(QModel%p(QModel%pst(1,21)) * pa(1,itd) * pb(1,itd) * vb(1,itd))
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum*damp
 
 
 !..   3-mode coupling e-e-a1
 !      call Evcoup_eea1(dum,itd,p(pst(1,24)),pst(2,24),itemp)        !  e-e-a1 coupling
   dum=QModel%p(QModel%pst(1,24)) * pa(1,itd) * vee(1,itd)
-!      write(6,*)'dum low',dum
+!      write(out_unitp,*)'dum low',dum
   eref = eref + dum
 !
 !..   dynamic damping depending on lowest reference state energy:
@@ -1248,7 +1248,7 @@ SUBROUTINE trans_coord (x,qinter,QModel)
 
         ! write cartesian
         !do i=0,3
-        ! write(6,*)'cart',i,(x(i,j),j=1,3)
+        ! write(out_unitp,*)'cart',i,(x(i,j),j=1,3)
         !enddo
 
   ! copy of internal.f subroutine
@@ -1314,7 +1314,7 @@ SUBROUTINE trans_coord (x,qinter,QModel)
   !      xintern(i+3)=xintern(i+3)-phi_ref angle not displaced
         enddo
         xintern(0)=xintern(0)-QModel%beta_ref ! planar = 0 for Eisfeld PES
-  !      Write(6,*)xintern(0),"umbrella"  ! printPES
+  !      write(out_unitp,*)xintern(0),"umbrella"  ! printPES
 
   ! compute morse or tmc morse
         do i=1,3
@@ -1366,10 +1366,10 @@ subroutine ff(x,ii,f,QModel)
       ! Power series in Tunable Morse coordinates of order m
       ! exponent is polynomial of order npoly * gaussian + switching function
 
-      !      write(6,*) 'x:', x
-      !      write(6,'(10f12.6)') (a(i), i=1,6)
-      !      write(6,'(10f12.6)') (a(i), i=7,11)
-      !      write(6,'(10f12.6)') (a(i), i=12,14)
+      !      write(out_unitp,*) 'x:', x
+      !      write(out_unitp,'(10f12.6)') (a(i), i=1,6)
+      !      write(out_unitp,'(10f12.6)') (a(i), i=7,11)
+      !      write(out_unitp,'(10f12.6)') (a(i), i=12,14)
       !      stop
 
       !.....set r  r-r_e
@@ -1396,7 +1396,7 @@ subroutine ff(x,ii,f,QModel)
 
       !..   set up full exponent function:
             f=QModel%a(2)  + skew + gaus*poly
-      !      write(6,*) ii, a(ii,2)
+      !      write(out_unitp,*) ii, a(ii,2)
 end subroutine ff
 
 SUBROUTINE vwzprec(n,q)

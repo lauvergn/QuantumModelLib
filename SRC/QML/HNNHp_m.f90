@@ -104,7 +104,7 @@ MODULE QML_HNNHp_m
       FileName = make_FileName('InternalData/HNNHp/n2h2pcc5.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       read(nio_fit,*) QModel%nb_funcModel
-      !write(6,*) 'nb_funcModel',QModel%nb_funcModel
+      !write(out_unitp,*) 'nb_funcModel',QModel%nb_funcModel
 
       allocate(QModel%Qref(QModel%ndim))
       allocate(QModel%F(QModel%nb_funcModel))
@@ -113,14 +113,14 @@ MODULE QML_HNNHp_m
        k = 0
        DO
         nb_columns = min(6,QModel%nb_funcModel-k)
-        !write(6,*) k+1,k+nb_columns,nb_columns
+        !write(out_unitp,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
  11      format(6i1,f15.8,5(2x,6i1,f15.8))
          k = k + nb_columns
        END DO
        read(nio_fit,*) QModel%Qref(:)
-       !write(6,*) 'Qref',QModel%Qref
+       !write(out_unitp,*) 'Qref',QModel%Qref
 
        close(nio_fit)
        deallocate(FileName)
@@ -296,7 +296,7 @@ MODULE QML_HNNHp_m
     TYPE (dnS_t)        :: Vtemp
     integer             :: i,j
 
-    !write(6,*) ' sub EvalPot1_QML_HNNHp' ; flush(6)
+    !write(out_unitp,*) ' sub EvalPot1_QML_HNNHp' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,1,4,3,5,6]) - QModel%Qref(:)
@@ -326,7 +326,7 @@ MODULE QML_HNNHp_m
    CALL dealloc_dnS(Vtemp)
    CALL dealloc_dnS(DQ)
 
-   !write(6,*) ' end EvalPot1_QML_HNNHp' ; flush(6)
+   !write(out_unitp,*) ' end EvalPot1_QML_HNNHp' ; flush(6)
 
   END SUBROUTINE EvalPot1_QML_HNNHp
 

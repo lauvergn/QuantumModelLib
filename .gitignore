@@ -1,11 +1,10 @@
 .DS_Store
-DOC/.DS_Store
+*/.DS_Store
 .metadata
 .project
 .settings
 *.x
-libpot.a
-libQMLib.a
+*.a
 SRC/AdiaChannels/mod_Basis.f90-pointer
 SRC/AdiaChannels/mod_Basis.f90.i
 SRC/AdiaChannels/mod_Basis.f90.corrfort17

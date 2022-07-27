@@ -35,14 +35,13 @@ PROGRAM TEST_adia
   USE QMLLib_UtilLib_m
   USE ADdnSVM_m
   USE Model_m
-  USE mod_AdiaChannels
+  !USE AdiaChannels_MakeHinact_m
   IMPLICIT NONE
 
 
   TYPE (Model_t)                  :: QModel
   real (kind=Rkind), allocatable  :: Qact(:)
   TYPE (dnMat_t)                  :: PotVal,NAC
-  real(kind=Rkind), allocatable   :: Ene(:)
 
   real(kind=Rkind) :: dQ
   integer :: i,iq
@@ -58,7 +57,7 @@ PROGRAM TEST_adia
     CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
     !write(out_unitp,*) 'NAC'
     !CALL Write_RMat(NAC%d1(:,:,1),out_unitp,6,name_info='NAC')
-    write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,QML_get_nsurf_FROM_dnMat(PotVal))
+    write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
   END DO
 
 

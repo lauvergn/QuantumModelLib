@@ -276,7 +276,7 @@ CONTAINS
     DO i=1,100
       !Rt2 = (QModel%B*QModel%A/(SIX*QModel%C)*exp(-QModel%B*Rt1))**(-ONE/SEVEN)
       Rt2 = -ONE/QModel%B* log(SIX*QModel%C/(QModel%B*QModel%A)*Rt1**(-7))
-      !write(6,*) i,RT2
+      !write(out_unitp,*) i,RT2
       IF (abs(Rt1-Rt2) < ONETENTH**10) EXIT
       Rt1 = Rt2
     END DO

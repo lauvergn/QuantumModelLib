@@ -37,10 +37,10 @@ PROGRAM main_pot
 
   maxth = 1
   !$ maxth           = omp_get_max_threads()
-  write(6,*) 'NTEST_driver. number of threads:',maxth
+  write(out_unitp,*) 'NTEST_driver. number of threads:',maxth
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
   ndim      = 6
   nsurf     = 1
@@ -53,8 +53,8 @@ PROGRAM main_pot
   allocate(Q0(ndim))
   CALL get_Qmodel_Q0(Q0,0) ! the option of get_Qmodel_Q0 enables to select different reference geometries.
 
-  write(6,*) '============================================================'
-  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
   CALL time_perso('Test ' // pot_name)
 
 !$OMP   PARALLEL DEFAULT(NONE) &
@@ -64,7 +64,7 @@ PROGRAM main_pot
 
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
-  write(6,*) 'alloc Q and V'
+  write(out_unitp,*) 'alloc Q and V'
 !$OMP BARRIER
 
 !$OMP   DO SCHEDULE(STATIC)
@@ -75,14 +75,14 @@ PROGRAM main_pot
 
     CALL sub_Qmodel_V(V,Q)
 
-    !write(6,*) Q,(V(k,k),k=1,nsurf)
+    !write(out_unitp,*) Q,(V(k,k),k=1,nsurf)
   END DO
 !$OMP   END DO
 
 !$OMP BARRIER
   deallocate(Q)
   deallocate(V)
-  write(6,*) 'dealloc Q and V'
+  write(out_unitp,*) 'dealloc Q and V'
 
 !$OMP   END PARALLEL
 
@@ -90,8 +90,8 @@ PROGRAM main_pot
 
 
   CALL time_perso('Test ' // pot_name)
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
 END PROGRAM main_pot
   SUBROUTINE time_perso(name)
@@ -114,7 +114,7 @@ END PROGRAM main_pot
 !$OMP    CRITICAL (time_perso_CRIT)
 
     CALL date_and_time(values=tab_time)
-    write(6,21) name,tab_time(5:8),tab_time(3:1:-1)
+    write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
  21 format('     Time and date in ',a,' : ',i2,'h:',                &
             i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
 
@@ -145,12 +145,12 @@ END PROGRAM main_pot
 
 
      t_real = real(count_work,kind=8)/real(freq,kind=8)
-     write(6,31) t_real,name
+     write(out_unitp,31) t_real,name
  31  format('        real (s): ',f18.3,' in ',a)
-     write(6,32) days,hours,minutes,seconds,name
+     write(out_unitp,32) days,hours,minutes,seconds,name
  32  format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
 
-     write(6,33) t_cpu-t_cpu_old,name
+     write(out_unitp,33) t_cpu-t_cpu_old,name
  33  format('        cpu (s): ',f18.3,' in ',a)
 
 
@@ -168,11 +168,11 @@ END PROGRAM main_pot
      hours   = mod(hours,24)
 
      t_real = real(count_work,kind=8)/real(freq,kind=8)
-     write(6,41) t_real
+     write(out_unitp,41) t_real
  41  format('  Total real (s): ',f18.3)
-     write(6,42) days,hours,minutes,seconds
+     write(out_unitp,42) days,hours,minutes,seconds
  42  format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
-     write(6,43) t_cpu-t_cpu_ini
+     write(out_unitp,43) t_cpu-t_cpu_ini
  43  format('  Total cpu (s): ',f18.3)
 
  51  format(a,i10,a,a)

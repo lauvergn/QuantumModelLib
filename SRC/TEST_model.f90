@@ -1683,7 +1683,7 @@ SUBROUTINE test_ClH2p
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
-  write(out_unitp,*) '------------ 3D-ClH2+ -----------------------'
+  write(out_unitp,*) '------------ 3D-ClH2+ (option 1: a,R+,R-)----'
   CALL Init_Model(QModel,pot_name='ClH2p',Print_init=.TRUE.)
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -1717,11 +1717,55 @@ SUBROUTINE test_ClH2p
 
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='ClH2p')
+  deallocate(q)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-ClH2+ (option 2: R1,R2,a)----'
+  CALL Init_Model(QModel,pot_name='ClH2p',Print_init=.TRUE.,option=2)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(q(QModel%QM%ndim))
+  CALL get_Q0_Model(Q,QModel,option=0)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='ClH2p')
+  deallocate(q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
 END SUBROUTINE test_ClH2p
 SUBROUTINE test_template
   USE QMLLib_NumParameters_m
@@ -2049,18 +2093,18 @@ SUBROUTINE test_PH4
   DO i=0,200
     Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
     CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-    write(6,*) Q(1:1),get_d0(Func)
+    write(out_unitp,*) Q(1:1),get_d0(Func)
     flush(6)
   END DO
 
   Q(1)= 0.5_Rkind
   CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-  write(6,*) Q(1),'Energy',get_d0(Func(1))
-  write(6,*) Q(1),'Qopt',get_d0(Func(2:9))
-  write(6,*) Q(1),'Grad',get_d0(Func(10:17))
-  write(6,*) Q(1),'hessian'
+  write(out_unitp,*) Q(1),'Energy',get_d0(Func(1))
+  write(out_unitp,*) Q(1),'Qopt',get_d0(Func(2:9))
+  write(out_unitp,*) Q(1),'Grad',get_d0(Func(10:17))
+  write(out_unitp,*) Q(1),'hessian'
   DO i=1,64
-    write(6,*) '                       ',get_d0(Func(17+i)),',     &'
+    write(out_unitp,*) '                       ',get_d0(Func(17+i)),',     &'
   END DO
 
   deallocate(Q)
@@ -2145,17 +2189,17 @@ SUBROUTINE test_CH5
   DO i=0,200
     Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
     CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-    write(6,*) Q,get_d0(Func)
+    write(out_unitp,*) Q,get_d0(Func)
     flush(6)
   END DO
 
   Q(1)= 0.5_Rkind
   CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-  write(6,*) Q(1),'Energy',get_d0(Func(1))
-  write(6,*) Q(1),'Qopt',get_d0(Func(2:12))
-  write(6,*) Q(1),'hessian'
+  write(out_unitp,*) Q(1),'Energy',get_d0(Func(1))
+  write(out_unitp,*) Q(1),'Qopt',get_d0(Func(2:12))
+  write(out_unitp,*) Q(1),'hessian'
   DO i=1,121
-    write(6,*) '                       ',get_d0(Func(12+i)),',     &'
+    write(out_unitp,*) '                       ',get_d0(Func(12+i)),',     &'
   END DO
 
   deallocate(Q)
@@ -2364,7 +2408,7 @@ SUBROUTINE test_H3
   DO i=-400,400
     Q1D = real(i,kind=Rkind)/100
     CALL Eval_Func(QModel,Q1D,Func,nderiv=0)
-    write(6,*) 'grid_H3_IRC',Q1D,get_d0(Func)
+    write(out_unitp,*) 'grid_H3_IRC',Q1D,get_d0(Func)
     flush(6)
   END DO
 

@@ -81,7 +81,7 @@ MODULE Model_m
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func,Eval_tab_HMatVibAdia
+  PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func,Eval_tab_HMatVibAdia,Eval_dnHVib_ana
   PUBLIC :: check_alloc_QM,check_Init_QModel
   PUBLIC :: Write0_Model,Write_Model,Write_QdnV_FOR_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
@@ -175,6 +175,7 @@ CONTAINS
     logical :: Vib_adia,print_EigenVec_Grid,print_EigenVec_Basis
     logical :: opt,IRC
     logical :: Phase_checking,Phase_Following
+    logical :: Cart_TO_Q
 
     character (len=20) :: pot_name
     integer :: err_read,nb_act
@@ -182,7 +183,7 @@ CONTAINS
 
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
-                         Phase_Checking,Phase_Following,                        &
+                         Phase_Checking,Phase_Following,Cart_TO_Q,              &
                          read_nml,printlevel,Vib_adia,nb_Channels,list_act,     &
                          print_EigenVec_Grid,print_EigenVec_Basis,opt,IRC
 
@@ -194,6 +195,7 @@ CONTAINS
 
     Phase_Checking  = QModel_inout%Phase_Checking
     Phase_Following = QModel_inout%Phase_Following
+    Cart_TO_Q       = QModel_inout%Cart_TO_Q
 
     Vib_adia        = QModel_inout%Vib_adia
     nb_Channels     = 0
@@ -244,6 +246,7 @@ CONTAINS
     QModel_inout%numeric              = numeric
     QModel_inout%Phase_Checking       = (adiabatic .AND. Phase_Checking)
     QModel_inout%Phase_Following      = (adiabatic .AND. Phase_Following)
+    QModel_inout%Cart_TO_Q            = Cart_TO_Q
 
     QModel_inout%pot_name             = trim(pot_name)
     QModel_inout%PubliUnit            = PubliUnit
@@ -357,10 +360,14 @@ CONTAINS
       write(out_unitp,*) '== Initialization of the Model =================='
     END IF
 
-    IF (allocated(QModel%QM)) deallocate(QModel%QM)
-
     ! set the "File_path" in the Lib_module.f90
     File_path = trim(adjustl(QML_path))
+
+    ! test the QML_path variable (it enables to test is the QML directory has been moved)
+    CALL check_QML_Path()
+
+
+    IF (allocated(QModel%QM)) deallocate(QModel%QM)
 
     IF (present(ndim)) THEN
       QModel_in%ndim      = ndim
@@ -431,10 +438,10 @@ CONTAINS
       IF (present(param_file_name)) THEN
         IF (len_trim(param_file_name) == 0) THEN
           param_file_name_loc = strdup("input.dat")
-          nio_loc = 99
+          nio_loc = 99 ! this value is not used
         ELSE
           param_file_name_loc = strdup(param_file_name)
-          nio_loc = 99
+          nio_loc = 99 ! this value is not used
         END IF
       ELSE
       nio_loc = in_unitp
@@ -456,7 +463,7 @@ CONTAINS
     read_nml       = .FALSE.
     IF (read_param_loc) THEN
       IF (nio_loc /= in_unitp) THEN
-        open(unit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
+        open(newunit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
       END IF
       CALL Read_Model(QModel_in,nio_loc,read_nml,QModel%opt,QModel%IRC)
       pot_name_loc = QModel_in%pot_name
@@ -705,7 +712,7 @@ CONTAINS
       !! === README ==
       !! Model for the photo-isomerization of retinal.
       !! pot_name  = 'Retinal_JPCB2000'
-      !! ndim      = 2
+      !! ndim      = 2 or up to 2+23
       !! nsurf     = 2
       !! ref:  S. Hahn, G. Stock / Chemical Physics 259 (2000) 297-312.
       !!              doi: 10.1016/S0301-0104(00)00201-9
@@ -834,9 +841,12 @@ CONTAINS
       !! ClH2+ potential:
       !! pot_name  = 'ClH2+'
       !! option    = 1
-      !! ndim      = 3   (angle, R+, R-)
+      !! ndim      = 3
       !! nsurf     = 1
-      !! refs (option=1): unpublished
+      !! remark, two options are possible:
+      !!    option = 1, the coordinates are [angle, R+, R-] (in bohr and radian)
+      !!    option = 2, the coordinates are [R1, R2, angle] (in bohr and radian)
+      !! refs (option=1 and 2): unpublished
       !! === END README ==
       allocate(QML_ClH2p_t :: QModel%QM)
       QModel%QM = Init_QML_ClH2p(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
@@ -1042,6 +1052,30 @@ CONTAINS
 
   END SUBROUTINE get_Q0_Model
 
+  SUBROUTINE check_QML_Path()
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  IMPLICIT NONE
+
+  character (len=:), allocatable :: FileName
+  logical :: file_exist
+
+
+  FileName = make_FileName('InternalData/Test_QML_Path.txt')
+
+  inquire(file=FileName,exist=file_exist)
+
+  IF (.NOT. file_exist) THEN
+    write(out_unitp,*) 'ERROR: the QML directory path is wrong !!'
+    write(out_unitp,*) ' FileName: ',FileName
+    write(out_unitp,*) ' QML_path: ',trim(adjustl(QML_path))
+    write(out_unitp,*) ' Probably, the QML directory has been moved'
+    write(out_unitp,*) ' Recompile again QML.'
+    STOP 'Wrong QML_path'
+  END IF
+
+  END SUBROUTINE check_QML_Path
+
   ! check if the QM [CLASS(QML_Empty_t)] is allocated
   SUBROUTINE check_alloc_QM(QModel,name_sub_in)
   USE QMLLib_UtilLib_m
@@ -1129,7 +1163,7 @@ CONTAINS
   !Mat_diag = matmul(transpose(Vec),matmul(PotVal_dia,Vec))
   !CALL Write_dnMat(Mat_diag,nio=out_unitp,info='Mat_diag')
 
-  !write(6,*) 'nsurf,ndim',QModel%nsurf,QModel%ndim
+  !write(out_unitp,*) 'nsurf,ndim',QModel%nsurf,QModel%ndim
   nsurf    = QModel%nsurf
   nb_terms = (QModel%ndim + 1)*(QModel%ndim + 2)/2
   IF (.NOT. allocated(tab_MatH)) THEN
@@ -2029,25 +2063,25 @@ CONTAINS
     Q_loc(:) = Q
     CALL alloc_dnMat(PotVal_loc0,nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,nderiv=0)
     CALL alloc_dnMat(Vec_loc0,   nsurf=QModel%QM%nsurf,nVar=QModel%QM%ndim,nderiv=0)
-    !write(6,*) 'coucou1 Eval_Pot_Numeric_adia_v3' ; flush(6)
+    !write(out_unitp,*) 'coucou1 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0,vec=Vec_loc0)
-    !write(6,*) 'coucou1.1 Eval_Pot_Numeric_adia_v3' ; flush(6)
+    !write(out_unitp,*) 'coucou1.1 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
 
 
     CALL FiniteDiff_AddMat_TO_dnMat(PotVal,PotVal_loc0%d0,option=3)
     CALL FiniteDiff_AddMat_TO_dnMat(Vec,   Vec_loc0%d0,   option=3)
-    !write(6,*) 'coucou1.2 Eval_Pot_Numeric_adia_v3' ; flush(6)
+    !write(out_unitp,*) 'coucou1.2 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     CALL Init_IdMat(NAC%d0,QModel%QM%nsurf)
-    !write(6,*) 'coucou1.3 Eval_Pot_Numeric_adia_v3' ; flush(6)
+    !write(out_unitp,*) 'coucou1.3 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     allocate(tVec(QModel%QM%nsurf,QModel%QM%nsurf))
     tVec(:,:)      = transpose(Vec%d0)
-    !write(6,*) 'coucou2 0-order Eval_Pot_Numeric_adia_v3' ; flush(6)
+    !write(out_unitp,*) 'coucou2 0-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     IF (nderiv >= 1) THEN ! 1st derivatives
 
@@ -2070,7 +2104,7 @@ CONTAINS
 
       END DO
     END IF
-    !write(6,*) 'coucou2 1-order Eval_Pot_Numeric_adia_v3' ; flush(6)
+    !write(out_unitp,*) 'coucou2 1-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     IF (nderiv >= 2) THEN ! 2d derivatives
 
@@ -2101,7 +2135,7 @@ CONTAINS
       END DO
       END DO
     END IF
-    !write(6,*) 'coucou2 2-order Eval_Pot_Numeric_adia_v3' ; flush(6)
+    !write(out_unitp,*) 'coucou2 2-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     IF (nderiv >= 3) THEN ! 3d derivatives: d3/dQidQidQj
 
@@ -2130,18 +2164,18 @@ CONTAINS
       END DO
       END DO
     END IF
-    !write(6,*) 'coucou2 3-order Eval_Pot_Numeric_adia_v3' ; flush(6)
+    !write(out_unitp,*) 'coucou2 3-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     CALL FiniteDiff_Finalize_dnMat(PotVal,step)
     CALL FiniteDiff_Finalize_dnMat(Vec,step)
     CALL FiniteDiff_Finalize_dnMat(NAC,step)
-    !write(6,*) 'coucou3 Eval_Pot_Numeric_adia_v3' ; flush(6)
+    !write(out_unitp,*) 'coucou3 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     deallocate(tVec)
     deallocate(Q_loc)
     CALL dealloc_dnMat(PotVal_loc0)
     CALL dealloc_dnMat(Vec_loc0)
-    !write(6,*) 'coucouf Eval_Pot_Numeric_adia_v3' ; flush(6)
+    !write(out_unitp,*) 'coucouf Eval_Pot_Numeric_adia_v3' ; flush(6)
 
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
   SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,   &
@@ -2222,7 +2256,7 @@ CONTAINS
        allocate(Eig(nsurf))
 
        CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,nsurf,sort=1,phase=.TRUE.,type_diag=type_diag_loc)
-       !write(6,*) 'Eig (full diag)',Eig(1:2)
+       !write(out_unitp,*) 'Eig (full diag)',Eig(1:2)
        !CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,n=2,sort=1,phase=.TRUE.,type_diag=5)
 
        deallocate(Eig)
@@ -2324,7 +2358,7 @@ CONTAINS
       dnHB(iq) = dnHB(iq) * QModel%Basis%w(iq)
     END DO
     !CALL Write_dnS(dnHB(1),6,info='dnHB',all_type=.TRUE.)
-    !write(6,*) 'coucou dnHB: done',ib ; flush(6)
+    !write(out_unitp,*) 'coucou dnHB: done',ib ; flush(6)
     DO jb=1,nb
       IF (QModel%Basis%tab_symab(ib) == QModel%Basis%tab_symab(jb)) THEN
         dnHij = dot_product(QModel%Basis%d0gb(:,jb),dnHB(:))

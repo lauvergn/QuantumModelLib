@@ -725,20 +725,20 @@ MODULE QMLLib_diago_m
 
         j = i+1
         IF ( abs(v(i)-v(j)) < epsi) THEN
-          !write(6,*) 'i,j',i,j
-          !write(6,*) 'vec i',c(:,i)
-          !write(6,*) 'vec j',c(:,j)
+          !write(out_unitp,*) 'i,j',i,j
+          !write(out_unitp,*) 'vec i',c(:,i)
+          !write(out_unitp,*) 'vec j',c(:,j)
 
 
           kloc = maxloc((c(:,i)**2+c(:,j)**2),dim=1)
 
           cc   =  c(kloc,i)
           ss   = -c(kloc,j)
-          !write(6,*) i,j,'cos sin',kloc,cc,ss
+          !write(out_unitp,*) i,j,'cos sin',kloc,cc,ss
           norm = sqrt(cc*cc+ss*ss)
           cc   = cc/norm
           ss   = ss/norm
-          !write(6,*) i,j,'cos sin',cc,ss
+          !write(out_unitp,*) i,j,'cos sin',cc,ss
           IF (abs(cc) < epsi .OR. abs(ss) < epsi) CYCLE
 
           DO k=1,size(c,dim=1)
@@ -1017,20 +1017,20 @@ MODULE QMLLib_diago_m
 
       ! Begin Lanczos scheme
       n_size = size(A,dim=1)
-      write(6,*) 'shape(A)',shape(A)
-      write(6,*) 'shape(V)',shape(V)
-      write(6,*) 'shape(D)',shape(D)
-      write(6,*) 'n_size',n_size
-      write(6,*) 'n_vect',n_vect
-      write(6,*) 'max_it',max_it
-      write(6,*) 'epsi',epsi
+      write(out_unitp,*) 'shape(A)',shape(A)
+      write(out_unitp,*) 'shape(V)',shape(V)
+      write(out_unitp,*) 'shape(D)',shape(D)
+      write(out_unitp,*) 'n_size',n_size
+      write(out_unitp,*) 'n_vect',n_vect
+      write(out_unitp,*) 'max_it',max_it
+      write(out_unitp,*) 'epsi',epsi
 
       allocate(Krylov_vectors(n_size,0:max_it))
       Krylov_vectors(:,:) = ZERO
       CALL random_number(Krylov_vectors(1:n_vect,0))
       Krylov_vectors(:,0) = Krylov_vectors(:,0) /                               &
                       sqrt(dot_product(Krylov_vectors(:,0),Krylov_vectors(:,0)))
-      write(6,*) 'Krylov_vectors (guess)',Krylov_vectors(:,0)
+      write(out_unitp,*) 'Krylov_vectors (guess)',Krylov_vectors(:,0)
 
 
       allocate(M_Krylov(max_it,max_it))
@@ -1060,7 +1060,7 @@ MODULE QMLLib_diago_m
 
          IF (it >= n_vect) THEN
             CALL diagonalization(M_Krylov(1:it,1:it),E1_Krylov(1:it),V_Krylov(1:it,1:it),it,3,1,.FALSE.)
-            write(6,*) 'it eig',it,E1_Krylov(1:n_vect)
+            write(out_unitp,*) 'it eig',it,E1_Krylov(1:n_vect)
          END IF
          IF (it > n_vect) THEN
             maxdiff = maxval(abs(E1_Krylov(1:n_vect) - E0_Krylov(1:n_vect)))
@@ -1068,7 +1068,7 @@ MODULE QMLLib_diago_m
          ELSE
             maxdiff = huge(ONE)
          END IF
-         write(6,*) 'it maxdiff,epsi,exit?',it,maxdiff,epsi,(maxdiff < epsi)
+         write(out_unitp,*) 'it maxdiff,epsi,exit?',it,maxdiff,epsi,(maxdiff < epsi)
 
          IF (maxdiff < epsi) EXIT
 

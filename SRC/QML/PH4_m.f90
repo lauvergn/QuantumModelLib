@@ -423,7 +423,7 @@ MODULE QML_PH4_m
     TYPE (dnS_t)    :: dnDQ(QModel%ndim),vh,Rm,tRm
     integer         :: i1,i2,i,ifunc
 
-    !write(6,*) 'coucou pot PH4 '
+    !write(out_unitp,*) 'coucou pot PH4 '
 
     Rm  = dnQ(1)
     tRm = tanh(Rm)
@@ -436,7 +436,7 @@ MODULE QML_PH4_m
     DO i1=2,QModel%ndim
       ifunc = QModel%iQopt_TO_ifunc(i1)
       dnDQ(i1) = dnQ(i1) - QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-      !write(6,*) 'DQ',i1,get_d0(dnDQ(i1))
+      !write(out_unitp,*) 'DQ',i1,get_d0(dnDQ(i1))
     END DO
 
     vh = ZERO
@@ -447,17 +447,17 @@ MODULE QML_PH4_m
         ifunc = QModel%iQgrad_TO_ifunc(i1)
         IF (QModel%file_exist(ifunc)) THEN
           vh = vh + dnDQ(i1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-          !write(6,*) 'vh grad',i1,get_d0(vh)
+          !write(out_unitp,*) 'vh grad',i1,get_d0(vh)
         END IF
 
         ifunc = QModel%iQjQHess_TO_ifunc(i1,i1)
         IF (QModel%file_exist(ifunc)) THEN
           vh = vh + HALF * dnDQ(i1)**2 * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-          !write(6,*) 'vh hessii',i1,get_d0(vh)
+          !write(out_unitp,*) 'vh hessii',i1,get_d0(vh)
         END IF
       END DO
     CASE(5) ! with anharmonicity along Rp (Q(2))
-      !write(6,*) 'coucou anhar'
+      !write(out_unitp,*) 'coucou anhar'
 
       ! function in DeltaQ2 (poly fourth order)
       i1    = 2
@@ -465,7 +465,7 @@ MODULE QML_PH4_m
         ifunc = QModel%AnHar_TO_ifunc(i) ! DeltaQ2^(i-1)
         IF (QModel%file_exist(ifunc)) THEN
           vh = vh + dnDQ(i1)**(i-1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-          !write(6,*) 'vh anhar',i1,i,get_d0(vh)
+          !write(out_unitp,*) 'vh anhar',i1,i,get_d0(vh)
         END IF
       END DO
 
@@ -473,14 +473,14 @@ MODULE QML_PH4_m
         ifunc = QModel%iQgrad_TO_ifunc(i1)
         IF (QModel%file_exist(ifunc)) THEN
           vh = vh + dnDQ(i1) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-          !write(6,*) 'vh grad',i1,get_d0(vh)
+          !write(out_unitp,*) 'vh grad',i1,get_d0(vh)
         END IF
 
         ifunc = QModel%iQjQHess_TO_ifunc(i1,i1)
         IF (QModel%file_exist(ifunc)) THEN
           vh = vh + HALF * dnDQ(i1)**2 * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
         END IF
-        !write(6,*) 'vh hessii',i1,i1,get_d0(vh)
+        !write(out_unitp,*) 'vh hessii',i1,i1,get_d0(vh)
       END DO
 
     END SELECT
@@ -491,7 +491,7 @@ MODULE QML_PH4_m
         ifunc = QModel%iQjQHess_TO_ifunc(i1,i2)
         IF (.NOT. QModel%file_exist(ifunc)) CYCLE
         vh = vh + dnDQ(i1)*dnDQ(i2) * QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly)
-        !write(6,*) 'vh hessij',i1,i2,get_d0(vh)
+        !write(out_unitp,*) 'vh hessij',i1,i2,get_d0(vh)
       END DO
     END DO
     ifunc = QModel%ifunc_Ene

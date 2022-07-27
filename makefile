@@ -294,8 +294,6 @@ OBJ_QML   = $(DIROBJ)/Empty_m.o \
                  $(DIROBJ)/OneDSOC_1S1T_m.o $(DIROBJ)/OneDSOC_2S1T_m.o \
                  $(DIROBJ)/Tully_m.o
 
-OBJ_AdiaLib    = $(DIROBJ)/MakeHinact_m.o
-
 OBJ_Model      = $(DIROBJ)/Model_m.o $(DIROBJ)/Basis_m.o $(DIROBJ)/Opt_m.o $(DIROBJ)/IRC_m.o
 
 OBJ_test       = $(DIROBJ)/TEST_OOP.o
@@ -341,8 +339,8 @@ $(GRIDEXE): $(OBJ_grid) $(OBJ_all)
 # Adia
 .PHONY: adia testadia
 adia testadia:$(ADIAEXE)
-$(ADIAEXE): $(OBJ_adia) $(OBJ_AdiaLib) $(OBJ_all)
-	$(LYNK90)   -o $(ADIAEXE) $(OBJ_adia) $(OBJ_AdiaLib) $(OBJ_all) $(LYNKFLAGS)
+$(ADIAEXE): $(OBJ_adia) $(OBJ_all)
+	$(LYNK90)   -o $(ADIAEXE) $(OBJ_adia) $(OBJ_all) $(LYNKFLAGS)
 #
 #
 #driver
@@ -539,7 +537,7 @@ dns dnS: $(dnSVMLibDIR) $(dnSVMLibDIR_full)
 	@echo "make dnS library"
 $(dnSVMLibDIR_full): $(dnSVMLibDIR)
 	@echo "make dnS library"
-	cd $(dnSVMLibDIR) ; make lib ; cp $(dnSMODFILE) $(DIR0)/OBJ
+	cd $(dnSVMLibDIR) ; make lib ; cp $(dnSMODFILE) $(DIR0)/OBJ ; cp $(dnSVMLibDIR_full) $(DIR0)
 $(dnSVMLibDIR):
 	cd $(ExternalLibDIR) ; ./get_dnSVM.sh
 	test -d $(dnSVMLibDIR) || exit 1
@@ -571,7 +569,7 @@ $(DIROBJ)/NumParameters_m.o:$(DIRLib)/NumParameters_m.f90
 $(DIROBJ)/TEST_OOP.o:    $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 $(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 $(DIROBJ)/TEST_driver.o: $(ModLib)
-$(DIROBJ)/TEST_Adia.o:   $(ModLib) $(OBJ_AdiaLib)
+$(DIROBJ)/TEST_Adia.o:   $(ModLib)
 
 
 $(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)

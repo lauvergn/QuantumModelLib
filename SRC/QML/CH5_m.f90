@@ -471,7 +471,7 @@ MODULE QML_CH5_m
     integer         :: i,kl,iiq,jjq
     TYPE (dnS_t)    :: tRm ! transformation of Rm
 
-    !write(6,*) 'in QML_dnvfour_fit3',iq,jq
+    !write(out_unitp,*) 'in QML_dnvfour_fit3',iq,jq
 
     IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
       write(out_unitp,*) ' ERROR in dnvfour'
@@ -549,7 +549,7 @@ MODULE QML_CH5_m
 
     integer         :: i,kl,iiq,jjq,np
 
-    !write(6,*) 'in QML_dnvfour_fit3',iq,jq
+    !write(out_unitp,*) 'in QML_dnvfour_fit3',iq,jq
     dnvfour = ZERO
     IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
       write(out_unitp,*) ' ERROR in dnvfour'

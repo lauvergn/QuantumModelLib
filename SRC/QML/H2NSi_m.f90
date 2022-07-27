@@ -140,7 +140,7 @@ MODULE QML_H2NSi_m
        k = 0
        DO
         nb_columns = min(6,QModel%nb_funcModel-k)
-        !write(6,*) k+1,k+nb_columns,nb_columns
+        !write(out_unitp,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
  11      format(6i1,f15.8,5(2x,6i1,f15.8))
@@ -355,7 +355,7 @@ MODULE QML_H2NSi_m
     TYPE (dnS_t)        :: Vtemp
     integer            :: i,j
 
-    !write(6,*) ' sub EvalPot1_QML_H2NSi' ; flush(6)
+    !write(out_unitp,*) ' sub EvalPot1_QML_H2NSi' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,4,1,3,5,6]) - QModel%Qref(:)
@@ -383,7 +383,7 @@ MODULE QML_H2NSi_m
    CALL dealloc_dnS(Vtemp)
    CALL dealloc_dnS(DQ)
 
-   !write(6,*) ' end EvalPot1_QML_H2NSi' ; flush(6)
+   !write(out_unitp,*) ' end EvalPot1_QML_H2NSi' ; flush(6)
 
   END SUBROUTINE EvalPot1_QML_H2NSi
 

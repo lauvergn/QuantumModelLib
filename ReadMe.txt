@@ -1,7 +1,7 @@
 =========================================
 =========================================
  QuantumModelLib* is a free software under LGPL.
-  date: 23/10/2021
+  date: 27/07/2022
 
     Copyright 2016 David Lauvergnat [1]
       with contributions of:
@@ -18,7 +18,7 @@
 =========================================
  1) Installation
    From the QuantumModelLib directory, execute make
-   the "libpot.a" must be created
+   the "libpot.a" ("libQMLib.a") and "libAD_dnSVM.a" must be created
 
    This version works with:
        gfortran 8.3, 9.1, 9.2 (linux and macOS)
@@ -26,15 +26,15 @@
        pgf90    17.10-0
        nagfor   7.0 (macOS)
 
- 2) Link "libpot.a" to your code
+ 2) Link "libpot.a" and "libAD_dnSVM.a" to your code
 
-   gfortran ....   -L$QuantumModelLib_path -lpot
+   gfortran ....   -L$QuantumModelLib_path -lpot -lAD_dnSVM
 
       QuantumModelLib_path contains the path of the QuantumModelLib
 
 
  3) In your fortan code
- 3a1) Initialization of the potential (see the list below)
+ 3a1) Initialization of the model (the Potential)
 
         CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
@@ -55,7 +55,35 @@
         It initializes the phenol potential (2D and 3 PES).
         => Computation of the diabatic surface
 
- 3a2) Initialization (extra)
+
+        See the list of models below.
+
+ 3a2) Initialization of the potential (reading the model)
+
+ CALL sub_Read_Qmodel(ndim,nsurf,nio)
+
+ where
+    ndim       : the number of degree(s) of freedom [integer]
+    nsurf      : the number of electronic surface(s) (adiabatic or diabatic) [integer]
+    nio        : file unit where the namelist is read. It can be the standard unit [integer]
+
+  Then, the &potential namelist is read.
+  In the following exemple, the 2+1D-retinal model ('Retinal_JPCB2000') is read.
+
+  &potential
+    pot_name='Retinal_JPCB2000' ! potential surface name
+    ndim=3 PubliUnit=f
+    adiabatic=t
+    Phase_checking=f
+     /
+
+     It initializes the 2+1D-retinal model (ndim=3).
+     For this model, fhe number of electronic surfaces is automatically set up to 2.
+     => adiabatic=t      : Computation of the adiabatic surface: 
+     => Phase_checking=f : The adiabatic vector phases are not checked between several calculations
+     => PubliUnit=f      : The atomic units are used
+
+ 3a3) Initialization (extra)
     Some extra parameters can be initialized with specific procedures:
 
     - Phase_Following (default: .TRUE. ) for the adiabatic calculations:
@@ -65,6 +93,8 @@
               CALL set_Qmodel_Phase_Checking(Phase_Checking)
 
     - ...
+
+    or it can be set up while reading the model (see 3a2).
 
  3b) Potential energy surface(s), PES, evaluation
 
@@ -349,9 +379,12 @@
       !! ClH2+ potential:
       !! pot_name  = 'ClH2+'
       !! option    = 1
-      !! ndim      = 3   (angle, R+, R-)
+      !! ndim      = 3
       !! nsurf     = 1
-      !! refs (option=1): unpublished
+      !! remark, two options are possible:
+      !!    option = 1, the coordinates are [angle, R+, R-] (in bohr and radian)
+      !!    option = 2, the coordinates are [R1, R2, angle] (in bohr and radian)
+      !! refs (option=1 and 2): unpublished
 =========================================
 =========================================
 =========================================

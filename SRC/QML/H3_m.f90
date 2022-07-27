@@ -300,7 +300,7 @@ MODULE QML_H3_m
     QModel%ndimCart   = 9
 
     IF (QModel%option == -1) QModel%option = 0
-    write(6,*) 'ndim ?',QModel%ndim
+    write(out_unitp,*) 'ndim ?',QModel%ndim
 
     SELECT CASE(QModel%option)
     CASE (0) !

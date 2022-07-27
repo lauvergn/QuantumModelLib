@@ -31,10 +31,12 @@
 !===========================================================================
 !===========================================================================
 PROGRAM main_pot
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
   IMPLICIT NONE
 
   !CALL test_Phenol_ADia() ; stop
   !CALL test_HBond() ; stop
+  CALL test_Vib_adia(1) ; stop
 
 
   CALL test_PH4()
@@ -48,7 +50,7 @@ PROGRAM main_pot
 
 END PROGRAM main_pot
 SUBROUTINE test2_Vib_adia(nb_eval)
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
   IMPLICIT NONE
 
   real (kind=real64),      allocatable     :: Q(:)
@@ -61,12 +63,12 @@ SUBROUTINE test2_Vib_adia(nb_eval)
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   maxth = 1
-  write(6,*) '============================================================'
-  write(6,*) '  Vibrational adiabatic separation'
-  write(6,*) 'TEST_driver. number of threads:',maxth
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '  Vibrational adiabatic separation'
+  write(out_unitp,*) 'TEST_driver. number of threads:',maxth
 
   pot_name  = 'read_model'
   ndim      = 0 ! it would be initialized
@@ -74,9 +76,10 @@ SUBROUTINE test2_Vib_adia(nb_eval)
   option    = -1
   adiabatic = .FALSE.
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
-  write(6,*) 'ndim,nsurf',ndim,nsurf
 
-  write(6,*) ' Test V, G and NAC'
+  write(out_unitp,*) 'ndim,nsurf',ndim,nsurf
+
+  write(out_unitp,*) ' Test V, G and NAC'
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
   allocate(G(nsurf,nsurf,ndim))
@@ -85,12 +88,12 @@ SUBROUTINE test2_Vib_adia(nb_eval)
   read(5,*) Q
 
   CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
-  write(6,*) 'Q',Q
-  write(6,*) 'Vadia',(V(i,i),i=1,nsurf)
-  write(6,*) 'Gadia',(G(i,i,1:ndim),i=1,nsurf)
-  write(6,*) 'NAC'
+  write(out_unitp,*) 'Q',Q
+  write(out_unitp,*) 'Vadia',(V(i,i),i=1,nsurf)
+  write(out_unitp,*) 'Gadia',(G(i,i,1:ndim),i=1,nsurf)
+  write(out_unitp,*) 'NAC'
   DO i=1,nsurf
-    write(6,*) i,NAC(:,i,1:ndim)
+    write(out_unitp,*) i,NAC(:,i,1:ndim)
   END DO
 
   deallocate(Q)
@@ -98,7 +101,7 @@ SUBROUTINE test2_Vib_adia(nb_eval)
   deallocate(G)
   deallocate(NAC)
 
-  write(6,*) ' Test of evaluations of the potential ',pot_name
+  write(out_unitp,*) ' Test of evaluations of the potential ',pot_name
   CALL time_perso('Test ' // pot_name)
 
   allocate(Q(ndim))
@@ -110,19 +113,19 @@ SUBROUTINE test2_Vib_adia(nb_eval)
 
     CALL sub_Qmodel_V(V,Q)
 
-    write(6,*) 'pot:',Q,(V(k,k),k=1,nsurf)
+    write(out_unitp,*) 'pot:',Q,(V(k,k),k=1,nsurf)
   END DO
 
   deallocate(Q)
   deallocate(V)
 
   CALL time_perso('Test ' // pot_name)
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
 END SUBROUTINE test2_Vib_adia
 SUBROUTINE test_1DSOC_1S1T
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
 !$ USE omp_lib
   IMPLICIT NONE
 
@@ -139,12 +142,12 @@ SUBROUTINE test_1DSOC_1S1T
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   nb_eval = 1
 
   pot_name = '1DSOC_1S1T'
-  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
 
   ndim      = 1
   nsurf     = 4
@@ -162,10 +165,10 @@ SUBROUTINE test_1DSOC_1S1T
   Q(:) = (/8.5_real64 /)
 
   CALL sub_Qmodel_VVec(V,Vec,Q)
-  write(6,*) ' Diabatic potential as a 4x4 matrix:'
-  write(6,'(4f12.8)') V
-  write(6,*) ' Adiabatic vectors (in column) as a 4x4 matrix:'
-  write(6,'(4f12.8)') transpose(Vec)
+  write(out_unitp,*) ' Diabatic potential as a 4x4 matrix:'
+  write(out_unitp,'(4f12.8)') V
+  write(out_unitp,*) ' Adiabatic vectors (in column) as a 4x4 matrix:'
+  write(out_unitp,'(4f12.8)') transpose(Vec)
 
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
 
@@ -174,13 +177,13 @@ SUBROUTINE test_1DSOC_1S1T
   deallocate(Vec)
 
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
 
 END SUBROUTINE test_1DSOC_1S1T
 SUBROUTINE test_PSB3
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
 !$ USE omp_lib
   IMPLICIT NONE
 
@@ -198,16 +201,16 @@ SUBROUTINE test_PSB3
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
   nb_eval = 1
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   maxth = 1
   !$ maxth           = omp_get_max_threads()
-  write(6,*) '============================================================'
-  write(6,*) 'NTEST_driver. number of threads:',maxth
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) 'NTEST_driver. number of threads:',maxth
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   pot_name = 'PSB3'
-  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
   CALL time_perso('Test ' // pot_name)
 
   ndim     = 3
@@ -225,8 +228,8 @@ SUBROUTINE test_PSB3
   Q(:) = (/0.1_real64,-3.14_real64,0.0_real64/)
 
   CALL sub_Qmodel_V(V,Q)
-  write(6,*) ' Diabatic potential as a 2x2 matrix:'
-  write(6,'(2f12.8)') V
+  write(out_unitp,*) ' Diabatic potential as a 2x2 matrix:'
+  write(out_unitp,'(2f12.8)') V
 
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
 
@@ -234,13 +237,13 @@ SUBROUTINE test_PSB3
   deallocate(Q)
 
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
 END SUBROUTINE test_PSB3
 
 SUBROUTINE test_HBond
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
 !$ USE omp_lib
   IMPLICIT NONE
 
@@ -258,17 +261,17 @@ SUBROUTINE test_HBond
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
   nb_eval = 1
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   maxth = 1
   !$ maxth           = omp_get_max_threads()
-  write(6,*) '============================================================'
-  write(6,*) 'NTEST_driver. number of threads:',maxth
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) 'NTEST_driver. number of threads:',maxth
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   pot_name = 'HBond'
-  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
   CALL time_perso('Test ' // pot_name)
 
   ndim     = 2
@@ -286,15 +289,15 @@ SUBROUTINE test_HBond
   Q(:) = (/2._real64,0._real64/)
 
   CALL sub_Qmodel_V(V,Q)
-  write(6,*) V
+  write(out_unitp,*) V
 
 
   allocate(G(nsurf,nsurf,ndim))
   allocate(h(nsurf,nsurf,ndim,ndim))
 
   CALL sub_Qmodel_VGH(V,G,H,Q)
-  write(6,*) 'gradiant',G
-  write(6,*) 'hessian',H
+  write(out_unitp,*) 'gradiant',G
+  write(out_unitp,*) 'hessian',H
 
   CALL set_Qmodel_step(1.e-2_real64)
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
@@ -303,15 +306,15 @@ SUBROUTINE test_HBond
   deallocate(Q)
 
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
 
 
 END SUBROUTINE test_HBond
 
 SUBROUTINE test_Phenol_Dia(nb_eval)
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
 !$ USE omp_lib
   IMPLICIT NONE
 
@@ -328,17 +331,17 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   maxth = 1
   !$ maxth           = omp_get_max_threads()
-  write(6,*) '============================================================'
-  write(6,*) 'NTEST_driver. number of threads:',maxth
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) 'NTEST_driver. number of threads:',maxth
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   pot_name = 'phenol'
-  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
   CALL time_perso('Test ' // pot_name)
 
   ndim     = 2
@@ -348,24 +351,24 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
-  write(6,*) 'ndim,nsurf',ndim,nsurf
+  write(out_unitp,*) 'ndim,nsurf',ndim,nsurf
 
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
   allocate(GGdef(ndim,ndim))
 
   ! write GGdef
-  write(6,*) 'Get and Write the metric Tensor'
+  write(out_unitp,*) 'Get and Write the metric Tensor'
   CALL get_Qmodel_GGdef(GGdef)
   DO i=1,ndim
-    write(6,*) i,GGdef(:,i)
+    write(out_unitp,*) i,GGdef(:,i)
   END DO
 
 
   Q = (/1.0_real64,-0.5_real64 /)
   CALL sub_Qmodel_V(V,Q)
-  write(6,*) ' Diabatic potential as a 3x3 matrix:'
-  write(6,'(3f12.8)') V
+  write(out_unitp,*) ' Diabatic potential as a 3x3 matrix:'
+  write(out_unitp,'(3f12.8)') V
 
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
 
@@ -398,13 +401,13 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 !$OMP   END PARALLEL
 
   CALL time_perso('Test ' // pot_name)
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
 
 END SUBROUTINE test_Phenol_Dia
 SUBROUTINE test_Phenol_ADia
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
 !$ USE omp_lib
   IMPLICIT NONE
 
@@ -422,19 +425,19 @@ SUBROUTINE test_Phenol_ADia
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
   nb_eval = 1
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   maxth = 1
   !$ maxth           = omp_get_max_threads()
-  write(6,*) '============================================================'
-  write(6,*) 'NTEST_driver. number of threads:',maxth
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) 'NTEST_driver. number of threads:',maxth
 
 
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   pot_name = 'phenol'
-  write(6,*) ' Test of the adiatic potential ',pot_name
+  write(out_unitp,*) ' Test of the adiatic potential ',pot_name
 
 
   ndim     = 2
@@ -453,37 +456,37 @@ SUBROUTINE test_Phenol_ADia
   Q = [1._real64,-0.5_real64 ]
   CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
 
-  write(6,*) ' Q:',Q
-  write(6,*) ' Adiabatic potential as a 3x3 matrix:'
-  write(6,'(3f12.8)') V
-  write(6,*) ' Adiabatic gradient. Each component as a 3x3 matrix:'
+  write(out_unitp,*) ' Q:',Q
+  write(out_unitp,*) ' Adiabatic potential as a 3x3 matrix:'
+  write(out_unitp,'(3f12.8)') V
+  write(out_unitp,*) ' Adiabatic gradient. Each component as a 3x3 matrix:'
   DO i=1,ndim
-    write(6,*) ' Component:',i
-    write(6,'(3f12.8)') g(:,:,i)
+    write(out_unitp,*) ' Component:',i
+    write(out_unitp,'(3f12.8)') g(:,:,i)
   END DO
 
-  write(6,*) ' NAC. Each component as a 3x3 matrix:'
+  write(out_unitp,*) ' NAC. Each component as a 3x3 matrix:'
   DO i=1,ndim
-    write(6,*) ' Component:',i
-    write(6,'(3f12.8)') NAC(:,:,i)
+    write(out_unitp,*) ' Component:',i
+    write(out_unitp,'(3f12.8)') NAC(:,:,i)
   END DO
 
   Q = [1.1_real64,-0.5_real64 ]
   CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
 
-  write(6,*) ' Q:',Q
-  write(6,*) ' Adiabatic potential as a 3x3 matrix:'
-  write(6,'(3f12.8)') V
-  write(6,*) ' Adiabatic gradient. Each component as a 3x3 matrix:'
+  write(out_unitp,*) ' Q:',Q
+  write(out_unitp,*) ' Adiabatic potential as a 3x3 matrix:'
+  write(out_unitp,'(3f12.8)') V
+  write(out_unitp,*) ' Adiabatic gradient. Each component as a 3x3 matrix:'
   DO i=1,ndim
-    write(6,*) ' Component:',i
-    write(6,'(3f12.8)') g(:,:,i)
+    write(out_unitp,*) ' Component:',i
+    write(out_unitp,'(3f12.8)') g(:,:,i)
   END DO
 
-  write(6,*) ' NAC. Each component as a 3x3 matrix:'
+  write(out_unitp,*) ' NAC. Each component as a 3x3 matrix:'
   DO i=1,ndim
-    write(6,*) ' Component:',i
-    write(6,'(3f12.8)') NAC(:,:,i)
+    write(out_unitp,*) ' Component:',i
+    write(out_unitp,'(3f12.8)') NAC(:,:,i)
   END DO
 
   deallocate(Q)
@@ -491,13 +494,13 @@ SUBROUTINE test_Phenol_ADia
   deallocate(g)
   deallocate(NAC)
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
 
 END SUBROUTINE test_Phenol_ADia
 SUBROUTINE test_henonheiles(nb_eval)
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
 !$ USE omp_lib
   IMPLICIT NONE
 
@@ -514,15 +517,15 @@ SUBROUTINE test_henonheiles(nb_eval)
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   maxth = 1
   !$ maxth           = omp_get_max_threads()
-  write(6,*) '============================================================'
-  write(6,*) 'NTEST_driver. number of threads:',maxth
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) 'NTEST_driver. number of threads:',maxth
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
   ndim     = 6
   nsurf    = 1
@@ -531,8 +534,8 @@ SUBROUTINE test_henonheiles(nb_eval)
   pot_name = 'henonheiles'
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
 
-  write(6,*) '============================================================'
-  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
   CALL time_perso('Test ' // pot_name)
 
 !$OMP   PARALLEL DEFAULT(NONE) &
@@ -549,7 +552,7 @@ SUBROUTINE test_henonheiles(nb_eval)
 
     CALL sub_Qmodel_V(V,Q)
 
-    !write(6,*) Q,(V(k,k),k=1,nsurf)
+    !write(out_unitp,*) Q,(V(k,k),k=1,nsurf)
   END DO
 !$OMP   END DO
 
@@ -559,13 +562,13 @@ SUBROUTINE test_henonheiles(nb_eval)
 !$OMP   END PARALLEL
 
   CALL time_perso('Test ' // pot_name)
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
 END SUBROUTINE test_henonheiles
 
 SUBROUTINE test_Vib_adia(nb_eval)
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
 !$ USE omp_lib
   IMPLICIT NONE
 
@@ -574,28 +577,26 @@ SUBROUTINE test_Vib_adia(nb_eval)
   real (kind=real64),      allocatable     :: g(:,:,:)
   real (kind=real64),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
-  logical                             :: adiabatic
 
-  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
+  integer                             :: ndim,nsurf,nio_QML
+  integer                             :: i,j,k,nb_eval,maxth
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   maxth = 1
   !$ maxth           = omp_get_max_threads()
-  write(6,*) '============================================================'
-  write(6,*) '  Vibrational adiabatic separation'
-  write(6,*) 'TEST_driver. number of threads:',maxth
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '  Vibrational adiabatic separation'
+  write(out_unitp,*) 'TEST_driver. number of threads:',maxth
 
-  pot_name  = 'read_model'
   ndim      = 0 ! it would be initialized
   nsurf     = 0 ! it would be initialized
-  option    = -1
-  adiabatic = .FALSE.
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
-  write(6,*) 'ndim,nsurf',ndim,nsurf
+  nio_QML   = in_unitp
+  CALL sub_Read_Qmodel(ndim,nsurf,nio_QML)
 
-  write(6,*) ' Test V, G and NAC'
+  write(out_unitp,*) 'ndim,nsurf',ndim,nsurf
+
+  write(out_unitp,*) ' Test V, G and NAC'
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
   allocate(G(nsurf,nsurf,ndim))
@@ -609,12 +610,12 @@ SUBROUTINE test_Vib_adia(nb_eval)
   ! calculation of the gradient and the NAC
 
   CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
-  write(6,*) 'Q',Q
-  write(6,*) 'Vadia',(V(i,i),i=1,nsurf)
-  write(6,*) 'Gadia',(G(i,i,1:ndim),i=1,nsurf)
-  write(6,*) 'NAC'
+  write(out_unitp,*) 'Q',Q
+  write(out_unitp,*) 'Vadia',(V(i,i),i=1,nsurf)
+  write(out_unitp,*) 'Gadia',(G(i,i,1:ndim),i=1,nsurf)
+  write(out_unitp,*) 'NAC'
   DO i=1,nsurf
-    write(6,*) i,NAC(:,i,1:ndim)
+    write(out_unitp,*) i,NAC(:,i,1:ndim)
   END DO
 
   deallocate(Q)
@@ -622,11 +623,11 @@ SUBROUTINE test_Vib_adia(nb_eval)
   deallocate(G)
   deallocate(NAC)
 
-  write(6,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL time_perso('Test ' // pot_name)
+  write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential (read_model)'
+  CALL time_perso('Test read_model')
 
 !$OMP   PARALLEL DEFAULT(NONE) &
-!$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
+!$OMP   SHARED(nb_eval,ndim,nsurf,maxth) &
 !$OMP   PRIVATE(i,k,Q,V) &
 !$OMP   NUM_THREADS(maxth)
 
@@ -640,7 +641,7 @@ SUBROUTINE test_Vib_adia(nb_eval)
 
     CALL sub_Qmodel_V(V,Q)
 
-    !write(6,*) Q,(V(k,k),k=1,nsurf)
+    !write(out_unitp,*) Q,(V(k,k),k=1,nsurf)
   END DO
 !$OMP   END DO
 
@@ -649,14 +650,14 @@ SUBROUTINE test_Vib_adia(nb_eval)
 
 !$OMP   END PARALLEL
 
-  CALL time_perso('Test ' // pot_name)
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  CALL time_perso('Test read_model')
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
 END SUBROUTINE test_Vib_adia
 
 SUBROUTINE test_PH4
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
 !$ USE omp_lib
   IMPLICIT NONE
 
@@ -673,8 +674,8 @@ SUBROUTINE test_PH4
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
   nb_eval = 1
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
   pot_name = 'PH4'
 
   ndim     = 1
@@ -693,7 +694,7 @@ SUBROUTINE test_PH4
     Q(1) = 0.1_real64 * i
 
     CALL sub_Qmodel_V(V,Q)
-    write(6,*) Q,V
+    write(out_unitp,*) Q,V
   END DO
 
 
@@ -701,8 +702,8 @@ SUBROUTINE test_PH4
   deallocate(Q)
 
 
-  write(6,*) '============================================================'
-  write(6,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
 
 
 
@@ -710,7 +711,7 @@ END SUBROUTINE test_PH4
 
 
   SUBROUTINE time_perso(name)
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
   IMPLICIT NONE
 
     character (len=*) :: name
@@ -730,7 +731,7 @@ END SUBROUTINE test_PH4
 !$OMP    CRITICAL (time_perso_CRIT)
 
     CALL date_and_time(values=tab_time)
-    write(6,21) name,tab_time(5:8),tab_time(3:1:-1)
+    write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
  21 format('     Time and date in ',a,' : ',i2,'h:',                &
             i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
 
@@ -761,12 +762,12 @@ END SUBROUTINE test_PH4
 
 
      t_real = real(count_work,kind=real64)/real(freq,kind=real64)
-     write(6,31) t_real,name
+     write(out_unitp,31) t_real,name
  31  format('        real (s): ',f18.3,' in ',a)
-     write(6,32) days,hours,minutes,seconds,name
+     write(out_unitp,32) days,hours,minutes,seconds,name
  32  format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
 
-     write(6,33) t_cpu-t_cpu_old,name
+     write(out_unitp,33) t_cpu-t_cpu_old,name
  33  format('        cpu (s): ',f18.3,' in ',a)
 
 
@@ -784,11 +785,11 @@ END SUBROUTINE test_PH4
      hours   = mod(hours,24)
 
      t_real = real(count_work,kind=real64)/real(freq,kind=real64)
-     write(6,41) t_real
+     write(out_unitp,41) t_real
  41  format('  Total real (s): ',f18.3)
-     write(6,42) days,hours,minutes,seconds
+     write(out_unitp,42) days,hours,minutes,seconds
  42  format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
-     write(6,43) t_cpu-t_cpu_ini
+     write(out_unitp,43) t_cpu-t_cpu_ini
  43  format('  Total cpu (s): ',f18.3)
 
  51  format(a,i10,a,a)
