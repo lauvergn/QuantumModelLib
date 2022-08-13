@@ -315,12 +315,22 @@ CONTAINS
 
     IF (QModel%In_a_Model) RETURN
 
+    write(nio,*) 'Potential parameters are written just below'
     write(nio,*) 'Init:                      ',QModel%Init
     write(nio,*) 'In_a_Model:                ',QModel%In_a_Model
 
+    write(nio,*) 'option:                    ',QModel%option
+    write(nio,*)
     write(nio,*) 'nsurf:                     ',QModel%nsurf
     write(nio,*) 'ndim:                      ',QModel%ndim
     write(nio,*) 'numeric:                   ',QModel%numeric
+    write(nio,*) 'no analytical derivatives: ',QModel%no_ana_der
+    write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
+    write(nio,*) 'ndimQ:                     ',QModel%ndimQ
+    write(nio,*) 'ndimCart:                  ',QModel%ndimCart
+    write(nio,*) 'ndimFunc:                  ',QModel%ndimFunc
+    write(nio,*) 'nb_Func:                   ',QModel%nb_Func
+
     write(nio,*) 'adiabatic:                 ',QModel%adiabatic
     write(nio,*) 'Vib_adia:                  ',QModel%Vib_adia
     write(nio,*) 'Phase_Following:           ',QModel%Phase_Following
@@ -333,13 +343,6 @@ CONTAINS
       IF (allocated(QModel%list_inact)) &
         write(nio,*) 'list_inact(:):             ',QModel%list_inact(:)
     END IF
-    write(nio,*) 'no analytical derivatives: ',QModel%no_ana_der
-    write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
-    write(nio,*) 'ndimQ:                     ',QModel%ndimQ
-    write(nio,*) 'ndimCart:                  ',QModel%ndimCart
-    write(nio,*) 'ndimFunc:                  ',QModel%ndimQ
-    write(nio,*) 'nb_Func:                   ',QModel%ndimCart
-
     write(nio,*) 'print_EigenVec Basis/Grid: ',QModel%print_EigenVec_Basis,QModel%print_EigenVec_Grid
 
 
@@ -372,6 +375,7 @@ CONTAINS
     write(nio,*)
     write(nio,*) 'Potential parameters are written just below'
     write(nio,*) 'Init:                      ',QModel%Init
+    write(nio,*) 'option:                    ',QModel%option
     write(nio,*)
     write(nio,*) 'nsurf:                     ',QModel%nsurf
     write(nio,*) 'ndim:                      ',QModel%ndim
@@ -381,8 +385,8 @@ CONTAINS
     write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
     write(nio,*) 'ndimQ:                     ',QModel%ndimQ
     write(nio,*) 'ndimCart:                  ',QModel%ndimCart
-    write(nio,*) 'ndimFunc:                  ',QModel%ndimQ
-    write(nio,*) 'nb_Func:                   ',QModel%ndimCart
+    write(nio,*) 'ndimFunc:                  ',QModel%ndimFunc
+    write(nio,*) 'nb_Func:                   ',QModel%nb_Func
     write(nio,*)
 
      IF (allocated(QModel%d0GGdef)) THEN

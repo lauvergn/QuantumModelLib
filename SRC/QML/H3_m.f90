@@ -259,7 +259,6 @@ MODULE QML_H3_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel   => EvalPot_QML_H3
     PROCEDURE :: Write_QModel     => Write_QML_H3
-    PROCEDURE :: Write0_QModel    => Write0_QML_H3
     PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_H3
     PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_H3
   END TYPE QML_H3_t
@@ -300,10 +299,9 @@ MODULE QML_H3_m
     QModel%ndimCart   = 9
 
     IF (QModel%option == -1) QModel%option = 0
-    write(out_unitp,*) 'ndim ?',QModel%ndim
 
     SELECT CASE(QModel%option)
-    CASE (0) !
+    CASE (0,10) !
 
       IF (QModel%ndim == 2) THEN
         QModel%ndimQ      = 2
@@ -318,16 +316,16 @@ MODULE QML_H3_m
 
       ! so that, we can get the irc function with the 3D model
       QModel%ndimFunc = 1
-      QModel%nb_Func  = 6 ! V, R1op,R2opt,R3opt,RPH_r,RPH_th
+      QModel%nb_Func  = 6 ! V, R1op,R2opt,R3opt,RPH_a0,RPH_a1
 
       QModel%pot_name   = 'H3_LSTH'
       QModel%no_ana_der = .TRUE.
-    CASE (1)
+    CASE (1,11)
       QModel%ndimQ    = 1
       QModel%ndim     = 1
 
       QModel%ndimFunc = 1
-      QModel%nb_Func  = 6 ! V, R1op,R2opt,R3opt,RPH_r,RPH_th
+      QModel%nb_Func  = 6 ! V, R1op,R2opt,R3opt,RPH_a0,RPH_a1
 
       QModel%pot_name   = 'H3_LSTH_IRC'
       QModel%no_ana_der = .FALSE.
@@ -336,17 +334,15 @@ MODULE QML_H3_m
        CALL QModel%Write_QModel(out_unitp)
        write(out_unitp,*) ' ERROR in ',name_sub
        write(out_unitp,*) ' option: ',QModel%option
-       write(out_unitp,*) ' the possible option are: 0 (3D) or 1 (1D-IRC)'
+       write(out_unitp,*) ' the possible option are: 0,10 (3D) or 1,11 (1D-IRC)'
        STOP 'ERROR in Init_QML_H3: wrong option'
     END SELECT
-
 
     IF (debug) write(out_unitp,*) 'init Q0 of H3 (H3 minimum)'
     QModel%Q0 = [2.806_Rkind,2.271_Rkind,2.271_Rkind]
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of H3'
     CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-
 
     IF (debug) THEN
       !CALL Write_QML_H3(QModel,nio=out_unitp)
@@ -364,31 +360,51 @@ MODULE QML_H3_m
   IMPLICIT NONE
 
     CLASS(QML_H3_t),   intent(in) :: QModel
-    integer,                   intent(in) :: nio
+    integer,           intent(in) :: nio
 
-    write(nio,*) 'H3 IV current parameters'
+    write(nio,*) '-------------------------------------------------------------'
+    write(nio,*) '-------------------------------------------------------------'
+    write(nio,*) 'H3 LSTH current parameters'
+    write(nio,*)
+    write(nio,*) 'refs: '
+    write(nio,*) ' P. Siegbahn, B. Liu,  J. Chem. Phys. 68, 2457(1978).'
+    write(nio,*) ' D.G. Truhlar and C.J. Horowitz, J. Chem. Phys. 68, 2466 (1978); https://doi.org/10.1063/1.436019'
+    write(nio,*)
+    write(nio,*) '-------------------------------------------------------------'
+    write(nio,*)
 
+    SELECT CASE(QModel%option)
+    CASE (0) ! 2D or 3D
+      IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances'
+      IF (QModel%ndim == 3) write(nio,*) '3D-H3 LSTH model, with 3 distances'
+      IF (QModel%ndim == 9) write(nio,*) 'Cartessian H3 LSTH model'
+
+      write(nio,*) 'Can be used with the first 1D-IRC H3 LSTH model (from polar tranformation)'
+
+    CASE (10) ! 2D or 3D
+      IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances'
+      IF (QModel%ndim == 3) write(nio,*) '3D-H3 LSTH model, with 3 distances'
+      IF (QModel%ndim == 9) write(nio,*) 'Cartessian LSTH LST model'
+
+      write(nio,*) 'Can be used with the second 1D-IRC H3 LSTH model (from sum and difference)'
+
+    CASE (1) ! IRC
+      write(nio,*) 'First 1D-IRC H3 LSTH model (from polar tranformation)'
+    CASE (11) ! IRC
+      write(nio,*) 'Second 1D-IRC H3 LSTH model (from sum and difference)'
+    END SELECT
+    write(nio,*)
+
+    write(nio,*)
+    write(nio,*) '-------------------------------------------------------------'
     CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
-
-    write(nio,*) 'end H3 current parameters'
+    write(nio,*) '-------------------------------------------------------------'
+    write(nio,*)
+    write(nio,*) 'end H3 LSTH current parameters'
+    write(nio,*) '-------------------------------------------------------------'
+    write(nio,*) '-------------------------------------------------------------'
 
   END SUBROUTINE Write_QML_H3
-!> @brief Subroutine wich prints the default QML_H3 parameters.
-!!
-!! @param QModel            CLASS(QML_H3_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_H3(QModel,nio)
-  IMPLICIT NONE
-
-    CLASS(QML_H3_t),   intent(in) :: QModel
-    integer,                   intent(in) :: nio
-
-    write(nio,*) 'H3 IV default parameters'
-    write(nio,*)
-    write(nio,*) 'end H3 IV default parameters'
-
-
-  END SUBROUTINE Write0_QML_H3
 
 !> @brief Subroutine wich calculates the H3 potential with derivatives up to the 2d order.
 !!
@@ -411,7 +427,7 @@ MODULE QML_H3_m
 
 
     SELECT CASE(QModel%option)
-    CASE (0) ! 2D or 3D
+    CASE (0,10) ! 2D or 3D
       IF (size(dnQ) == 2) THEN
         Q(1:2) = get_d0(dnQ)
         Q(3)   = Q(1) + Q(2)
@@ -422,7 +438,11 @@ MODULE QML_H3_m
       CALL set_dnS(Mat_OF_PotDia(1,1),d0=V)
 
     CASE (1) ! IRC
-      CALL EvalFunc_QML_H3(QModel,Func,dnQ,nderiv)
+      CALL EvalFunc_QML_H3_v1(QModel,Func,dnQ,nderiv)
+      Mat_OF_PotDia(1,1) = Func(1)
+
+    CASE (11) ! IRC
+      CALL EvalFunc_QML_H3_v11(QModel,Func,dnQ,nderiv)
       Mat_OF_PotDia(1,1) = Func(1)
 
     END SELECT
@@ -779,8 +799,136 @@ MODULE QML_H3_m
         TAB(3)=(W(MI)*(X(I+1)-Y)+W(KI)*(Y-X(I)))/FLK
   END SUBROUTINE QML_SPLID2
 
-  ! for IRC, RPH
   SUBROUTINE EvalFunc_QML_H3(QModel,Func,dnQ,nderiv)
+  USE ADdnSVM_m
+  IMPLICIT NONE
+
+    CLASS(QML_H3_t),      intent(in)    :: QModel
+    TYPE (dnS_t),         intent(inout) :: Func(:)
+    TYPE (dnS_t),         intent(in)    :: dnQ(:)
+    integer,              intent(in)    :: nderiv
+
+    SELECT CASE(QModel%option)
+    CASE (0,1) ! IRC
+      CALL EvalFunc_QML_H3_v1(QModel,Func,dnQ,nderiv)
+    CASE (10,11) ! IRC
+      CALL EvalFunc_QML_H3_v11(QModel,Func,dnQ,nderiv)
+    END SELECT
+
+  END SUBROUTINE EvalFunc_QML_H3
+
+  ! for IRC, RPH
+  SUBROUTINE EvalFunc_QML_H3_v11(QModel,Func,dnQ,nderiv)
+  USE ADdnSVM_m
+  IMPLICIT NONE
+
+    CLASS(QML_H3_t),      intent(in)    :: QModel
+    TYPE (dnS_t),         intent(inout) :: Func(:)
+    TYPE (dnS_t),         intent(in)    :: dnQ(:)
+    integer,              intent(in)    :: nderiv
+
+    TYPE (dnS_t)                  :: s,ts,am,ap
+    integer                       :: i
+    integer,           parameter  :: max_deg = 20
+    TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
+    real (kind=Rkind), parameter  :: betaQ = 1.4_Rkind
+
+
+    s  = dnQ(1)
+    ts = tanh(s)
+
+    DO i=0,max_deg
+      tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
+    END DO
+
+    ! potential
+    Func(1) = -0.17447440045043028_Rkind +                                      &
+              (0.010858975893853413_Rkind)    * tab_Pl(0)  +                    &
+              (-0.009667492179225417_Rkind)   * tab_Pl(2)  +                    &
+              (-0.0006089583649096594_Rkind)  * tab_Pl(4)  +                    &
+              (-0.0005463286353325458_Rkind)  * tab_Pl(6)  +                    &
+              (-7.674511378387464e-05_Rkind)  * tab_Pl(8)  +                    &
+              (-1.2703773915447383e-06_Rkind) * tab_Pl(10) +                    &
+              (1.7588216355925958e-05_Rkind)  * tab_Pl(12) +                    &
+              (1.7051544329081514e-05_Rkind)  * tab_Pl(14) +                    &
+              (-3.7481719120090565e-05_Rkind) * tab_Pl(16)
+
+   ! R1eq
+   Func(2) = 1.4010444_Rkind * QML_dnSigmoid_H3(-s,betaQ)         +             &
+           QML_dnSigmoid_H3(s,betaQ)*(s+1.6803643117748104_Rkind) +             &
+            (0.1357176824058676_Rkind)     * tab_Pl(0)            +             &
+            (-0.0009647928495994389_Rkind) * tab_Pl(1)            +             &
+            (-0.1496072194236861_Rkind)    * tab_Pl(2)            +             &
+            (-0.004622944008685905_Rkind)  * tab_Pl(3)            +             &
+            (0.013899404906043201_Rkind)   * tab_Pl(4)            +             &
+            (0.00406379918470803_Rkind)    * tab_Pl(5)            +             &
+            (-0.0010528232085257284_Rkind) * tab_Pl(6)            +             &
+            (0.0006881469085679271_Rkind)  * tab_Pl(7)            +             &
+            (0.0009920029080101385_Rkind)  * tab_Pl(8)            +             &
+            (0.00014255050945681492_Rkind) * tab_Pl(9)            +             &
+            (2.4954747402158953e-05_Rkind) * tab_Pl(10)           +             &
+            (0.0004543931972375909_Rkind)  * tab_Pl(11)
+
+   ! R2eq(s) = R1eq(-s)
+   Func(3) = 1.4010444_Rkind * QML_dnSigmoid_H3(s,betaQ)          +             &
+         QML_dnSigmoid_H3(-s,betaQ)*(-s+1.6803643117748104_Rkind) +             &
+            (0.1357176824058676_Rkind)     * tab_Pl(0)            +             &
+            (0.0009647928495994389_Rkind)  * tab_Pl(1)            +             &
+            (-0.1496072194236861_Rkind)    * tab_Pl(2)            +             &
+            (0.004622944008685905_Rkind)   * tab_Pl(3)            +             &
+            (0.013899404906043201_Rkind)   * tab_Pl(4)            +             &
+            (-0.00406379918470803_Rkind)   * tab_Pl(5)            +             &
+            (-0.0010528232085257284_Rkind) * tab_Pl(6)            +             &
+            (-0.0006881469085679271_Rkind) * tab_Pl(7)            +             &
+            (0.0009920029080101385_Rkind)  * tab_Pl(8)            +             &
+            (-0.00014255050945681492_Rkind)* tab_Pl(9)            +             &
+            (2.4954747402158953e-05_Rkind) * tab_Pl(10)           +             &
+            (-0.0004543931972375909_Rkind) * tab_Pl(11)
+
+    ! R3eq(s) = R1eq(s)+R2eq(s) (!linear HHH)
+    Func(4) = Func(2) + Func(3)
+
+
+    ! RPH parameters ap=(a(1)+a(2))/2
+    ap  =                  &
+    (0.10654140540118079_Rkind) * tab_Pl(0) +  &
+    (-0.08156956206363981_Rkind) * tab_Pl(2) +  &
+    (0.05165961900675448_Rkind) * tab_Pl(4) +  &
+    (-0.02712759178768974_Rkind) * tab_Pl(6) +  &
+    (0.01297477538446188_Rkind) * tab_Pl(8) +  &
+    (-0.006231119449146584_Rkind) * tab_Pl(10) +  &
+    (0.0029194223124278493_Rkind) * tab_Pl(12) +  &
+    (-0.0015729890889698303_Rkind) * tab_Pl(14) +  &
+    (0.0007856122821166629_Rkind) * tab_Pl(16) +  &
+    (-0.0004478849431914204_Rkind) * tab_Pl(18) +  &
+    (0.0002493501993969134_Rkind) * tab_Pl(20)
+
+    ! RPH paramter: ap=(a(1)-a(2))/2
+    am  =                  &
+    (-0.24947389963365996_Rkind) * tab_Pl(1) +  &
+    (0.11071787203324072_Rkind) * tab_Pl(3) +  &
+    (-0.051987344951231605_Rkind) * tab_Pl(5) +  &
+    (0.02429237299028829_Rkind) * tab_Pl(7) +  &
+    (-0.01126303087651565_Rkind) * tab_Pl(9) +  &
+    (0.005631218234846266_Rkind) * tab_Pl(11) +  &
+    (-0.003014340083025705_Rkind) * tab_Pl(13) +  &
+    (0.0014056596059369348_Rkind) * tab_Pl(15) +  &
+    (-0.000660824039222194_Rkind) * tab_Pl(17) +  &
+    (-7.516971220985713e-05_Rkind) * tab_Pl(19)
+
+    Func(5) = ap+am
+    Func(6) = ap-am
+
+    DO i=0,max_deg
+      CALL dealloc_dnS(tab_Pl(i))
+    END DO
+    CALL dealloc_dnS(s)
+    CALL dealloc_dnS(ts)
+
+  END SUBROUTINE EvalFunc_QML_H3_v11
+
+
+  SUBROUTINE EvalFunc_QML_H3_v1(QModel,Func,dnQ,nderiv)
   USE ADdnSVM_m
   IMPLICIT NONE
 
@@ -926,7 +1074,8 @@ MODULE QML_H3_m
     CALL dealloc_dnS(s)
     CALL dealloc_dnS(ts)
 
-  END SUBROUTINE EvalFunc_QML_H3
+  END SUBROUTINE EvalFunc_QML_H3_v1
+
   FUNCTION QML_dnSigmoid_H3(x,sc)
   USE ADdnSVM_m
   IMPLICIT NONE

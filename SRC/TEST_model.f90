@@ -39,7 +39,7 @@ PROGRAM TEST_model
 
   !CALL test_Retinal_CP2000() ; stop
   !CALL test_IRC_MullerBrown() ; stop
-  !CALL test_H3() ; stop
+  !CALL test_H3()  ; stop
   !CALL test_IRC_H3() ; stop
 
   !CALL test_LinearHBond() ; stop
@@ -2331,8 +2331,7 @@ SUBROUTINE test_H3
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '------------ 3D-H+H2 ------------------------'
-  CALL Init_Model(QModel,pot_name='H3_LSTH',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
+  CALL Init_Model(QModel,pot_name='H3_LSTH',Print_init=.TRUE.)
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
 

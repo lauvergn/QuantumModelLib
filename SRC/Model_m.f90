@@ -813,12 +813,15 @@ CONTAINS
       !! === README ==
       !! H3 potential:
       !! pot_name  = 'H3'
-      !! option    = 1 (LSTH)
+      !! option    = 0,1,10,11 (LSTH)
       !! ndim      = 3   (the 3 H-H distances)
       !! nsurf     = 1
-      !! refs (option=1):
+      !! refs (option=0):
       !! P. Siegbahn, B. Liu,  J. Chem. Phys. 68, 2457(1978).
       !! D.G. Truhlar and C.J. Horowitz, J. Chem. Phys. 68, 2466 (1978); https://doi.org/10.1063/1.436019
+      !! options  0 and 10 : 3D model with IRC functions (1 potential + parameters)
+      !! options  0 and  1 : first IRC funtions fitted in polar representation (alpha)
+      !! options 10 and 11 : second IRC funtions fitted with the sum and the difference (alpha)
       !! === END README ==
       allocate(QML_H3_t :: QModel%QM)
       QModel%QM = Init_QML_H3(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
