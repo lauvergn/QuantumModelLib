@@ -157,13 +157,13 @@ CONTAINS
 
     CALL Read_QML_Opt(Opt_param,QModel,nio_loc,icv_loc)
 
+  ELSE
+    Opt_param%Largest_disp  = abs(Largest_disp)
   END IF
 
   IF (icv_loc < 0)          icv_loc = 0
 
-
   IF (Opt_param%max_it < 0)   Opt_param%Max_it = (10+QModel%ndim)*(icv_loc+2)
-  Opt_param%Largest_disp  = abs(Largest_disp)
 
   IF (Opt_param%i_surf < 0 .OR. Opt_param%i_surf > QModel%nsurf) THEN
     write(out_unitp,*) ' ERROR in ',name_sub
@@ -174,6 +174,7 @@ CONTAINS
     STOP ' ERROR in Init_QML_Opt: i_surf is out-of-range'
   END IF
   IF (Opt_param%nb_neg < 0) Opt_param%nb_neg = 0
+
 
 
   Opt_param%Thresh_max_grad = Thresh_max_grad/TEN**icv_loc
