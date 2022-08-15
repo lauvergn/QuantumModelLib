@@ -111,8 +111,8 @@ MODULE QML_ClH2p_m
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_ClH2p'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
@@ -125,7 +125,7 @@ MODULE QML_ClH2p_m
     QModel%pot_name = 'ClH2p'
 
 
-    IF (QModel%option < 1 .OR. QModel%option > 4) QModel%option = 1
+    IF (QModel%option < 1 .OR. QModel%option > 6) QModel%option = 6
 
     SELECT CASE (QModel%option)
     CASE (1)
@@ -159,7 +159,6 @@ MODULE QML_ClH2p_m
 
       FileName = make_FileName('InternalData/ClH2p/ClH2p_B3LYP_cc-pVTZ_v2.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
-      !QModel%E0 = -455.36075164976319_Rkind
       QModel%E0 = -461.06327752734671_Rkind
 
     CASE (4)
@@ -171,14 +170,35 @@ MODULE QML_ClH2p_m
 
         FileName = make_FileName('InternalData/ClH2p/ClH2p_B3LYP_cc-pVTZ_v2.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
-      !QModel%E0 = -455.36075164976319_Rkind
       QModel%E0 = -461.06327752734671_Rkind
+
+    CASE (5)
+
+      QModel%d0GGdef = reshape(                                                 &
+        [0.0001843648_Rkind,-0.0000063402_Rkind,0.0000000000_Rkind,             &
+        -0.0000063402_Rkind, 0.0002794155_Rkind,0.0000000000_Rkind,             &
+        -0.0000000000_Rkind,-0.0000000000_Rkind,0.0002805928_Rkind],shape=[3,3])
+
+      FileName = make_FileName('InternalData/ClH2p/ClH2p_CCSDTF12_cc-pVTZ.txt')
+      CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
+      QModel%E0 = -460.59052688_Rkind
+
+    CASE (6)
+
+      QModel%d0GGdef = reshape(                                                 &
+        [0.0005600083_Rkind,-0.0000011773_Rkind,-0.0000063402_Rkind,            &
+        -0.0000011773_Rkind, 0.0005600083_Rkind,-0.0000063402_Rkind,            &
+        -0.0000063402_Rkind,-0.0000063402_Rkind, 0.0001843648_Rkind],shape=[3,3])
+
+        FileName = make_FileName('InternalData/ClH2p/ClH2p_CCSDTF12_cc-pVTZ.txt')
+      CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
+      QModel%E0 = -460.59052688_Rkind
 
     CASE Default
 
       write(out_unitp,*) ' ERROR in Init_QML_ClH2p '
       write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1,2,3,4'
+      write(out_unitp,*) ' Its value MUST be 1,2,3,4,5,6'
       STOP 'ERROR in Init_QML_ClH2p: wrong option'
 
     END SELECT
@@ -323,17 +343,22 @@ MODULE QML_ClH2p_m
     write(nio,*) '         Cl------------H               '
     write(nio,*) '              R1                       '
     write(nio,*) '                                       '
-    write(nio,*) '  Coordinates (option 1):              '
+    write(nio,*) '  Coordinates (option 1,3,5):          '
     write(nio,*) '  Q(1) = a          (Radian)           '
     write(nio,*) '  Q(2) = 1/2(R1+R2) (Bohr)             '
     write(nio,*) '  Q(3) = 1/2(R1-R2) (Bohr)             '
     write(nio,*) '                                       '
-    write(nio,*) '  Coordinates (option 2):              '
+    write(nio,*) '  Coordinates (option 2,4,6):          '
     write(nio,*) '  Q(1) = R1         (Bohr)             '
     write(nio,*) '  Q(2) = R2         (Bohr)             '
     write(nio,*) '  Q(3) = a          (Radian)           '
     write(nio,*) '                                       '
     write(nio,*) '  V           (Hartree)                '
+    write(nio,*) '                                       '
+    write(nio,*) ' Options (default: 6)                  '
+    write(nio,*) ' 1,2: B3LYP/cc-pVTZ 1st version (do not use)'
+    write(nio,*) ' 3,4: B3LYP/cc-pVTZ 2d  version        '
+    write(nio,*) ' 5,6: CCSD(T)-F12b/cc-pVTZ-F12         '
     write(nio,*) '                                       '
     write(nio,*) 'Ref: unpublished'
     write(nio,*) '---------------------------------------'
@@ -391,14 +416,82 @@ MODULE QML_ClH2p_m
       write(nio,*) '                                       '
       write(nio,*) '                                       '
       write(nio,*) '  Level: B3LYP/cc-pVTZ_v2              '
+      write(nio,*) '  Minimum:                             '
+      write(nio,*) '  Q(1) = a    = 1.6525859462 (Rad)     '
+      write(nio,*) '  Q(2) = r+   = 2.4849898659 (Bohr)    '
+      write(nio,*) '  Q(3) = r-   = 0.           (Bohr)    '
+      write(nio,*) '                                       '
+      write(nio,*) '  V = -461.0632775273 Hartree          '
+      write(nio,*) ' grad(:) =[ 0.0000000000, 0.0000726996,'
+      write(nio,*) '            0.0000000000]              '
+      write(nio,*) ' hess    =[0.165834373,0.008873536,0.000000000'
+      write(nio,*) '           0.008873536,0.544253313,0.000000000'
+      write(nio,*) '           0.000000000,0.000000000,0.534630932]'
+      write(nio,*) '                                       '
+      write(nio,*) 'The constant metric tensor is obtained '
+      write(nio,*) ' with Tnum at the minimun.             '
+      write(nio,*) '                                       '
     CASE (4)
       write(nio,*) '                                       '
       write(nio,*) '                                       '
       write(nio,*) '  Level: B3LYP/cc-pVTZ_v2              '
+      write(nio,*) '  Minimum:                             '
+      write(nio,*) '  Q(1) = R1   = 2.4849898659 (Bohr)    '
+      write(nio,*) '  Q(2) = R2   = 2.4849898659 (Bohr)    '
+      write(nio,*) '  Q(3) = a    = 1.6525859462 (Rad)     '
+      write(nio,*) '                                       '
+      write(nio,*) '  V = -461.0632775273 Hartree          '
+      write(nio,*) ' grad(:) =[ 0.0000363498, 0.0000363498,'
+      write(nio,*) '            0.0000000000]              '
+      write(nio,*) ' hess    =[0.269721061,0.002405595,0.004436768'
+      write(nio,*) '           0.002405595,0.269721061,0.004436768'
+      write(nio,*) '           0.004436768,0.004436768,0.165834373]'
+      write(nio,*) '                                       '
+      write(nio,*) 'The constant metric tensor is obtained '
+      write(nio,*) ' with Tnum at the minimun.             '
+      write(nio,*) '                                       '
+    CASE (5)
+      write(nio,*) '                                       '
+      write(nio,*) '                                       '
+      write(nio,*) '  Level: CCSD(T)-F12b/cc-pVTZ-F12      '
+      write(nio,*) '  Minimum:                             '
+      write(nio,*) '  Q(1) = a    = 1.6459159559 (Rad)     '
+      write(nio,*) '  Q(2) = r+   = 2.4673412575 (Bohr)    '
+      write(nio,*) '  Q(3) = r-   = 0.           (Bohr)    '
+      write(nio,*) '                                       '
+      write(nio,*) '  V = -460.5905268800 Hartree          '
+      write(nio,*) ' grad(:) =[ 0.0000060177, 0.0000283675,'
+      write(nio,*) '            0.0000000000]              '
+      write(nio,*) ' hess    =[0.167709143,0.010804767,0.000000000'
+      write(nio,*) '           0.010804767,0.567302406,0.000000000'
+      write(nio,*) '           0.000000000,0.000000000,0.560705276]'
+      write(nio,*) '                                       '
+      write(nio,*) 'The constant metric tensor is obtained '
+      write(nio,*) ' with Tnum at the minimun.             '
+      write(nio,*) '                                       '
+    CASE (6)
+      write(nio,*) '                                       '
+      write(nio,*) '                                       '
+      write(nio,*) '  Level: CCSD(T)-F12b/cc-pVTZ-F12      '
+      write(nio,*) '  Minimum:                             '
+      write(nio,*) '  Q(1) = R1   = 2.4673412575 (Bohr)    '
+      write(nio,*) '  Q(2) = R2   = 2.4673412575 (Bohr)    '
+      write(nio,*) '  Q(3) = a    = 1.6459159559 (Rad)     '
+      write(nio,*) '                                       '
+      write(nio,*) '  V = -460.5905268800 Hartree          '
+      write(nio,*) ' grad(:) =[ 0.0000141837, 0.0000141837,'
+      write(nio,*) '            0.0000060177]              '
+      write(nio,*) ' hess    =[0.282001921,0.001649282,0.005402383'
+      write(nio,*) '           0.001649282,0.282001921,0.005402383'
+      write(nio,*) '           0.005402383,0.005402383,0.167709143]'
+      write(nio,*) '                                       '
+      write(nio,*) 'The constant metric tensor is obtained '
+      write(nio,*) ' with Tnum at the minimun.             '
+      write(nio,*) '                                       '
     CASE Default
         write(out_unitp,*) ' ERROR in write_QModel '
         write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1,2,3,4'
+        write(out_unitp,*) ' Its value MUST be 1,2,3,4,5,6'
         STOP
     END SELECT
     write(nio,*) '---------------------------------------'
@@ -423,16 +516,16 @@ MODULE QML_ClH2p_m
 
 
     SELECT CASE (QModel%option)
-    CASE (1,3) ! a,r+,r-
+    CASE (1,3,5) ! a,r+,r-
       Q0(:) = QModel%Qref(:)
 
-    CASE (2,4) ! R1,R2,a
+    CASE (2,4,6) ! R1,R2,a
       Q0(:) = [QModel%Qref(2),QModel%Qref(2),QModel%Qref(1)]
 
     CASE Default
       write(out_unitp,*) ' ERROR in get_Q0_QML_ClH2p '
       write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1,2,3,4'
+      write(out_unitp,*) ' Its value MUST be 1,2,3,4,5,6'
       STOP 'ERROR in get_Q0_QML_ClH2p: wrong option'
     END SELECT
 
@@ -457,17 +550,17 @@ MODULE QML_ClH2p_m
 
 
     SELECT CASE (QModel%option)
-    CASE (1,3) ! a,r+,r-
+    CASE (1,3,5) ! a,r+,r-
       CALL EvalPot1_QML_ClH2p(QModel,Mat_OF_PotDia,dnQ,nderiv)
 
-    CASE (2,4) ! R1,R2,a
+    CASE (2,4,6) ! R1,R2,a
       dnQsym = [dnQ(3), HALF*(dnQ(1)+dnQ(2)), HALF*(dnQ(1)-dnQ(2))]
       CALL EvalPot1_QML_ClH2p(QModel,Mat_OF_PotDia,dnQsym,nderiv)
 
     CASE Default
       write(out_unitp,*) ' ERROR in EvalPot_QML_ClH2p '
       write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1,2,3,4'
+      write(out_unitp,*) ' Its value MUST be 1,2,3,4,5,6'
       STOP 'ERROR in EvalPot_QML_ClH2p: wrong option'
     END SELECT
 

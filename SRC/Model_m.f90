@@ -843,13 +843,17 @@ CONTAINS
       !! === README ==
       !! ClH2+ potential:
       !! pot_name  = 'ClH2+'
-      !! option    = 1
+      !! option    = 1 to 6 (default 6)
       !! ndim      = 3
       !! nsurf     = 1
-      !! remark, two options are possible:
-      !!    option = 1, the coordinates are [angle, R+, R-] (in bohr and radian)
-      !!    option = 2, the coordinates are [R1, R2, angle] (in bohr and radian)
-      !! refs (option=1 and 2): unpublished
+      !! remark, 6 options are possible:
+      !!    options = 1,3,5: the coordinates are [angle, R+, R-] (in bohr and radian)
+      !!    options = 2,4,6: the coordinates are [R1, R2, angle] (in bohr and radian)
+      !!
+      !!    options = 1,2: B3LYP/cc-pVTZ 1st version (do not use)
+      !!    options = 3,4: B3LYP/cc-pVTZ 2d  version
+      !!    options = 5,6: CCSD(T)-F12b/cc-pVTZ-F12
+      !! refs: unpublished
       !! === END README ==
       allocate(QML_ClH2p_t :: QModel%QM)
       QModel%QM = Init_QML_ClH2p(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
