@@ -1677,6 +1677,9 @@ SUBROUTINE test_ClH2p
   real (kind=Rkind), allocatable :: q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: PotVal_gaussian
+  real (kind=Rkind), allocatable :: qtest(:,:),EAbInitio(:)
+
 
 
   nderiv = 2
@@ -1766,6 +1769,145 @@ SUBROUTINE test_ClH2p
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
+
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-ClH2+ (option 3: a,R+,R-)----'
+  CALL Init_Model(QModel,pot_name='ClH2p',Print_init=.TRUE.,option=3)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(q(QModel%QM%ndim))
+  CALL get_Q0_Model(Q,QModel,option=0)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='ClH2p')
+
+  CALL get_Q0_Model(Q,QModel,option=0)
+
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[0.8_Rkind,Q(2),Q(3)], &
+                               Qmax=[2.6_Rkind,Q(2),Q(3)], &
+                        nb_points=101,grid_file='grid_ClH2+_Q1.tab')
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[Q(1),2.1_Rkind,Q(3)], &
+                               Qmax=[Q(1),3.1_Rkind,Q(3)], &
+                        nb_points=101,grid_file='grid_ClH2+_Q2.tab')
+
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[Q(1),Q(2),-0.5_Rkind], &
+                               Qmax=[Q(1),Q(2), 0.5_Rkind], &
+                        nb_points=101,grid_file='grid_ClH2+_Q3.tab')
+
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[0.8_Rkind,2.1_Rkind,Q(3)], &
+                               Qmax=[2.6_Rkind,3.1_Rkind,Q(3)], &
+                        nb_points=101,grid_file='grid_ClH2+_Q12.tab')
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[Q(1),2.1_Rkind,-0.5_Rkind], &
+                               Qmax=[Q(1),3.1_Rkind, 0.5_Rkind], &
+                        nb_points=101,grid_file='grid_ClH2+_Q23.tab')
+
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[0.8_Rkind,Q(2),-0.5_Rkind], &
+                               Qmax=[2.6_Rkind,Q(2), 0.5_Rkind], &
+                        nb_points=101,grid_file='grid_ClH2+_Q13.tab')
+  deallocate(q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-ClH2+ (option 4: R1,R2,a)----'
+  CALL Init_Model(QModel,pot_name='ClH2p',Print_init=.TRUE.,option=4)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(q(QModel%QM%ndim))
+  CALL get_Q0_Model(Q,QModel,option=0)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='ClH2p')
+
+
+  CALL dealloc_dnMat(PotVal)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential test against the ab initio values '
+  EAbInitio = [-461.057937359_Rkind,-461.027304042_Rkind,-460.988071490_Rkind]
+  Qtest     = reshape([2.7_Rkind,2.5_Rkind,1.7_Rkind, &
+                       2.3_Rkind,2.7_Rkind,1.1_Rkind, &
+                       3.0_Rkind,2.5_Rkind,2.6_Rkind] &
+              ,shape=[3,size(EAbInitio)])
+  DO i=1,size(EAbInitio)
+    Q = Qtest(:,i)
+    write(out_unitp,*) 'Q:'
+    CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+    CALL Eval_Pot(QModel,Q,PotVal,nderiv=0)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
+    write(out_unitp,*) 'Difference with the ab initio value (cm-1)'
+
+    PotVal = (PotVal - EAbInitio(i))*219475._Rkind
+    CALL Write_dnMat(PotVal,nio=out_unitp)
+  END DO
+
+  deallocate(q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
 END SUBROUTINE test_ClH2p
 SUBROUTINE test_template
   USE QMLLib_NumParameters_m
