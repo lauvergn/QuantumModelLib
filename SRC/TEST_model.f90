@@ -35,6 +35,7 @@ PROGRAM TEST_model
 
   !CALL test_HCN_Murrell ; stop
 
+  !CALL test_ClH2p_Botschwina() ; stop
   !CALL test_ClH2p_op12() ;   CALL test_ClH2p_op34() ;   CALL test_ClH2p_op56() ; stop
 
   !CALL test_Retinal_CP2000() ; stop
@@ -93,6 +94,9 @@ PROGRAM TEST_model
   CALL test_ClH2p_op12()
   CALL test_ClH2p_op34()
   CALL test_ClH2p_op56()
+  ! 3D (full-D), One electronic surface (spectro); ClH2+ (From Botschwina 1988)
+  CALL test_ClH2p_Botschwina()
+
 
   ! 3D (full-D), One electronic surface (spectro): HCN Murrell
   CALL test_HCN_Murrell
@@ -1668,6 +1672,113 @@ DO option=1,2
 END DO
 
 END SUBROUTINE test_H2NSi
+SUBROUTINE test_ClH2p_Botschwina
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: PotVal_gaussian
+  real (kind=Rkind), allocatable :: qtest(:,:),EAbInitio(:)
+
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-ClH2+ Botschwina ------------'
+  write(out_unitp,*) '------------ option 1: R1, R2, A ------------'
+  CALL Init_Model(QModel,pot_name='ClH2p_Botschwina',Print_init=.TRUE.,option=1)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(q(QModel%QM%ndim))
+  CALL get_Q0_Model(Q,QModel,option=0)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='ClH2p_Botschwina')
+  deallocate(q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-ClH2+ Botschwina corrected --'
+  write(out_unitp,*) '------------ option 2: R1, R2, A ------------'
+  CALL Init_Model(QModel,pot_name='ClH2p_Botschwina',Print_init=.TRUE.,option=2)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(q(QModel%QM%ndim))
+  CALL get_Q0_Model(Q,QModel,option=0)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='ClH2p_Botschwina')
+  deallocate(q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+
+END SUBROUTINE test_ClH2p_Botschwina
 SUBROUTINE test_ClH2p_op12
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m

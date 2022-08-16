@@ -56,6 +56,7 @@ MODULE Model_m
   USE QML_H2SiN_m
   USE QML_H2NSi_m
   USE QML_ClH2p_m
+  USE QML_ClH2p_Botschwina_m
   USE QML_HNO3_m
   USE QML_NO3_m
   USE QML_CH5_m
@@ -857,6 +858,23 @@ CONTAINS
       !! === END README ==
       allocate(QML_ClH2p_t :: QModel%QM)
       QModel%QM = Init_QML_ClH2p(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('clh2+_botschwina','clh2p_botschwina')
+      !! === README ==
+      !! ClH2+ potential:
+      !! pot_name  = 'ClH2+_Botschwina'
+      !! option    = 1,2 (default 1)
+      !! ndim      = 3
+      !! nsurf     = 1
+      !! remark, 2 options are possible:
+      !!    options = 1: CEPA-1
+      !!    options = 2: CEPA-1 corrected
+      !! ref: Peter Botschwina, J. Chem. Soc., Faraday Trans. 2, 1988, 84(9), 1263-1276'
+      !!      DOI: 10.1039/F29888401263
+      !! === END README ==
+      allocate(QML_ClH2p_Botschwina_t :: QModel%QM)
+      QModel%QM = Init_QML_ClH2p_Botschwina(QModel_in,read_param=read_nml,      &
+                                            nio_param_file=nio_loc)
 
     CASE ('template')
       !! 3D-potential with 1 surface
