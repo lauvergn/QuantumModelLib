@@ -302,7 +302,6 @@ MODULE QML_H3_m
 
     SELECT CASE(QModel%option)
     CASE (0,10) !
-
       IF (QModel%ndim == 2) THEN
         QModel%ndimQ      = 2
       ELSE
@@ -389,7 +388,7 @@ MODULE QML_H3_m
       write(nio,*) 'Can be used with the second 1D-IRC H3 LSTH model (from sum and difference)'
 
     CASE (1) ! IRC
-      write(nio,*) 'First 1D-IRC H3 LSTH model (from polar tranformation)'
+      write(nio,*) 'First 1D-IRC H3 LSTH model (from polar transformation)'
     CASE (11) ! IRC
       write(nio,*) 'Second 1D-IRC H3 LSTH model (from sum and difference)'
     END SELECT

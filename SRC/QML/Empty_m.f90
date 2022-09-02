@@ -45,8 +45,12 @@ MODULE QML_Empty_m
     integer :: ndimCart    = 0
 
     ! for functions (used in the fit, Qeq(Q(1:ndimFunc)), hess() ....)
-    integer :: ndimFunc    = 0
-    integer :: nb_Func     = 0
+    integer :: ndimFunc         = 0
+    integer :: nb_Func          = 0
+    integer :: IndexFunc_Ene    = 0
+    integer :: IndexFunc_Qop    = 0
+    integer :: IndexFunc_Grad   = 0
+    integer :: IndexFunc_Hess   = 0
 
 
     logical :: numeric     = .FALSE.
@@ -328,9 +332,15 @@ CONTAINS
     write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
     write(nio,*) 'ndimQ:                     ',QModel%ndimQ
     write(nio,*) 'ndimCart:                  ',QModel%ndimCart
+    write(nio,*)
     write(nio,*) 'ndimFunc:                  ',QModel%ndimFunc
     write(nio,*) 'nb_Func:                   ',QModel%nb_Func
+    write(nio,*) 'IndexFunc_Ene:             ',QModel%IndexFunc_Ene
+    write(nio,*) 'IndexFunc_Qop:             ',QModel%IndexFunc_Qop
+    write(nio,*) 'IndexFunc_Grad:            ',QModel%IndexFunc_Grad
+    write(nio,*) 'IndexFunc_Hess:            ',QModel%IndexFunc_Hess
 
+    write(nio,*)
     write(nio,*) 'adiabatic:                 ',QModel%adiabatic
     write(nio,*) 'Vib_adia:                  ',QModel%Vib_adia
     write(nio,*) 'Phase_Following:           ',QModel%Phase_Following
@@ -389,10 +399,10 @@ CONTAINS
     write(nio,*) 'nb_Func:                   ',QModel%nb_Func
     write(nio,*)
 
-     IF (allocated(QModel%d0GGdef)) THEN
-       write(nio,*) 'Deformation metric tensor (~ 1/Mii)'
-       CALL Write_RMat(QModel%d0GGdef,nio,nbcol1=5)
-     END IF
+    IF (allocated(QModel%d0GGdef)) THEN
+     write(nio,*) 'Deformation metric tensor (~ 1/Mii)'
+     CALL Write_RMat(QModel%d0GGdef,nio,nbcol1=5)
+    END IF
 
     write(nio,*) 'END QUANTUM MODEL default parameters'
     flush(nio)

@@ -96,7 +96,7 @@ MODULE QML_HCN_Murrell_m
     IF (QModel%option == -1) QModel%option = 0
 
     SELECT CASE(QModel%option)
-    CASE (0,1) !
+    CASE (0,1,11) !
 
       IF (QModel%Cart_TO_Q) THEN
         QModel%ndim       = QModel%ndimCart
@@ -104,26 +104,32 @@ MODULE QML_HCN_Murrell_m
         QModel%ndim       = QModel%ndimQ
       END IF
 
-      ! so that, we can get the irc function with the 3D model
-      QModel%ndimFunc = 1
-      QModel%nb_Func  = -1 ! V, R1op,R2opt,R3opt,RPH_r,RPH_th
+      ! so that, we can get the MEP function with the 3D model
+      QModel%ndimFunc       = 1
+      QModel%nb_Func        = 1 + 2 + 4 ! V,Req,Hess
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 2
+      QModel%IndexFunc_Hess = 4
 
-      QModel%pot_name   = 'HCN_Murrell'
-    CASE (2)
-      QModel%ndimQ    = 1
-      QModel%ndim     = 1
+      QModel%pot_name       = 'HCN_Murrell'
+    CASE (2,21)
+      QModel%ndimQ          = 1
+      QModel%ndim           = 1
 
-      QModel%ndimFunc = 1
-      QModel%nb_Func  = -1 ! V, R1op,R2opt,R3opt,RPH_r,RPH_th
+      ! so that, we can get the MEP function with the 3D model
+      QModel%ndimFunc       = 1
+      QModel%nb_Func        = 1 + 2 + 4 ! V,Req,Hess
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 2
+      QModel%IndexFunc_Hess = 4
 
-      QModel%pot_name   = 'HCN_Murrell_IRC'
-      QModel%no_ana_der = .FALSE.
+      QModel%pot_name       = 'HCN_Murrell_MEP'
     CASE Default
        write(out_unitp,*) 'Write_QModel'
        CALL QModel%Write_QModel(out_unitp)
        write(out_unitp,*) ' ERROR in ',name_sub
        write(out_unitp,*) ' option: ',QModel%option
-       write(out_unitp,*) ' the possible option are: 0, 1 (3D) or 1 (1D-IRC)'
+       write(out_unitp,*) ' the possible option are: 0, 1, 11 (3D) or 2,21 (1D-MEP)'
        STOP 'ERROR in Init_QML_HCN_Murrell: wrong option'
     END SELECT
 
@@ -161,9 +167,13 @@ MODULE QML_HCN_Murrell_m
     CASE (0) ! 3D (three distances)
       write(nio,*) '3D with 3 distances'
     CASE (1) ! 3D Jacobi
-      write(nio,*) '3D With Jacobi coordinates'
-    CASE (2) ! IRC
-      write(nio,*) '1D-IRC + RPH'
+      write(nio,*) '3D With Jacobi coordinates: Theta, R_H-CN, R_CN'
+    CASE (11) ! 3D Jacobi
+      write(nio,*) '3D With Jacobi coordinates: cos(Theta), R_H-CN, R_CN'
+    CASE (2) ! MEP
+      write(nio,*) '1D-MEP: Theta'
+    CASE (21) ! MEP
+      write(nio,*) '1D-MEP: cos(Theta)'
     END SELECT
 
     write(nio,*) 'end HCN_Murrell current parameters'
@@ -192,11 +202,12 @@ MODULE QML_HCN_Murrell_m
 
     SELECT CASE(QModel%option)
     CASE (0) ! 3D (three distances)
-      CALL QML_EvalPot3D_Murrell(Mat_OF_PotDia,dnQ,.FALSE.)
-    CASE (1) ! 3D Jacobi
-      CALL QML_EvalPot3D_Murrell(Mat_OF_PotDia,dnQ,.TRUE.)
-
-    CASE (2) ! IRC
+      CALL QML_EvalPot3D_Murrell(Mat_OF_PotDia,dnQ,.FALSE.,.FALSE.)
+    CASE (1) ! 3D Jacobi: Theta (H-CN), RH-CN, RCN
+      CALL QML_EvalPot3D_Murrell(Mat_OF_PotDia,dnQ,.TRUE.,.FALSE.)
+    CASE (11) ! 3D Jacobi : cos(Theta) (H-CN), RH-CN, RCN
+      CALL QML_EvalPot3D_Murrell(Mat_OF_PotDia,dnQ,.TRUE.,.TRUE.)
+    CASE (2,21) ! MEP : Theta (H-CN) or cos(Theta) (H-CN)
       CALL EvalFunc_QML_HCN_Murrell(QModel,Func,dnQ,nderiv)
       Mat_OF_PotDia(1,1) = Func(1)
     END SELECT
@@ -204,13 +215,13 @@ MODULE QML_HCN_Murrell_m
 
   END SUBROUTINE EvalPot_QML_HCN_Murrell
 
-  SUBROUTINE QML_EvalPot3D_Murrell(Mat_OF_PotDia,dnQ,Jacobi)
+  SUBROUTINE QML_EvalPot3D_Murrell(Mat_OF_PotDia,dnQ,Jacobi,cosTh)
   USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (dnS_t),            intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),            intent(in)    :: dnQ(:)
-    logical,                 intent(in)    :: Jacobi
+    logical,                 intent(in)    :: Jacobi,cosTh
 
     real(kind=Rkind), parameter :: mB = 12._Rkind
     real(kind=Rkind), parameter :: mC = 14.003074_Rkind
@@ -233,7 +244,11 @@ MODULE QML_HCN_Murrell_m
       pR = dnQ(2)
       gR = dnQ(3)
 
-      T=cos(dnQ(1))
+      IF (cosTh) THEN
+        T = dnQ(1)
+      ELSE
+        T = cos(dnQ(1))
+      END IF
       RN=mC/(mB+mC)
       RC=ONE-RN
       R1=sqrt(pR**2+(RN*gR)**2-TWO*pR*gR*RN*T)
@@ -388,7 +403,7 @@ MODULE QML_HCN_Murrell_m
   END SUBROUTINE Cart_TO_Q_QML_HCN_Murrell
 
 
-  ! for IRC, RPH
+  ! for MEP
   SUBROUTINE EvalFunc_QML_HCN_Murrell(QModel,Func,dnQ,nderiv)
   USE ADdnSVM_m
   IMPLICIT NONE
@@ -398,138 +413,221 @@ MODULE QML_HCN_Murrell_m
     TYPE (dnS_t),             intent(in)    :: dnQ(:)
     integer,                  intent(in)    :: nderiv
 
-    TYPE (dnS_t)                  :: s,ts,dnR,dnTh
+
+    TYPE (dnS_t)                  :: dnCth
     integer                       :: i
     integer,           parameter  :: max_deg = 29
     TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
-    real (kind=Rkind), parameter  :: betaQ = 1.4_Rkind
 
 
-    s  = dnQ(1)
-    ts = tanh(s)
+    IF (QModel%option == 11 .OR. QModel%option == 21) THEN
+      dnCth = dnQ(1)
+    ELSE
+      dnCth = cos(dnQ(1))
+    END IF
 
     DO i=0,max_deg
-      tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
+      tab_Pl(i) = dnLegendre0(dnCth,i,ReNorm=.TRUE.)
     END DO
 
-    ! potential
-    Func(1) = -0.17447440045043028_Rkind +                                      &
-              (0.010858975893853413_Rkind)    * tab_Pl(0)  +                    &
-              (-0.009667492179225417_Rkind)   * tab_Pl(2)  +                    &
-              (-0.0006089583649096594_Rkind)  * tab_Pl(4)  +                    &
-              (-0.0005463286353325458_Rkind)  * tab_Pl(6)  +                    &
-              (-7.674511378387464e-05_Rkind)  * tab_Pl(8)  +                    &
-              (-1.2703773915447383e-06_Rkind) * tab_Pl(10) +                    &
-              (1.7588216355925958e-05_Rkind)  * tab_Pl(12) +                    &
-              (1.7051544329081514e-05_Rkind)  * tab_Pl(14) +                    &
-              (-3.7481719120090565e-05_Rkind) * tab_Pl(16)
+    ! potential: MEP
+    Func(1) = (-0.655285009791138906_Rkind)     * tab_Pl( 0) +    &
+              (0.368866311567775168E-02_Rkind)  * tab_Pl( 1) +    &
+              (-0.124410758695529707E-01_Rkind) * tab_Pl( 2) +    &
+              (-0.990511349333085718E-02_Rkind) * tab_Pl( 3) +    &
+              (-0.500503540822320580E-02_Rkind) * tab_Pl( 4) +    &
+              (0.270621059491787551E-02_Rkind)  * tab_Pl( 5) +    &
+              (0.141103658983222240E-02_Rkind)  * tab_Pl( 6) +    &
+              (-0.437949934617522837E-03_Rkind) * tab_Pl( 7) +    &
+              (-0.252460909929458637E-03_Rkind) * tab_Pl( 8) +    &
+              (-0.358625641419419249E-04_Rkind) * tab_Pl( 9) +    &
+              (0.976619474825319656E-04_Rkind)  * tab_Pl(10) +    &
+              (0.217366800231287497E-04_Rkind)  * tab_Pl(11) +    &
+              (-0.268212617015022991E-04_Rkind) * tab_Pl(12) +    &
+              (-0.342047081164582388E-05_Rkind) * tab_Pl(13) +    &
+              (-0.362810339599638992E-06_Rkind) * tab_Pl(14) +    &
+              (0.259881013065570441E-05_Rkind)  * tab_Pl(15) +    &
+              (0.257930636674634998E-05_Rkind)  * tab_Pl(16) +    &
+              (-0.158479604070947891E-05_Rkind) * tab_Pl(17) +    &
+              (-0.920544265357076132E-06_Rkind) * tab_Pl(18) +    &
+              (0.338251259556195095E-06_Rkind)  * tab_Pl(19) +    &
+              (0.285425243520912436E-06_Rkind)  * tab_Pl(20) +    &
+              (0.425409677567662173E-07_Rkind)  * tab_Pl(21) +    &
+              (-0.101054782382119211E-06_Rkind) * tab_Pl(22) +    &
+              (-0.654484114758141540E-07_Rkind) * tab_Pl(23) +    &
+              (0.335637142899206936E-07_Rkind)  * tab_Pl(24) +    &
+              (0.463079565321430222E-07_Rkind)  * tab_Pl(25) +    &
+              (-0.336153084693118319E-07_Rkind) * tab_Pl(26) +    &
+              (-0.158611305955054091E-07_Rkind) * tab_Pl(27) +    &
+              (0.134961732975956485E-07_Rkind)  * tab_Pl(28) +    &
+              (0.106816325366728205E-07_Rkind)  * tab_Pl(29)
 
-   ! R1eq
-   Func(2) = (0.1357176824058676_Rkind)     * tab_Pl(0)            +             &
-            (-0.0009647928495994389_Rkind) * tab_Pl(1)            +             &
-            (-0.1496072194236861_Rkind)    * tab_Pl(2)            +             &
-            (-0.004622944008685905_Rkind)  * tab_Pl(3)            +             &
-            (0.013899404906043201_Rkind)   * tab_Pl(4)            +             &
-            (0.00406379918470803_Rkind)    * tab_Pl(5)            +             &
-            (-0.0010528232085257284_Rkind) * tab_Pl(6)            +             &
-            (0.0006881469085679271_Rkind)  * tab_Pl(7)            +             &
-            (0.0009920029080101385_Rkind)  * tab_Pl(8)            +             &
-            (0.00014255050945681492_Rkind) * tab_Pl(9)            +             &
-            (2.4954747402158953e-05_Rkind) * tab_Pl(10)           +             &
-            (0.0004543931972375909_Rkind)  * tab_Pl(11)
+    ! Rop : R_H-CN
+    Func(2) = (3.35875511812137484_Rkind) * tab_Pl(0) +    &
+              (0.148871082021365564_Rkind) * tab_Pl(1) +    &
+              (0.481094554409106090_Rkind) * tab_Pl(2) +    &
+              (-0.253922825825884796E-01_Rkind) * tab_Pl(3) +    &
+              (-0.537271857241523043E-01_Rkind) * tab_Pl(4) +    &
+              (0.287137955899733916E-02_Rkind) * tab_Pl(5) +    &
+              (0.883287278072170806E-02_Rkind) * tab_Pl(6) +    &
+              (0.341914213510483619E-02_Rkind) * tab_Pl(7) +    &
+              (-0.143761468388556584E-02_Rkind) * tab_Pl(8) +    &
+              (-0.155642376002690548E-02_Rkind) * tab_Pl(9) +    &
+              (-0.243938464552128774E-03_Rkind) * tab_Pl(10) +    &
+              (0.324046391033408054E-03_Rkind) * tab_Pl(11) +    &
+              (0.452748654304650116E-03_Rkind) * tab_Pl(12) +    &
+              (-0.832793760270137800E-04_Rkind) * tab_Pl(13) +    &
+              (-0.208508529872799653E-03_Rkind) * tab_Pl(14) +    &
+              (0.188747686492221380E-04_Rkind) * tab_Pl(15) +    &
+              (0.460225477732536980E-04_Rkind) * tab_Pl(16) +    &
+              (0.115136940873498727E-04_Rkind) * tab_Pl(17) +    &
+              (-0.227801221698345384E-05_Rkind) * tab_Pl(18) +    &
+              (-0.113574404267734137E-04_Rkind) * tab_Pl(19) +    &
+              (-0.349582880383952149E-05_Rkind) * tab_Pl(20) +    &
+              (0.404005631088145106E-05_Rkind) * tab_Pl(21) +    &
+              (0.187086530648967789E-05_Rkind) * tab_Pl(22) +    &
+              (-0.474547142158161413E-06_Rkind) * tab_Pl(23) +    &
+              (-0.112906549967473481E-05_Rkind) * tab_Pl(24) +    &
+              (-0.537314466513270506E-06_Rkind) * tab_Pl(25) +    &
+              (0.702706581417238486E-06_Rkind) * tab_Pl(26) +    &
+              (-0.107428406076785338E-05_Rkind) * tab_Pl(27) +    &
+              (0.348530750491854912E-07_Rkind) * tab_Pl(28) +    &
+              (0.108653261459408565E-05_Rkind) * tab_Pl(29)
 
-   ! R2eq(s) = R1eq(-s)
-   Func(3) = (0.1357176824058676_Rkind)     * tab_Pl(0)            +             &
-            (0.0009647928495994389_Rkind)  * tab_Pl(1)            +             &
-            (-0.1496072194236861_Rkind)    * tab_Pl(2)            +             &
-            (0.004622944008685905_Rkind)   * tab_Pl(3)            +             &
-            (0.013899404906043201_Rkind)   * tab_Pl(4)            +             &
-            (-0.00406379918470803_Rkind)   * tab_Pl(5)            +             &
-            (-0.0010528232085257284_Rkind) * tab_Pl(6)            +             &
-            (-0.0006881469085679271_Rkind) * tab_Pl(7)            +             &
-            (0.0009920029080101385_Rkind)  * tab_Pl(8)            +             &
-            (-0.00014255050945681492_Rkind)* tab_Pl(9)            +             &
-            (2.4954747402158953e-05_Rkind) * tab_Pl(10)           +             &
-            (-0.0004543931972375909_Rkind) * tab_Pl(11)
+    ! Rop : R_CN
+    Func(3) = (3.05567618651521178_Rkind) * tab_Pl(0) +    &
+              (-0.387552561077800402E-02_Rkind) * tab_Pl(1) +    &
+              (0.362104655719323598E-01_Rkind) * tab_Pl(2) +    &
+              (-0.530589035832196559E-02_Rkind) * tab_Pl(3) +    &
+              (-0.150883035992536076E-01_Rkind) * tab_Pl(4) +    &
+              (0.180163772289059442E-02_Rkind) * tab_Pl(5) +    &
+              (0.149572376873839718E-02_Rkind) * tab_Pl(6) +    &
+              (0.805635074701905652E-04_Rkind) * tab_Pl(7) +    &
+              (0.176212224375385838E-03_Rkind) * tab_Pl(8) +    &
+              (-0.210362333581846055E-03_Rkind) * tab_Pl(9) +    &
+              (-0.169109695229127790E-03_Rkind) * tab_Pl(10) +    &
+              (0.803399445418478573E-04_Rkind) * tab_Pl(11) +    &
+              (0.921372890564473051E-04_Rkind) * tab_Pl(12) +    &
+              (-0.210460594038160419E-04_Rkind) * tab_Pl(13) +    &
+              (-0.324489980716477540E-04_Rkind) * tab_Pl(14) +    &
+              (0.117169011613050838E-05_Rkind) * tab_Pl(15) +    &
+              (0.474614394156325088E-05_Rkind) * tab_Pl(16) +    &
+              (0.399296936512522564E-05_Rkind) * tab_Pl(17) +    &
+              (0.153363120618120103E-05_Rkind) * tab_Pl(18) +    &
+              (-0.353877162048743810E-05_Rkind) * tab_Pl(19) +    &
+              (-0.238404368608901790E-05_Rkind) * tab_Pl(20) +    &
+              (0.543490026077864873E-06_Rkind) * tab_Pl(21) +    &
+              (0.108342236176666158E-05_Rkind) * tab_Pl(22) +    &
+              (0.343696074723912407E-06_Rkind) * tab_Pl(23) +    &
+              (-0.812400205583611045E-06_Rkind) * tab_Pl(24) +    &
+              (-0.128163223845606709E-05_Rkind) * tab_Pl(25) +    &
+              (-0.646090897300889352E-06_Rkind) * tab_Pl(26) +    &
+              (0.327319857948809944E-06_Rkind) * tab_Pl(27) +    &
+              (0.812961909547953328E-06_Rkind) * tab_Pl(28) +    &
+              (0.415922247152272469E-06_Rkind) * tab_Pl(29)
 
-    ! R3eq(s) = R1eq(s)+R2eq(s) (!linear HHH)
-    Func(4) = Func(2) + Func(3)
+    ! hess: R_H-CN,R_H-CN
+    Func(4) = (0.490102788711937298_Rkind) * tab_Pl(0) +    &
+              (-0.607405214287308134E-01_Rkind) * tab_Pl(1) +    &
+              (0.471897394697577272E-01_Rkind) * tab_Pl(2) +    &
+              (0.215199509086547482E-01_Rkind) * tab_Pl(3) +    &
+              (0.187589053704660357E-01_Rkind) * tab_Pl(4) +    &
+              (-0.730896227164504544E-02_Rkind) * tab_Pl(5) +    &
+              (-0.495680012901110034E-02_Rkind) * tab_Pl(6) +    &
+              (0.545601888552436865E-03_Rkind) * tab_Pl(7) +    &
+              (0.288205091824102807E-02_Rkind) * tab_Pl(8) +    &
+              (-0.150455202101582481E-03_Rkind) * tab_Pl(9) +    &
+              (-0.135822812297228617E-02_Rkind) * tab_Pl(10) +    &
+              (0.378620952994913158E-03_Rkind) * tab_Pl(11) +    &
+              (0.223172238114486974E-03_Rkind) * tab_Pl(12) +    &
+              (-0.113639874719230033E-03_Rkind) * tab_Pl(13) +    &
+              (0.479670914337290878E-04_Rkind) * tab_Pl(14) +    &
+              (-0.295643176360794466E-04_Rkind) * tab_Pl(15) +    &
+              (-0.220891025839080444E-04_Rkind) * tab_Pl(16) +    &
+              (0.233380028833382715E-04_Rkind) * tab_Pl(17) +    &
+              (0.226740013135044743E-05_Rkind) * tab_Pl(18) +    &
+              (-0.383700217098819257E-05_Rkind) * tab_Pl(19) +    &
+              (-0.176925895920402338E-05_Rkind) * tab_Pl(20) +    &
+              (0.126527708534225592E-06_Rkind) * tab_Pl(21) +    &
+              (0.102875267686912131E-05_Rkind) * tab_Pl(22) +    &
+              (-0.244257932870602493E-06_Rkind) * tab_Pl(23) +    &
+              (-0.132903576796384672E-06_Rkind) * tab_Pl(24) +    &
+              (0.318903079193596794E-07_Rkind) * tab_Pl(25) +    &
+              (0.270895958135604389E-06_Rkind) * tab_Pl(26) +    &
+              (-0.334319014937836363E-07_Rkind) * tab_Pl(27) +    &
+              (-0.215243670177822377E-06_Rkind) * tab_Pl(28) +    &
+              (-0.532921517866474822E-07_Rkind) * tab_Pl(29)
 
+    ! hess: R_H-CN,R_CN
+    Func(5) = (-0.269621628391861212_Rkind) * tab_Pl(0) +    &
+              (0.298216690078651966E-01_Rkind) * tab_Pl(1) +    &
+              (-0.252263406635114523E-02_Rkind) * tab_Pl(2) +    &
+              (-0.189365831326591162E-01_Rkind) * tab_Pl(3) +    &
+              (-0.135862653973030569E-01_Rkind) * tab_Pl(4) +    &
+              (0.180882447027921715E-02_Rkind) * tab_Pl(5) +    &
+              (-0.807456875985611278E-02_Rkind) * tab_Pl(6) +    &
+              (0.162126376060913813E-02_Rkind) * tab_Pl(7) +    &
+              (0.246532720643025506E-02_Rkind) * tab_Pl(8) +    &
+              (-0.529028555072996428E-03_Rkind) * tab_Pl(9) +    &
+              (-0.604375862043439872E-03_Rkind) * tab_Pl(10) +    &
+              (0.450771375745010218E-04_Rkind) * tab_Pl(11) +    &
+              (0.158382700747678866E-03_Rkind) * tab_Pl(12) +    &
+              (0.838098940644294889E-05_Rkind) * tab_Pl(13) +    &
+              (0.157629766319828802E-05_Rkind) * tab_Pl(14) +    &
+              (-0.182030790249838681E-04_Rkind) * tab_Pl(15) +    &
+              (-0.271668080516251952E-04_Rkind) * tab_Pl(16) +    &
+              (0.156823664488067170E-04_Rkind) * tab_Pl(17) +    &
+              (0.129700582797636253E-04_Rkind) * tab_Pl(18) +    &
+              (-0.588984022955290420E-05_Rkind) * tab_Pl(19) +    &
+              (-0.329310498897404528E-05_Rkind) * tab_Pl(20) +    &
+              (0.382968507344196263E-06_Rkind) * tab_Pl(21) +    &
+              (0.662203964149338334E-06_Rkind) * tab_Pl(22) +    &
+              (0.537619208727332427E-06_Rkind) * tab_Pl(23) +    &
+              (0.503885020561694568E-07_Rkind) * tab_Pl(24) +    &
+              (-0.117926135430141456E-06_Rkind) * tab_Pl(25) +    &
+              (-0.950694993110524940E-07_Rkind) * tab_Pl(26) +    &
+              (0.661655056484692365E-07_Rkind) * tab_Pl(27) +    &
+              (-0.444581410057473655E-07_Rkind) * tab_Pl(28) +    &
+              (-0.327143067519841403E-07_Rkind) * tab_Pl(29)
 
-    ! RPH parameters r
-    dnR      =                                                                  &
-              (0.26766607524797303_Rkind)     * tab_Pl(0)  +                    &
-              (6.806052032746861e-09_Rkind)   * tab_Pl(1)  +                    &
-              (-0.0015535754772908871_Rkind)  * tab_Pl(2)  +                    &
-              (2.0009552260491068e-08_Rkind)  * tab_Pl(3)  +                    &
-              (-0.012582288956034828_Rkind)   * tab_Pl(4)  +                    &
-              (-2.8073095955518356e-08_Rkind) * tab_Pl(5)  +                    &
-              (0.010502145645054565_Rkind)    * tab_Pl(6)  +                    &
-              (2.5402220408683394e-08_Rkind)  * tab_Pl(7)  +                    &
-              (-0.00678496091874973_Rkind)    * tab_Pl(8)  +                    &
-              (-1.847484282317999e-08_Rkind)  * tab_Pl(9)  +                    &
-              (0.003474989262273117_Rkind)    * tab_Pl(10) +                    &
-              (1.2017866799932617e-08_Rkind)  * tab_Pl(11) +                    &
-              (-0.0019395131094161956_Rkind)  * tab_Pl(12) +                    &
-              (-7.233204033268473e-09_Rkind)  * tab_Pl(13) +                    &
-              (0.0013262986972957342_Rkind)   * tab_Pl(14) +                    &
-              (4.2016095723736e-09_Rkind)     * tab_Pl(15) +                    &
-              (-0.0007299784927963528_Rkind)  * tab_Pl(16) +                    &
-              (-2.401414821263817e-09_Rkind)  * tab_Pl(17) +                    &
-              (0.00044078321280719524_Rkind)  * tab_Pl(18) +                    &
-              (1.3108656875294227e-09_Rkind)  * tab_Pl(19) +                    &
-              (0.00022352966903015168_Rkind)  * tab_Pl(20) +                    &
-              (-7.518732295064561e-10_Rkind)  * tab_Pl(21) +                    &
-              (-0.00036549376491577264_Rkind) * tab_Pl(22) +                    &
-              (4.1612329783873094e-10_Rkind)  * tab_Pl(23) +                    &
-              (0.0004459035924032867_Rkind)   * tab_Pl(24) +                    &
-              (-2.6223332018163205e-10_Rkind) * tab_Pl(25) +                    &
-              (2.273672442589093e-05_Rkind)   * tab_Pl(26) +                    &
-              (1.447938227854266e-10_Rkind)   * tab_Pl(27) +                    &
-              (-1.855501791553842e-05_Rkind)  * tab_Pl(28) +                    &
-              (-9.176168686383644e-11_Rkind)  * tab_Pl(29)
+    Func(6) =   Func(5)      ! hess: R_CN,R_H-CN
 
-    ! RPH paramter: th
-    dnTh     =                                                                  &
-              (0.7853980834870691_Rkind)      * tab_Pl(0)  +                    &
-              (1.6556773456797165_Rkind)      * tab_Pl(1)  +                    &
-              (3.4626851455522983e-07_Rkind)  * tab_Pl(2)  +                    &
-              (-0.5731854583939033_Rkind)     * tab_Pl(3)  +                    &
-              (-2.8771835705821473e-07_Rkind) * tab_Pl(4)  +                    &
-              (0.2350158022234596_Rkind)      * tab_Pl(5)  +                    &
-              (1.989230244253878e-07_Rkind)   * tab_Pl(6)  +                    &
-              (-0.10219520909830185_Rkind)    * tab_Pl(7)  +                    &
-              (-1.2621208480613884e-07_Rkind) * tab_Pl(8)  +                    &
-              (0.048468715568805845_Rkind)    * tab_Pl(9)  +                    &
-              (7.696291823409225e-08_Rkind)   * tab_Pl(10) +                    &
-              (-0.024524927534999522_Rkind)   * tab_Pl(11) +                    &
-              (-4.58667842666333e-08_Rkind)   * tab_Pl(12) +                    &
-              (0.014023814755791649_Rkind)    * tab_Pl(13) +                    &
-              (2.773916912783092e-08_Rkind)   * tab_Pl(14) +                    &
-              (-0.006958147875138725_Rkind)   * tab_Pl(15) +                    &
-              (-1.639868076367661e-08_Rkind)  * tab_Pl(16) +                    &
-              (0.003770984041691324_Rkind)    * tab_Pl(17) +                    &
-              (9.721641212735887e-09_Rkind)   * tab_Pl(18) +                    &
-              (-0.0019178090260791802_Rkind)  * tab_Pl(19) +                    &
-              (-5.691839285240476e-09_Rkind)  * tab_Pl(20) +                    &
-              (0.001074145733356513_Rkind)    * tab_Pl(21) +                    &
-              (3.3623843187612974e-09_Rkind)  * tab_Pl(22) +                    &
-              (-0.0005259206048766796_Rkind)  * tab_Pl(23) +                    &
-              (-1.9704799248725513e-09_Rkind) * tab_Pl(24) +                    &
-              (0.0003092457483074583_Rkind)   * tab_Pl(25) +                    &
-              (1.2005965897009222e-09_Rkind)  * tab_Pl(26) +                    &
-              (-0.00013246994648197604_Rkind) * tab_Pl(27) +                    &
-              (-4.627433514270627e-10_Rkind)  * tab_Pl(28) +                    &
-              (9.114113633803292e-05_Rkind)   * tab_Pl(29)
-
-    Func(5) = dnR * cos(dnTh)
-    Func(6) = dnR * sin(dnTh)
+    ! hess: R_CN,R_CN
+    Func(7) = (1.89775051256421889_Rkind) * tab_Pl(0) +    &
+              (0.189212178373149228E-01_Rkind) * tab_Pl(1) +    &
+              (-0.177346711887173797_Rkind) * tab_Pl(2) +    &
+              (0.285390255705121020E-01_Rkind) * tab_Pl(3) +    &
+              (0.117421295103266571_Rkind) * tab_Pl(4) +    &
+              (-0.108113416642430672E-01_Rkind) * tab_Pl(5) +    &
+              (-0.181273718435335900E-01_Rkind) * tab_Pl(6) +    &
+              (0.219170948917988715E-02_Rkind) * tab_Pl(7) +    &
+              (0.254074210398737418E-02_Rkind) * tab_Pl(8) +    &
+              (0.579675850294103122E-03_Rkind) * tab_Pl(9) +    &
+              (0.285040611946511661E-03_Rkind) * tab_Pl(10) +    &
+              (-0.573959392146183443E-03_Rkind) * tab_Pl(11) +    &
+              (-0.437665242169073482E-03_Rkind) * tab_Pl(12) +    &
+              (0.220390748629632348E-03_Rkind) * tab_Pl(13) +    &
+              (0.218654827462475313E-03_Rkind) * tab_Pl(14) +    &
+              (-0.476404921173668880E-04_Rkind) * tab_Pl(15) +    &
+              (-0.682533881162194865E-04_Rkind) * tab_Pl(16) +    &
+              (-0.472076754440356353E-05_Rkind) * tab_Pl(17) +    &
+              (0.917501271955926315E-05_Rkind) * tab_Pl(18) +    &
+              (0.142547973671411078E-04_Rkind) * tab_Pl(19) +    &
+              (0.801385332200406864E-05_Rkind) * tab_Pl(20) +    &
+              (-0.431806540655166862E-05_Rkind) * tab_Pl(21) +    &
+              (-0.549017839362386120E-05_Rkind) * tab_Pl(22) +    &
+              (-0.380986883790360773E-06_Rkind) * tab_Pl(23) +    &
+              (0.409272286953666955E-05_Rkind) * tab_Pl(24) +    &
+              (0.514630181802097401E-05_Rkind) * tab_Pl(25) +    &
+              (0.268744213230514938E-05_Rkind) * tab_Pl(26) +    &
+              (-0.133719501498734565E-05_Rkind) * tab_Pl(27) +    &
+              (-0.354094525621361928E-05_Rkind) * tab_Pl(28) +    &
+              (-0.191216423100044473E-05_Rkind) * tab_Pl(29)
 
     DO i=0,max_deg
       CALL dealloc_dnS(tab_Pl(i))
     END DO
-    CALL dealloc_dnS(s)
-    CALL dealloc_dnS(ts)
+    CALL dealloc_dnS(dnCth)
 
   END SUBROUTINE EvalFunc_QML_HCN_Murrell
 

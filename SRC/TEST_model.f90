@@ -2973,6 +2973,132 @@ SUBROUTINE test_HCN_Murrell
   deallocate(Qopt)
 
 
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-HCN ------------------------'
+  CALL Init_Model(QModel,pot_name='HCN_Murrell',option=11) ! jacobi
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(Q(QModel%ndim,3))
+
+  Q(:,1) = [ONE,               3.18722_Rkind,2.17926_Rkind]
+  Q(:,2) = [-ONE,              2.89321_Rkind,2.20061_Rkind]
+  Q(:,3) = [cos(1.16809_Rkind),2.28376_Rkind,2.15316_Rkind]
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  DO i=1,size(Q,dim=2)
+    write(out_unitp,*) 'Q:'
+    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+
+    CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
+
+    ! For testing the model
+    CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HCN_Murrell')
+  END DO
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Q)
+  write(out_unitp,*) ' END Potential and derivatives'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 1D-HCN ------------------------'
+  CALL Init_Model(QModel,pot_name='HCN_Murrell',option=2) ! jacobi
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) 'IndexFunc_Ene:             ',QModel%QM%IndexFunc_Ene
+  write(out_unitp,*) 'IndexFunc_Qop:             ',QModel%QM%IndexFunc_Qop
+  write(out_unitp,*) 'IndexFunc_Hess:            ',QModel%QM%IndexFunc_Hess
+  write(out_unitp,*) '---------------------------------------------'
+
+
+  allocate(Q(QModel%ndim,3))
+
+  Q(:,1) = [ZERO]
+  Q(:,2) = [Pi]
+  Q(:,3) = [1.16809_Rkind]
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  DO i=1,size(Q,dim=2)
+    write(out_unitp,*) 'Q:'
+    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+
+    CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
+
+    ! For testing the model
+    CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HCN_Murrell')
+  END DO
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Q)
+  write(out_unitp,*) ' END Potential and derivatives'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 1D-HCN ------------------------'
+  CALL Init_Model(QModel,pot_name='HCN_Murrell',option=21) ! jacobi
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(Q(QModel%ndim,3))
+
+  Q(:,1) = [ONE]
+  Q(:,2) = [-ONE]
+  Q(:,3) = [cos(1.16809_Rkind)]
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives'
+  DO i=1,size(Q,dim=2)
+    write(out_unitp,*) 'Q:'
+    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+
+    CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
+    CALL Write_dnMat(PotVal,nio=out_unitp)
+
+    ! For testing the model
+    CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HCN_Murrell')
+  END DO
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Q)
+  write(out_unitp,*) ' END Potential and derivatives'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  STOP
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -2982,8 +3108,6 @@ SUBROUTINE test_HCN_Murrell
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   flush(out_unitp)
-  !CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,                    &
-  !                read_param=.TRUE.,param_file_name='DAT_files/irc_h3.dat')
   CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,pot_name='HCN_Murrell')
 
   Opt_p%nb_neg = 0

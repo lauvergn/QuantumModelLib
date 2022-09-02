@@ -859,6 +859,25 @@ SUBROUTINE get_Qmodel_nb_Func_ndimFunc(nb_Func,ndimFunc)
   ndimFunc = QuantumModel%QM%ndimFunc
 
 END SUBROUTINE get_Qmodel_nb_Func_ndimFunc
+SUBROUTINE get_Qmodel_IndexesFunc(IndexFunc_Ene,IndexFunc_Qop,IndexFunc_Grad,IndexFunc_Hess)
+  USE QMLLib_UtilLib_m
+  USE Model_m
+  IMPLICIT NONE
+
+  integer,      intent(inout)     :: IndexFunc_Ene
+  integer,      intent(inout)     :: IndexFunc_Qop
+  integer,      intent(inout)     :: IndexFunc_Grad,IndexFunc_Hess
+
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_IndexesFunc in Model_driver.f90')
+
+  IndexFunc_Ene  = QuantumModel%QM%IndexFunc_Ene
+  IndexFunc_Qop  = QuantumModel%QM%IndexFunc_Qop
+  IndexFunc_Grad = QuantumModel%QM%IndexFunc_Grad
+  IndexFunc_Hess = QuantumModel%QM%IndexFunc_Hess
+
+END SUBROUTINE get_Qmodel_IndexesFunc
+
 SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
