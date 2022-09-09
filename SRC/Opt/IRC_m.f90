@@ -46,6 +46,7 @@ MODULE IRC_m
     integer                           :: IRC_Max_it       = -1 ! it will be set-up after
     real (kind=Rkind)                 :: Delta_s          = ONETENTH**2
     character (len=:), allocatable    :: Method
+    logical                           :: MassWeighted     = .FALSE.
 
     integer                           :: order2           = 8  ! used for micro-iteration and with Method='BS'
     character (len=:), allocatable    :: Method2               ! used only when Method='BS'
@@ -85,14 +86,14 @@ CONTAINS
 
 
     integer                        :: err_read,nio_loc,i
-    logical                        :: read_param_loc
+    logical                        :: read_param_loc,MassWeighted
     character (len=:), allocatable :: param_file_name_loc
 
     integer                        :: Max_it,order2,m0_BS
     real (kind=Rkind)              :: Delta_s
     character (len=Name_longlen)   :: Method,Method2
 
-    namelist /IRC/ max_it,Delta_s,Method,Method2,order2,m0_BS
+    namelist /IRC/ max_it,Delta_s,Method,Method2,order2,m0_BS,MassWeighted
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_IRC'
@@ -143,6 +144,7 @@ CONTAINS
   Delta_s         = ONETENTH**2
   Method          = 'BS'
   Method2         = 'ModMidPoint'
+  MassWeighted    = .FALSE.
   order2          = 8
   m0_BS           = 0
 
@@ -185,14 +187,13 @@ CONTAINS
   !                   Method=trim(method),Method2=trim(method2),                  &
   !                   order2=order2,m0_BS=m0_BS,                                  &
   !                   QML_Opt_t=IRC_p%QML_Opt_t)
-  IRC_p%IRC_Max_it = Max_it
-  IRC_p%Delta_s    = Delta_s
-  IRC_p%Method     = trim(method)
-  IRC_p%Method2    = trim(method2)
-  IRC_p%order2     = order2
-  IRC_p%m0_BS      = m0_BS
-
-
+  IRC_p%IRC_Max_it    = Max_it
+  IRC_p%Delta_s       = Delta_s
+  IRC_p%MassWeighted  = MassWeighted
+  IRC_p%Method        = trim(method)
+  IRC_p%Method2       = trim(method2)
+  IRC_p%order2        = order2
+  IRC_p%m0_BS         = m0_BS
 
   CALL Write_QML_IRC(IRC_p)
 
@@ -220,6 +221,7 @@ CONTAINS
 
     write(out_unitp,*) ' IRC_Maxt_it     ',IRC_p%IRC_Max_it
     write(out_unitp,*) ' Delta_s         ',IRC_p%Delta_s
+    write(out_unitp,*) ' MassWeighted    ',IRC_p%MassWeighted
     write(out_unitp,*) ' Method          ',IRC_p%Method
     write(out_unitp,*) ' Method2         ',IRC_p%Method2
     write(out_unitp,*) ' order2          ',IRC_p%order2
@@ -723,6 +725,7 @@ END SUBROUTINE QML_IRC_BS
 
     TYPE (dnMat_t)                  :: PotVal
     real (kind=Rkind), allocatable  :: Qit(:)
+    integer                         :: i,iat
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='QML_IRC_fcn'
@@ -751,6 +754,12 @@ END SUBROUTINE QML_IRC_BS
     Ene_AT_s = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
 
     dQact    = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
+    IF (IRC_p%MassWeighted) THEN
+      DO i=1,size(dQact)
+        iat = (IRC_p%list_act(i)+2)/3
+        dQact(i) = dQact(i) / sqrt(QModel%QM%masses(iat))
+      END DO
+    END IF
     !write(out_unitp,*) 'grad at s',s,norm2(dQact)
     !write(out_unitp,*) 'grad/s at s',s,norm2(dQact)/abs(s)
     IF (norm2(dQact) < IRC_p%Thresh_RMS_grad*TEN) write(out_unitp,*) 'WARNING small grad at s',s

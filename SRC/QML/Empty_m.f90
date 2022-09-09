@@ -77,6 +77,7 @@ MODULE QML_Empty_m
 
     character (len=:),  allocatable :: pot_name
     real (kind=Rkind),  allocatable :: d0GGdef(:,:)
+    real (kind=Rkind),  allocatable :: masses(:) ! atomic masses (in au)
     real (kind=Rkind),  allocatable :: Q0(:)
 
     !Vec0 must be allocatable, to be able to deallocate with deallocate of the QML_Empty_t variable.
@@ -105,9 +106,8 @@ CONTAINS
   USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
-    TYPE (QML_Empty_t)                  :: QModel
-
-    TYPE(QML_Empty_t),  intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t)                  :: QModel
+    TYPE(QML_Empty_t),  intent(in)     :: QModel_in ! variable to transfer info to the init
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_Empty'
@@ -189,6 +189,7 @@ CONTAINS
 
     IF (allocated(QModel%d0GGdef)) deallocate(QModel%d0GGdef)
     IF (allocated(QModel%Q0))      deallocate(QModel%Q0)
+    IF (allocated(QModel%masses))  deallocate(QModel%masses)
 
     QModel%ndimFunc     = QModel_in%ndimFunc
     QModel%nb_Func      = QModel_in%nb_Func
@@ -367,6 +368,11 @@ CONTAINS
     IF (allocated(QModel%Q0)) THEN
       write(nio,*) 'Reference Coordinate values, Q0(:)'
       CALL Write_RVec(QModel%Q0,nio,nbcol1=5)
+    END IF
+
+    IF (allocated(QModel%masses)) THEN
+      write(nio,*) 'Masses in au'
+      CALL Write_RVec(QModel%masses,nio,nbcol1=5)
     END IF
     flush(nio)
 

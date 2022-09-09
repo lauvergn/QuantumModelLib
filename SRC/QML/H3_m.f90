@@ -276,12 +276,13 @@ MODULE QML_H3_m
   FUNCTION Init_QML_H3(QModel_in,read_param,nio_param_file) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (QML_H3_t)                           :: QModel ! RESULT
+    TYPE (QML_H3_t)                              :: QModel ! RESULT
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
+    real(kind=Rkind), parameter :: mH = 1837.1526464003414_Rkind
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_H3'
@@ -297,6 +298,9 @@ MODULE QML_H3_m
 
     QModel%nsurf      = 1
     QModel%ndimCart   = 9
+
+    allocate(QModel%masses(QModel%ndimCart/3))
+    QModel%masses(:) = [mH,mH,mH]
 
     IF (QModel%option == -1) QModel%option = 0
 

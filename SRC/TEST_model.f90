@@ -2724,7 +2724,8 @@ SUBROUTINE test_H3
   TYPE (dnMat_t)                 :: PotVal
   TYPE (QML_Opt_t)               :: Opt_p
 
-    TYPE (dnS_t),    allocatable :: Func(:)
+  TYPE (dnS_t),    allocatable   :: Func(:)
+  real(kind=Rkind), parameter    :: auTOcm_inv = 219474.631443_Rkind
 
 
   nderiv = 2
@@ -2742,9 +2743,7 @@ SUBROUTINE test_H3
 
   ! TableII of JCP paper, E=9.802 kcal/mol
   Q(:,1) = [1.757_Rkind,1.757_Rkind,1.757_Rkind]
-
   Q(:,2) = [1.4_Rkind,1000._Rkind,1001.4_Rkind]
-
   Q(:,3) = [1000._Rkind,1000._Rkind,2000._Rkind]
 
   write(out_unitp,*) '---------------------------------------------'
@@ -2764,6 +2763,19 @@ SUBROUTINE test_H3
     ! For testing the model
     CALL Write_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='H3_LSTH')
   END DO
+
+  write(out_unitp,*) ' Potential and derivatives at the asymptotic chanel'
+  Q(:,2) = [1.4010443631833713_Rkind,1000._Rkind,1001.4010443631833713_Rkind]
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q(:,2),out_unitp,QModel%ndim)
+
+  CALL Eval_Pot(QModel,Q(:,2),PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  write(out_unitp,*) ' H2 Harmonic frequency. k,m,w', &
+         PotVal%d2(1,1,1,1),QModel%QM%masses(1)/TWO, &
+         auTOcm_inv*sqrt( PotVal%d2(1,1,1,1)/(QModel%QM%masses(1)/TWO) )
+
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
   write(out_unitp,*) ' END Potential and derivatives'
