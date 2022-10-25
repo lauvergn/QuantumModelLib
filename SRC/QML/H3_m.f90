@@ -330,6 +330,11 @@ MODULE QML_H3_m
       QModel%ndimFunc = 1
       QModel%nb_Func  = 6 ! V, R1op,R2opt,R3opt,RPH_a0,RPH_a1
 
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 2
+      QModel%IndexFunc_Grad = 0
+      QModel%IndexFunc_Hess = 0
+
       QModel%pot_name   = 'H3_LSTH_IRC'
       QModel%no_ana_der = .FALSE.
     CASE Default
@@ -340,6 +345,9 @@ MODULE QML_H3_m
        write(out_unitp,*) ' the possible option are: 0,10 (3D) or 1,11 (1D-IRC)'
        STOP 'ERROR in Init_QML_H3: wrong option'
     END SELECT
+
+    IF (QModel%AbInitio) QModel%no_ana_der = .FALSE.
+
 
     IF (debug) write(out_unitp,*) 'init Q0 of H3 (H3 minimum)'
     QModel%Q0 = [2.806_Rkind,2.271_Rkind,2.271_Rkind]

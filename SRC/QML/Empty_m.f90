@@ -58,6 +58,7 @@ MODULE QML_Empty_m
                                      ! for potential without analitical derivatives
 
     logical :: Cart_TO_Q        = .FALSE. ! to perform the Cartesian to model coordinates
+    logical :: AbInitio         = .FALSE. ! To use abitio calculation (experimental)
 
     logical :: Phase_Following  = .TRUE.
     logical :: Phase_Checking   = .TRUE.
@@ -83,13 +84,14 @@ MODULE QML_Empty_m
     !Vec0 must be allocatable, to be able to deallocate with deallocate of the QML_Empty_t variable.
     TYPE (dnMat_t),     allocatable :: Vec0 ! to get the correct phase of the adiatic couplings
     CONTAINS
-      PROCEDURE :: EvalPot_QModel    => EvalPot_QML_Empty
-      PROCEDURE :: Eval_QModel_Func   => EvalFunc_QML_Empty
-      PROCEDURE :: Write_QModel       => Write_QML_Empty
-      PROCEDURE :: Write0_QModel      => Write0_QML_Empty
-     !PROCEDURE :: get2_Q0_QModel     => get2_Q0_QML_Empty
-      PROCEDURE :: get_d0GGdef_QModel => get_d0GGdef_QML_Empty
-      PROCEDURE :: Cart_TO_Q_QModel   => Cart_TO_Q_QML_Empty
+      PROCEDURE :: EvalPot_QModel         => EvalPot_QML_Empty
+      PROCEDURE :: EvalPotAbInitio_QModel => EvalPotAbInitio_QML_Empty
+      PROCEDURE :: Eval_QModel_Func       => EvalFunc_QML_Empty
+      PROCEDURE :: Write_QModel           => Write_QML_Empty
+      PROCEDURE :: Write0_QModel          => Write0_QML_Empty
+     !PROCEDURE :: get2_Q0_QModel         => get2_Q0_QML_Empty
+      PROCEDURE :: get_d0GGdef_QModel     => get_d0GGdef_QML_Empty
+      PROCEDURE :: Cart_TO_Q_QModel       => Cart_TO_Q_QML_Empty
   END TYPE QML_Empty_t
 
   INTERFACE get_Q0_QModel
@@ -167,6 +169,7 @@ CONTAINS
 
     QModel%no_ana_der       = QModel_in%no_ana_der
     QModel%Cart_TO_Q        = QModel_in%Cart_TO_Q
+    QModel%AbInitio         = QModel_in%AbInitio
 
     IF (QModel%adiabatic) THEN
       write(out_unitp,*) 'Adiabatic potential . . .'
@@ -295,6 +298,168 @@ CONTAINS
 
   END SUBROUTINE EvalPot_QML_Empty
 
+  SUBROUTINE EvalPotAbInitio_QML_Empty(QModel,Mat_OF_PotDia,dnX,nderiv)
+  USE ADdnSVM_m, ONLY :  dnS_t, get_d0, set_dnS, write_dnS
+  IMPLICIT NONE
+
+    CLASS (QML_Empty_t),    intent(in)     :: QModel
+    TYPE (dnS_t),           intent(in)     :: dnX(:,:)
+    TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
+    integer,                intent(in)     :: nderiv
+
+    integer                       :: i,j,Z,nio_otf,err
+    logical                       :: located
+    real(kind=Rkind)              :: d0E
+    real(kind=Rkind), allocatable :: d1E(:)
+    real(kind=Rkind), allocatable :: d2E(:,:)
+
+    character (len=Name_longlen)  :: labelR
+    character (len=Name_len)      :: name1_i
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='EvalPotAbInitio_QML_Empty'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    !-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      write(out_unitp,*) '   nderiv:       ',nderiv
+      flush(out_unitp)
+    END IF
+
+    ! check if Cart_TO_Q=t
+    IF (.NOT. QModel%Cart_TO_Q) THEN
+      write(out_unitp,*) 'ERROR in EvalPotAbInitio_QML_Empty'
+      write(out_unitp,*) 'Cartessian coordinates must be used and Cart_TO_Q=F'
+      write(out_unitp,*) 'Check your data'
+      STOP 'ERROR in EvalPotAbInitio_QML_Empty'
+    END IF
+
+    ! generate the input file
+    open(newunit=nio_otf,file='xx.com',form='formatted')
+    write(nio_otf,*) '%chk=xx.chk'
+
+    IF (nderiv == 0) write(nio_otf,*) '#n HF STO-3G'
+    IF (nderiv == 1) write(nio_otf,*) '#n HF STO-3G force '
+    IF (nderiv == 2) write(nio_otf,*) '#n HF STO-3G freq=noraman '
+
+    write(nio_otf,*) '# unit=(au,rad) nosymm FormCheck=All'
+    write(nio_otf,*) '# integral=(grid=ultrafine) '
+    write(nio_otf,*) '# iop(1/18=40,2/9=111,2/11=1,7/33=1,1/33=1)'
+    write(nio_otf,*) '# iop(3/27=30,11/27=30)'
+
+    write(nio_otf,*) ' '
+    write(nio_otf,*) ' xx shape dnX',shape(dnX),'ndimCart',QModel%ndimCart
+    write(nio_otf,*) ' '
+    write(nio_otf,*) '0 2'
+
+
+    DO i=1,QModel%ndimCart/3
+      Z = 1
+      write(nio_otf,13) Z,0,get_d0(dnX(:,i))
+13    format(i5,1x,i5,3(1x,f20.15))
+    END DO
+    write(nio_otf,*) ' '
+    close(nio_otf)
+
+    !calculation + checking the normal termination
+    CALL EXECUTE_COMMAND_LINE('gauss09.run  xx &> gaussexe.log')
+
+    !checking the normal termination
+    located = .FALSE.
+    open(newunit=nio_otf,file='xx.log',status='old',position='append',form='formatted')
+    backspace(nio_otf,err=999)
+    read(nio_otf,'(a32)',err=999) labelR
+    !write(out_unitp,*) 'last line: ',labelR
+    located = verify(labelR,' Normal termination of Gaussian') == 0
+    close(nio_otf)
+999  CONTINUE
+    IF (.NOT. located) THEN
+      write(out_unitp,*) 'ERROR in EvalPotAbInitio_QML_Empty'
+      write(out_unitp,*) 'no line: "Normal termination of Gaussian"'
+      write(out_unitp,*) 'log file last line: ',labelR
+      STOP
+    END IF
+
+
+    !- read the energy from the file energy
+    open(newunit=nio_otf,file='xx.fchk',status='old',form='formatted')
+    CALL Find_Label(nio_otf,'Total Energy',located)
+    IF (debug) write(out_unitp,*) 'located: Total Energy',located
+    IF (located) THEN
+      read(nio_otf,*,iostat=err) name1_i,d0E
+    ELSE
+      err = -1
+    END IF
+
+    IF (.NOT. located .OR. err /=0) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) 'I cannot find the energy in : xx.fchk'
+      write(out_unitp,*) 'located,err',located,err
+      STOP
+    END IF
+    close(nio_otf)
+
+    !- read the gradient
+    IF (nderiv >= 1) THEN
+      allocate(d1E(QModel%ndimCart))
+      open(newunit=nio_otf,file='xx.fchk',status='old',form='formatted')
+
+      CALL Find_Label(nio_otf,'Cartesian Gradient',located)
+      IF (debug) write(out_unitp,*) 'located: Cartesian Gradient',located
+      IF (located) THEN
+        read(nio_otf,*,iostat=err)
+        read(nio_otf,*,iostat=err) d1E(:)
+      END IF
+      IF (.NOT. located .OR. err /=0) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) 'I cannot find the Gradient in : xx.fchk'
+        write(out_unitp,*) 'located,err',located,err
+        STOP
+      END IF
+      close(nio_otf)
+    END IF
+
+    IF (nderiv == 2) THEN
+      allocate(d2E(QModel%ndimCart,QModel%ndimCart))
+      open(newunit=nio_otf,file='xx.fchk',status='old',form='formatted')
+      CALL Find_Label(nio_otf,'Cartesian Force Constants',located)
+      IF (debug) write(out_unitp,*) 'located: Cartesian Force Constants (hessian)',located
+      IF (located) THEN
+        read(nio_otf,*,iostat=err)
+        read(nio_otf,*,iostat=err) ((d2E(i,j),i=1,j),j=1,QModel%ndimCart)
+      END IF
+      IF (.NOT. located .OR. err /=0) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) 'I cannot find the hessian in : xx.fchk'
+        write(out_unitp,*) 'located,err',located,err
+        STOP
+      END IF
+
+      DO j=1,QModel%ndimCart
+      DO i=1,j-1
+        d2E(j,i) = d2E(i,j)
+      END DO
+      END DO
+      close(nio_otf)
+    END IF
+
+    IF (nderiv == 0) THEN
+      CALL set_dnS(Mat_OF_PotDia(1,1),d0=d0E)
+    ELSE IF (nderiv == 1) THEN
+      CALL set_dnS(Mat_OF_PotDia(1,1),d0=d0E,d1=d1E)
+    ELSE IF (nderiv == 2) THEN
+      CALL set_dnS(Mat_OF_PotDia(1,1),d0=d0E,d1=d1E,d2=d2E)
+    END IF
+
+    IF (debug) THEN
+      CALL write_dnS(Mat_OF_PotDia(1,1),info='dnE')
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    END IF
+
+  END SUBROUTINE EvalPotAbInitio_QML_Empty
+
   SUBROUTINE EvalFunc_QML_Empty(QModel,Func,dnQ,nderiv)
   USE ADdnSVM_m, ONLY :  dnS_t
   IMPLICIT NONE
@@ -325,6 +490,8 @@ CONTAINS
     write(nio,*) 'In_a_Model:                ',QModel%In_a_Model
 
     write(nio,*) 'option:                    ',QModel%option
+    write(nio,*) 'AbInitio:                  ',QModel%AbInitio
+
     write(nio,*)
     write(nio,*) 'nsurf:                     ',QModel%nsurf
     write(nio,*) 'ndim:                      ',QModel%ndim

@@ -36,6 +36,7 @@ IMPLICIT NONE
   PUBLIC :: Write_RMat,Write_RVec,Read_RMat,Read_RVec,Init_IdMat
   PUBLIC :: time_perso
   PUBLIC :: err_file_name,make_FileName,file_open2
+  PUBLIC :: Find_Label,NFind_Label,FFind_Label
 
 INTERFACE string_uppercase_TO_lowercase
   MODULE PROCEDURE QML_string_uppercase_TO_lowercase
@@ -81,7 +82,15 @@ END INTERFACE
 INTERFACE file_open2
   MODULE PROCEDURE QML_file_open2
 END INTERFACE
-
+INTERFACE Find_Label
+  MODULE PROCEDURE QML_Find_Label
+END INTERFACE
+INTERFACE NFind_Label
+  MODULE PROCEDURE QML_NFind_Label
+END INTERFACE
+INTERFACE FFind_Label
+  MODULE PROCEDURE QML_FFind_Label
+END INTERFACE
 CONTAINS
 
   !!@description: Change the case of a string (default lowercase)
@@ -656,4 +665,119 @@ CONTAINS
 ! write(out_unitp,*) 'open ',name_file,iunit
 
   END SUBROUTINE QML_file_open2
+
+
+
+  SUBROUTINE QML_Find_Label(nio,label,located)
+        IMPLICIT NONE
+        character (len=*) :: label
+        logical :: located
+        integer :: nio
+
+        character (len=len(label)) :: labelR
+        character (len=name_len) :: format_label
+
+        integer, save :: i_line = 0
+
+        located = .FALSE.
+        format_label='(A' // int_TO_char(len(label)) // ')'
+
+        !write(out_unitp,*) 'format_label',format_label
+  !     write(out_unitp,*) 'label to find:',label,located
+        DO
+          i_line = i_line + 1
+
+          read(nio,format_label,end=999,eor=888,err=888,advance='no') labelR
+   11     format(A40)
+
+
+          located = (labelR .EQ. label)
+          !located = verify(label,labelR) == 0
+          !write(out_unitp,*) i_line,located,labelR
+          IF (located) EXIT
+          read(nio,*,end=999,err=888)
+
+   888    CONTINUE
+        END DO
+
+
+   999  CONTINUE
+        i_line = 0
+
+        !write(out_unitp,*) 'Find_Label: ',label,located
+  END SUBROUTINE QML_Find_Label
+
+  SUBROUTINE QML_NFind_Label(nio,label,located,iformat)
+        IMPLICIT NONE
+        character (len=*) :: label
+        integer :: iformat
+        character (len=Name_len) :: fformat
+        logical :: located
+        integer :: nio
+
+        character (len=iformat) :: labelR
+        integer, save :: i_line = 0
+
+
+        located = .FALSE.
+
+        IF (iformat < 1) THEN
+          write(out_unitp,*) ' ERROR in NFind_Label'
+          write(out_unitp,*) ' iformat < 1',iformat
+          STOP
+        END IF
+        fformat='(A' // int_TO_char(iformat) // ')'
+        !write(out_unitp,*) iformat,fformat
+        !write(out_unitp,*) 'label to find:',label,located
+        DO
+          i_line = i_line + 1
+          read(nio,fformat,end=999,eor=888,err=888,advance='no') labelR
+
+          located = verify(label,labelR) == 0
+          !write(out_unitp,*) i_line,located,labelR
+          IF (located) EXIT
+          read(nio,*,end=999,err=888)
+
+   888    CONTINUE
+        END DO
+
+
+   999  CONTINUE
+        i_line = 0
+  end subroutine QML_NFind_Label
+
+  SUBROUTINE QML_FFind_Label(nio,label,located,fformat)
+        IMPLICIT NONE
+        character (len=*)   :: label
+        character (len=*)   :: fformat
+        logical             :: located
+        integer             :: nio
+
+        character (len=256) :: labelR
+        integer, save       :: i_line = 0
+
+
+        located = .FALSE.
+
+        !write(out_unitp,*) 'label to find:',label,located
+        DO
+          i_line = i_line + 1
+          read(nio,fformat,end=999,eor=888,err=888,advance='no') labelR
+
+
+          located = verify(label,labelR) == 0
+          !write(out_unitp,*) i_line,located,labelR
+          IF (located) EXIT
+          read(nio,*,end=999,err=888)
+
+   888    CONTINUE
+        END DO
+
+
+   999  CONTINUE
+        i_line = 0
+        IF (located) read(nio,*)
+
+  END SUBROUTINE QML_FFind_Label
+
 END MODULE QMLLib_UtilLib_m

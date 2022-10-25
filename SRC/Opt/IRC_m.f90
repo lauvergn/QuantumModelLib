@@ -45,6 +45,7 @@ MODULE IRC_m
 
     integer                           :: IRC_Max_it       = -1 ! it will be set-up after
     real (kind=Rkind)                 :: Delta_s          = ONETENTH**2
+    character (len=:), allocatable    :: Direction
     character (len=:), allocatable    :: Method
     logical                           :: MassWeighted     = .FALSE.
 
@@ -58,6 +59,8 @@ MODULE IRC_m
     real (kind=Rkind), allocatable    :: QactTS(:)
     real (kind=Rkind), allocatable    :: EigenVec_QactTS(:)
 
+
+
   END TYPE QML_IRC_t
 
   TYPE :: QML_IRC_at_s
@@ -67,6 +70,9 @@ MODULE IRC_m
     real (kind=Rkind), allocatable       :: Qact(:),Grad_Qact(:)
 
   END TYPE QML_IRC_at_s
+
+  integer                           :: nb_PotEval       = 0
+
 
 CONTAINS
 
@@ -91,9 +97,9 @@ CONTAINS
 
     integer                        :: Max_it,order2,m0_BS
     real (kind=Rkind)              :: Delta_s
-    character (len=Name_longlen)   :: Method,Method2
+    character (len=Name_longlen)   :: Method,Method2,Direction
 
-    namelist /IRC/ max_it,Delta_s,Method,Method2,order2,m0_BS,MassWeighted
+    namelist /IRC/ max_it,Delta_s,Direction,Method,Method2,order2,m0_BS,MassWeighted
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_IRC'
@@ -142,6 +148,7 @@ CONTAINS
 
   Max_it          = -1
   Delta_s         = ONETENTH**2
+  Direction       = 'both'
   Method          = 'BS'
   Method2         = 'ModMidPoint'
   MassWeighted    = .FALSE.
@@ -181,19 +188,26 @@ CONTAINS
 
   CALL string_uppercase_TO_lowercase(method2,lower=.TRUE.)
   CALL string_uppercase_TO_lowercase(method,lower=.TRUE.)
+  CALL string_uppercase_TO_lowercase(Direction,lower=.TRUE.)
+  IF (Direction /= 'both' .AND. Direction /= 'forward' .AND. Direction /= 'reverse') THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Direction keyword is wrong',trim(Direction)
+    write(out_unitp,*) ' The possibles values: "both", "forward", "reverse"'
+    write(out_unitp,*) ' check your data!'
+    STOP ' ERROR in Init_QML_IRC'
+  END IF
 
   ! the initialisation with QML_Opt_t=IRC_p%QML_Opt_t does not work with ifort 18
-  ! IRC_p = QML_IRC_t(IRC_Max_it=Max_it,Delta_s=Delta_s,                          &
-  !                   Method=trim(method),Method2=trim(method2),                  &
-  !                   order2=order2,m0_BS=m0_BS,                                  &
-  !                   QML_Opt_t=IRC_p%QML_Opt_t)
   IRC_p%IRC_Max_it    = Max_it
   IRC_p%Delta_s       = Delta_s
   IRC_p%MassWeighted  = MassWeighted
   IRC_p%Method        = trim(method)
   IRC_p%Method2       = trim(method2)
+  IRC_p%Direction     = trim(Direction)
   IRC_p%order2        = order2
   IRC_p%m0_BS         = m0_BS
+
+  nb_PotEval    = 0
 
   CALL Write_QML_IRC(IRC_p)
 
@@ -222,10 +236,13 @@ CONTAINS
     write(out_unitp,*) ' IRC_Maxt_it     ',IRC_p%IRC_Max_it
     write(out_unitp,*) ' Delta_s         ',IRC_p%Delta_s
     write(out_unitp,*) ' MassWeighted    ',IRC_p%MassWeighted
+    write(out_unitp,*) ' Direction       ',IRC_p%Direction
     write(out_unitp,*) ' Method          ',IRC_p%Method
     write(out_unitp,*) ' Method2         ',IRC_p%Method2
     write(out_unitp,*) ' order2          ',IRC_p%order2
     write(out_unitp,*) ' m0_BS           ',IRC_p%m0_BS
+
+    write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
 
     write(out_unitp,*) ' END ',name_sub
     flush(out_unitp)
@@ -248,7 +265,7 @@ CONTAINS
 
     TYPE (QML_Opt_t)                :: Opt_p
     integer                         :: it
-    real (kind=Rkind), allocatable  :: QactOld(:),QactNew(:),grad(:)
+    real (kind=Rkind), allocatable  :: QactOld(:),QactNew(:),grad(:),dQactds_AT_s(:)
     real (kind=Rkind)               :: s,Ene_AT_s
     real (kind=Rkind)               :: forward
 
@@ -282,47 +299,64 @@ CONTAINS
 
   CALL QML_Opt(IRC_p%QTS,QModel,IRC_p%QML_Opt_t,Q0=IRC_p%QTS)
 
+  write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
   !first point + check if the geometry is a TS (s=0)
   CALL QML_IRC_at_TS(IRC_p,QModel)
+  write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
 
 
   s       = ZERO
   QactOld = IRC_p%QactTS
   allocate(QactNew(size(QactOld)))
   allocate(grad(size(QactOld)))
+  allocate(dQactds_AT_s(size(QactOld)))
   forward = ONE
 
-  DO it=0,IRC_p%IRC_Max_it-1
+  IF (IRC_p%Direction == 'both' .OR. IRC_p%Direction == 'forward') THEN
+    DO it=0,IRC_p%IRC_Max_it-1
 
-    CALL QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward=forward,   &
-                     Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
+      CALL QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,                 &
+                       QModel,IRC_p,forward=forward,                            &
+                       Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
 
-    CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s)
+      write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+      CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s)
 
-    s       = s + forward*IRC_p%Delta_s
-    QactOld = QactNew
+      s       = s + forward*IRC_p%Delta_s
+      QactOld = QactNew
 
-  END DO
-  CALL QML_IRC_fcn(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward,grad)
-  CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s)
+    END DO
+    nb_PotEval = nb_PotEval + 1
+    CALL QML_IRC_fcn(s,QactOld,dQactds_AT_s,Ene_AT_s,QModel,IRC_p,forward,grad)
+
+    write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+    CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s)
+  END IF
 
   s       = ZERO
   QactOld = IRC_p%QactTS
   forward = -ONE
 
-  DO it=0,IRC_p%IRC_Max_it-1
+  IF (IRC_p%Direction == 'both' .OR. IRC_p%Direction == 'reverse') THEN
+    DO it=0,IRC_p%IRC_Max_it-1
 
-    CALL QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward=forward,   &
-                     Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
+      CALL QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,                 &
+                       QModel,IRC_p,forward=forward,                            &
+                       Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
 
-    CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s)
+      write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+      CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s)
 
-    s       = s + forward*IRC_p%Delta_s
-    QactOld = QactNew
+      s       = s + forward*IRC_p%Delta_s
+      QactOld = QactNew
 
-  END DO
-  CALL QML_IRC_fcn(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,forward,grad)
-  CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s)
+    END DO
+    nb_PotEval = nb_PotEval + 1
+    CALL QML_IRC_fcn(s,QactOld,dQactds_AT_s,Ene_AT_s,QModel,IRC_p,forward,grad)
+
+    write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+    CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s)
+  END IF
 
   IF (debug) THEN
     write(out_unitp,*) ' END ',name_sub
@@ -331,8 +365,8 @@ CONTAINS
 
   END SUBROUTINE QML_IRC
 
-  SUBROUTINE QML_write_IRC_Res(Qact,s,grad,Ene)
-    real (kind=Rkind), allocatable  :: Qact(:),grad(:)
+  SUBROUTINE QML_write_IRC_Res(Qact,s,grad,Ene,dQactds)
+    real (kind=Rkind), allocatable  :: Qact(:),grad(:),dQactds(:)
     real (kind=Rkind)               :: s,Ene
 
     real (kind=Rkind)               :: u,g_mtu
@@ -343,7 +377,8 @@ CONTAINS
 
     write(out_unitp,*) 's,Qact,|grad|,E',s,Qact,norm2(grad),Ene
     write(out_unitp,*) 's,grad',s,grad
-    IF (Print_extral) write(out_unitp,*) 's,g_mt',s,dot_product(grad,grad)
+    write(out_unitp,*) 's,g_mt',s,dot_product(dQactds,dQactds)
+    !IF (Print_extral) write(out_unitp,*) 's,g_mt',s,dot_product(grad,grad)
     flush(out_unitp)
 
     IF (Print_extral) THEN
@@ -367,7 +402,7 @@ CONTAINS
 
   END SUBROUTINE QML_write_IRC_Res
 
-  RECURSIVE SUBROUTINE QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,                  &
+  RECURSIVE SUBROUTINE QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,     &
                                    QModel,IRC_p,forward,                        &
                                    grad_AT_s,Method,order)
   USE QMLLib_UtilLib_m
@@ -377,6 +412,7 @@ CONTAINS
     real (kind=Rkind),  intent(in)               :: s
     real (kind=Rkind),  intent(in)               :: QactOld(:)
     real (kind=Rkind),  intent(inout)            :: QactNew(:)
+    real (kind=Rkind),  intent(inout)            :: dQactds_AT_s(:)
     real (kind=Rkind),  intent(inout), optional  :: grad_AT_s(:)
     real (kind=Rkind),  intent(inout)            :: Ene_AT_s
 
@@ -420,24 +456,31 @@ CONTAINS
   IF (present(grad_AT_s)) THEN
     SELECT CASE (Method_loc)
     CASE('midpoint','modmidpoint')
-      CALL QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward,grad_AT_s)
+      CALL QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,         &
+                               QModel,IRC_p,order_loc,forward,grad_AT_s)
     CASE('euler')
-      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward,grad_AT_s)
+      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,              &
+                          QModel,IRC_p,order_loc,forward,grad_AT_s)
     CASE('bs','bulirsch-stoer')
-      CALL QML_IRC_BS(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward,grad_AT_s)
+      CALL QML_IRC_BS(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,                  &
+                      QModel,IRC_p,order_loc,forward,grad_AT_s)
     CASE Default
-      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward,grad_AT_s)
+      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,              &
+                          QModel,IRC_p,order_loc,forward,grad_AT_s)
     END SELECT
   ELSE
     SELECT CASE (Method_loc)
     CASE('midpoint','modmidpoint')
-      CALL QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward)
+      CALL QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,         &
+                               QModel,IRC_p,order_loc,forward)
     CASE('euler')
-      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward)
+      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,              &
+                          QModel,IRC_p,order_loc,forward)
     CASE('bs','bulirsch-stoer')
       STOP 'ERROR in QML_IRC_ODE: bulirsch-stoer method sould be called with grad_AT_s(:)'
     CASE Default
-      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order_loc,forward)
+      CALL QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,              &
+                          QModel,IRC_p,order_loc,forward)
     END SELECT
   END IF
 
@@ -448,7 +491,8 @@ CONTAINS
 
 END SUBROUTINE QML_IRC_ODE
 
-  SUBROUTINE QML_IRC_BS(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,order,forward,grad_AT_s)
+  SUBROUTINE QML_IRC_BS(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,                &
+                        QModel,IRC_p,order,forward,grad_AT_s)
   USE QMLLib_UtilLib_m
   USE Model_m
   USE Opt_m
@@ -459,6 +503,7 @@ END SUBROUTINE QML_IRC_ODE
     real (kind=Rkind),  intent(inout)            :: QactNew(:)
     real (kind=Rkind),  intent(inout)            :: grad_AT_s(:)
     real (kind=Rkind),  intent(inout)            :: Ene_AT_s
+    real (kind=Rkind),  intent(inout)            :: dQactds_AT_s(:)
 
     TYPE (Model_t),     intent(inout)            :: QModel
     TYPE (QML_IRC_t),   intent(in)               :: IRC_p
@@ -468,6 +513,7 @@ END SUBROUTINE QML_IRC_ODE
 
     integer                         :: nb_act
     real (kind=Rkind)               :: Ene_loc
+    real (kind=Rkind), allocatable  :: dQactds_loc(:)
 
     real (kind=Rkind), allocatable :: yt0(:,:),yt1(:,:)
     real (kind=Rkind), allocatable :: yerr(:)
@@ -499,12 +545,13 @@ END SUBROUTINE QML_IRC_ODE
   nb_act = size(QactOld)
   allocate(yt0(nb_act,0:0))
   allocate(yerr(nb_act))
+  allocate(dQactds_loc(nb_act))
 
   yerr     = ZERO
   m        = QML_BS_m(0,IRC_p%m0_BS)
   !yt0(:,0) = QactOld
 
-  CALL QML_IRC_ODE(s,QactOld,yt0(:,0),Ene_AT_s,QModel,IRC_p,forward,            &
+  CALL QML_IRC_ODE(s,QactOld,yt0(:,0),Ene_AT_s,dQactds_AT_s,QModel,IRC_p,forward,&
                    Method=IRC_p%Method2,order=m,grad_AT_s=grad_AT_s)
 
   err0 = huge(ONE)
@@ -513,7 +560,7 @@ END SUBROUTINE QML_IRC_ODE
     allocate(yt1(nb_act,0:j))
     m = QML_BS_m(j,IRC_p%m0_BS)
 
-    CALL QML_IRC_ODE(s,QactOld,yt1(:,0),Ene_loc,QModel,IRC_p,forward,           &
+    CALL QML_IRC_ODE(s,QactOld,yt1(:,0),Ene_loc,dQactds_loc,QModel,IRC_p,forward,&
                      Method=IRC_p%Method2,order=m)
 
     !extrapolation
@@ -552,7 +599,8 @@ END SUBROUTINE QML_IRC_ODE
 END SUBROUTINE QML_IRC_BS
 
 
-  SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m,forward,grad)
+  SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
+                            QModel,IRC_p,m,forward,grad)
   USE QMLLib_UtilLib_m
   USE Model_m
   USE Opt_m
@@ -561,6 +609,7 @@ END SUBROUTINE QML_IRC_BS
     real (kind=Rkind),  intent(in)               :: s
     real (kind=Rkind),  intent(in)               :: QactOld(:)
     real (kind=Rkind),  intent(inout)            :: QactNew(:)
+    real (kind=Rkind),  intent(inout)            :: dQactds_AT_s(:)
     real (kind=Rkind),  intent(inout), optional  :: grad(:)
     real (kind=Rkind),  intent(inout)            :: Ene_AT_s
 
@@ -595,7 +644,7 @@ END SUBROUTINE QML_IRC_BS
   END IF
 
   s_loc = s
-  Qact = QactOld
+  Qact  = QactOld
   allocate(dQact(size(QactOld)))
   Delta_s = IRC_p%Delta_s/m
 
@@ -607,10 +656,12 @@ END SUBROUTINE QML_IRC_BS
       ELSE
         CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_loc,QModel,IRC_p,forward)
       END IF
-      Ene_AT_s = Ene_loc
+      Ene_AT_s     = Ene_loc
+      dQactds_AT_s = dQact
     ELSE
       CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_loc,QModel,IRC_p,forward)
     END IF
+    nb_PotEval = nb_PotEval + 1
     IF (debug) write(out_unitp,*) 's,Qact,E',s_loc,Qact,Ene_loc
     IF (debug) flush(out_unitp)
 
@@ -627,7 +678,8 @@ END SUBROUTINE QML_IRC_BS
   END IF
 
   END SUBROUTINE QML_IRC_mEuler
-  SUBROUTINE QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,QModel,IRC_p,m,forward,grad)
+  SUBROUTINE QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,       &
+                                 QModel,IRC_p,m,forward,grad)
   USE QMLLib_UtilLib_m
   USE Model_m
   USE Opt_m
@@ -637,6 +689,7 @@ END SUBROUTINE QML_IRC_BS
     real (kind=Rkind),  intent(in)               :: QactOld(:)
     real (kind=Rkind),  intent(inout)            :: QactNew(:)
     real (kind=Rkind),  intent(inout), optional  :: grad(:)
+    real (kind=Rkind),  intent(inout)            :: dQactds_AT_s(:)
     real (kind=Rkind),  intent(inout)            :: Ene_AT_s
 
     TYPE (Model_t),     intent(inout)            :: QModel
@@ -681,17 +734,23 @@ END SUBROUTINE QML_IRC_BS
   ELSE
     CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward)
   END IF
+  dQactds_AT_s = dQact
+  nb_PotEval   = nb_PotEval + 1
   zk  = QactOld + dQact * Delta_s
 
 
   DO it=1,m-1
     CALL QML_IRC_fcn(s_loc,zk,dQact,Ene_loc,QModel,IRC_p,forward)
+    nb_PotEval = nb_PotEval + 1
+
     zkp = zkm + TWO*Delta_s * dQact
     zkm = zk
     zk  = zkp
   END DO
 
   CALL QML_IRC_fcn(s_loc,zk,zkp,Ene_loc,QModel,IRC_p,forward)
+  nb_PotEval = nb_PotEval + 1
+
   dQact = Delta_s * zkp
 
   zkp = zk + zkm

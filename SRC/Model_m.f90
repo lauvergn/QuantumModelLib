@@ -176,7 +176,7 @@ CONTAINS
     logical :: Vib_adia,print_EigenVec_Grid,print_EigenVec_Basis
     logical :: opt,IRC
     logical :: Phase_checking,Phase_Following
-    logical :: Cart_TO_Q
+    logical :: Cart_TO_Q,AbInitio
 
     character (len=20) :: pot_name
     integer :: err_read,nb_act
@@ -184,7 +184,7 @@ CONTAINS
 
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
-                         Phase_Checking,Phase_Following,Cart_TO_Q,              &
+                         Phase_Checking,Phase_Following,Cart_TO_Q,AbInitio,     &
                          read_nml,printlevel,Vib_adia,nb_Channels,list_act,     &
                          print_EigenVec_Grid,print_EigenVec_Basis,opt,IRC
 
@@ -197,6 +197,7 @@ CONTAINS
     Phase_Checking  = QModel_inout%Phase_Checking
     Phase_Following = QModel_inout%Phase_Following
     Cart_TO_Q       = QModel_inout%Cart_TO_Q
+    AbInitio        = .FALSE.
 
     Vib_adia        = QModel_inout%Vib_adia
     nb_Channels     = 0
@@ -248,6 +249,7 @@ CONTAINS
     QModel_inout%Phase_Checking       = (adiabatic .AND. Phase_Checking)
     QModel_inout%Phase_Following      = (adiabatic .AND. Phase_Following)
     QModel_inout%Cart_TO_Q            = Cart_TO_Q
+    QModel_inout%AbInitio             = AbInitio
 
     QModel_inout%pot_name             = trim(pot_name)
     QModel_inout%PubliUnit            = PubliUnit
@@ -290,7 +292,6 @@ CONTAINS
         STOP ' ERROR in Read_Model: "list_act(:)" with 0 in the namelist.'
       END IF
     END IF
-
 
   END SUBROUTINE Read_Model
 
@@ -1498,7 +1499,12 @@ CONTAINS
       END DO
       END DO
 
-      CALL QModel%QM%Cart_TO_Q_QModel(dnX,dnQ,nderiv=nderiv)
+
+      IF (QModel%QM%AbInitio) THEN
+        CALL QModel%QM%EvalPotAbInitio_QModel(Mat_OF_PotDia,dnX,nderiv=nderiv)
+      ELSE
+        CALL QModel%QM%Cart_TO_Q_QModel(dnX,dnQ,nderiv=nderiv)
+      END IF
 
       CALL dealloc_dnS(dnX)
       deallocate(dnX)
@@ -1511,8 +1517,11 @@ CONTAINS
     END IF
     IF (debug) write(out_unitp,*) '   init dnQ(:)  ' ; flush(out_unitp)
 
-    CALL QModel%QM%EvalPot_QModel(Mat_OF_PotDia,dnQ,nderiv=nderiv)
-
+    IF (QModel%QM%AbInitio) THEN
+      IF (debug) write(out_unitp,*) 'PotVal already done'
+    ELSE
+      CALL QModel%QM%EvalPot_QModel(Mat_OF_PotDia,dnQ,nderiv=nderiv)
+    END IF
     PotVal = Mat_OF_PotDia ! transfert the potential and its derivatives to the matrix form (PotVal)
 
     ! deallocation

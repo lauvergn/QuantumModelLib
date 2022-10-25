@@ -33,6 +33,9 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+   !CALL test_IRC_H3() ; stop
+   !CALL test_IRC_H3_AbInitio() ; stop
+
   !CALL test_HCN_Murrell ; stop
 
   !CALL test_ClH2p_Botschwina() ; stop
@@ -2877,6 +2880,52 @@ SUBROUTINE test_IRC_H3
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_IRC_H3
+
+SUBROUTINE test_IRC_H3_AbInitio
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE ADdnSVM_m
+  USE Model_m
+  USE Opt_m
+  USE IRC_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  TYPE (QML_IRC_t)               :: IRC_p
+
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' IRC with H3 ab initio'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+  CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,                    &
+                  read_param=.TRUE.,param_file_name='DAT_files/irc_h3_abinitio.dat')
+
+  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='DAT_files/irc_h3_abinitio.dat')
+
+  allocate(Q(QModel%QM%ndim))
+
+
+  CALL QML_IRC(Q,QModel,IRC_p,Q0=[ZERO,ZERO,-TWO,ZERO,ZERO,ZERO,ZERO,ZERO,TWO])
+
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_IRC_H3_AbInitio
 
 SUBROUTINE test_HCN_Murrell
   USE QMLLib_NumParameters_m

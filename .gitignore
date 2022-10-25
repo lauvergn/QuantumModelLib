@@ -9,6 +9,8 @@ SRC/AdiaChannels/mod_Basis.f90-pointer
 SRC/AdiaChannels/mod_Basis.f90.i
 SRC/AdiaChannels/mod_Basis.f90.corrfort17
 Tests/*txt
+Tests/*com
+Tests/*FChk
 Tests/*.log
 Tests/grid*
 Tests/res*

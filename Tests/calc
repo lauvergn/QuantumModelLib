@@ -1,0 +1,14 @@
+i=$1
+
+run_test_QML
+
+grep "s,Qact,|grad|,E" res > irc$i
+
+mv res $i"res"
+
+
+
+for rr in ?res
+do
+  grep nb_PotEval $rr | tail -1
+done
