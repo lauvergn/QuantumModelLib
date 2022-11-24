@@ -280,7 +280,7 @@ DIRModel   = $(DIRSRC)/QML
 DIRAdia    = $(DIRSRC)/AdiaChannels
 DIROpt     = $(DIRSRC)/Opt
 
-LIBS := $(F90LIB) -L$(dnSVMLibDIR) -lAD_dnSVM$(ext_obj) -L$(DIR0) -l$(QMLibshort)
+LIBS := -L$(DIR0) -l$(QMLibshort) -L$(dnSVMLibDIR) -lAD_dnSVM$(ext_obj) $(F90LIB)
 
 
 #
