@@ -11,9 +11,9 @@
 #F90 = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 #=================================================================================
@@ -259,7 +259,6 @@ CPPSHELL_MATRIX  = -D__LAPACK="$(LAPACK)"
 F90_FLAGS = $(F90) $(F90FLAGS)
 
 LYNK90 = $(F90_FLAGS)
-LIBS := $(F90LIB) -L$(dnSVMLibDIR) -lAD_dnSVM
 
 #
 GRIDEXE    = Grid.x
@@ -280,6 +279,8 @@ DIRLib     = $(DIRSRC)/QMLLib
 DIRModel   = $(DIRSRC)/QML
 DIRAdia    = $(DIRSRC)/AdiaChannels
 DIROpt     = $(DIRSRC)/Opt
+
+LIBS := $(F90LIB) -L$(dnSVMLibDIR) -lAD_dnSVM$(ext_obj) -L$(DIR0) -l$(QMLibshort)
 
 
 #
@@ -330,32 +331,32 @@ all: dnS lib model grid driver readme
 .PHONY: test
 test:$(TESTEXE)
 $(TESTEXE): $(OBJ_test) $(QMLib)
-	$(LYNK90)   -o $(TESTEXE) $(OBJ_test) $(LIBS) -L$(DIR0) -l$(QMLibshort)
+	$(LYNK90)   -o $(TESTEXE) $(OBJ_test) $(LIBS)
 
 .PHONY: model QML_Test
 model QML_Test:$(MODEXE)
+	echo "model (QML) compilation: OK"
 $(MODEXE): $(OBJ_testmod) $(QMLib)
-	$(LYNK90)   -o $(MODEXE) $(OBJ_testmod) $(LIBS) -L$(DIR0) -l$(QMLibshort)
-	echo "model (QML) and QML_Test compilations: OK"
+	$(LYNK90)   -o $(MODEXE) $(OBJ_testmod) $(LIBS)
 #
 # grid
 .PHONY: grid testgrid
 grid testgrid:$(GRIDEXE)
 $(GRIDEXE): $(OBJ_grid) $(QMLib)
-	$(LYNK90)   -o $(GRIDEXE) $(OBJ_grid) $(LIBS) -L$(DIR0) -l$(QMLibshort)
+	$(LYNK90)   -o $(GRIDEXE) $(OBJ_grid) $(LIBS)
 #
 # Adia
 .PHONY: adia testadia
 adia testadia:$(ADIAEXE)
 $(ADIAEXE): $(OBJ_adia) $(QMLib)
-	$(LYNK90)   -o $(ADIAEXE) $(OBJ_adia) $(LIBS) -L$(DIR0) -l$(QMLibshort)
+	$(LYNK90)   -o $(ADIAEXE) $(OBJ_adia) $(LIBS)
 #
 #
 #driver
 .PHONY: driver
 driver:$(DriverEXE)
 $(DriverEXE): $(OBJ_testdriver) $(QMLib)
-	$(LYNK90)   -o $(DriverEXE) $(OBJ_testdriver) $(LIBS) -L$(DIR0) -l$(QMLibshort)
+	$(LYNK90)   -o $(DriverEXE) $(OBJ_testdriver) $(LIBS)
 #
 #readme
 .PHONY: readme

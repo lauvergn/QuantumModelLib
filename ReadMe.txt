@@ -17,18 +17,19 @@
      https://www.e-cam2020.eu/quantum-dynamics
 =========================================
  1) Installation
-   From the QuantumModelLib directory, execute make
-   the "libpot.a" ("libQMLib.a") and "libAD_dnSVM.a" must be created
+   From the QuantumModelLib directory, when make is executated, 
+   the "libQMLib_XXX_OMPy.a" ("libpot.a") and "libAD_dnSVM_XXX_OMPy.a" must be created.
+   XXX is the compiler name and y is 0/1 when OpenMP flag is turn off/on. 
 
    This version works with:
-       gfortran 8.3, 9.1, 9.2 (linux and macOS)
-       ifort    18
-       pgf90    17.10-0
-       nagfor   7.0 (macOS)
+       gfortran 9.0 (linux and macOS)
+       ifort    19
+       pgf90    ?
+       nagfor   ?
 
- 2) Link "libpot.a" and "libAD_dnSVM.a" to your code
+ 2) Link "libAD_dnSVM.a" to your code
 
-   gfortran ....   -L$QuantumModelLib_path -lpot -lAD_dnSVM
+   gfortran ....   -L$QuantumModelLib_path --LQMLib_XXX_OMPy -lAD_dnSVM_XXX_OMPy
 
       QuantumModelLib_path contains the path of the QuantumModelLib
 
