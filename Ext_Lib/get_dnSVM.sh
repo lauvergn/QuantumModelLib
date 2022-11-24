@@ -7,7 +7,9 @@ rm -f dnSVMLib #always remove the link
 
 
 curl -LJ $version --output dnSVM.zip
-test -e dnSVM.zip && echo dnSVM.zip file exist || cp Save_AD_dnSVM-1.0.0.zip dnSVM.zip
+#test -e dnSVM.zip && echo dnSVM.zip file exist || cp Save_AD_dnSVM-1.0.0.zip dnSVM.zip
+test -e dnSVM.zip && echo dnSVM.zip file exist || cp Save_AD_dnSVM-2.0.0.zip dnSVM.zip
+
 unzip dnSVM.zip
 rm -f dnSVM.zip
 

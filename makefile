@@ -2,8 +2,8 @@
 #=================================================================================
 # Compiler?
 #Possible values: (Empty: gfortran)
-#                ifort (version: 14.0.2, 16.0.3, 17.0.1 linux)
-#                gfortran (version: 6.3.0 linux and osx)
+#                ifort (version: 19.0 linux)
+#                gfortran (version: 9.0 linux and osx)
 #                pgf90 (version: 17.10-0, linux)
 #                nagfor (version 7.0, osx)
 #F90 = ifort
@@ -13,27 +13,32 @@
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
-## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
-# NVHYP  = 1 : with intrinsic inverse hyperbolic functions
-# NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic ones)
-INVHYP  = 1
 #=================================================================================
+#=================================================================================
+
 QML_ver=$(shell awk '/QML/ {print $$3}' version-QML)
 QML_path:=$(shell pwd)
+ext_obj=_$(F90)_omp$(OMP)
+
 
 # External Libraries directory (dnSVM ...)
 ExternalLibDIR=$(QML_path)/Ext_Lib
 
-# dnSVM Lib
-dnSVMLibDIR := $(ExternalLibDIR)/dnSVMLib
-dnSVMDIRLIB += -L$(dnSVMLibDIR)
-dnSVMLIB := -lAD_dnSVM
+# AD_dnSVM Lib
+dnSVMLibDIR      := $(ExternalLibDIR)/dnSVMLib
+dnSVMDIRLIB      += -L$(dnSVMLibDIR)
+dnSVMLIB         := -lAD_dnSVM
 dnSVMLibDIR_full := $(dnSVMLibDIR)/libAD_dnSVM.a
+dnSVMObjDIROld   :=$(dnSVMLibDIR)/OBJ
+dnSVMObjDIRNew   :=$(dnSVMLibDIR)/OBJ/obj_$(F90)_omp$(OMP)
+
 #===============================================================================
 
+#===============================================================================
+# Use external variables is they are not empty
 #===============================================================================
 # If ExternalF90 is empty, F90 is unchanged
 ifeq  ($(strip $(ExternalF90)),)
@@ -44,6 +49,7 @@ endif
 ifeq  ($(strip $(F90)),)
   F90 = gfortran
 endif
+
 # If ExternalOPT is empty, OPT is unchanged
 ifeq  ($(strip $(ExternalOPT)),)
 else
@@ -63,10 +69,15 @@ ifeq  ($(strip $(OMP)),)
   OMP = 1
 endif
 #=================================================================================
+#=================================================================================
 
+
+#=================================================================================
 # Operating system, OS? automatic using uname:
+#=================================================================================
 OS=$(shell uname)
-
+#=================================================================================
+#=================================================================================
 
 #=================================================================================
 # for c++ preprocessing
@@ -131,10 +142,8 @@ ifeq ($(F90),ifort)
       F90FLAGS = -O0 $(OMPFLAG) -check all -g -traceback
    endif
 
-   F90LIB = -L/Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk/usr/lib/
    ifeq ($(LAPACK),1)
      F90LIB += -qmkl -lpthread
-     #F90LIB += -qmkl
    else
      F90LIB += -lpthread
    endif
@@ -150,8 +159,6 @@ endif
 #=================================================================================
 ifeq ($(F90),pgf90)
 
-   # With pgf90 invers hyperbolic functions are not present => INVHYP = 0
-   INVHYP = 0
    # for c++ preprocessing
    CPPpre    = -Mpreprocess
 
@@ -234,11 +241,9 @@ $(info ***********dnSVMLIB:     $(dnSVMLIB))
 $(info ***********dnSVMDIRLIB:  $(dnSVMDIRLIB))
 $(info ***********F90FLAGS:     $(F90FLAGS))
 $(info ***********F90LIB:       $(F90LIB))
-$(info ***********INVHYP:       $(INVHYP))
 $(info ***********QML_ver:      $(QML_ver))
 $(info ***********QML_path:     $(QML_path))
 $(info ***********************************************************************)
-
 
 CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
                -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
@@ -252,31 +257,33 @@ CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
 CPPSHELL_MATRIX  = -D__LAPACK="$(LAPACK)"
 
 F90_FLAGS = $(F90) $(F90FLAGS)
+
 LYNK90 = $(F90_FLAGS)
-
- LIBS := $(PESLIB) $(ARPACKLIB) $(F90LIB) -L$(dnSVMLibDIR) -lAD_dnSVM
- LYNKFLAGS = $(LIBS)
+LIBS := $(F90LIB) -L$(dnSVMLibDIR) -lAD_dnSVM
 
 #
-GRIDEXE   = Grid.x
-ADIAEXE   = Adia.x
-MODEXE    = ModLib.x
-TESTEXE   = testOOP.x
-DriverEXE = Driver.x
-ModLib    = libpot.a
-QMLib     = libQMLib.a
+GRIDEXE    = Grid.x
+ADIAEXE    = Adia.x
+MODEXE     = ModLib.x
+TESTEXE    = testOOP.x
+DriverEXE  = Driver.x
 
-DIR0      = $(QML_path)
-DIROBJ    = $(DIR0)/OBJ
-DIRSRC    = $(DIR0)/SRC
-DIRLib    = $(DIRSRC)/QMLLib
-DIRModel  = $(DIRSRC)/QML
-DIRAdia   = $(DIRSRC)/AdiaChannels
-DIROpt    = $(DIRSRC)/Opt
+ModLib     = libpot.a     #old name
+QMLibshort = QMLib$(ext_obj)
+QMLib      = lib$(QMLibshort).a
+
+DIR0       = $(QML_path)
+DIROBJ     = $(DIR0)/OBJ/obj$(ext_obj)
+$(shell [ -d $(DIROBJ) ] || mkdir -p $(DIROBJ))
+DIRSRC     = $(DIR0)/SRC
+DIRLib     = $(DIRSRC)/QMLLib
+DIRModel   = $(DIRSRC)/QML
+DIRAdia    = $(DIRSRC)/AdiaChannels
+DIROpt     = $(DIRSRC)/Opt
 
 
 #
-OBJ_QML   = $(DIROBJ)/Empty_m.o \
+OBJ_QML        = $(DIROBJ)/Empty_m.o \
                  $(DIROBJ)/Sigmoid_m.o $(DIROBJ)/Morse_m.o $(DIROBJ)/Poly1D_m.o \
                  $(DIROBJ)/H2_m.o $(DIROBJ)/Buck_m.o \
                  $(DIROBJ)/Template_m.o $(DIROBJ)/Test_m.o \
@@ -286,16 +293,22 @@ OBJ_QML   = $(DIROBJ)/Empty_m.o \
                  $(DIROBJ)/CH5_m.o $(DIROBJ)/PH4_m.o \
                  $(DIROBJ)/HOO_DMBE_m.o \
                  $(DIROBJ)/H3_m.o $(DIROBJ)/HCN_Murrell_m.o \
-								 $(DIROBJ)/ClH2p_m.o $(DIROBJ)/ClH2p_Botschwina_m.o\
+					  $(DIROBJ)/ClH2p_m.o $(DIROBJ)/ClH2p_Botschwina_m.o\
                  $(DIROBJ)/HenonHeiles_m.o $(DIROBJ)/LinearHBond_m.o \
-								 $(DIROBJ)/TwoD_MullerBrown_m.o \
+					  $(DIROBJ)/TwoD_MullerBrown_m.o \
                  $(DIROBJ)/Phenol_m.o \
-								 $(DIROBJ)/TwoD_m.o $(DIROBJ)/TwoD_RJDI2014_m.o \
+					  $(DIROBJ)/TwoD_m.o $(DIROBJ)/TwoD_RJDI2014_m.o \
                  $(DIROBJ)/PSB3_m.o $(DIROBJ)/Retinal_JPCB2000_m.o \
                  $(DIROBJ)/OneDSOC_1S1T_m.o $(DIROBJ)/OneDSOC_2S1T_m.o \
                  $(DIROBJ)/Tully_m.o
 
 OBJ_Model      = $(DIROBJ)/Model_m.o $(DIROBJ)/Basis_m.o $(DIROBJ)/Opt_m.o $(DIROBJ)/IRC_m.o
+
+OBJ_lib        = $(DIROBJ)/FiniteDiff_m.o \
+                 $(DIROBJ)/UtilLib_m.o $(DIROBJ)/diago_m.o $(DIROBJ)/Matrix_m.o \
+                 $(DIROBJ)/NumParameters_m.o
+
+OBJ_all        = $(OBJ_lib) $(OBJ_QML) $(OBJ_Model)
 
 OBJ_test       = $(DIROBJ)/TEST_OOP.o
 OBJ_driver     = $(DIROBJ)/Model_driver.o
@@ -305,11 +318,6 @@ OBJ_testmod    = $(DIROBJ)/TEST_model.o
 OBJ_testdriver = $(DIROBJ)/TEST_driver.o
 
 
-OBJ_lib        = $(DIROBJ)/FiniteDiff_m.o \
-                 $(DIROBJ)/UtilLib_m.o $(DIROBJ)/diago_m.o $(DIROBJ)/Matrix_m.o \
-                 $(DIROBJ)/NumParameters_m.o
-
-OBJ_all        = $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 
 #===============================================
 #============= Main program ====================
@@ -321,34 +329,33 @@ all: dnS lib model grid driver readme
 # test_OOP
 .PHONY: test
 test:$(TESTEXE)
-
-$(TESTEXE): $(OBJ_test) $(OBJ_all)
-	$(LYNK90)   -o $(TESTEXE) $(OBJ_test) $(OBJ_all) $(LYNKFLAGS)
+$(TESTEXE): $(OBJ_test) $(QMLib)
+	$(LYNK90)   -o $(TESTEXE) $(OBJ_test) $(LIBS) -L$(DIR0) -l$(QMLibshort)
 
 .PHONY: model QML_Test
 model QML_Test:$(MODEXE)
-	echo "model (QML) compilation: OK"
-$(MODEXE): $(OBJ_testmod) $(OBJ_all)
-	$(LYNK90)   -o $(MODEXE) $(OBJ_testmod) $(OBJ_all) $(LYNKFLAGS)
+$(MODEXE): $(OBJ_testmod) $(QMLib)
+	$(LYNK90)   -o $(MODEXE) $(OBJ_testmod) $(LIBS) -L$(DIR0) -l$(QMLibshort)
+	echo "model (QML) and QML_Test compilations: OK"
 #
 # grid
 .PHONY: grid testgrid
 grid testgrid:$(GRIDEXE)
-$(GRIDEXE): $(OBJ_grid) $(OBJ_all)
-	$(LYNK90)   -o $(GRIDEXE) $(OBJ_grid) $(OBJ_all) $(LYNKFLAGS)
+$(GRIDEXE): $(OBJ_grid) $(QMLib)
+	$(LYNK90)   -o $(GRIDEXE) $(OBJ_grid) $(LIBS) -L$(DIR0) -l$(QMLibshort)
 #
 # Adia
 .PHONY: adia testadia
 adia testadia:$(ADIAEXE)
-$(ADIAEXE): $(OBJ_adia) $(OBJ_all)
-	$(LYNK90)   -o $(ADIAEXE) $(OBJ_adia) $(OBJ_all) $(LYNKFLAGS)
+$(ADIAEXE): $(OBJ_adia) $(QMLib)
+	$(LYNK90)   -o $(ADIAEXE) $(OBJ_adia) $(LIBS) -L$(DIR0) -l$(QMLibshort)
 #
 #
 #driver
 .PHONY: driver
 driver:$(DriverEXE)
-$(DriverEXE): $(OBJ_testdriver) $(ModLib)
-	$(LYNK90)   -o $(DriverEXE) $(OBJ_testdriver) -L$(DIR0) -lpot $(LYNKFLAGS)
+$(DriverEXE): $(OBJ_testdriver) $(QMLib)
+	$(LYNK90)   -o $(DriverEXE) $(OBJ_testdriver) $(LIBS) -L$(DIR0) -l$(QMLibshort)
 #
 #readme
 .PHONY: readme
@@ -357,14 +364,15 @@ readme:
 
 #===============================================
 #============= Model Lib =======================
+#===============================================
 #
 .PHONY: lib
-lib: $(ModLib) readme
-	echo "create the library: ",$(ModLib)
-$(ModLib): $(OBJ_driver) $(OBJ_all)
-	ar -r $(ModLib) $(OBJ_driver) $(OBJ_all)
-	rm -f $(QMLib)
-	ln -s $(ModLib) $(QMLib)
+lib: $(QMLib) readme
+$(QMLib): $(OBJ_driver) $(OBJ_all)
+	ar -r $(QMLib) $(OBJ_driver) $(OBJ_all)
+	rm -f $(ModLib)
+	ln -s $(QMLib) $(ModLib)
+	echo "create the library: ",$(QMLib)
 #
 #
 #===============================================
@@ -372,7 +380,8 @@ $(ModLib): $(OBJ_driver) $(OBJ_all)
 .PHONY: clean
 clean: clean_dnS
 	rm -f  $(MODEXE) $(GRIDEXE) $(ADIAEXE) $(DriverEXE) $(TESTEXE)
-	rm -f  $(ModLib) libQMLib.a
+	rm -f  *.a
+	rm -f grid*
 	rm -fr *.dSYM comp.log
 	cd $(DIROBJ) ; rm -f *.o *.mod *.MOD
 	@cd Tests && ./clean
@@ -531,20 +540,23 @@ $(DIROBJ)/TEST_Adia.o:$(DIRSRC)/TEST_Adia.f90
 #
 #
 ##################################################################################
-### dnS libraries
-#
-dnSMODFILE= $(dnSVMLibDIR)/OBJ/addnsvm_m.mod $(dnSVMLibDIR)/OBJ/addnsvm_dns_m.mod \
-            $(dnSVMLibDIR)/OBJ/addnsvm_dnmat_m.mod $(dnSVMLibDIR)/OBJ/addnsvm_dnpoly_m.mod
+### AD_dnSVM libraries
+dnSMODFILE= addnsvm_m.mod addnsvm_dns_m.mod addnsvm_dnmat_m.mod addnsvm_dnpoly_m.mod
 .PHONY: dns dnS
 dns dnS: $(dnSVMLibDIR) $(dnSVMLibDIR_full)
-	@echo "make dnS library"
+#
 $(dnSVMLibDIR_full): $(dnSVMLibDIR)
-	@echo "make dnS library"
-	cd $(dnSVMLibDIR) ; make lib ; cp $(dnSMODFILE) $(DIR0)/OBJ ; cp $(dnSVMLibDIR_full) $(DIR0)
+	cd $(dnSVMLibDIR) ; export ExternalF90=$(F90) ; export ExternalOMP=$(OMP); export ExternalOPT=$(OPT) ;  make lib
+	cd $(dnSVMObjDIROld) ; cp $(dnSMODFILE) $(DIROBJ) | true
+	cd $(dnSVMObjDIRNew) ; cp $(dnSMODFILE) $(DIROBJ)
+	cp $(dnSVMLibDIR)/*.a $(DIR0)
+	@echo "make AD_dnSVM library in QML"
+#
 $(dnSVMLibDIR):
 	cd $(ExternalLibDIR) ; ./get_dnSVM.sh
 	test -d $(dnSVMLibDIR) || exit 1
-
+	@echo "download AD_dnSVM library in QML"
+#
 .PHONY: clean_dns clean_dnS
 clean_dns clean_dnS:
 	cd $(ExternalLibDIR) ; rm -rf AD_dnSVM* dnSVMLib
@@ -571,8 +583,8 @@ $(DIROBJ)/NumParameters_m.o:$(DIRLib)/NumParameters_m.f90
 #
 $(DIROBJ)/TEST_OOP.o:    $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
 $(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
-$(DIROBJ)/TEST_driver.o: $(ModLib)
-$(DIROBJ)/TEST_Adia.o:   $(ModLib)
+$(DIROBJ)/TEST_driver.o: $(QMLib)
+$(DIROBJ)/TEST_Adia.o:   $(QMLib)
 
 
 $(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
@@ -582,7 +594,7 @@ $(DIROBJ)/IRC_m.o: $(OBJ_lib) $(DIROBJ)/Model_m.o $(DIROBJ)/Opt_m.o $(OBJ_QML)
 
 $(DIROBJ)/Model_m.o: $(DIROBJ)/Basis_m.o $(OBJ_lib) $(OBJ_QML)
 
-$(DIROBJ)/MakeHinact_m.o: $(DIROBJ)/Basis_m.o $(ModLib)
+$(DIROBJ)/MakeHinact_m.o: $(DIROBJ)/Basis_m.o $(QMLib)
 
 
 $(DIROBJ)/Empty_m.o:   $(OBJ_lib)

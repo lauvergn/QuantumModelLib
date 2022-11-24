@@ -34,6 +34,9 @@ PROGRAM main_pot
   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
   IMPLICIT NONE
 
+  CALL test_PSB3() ; stop
+
+  CALL test_Read_Model() ; stop
   !CALL test_Phenol_ADia() ; stop
   !CALL test_HBond() ; stop
   CALL test_Vib_adia(1) ; stop
@@ -49,6 +52,87 @@ PROGRAM main_pot
   CALL test_Vib_adia(1000)
 
 END PROGRAM main_pot
+SUBROUTINE test_Read_Model()
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+  IMPLICIT NONE
+
+  real (kind=real64),      allocatable     :: Q(:)
+  real (kind=real64),      allocatable     :: V(:,:)
+  real (kind=real64),      allocatable     :: g(:,:,:)
+  real (kind=real64),      allocatable     :: NAC(:,:,:)
+
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
+
+  integer                             :: i,j,k,ndim,nsurf,option
+  real (kind=real64)                  :: DQ
+
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '  Read model'
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+
+  pot_name  = 'read_model'
+  ndim      = 0 ! it would be initialized
+  nsurf     = 0 ! it would be initialized
+  option    = -1
+  adiabatic = .TRUE.
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+
+  write(out_unitp,*) 'ndim,nsurf',ndim,nsurf
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+  allocate(G(nsurf,nsurf,ndim))
+
+  IF (nsurf > 1) THEN
+    write(out_unitp,*) ' Test V, G and NAC'
+
+    allocate(NAC(nsurf,nsurf,ndim))
+
+    CALL get_Qmodel_Q0(Q,0)
+    DQ = 0.1_real64
+    DO k=1,4
+      write(out_unitp,*) '------------------------------------------------------'
+      CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
+      write(out_unitp,*) 'Q',Q
+      DO i=1,nsurf
+        write(out_unitp,*) 'Vadia',i,':',V(i,i)
+      END DO
+      DO i=1,nsurf
+        write(out_unitp,*) 'Gadia',i,':',G(i,i,1:ndim)
+      END DO
+      DO i=1,nsurf
+        DO j=1,nsurf
+          write(out_unitp,*) 'NAC',i,j,':',NAC(j,i,1:ndim)
+        END DO
+      END DO
+
+      Q(:) = Q(:) + DQ
+    END DO
+
+    deallocate(NAC)
+  ELSE
+    write(out_unitp,*) ' Test V, G'
+
+    CALL get_Qmodel_Q0(Q,0)
+
+    CALL sub_Qmodel_VG(V,G,Q)
+    write(out_unitp,*) 'Q',Q
+    write(out_unitp,*) 'Potential',V
+    write(out_unitp,*) 'Gradient',G
+  END IF
+
+  deallocate(Q)
+  deallocate(V)
+  deallocate(G)
+
+
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+
+END SUBROUTINE test_Read_Model
 SUBROUTINE test2_Vib_adia(nb_eval)
   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
   IMPLICIT NONE
@@ -232,6 +316,13 @@ SUBROUTINE test_PSB3
   write(out_unitp,'(2f12.8)') V
 
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
+
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '== Optimisation ==='
+  write(out_unitp,*) '============================================================'
+
+       !sub_Qmodel_Opt(Q,i_surf,nb_deg,icv,Max_it)
+  CALL sub_Qmodel_Opt(Q,1,-1,3,-1)
 
   deallocate(V)
   deallocate(Q)

@@ -163,6 +163,41 @@ SUBROUTINE sub_Write_Qmodel(nio)
   CALL Write_Model(QuantumModel,nio)
 
 END SUBROUTINE sub_Write_Qmodel
+SUBROUTINE sub_Qmodel_Opt(Q,i_surf,nb_deg,icv,Max_it)
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+  real (kind=Rkind),      intent(inout)     :: Q(QuantumModel%ndim) ! intial and final geometry
+  integer,                intent(in)        :: i_surf,nb_deg,icv,Max_it
+
+  !local variables
+  TYPE (QML_Opt_t)               :: Opt_param
+  real (kind=Rkind)              :: Q0(QuantumModel%ndim)
+
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_Opt in Model_driver.f90')
+
+
+  Q0(:) = Q
+
+  Opt_param%i_surf = i_surf
+  IF (Opt_param%i_surf < 1) Opt_param%i_surf = 1
+
+  Opt_param%nb_neg = nb_deg
+
+  Opt_param%max_it = Max_it
+
+  CALL Init_QML_Opt(Opt_param,QuantumModel,icv=icv,read_param=.FALSE.)
+
+  CALL QML_Opt(Q,QuantumModel,Opt_param,Q0=Q0)
+
+
+END SUBROUTINE sub_Qmodel_Opt
+! get a reference geometry, Q0
+! the option parameter is not used
 SUBROUTINE get_Qmodel_Q0(Q0,option)
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m

@@ -165,7 +165,7 @@ CONTAINS
 
   IF (Opt_param%max_it < 0)   Opt_param%Max_it = (10+QModel%ndim)*(icv_loc+2)
 
-  IF (Opt_param%i_surf < 0 .OR. Opt_param%i_surf > QModel%nsurf) THEN
+  IF (Opt_param%i_surf < 1 .OR. Opt_param%i_surf > QModel%nsurf) THEN
     write(out_unitp,*) ' ERROR in ',name_sub
     write(out_unitp,*) ' i_surf',Opt_param%i_surf
     write(out_unitp,*) ' i_surf is out-of-range ([1,',int_TO_char(QModel%nsurf),'])'

@@ -33,6 +33,8 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+    !CALL test_H3()  ; stop
+
    !CALL test_IRC_H3() ; stop
    !CALL test_IRC_H3_AbInitio() ; stop
 
@@ -2716,6 +2718,7 @@ END SUBROUTINE test_HOO_DMBE
 SUBROUTINE test_H3
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m
+  USE QMLLib_diago_m
   USE ADdnSVM_m
   USE Model_m
   USE Opt_m
@@ -2723,7 +2726,8 @@ SUBROUTINE test_H3
 
   TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: Q(:,:),x(:,:),Qcart(:),Q1D(:)
-  integer                        :: ndim,nsurf,nderiv,i,option
+  real (kind=Rkind), allocatable :: MW_hessian(:,:),EigVal(:),EigVec(:,:)
+  integer                        :: ndim,nsurf,nderiv,i,j,option
   TYPE (dnMat_t)                 :: PotVal
   TYPE (QML_Opt_t)               :: Opt_p
 
@@ -2802,8 +2806,70 @@ SUBROUTINE test_H3
 
   CALL Write_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH')
 
+  ! harmonic frequencies
+  MW_hessian = reshape(get_d2(PotVal),shape=[QModel%ndim,QModel%ndim])
+  allocate(EigVal(QModel%ndim))
+  allocate(EigVec(QModel%ndim,QModel%ndim))
+
+  DO i=1,QModel%ndim
+  DO j=1,QModel%ndim
+    MW_hessian(i,j) = MW_hessian(i,j) / sqrt( QModel%QM%masses((i-1)/3+1)*QModel%QM%masses((j-1)/3+1) )
+  END DO
+  END DO
+  !CALL Write_RMat(MW_hessian, out_unitp, 5, name_info='MWhessian')
+  CALL diagonalization(MW_hessian,EigVal,EigVec,QModel%ndim)
+  EigVal = sqrt(abs(EigVal))*auTOcm_inv
+  CALL Write_RVec(EigVal, out_unitp, 5, name_info='freq (cm-1):')
+
+  deallocate(MW_hessian)
+  deallocate(EigVal)
+  deallocate(EigVec)
+  ! enb harmonic frequencies
+
   CALL dealloc_dnMat(PotVal)
   deallocate(Qcart)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Optimization (TS) H-H-H'
+
+  CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,pot_name='H3_LSTH')
+  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=6,list_act=[3,9])
+  CALL Write_QML_Opt(Opt_p)
+  allocate(Qcart(QModel%ndim))
+
+  CALL QML_Opt(Qcart,QModel,Opt_p,Q0=[ZERO,ZERO,-2._Rkind,ZERO,ZERO,ZERO,ZERO,ZERO,2._Rkind])
+
+  write(out_unitp,*) 'Potential+derivatives:'
+  CALL Eval_Pot(QModel,Qcart,PotVal,nderiv=2)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  CALL Write_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH')
+
+
+ ! harmonic frequencies
+  MW_hessian = reshape(get_d2(PotVal),shape=[QModel%ndim,QModel%ndim])
+  allocate(EigVal(QModel%ndim))
+  allocate(EigVec(QModel%ndim,QModel%ndim))
+
+  DO i=1,QModel%ndim
+  DO j=1,QModel%ndim
+    MW_hessian(i,j) = MW_hessian(i,j) / sqrt( QModel%QM%masses((i-1)/3+1)*QModel%QM%masses((j-1)/3+1) )
+  END DO
+  END DO
+  !CALL Write_RMat(MW_hessian, out_unitp, 5, name_info='MWhessian')
+  CALL diagonalization(MW_hessian,EigVal,EigVec,QModel%ndim)
+  EigVal = sqrt(abs(EigVal))*auTOcm_inv
+  CALL Write_RVec(EigVal, out_unitp, 5, name_info='freq (cm-1):')
+
+  deallocate(MW_hessian)
+  deallocate(EigVal)
+  deallocate(EigVec)
+  ! enb harmonic frequencies
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Qcart)
+
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
