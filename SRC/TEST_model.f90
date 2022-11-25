@@ -95,6 +95,8 @@ PROGRAM TEST_model
   CALL test_H2SiN()
   CALL test_H2NSi()
 
+  CALL test_H2O() ! for testing (PES: quadratic expansion)
+
   ! 3D (full-D), One electronic surface (spectro); ClH2+ (unpublished)
   CALL test_ClH2p_op12()
   CALL test_ClH2p_op34()
@@ -1677,6 +1679,70 @@ DO option=1,2
 END DO
 
 END SUBROUTINE test_H2NSi
+
+SUBROUTINE test_H2O
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: PotVal_gaussian
+  real (kind=Rkind), allocatable :: qtest(:,:),EAbInitio(:)
+
+
+  nderiv = 2
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '------------ 3D-H2O (option 1: R1,R2,a)------'
+  CALL Init_Model(QModel,pot_name='H2O',Print_init=.TRUE.,option=1)
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+  allocate(q(QModel%QM%ndim))
+  CALL get_Q0_Model(Q,QModel,option=0)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives at the minimum'
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='H2O_op1')
+  deallocate(q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+
+
+END SUBROUTINE test_H2O
+
 SUBROUTINE test_ClH2p_Botschwina
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m

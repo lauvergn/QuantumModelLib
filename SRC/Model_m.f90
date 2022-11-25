@@ -55,8 +55,11 @@ MODULE Model_m
   USE QML_HNNHp_m
   USE QML_H2SiN_m
   USE QML_H2NSi_m
+
+  USE QML_H2O_m
   USE QML_ClH2p_m
   USE QML_ClH2p_Botschwina_m
+  USE QML_H2O_m
   USE QML_HNO3_m
   USE QML_NO3_m
   USE QML_CH5_m
@@ -840,6 +843,19 @@ CONTAINS
       !! === END README ==
       allocate(QML_HCN_Murrell_t :: QModel%QM)
       QModel%QM = Init_QML_HCN_Murrell(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('h2o','water')
+      !! === README ==
+      !! H2O potential:
+      !! pot_name  = 'H2O'
+      !! option    = 1(default 1)
+      !! ndim      = 3
+      !! nsurf     = 1
+      !! refs: Quadratic model potential for H2O; TIPS force constants taken from:  
+      !!       Dang and Pettitt, J. Chem. Phys. 91 (1987)
+      !! === END README ==
+      allocate(QML_H2O_t :: QModel%QM)
+      QModel%QM = Init_QML_H2O(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('clh2+','clh2p')
       !! === README ==

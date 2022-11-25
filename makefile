@@ -294,6 +294,7 @@ OBJ_QML        = $(DIROBJ)/Empty_m.o \
                  $(DIROBJ)/CH5_m.o $(DIROBJ)/PH4_m.o \
                  $(DIROBJ)/HOO_DMBE_m.o \
                  $(DIROBJ)/H3_m.o $(DIROBJ)/HCN_Murrell_m.o \
+                 $(DIROBJ)/H2O_m.o \
 					  $(DIROBJ)/ClH2p_m.o $(DIROBJ)/ClH2p_Botschwina_m.o\
                  $(DIROBJ)/HenonHeiles_m.o $(DIROBJ)/LinearHBond_m.o \
 					  $(DIROBJ)/TwoD_MullerBrown_m.o \
@@ -452,7 +453,8 @@ $(DIROBJ)/H3_m.o:$(DIRModel)/H3_m.f90
 $(DIROBJ)/HCN_Murrell_m.o:$(DIRModel)/HCN_Murrell_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/HCN_Murrell_m.f90
 
-
+$(DIROBJ)/H2O_m.o:$(DIRModel)/H2O_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/H2O_m.f90
 $(DIROBJ)/ClH2p_m.o:$(DIRModel)/ClH2p_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/ClH2p_m.f90
 $(DIROBJ)/ClH2p_Botschwina_m.o:$(DIRModel)/ClH2p_Botschwina_m.f90
