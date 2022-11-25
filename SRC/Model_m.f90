@@ -1,21 +1,28 @@
 !===========================================================================
 !===========================================================================
-!This file is part of ModelLib.
+!This file is part of QuantumModelLib (QML).
+!===============================================================================
+! MIT License
 !
-!    ModelLib is a free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
-!    the Free Software Foundation, either version 3 of the License, or
-!    (at your option) any later version.
+! Permission is hereby granted, free of charge, to any person obtaining a copy
+! of this software and associated documentation files (the "Software"), to deal
+! in the Software without restriction, including without limitation the rights
+! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+! copies of the Software, and to permit persons to whom the Software is
+! furnished to do so, subject to the following conditions:
 !
-!    ModelLib is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+! The above copyright notice and this permission notice shall be included in all
+! copies or substantial portions of the Software.
 !
-!    You should have received a copy of the GNU Lesser General Public License
-!    along with ModelLib.  If not, see <http://www.gnu.org/licenses/>.
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+! SOFTWARE.
 !
-!    Copyright 2016 David Lauvergnat [1]
+!    Copyright (c) 2022 David Lauvergnat [1]
 !      with contributions of:
 !        Félix MOUHAT [2]
 !        Liang LIANG [3]
@@ -30,57 +37,11 @@
 !
 !===========================================================================
 !===========================================================================
-
 MODULE Model_m
 !$ USE omp_lib
   USE QMLLib_NumParameters_m
-
-  !USE ADdnSVM_m
-
-  USE QML_Empty_m
-
-  USE QML_Template_m
-  USE QML_Test_m
-  USE QML_Morse_m
-  USE QML_Poly1D_m
-  USE QML_H2_m
-
-  USE QML_HenonHeiles_m
-  USE QML_Tully_m
-
-  USE QML_PSB3_m
-  USE QML_Retinal_JPCB2000_m
-
-  USE QML_HONO_m
-  USE QML_HNNHp_m
-  USE QML_H2SiN_m
-  USE QML_H2NSi_m
-
-  USE QML_H2O_m
-  USE QML_ClH2p_m
-  USE QML_ClH2p_Botschwina_m
-  USE QML_H2O_m
-  USE QML_HNO3_m
-  USE QML_NO3_m
-  USE QML_CH5_m
-  USE QML_PH4_m
-
-  USE QML_HOO_DMBE_m
-  USE QML_H3_m
-  USE QML_HCN_Murrell_m
-
-  USE QML_OneDSOC_1S1T_m
-  USE QML_OneDSOC_2S1T_m
-
-  USE QML_LinearHBond_m
-  USE QML_TwoD_MullerBrown_m
-  USE QML_Buck_m
-  USE QML_Phenol_m
-  USE QML_Sigmoid_m
-  USE QML_TwoD_m
-  USE QML_TwoD_RJDI2014_m
-
-  USE AdiaChannels_Basis_m
+  USE QML_Empty_m,          ONLY : QML_Empty_t,Qact_TO_Q
+  USE AdiaChannels_Basis_m, ONLY : QML_Basis_t
 
   IMPLICIT NONE
 
@@ -91,11 +52,11 @@ MODULE Model_m
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
   PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model,Qact_TO_Q
-  PUBLIC :: set_step_epsi_Model
+  PUBLIC :: Set_step_epsi_Model
 
   TYPE :: Model_t
-    ! add nsurf and ndim to avoid crash when using the driver without initialization
-    ! at the intialization, the variables are set-up to the correct values and are
+    ! Add nsurf and ndim to avoid crash when using the driver without initialization
+    ! At the intialization, the variables are set-up to the correct values and are
     !   identical to QM%nsurf and QM%ndim ones respectively.
     integer                           :: nsurf       = 0
     integer                           :: ndim        = 0
@@ -111,50 +72,59 @@ MODULE Model_m
 
   real (kind=Rkind)                     :: epsi = ONETENTH**10
 
+  character (len=*), parameter :: QML_version =                         &
 #if defined(__QML_VER)
-      character (len=Name_len) :: QML_version = __QML_VER
+      __QML_VER
 #else
-      character (len=Name_len) :: QML_version = "unknown: -D__QML_VER=?"
+      'unknown: -D__QML_VER=?'
 #endif
 
+character (len=*), parameter :: QML_path   =                            &
 #if defined(__QMLPATH)
-      character (len=Line_len) :: QML_path   =                         &
        __QMLPATH
 #else
-      character (len=Line_len) :: QML_path   = '~/QuantumModelLib'
+      '~/QuantumModelLib'
 #endif
 
+character (len=*), parameter :: compile_date =                          &
 #if defined(__COMPILE_DATE)
-      character (len=Line_len) :: compile_date = __COMPILE_DATE
+      __COMPILE_DATE
 #else
-      character (len=Line_len) :: compile_date = "unknown: -D__COMPILE_DATE=?"
+      'unknown: -D__COMPILE_DATE=?'
 #endif
 
+character (len=*), parameter :: compile_host =                          &
 #if defined(__COMPILE_HOST)
-      character (len=Line_len) :: compile_host = __COMPILE_HOST
+      __COMPILE_HOST
 #else
-      character (len=Line_len) :: compile_host = "unknown: -D__COMPILE_HOST=?"
+      "unknown: -D__COMPILE_HOST=?"
 #endif
+
+character (len=*), parameter :: compiler =                              &
 #if defined(__COMPILER)
-      character (len=Line_len) :: compiler = __COMPILER
+      __COMPILER
 #else
-      character (len=Line_len) :: compiler = "unknown: -D__COMPILER=?"
+      "unknown: -D__COMPILER=?"
 #endif
+
+character (len=*), parameter :: compiler_ver =                          &
 #if defined(__COMPILER_VER)
-      character (len=Line_len) :: compiler_ver = __COMPILER_VER
+      __COMPILER_VER
 #else
-      character (len=Line_len) :: compiler_ver = "unknown: -D__COMPILER_VER=?"
+      "unknown: -D__COMPILER_VER=?"
 #endif
+
+character (len=*), parameter :: compiler_opt =                          &
 #if defined(__COMPILER_OPT)
-      character (len=Line_len) :: compiler_opt = &
       __COMPILER_OPT
 #else
-      character (len=Line_len) :: compiler_opt = "unknown: -D__COMPILER_OPT=?"
+      "unknown: -D__COMPILER_OPT=?"
 #endif
+character (len=*), parameter :: compiler_libs =                         &
 #if defined(__COMPILER_LIBS)
-      character (len=Line_len) :: compiler_libs = __COMPILER_LIBS
+       __COMPILER_LIBS
 #else
-      character (len=Line_len) :: compiler_libs = "unknown: -D__COMPILER_LIBS=?"
+      "unknown: -D__COMPILER_LIBS=?"
 #endif
 
 
@@ -168,7 +138,7 @@ CONTAINS
   USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
-    TYPE (QML_Empty_t), intent(inout)  :: QModel_inout ! variable to transfer info to the init
+    TYPE (QML_Empty_t),  intent(inout) :: QModel_inout ! variable to transfer info to the init
     integer,             intent(in)    :: nio
     logical,             intent(inout) :: read_nml1,opt1,IRC1
 
@@ -303,9 +273,55 @@ CONTAINS
                         option,PubliUnit,Print_init,Vib_adia,                   &
                         Phase_Following,Phase_checking)
   USE QMLLib_UtilLib_m
+
+  USE QML_Empty_m
+
+  USE QML_Template_m
+  USE QML_Test_m
+  USE QML_Morse_m
+  USE QML_Poly1D_m
+  USE QML_H2_m
+
+  USE QML_HenonHeiles_m
+  USE QML_Tully_m
+
+  USE QML_PSB3_m
+  USE QML_Retinal_JPCB2000_m
+
+  USE QML_HONO_m
+  USE QML_HNNHp_m
+  USE QML_H2SiN_m
+  USE QML_H2NSi_m
+
+  USE QML_H2O_m
+  USE QML_ClH2p_m
+  USE QML_ClH2p_Botschwina_m
+  USE QML_H2O_m
+  USE QML_HNO3_m
+  USE QML_NO3_m
+  USE QML_CH5_m
+  USE QML_PH4_m
+
+  USE QML_HOO_DMBE_m
+  USE QML_H3_m
+  USE QML_HCN_Murrell_m
+
+  USE QML_OneDSOC_1S1T_m
+  USE QML_OneDSOC_2S1T_m
+
+  USE QML_LinearHBond_m
+  USE QML_TwoD_MullerBrown_m
+  USE QML_Buck_m
+  USE QML_Phenol_m
+  USE QML_Sigmoid_m
+  USE QML_TwoD_m
+  USE QML_TwoD_RJDI2014_m
+
+  USE AdiaChannels_Basis_m
+
   IMPLICIT NONE
 
-    TYPE (Model_t),      intent(inout)            :: QModel
+    TYPE (Model_t),      intent(inout)           :: QModel
 
     character (len=*),   intent(in),    optional :: pot_name
     integer,             intent(in),    optional :: ndim,nsurf
@@ -341,15 +357,15 @@ CONTAINS
       write(out_unitp,*) '================================================='
       write(out_unitp,*) '== QML: Quantum Model Lib (E-CAM) ==============='
       write(out_unitp,*) '== QML version:       ',QML_version
-      write(out_unitp,*) '== QML path:          ',trim(adjustl(QML_path))
+      write(out_unitp,*) '== QML path:          ',QML_path
       write(out_unitp,*) '-------------------------------------------------'
-      write(out_unitp,*) '== Compiled on       "',trim(compile_host), '" the ',trim(compile_date)
-      write(out_unitp,*) '== Compiler:         ',trim(compiler)
-      write(out_unitp,*) '== Compiler version: ',trim(compiler_ver)
-      write(out_unitp,*) '== Compiler options: ',trim(compiler_opt)
-      write(out_unitp,*) '== Compiler libs:     ',trim(compiler_libs)
+      write(out_unitp,*) '== Compiled on       "',compile_host, '" the ',compile_date
+      write(out_unitp,*) '== Compiler:         ',compiler
+      write(out_unitp,*) '== Compiler version: ',compiler_ver
+      write(out_unitp,*) '== Compiler options: ',compiler_opt
+      write(out_unitp,*) '== Compiler libs:     ',compiler_libs
       write(out_unitp,*) '-------------------------------------------------'
-      write(out_unitp,*) 'QML is under GNU LGPL3 license and '
+      write(out_unitp,*) 'QML is under the MIT license and '
       write(out_unitp,*) '  is written by David Lauvergnat [1]'
       write(out_unitp,*) '  with contributions of'
       write(out_unitp,*) '     Félix MOUHAT [2]'
@@ -1008,7 +1024,7 @@ CONTAINS
     END IF
 
   END SUBROUTINE Init_Model
-  SUBROUTINE set_step_epsi_Model(step_in,epsi_in)
+  SUBROUTINE Set_step_epsi_Model(step_in,epsi_in)
   USE QMLLib_UtilLib_m
   IMPLICIT NONE
 
@@ -1016,7 +1032,7 @@ CONTAINS
 
 
 !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='set_step_epsi_Model'
+    character (len=*), parameter :: name_sub='Set_step_epsi_Model'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -1043,10 +1059,11 @@ CONTAINS
       flush(out_unitp)
     END IF
 
-  END SUBROUTINE set_step_epsi_Model
+  END SUBROUTINE Set_step_epsi_Model
 
   SUBROUTINE get_Q0_Model(Q0,QModel,option)
   USE QMLLib_UtilLib_m
+  USE QML_Empty_m,          ONLY : get_Q0_QModel
   IMPLICIT NONE
 
     real (kind=Rkind),  intent(inout)            :: Q0(:)
@@ -1110,10 +1127,10 @@ CONTAINS
   IF (.NOT. file_exist) THEN
     write(out_unitp,*) 'ERROR: the QML directory path is wrong !!'
     write(out_unitp,*) ' FileName: ',FileName
-    write(out_unitp,*) ' QML_path: ',trim(adjustl(QML_path))
+    write(out_unitp,*) ' QML_path: ',QML_path
     write(out_unitp,*) ' Probably, the QML directory has been moved'
     write(out_unitp,*) ' Recompile again QML.'
-    STOP 'Wrong QML_path'
+    STOP 'ERROR in check_QML_Path: Wrong QML_path'
   END IF
 
   END SUBROUTINE check_QML_Path
@@ -1134,7 +1151,7 @@ CONTAINS
       write(out_unitp,*) '    CALL init_Model(...) in Model_m.f90'
       write(out_unitp,*) ' or'
       write(out_unitp,*) '    CALL sub_Init_Qmodel(...) in Model_driver.f90'
-      STOP 'STOP in check_alloc_QM: QM is not allocated in QModel.'
+      STOP 'ERROR in check_alloc_QM: QM is not allocated in QModel.'
     END IF
 
   END SUBROUTINE check_alloc_QM
@@ -1155,6 +1172,7 @@ CONTAINS
   END FUNCTION check_Init_QModel
 
   SUBROUTINE Eval_tab_HMatVibAdia(QModel,Qact,tab_MatH)
+  USE QMLLib_UtilLib_m
   USE ADdnSVM_m
   IMPLICIT NONE
 
@@ -1221,7 +1239,7 @@ CONTAINS
     write(out_unitp,*) '    shape(tab_MatH):',shape(tab_MatH)
     write(out_unitp,*) '  It MUST be:      [',nsurf,nsurf,nb_terms,']'
     write(out_unitp,*) '  Check your data or the code!'
-    STOP 'STOP in Eval_tab_HMatVibAdia: The shape of tab_MatH is wrong.'
+    STOP 'ERROR in Eval_tab_HMatVibAdia: The shape of tab_MatH is wrong.'
   END IF
   tab_MatH(:,:,:) = ZERO
 
@@ -1936,6 +1954,7 @@ CONTAINS
   END SUBROUTINE Eval_Pot_Numeric_adia
   SUBROUTINE Eval_Pot_Numeric_adia_old(QModel,Q,PotVal,nderiv,Vec,NAC)
   USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
+  USE QMLLib_UtilLib_m, ONLY : Init_IdMat
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -2070,7 +2089,9 @@ CONTAINS
   END SUBROUTINE Eval_Pot_Numeric_adia_old
   SUBROUTINE Eval_Pot_Numeric_adia_v3(QModel,Q,PotVal,nderiv,Vec,NAC)
   USE QMLLib_FiniteDiff_m
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
+  USE ADdnSVM_m,        ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
+  USE QMLLib_UtilLib_m, ONLY : Init_IdMat
+
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -2625,6 +2646,7 @@ CONTAINS
   END SUBROUTINE Write0_Model
   SUBROUTINE Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec,NAC,info,name_file)
   USE QMLLib_UtilLib_m
+  USE ADdnSVM_m
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(in)           :: QModel

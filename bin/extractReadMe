@@ -6,10 +6,10 @@ rm -f temp/*
 cat << ** > ReadMe.txt
 =========================================
 =========================================
- QuantumModelLib* is a free software under LGPL.
-  date: 27/07/2022
+ QuantumModelLib* is a free software under the MIT Licence.
+  date: 25/11/2022
 
-    Copyright 2016 David Lauvergnat [1]
+    Copyright (c) 2022 David Lauvergnat [1]
       with contributions of:
         Félix MOUHAT [2]
         Liang LIANG [3]

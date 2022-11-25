@@ -1,25 +1,40 @@
 !===========================================================================
 !===========================================================================
-!This file is part of ModelLib.
+!This file is part of QuantumModelLib (QML).
+!===============================================================================
+! MIT License
 !
-!    ModelLib is a free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
-!    the Free Software Foundation, either version 3 of the License, or
-!    (at your option) any later version.
+! Permission is hereby granted, free of charge, to any person obtaining a copy
+! of this software and associated documentation files (the "Software"), to deal
+! in the Software without restriction, including without limitation the rights
+! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+! copies of the Software, and to permit persons to whom the Software is
+! furnished to do so, subject to the following conditions:
 !
-!    ModelLib is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+! The above copyright notice and this permission notice shall be included in all
+! copies or substantial portions of the Software.
 !
-!    You should have received a copy of the GNU Lesser General Public License
-!    along with ModelLib.  If not, see <http://www.gnu.org/licenses/>.
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+! SOFTWARE.
 !
-!    Copyright 2016 David Lauvergnat
-!      with contributions of Félix MOUHAT and Liang LIANG
+!    Copyright (c) 2022 David Lauvergnat [1]
+!      with contributions of:
+!        Félix MOUHAT [2]
+!        Liang LIANG [3]
+!        Emanuele MARSILI [1,4]
 !
-!    This particular module has been modified from ElVibRot-Tnum:
-!       <http://pagesperso.lcp.u-psud.fr/lauvergnat/ElVibRot/ElVibRot.html>
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France
+![3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France
+![4]: Durham University, Durham, UK
+!* Originally, it has been developed during the Quantum-Dynamics E-CAM project :
+!     https://www.e-cam2020.eu/quantum-dynamics
+!
 !===========================================================================
 !===========================================================================
 MODULE QMLLib_UtilLib_m
@@ -533,9 +548,6 @@ CONTAINS
      write(out_unitp,43) t_cpu-t_cpu_ini
  43  format('  Total cpu (s): ',f18.3)
 
- 51  format(a,i10,a,a)
-
-
      flush(out_unitp)
      !============================================
 
@@ -688,8 +700,6 @@ CONTAINS
           i_line = i_line + 1
 
           read(nio,format_label,end=999,eor=888,err=888,advance='no') labelR
-   11     format(A40)
-
 
           located = (labelR .EQ. label)
           !located = verify(label,labelR) == 0
