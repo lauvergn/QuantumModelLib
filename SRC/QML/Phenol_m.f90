@@ -373,16 +373,26 @@ CONTAINS
 
    !--------------------------------------------------------------------
    ! for V(2,2): 2d diabatic state
-   v201R = QML_dnMorse(dnR,QModel%v201) + QModel%B204
+   !v201R = QML_dnMorse(dnR,QModel%v201) + QModel%B204 ! pb with ifort19
+   v201R = QML_dnMorse(dnR,QModel%v201)
+   v201R = v201R + QModel%B204
+
    v202R = QModel%B205*exp(-QModel%B206*(dnR-QModel%B207)) + QModel%B208
+
    v20pR = v201R + v202R
+
    v20mR = v201R - v202R
+
    v20R  = HALF*(v20pR - (v20mR**TWO + QModel%X20)**HALF)
 
 
    !write(out_unitp,*) 'sigmoid:'
    v211R = QML_dnSigmoid(dnR,QModel%v211)
-   v212R = QML_dnSigmoid(dnR,QModel%v212) + QModel%B217
+   
+   !v212R = QML_dnSigmoid(dnR,QModel%v212) + QModel%B217 ! pb with ifort19
+   v212R = QML_dnSigmoid(dnR,QModel%v212)
+   v212R = v212R + QModel%B217
+
    v21pR = v211R + v212R
    v21mR = v211R - v212R
    v21R  = HALF * (v21pR + (v21mR**TWO + QModel%X21)**HALF)
@@ -423,7 +433,10 @@ CONTAINS
    !--------------------------------------------------------------------
    ! for V(3,3): 3d diabatic state
    !write(out_unitp,*) 'morse:'
-   v30R = QML_dnMorse(dnR,QModel%v30) + QModel%a30
+   !v30R = QML_dnMorse(dnR,QModel%v30) + QModel%a30 ! with ifort19 this doesn't work, it has to be split
+   v30R = QML_dnMorse(dnR,QModel%v30)
+   v30R = v30R + QModel%a30
+
    !CALL Write_dnMat(v30R,6)
    !write(out_unitp,*) 'sigmoid:'
    v31R = QML_dnSigmoid(dnR,QModel%v31)

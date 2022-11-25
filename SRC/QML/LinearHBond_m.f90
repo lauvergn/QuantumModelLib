@@ -445,7 +445,10 @@ MODULE QML_LinearHBond_m
       flush(out_unitp)
     END IF
 
-    PotVal_m2 = QML_dnMorse(dnY,QModel%Morse2)+QModel%Eref2
+    !PotVal_m2 = QML_dnMorse(dnY,QModel%Morse2)+QModel%Eref2 ! with ifort19 this doesn't work, it has to be split
+    PotVal_m2 = QML_dnMorse(dnY,QModel%Morse2)
+    PotVal_m2 = PotVal_m2+QModel%Eref2
+
     IF (debug .OR. print_level > 1) THEN
       write(out_unitp,*) 'PotVal_m2. y:',get_d0(dnY)
       CALL Write_dnS(PotVal_m2)

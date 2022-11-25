@@ -363,7 +363,7 @@ CONTAINS
       write(out_unitp,*) '== Compiler:         ',compiler
       write(out_unitp,*) '== Compiler version: ',compiler_ver
       write(out_unitp,*) '== Compiler options: ',compiler_opt
-      write(out_unitp,*) '== Compiler libs:     ',compiler_libs
+      write(out_unitp,*) '== Compiler libs:    ',compiler_libs
       write(out_unitp,*) '-------------------------------------------------'
       write(out_unitp,*) 'QML is under the MIT license and '
       write(out_unitp,*) '  is written by David Lauvergnat [1]'

@@ -29,11 +29,8 @@ ExternalLibDIR=$(QML_path)/Ext_Lib
 
 # AD_dnSVM Lib
 dnSVMLibDIR      := $(ExternalLibDIR)/dnSVMLib
-dnSVMDIRLIB      += -L$(dnSVMLibDIR)
-dnSVMLIB         := -lAD_dnSVM
 dnSVMLibDIR_full := $(dnSVMLibDIR)/libAD_dnSVM.a
-dnSVMObjDIROld   :=$(dnSVMLibDIR)/OBJ
-dnSVMObjDIRNew   :=$(dnSVMLibDIR)/OBJ/obj_$(F90)_omp$(OMP)
+dnSVMObjDIR      := $(dnSVMLibDIR)/OBJ/obj_$(F90)_omp$(OMP)
 
 #===============================================================================
 
@@ -111,6 +108,8 @@ ifeq ($(F90),nagfor)
         F90FLAGS = -O0 $(OMPFLAG) -g -C=all
       endif
    endif
+   F90FLAGS0 := $(F90FLAGS)
+   F90FLAGS += -I$(dnSVMObjDIR) # ok ?????
 
    ifeq ($(LAPACK),1)
      F90LIB = -framework Accelerate
@@ -141,9 +140,12 @@ ifeq ($(F90),ifort)
    else
       F90FLAGS = -O0 $(OMPFLAG) -check all -g -traceback
    endif
+   F90FLAGS0 := $(F90FLAGS)
+   F90FLAGS += -I$(dnSVMObjDIR)
 
    ifeq ($(LAPACK),1)
-     F90LIB += -qmkl -lpthread
+     #F90LIB += -qmkl -lpthread
+     F90LIB += -mkl -lpthread
    else
      F90LIB += -lpthread
    endif
@@ -175,6 +177,8 @@ ifeq ($(F90),pgf90)
    else
       F90FLAGS = -O0 $(OMPFLAG)      -Mallocatable=03 -Mbounds -Mchkstk -g
    endif
+   F90FLAGS0 := $(F90FLAGS)
+   F90FLAGS += -I$(dnSVMObjDIR)
 
    ifeq ($(LAPACK),1)
      F90LIB += -lblas -llapack
@@ -222,11 +226,24 @@ endif
       #F90FLAGS = -O0 -fbounds-check -Wuninitialized
       F90FLAGS = -Og $(OMPFLAG) -Wall -Wextra -Wimplicit-interface -fPIC -fmax-errors=1 -g -fcheck=all -fbacktrace
    endif
+   F90FLAGS0 := $(F90FLAGS)
+   F90FLAGS += -J$(dnSVMObjDIR)
 
    F90_VER = $(shell $(F90) --version | head -1 )
 
 endif
 
+#=================================================================================
+# Directories
+#=================================================================================
+DIR0       = $(QML_path)
+DIROBJ     = $(DIR0)/OBJ/obj$(ext_obj)
+$(shell [ -d $(DIROBJ) ] || mkdir -p $(DIROBJ))
+DIRSRC     = $(DIR0)/SRC
+DIRLib     = $(DIRSRC)/QMLLib
+DIRModel   = $(DIRSRC)/QML
+DIRAdia    = $(DIRSRC)/AdiaChannels
+DIROpt     = $(DIRSRC)/Opt
 #=================================================================================
 #=================================================================================
 $(info ***********************************************************************)
@@ -237,8 +254,6 @@ $(info ***********OPTIMIZATION: $(OPT))
 $(info ***********OpenMP:       $(OMPFLAG))
 $(info ***********Arpack:       $(ARPACK))
 $(info ***********dnSVMLibDIR:  $(dnSVMLibDIR))
-$(info ***********dnSVMLIB:     $(dnSVMLIB))
-$(info ***********dnSVMDIRLIB:  $(dnSVMDIRLIB))
 $(info ***********F90FLAGS:     $(F90FLAGS))
 $(info ***********F90LIB:       $(F90LIB))
 $(info ***********QML_ver:      $(QML_ver))
@@ -249,7 +264,7 @@ CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
                -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
                -D__COMPILER="'$(F90)'" \
                -D__COMPILER_VER="'$(F90_VER)'" \
-               -D__COMPILER_OPT="'$(F90FLAGS)'" \
+               -D__COMPILER_OPT="'$(F90FLAGS0)'" \
                -D__COMPILER_LIBS="'$(F90LIB)'" \
                -D__QMLPATH="'$(QML_path)'" \
                -D__QML_VER='"$(QML_ver)"'
@@ -271,14 +286,7 @@ ModLib     = libpot.a     #old name
 QMLibshort = QMLib$(ext_obj)
 QMLib      = lib$(QMLibshort).a
 
-DIR0       = $(QML_path)
-DIROBJ     = $(DIR0)/OBJ/obj$(ext_obj)
-$(shell [ -d $(DIROBJ) ] || mkdir -p $(DIROBJ))
-DIRSRC     = $(DIR0)/SRC
-DIRLib     = $(DIRSRC)/QMLLib
-DIRModel   = $(DIRSRC)/QML
-DIRAdia    = $(DIRSRC)/AdiaChannels
-DIROpt     = $(DIRSRC)/Opt
+
 
 LIBS := -L$(DIR0) -l$(QMLibshort) -L$(dnSVMLibDIR) -lAD_dnSVM$(ext_obj) $(F90LIB)
 
@@ -550,8 +558,6 @@ dns dnS: $(dnSVMLibDIR) $(dnSVMLibDIR_full)
 #
 $(dnSVMLibDIR_full): $(dnSVMLibDIR)
 	cd $(dnSVMLibDIR) ; export ExternalF90=$(F90) ; export ExternalOMP=$(OMP); export ExternalOPT=$(OPT) ;  make lib
-	cd $(dnSVMObjDIROld) ; cp $(dnSMODFILE) $(DIROBJ) | true
-	cd $(dnSVMObjDIRNew) ; cp $(dnSMODFILE) $(DIROBJ)
 	cp $(dnSVMLibDIR)/*.a $(DIR0)
 	@echo "make AD_dnSVM library in QML"
 #
