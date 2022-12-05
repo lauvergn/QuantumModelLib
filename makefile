@@ -24,6 +24,15 @@ QML_path:=$(shell pwd)
 ext_obj=_$(F90)_omp$(OMP)
 
 
+#=================================================================================
+# Directories
+#=================================================================================
+DIR0       = $(QML_path)
+DIROBJ     = $(DIR0)/OBJ/obj$(ext_obj)
+$(shell [ -d $(DIROBJ) ] || mkdir -p $(DIROBJ))
+QMLMODDIR  = $(DIROBJ)
+
+#=================================================================================
 # External Libraries directory (dnSVM ...)
 ExternalLibDIR=$(QML_path)/Ext_Lib
 
@@ -31,7 +40,6 @@ ExternalLibDIR=$(QML_path)/Ext_Lib
 dnSVMLibDIR      := $(ExternalLibDIR)/dnSVMLib
 dnSVMLibDIR_full := $(dnSVMLibDIR)/libAD_dnSVM.a
 dnSVMObjDIR      := $(dnSVMLibDIR)/OBJ/obj_$(F90)_omp$(OMP)
-
 #===============================================================================
 
 #===============================================================================
@@ -234,11 +242,8 @@ endif
 endif
 
 #=================================================================================
-# Directories
+# Other directories
 #=================================================================================
-DIR0       = $(QML_path)
-DIROBJ     = $(DIR0)/OBJ/obj$(ext_obj)
-$(shell [ -d $(DIROBJ) ] || mkdir -p $(DIROBJ))
 DIRSRC     = $(DIR0)/SRC
 DIRLib     = $(DIRSRC)/QMLLib
 DIRModel   = $(DIRSRC)/QML
