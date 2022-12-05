@@ -24,6 +24,15 @@ QML_path:=$(shell pwd)
 ext_obj=_$(F90)_omp$(OMP)
 
 
+#=================================================================================
+# Directories
+#=================================================================================
+DIR0       = $(QML_path)
+DIROBJ     = $(DIR0)/OBJ/obj$(ext_obj)
+$(shell [ -d $(DIROBJ) ] || mkdir -p $(DIROBJ))
+QMLMODDIR  = $(DIROBJ)
+
+#=================================================================================
 # External Libraries directory (dnSVM ...)
 ExternalLibDIR=$(QML_path)/Ext_Lib
 
@@ -31,7 +40,6 @@ ExternalLibDIR=$(QML_path)/Ext_Lib
 dnSVMLibDIR      := $(ExternalLibDIR)/dnSVMLib
 dnSVMLibDIR_full := $(dnSVMLibDIR)/libAD_dnSVM.a
 dnSVMObjDIR      := $(dnSVMLibDIR)/OBJ/obj_$(F90)_omp$(OMP)
-
 #===============================================================================
 
 #===============================================================================
@@ -227,18 +235,15 @@ endif
       F90FLAGS = -Og $(OMPFLAG) -Wall -Wextra -Wimplicit-interface -fPIC -fmax-errors=1 -g -fcheck=all -fbacktrace
    endif
    F90FLAGS0 := $(F90FLAGS)
-   F90FLAGS += -J$(dnSVMObjDIR)
+   F90FLAGS += -I$(dnSVMObjDIR)
 
    F90_VER = $(shell $(F90) --version | head -1 )
 
 endif
 
 #=================================================================================
-# Directories
+# Other directories
 #=================================================================================
-DIR0       = $(QML_path)
-DIROBJ     = $(DIR0)/OBJ/obj$(ext_obj)
-$(shell [ -d $(DIROBJ) ] || mkdir -p $(DIROBJ))
 DIRSRC     = $(DIR0)/SRC
 DIRLib     = $(DIRSRC)/QMLLib
 DIRModel   = $(DIRSRC)/QML
@@ -552,7 +557,6 @@ $(DIROBJ)/TEST_Adia.o:$(DIRSRC)/TEST_Adia.f90
 #
 ##################################################################################
 ### AD_dnSVM libraries
-dnSMODFILE= addnsvm_m.mod addnsvm_dns_m.mod addnsvm_dnmat_m.mod addnsvm_dnpoly_m.mod
 .PHONY: dns dnS
 dns dnS: $(dnSVMLibDIR) $(dnSVMLibDIR_full)
 #
