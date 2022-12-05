@@ -67,7 +67,7 @@ MODULE QML_HNO3_m
 
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_HNO3
-    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_HNO3
+    PROCEDURE :: EvalFunc_QModel => EvalFunc_QML_HNO3
     PROCEDURE :: Write_QModel     => Write_QML_HNO3
     PROCEDURE :: Write0_QModel    => Write0_QML_HNO3
   END TYPE QML_HNO3_t

@@ -144,6 +144,7 @@ CONTAINS
 
     ! local variable
     integer, parameter :: max_act = 10
+    integer, parameter :: max_Op = 3
     integer :: ndim,nsurf,nderiv,option,printlevel,nb_Channels
     logical :: adiabatic,numeric,PubliUnit,read_nml
     logical :: Vib_adia,print_EigenVec_Grid,print_EigenVec_Basis
@@ -154,10 +155,12 @@ CONTAINS
     character (len=20) :: pot_name
     integer :: err_read,nb_act
     integer :: list_act(max_act)
+    integer :: list_Op(max_Op)
 
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
                          Phase_Checking,Phase_Following,Cart_TO_Q,AbInitio,     &
+                         list_Op, &
                          read_nml,printlevel,Vib_adia,nb_Channels,list_act,     &
                          print_EigenVec_Grid,print_EigenVec_Basis,opt,IRC
 
@@ -171,6 +174,7 @@ CONTAINS
     Phase_Following = QModel_inout%Phase_Following
     Cart_TO_Q       = QModel_inout%Cart_TO_Q
     AbInitio        = .FALSE.
+    list_Op(:)      = -1 ! 0: potential, then other scalar operators
 
     Vib_adia        = QModel_inout%Vib_adia
     nb_Channels     = 0
@@ -2491,7 +2495,7 @@ CONTAINS
         dnQ(i) = Variable(Q(i),nVar=QModel%QM%ndimFunc,nderiv=nderiv,iVar=i) ! to set up the derivatives
       END DO
 
-      CALL QModel%QM%Eval_QModel_Func(Func,dnQ,nderiv=nderiv)
+      CALL QModel%QM%EvalFunc_QModel(Func,dnQ,nderiv=nderiv)
 
       ! deallocation
       DO i=1,size(dnQ)

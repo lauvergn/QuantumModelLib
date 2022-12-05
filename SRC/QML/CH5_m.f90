@@ -86,7 +86,7 @@ MODULE QML_CH5_m
 
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_CH5
-    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_CH5
+    PROCEDURE :: EvalFunc_QModel => EvalFunc_QML_CH5
     PROCEDURE :: Write_QModel     => Write_QML_CH5
     PROCEDURE :: Write0_QModel    => Write0_QML_CH5
   END TYPE QML_CH5_t

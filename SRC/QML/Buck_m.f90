@@ -68,7 +68,7 @@ MODULE QML_Buck_m
      ! C= 102 10^-12 erg A^-6 = 106.54483566475760255666 Hartree bohr^-6
      real (kind=Rkind) :: mu  = 36423.484024390622_Rkind        ! au
   CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Buck
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Buck
     PROCEDURE :: Write_QModel    => Write_QML_Buck
     PROCEDURE :: Write0_QModel   => Write0_QML_Buck
   END TYPE QML_Buck_t
@@ -111,10 +111,10 @@ CONTAINS
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     !Default for Ar-Ar
-    CALL Init0_QML_Buck(QModel,A=387.63744459726228783977_Rkind,       &
-                                 B=1.93837805257707347985_Rkind,        &
-                                 C=106.54483566475760255666_Rkind,      &
-                                 model_name='buck')
+    CALL Init0_QML_Buck(QModel,A=387.63744459726228783977_Rkind,      &
+                               B=1.93837805257707347985_Rkind,        &
+                               C=106.54483566475760255666_Rkind,      &
+                               model_name='buck')
 
     IF (read_param) THEN
       CALL Read_QML_Buck(QModel,nio_param_file)

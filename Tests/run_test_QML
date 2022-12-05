@@ -3,8 +3,14 @@
 here=`pwd`
 ./clean
 
+F90=$1
+OMP=$2
+
+
+echo $F90 $OMP
+
 cd ..
-  make model > $here/comp.log 2>&1
+  make $F90 $OMP model > $here/comp.log 2>&1
 cd  $here
 nbOK=`grep -c "model (QML) compilation: OK" comp.log`
 

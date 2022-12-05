@@ -64,8 +64,10 @@ MODULE QML_Empty_m
     logical :: no_ana_der  = .FALSE. ! to force numerical derivatives
                                      ! for potential without analitical derivatives
 
-    logical :: Cart_TO_Q        = .FALSE. ! to perform the Cartesian to model coordinates
+    logical :: Cart_TO_Q        = .FALSE. ! to perform the Cartesian to the model coordinates
     logical :: AbInitio         = .FALSE. ! To use abitio calculation (experimental)
+    integer :: nb_ScalOp        = 1 ! number scalar operators including the potential
+                                    ! numbering: [0: potential, 1...: other operators]
 
     logical :: Phase_Following  = .TRUE.
     logical :: Phase_Checking   = .TRUE.
@@ -93,7 +95,8 @@ MODULE QML_Empty_m
     CONTAINS
       PROCEDURE :: EvalPot_QModel         => EvalPot_QML_Empty
       PROCEDURE :: EvalPotAbInitio_QModel => EvalPotAbInitio_QML_Empty
-      PROCEDURE :: Eval_QModel_Func       => EvalFunc_QML_Empty
+      PROCEDURE :: EvalScalOp_QModel      => EvalScalOp_QML_Empty
+      PROCEDURE :: EvalFunc_QModel        => EvalFunc_QML_Empty
       PROCEDURE :: Write_QModel           => Write_QML_Empty
       PROCEDURE :: Write0_QModel          => Write0_QML_Empty
      !PROCEDURE :: get2_Q0_QModel         => get2_Q0_QML_Empty
@@ -177,6 +180,7 @@ CONTAINS
     QModel%no_ana_der       = QModel_in%no_ana_der
     QModel%Cart_TO_Q        = QModel_in%Cart_TO_Q
     QModel%AbInitio         = QModel_in%AbInitio
+    QModel%nb_ScalOp        = QModel_in%nb_ScalOp
 
     IF (QModel%adiabatic) THEN
       write(out_unitp,*) 'Adiabatic potential . . .'
@@ -304,6 +308,21 @@ CONTAINS
     Mat_OF_PotDia(:,:) = ZERO
 
   END SUBROUTINE EvalPot_QML_Empty
+
+  SUBROUTINE EvalScalOp_QML_Empty(QModel,Mat_OF_ScalOpDia,list_Op,dnQ,nderiv)
+    USE ADdnSVM_m, ONLY :  dnS_t
+    IMPLICIT NONE
+  
+      CLASS (QML_Empty_t),    intent(in)     :: QModel
+      TYPE (dnS_t),           intent(in)     :: dnQ(:)
+      integer,                intent(in)     :: list_Op(:)
+      TYPE (dnS_t),           intent(inout)  :: Mat_OF_ScalOpDia(:,:,:)
+      integer,                intent(in)     :: nderiv
+  
+  
+      Mat_OF_ScalOpDia(:,:,:) = ZERO
+  
+  END SUBROUTINE EvalScalOp_QML_Empty
 
   SUBROUTINE EvalPotAbInitio_QML_Empty(QModel,Mat_OF_PotDia,dnX,nderiv)
   USE ADdnSVM_m, ONLY :  dnS_t, get_d0, set_dnS, write_dnS

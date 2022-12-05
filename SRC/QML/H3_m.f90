@@ -266,7 +266,7 @@ MODULE QML_H3_m
     PROCEDURE :: EvalPot_QModel   => EvalPot_QML_H3
     PROCEDURE :: Write_QModel     => Write_QML_H3
     PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_H3
-    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_H3
+    PROCEDURE :: EvalFunc_QModel => EvalFunc_QML_H3
   END TYPE QML_H3_t
 
   PUBLIC :: QML_H3_t,Init_QML_H3

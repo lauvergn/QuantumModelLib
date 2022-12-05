@@ -40,6 +40,7 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test_ClH2p_op56() ; stop
     !CALL test_H3()  ; stop
 
    !CALL test_IRC_H3() ; stop
@@ -2121,6 +2122,7 @@ SUBROUTINE test_ClH2p_op56
   USE QMLLib_UtilLib_m
   USE ADdnSVM_m
   USE Model_m
+  USE Opt_m
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
@@ -2129,6 +2131,7 @@ SUBROUTINE test_ClH2p_op56
   TYPE (dnMat_t)                 :: PotVal
   TYPE (dnMat_t)                 :: PotVal_gaussian
   real (kind=Rkind), allocatable :: qtest(:,:),EAbInitio(:)
+  TYPE (QML_Opt_t)               :: Opt_p
 
 
   nderiv = 2
@@ -2238,6 +2241,16 @@ SUBROUTINE test_ClH2p_op56
   ! For testing the model
   CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='ClH2p_op56')
 
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Find the true minimum'
+  CALL get_Q0_Model(Q,QModel,option=0)
+  write(out_unitp,*) 'Q:'
+  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+
+  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=7)
+  CALL QML_Opt(Q,QModel,Opt_p,Q0=Q)
+
+  deallocate(Q)
   CALL dealloc_dnMat(PotVal)
 
   write(out_unitp,*) '---------------------------------------------'

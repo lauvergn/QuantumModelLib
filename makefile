@@ -3,7 +3,7 @@
 # Compiler?
 #Possible values: (Empty: gfortran)
 #                ifort (version: 19.0 linux)
-#                gfortran (version: 9.0 linux and osx)
+#                gfortran (version: >9.0 linux and osx)
 #                pgf90 (version: 17.10-0, linux)
 #                nagfor (version 7.0, osx)
 #F90 = ifort
@@ -227,7 +227,7 @@ endif
       F90FLAGS = -Og $(OMPFLAG) -Wall -Wextra -Wimplicit-interface -fPIC -fmax-errors=1 -g -fcheck=all -fbacktrace
    endif
    F90FLAGS0 := $(F90FLAGS)
-   F90FLAGS += -J$(dnSVMObjDIR)
+   F90FLAGS += -I$(dnSVMObjDIR)
 
    F90_VER = $(shell $(F90) --version | head -1 )
 
@@ -552,12 +552,11 @@ $(DIROBJ)/TEST_Adia.o:$(DIRSRC)/TEST_Adia.f90
 #
 ##################################################################################
 ### AD_dnSVM libraries
-dnSMODFILE= addnsvm_m.mod addnsvm_dns_m.mod addnsvm_dnmat_m.mod addnsvm_dnpoly_m.mod
 .PHONY: dns dnS
 dns dnS: $(dnSVMLibDIR) $(dnSVMLibDIR_full)
 #
 $(dnSVMLibDIR_full): $(dnSVMLibDIR)
-	cd $(dnSVMLibDIR) ; export ExternalF90=$(F90) ; export ExternalOMP=$(OMP); export ExternalOPT=$(OPT) ;  make lib
+	cd $(dnSVMLibDIR) ; make F90=$(F90) OMP=$(OMP) OPT=$(OPT) lib
 	cp $(dnSVMLibDIR)/*.a $(DIR0)
 	@echo "make AD_dnSVM library in QML"
 #

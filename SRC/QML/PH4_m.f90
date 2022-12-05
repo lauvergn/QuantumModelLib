@@ -93,7 +93,7 @@ MODULE QML_PH4_m
 
    CONTAINS
     PROCEDURE :: EvalPot_QModel   => EvalPot_QML_PH4
-    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_PH4
+    PROCEDURE :: EvalFunc_QModel => EvalFunc_QML_PH4
     PROCEDURE :: Write_QModel     => Write_QML_PH4
     PROCEDURE :: Write0_QModel    => Write0_QML_PH4
   END TYPE QML_PH4_t

@@ -59,7 +59,7 @@ MODULE QML_HCN_Murrell_m
     PROCEDURE :: EvalPot_QModel   => EvalPot_QML_HCN_Murrell
     PROCEDURE :: Write_QModel     => Write_QML_HCN_Murrell
     PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_HCN_Murrell
-    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_HCN_Murrell
+    PROCEDURE :: EvalFunc_QModel => EvalFunc_QML_HCN_Murrell
   END TYPE QML_HCN_Murrell_t
 
   PUBLIC :: QML_HCN_Murrell_t,Init_QML_HCN_Murrell
