@@ -312,7 +312,7 @@ OBJ_QML        = $(DIROBJ)/Empty_m.o \
                  $(DIROBJ)/HenonHeiles_m.o $(DIROBJ)/LinearHBond_m.o \
 					  $(DIROBJ)/TwoD_MullerBrown_m.o \
                  $(DIROBJ)/Phenol_m.o \
-					  $(DIROBJ)/TwoD_m.o $(DIROBJ)/TwoD_RJDI2014_m.o \
+					  $(DIROBJ)/TwoD_m.o $(DIROBJ)/TwoD_RJDI2014_m.o $(DIROBJ)/TwoD_Valahu2022_m.o \
                  $(DIROBJ)/PSB3_m.o $(DIROBJ)/Retinal_JPCB2000_m.o \
                  $(DIROBJ)/OneDSOC_1S1T_m.o $(DIROBJ)/OneDSOC_2S1T_m.o \
                  $(DIROBJ)/Tully_m.o
@@ -488,6 +488,9 @@ $(DIROBJ)/TwoD_m.o:$(DIRModel)/TwoD_m.f90
 $(DIROBJ)/TwoD_RJDI2014_m.o:$(DIRModel)/TwoD_RJDI2014_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/TwoD_RJDI2014_m.f90
 
+$(DIROBJ)/TwoD_Valahu2022_m.o:$(DIRModel)/TwoD_Valahu2022_m.f90
+	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/TwoD_Valahu2022_m.f90
+
 $(DIROBJ)/Tully_m.o:$(DIRModel)/Tully_m.f90
 	cd $(DIROBJ) ; $(F90_FLAGS)   -c $(DIRModel)/Tully_m.f90
 
@@ -626,6 +629,7 @@ $(DIROBJ)/OneDSOC_1S1T_m.o:      $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/OneDSOC_2S1T_m.o:      $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/TwoD_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/TwoD_RJDI2014_m.o:     $(DIROBJ)/Empty_m.o $(OBJ_lib)
+$(DIROBJ)/TwoD_Valahu2022_m.o:   $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/PSB3_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/Retinal_JPCB2000_m.o:  $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/HONO_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)

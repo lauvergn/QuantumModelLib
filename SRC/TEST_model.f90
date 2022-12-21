@@ -93,6 +93,7 @@ PROGRAM TEST_model
   CALL test_PSB3()
   CALL test_TwoD()
   CALL test_TwoD_RJDI2014()
+  CALL test_TwoD_Valahu2022()
   CALL test_Retinal_JPCB2000()
 
   ! 6D (full-D), One electronic surface (spectro)
@@ -2445,6 +2446,69 @@ SUBROUTINE test_TwoD_RJDI2014
 
 
 END SUBROUTINE test_TwoD_RJDI2014
+SUBROUTINE test_TwoD_Valahu2022
+  USE QMLLib_NumParameters_m
+  USE QMLLib_UtilLib_m
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' TwoD_Valahu2022 potential'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+  CALL Init_Model(QModel,pot_name='TwoD_Valahu2022',adiabatic=.TRUE.,Print_init=.TRUE.,option=1,PubliUnit=.TRUE.)
+
+  allocate(Q(QModel%ndim))
+
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  option = 1
+  CALL get_Q0_Model(Q,QModel,option)
+  write(out_unitp,*) 'Q(:) (no unit):'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives',nderiv
+
+  option = 1
+  CALL get_Q0_Model(Q,QModel,option)
+  write(out_unitp,*) 'Q(:) (no unit):'
+  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv) 
+  write(out_unitp,*) 'Energy (2*pi Hz)'
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+  ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='TwoD_Valahu2022')
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Q)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+
+
+END SUBROUTINE test_TwoD_Valahu2022
 SUBROUTINE test_HNO3
   USE QMLLib_NumParameters_m
   USE QMLLib_UtilLib_m

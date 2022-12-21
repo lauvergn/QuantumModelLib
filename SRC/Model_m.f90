@@ -128,7 +128,6 @@ character (len=*), parameter :: compiler_libs =                         &
 #endif
 
 
-
   TYPE(Model_t), PUBLIC  :: QuantumModel
 
 CONTAINS
@@ -149,7 +148,7 @@ CONTAINS
     logical :: Vib_adia,print_EigenVec_Grid,print_EigenVec_Basis
     logical :: opt,IRC
     logical :: Phase_checking,Phase_Following
-    logical :: Cart_TO_Q,AbInitio
+    logical :: Cart_TO_Q,AbInitio,MassWeighted
 
     character (len=20) :: pot_name
     integer :: err_read,nb_act
@@ -157,7 +156,8 @@ CONTAINS
 
     ! Namelists for input file
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
-                         Phase_Checking,Phase_Following,Cart_TO_Q,AbInitio,     &
+                         Phase_Checking,Phase_Following,                        &
+                         Cart_TO_Q,MassWeighted,AbInitio,                       &
                          read_nml,printlevel,Vib_adia,nb_Channels,list_act,     &
                          print_EigenVec_Grid,print_EigenVec_Basis,opt,IRC
 
@@ -170,6 +170,7 @@ CONTAINS
     Phase_Checking  = QModel_inout%Phase_Checking
     Phase_Following = QModel_inout%Phase_Following
     Cart_TO_Q       = QModel_inout%Cart_TO_Q
+    MassWeighted    = QModel_inout%MassWeighted
     AbInitio        = .FALSE.
 
     Vib_adia        = QModel_inout%Vib_adia
@@ -223,6 +224,7 @@ CONTAINS
     QModel_inout%Phase_Following      = (adiabatic .AND. Phase_Following)
     QModel_inout%Cart_TO_Q            = Cart_TO_Q
     QModel_inout%AbInitio             = AbInitio
+    QModel_inout%MassWeighted         = (Cart_TO_Q .AND. MassWeighted)
 
     QModel_inout%pot_name             = trim(pot_name)
     QModel_inout%PubliUnit            = PubliUnit
@@ -316,6 +318,7 @@ CONTAINS
   USE QML_Sigmoid_m
   USE QML_TwoD_m
   USE QML_TwoD_RJDI2014_m
+  USE QML_TwoD_Valahu2022_m
 
   USE AdiaChannels_Basis_m
 
@@ -342,7 +345,7 @@ CONTAINS
 
 
     ! local variables
-    TYPE(QML_Empty_t)             :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t)              :: QModel_in ! variable to transfer info to the init
     integer                        :: i,nio_loc,i_inact,nb_inact
     logical                        :: read_param_loc,read_nml,Print_init_loc
     logical,           allocatable :: list_Q(:)
@@ -711,6 +714,17 @@ CONTAINS
       !! === END README ==
       allocate(QML_TwoD_RJDI2014_t :: QModel%QM)
       QModel%QM = Init_QML_TwoD_RJDI2014(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('twod_valahu2022')
+      !! === README ==
+      !! 2D model
+      !! pot_name  = 'TwoD_Valahu2022'
+      !! ndim      = 2 (X,Y)
+      !! nsurf     = 2
+      !! ref:  xxxxx
+      !! === END README ==
+      allocate(QML_TwoD_Valahu2022_t :: QModel%QM)
+      QModel%QM = Init_QML_TwoD_Valahu2022(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('psb3')
       !! === README ==

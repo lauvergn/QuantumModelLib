@@ -65,6 +65,7 @@ MODULE QML_Empty_m
                                      ! for potential without analitical derivatives
 
     logical :: Cart_TO_Q        = .FALSE. ! to perform the Cartesian to model coordinates
+    logical :: MassWeighted     = .FALSE. ! Cartesian with mass Weighted
     logical :: AbInitio         = .FALSE. ! To use abitio calculation (experimental)
 
     logical :: Phase_Following  = .TRUE.
@@ -176,6 +177,8 @@ CONTAINS
 
     QModel%no_ana_der       = QModel_in%no_ana_der
     QModel%Cart_TO_Q        = QModel_in%Cart_TO_Q
+    QModel%MassWeighted     = QModel_in%MassWeighted
+
     QModel%AbInitio         = QModel_in%AbInitio
 
     IF (QModel%adiabatic) THEN
@@ -505,6 +508,7 @@ CONTAINS
     write(nio,*) 'numeric:                   ',QModel%numeric
     write(nio,*) 'no analytical derivatives: ',QModel%no_ana_der
     write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
+    write(nio,*) 'Cart. With Mass Weighted:  ',QModel%MassWeighted
     write(nio,*) 'ndimQ:                     ',QModel%ndimQ
     write(nio,*) 'ndimCart:                  ',QModel%ndimCart
     write(nio,*)
