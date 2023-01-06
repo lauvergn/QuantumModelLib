@@ -53,7 +53,6 @@ MODULE IRC_m
     real (kind=Rkind)                 :: Delta_s          = ONETENTH**2
     character (len=:), allocatable    :: Direction
     character (len=:), allocatable    :: Method
-    logical                           :: MassWeighted     = .FALSE.
 
     integer                           :: order2           = 8  ! used for micro-iteration and with Method='BS'
     character (len=:), allocatable    :: Method2               ! used only when Method='BS'
@@ -64,6 +63,8 @@ MODULE IRC_m
     real (kind=Rkind), allocatable    :: QTS(:)
     real (kind=Rkind), allocatable    :: QactTS(:)
     real (kind=Rkind), allocatable    :: EigenVec_QactTS(:)
+    integer,           allocatable    :: list_actIRC(:)      ! default all coordinates
+
 
 
 
@@ -90,22 +91,23 @@ CONTAINS
   IMPLICIT NONE
 
     TYPE (QML_IRC_t),   intent(inout)            :: IRC_p
-    TYPE (Model_t),     intent(in)               :: QModel
+    TYPE (Model_t),     intent(inout)            :: QModel
     logical,            intent(in),    optional  :: read_param
     integer,            intent(in),    optional  :: nio_param_file
     character (len=*),  intent(in),    optional  :: param_file_name
 
 
 
-    integer                        :: err_read,nio_loc,i
+    integer                        :: err_read,nio_loc,i,iact,nb_act
     logical                        :: read_param_loc,MassWeighted
     character (len=:), allocatable :: param_file_name_loc
 
     integer                        :: Max_it,order2,m0_BS
     real (kind=Rkind)              :: Delta_s
     character (len=Name_longlen)   :: Method,Method2,Direction
+    integer,           allocatable :: list_actIRC(:)      ! default the same for opt
 
-    namelist /IRC/ max_it,Delta_s,Direction,Method,Method2,order2,m0_BS,MassWeighted
+    namelist /IRC/ list_actIRC,max_it,Delta_s,Direction,Method,Method2,order2,m0_BS,MassWeighted
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_IRC'
@@ -151,13 +153,15 @@ CONTAINS
     flush(out_unitp)
   END IF
 
-
+  allocate(list_actIRC(QModel%ndim))
+  list_actIRC(:) = 0
+  
   Max_it          = -1
   Delta_s         = ONETENTH**2
   Direction       = 'both'
   Method          = 'BS'
   Method2         = 'ModMidPoint'
-  MassWeighted    = .FALSE.
+  MassWeighted    = QModel%QM%MassWeighted
   order2          = 8
   m0_BS           = 0
 
@@ -203,16 +207,30 @@ CONTAINS
     STOP ' ERROR in Init_QML_IRC'
   END IF
 
+  nb_act = count(list_actIRC > 0)
+  IF (nb_act == 0) THEN
+    IRC_p%list_actIRC = IRC_p%list_act ! we use the opt ones
+  ELSE
+    allocate(IRC_p%list_actIRC(nb_act))
+    iact = 0
+    DO i=1,size(list_actIRC)
+      IF (list_actIRC(i) > 0) THEN 
+        iact = iact + 1
+        IRC_p%list_actIRC(iact) = list_actIRC(i)
+      END IF
+    END DO
+  END IF
+
   ! the initialisation with QML_Opt_t=IRC_p%QML_Opt_t does not work with ifort 18
   IRC_p%IRC_Max_it    = Max_it
   IRC_p%Delta_s       = Delta_s
-  IRC_p%MassWeighted  = MassWeighted
   IRC_p%Method        = trim(method)
   IRC_p%Method2       = trim(method2)
   IRC_p%Direction     = trim(Direction)
   IRC_p%order2        = order2
   IRC_p%m0_BS         = m0_BS
 
+  QModel%QM%MassWeighted = MassWeighted
   nb_PotEval    = 0
 
   CALL Write_QML_IRC(IRC_p)
@@ -238,10 +256,9 @@ CONTAINS
     write(out_unitp,*) ' BEGINNING ',name_sub
 
     CALL Write_QML_Opt(IRC_p%QML_Opt_t)
-
+    write(out_unitp,*) ' list_actIRC     ',IRC_p%list_actIRC
     write(out_unitp,*) ' IRC_Maxt_it     ',IRC_p%IRC_Max_it
     write(out_unitp,*) ' Delta_s         ',IRC_p%Delta_s
-    write(out_unitp,*) ' MassWeighted    ',IRC_p%MassWeighted
     write(out_unitp,*) ' Direction       ',IRC_p%Direction
     write(out_unitp,*) ' Method          ',IRC_p%Method
     write(out_unitp,*) ' Method2         ',IRC_p%Method2
@@ -311,8 +328,14 @@ CONTAINS
   write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
 
 
+
+
   s       = ZERO
   QactOld = IRC_p%QactTS
+  CALL QML_Recenter_CenterOfMass(s,QactOld,QModel,IRC_p)
+
+  CALL QML_CenterOfMass(s,QactOld,QModel,IRC_p)
+
   allocate(QactNew(size(QactOld)))
   allocate(grad(size(QactOld)))
   allocate(dQactds_AT_s(size(QactOld)))
@@ -326,17 +349,19 @@ CONTAINS
                        Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
 
       write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
-      CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s)
+      CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s,QModel,IRC_p)
 
       s       = s + forward*IRC_p%Delta_s
       QactOld = QactNew
+
+      CALL QML_CenterOfMass(s,QactOld,QModel,IRC_p)
 
     END DO
     nb_PotEval = nb_PotEval + 1
     CALL QML_IRC_fcn(s,QactOld,dQactds_AT_s,Ene_AT_s,QModel,IRC_p,forward,grad)
 
     write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
-    CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s)
+    CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s,QModel,IRC_p)
   END IF
 
   s       = ZERO
@@ -351,17 +376,19 @@ CONTAINS
                        Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
 
       write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
-      CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s)
+      CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s,QModel,IRC_p)
 
       s       = s + forward*IRC_p%Delta_s
       QactOld = QactNew
+
+      CALL QML_CenterOfMass(s,QactOld,QModel,IRC_p)
 
     END DO
     nb_PotEval = nb_PotEval + 1
     CALL QML_IRC_fcn(s,QactOld,dQactds_AT_s,Ene_AT_s,QModel,IRC_p,forward,grad)
 
     write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
-    CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s)
+    CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s,QModel,IRC_p)
   END IF
 
   IF (debug) THEN
@@ -371,40 +398,33 @@ CONTAINS
 
   END SUBROUTINE QML_IRC
 
-  SUBROUTINE QML_write_IRC_Res(Qact,s,grad,Ene,dQactds)
-    real (kind=Rkind), allocatable  :: Qact(:),grad(:),dQactds(:)
-    real (kind=Rkind)               :: s,Ene
+  SUBROUTINE QML_write_IRC_Res(Qact,s,grad,Ene,dQactds,QModel,IRC_p)
+    USE Model_m
+    IMPLICIT NONE
+
+    real (kind=Rkind), allocatable, intent(in)  :: Qact(:),grad(:),dQactds(:)
+    real (kind=Rkind),              intent(in)  :: s,Ene
+    TYPE (Model_t),                 intent(in)  :: QModel
+    TYPE (QML_IRC_t),               intent(in)  :: IRC_p
+
+
 
     real (kind=Rkind)               :: u,g_mtu
-    real (kind=Rkind), allocatable  :: grad_u(:)
+    real (kind=Rkind), allocatable  :: grad_loc(:),Qact_loc(:)
 
-    logical,           parameter    :: Print_extral = .FALSE.
-
-
-    write(out_unitp,*) 's,Qact,|grad|,E',s,Qact,norm2(grad),Ene
+    IF (QModel%QM%Cart_TO_Q .AND. QModel%QM%MassWeighted) THEN
+      Qact_loc = Qact
+      grad_loc = grad
+      CALL QML_UnMassWeighted_Qact(s,Qact_loc,QModel,IRC_p)
+      write(out_unitp,*) 's,QxyzMW,|grad|,E',s,Qact,norm2(grad),Ene
+      write(out_unitp,*) 's,Qxyz,|grad|,E',s,Qact_loc,norm2(grad),Ene
+    ELSE
+      write(out_unitp,*) 's,Qact,|grad|,E',s,Qact,norm2(grad),Ene
+    END IF
     write(out_unitp,*) 's,grad',s,grad
     write(out_unitp,*) 's,g_mt',s,dot_product(dQactds,dQactds)
     !IF (Print_extral) write(out_unitp,*) 's,g_mt',s,dot_product(grad,grad)
     flush(out_unitp)
-
-    IF (Print_extral) THEN
-      IF (s > ZERO) THEN
-        u = s*s ! s=sqrt(u)
-        !ds/du = 1/2 u^(-1/2)
-        !dx/du = ds/du dx/gs
-        grad_u = HALF / sqrt(u) * grad
-        write(out_unitp,*) 'u,grad_u',u,grad_u
-        write(out_unitp,*) 'u,g_mtu',u,dot_product(grad_u,grad_u)
-        flush(out_unitp)
-      ELSE IF (s < ZERO) THEN
-        u = -s*s  ! s=-sqrt(-u)
-        !ds/du = 1/2 (-u)^(-1/2)
-        grad_u = HALF / sqrt(-u) * grad
-        write(out_unitp,*) 'u,grad_u',u,grad_u
-        write(out_unitp,*) 'u,g_mtu',u,dot_product(grad_u,grad_u)
-        flush(out_unitp)
-      END IF
-    END IF
 
   END SUBROUTINE QML_write_IRC_Res
 
@@ -604,8 +624,7 @@ END SUBROUTINE QML_IRC_ODE
 
 END SUBROUTINE QML_IRC_BS
 
-
-  SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
+SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
                             QModel,IRC_p,m,forward,grad)
   USE QMLLib_UtilLib_m
   USE Model_m
@@ -809,26 +828,25 @@ END SUBROUTINE QML_IRC_BS
     dQact    =  forward * IRC_p%EigenVec_QactTS
     Ene_AT_s = IRC_p%Ene_TS
     IF (present(grad)) grad = IRC_p%Grad_QactTS
-   ELSE
+  ELSE
     Qit = IRC_p%QTS
 
-    CALL Qact_TO_Q(Qact,Qit,IRC_p%list_act)
+    CALL Qact_TO_Q(Qact,Qit,IRC_p%list_actIRC)
 
     CALL Eval_Pot(QModel,Qit,PotVal,nderiv=1)
 
     Ene_AT_s = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
 
-    dQact    = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
-    IF (IRC_p%MassWeighted) THEN
-      DO i=1,size(dQact)
-        iat = (IRC_p%list_act(i)+2)/3
-        dQact(i) = dQact(i) / sqrt(QModel%QM%masses(iat))
-      END DO
-    END IF
+    dQact    = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_actIRC)
+
+    CALL QML_Recenter_CenterOfMass(s,dQact,QModel,IRC_p)
+
     !write(out_unitp,*) 'grad at s',s,norm2(dQact)
     !write(out_unitp,*) 'grad/s at s',s,norm2(dQact)/abs(s)
     IF (norm2(dQact) < IRC_p%Thresh_RMS_grad*TEN) write(out_unitp,*) 'WARNING small grad at s',s
     IF (present(grad)) grad = dQact
+
+
 
     dQact    = -dQact/norm2(dQact)
 
@@ -844,6 +862,228 @@ END SUBROUTINE QML_IRC_BS
   END IF
 
 END SUBROUTINE QML_IRC_fcn
+SUBROUTINE QML_MassWeighted_Qact(s,Qact,QModel,IRC_p)
+  USE QMLLib_UtilLib_m
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in)               :: s
+    real (kind=Rkind),  intent(inout)            :: Qact(:)
+
+    TYPE (Model_t),     intent(in)               :: QModel
+    TYPE (QML_IRC_t),   intent(in)               :: IRC_p
+
+    integer           :: i,iat
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_MassWeighted_Qact'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    flush(out_unitp)
+  END IF
+
+  IF (QModel%QM%Cart_TO_Q .AND. QModel%QM%MassWeighted) THEN
+    DO i=1,size(Qact)
+      iat = (IRC_p%list_actIRC(i)+2)/3
+      Qact(i) = Qact(i) * sqrt(QModel%QM%masses(iat))
+    END DO
+  END IF
+
+  IF (debug) THEN
+    write(out_unitp,*) 'Qact     ',Qact
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_MassWeighted_Qact
+SUBROUTINE QML_UnMassWeighted_Qact(s,Qact,QModel,IRC_p)
+  USE QMLLib_UtilLib_m
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in)               :: s
+    real (kind=Rkind),  intent(inout)            :: Qact(:)
+
+    TYPE (Model_t),     intent(in)               :: QModel
+    TYPE (QML_IRC_t),   intent(in)               :: IRC_p
+
+    integer           :: i,iat
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_UnMassWeighted_Qact'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    flush(out_unitp)
+  END IF
+
+  IF (QModel%QM%Cart_TO_Q .AND. QModel%QM%MassWeighted) THEN
+    DO i=1,size(Qact)
+      iat = (IRC_p%list_actIRC(i)+2)/3
+      Qact(i) = Qact(i) / sqrt(QModel%QM%masses(iat))
+    END DO
+  END IF
+
+  IF (debug) THEN
+    write(out_unitp,*) 'Qact     ',Qact
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_UnMassWeighted_Qact
+SUBROUTINE QML_CenterOfMass(s,Qact,QModel,IRC_p)
+  USE QMLLib_UtilLib_m
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in)               :: s
+    real (kind=Rkind),  intent(in)               :: Qact(:)
+
+    TYPE (Model_t),     intent(in)               :: QModel
+    TYPE (QML_IRC_t),   intent(in)               :: IRC_p
+
+    real (kind=Rkind)                :: QCOM(3)
+    real (kind=Rkind), allocatable   :: Qact_loc(:)
+    integer                          :: i,iat
+    real (kind=Rkind)                :: Mtot
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_CenterOfMass'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    flush(out_unitp)
+  END IF
+
+  IF (QModel%QM%Cart_TO_Q) THEN
+
+    Mtot = sum(QModel%QM%masses)
+    QCOM(:) = ZERO
+
+    IF (QModel%QM%MassWeighted) THEN
+      Qact_loc = Qact
+      CALL QML_UnMassWeighted_Qact(s,Qact_loc,QModel,IRC_p)
+      DO i=1,size(Qact)
+        iat = (IRC_p%list_actIRC(i)+2)/3
+        SELECT CASE (mod(IRC_p%list_actIRC(i),3))
+        CASE (1) ! x
+          QCOM(1) = QCOM(1) + Qact_loc(i)*QModel%QM%masses(iat)/Mtot
+        CASE (2) ! y
+          QCOM(2) = QCOM(2) + Qact_loc(i)*QModel%QM%masses(iat)/Mtot
+        CASE (0) ! x
+          QCOM(3) = QCOM(3) + Qact_loc(i)*QModel%QM%masses(iat)/Mtot
+        END SELECT
+      END DO
+      CALL QML_MassWeighted_Qact(s,Qact_loc,QModel,IRC_p)
+    ELSE
+      DO i=1,size(Qact)
+        iat = (IRC_p%list_actIRC(i)+2)/3
+        SELECT CASE (mod(IRC_p%list_actIRC(i),3))
+        CASE (1) ! x
+          QCOM(1) = QCOM(1) + Qact(i)*QModel%QM%masses(iat)/Mtot
+        CASE (2) ! y
+          QCOM(2) = QCOM(2) + Qact(i)*QModel%QM%masses(iat)/Mtot
+        CASE (0) ! x
+          QCOM(3) = QCOM(3) + Qact(i)*QModel%QM%masses(iat)/Mtot
+        END SELECT
+      END DO
+    END IF
+  END IF
+
+  write(out_unitp,*) s,'QCOM    ',QCOM
+
+  IF (debug) THEN
+    write(out_unitp,*) 'Qact     ',Qact
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_CenterOfMass
+
+SUBROUTINE QML_Recenter_CenterOfMass(s,Qact,QModel,IRC_p)
+  USE QMLLib_UtilLib_m
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
+
+    real (kind=Rkind),  intent(in)               :: s
+    real (kind=Rkind),  intent(inout)            :: Qact(:)
+
+    TYPE (Model_t),     intent(in)               :: QModel
+    TYPE (QML_IRC_t),   intent(in)               :: IRC_p
+
+    real (kind=Rkind) :: QCOM(3)
+    integer           :: i,iat
+    real (kind=Rkind) :: Mtot
+
+!----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='QML_Recenter_CenterOfMass'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) ' BEGINNING ',name_sub
+    flush(out_unitp)
+  END IF
+
+  IF (QModel%QM%Cart_TO_Q) THEN
+
+    Mtot = sum(QModel%QM%masses)
+    QCOM(:) = ZERO
+
+    IF (QModel%QM%MassWeighted) CALL QML_UnMassWeighted_Qact(s,Qact,QModel,IRC_p)
+
+    DO i=1,size(Qact)
+      iat = (IRC_p%list_actIRC(i)+2)/3
+      SELECT CASE (mod(IRC_p%list_actIRC(i),3))
+      CASE (1) ! x
+        QCOM(1) = QCOM(1) + Qact(i)*QModel%QM%masses(iat)/Mtot
+      CASE (2) ! y
+        QCOM(2) = QCOM(2) + Qact(i)*QModel%QM%masses(iat)/Mtot
+      CASE (0) ! x
+        QCOM(3) = QCOM(3) + Qact(i)*QModel%QM%masses(iat)/Mtot
+      END SELECT
+    END DO
+
+    DO i=1,size(Qact)
+      iat = (IRC_p%list_actIRC(i)+2)/3
+      SELECT CASE (mod(IRC_p%list_actIRC(i),3))
+      CASE (1) ! x
+        Qact(i) = Qact(i) - QCOM(1)
+      CASE (2) ! y
+        Qact(i) = Qact(i) - QCOM(2)
+      CASE (0) ! x
+        Qact(i) = Qact(i) - QCOM(3)
+      END SELECT
+    END DO
+
+    IF (QModel%QM%MassWeighted) CALL QML_MassWeighted_Qact(s,Qact,QModel,IRC_p)
+
+  END IF
+
+
+  IF (debug) THEN
+    write(out_unitp,*) 'Qact     ',Qact
+    write(out_unitp,*) s,'QCOM    ',QCOM
+    write(out_unitp,*) ' END ',name_sub
+    flush(out_unitp)
+  END IF
+
+END SUBROUTINE QML_Recenter_CenterOfMass
 
   SUBROUTINE QML_IRC_at_TS(IRC_p,QModel)
   USE QMLLib_UtilLib_m
@@ -879,7 +1119,7 @@ END SUBROUTINE QML_IRC_fcn
     STOP 'ERROR in QML_IRC_at_TS: IRC_p is not initialized'
   END IF
 
-  nb_act = size(IRC_p%list_act)
+  nb_act = size(IRC_p%list_actIRC)
 
   allocate(hess(nb_act,nb_act))
   allocate(vec(nb_act,nb_act))
@@ -888,8 +1128,8 @@ END SUBROUTINE QML_IRC_fcn
 
   !first check if the geometry in Q0 is a TS
   CALL Eval_Pot(QModel,IRC_p%QTS,PotVal,nderiv=2)
-  hess              = PotVal%d2(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act,IRC_p%list_act)
-  IRC_p%Grad_QactTS = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_act)
+  hess              = PotVal%d2(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_actIRC,IRC_p%list_actIRC)
+  IRC_p%Grad_QactTS = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_actIRC)
 
   CALL diagonalization(hess,diag,Vec,nb_act,sort=1)
   write(out_unitp,*) 'grad',IRC_p%Grad_QactTS
@@ -899,7 +1139,7 @@ END SUBROUTINE QML_IRC_fcn
 
   !s=0 (TS)
   IRC_p%Ene_TS          = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
-  IRC_p%QactTS          = IRC_p%QTS(IRC_p%list_act)
+  IRC_p%QactTS          = IRC_p%QTS(IRC_p%list_actIRC)
   IRC_p%EigenVec_QactTS = Vec(:,1)
 
   deallocate(hess)

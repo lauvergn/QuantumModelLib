@@ -64,7 +64,8 @@ MODULE QML_Empty_m
     logical :: no_ana_der  = .FALSE. ! to force numerical derivatives
                                      ! for potential without analitical derivatives
 
-    logical :: Cart_TO_Q        = .FALSE. ! to perform the Cartesian to the model coordinates
+    logical :: Cart_TO_Q        = .FALSE. ! to perform the Cartesian to model coordinates
+    logical :: MassWeighted     = .FALSE. ! Cartesian with mass Weighted
     logical :: AbInitio         = .FALSE. ! To use abitio calculation (experimental)
     integer :: nb_ScalOp        = 1 ! number scalar operators including the potential
                                     ! numbering: [0: potential, 1...: other operators]
@@ -179,6 +180,8 @@ CONTAINS
 
     QModel%no_ana_der       = QModel_in%no_ana_der
     QModel%Cart_TO_Q        = QModel_in%Cart_TO_Q
+    QModel%MassWeighted     = QModel_in%MassWeighted
+
     QModel%AbInitio         = QModel_in%AbInitio
     QModel%nb_ScalOp        = QModel_in%nb_ScalOp
 
@@ -524,6 +527,7 @@ CONTAINS
     write(nio,*) 'numeric:                   ',QModel%numeric
     write(nio,*) 'no analytical derivatives: ',QModel%no_ana_der
     write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
+    write(nio,*) 'Cart. With Mass Weighted:  ',QModel%MassWeighted
     write(nio,*) 'ndimQ:                     ',QModel%ndimQ
     write(nio,*) 'ndimCart:                  ',QModel%ndimCart
     write(nio,*)
