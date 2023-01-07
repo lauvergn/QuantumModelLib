@@ -164,9 +164,7 @@ OBJ_QML        = $(DIROBJ)/Empty_m.o \
 
 OBJ_Model      = $(DIROBJ)/Model_m.o $(DIROBJ)/Basis_m.o $(DIROBJ)/Opt_m.o $(DIROBJ)/IRC_m.o
 
-OBJ_lib        = $(DIROBJ)/FiniteDiff_m.o \
-                 $(DIROBJ)/UtilLib_m.o $(DIROBJ)/diago_m.o $(DIROBJ)/Matrix_m.o \
-                 $(DIROBJ)/NumParameters_m.o
+OBJ_lib        = $(DIROBJ)/FiniteDiff_m.o $(DIROBJ)/UtilLib_m.o 
 
 OBJ_all        = $(OBJ_lib) $(OBJ_QML) $(OBJ_Model)
 
@@ -422,12 +420,6 @@ $(DIROBJ)/FiniteDiff_m.o:$(DIRLib)/FiniteDiff_m.f90
 	cd $(DIROBJ) ; $(FC_FLAGS) -c $(DIRLib)/FiniteDiff_m.f90
 $(DIROBJ)/UtilLib_m.o:$(DIRLib)/UtilLib_m.f90
 	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRLib)/UtilLib_m.f90
-$(DIROBJ)/diago_m.o:$(DIRLib)/diago_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS) $(CPPpre) $(CPPSHELL_MATRIX)  -c $(DIRLib)/diago_m.f90
-$(DIROBJ)/Matrix_m.o:$(DIRLib)/Matrix_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS) $(CPPpre) $(CPPSHELL_MATRIX)  -c $(DIRLib)/Matrix_m.f90
-$(DIROBJ)/NumParameters_m.o:$(DIRLib)/NumParameters_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRLib)/NumParameters_m.f90
 #
 ##################################################################################
 #
@@ -451,7 +443,7 @@ $(DIROBJ)/Model_m.o: $(DIROBJ)/Basis_m.o $(OBJ_lib) $(OBJ_QML)
 $(DIROBJ)/MakeHinact_m.o: $(DIROBJ)/Basis_m.o $(QMLib)
 
 
-$(DIROBJ)/Empty_m.o:   $(OBJ_lib)
+$(DIROBJ)/Empty_m.o:   $(OBJ_lib) $(QDUTILLib)
 $(DIROBJ)/Morse_m.o:   $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/Poly1D_m.o:  $(DIROBJ)/Empty_m.o $(OBJ_lib)
 $(DIROBJ)/H2_m.o:      $(DIROBJ)/Empty_m.o $(OBJ_lib)
@@ -490,10 +482,5 @@ $(DIROBJ)/Phenol_m.o:            $(DIROBJ)/Empty_m.o $(AD_dnSVMLib) $(OBJ_lib) \
                                        $(DIROBJ)/Morse_m.o $(DIROBJ)/Sigmoid_m.o
 #
 #
-$(DIROBJ)/UtilLib_m.o:    $(DIROBJ)/NumParameters_m.o
-$(DIROBJ)/diago_m.o:      $(DIROBJ)/NumParameters_m.o
-$(DIROBJ)/Matrix_m.o:     $(DIROBJ)/NumParameters_m.o
-$(DIROBJ)/FiniteDiff_m.o: $(AD_dnSVMLib) $(DIROBJ)/NumParameters_m.o
-
-$(DIROBJ)/NumParameters_m.o:  $(QDUTILLib)
-#
+$(DIROBJ)/UtilLib_m.o:    $(QDUTILLib)
+$(DIROBJ)/FiniteDiff_m.o: $(AD_dnSVMLib) $(QDUTILLib)
