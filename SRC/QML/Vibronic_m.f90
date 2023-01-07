@@ -42,7 +42,7 @@
 !! @date 02/12/2017
 !!
 MODULE QML_Vibronic_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE ADdnSVM_m, ONLY : dnMat_t
   USE QML_Empty_m
   IMPLICIT NONE
@@ -85,8 +85,11 @@ CONTAINS
 !! @param Para_Phenol        TYPE(Param_Phenol):   derived type in which the parameters are set-up.
 !! @param PubliUnit          logical (optional):   when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
   SUBROUTINE Init_QML_Vibronic(VibronicPot,ndim,nsurf,nio,PubliUnit)
+    USE QDUtil_m,         ONLY : Read_Vec, Read_Mat
+    IMPLICIT NONE
+
     TYPE (QML_Vibronic_t),      intent(inout)   :: VibronicPot
-     logical, optional,         intent(in)      :: PubliUnit
+    logical, optional,          intent(in)      :: PubliUnit
 
      integer :: i,j,IOerr,order,nbcol
      real (kind=Rkind)     :: V0,V0coupling
@@ -95,7 +98,7 @@ CONTAINS
 
      IF (present(PubliUnit)) VibronicPot%PubliUnit = PubliUnit
 
-     CALL alloc_dnMat(VibronicPot%V,nsurf,ndim,nderiv, &
+     CALL alloc_dnMat(VibronicPot%V,nsurf,ndim,nderiv,                  &
              name_var='VibronicPot%V',name_sub='Init_QML_Vibronic',IOerr)
      IF (IOerr /= 0 ) THEN
        write(out_unitp,*) ' ERROR in Init_QML_Vibronic'
@@ -130,10 +133,10 @@ CONTAINS
 
        VibronicPot%V%d0(i,i) = V0coupling
        IF (order > 0) THEN
-         CALL Read_RVec(VibronicPot%V%d1(:,i,i),nio,nbcol,IOerr)
+         CALL Read_Vec(VibronicPot%V%d1(:,i,i),nio,nbcol,IOerr)
        END IF
        IF (order > 1) THEN
-         CALL Read_RMat(VibronicPot%V%d2(:,:,i,i),nio,nbcol,IOerr)
+         CALL Read_Mat(VibronicPot%V%d2(:,:,i,i),nio,nbcol,IOerr)
        END IF
 
      END DO
@@ -148,14 +151,14 @@ CONTAINS
        VibronicPot%VOrder(i,j) = order
        IF (order < 0) CYCLE
 
-       CALL Read_RVec(VibronicPot%Q0(:,i,j),nio,nbcol,IOerr)
+       CALL Read_Vec(VibronicPot%Q0(:,i,j),nio,nbcol,IOerr)
 
        VibronicPot%V%d0(i,i) = V0
        IF (order > 0) THEN
-         CALL Read_RVec(VibronicPot%V%d1(:,i,j),nio,nbcol,IOerr)
+         CALL Read_Vec(VibronicPot%V%d1(:,i,j),nio,nbcol,IOerr)
        END IF
        IF (order > 1) THEN
-         CALL Read_RMat(VibronicPot%V%d2(:,:,i,j),nio,nbcol,IOerr)
+         CALL Read_Mat(VibronicPot%V%d2(:,:,i,j),nio,nbcol,IOerr)
        END IF
 
      END DO
@@ -171,6 +174,8 @@ CONTAINS
 !! @param Para_Phenol        TYPE(Param_Phenol):   derived type with the Phenol potential parameters.
 !! @param nio                integer:              file unit to print the parameters.
   SUBROUTINE Write_PhenolPot(Para_Phenol,nio)
+    IMPLICIT NONE
+
     TYPE (Param_Phenol), intent(in) :: Para_Phenol
     integer, intent(in) :: nio
 

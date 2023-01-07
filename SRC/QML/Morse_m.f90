@@ -279,7 +279,7 @@ CONTAINS
 
 
     write(nio,*) 'Morse current parameters:'
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*)
     write(nio,*) '    V(R) = D.( 1 - exp(-a.(r-req)) )^2'
     write(nio,*) '  D:   ',QModel%D

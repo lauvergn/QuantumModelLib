@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HNO3_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -82,7 +82,9 @@ MODULE QML_HNO3_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HNO3(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat, TO_string
+    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    IMPLICIT NONE
 
     TYPE (QML_HNO3_t)                           :: QModel ! RESULT
 
@@ -132,10 +134,9 @@ MODULE QML_HNO3_m
     jj=0
     DO ii=0,max_fit
 
-      FileName = make_FileName('InternalData/HNO3/inter_' //            &
-                                int_TO_char(ii))
+      FileName = make_FileName('InternalData/HNO3/inter_' // TO_string(ii))
       CALL QML_read_para4d_HNO3(QModel%F(:,ii,jj),QModel%nn(:,ii,jj),ndim,       &
-                       QModel%nt(ii,jj),max_nn,FileName,exist)
+                                QModel%nt(ii,jj),max_nn,FileName,exist)
       IF ( .NOT. exist) STOP ' ERROR while reading HNO3 parameters'
     END DO
 
@@ -144,9 +145,9 @@ MODULE QML_HNO3_m
     DO jj=1,max_fit
     DO ii=1,max_fit
       FileName = make_FileName('InternalData/HNO3/inter_' //            &
-                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+                                TO_string(ii) // '_' // TO_string(jj) )
       CALL QML_read_para4d_HNO3(QModel%F(:,ii,jj),QModel%nn(:,ii,jj),ndim,       &
-                       QModel%nt(ii,jj),max_nn,FileName,exist)
+                                QModel%nt(ii,jj),max_nn,FileName,exist)
       IF ( .NOT. exist) STOP ' ERROR while reading HNO3 parameters'
     END DO
     END DO
@@ -157,7 +158,7 @@ MODULE QML_HNO3_m
                  ZERO,ZERO,1.83492_Rkind,1.77157_Rkind,Pi/TWO]
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of HNO3'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
@@ -204,8 +205,8 @@ MODULE QML_HNO3_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HNO3(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_HNO3_t),  intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -234,8 +235,8 @@ MODULE QML_HNO3_m
   END SUBROUTINE EvalPot_QML_HNO3
 
   SUBROUTINE EvalFunc_QML_HNO3(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_HNO3_t),  intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
@@ -265,8 +266,8 @@ MODULE QML_HNO3_m
   END SUBROUTINE EvalFunc_QML_HNO3
 
   FUNCTION QML_dnvfour_HNO3(rot,iq,jq,QModel)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnvfour_HNO3
 
@@ -295,7 +296,8 @@ MODULE QML_HNO3_m
 
   END FUNCTION QML_dnvfour_HNO3
   SUBROUTINE QML_read_para4d_HNO3(F,n,ndim,nt,max_points,nom1,exist)
-  IMPLICIT NONE
+    USE QMLLib_UtilLib_m, ONLY : file_open2
+    IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim
    integer,           intent(inout) :: n(0:ndim),nt

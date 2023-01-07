@@ -1971,8 +1971,8 @@ CONTAINS
     END IF
   END SUBROUTINE Eval_Pot_Numeric_adia
   SUBROUTINE Eval_Pot_Numeric_adia_old(QModel,Q,PotVal,nderiv,Vec,NAC)
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
-  USE QMLLib_UtilLib_m, ONLY : Init_IdMat
+    USE QDUtil_m,  ONLY : Identity_Mat
+    USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -2016,9 +2016,9 @@ CONTAINS
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(QModel,Q,PotVal_loc0,nderiv=0,vec=Vec_loc0)
 
-    PotVal%d0 = PotVal_loc0%d0
-    Vec%d0    = Vec_loc0%d0
-    CALL Init_IdMat(NAC%d0,QModel%QM%nsurf)
+    PotVal%d0      =  PotVal_loc0%d0
+    Vec%d0         = Vec_loc0%d0
+    NAC%d0         = Identity_Mat(QModel%QM%nsurf)
 
     allocate(tVec(QModel%QM%nsurf,QModel%QM%nsurf))
     tVec(:,:)      = transpose(Vec%d0)
@@ -2106,10 +2106,9 @@ CONTAINS
 
   END SUBROUTINE Eval_Pot_Numeric_adia_old
   SUBROUTINE Eval_Pot_Numeric_adia_v3(QModel,Q,PotVal,nderiv,Vec,NAC)
-  USE QMLLib_FiniteDiff_m
-  USE ADdnSVM_m,        ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
-  USE QMLLib_UtilLib_m, ONLY : Init_IdMat
-
+    USE QDUtil_m,         ONLY : Identity_Mat
+    USE QMLLib_FiniteDiff_m
+    USE ADdnSVM_m,        ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
   IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
@@ -2165,7 +2164,7 @@ CONTAINS
     CALL FiniteDiff_AddMat_TO_dnMat(Vec,   Vec_loc0%d0,   option=3)
     !write(out_unitp,*) 'coucou1.2 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
-    CALL Init_IdMat(NAC%d0,QModel%QM%nsurf)
+    NAC%d0 = Identity_Mat(QModel%QM%nsurf)
     !write(out_unitp,*) 'coucou1.3 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     allocate(tVec(QModel%QM%nsurf,QModel%QM%nsurf))

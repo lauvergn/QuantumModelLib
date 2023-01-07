@@ -168,7 +168,8 @@ MODULE QML_HOO_DMBE_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HOO_DMBE(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_HOO_DMBE_t)                           :: QModel ! RESULT
 
@@ -207,11 +208,10 @@ MODULE QML_HOO_DMBE_m
     QModel%Q0 = [2.806_Rkind,2.271_Rkind,2.271_Rkind]
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of HOO_DMBE'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
-      !CALL Write_QML_HOO_DMBE(QModel,nio=out_unitp)
+      CALL Write_QML_HOO_DMBE(QModel,nio=out_unitp)
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
@@ -230,7 +230,7 @@ MODULE QML_HOO_DMBE_m
 
     write(nio,*) 'HOO_DMBE IV current parameters'
 
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
 
     write(nio,*) 'end HOO_DMBE IV current parameters'
 

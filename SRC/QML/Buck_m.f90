@@ -43,7 +43,7 @@
 !! @date 03/08/2017
 !!
 MODULE QML_Buck_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -86,7 +86,7 @@ CONTAINS
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param A,B,C              real (optional):    parameters
   FUNCTION Init_QML_Buck(QModel_in,read_param,nio_param_file,A,B,C) RESULT(QModel)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_Buck_t)                            :: QModel
 
@@ -140,7 +140,7 @@ CONTAINS
 
   END FUNCTION Init_QML_Buck
   SUBROUTINE Init0_QML_Buck(QModel,A,B,C,model_name)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_Buck_t),            intent(inout)   :: QModel
     real (kind=Rkind), optional,   intent(in)      :: A,B,C
@@ -187,6 +187,8 @@ CONTAINS
 !! @param QModel          TYPE(QML_Buck_t):    derived type in which the parameters are set-up.
 !! @param nio                integer:             file unit to read the parameters.
   SUBROUTINE Read_QML_Buck(QModel,nio)
+    IMPLICIT NONE
+
     TYPE (QML_Buck_t), intent(inout) :: QModel
     integer,            intent(in)    :: nio
 
@@ -227,6 +229,8 @@ CONTAINS
 !!
 !! @param nio                integer:             file unit to print the parameters.
   SUBROUTINE Write0_QML_Buck(QModel,nio)
+    IMPLICIT NONE
+
     CLASS (QML_Buck_t), intent(in) :: QModel
     integer,             intent(in) :: nio
 
@@ -256,6 +260,8 @@ CONTAINS
 !! @param QModel          TYPE(QML_Buck_t):    derived type with the Buckingham parameters.
 !! @param nio                integer:             file unit to print the parameters.
   SUBROUTINE Write_QML_Buck(QModel,nio)
+    IMPLICIT NONE
+
     CLASS (QML_Buck_t), intent(in) :: QModel
     integer,             intent(in) :: nio
 
@@ -330,7 +336,7 @@ CONTAINS
 !! @param BuckPot          TYPE(QML_Buck_t):    derived type with the Buckingham parameters.
   FUNCTION QML_dnBuck(dnR,BuckPot)
     USE ADdnSVM_m
-
+    IMPLICIT NONE
 
     TYPE (dnS_t)                          :: QML_dnBuck
     TYPE (dnS_t),          intent(in)     :: dnR

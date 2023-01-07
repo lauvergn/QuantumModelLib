@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_CH5_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -101,13 +101,15 @@ MODULE QML_CH5_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_CH5(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat, TO_string
+    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    IMPLICIT NONE
 
-    TYPE (QML_CH5_t)                           :: QModel ! RESULT
+    TYPE (QML_CH5_t)                            :: QModel ! RESULT
 
     TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
-    integer,                     intent(in)      :: nio_param_file
-    logical,                     intent(in)      :: read_param
+    integer,                    intent(in)      :: nio_param_file
+    logical,                    intent(in)      :: read_param
 
 
     integer :: ii,jj,ifunc
@@ -160,13 +162,13 @@ MODULE QML_CH5_m
 
     SELECT CASE (QModel%option)
     CASE (3)
-      FileName = make_FileName(base_fit3_fileName // int_TO_char(ii))
+      FileName = make_FileName(base_fit3_fileName // TO_string(ii))
     CASE (4)
-      FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+      FileName = make_FileName(base_fit4_fileName // TO_string(ii))
     CASE (5)
-      FileName = make_FileName(base_fit5_fileName // int_TO_char(ii))
+      FileName = make_FileName(base_fit5_fileName // TO_string(ii))
     CASE Default
-      FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+      FileName = make_FileName(base_fit4_fileName // TO_string(ii))
     END SELECT
 
     !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
@@ -189,13 +191,13 @@ MODULE QML_CH5_m
 
       SELECT CASE (QModel%option)
       CASE (3)
-        FileName = make_FileName(base_fit3_fileName // int_TO_char(ii))
+        FileName = make_FileName(base_fit3_fileName // TO_string(ii))
       CASE (4)
-        FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+        FileName = make_FileName(base_fit4_fileName // TO_string(ii))
       CASE (5)
-        FileName = make_FileName(base_fit5_fileName // int_TO_char(ii))
+        FileName = make_FileName(base_fit5_fileName // TO_string(ii))
       CASE Default
-        FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+        FileName = make_FileName(base_fit4_fileName // TO_string(ii))
       END SELECT
 
       !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
@@ -226,16 +228,16 @@ MODULE QML_CH5_m
       SELECT CASE (QModel%option)
       CASE (3)
         FileName = make_FileName(base_fit3_hess_fileName //                     &
-                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+                                        TO_string(ii) // '_' // TO_string(jj) )
       CASE (4)
         FileName = make_FileName(base_fit4_hess_fileName //                     &
-                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+                                        TO_string(ii) // '_' // TO_string(jj) )
       CASE (5)
         FileName = make_FileName(base_fit5_hess_fileName //                     &
-                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+                                        TO_string(ii) // '_' // TO_string(jj) )
       CASE Default
         FileName = make_FileName(base_fit4_hess_fileName //                     &
-                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+                                        TO_string(ii) // '_' // TO_string(jj) )
       END SELECT
 
       CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),   &
@@ -274,7 +276,7 @@ MODULE QML_CH5_m
     END SELECT
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of CH5'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
@@ -291,7 +293,7 @@ MODULE QML_CH5_m
   SUBROUTINE Write_QML_CH5(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(QML_CH5_t),   intent(in) :: QModel
+    CLASS(QML_CH5_t),     intent(in) :: QModel
     integer,              intent(in) :: nio
 
   END SUBROUTINE Write_QML_CH5
@@ -364,7 +366,7 @@ MODULE QML_CH5_m
   USE ADdnSVM_m
   IMPLICIT NONE
 
-    CLASS(QML_CH5_t),   intent(in)    :: QModel
+    CLASS(QML_CH5_t),     intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -621,6 +623,7 @@ MODULE QML_CH5_m
   END FUNCTION QML_sc2_fit3
   FUNCTION QML_sc_fit3(x,a,b)
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t)                          :: QML_sc_fit3
     TYPE (dnS_t),           intent(in)    :: x
@@ -631,7 +634,8 @@ MODULE QML_CH5_m
   END FUNCTION QML_sc_fit3
 
   SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist,print_info)
-  IMPLICIT NONE
+    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim
    integer,           intent(inout) :: n(0:ndim),nt

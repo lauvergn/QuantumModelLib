@@ -46,7 +46,7 @@
 !! @date 03/08/2017
 !!
 MODULE QML_Phenol_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   USE QML_Morse_m
   USE QML_Sigmoid_m
@@ -115,7 +115,7 @@ CONTAINS
 !!
 !! @param PhenolPot          TYPE(PhenolPot_t):   derived type in which the parameters are set-up.
   FUNCTION Init_QML_Phenol(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  USE QMLLib_UtilLib_m
+  USE QDUtil_m,         ONLY : Identity_Mat
   IMPLICIT NONE
 
     TYPE (QML_Phenol_t)               :: QModel
@@ -204,7 +204,7 @@ CONTAINS
 
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of Phenol [au]'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = QModel%G_RR
     QModel%d0GGdef(2,2) = QModel%G_ThTh
 
@@ -229,6 +229,8 @@ CONTAINS
 !!
 !! @param nio                integer:              file unit to print the parameters.
   SUBROUTINE Write0_QML_Phenol(QModel,nio)
+    IMPLICIT NONE
+
     CLASS(QML_Phenol_t),    intent(in) :: QModel
     integer,                 intent(in) :: nio
 
@@ -262,6 +264,8 @@ CONTAINS
 !! @param QModel        CLASS(PhenolPot_t):   derived type with the Phenol potential parameters.
 !! @param nio           integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_Phenol(QModel,nio)
+    IMPLICIT NONE
+
     CLASS(QML_Phenol_t),    intent(in) :: QModel
     integer,                 intent(in) :: nio
 
@@ -320,6 +324,8 @@ CONTAINS
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Phenol(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
+    IMPLICIT NONE
+
     CLASS(QML_Phenol_t),    intent(in) :: QModel
 
     TYPE (dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)

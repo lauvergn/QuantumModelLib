@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_H2SiN_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -76,13 +76,15 @@ MODULE QML_H2SiN_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_H2SiN(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    IMPLICIT NONE
 
-    TYPE (QML_H2SiN_t)                         :: QModel ! RESULT
+    TYPE (QML_H2SiN_t)                          :: QModel ! RESULT
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
-    integer,                     intent(in)      :: nio_param_file
-    logical,                     intent(in)      :: read_param
+    TYPE(QML_Empty_t),           intent(in)     :: QModel_in ! variable to transfer info to the init
+    integer,                     intent(in)     :: nio_param_file
+    logical,                     intent(in)     :: read_param
 
 
     integer :: nio_fit,nb_columns,j,k
@@ -186,8 +188,7 @@ MODULE QML_H2SiN_m
     QModel%Q0 = QModel%Qref([3,1,4,2,5,6])
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of H2SiN'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
@@ -201,7 +202,7 @@ MODULE QML_H2SiN_m
 !! @param QModel            CLASS(QML_H2SiN_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_H2SiN(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_H2SiN_t),   intent(in) :: QModel
     integer,                intent(in) :: nio
@@ -315,7 +316,7 @@ MODULE QML_H2SiN_m
 
   END SUBROUTINE Write_QML_H2SiN
   SUBROUTINE Write0_QML_H2SiN(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_H2SiN_t),   intent(in) :: QModel
     integer,                intent(in) :: nio
@@ -336,8 +337,8 @@ MODULE QML_H2SiN_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H2SiN(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H2SiN_t), intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -368,8 +369,8 @@ MODULE QML_H2SiN_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_H2SiN(Mat_OF_PotDia,dnQ,QModel)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:)

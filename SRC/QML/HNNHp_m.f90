@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HNNHp_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -76,7 +76,9 @@ MODULE QML_HNNHp_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HNNHp(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    IMPLICIT NONE
 
     TYPE (QML_HNNHp_t)                           :: QModel ! RESULT
 
@@ -148,7 +150,7 @@ MODULE QML_HNNHp_m
     QModel%Q0 = QModel%Qref([2,1,4,3,5,6])
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of HNNHp'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
@@ -163,7 +165,7 @@ MODULE QML_HNNHp_m
 !! @param QModel            CLASS(QML_HNNHp_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_HNNHp(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_HNNHp_t),   intent(in) :: QModel
     integer,                intent(in) :: nio
@@ -239,7 +241,7 @@ MODULE QML_HNNHp_m
 
   END SUBROUTINE Write_QML_HNNHp
   SUBROUTINE Write0_QML_HNNHp(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_HNNHp_t),   intent(in) :: QModel
     integer,                intent(in) :: nio
@@ -291,8 +293,8 @@ MODULE QML_HNNHp_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_HNNHp(Mat_OF_PotDia,dnQ,QModel)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t),      intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),      intent(in)    :: dnQ(:)
@@ -340,8 +342,8 @@ MODULE QML_HNNHp_m
   ! here we suppose that the atom ordering: N1-N2-H1-H2
   ! the bounds are N1-N2, N1-H1, n2-H2
   SUBROUTINE Cart_TO_Q_QML_HNNHp(dnX,dnQ,QModel,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t),        intent(in)    :: dnX(:,:)
     TYPE (dnS_t),        intent(inout) :: dnQ(:)

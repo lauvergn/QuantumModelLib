@@ -44,8 +44,8 @@
 !! @date 18/10/2021
 !!
 MODULE QML_H2_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
-  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
   PRIVATE
@@ -82,7 +82,7 @@ CONTAINS
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_H2(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_H2_t)                              :: QModel
 
@@ -171,7 +171,7 @@ CONTAINS
 !! @param QModel         TYPE(QML_H2_t):   derived type in which the parameters are set-up.
 !! @param nio                integer          :   file unit to read the parameters.
   SUBROUTINE Read_QML_H2(Req_inout,E0_inout,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     integer,           intent(in)    :: nio
     real (kind=Rkind), intent(inout) :: Req_inout,E0_inout
@@ -214,7 +214,7 @@ CONTAINS
 !!
 !! @param nio                integer          :   file unit to print the parameters.
   SUBROUTINE Write0_QML_H2(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_H2_t),    intent(in) :: QModel
     integer,            intent(in) :: nio
@@ -242,16 +242,16 @@ CONTAINS
 !! @date 03/08/2017
 !!
 !! @param QModel         TYPE(QML_H2_t):   derived type with the H2 parameters.
-!! @param nio                integer          :   file unit to print the parameters.
+!! @param nio            integer          :   file unit to print the parameters.
   SUBROUTINE Write_QML_H2(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_H2_t),    intent(in) :: QModel
-    integer,                intent(in) :: nio
+    integer,            intent(in) :: nio
 
 
     write(nio,*) 'H2 current parameters:'
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*)
     write(nio,*) '    V(R) = E0 + Sum_i a_i(R-Req)^i'
     write(nio,*) '  E0:            ',QModel%E0
@@ -273,8 +273,8 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H2(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H2_t), intent(in)     :: QModel
     TYPE(dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)
@@ -314,8 +314,8 @@ CONTAINS
 !! @param dnQ            TYPE (dnS_t):     derived type with the value of "r" and,if required, its derivatives.
 !! @param QModel         TYPE(QML_H2_t):   derived type with the H2 parameters.
   FUNCTION QML_dnH2(dnQ,QModel)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t)                     :: QML_dnH2
 

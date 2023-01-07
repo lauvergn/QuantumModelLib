@@ -94,7 +94,8 @@ MODULE QML_LinearHBond_m
 !! @param Abuck,Bbuck,Cbuck  real (optional):     parameters for the Buckingham potential
   FUNCTION Init_QML_LinearHBond(QModel_in,read_param,nio_param_file,   &
                                  D,a,req,epsi,Abuck,Bbuck,Cbuck) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_LinearHBond_t)                    :: QModel ! RESULT
 
@@ -192,7 +193,7 @@ MODULE QML_LinearHBond_m
     IF (.NOT. QModel%PubliUnit) QModel%Q0 = QModel%Q0/a0    ! in Bohr
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of LinearHBond'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = ONE/QModel%muQQ
     QModel%d0GGdef(2,2) = ONE/QModel%muq
 
@@ -293,7 +294,7 @@ MODULE QML_LinearHBond_m
     integer,                    intent(in) :: nio
 
     write(nio,*) 'LinearHBond current parameters:'
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*)
     write(nio,*) 'PubliUnit: ',QModel%PubliUnit
     write(nio,*) 'nsurf:     ',QModel%nsurf

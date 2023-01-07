@@ -44,8 +44,8 @@
 !! @date 30/11/2021
 !!
 MODULE QML_Poly1D_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
-  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
   PRIVATE
@@ -90,7 +90,7 @@ CONTAINS
 !! @param a                  real (optional):    Scaling parameter (in bohr^-1)
 !! @param req                real (optional):    Equilibrium distance (in bohr)
   FUNCTION Init_QML_Poly1D(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_Poly1D_t)                          :: QModel
 
@@ -159,7 +159,7 @@ CONTAINS
 !! @param QModel         TYPE(QML_Poly1D_t):   derived type in which the parameters are set-up.
 !! @param nio            integer           :   file unit to read the parameters.
   SUBROUTINE Read_QML_Poly1D(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_Poly1D_t), intent(inout) :: QModel
     integer,             intent(in)    :: nio
@@ -214,7 +214,7 @@ CONTAINS
 !!
 !! @param nio                integer          :   file unit to print the parameters.
   SUBROUTINE Write0_QML_Poly1D(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_Poly1D_t),    intent(in) :: QModel
     integer,                intent(in) :: nio
@@ -242,14 +242,14 @@ CONTAINS
 !! @param QModel         TYPE(QML_Poly1D_t):   derived type with the Poly1D parameters.
 !! @param nio                integer          :   file unit to print the parameters.
   SUBROUTINE Write_QML_Poly1D(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_Poly1D_t),    intent(in) :: QModel
     integer,                intent(in) :: nio
 
 
     write(nio,*) 'Poly1D current parameters:'
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*)
     write(nio,*) '    V(R) = Sum_i Coef_i * (R-Req)^i'
     write(nio,*) '  norder: ',QModel%norder
@@ -271,8 +271,8 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Poly1D(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_Poly1D_t), intent(in)     :: QModel
     TYPE(dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)

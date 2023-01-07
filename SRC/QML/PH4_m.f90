@@ -43,7 +43,7 @@
 !! @date 08/04/2021
 !!
 MODULE QML_PH4_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -108,7 +108,9 @@ MODULE QML_PH4_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_PH4(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat, TO_string
+    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    IMPLICIT NONE
 
     TYPE (QML_PH4_t)                             :: QModel ! RESULT
 
@@ -222,9 +224,9 @@ MODULE QML_PH4_m
 
       SELECT CASE (QModel%option)
       CASE (3,4,5)
-        FileName = make_FileName(base_fit3_Qopt_fileName // int_TO_char(i))
+        FileName = make_FileName(base_fit3_Qopt_fileName // TO_string(i))
       CASE Default
-        FileName = make_FileName(base_fit3_Qopt_fileName // int_TO_char(i))
+        FileName = make_FileName(base_fit3_Qopt_fileName // TO_string(i))
       END SELECT
 
       read_ab = (i == 2)
@@ -250,9 +252,9 @@ MODULE QML_PH4_m
 
       SELECT CASE (QModel%option)
       CASE (3,4,5)
-        FileName = make_FileName(base_fit3_grad_fileName // int_TO_char(i))
+        FileName = make_FileName(base_fit3_grad_fileName // TO_string(i))
       CASE Default
-        FileName = make_FileName(base_fit3_grad_fileName // int_TO_char(i))
+        FileName = make_FileName(base_fit3_grad_fileName // TO_string(i))
       END SELECT
 
       !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
@@ -276,10 +278,10 @@ MODULE QML_PH4_m
       SELECT CASE (QModel%option)
       CASE (3,4,5)
         FileName = make_FileName(base_fit3_hess_fileName //                     &
-                                       int_TO_char(i) // '_' // int_TO_char(j) )
+                                       TO_string(i) // '_' // TO_string(j) )
       CASE Default
         FileName = make_FileName(base_fit3_hess_fileName //                     &
-                                       int_TO_char(i) // '_' // int_TO_char(j) )
+                                       TO_string(i) // '_' // TO_string(j) )
       END SELECT
 
       !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
@@ -301,7 +303,7 @@ MODULE QML_PH4_m
 
         read_ab = .FALSE.
 
-        FileName = make_FileName(base_fit3_AnHar_fileName // int_TO_char(i-1))
+        FileName = make_FileName(base_fit3_AnHar_fileName // TO_string(i-1))
 
         !write(out_unitp,*) i,'FileName: ',FileName ; flush(out_unitp)
         CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc), &
@@ -331,8 +333,7 @@ MODULE QML_PH4_m
     END SELECT
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of PH4'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
@@ -346,7 +347,7 @@ MODULE QML_PH4_m
 !! @param QModel            CLASS(QML_PH4_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_PH4(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_PH4_t),     intent(in) :: QModel
     integer,              intent(in) :: nio
@@ -416,8 +417,8 @@ MODULE QML_PH4_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_PH4(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_PH4_t),     intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -512,8 +513,8 @@ MODULE QML_PH4_m
   END SUBROUTINE EvalPot_QML_PH4
 
   SUBROUTINE EvalFunc_QML_PH4(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_PH4_t),     intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
@@ -528,8 +529,9 @@ MODULE QML_PH4_m
   END SUBROUTINE EvalFunc_QML_PH4
 
   SUBROUTINE EvalFunc_QML_PH4_fit3(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : out_unitp => out_unit
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_PH4_t),     intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
@@ -584,8 +586,8 @@ MODULE QML_PH4_m
   END SUBROUTINE EvalFunc_QML_PH4_fit3
 
   FUNCTION QML_dnvfour_fit3_WITH_poly(Rm,ifunc,QModel,dnPoly) RESULT(dnvfour)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t)                        :: dnvfour
 
@@ -630,6 +632,7 @@ MODULE QML_PH4_m
   END FUNCTION QML_dnvfour_fit3_WITH_poly
   FUNCTION QML_sc2_fit3(x,a,b)
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t)                          :: QML_sc2_fit3
     TYPE (dnS_t),           intent(in)    :: x
@@ -641,7 +644,8 @@ MODULE QML_PH4_m
   END FUNCTION QML_sc2_fit3
 
   SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,file_name,exist,read_ab,print_info)
-  IMPLICIT NONE
+    USE QMLLib_UtilLib_m, ONLY : file_open2
+    IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim
    integer,           intent(inout) :: n(0:ndim),nt
@@ -687,8 +691,8 @@ MODULE QML_PH4_m
 
   END SUBROUTINE QML_read_para4d
   FUNCTION QML_dnSigmoid_PH4(x,a)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnSigmoid_PH4
 

@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HenonHeiles_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -73,11 +73,12 @@ MODULE QML_HenonHeiles_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HenonHeiles(QModel_in,read_param,nio_param_file,lambda) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_HenonHeiles_t)                    :: QModel ! RESULT
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: lambda
@@ -121,7 +122,7 @@ MODULE QML_HenonHeiles_m
     QModel%Q0 = ZERO
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of HenonHeiles'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
@@ -140,6 +141,8 @@ MODULE QML_HenonHeiles_m
 !! @param QModel            TYPE(QML_HenonHeiles_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:                    file unit to read the parameters.
   SUBROUTINE Read_QML_HenonHeiles(QModel,nio)
+    IMPLICIT NONE
+
     TYPE (QML_HenonHeiles_t), intent(inout)   :: QModel
     integer,                   intent(in)      :: nio
 
@@ -176,7 +179,7 @@ MODULE QML_HenonHeiles_m
 !! @param QModel            CLASS(QML_HenonHeiles_t): derived type in which the parameters are set-up.
 !! @param nio               integer:                   file unit to print the parameters.
   SUBROUTINE Write_QML_HenonHeiles(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_HenonHeiles_t),   intent(in) :: QModel
     integer,                     intent(in) :: nio
@@ -233,8 +236,8 @@ MODULE QML_HenonHeiles_m
 !! @param nderiv             integer:                  it enables to specify up to which derivatives the potential is calculated:
 !!                                                     the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HenonHeiles(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_HenonHeiles_t), intent(in)    :: QModel
     TYPE (dnS_t),              intent(inout) :: Mat_OF_PotDia(:,:)
@@ -307,8 +310,8 @@ MODULE QML_HenonHeiles_m
   END SUBROUTINE EvalPot_QML_HenonHeiles
 
   SUBROUTINE EvalPotnew_QML_HenonHeiles(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_HenonHeiles_t), intent(in)    :: QModel
     TYPE (dnS_t),              intent(inout) :: Mat_OF_PotDia(:,:)

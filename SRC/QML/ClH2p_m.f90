@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_ClH2p_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -80,7 +80,9 @@ MODULE QML_ClH2p_m
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_ClH2p(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    IMPLICIT NONE
+
     TYPE (QML_ClH2p_t)                           :: QModel
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
@@ -334,6 +336,7 @@ MODULE QML_ClH2p_m
 !! @param QModel            CLASS(QML_ClH2p_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:            file unit to print the parameters.
   SUBROUTINE Write_QML_ClH2p(QModel,nio)
+    IMPLICIT NONE
 
     CLASS(QML_ClH2p_t),   intent(in) :: QModel
     integer,              intent(in) :: nio
@@ -545,6 +548,7 @@ MODULE QML_ClH2p_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_ClH2p(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_ClH2p_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -575,6 +579,7 @@ MODULE QML_ClH2p_m
 
   SUBROUTINE EvalPot1_QML_ClH2p(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_ClH2p_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)

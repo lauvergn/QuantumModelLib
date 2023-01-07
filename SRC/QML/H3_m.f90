@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_H3_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -280,7 +280,8 @@ MODULE QML_H3_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_H3(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_H3_t)                              :: QModel ! RESULT
 
@@ -292,8 +293,8 @@ MODULE QML_H3_m
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_H3'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
@@ -359,10 +360,10 @@ MODULE QML_H3_m
     QModel%Q0 = [2.806_Rkind,2.271_Rkind,2.271_Rkind]
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of H3'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
-      !CALL Write_QML_H3(QModel,nio=out_unitp)
+      CALL Write_QML_H3(QModel,nio=out_unitp)
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
@@ -422,7 +423,7 @@ MODULE QML_H3_m
 
     write(nio,*)
     write(nio,*) '-------------------------------------------------------------'
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*) '-------------------------------------------------------------'
     write(nio,*)
     write(nio,*) 'end H3 LSTH current parameters'
@@ -479,8 +480,9 @@ MODULE QML_H3_m
   END SUBROUTINE EvalPot_QML_H3
 
   SUBROUTINE Cart_TO_Q_QML_H3(QModel,dnX,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : TO_string
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H3_t),         intent(in)    :: QModel
     TYPE (dnS_t),            intent(in)    :: dnX(:,:)
@@ -502,7 +504,7 @@ MODULE QML_H3_m
       write(out_unitp,*) 'size(dnQ)',size(dnQ)
       write(out_unitp,*) 'dnQ:'
       DO j=1,size(dnQ,dim=1)
-        CALL Write_dnS(dnQ(j),out_unitp,info='dnQ('// int_to_char(j) // ')')
+        CALL Write_dnS(dnQ(j),out_unitp,info='dnQ('// TO_string(j) // ')')
       END DO
       write(out_unitp,*) 'shape dnX',shape(dnX)
       write(out_unitp,*) 'dnX'
@@ -566,8 +568,7 @@ MODULE QML_H3_m
   END SUBROUTINE Cart_TO_Q_QML_H3
 
   SUBROUTINE QML_LSTH_refactoring(X,VXD)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
 !       tag='LSTH PES of H2+H. [P. Siegbahn, B. Liu, D.G. Truhlar and C.J.Horowitz, JCP 68, 2457(1978)'
 !       X refers to the three hh distances.
@@ -654,8 +655,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_LSTH_refactoring
 
   SUBROUTINE QML_LSTH(X,VXD)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
 !       tag='LSTH PES of H2+H. [P. Siegbahn, B. Liu, D.G. Truhlar and C.J.Horowitz, JCP 68, 2457(1978)'
 !       X refers to the three hh distances.
@@ -742,8 +742,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_LSTH
 
   SUBROUTINE QML_VH2(X,S1,S2,S3)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
         real(kind=Rkind), intent(in)    :: X(3)
         real(kind=Rkind), intent(inout) :: S1(3),S2(3),S3(3)
 
@@ -767,8 +766,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_VH2
 !       *************************************************************
   SUBROUTINE QML_VBIGR(X,S)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
         real(kind=Rkind), intent(in)    ::  X
         real(kind=Rkind), intent(inout) ::  S(3)
 
@@ -786,8 +784,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_VBIGR
 
   SUBROUTINE QML_SPLID2(N,X,FF,W,IJ,Y,TAB)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
         integer,          intent(in)    :: N,IJ
         real(kind=Rkind), intent(in)    :: X(N)
@@ -839,8 +836,8 @@ MODULE QML_H3_m
   END SUBROUTINE QML_SPLID2
 
   SUBROUTINE EvalFunc_QML_H3(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H3_t),      intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
@@ -860,8 +857,8 @@ MODULE QML_H3_m
 
   ! for IRC, RPH
   SUBROUTINE EvalFunc_QML_H3_v11(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H3_t),      intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
@@ -970,8 +967,8 @@ MODULE QML_H3_m
 
 
   SUBROUTINE EvalFunc_QML_H3_v1(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H3_t),      intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
@@ -1247,8 +1244,8 @@ MODULE QML_H3_m
     END SUBROUTINE EvalFunc_QML_H3_v21
 
   FUNCTION QML_dnSigmoid_H3(x,sc)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnSigmoid_H3
 

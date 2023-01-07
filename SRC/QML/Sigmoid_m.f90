@@ -43,7 +43,7 @@
 !! @date 03/08/2017
 !!
 MODULE QML_Sigmoid_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -81,7 +81,7 @@ CONTAINS
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param A,B,C,e            real (optional):    sigmoid parameters
   FUNCTION Init_QML_Sigmoid(QModel_in,read_param,nio_param_file,A,B,C,e) RESULT(QModel)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_Sigmoid_t)                        :: QModel
 
@@ -134,7 +134,7 @@ CONTAINS
 
   END FUNCTION Init_QML_Sigmoid
   SUBROUTINE Init0_QML_Sigmoid(QModel,A,B,C,e,model_name)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_Sigmoid_t),           intent(inout)   :: QModel
     real (kind=Rkind),   optional,   intent(in)      :: A,B,C,e
@@ -184,6 +184,8 @@ CONTAINS
 !! @param QModel       TYPE(QML_Sigmoid_t):   derived type in which the parameters are set-up.
 !! @param nio                integer            :   file unit to read the parameters.
   SUBROUTINE Read_QML_Sigmoid(QModel,nio)
+    IMPLICIT NONE
+
     TYPE (QML_Sigmoid_t), intent(inout) :: QModel
     integer, intent(in) :: nio
 
@@ -230,11 +232,13 @@ CONTAINS
 !! @param QModel             CLASS(QML_Sigmoid_t):   derived type with the Sigmoid parameters.
 !! @param nio                integer            :   file unit to print the parameters.
   SUBROUTINE Write_QML_Sigmoid(QModel,nio)
+    IMPLICIT NONE
+
     CLASS(QML_Sigmoid_t),    intent(in) :: QModel
     integer,                  intent(in) :: nio
 
     write(nio,*) 'Sigmoid current parameters'
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*) '  s(x) = A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)'
     write(nio,*) '  A:   ',QModel%A
     write(nio,*) '  B:   ',QModel%B
@@ -244,6 +248,8 @@ CONTAINS
 
   END SUBROUTINE Write_QML_Sigmoid
   SUBROUTINE Write0_QML_Sigmoid(QModel,nio)
+    IMPLICIT NONE
+
     CLASS(QML_Sigmoid_t),    intent(in) :: QModel
     integer,                  intent(in) :: nio
 
@@ -268,6 +274,7 @@ CONTAINS
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Sigmoid(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m, ONLY :  dnS_t
+    IMPLICIT NONE
 
     CLASS (QML_Sigmoid_t),  intent(in)     :: QModel
     TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
@@ -296,6 +303,7 @@ CONTAINS
 !! @param SigmoidPot       TYPE(QML_Sigmoid_t): derived type with the Sigmoid parameters.
   FUNCTION QML_dnSigmoid(dnR,SigmoidPot) !A*0.5*(1+e*tanh( (x-B)/C )) (e=1 or -1)
     USE ADdnSVM_m, ONLY :  dnS_t,tanh,dealloc_dnS,Write_dnS
+    IMPLICIT NONE
 
     TYPE (dnS_t)                          :: QML_dnSigmoid
     TYPE (dnS_t),          intent(in)     :: dnR

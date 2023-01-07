@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_OneDSOC_1S1T_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -85,7 +85,8 @@ MODULE QML_OneDSOC_1S1T_m
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_OneDSOC_1S1T(QModel_in,read_param,nio_param_file,&
                                    Rsig_in) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_OneDSOC_1S1T_t)                  :: QModel ! RESULT
 
@@ -170,7 +171,7 @@ MODULE QML_OneDSOC_1S1T_m
     QModel%Q0 = [9.5_Rkind]
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of OneDSOC_1S1T'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = ONE/QModel%mu
 
     IF (debug) THEN
@@ -185,7 +186,7 @@ MODULE QML_OneDSOC_1S1T_m
 !! @param QModel            CLASS(QML_OneDSOC_1S1T_t): derived type in which the parameters are set-up.
 !! @param nio               integer:                     file unit to print the parameters.
   SUBROUTINE Write_QML_OneDSOC_1S1T(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_OneDSOC_1S1T_t), intent(in) :: QModel
     integer,                     intent(in) :: nio
@@ -219,7 +220,7 @@ MODULE QML_OneDSOC_1S1T_m
 !! @param QModel            CLASS(QML_OneDSOC_1S1T_t):  derived type in which the parameters are set-up.
 !! @param nio               integer:                      file unit to print the parameters.
   SUBROUTINE Write0_QML_OneDSOC_1S1T(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_OneDSOC_1S1T_t),   intent(in) :: QModel
     integer,                       intent(in) :: nio
@@ -272,8 +273,8 @@ MODULE QML_OneDSOC_1S1T_m
 !! @param nderiv             integer:                     it enables to specify up to which derivatives the potential is calculated:
 !!                                                        the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_OneDSOC_1S1T(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_OneDSOC_1S1T_t), intent(in)    :: QModel
     TYPE (dnS_t),                intent(inout) :: Mat_OF_PotDia(:,:)

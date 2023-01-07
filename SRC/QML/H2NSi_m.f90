@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_H2NSi_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -80,7 +80,10 @@ MODULE QML_H2NSi_m
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_H2NSi(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    IMPLICIT NONE
+
     TYPE (QML_H2NSi_t)                           :: QModel
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
@@ -174,7 +177,8 @@ MODULE QML_H2NSi_m
      QModel%Q0 = QModel%Qref([3,1,4,2,5,6])
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of H2NSi'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
+
 
     IF (QModel%PubliUnit) THEN
       write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
@@ -194,6 +198,7 @@ MODULE QML_H2NSi_m
 !! @param QModel            CLASS(QML_H2NSi_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:            file unit to print the parameters.
   SUBROUTINE Write_QML_H2NSi(QModel,nio)
+    IMPLICIT NONE
 
     CLASS(QML_H2NSi_t), intent(in) :: QModel
     integer,              intent(in) :: nio
@@ -320,6 +325,7 @@ MODULE QML_H2NSi_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H2NSi(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H2NSi_t), intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -352,6 +358,7 @@ MODULE QML_H2NSi_m
   SUBROUTINE EvalPot1_QML_H2NSi(Mat_OF_PotDia,dnQ,QModel)
     !Unpublished model potential
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:)

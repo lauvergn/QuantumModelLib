@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HCN_Murrell_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -73,7 +73,8 @@ MODULE QML_HCN_Murrell_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HCN_Murrell(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_HCN_Murrell_t)                     :: QModel ! RESULT
 
@@ -84,8 +85,8 @@ MODULE QML_HCN_Murrell_m
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_HCN_Murrell'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
@@ -145,11 +146,11 @@ MODULE QML_HCN_Murrell_m
     QModel%Q0 = [ZERO,3.18722_Rkind,2.17926_Rkind]
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of HCN_Murrell'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
-      !CALL Write_QML_HCN_Murrell(QModel,nio=out_unitp)
+      CALL Write_QML_HCN_Murrell(QModel,nio=out_unitp)
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
       write(out_unitp,*) 'END ',name_sub
       flush(out_unitp)
@@ -161,14 +162,14 @@ MODULE QML_HCN_Murrell_m
 !! @param QModel            CLASS(QML_HCN_Murrell_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_HCN_Murrell(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_HCN_Murrell_t),  intent(in) :: QModel
     integer,                   intent(in) :: nio
 
     write(nio,*) 'HCN_Murrell current parameters'
 
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*) 'Atomic order : C,N,H'
     SELECT CASE(QModel%option)
     CASE (0) ! 3D (three distances)
@@ -196,8 +197,8 @@ MODULE QML_HCN_Murrell_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HCN_Murrell(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_HCN_Murrell_t),  intent(in)    :: QModel
     TYPE (dnS_t),              intent(inout) :: Mat_OF_PotDia(:,:)
@@ -223,8 +224,8 @@ MODULE QML_HCN_Murrell_m
   END SUBROUTINE EvalPot_QML_HCN_Murrell
 
   SUBROUTINE QML_EvalPot3D_Murrell(Mat_OF_PotDia,dnQ,Jacobi,cosTh)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t),            intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),            intent(in)    :: dnQ(:)
@@ -336,8 +337,9 @@ MODULE QML_HCN_Murrell_m
 
   ! here we assume the C,N,H atomic order
   SUBROUTINE Cart_TO_Q_QML_HCN_Murrell(QModel,dnX,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : TO_string
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_HCN_Murrell_t), intent(in)    :: QModel
     TYPE (dnS_t),             intent(in)    :: dnX(:,:)
@@ -358,7 +360,7 @@ MODULE QML_HCN_Murrell_m
       write(out_unitp,*) 'size(dnQ)',size(dnQ)
       write(out_unitp,*) 'dnQ:'
       DO j=1,size(dnQ,dim=1)
-        CALL Write_dnS(dnQ(j),out_unitp,info='dnQ('// int_to_char(j) // ')')
+        CALL Write_dnS(dnQ(j),out_unitp,info='dnQ('// TO_string(j) // ')')
       END DO
       write(out_unitp,*) 'shape dnX',shape(dnX)
       write(out_unitp,*) 'dnX'
@@ -412,8 +414,8 @@ MODULE QML_HCN_Murrell_m
 
   ! for MEP
   SUBROUTINE EvalFunc_QML_HCN_Murrell(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_HCN_Murrell_t), intent(in)    :: QModel
     TYPE (dnS_t),             intent(inout) :: Func(:)

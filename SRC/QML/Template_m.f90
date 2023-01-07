@@ -38,6 +38,7 @@
 !===========================================================================
 !===========================================================================
 module QML_Template_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   USE QML_Morse_m
   IMPLICIT NONE
@@ -64,12 +65,12 @@ module QML_Template_m
 contains
 
   FUNCTION Init_QML_Template(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  USE QMLLib_UtilLib_m
-  IMPLICIT NONE
+    USE QDUtil_m, ONLY : Identity_Mat
+    IMPLICIT NONE
 
-    TYPE (QML_Template_t)             :: QModel
+    TYPE (QML_Template_t)              :: QModel
 
-    TYPE(QML_Empty_t),   intent(in)   :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),    intent(in)   :: QModel_in ! variable to transfer info to the init
     logical,              intent(in)   :: read_param
     integer,              intent(in)   :: nio_param_file
 
@@ -111,8 +112,7 @@ contains
 
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of Template'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-    QModel%d0GGdef(:,:) = QModel%d0GGdef / 2000._Rkind
+    QModel%d0GGdef = Identity_Mat(QModel%ndim) / 2000._Rkind
 
     IF (debug) THEN
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
@@ -124,10 +124,10 @@ contains
 
 
   SUBROUTINE EvalPot_QML_Template(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
-    CLASS (QML_Template_t),  intent(in)     :: QModel
+    CLASS (QML_Template_t),   intent(in)     :: QModel
     TYPE (dnS_t),             intent(in)     :: dnQ(:)
     TYPE (dnS_t),             intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,                  intent(in)     :: nderiv
@@ -176,14 +176,14 @@ contains
   END SUBROUTINE EvalPot_QML_Template
 
   SUBROUTINE Write_QML_Template(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_Template_t), intent(in) :: QModel
     integer,                intent(in) :: nio
 
     write(nio,*) '========================================'
     write(nio,*) 'QML_Template current parameters'
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*)
     CALL Write_QML_Morse(QModel%morseXpY,nio)
     write(nio,*)

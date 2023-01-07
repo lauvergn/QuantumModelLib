@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_Tully_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -78,9 +78,9 @@ MODULE QML_Tully_m
 !! @param QModel_in          TYPE(QML_Empty_t):  type to transfer ndim, nsurf ...
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
-  FUNCTION Init_QML_Tully(QModel_in,read_param,nio_param_file,          &
-                           A,B,C,D,E0) RESULT(QModel)
-  IMPLICIT NONE
+  FUNCTION Init_QML_Tully(QModel_in,read_param,nio_param_file,A,B,C,D,E0) RESULT(QModel)
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_Tully_t)                           :: QModel ! RESULT
 
@@ -178,7 +178,7 @@ MODULE QML_Tully_m
     QModel%Q0 = [ZERO]
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of Tully'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = ONE/QModel%mu
 
     IF (debug) THEN
@@ -197,7 +197,7 @@ MODULE QML_Tully_m
 !! @param nio                       integer:   file unit to read the parameters.
 !! @param Asub,Bsub,Csub,Dsub,E0sub real:      model parameters.
   SUBROUTINE Read_QML_Tully(Asub,Bsub,Csub,Dsub,E0sub,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     real (kind=Rkind),    intent(inout) :: Asub,Bsub,Csub,Dsub,E0sub
     integer,              intent(in)    :: nio
@@ -242,7 +242,7 @@ MODULE QML_Tully_m
 !! @param QModel            CLASS(QML_Tully_t):  derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_Tully(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_Tully_t),  intent(in) :: QModel
     integer,              intent(in) :: nio
@@ -325,8 +325,8 @@ MODULE QML_Tully_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Tully(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_Tully_t),  intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -360,8 +360,8 @@ MODULE QML_Tully_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv)
   !A. Simple avoided crossing
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (QML_Tully_t), intent(in)     :: QModel
     TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
@@ -395,8 +395,8 @@ MODULE QML_Tully_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot2_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv) !2d Tully's potential
   !B. Dual avoided crossing
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (QML_Tully_t), intent(in)     :: QModel
     TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)
@@ -425,8 +425,8 @@ MODULE QML_Tully_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot3_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv) !3d Tully's potential
   !C. Extended coupling with reflection
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (QML_Tully_t), intent(in)     :: QModel
     TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)

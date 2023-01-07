@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_PSB3_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -102,7 +102,8 @@ MODULE QML_PSB3_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_PSB3(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_PSB3_t)                          :: QModel ! RESULT
 
@@ -183,7 +184,7 @@ MODULE QML_PSB3_m
     IF (debug) write(out_unitp,*) 'init Q0 of PSB3'
     QModel%Q0 = [0.172459_Rkind, -3.14_Rkind, ZERO]
     IF (debug) write(out_unitp,*) 'init d0GGdef of PSB3'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,:) = [0.00007981_Rkind, ZERO,             ZERO            ]
     QModel%d0GGdef(2,:) = [ZERO,             0.00002599_Rkind, 0.00004025_Rkind]
     QModel%d0GGdef(3,:) = [ZERO,             0.00004025_Rkind, 0.00040375_Rkind]
@@ -200,7 +201,7 @@ MODULE QML_PSB3_m
 !! @param QModel            CLASS(QML_PSB3_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_PSB3(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_PSB3_t),   intent(in) :: QModel
     integer,               intent(in) :: nio
@@ -267,7 +268,7 @@ MODULE QML_PSB3_m
 
   END SUBROUTINE Write_QML_PSB3
   SUBROUTINE Write0_QML_PSB3(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_PSB3_t),   intent(in) :: QModel
     integer,               intent(in) :: nio
@@ -290,8 +291,8 @@ MODULE QML_PSB3_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_PSB3(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_PSB3_t),    intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -316,7 +317,7 @@ MODULE QML_PSB3_m
 
   END SUBROUTINE EvalPot_QML_PSB3
 
-!> @brief Subroutine wich calculates the PSB3 potential (Not published model) with derivatives up to the 2d order is required.
+!> @brief Subroutine wich calculates the PSB3 potential with derivatives up to the 2d order is required.
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
@@ -324,7 +325,6 @@ MODULE QML_PSB3_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv)
-    !Unpublished model potential (yet)
     USE ADdnSVM_m
     IMPLICIT NONE
 
@@ -423,9 +423,8 @@ MODULE QML_PSB3_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot2_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv) !Second PSB3's potential
-  ! Published potential
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (QML_PSB3_t), intent(in)     :: PSB3Pot
     TYPE (dnS_t),        intent(inout)  :: Mat_OF_PotDia(:,:)

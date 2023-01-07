@@ -38,10 +38,11 @@
 !===========================================================================
 !===========================================================================
 MODULE QML_Empty_m
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   USE ADdnSVM_m, ONLY : dnMat_t
   IMPLICIT NONE
+
+  PRIVATE
 
   TYPE :: QML_Empty_t
     logical :: Init        = .FALSE.
@@ -113,11 +114,13 @@ MODULE QML_Empty_m
     MODULE PROCEDURE Qact_TO_Q_QML_Empty
   END INTERFACE
 
-CONTAINS
+  PUBLIC :: QML_Empty_t, Init_QML_Empty, Init0_QML_Empty
+  PUBLIC :: get_Q0_QModel, get2_Q0_QML_Empty, Qact_TO_Q
+
+  CONTAINS
 
   FUNCTION Init_QML_Empty(QModel_in) RESULT(QModel)
-  USE QMLLib_UtilLib_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE(QML_Empty_t)                  :: QModel
     TYPE(QML_Empty_t),  intent(in)     :: QModel_in ! variable to transfer info to the init
@@ -144,7 +147,6 @@ CONTAINS
 
   END FUNCTION Init_QML_Empty
   SUBROUTINE Init0_QML_Empty(QModel,QModel_in)
-  USE QMLLib_UtilLib_m
   USE ADdnSVM_m, ONLY : dealloc_dnMat
   IMPLICIT NONE
 
@@ -236,7 +238,7 @@ CONTAINS
     IMPLICIT NONE
 
     real (kind=Rkind),    intent(inout)  :: Q0(:)
-    CLASS(QML_Empty_t),  intent(in)     :: QModel
+    CLASS(QML_Empty_t),   intent(in)     :: QModel
 
     IF (size(Q0) /= QModel%ndim) THEN
       STOP 'STOP in get_Q0_QML_Empty, wrong ndim size.'
@@ -250,9 +252,10 @@ CONTAINS
   END SUBROUTINE get2_Q0_QML_Empty
 
   SUBROUTINE get_Q0_QML_Empty(QModel,Q0,err_Q0)
+    USE QDUtil_m, ONLY : Rkind
     IMPLICIT NONE
 
-    CLASS(QML_Empty_t),  intent(in)              :: QModel
+    CLASS(QML_Empty_t),   intent(in)              :: QModel
     real (kind=Rkind),    intent(inout)           :: Q0(:)
     integer,              intent(inout), optional ::  err_Q0
 
@@ -272,7 +275,7 @@ CONTAINS
   FUNCTION get_d0GGdef_QML_Empty(QModel) RESULT(d0GGdef)
     IMPLICIT NONE
 
-    real (kind=Rkind),   allocatable               :: d0GGdef(:,:)
+    real (kind=Rkind),   allocatable              :: d0GGdef(:,:)
     CLASS(QML_Empty_t),             intent(in)    :: QModel
 
     integer :: i,nact
@@ -299,7 +302,7 @@ CONTAINS
 
   END FUNCTION get_d0GGdef_QML_Empty
   SUBROUTINE EvalPot_QML_Empty(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m, ONLY :  dnS_t
+    USE ADdnSVM_m, ONLY : dnS_t
   IMPLICIT NONE
 
     CLASS (QML_Empty_t),    intent(in)     :: QModel
@@ -313,7 +316,8 @@ CONTAINS
   END SUBROUTINE EvalPot_QML_Empty
 
   SUBROUTINE EvalScalOp_QML_Empty(QModel,Mat_OF_ScalOpDia,list_Op,dnQ,nderiv)
-    USE ADdnSVM_m, ONLY :  dnS_t
+    USE QDUtil_m,  ONLY : ZERO
+    USE ADdnSVM_m, ONLY : dnS_t
     IMPLICIT NONE
   
       CLASS (QML_Empty_t),    intent(in)     :: QModel
@@ -328,8 +332,9 @@ CONTAINS
   END SUBROUTINE EvalScalOp_QML_Empty
 
   SUBROUTINE EvalPotAbInitio_QML_Empty(QModel,Mat_OF_PotDia,dnX,nderiv)
-  USE ADdnSVM_m, ONLY :  dnS_t, get_d0, set_dnS, write_dnS
-  IMPLICIT NONE
+    USE QMLLib_UtilLib_m, ONLY : Find_Label
+    USE ADdnSVM_m, ONLY :  dnS_t, get_d0, set_dnS, write_dnS
+    IMPLICIT NONE
 
     CLASS (QML_Empty_t),    intent(in)     :: QModel
     TYPE (dnS_t),           intent(in)     :: dnX(:,:)
@@ -402,7 +407,7 @@ CONTAINS
     !write(out_unitp,*) 'last line: ',labelR
     located = verify(labelR,' Normal termination of Gaussian') == 0
     close(nio_otf)
-999  CONTINUE
+999 CONTINUE
     IF (.NOT. located) THEN
       write(out_unitp,*) 'ERROR in EvalPotAbInitio_QML_Empty'
       write(out_unitp,*) 'no line: "Normal termination of Gaussian"'
@@ -490,8 +495,8 @@ CONTAINS
   END SUBROUTINE EvalPotAbInitio_QML_Empty
 
   SUBROUTINE EvalFunc_QML_Empty(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m, ONLY :  dnS_t
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
 
     CLASS (QML_Empty_t),    intent(in)     :: QModel
     TYPE (dnS_t),           intent(in)     :: dnQ(:)
@@ -507,7 +512,8 @@ CONTAINS
   END SUBROUTINE EvalFunc_QML_Empty
 
   SUBROUTINE Write_QML_Empty(QModel,nio)
-  IMPLICIT NONE
+    USE QDUtil_m,  ONLY : Write_RMat => Write_Mat, Write_RVec => Write_Vec
+    IMPLICIT NONE
 
     CLASS (QML_Empty_t), intent(in)    :: QModel
     integer,             intent(in)    :: nio
@@ -559,27 +565,27 @@ CONTAINS
 
     IF (allocated(QModel%d0GGdef)) THEN
       write(nio,*) 'Deformation metric tensor (~ 1/Mii)'
-      CALL Write_RMat(QModel%d0GGdef,nio,nbcol1=5)
+      CALL Write_RMat(QModel%d0GGdef,nio,nbcol=5)
     END IF
 
     IF (allocated(QModel%Q0)) THEN
       write(nio,*) 'Reference Coordinate values, Q0(:)'
-      CALL Write_RVec(QModel%Q0,nio,nbcol1=5)
+      CALL Write_RVec(QModel%Q0,nio,nbcol=5)
     END IF
 
     IF (allocated(QModel%masses)) THEN
       write(nio,*) 'Masses in au'
-      CALL Write_RVec(QModel%masses,nio,nbcol1=5)
+      CALL Write_RVec(QModel%masses,nio,nbcol=5)
     END IF
     flush(nio)
 
-
   END SUBROUTINE Write_QML_Empty
   SUBROUTINE Write0_QML_Empty(QModel,nio)
-  IMPLICIT NONE
+    USE QDUtil_m,  ONLY : Write_RMat => Write_Mat
+    IMPLICIT NONE
 
     CLASS (QML_Empty_t), intent(in)    :: QModel
-    integer,              intent(in)    :: nio
+    integer,             intent(in)    :: nio
 
 
     write(nio,*) 'QUANTUM MODEL default parameters'
@@ -604,7 +610,7 @@ CONTAINS
 
     IF (allocated(QModel%d0GGdef)) THEN
      write(nio,*) 'Deformation metric tensor (~ 1/Mii)'
-     CALL Write_RMat(QModel%d0GGdef,nio,nbcol1=5)
+     CALL Write_RMat(QModel%d0GGdef,nio,nbcol=5)
     END IF
 
     write(nio,*) 'END QUANTUM MODEL default parameters'
@@ -614,8 +620,8 @@ CONTAINS
   END SUBROUTINE Write0_QML_Empty
 
   SUBROUTINE Cart_TO_Q_QML_Empty(QModel,dnX,dnQ,nderiv)
-  USE ADdnSVM_m, ONLY :  dnS_t
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
 
     CLASS(QML_Empty_t),      intent(in)    :: QModel
     TYPE (dnS_t),            intent(in)    :: dnX(:,:)
@@ -627,7 +633,8 @@ CONTAINS
 
   END SUBROUTINE Cart_TO_Q_QML_Empty
   SUBROUTINE Qact_TO_Q_QML_Empty(Qact,Q,list_act)
-  IMPLICIT NONE
+    USE QDUtil_m,  ONLY : Rkind
+    IMPLICIT NONE
 
     real (kind=Rkind),       intent(in)    :: Qact(:)
     integer,                 intent(in)    :: list_act(:)

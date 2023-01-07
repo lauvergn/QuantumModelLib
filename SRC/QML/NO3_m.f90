@@ -97,7 +97,8 @@ MODULE QML_NO3_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_NO3(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_NO3_t)                          :: QModel ! RESULT
 
@@ -640,7 +641,7 @@ MODULE QML_NO3_m
     IF (debug) write(out_unitp,*) 'init Q0 of NO3'
     QModel%Q0 = [ZERO,ZERO,ZERO,ZERO,ZERO,ZERO]
     IF (debug) write(out_unitp,*) 'init d0GGdef of NO3'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
