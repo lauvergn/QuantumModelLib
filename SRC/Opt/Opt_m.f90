@@ -38,9 +38,8 @@
 !===========================================================================
 !===========================================================================
 MODULE Opt_m
-!$ USE omp_lib
-  USE QMLLib_NumParameters_m
-
+  !$ USE omp_lib
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   IMPLICIT NONE
 
   PRIVATE
@@ -71,9 +70,9 @@ CONTAINS
   SUBROUTINE Init_QML_Opt(Opt_param,QModel,                                     &
                           read_param,param_file_name,nio_param_file,icv,list_act)
 
-  USE QMLLib_UtilLib_m
-  USE Model_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : TO_string
+    USE Model_m
+    IMPLICIT NONE
 
     TYPE (QML_Opt_t),   intent(inout)            :: Opt_param
     TYPE (Model_t),     intent(in)               :: QModel
@@ -137,10 +136,10 @@ CONTAINS
   ELSE
     IF (present(param_file_name)) THEN
       IF (len_trim(param_file_name) == 0) THEN
-        param_file_name_loc = strdup("input.dat")
+        param_file_name_loc = trim("input.dat")
         nio_loc = 99
       ELSE
-        param_file_name_loc = strdup(param_file_name)
+        param_file_name_loc = trim(param_file_name)
         nio_loc = 99
       END IF
     ELSE
@@ -151,7 +150,7 @@ CONTAINS
     write(out_unitp,*) '   read_param      ',read_param_loc
     write(out_unitp,*) '   nio             ',nio_loc
     write(out_unitp,*) '   allo param_file_name ',allocated(param_file_name_loc)
-    IF (allocated(param_file_name_loc)) write(out_unitp,*) '   param_file_name ',strdup(param_file_name_loc)
+    IF (allocated(param_file_name_loc)) write(out_unitp,*) '   param_file_name ',trim(param_file_name_loc)
     flush(out_unitp)
   END IF
 
@@ -174,7 +173,7 @@ CONTAINS
   IF (Opt_param%i_surf < 1 .OR. Opt_param%i_surf > QModel%nsurf) THEN
     write(out_unitp,*) ' ERROR in ',name_sub
     write(out_unitp,*) ' i_surf',Opt_param%i_surf
-    write(out_unitp,*) ' i_surf is out-of-range ([1,',int_TO_char(QModel%nsurf),'])'
+    write(out_unitp,*) ' i_surf is out-of-range ([1,',TO_string(QModel%nsurf),'])'
     write(out_unitp,*) ' check your data!'
     write(out_unitp,*)
     STOP ' ERROR in Init_QML_Opt: i_surf is out-of-range'
@@ -207,10 +206,9 @@ CONTAINS
   END SUBROUTINE Init_QML_Opt
 
   SUBROUTINE Read_QML_Opt(Opt_param,QModel,nio_param_file,icv_inout)
-
-  USE QMLLib_UtilLib_m
-  USE Model_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : TO_lowercase, TO_string
+    USE Model_m
+    IMPLICIT NONE
 
     TYPE (QML_Opt_t),   intent(inout)   :: Opt_param
     TYPE (Model_t),     intent(in)      :: QModel
@@ -228,100 +226,100 @@ CONTAINS
 
     namelist /opt/ Max_it,nb_neg,i_surf,list_act,Largest_disp,icv,TS,hessian_method
 
-!----- for debuging --------------------------------------------------
+    !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Read_QML_Opt'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
+    !-----------------------------------------------------------
 
-  IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    write(out_unitp,*) '   nio_param_file  ',nio_param_file
-    flush(out_unitp)
-  END IF
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      write(out_unitp,*) '   nio_param_file  ',nio_param_file
+      flush(out_unitp)
+    END IF
 
-  allocate(list_act(QModel%ndim))
-  list_act(:) = 0
-  IF (allocated(Opt_param%list_act)) THEN
-    list_act(:) = Opt_param%list_act(1:size(Opt_param%list_act))
-  END IF
+    allocate(list_act(QModel%ndim))
+    list_act(:) = 0
+    IF (allocated(Opt_param%list_act)) THEN
+      list_act(:) = Opt_param%list_act(1:size(Opt_param%list_act))
+    END IF
+  
+    icv             = icv_inout ! to be able to change the convergence criteria
+    Max_it          = -1
+    Largest_disp    = 0.5_Rkind
+  
+    nb_neg          = -1 ! to be able to change the minimum, TS, ... optimization (see TS)
+    TS              = .FALSE.
+  
+    i_surf          = 1
+    hessian_method  = 'analytical'
+  
+  
+    read(nio_param_file,nml=opt,IOSTAT=err_read)
+    IF (err_read < 0) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' End-of-file or End-of-record'
+      write(out_unitp,*) ' The namelist "Opt" is probably absent'
+      write(out_unitp,*) ' check your data!'
+      write(out_unitp,*)
+      STOP ' ERROR in Read_QML_Opt'
+    ELSE IF (err_read > 0) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' Some parameter names of the namelist "Opt" are probaly wrong'
+      write(out_unitp,*) ' check your data!'
+      write(out_unitp,nml=Opt)
+      STOP ' ERROR in Read_QML_Opt'
+    END IF
+  
+    IF (TS .AND. nb_neg /= 1 .AND. nb_neg /= -1) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' TS=.TRUE. and nb_neg /= 1',TS,nb_neg
+      write(out_unitp,*) ' TS and nb_neg are not compatible'
+      write(out_unitp,*) ' check your data!'
+      write(out_unitp,*)
+      STOP ' ERROR in Read_QML_Opt: TS and nb_neg are not compatible'
+    END IF
+    IF (TS)         nb_neg = 1
+    IF (nb_neg < 0) nb_neg = 0
+  
+    hessian_method = TO_lowercase(hessian_method)
+    SELECT CASE (hessian_method)
+    CASE ('analytical','ana')
+      hessian_type = 1
+    CASE Default
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' Wrong hessian_method'
+      write(out_unitp,*) ' The posibilities: "analytical" or "ana"'
+      write(out_unitp,*) ' check your data!'
+      write(out_unitp,*)
+      STOP ' ERROR in Read_QML_Opt: Wrong hessian_method'
+    END SELECT
+  
+    Opt_param = QML_Opt_t(Max_it=Max_it,nb_neg=nb_neg,i_surf=i_surf,              &
+                          list_act=list_act,hessian_type=hessian_type,            &
+                          Largest_disp=Largest_disp)
+  
+    icv_inout = icv
+  
+    IF (debug) THEN
+      write(out_unitp,*) ' icv_inout ',icv_inout
+      CALL Write_QML_Opt(Opt_param)
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    END IF
 
-  icv             = icv_inout ! to be able to change the convergence criteria
-  Max_it          = -1
-  Largest_disp    = 0.5_Rkind
-
-  nb_neg          = -1 ! to be able to change the minimum, TS, ... optimization (see TS)
-  TS              = .FALSE.
-
-  i_surf          = 1
-  hessian_method  = 'analytical'
-
-
-  read(nio_param_file,nml=opt,IOSTAT=err_read)
-  IF (err_read < 0) THEN
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' End-of-file or End-of-record'
-    write(out_unitp,*) ' The namelist "Opt" is probably absent'
-    write(out_unitp,*) ' check your data!'
-    write(out_unitp,*)
-    STOP ' ERROR in Read_QML_Opt'
-  ELSE IF (err_read > 0) THEN
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' Some parameter names of the namelist "Opt" are probaly wrong'
-    write(out_unitp,*) ' check your data!'
-    write(out_unitp,nml=Opt)
-    STOP ' ERROR in Read_QML_Opt'
-  END IF
-
-  IF (TS .AND. nb_neg /= 1 .AND. nb_neg /= -1) THEN
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' TS=.TRUE. and nb_neg /= 1',TS,nb_neg
-    write(out_unitp,*) ' TS and nb_neg are not compatible'
-    write(out_unitp,*) ' check your data!'
-    write(out_unitp,*)
-    STOP ' ERROR in Read_QML_Opt: TS and nb_neg are not compatible'
-  END IF
-  IF (TS)         nb_neg = 1
-  IF (nb_neg < 0) nb_neg = 0
-
-  CALL string_uppercase_TO_lowercase(hessian_method)
-  SELECT CASE (hessian_method)
-  CASE ('analytical','ana')
-    hessian_type = 1
-  CASE Default
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' Wrong hessian_method'
-    write(out_unitp,*) ' The posibilities: "analytical" or "ana"'
-    write(out_unitp,*) ' check your data!'
-    write(out_unitp,*)
-    STOP ' ERROR in Read_QML_Opt: Wrong hessian_method'
-  END SELECT
-
-  Opt_param = QML_Opt_t(Max_it=Max_it,nb_neg=nb_neg,i_surf=i_surf,              &
-                        list_act=list_act,hessian_type=hessian_type,            &
-                        Largest_disp=Largest_disp)
-
-  icv_inout = icv
-
-  IF (debug) THEN
-    write(out_unitp,*) ' icv_inout ',icv_inout
-    CALL Write_QML_Opt(Opt_param)
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
-  END IF
-
-END SUBROUTINE Read_QML_Opt
+  END SUBROUTINE Read_QML_Opt
 
   SUBROUTINE Write_QML_Opt(Opt_param)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_Opt_t),       intent(in)            :: Opt_param
 
-!----- for debuging --------------------------------------------------
+    !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Write_QML_Opt'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
+    !-----------------------------------------------------------
 
     write(out_unitp,*) ' BEGINNING ',name_sub
 
@@ -330,7 +328,7 @@ END SUBROUTINE Read_QML_Opt
     write(out_unitp,*) ' nb_neg          ',Opt_param%nb_neg
     write(out_unitp,*) ' hessian_type    ',Opt_param%hessian_type
     IF (allocated(Opt_param%list_act)) THEN
-    write(out_unitp,*) ' list_act        ',Opt_param%list_act
+      write(out_unitp,*) ' list_act        ',Opt_param%list_act
     END IF
     write(out_unitp,*) ' Thresh_max_grad ',Opt_param%Thresh_max_grad
     write(out_unitp,*) ' Thresh_RMS_grad ',Opt_param%Thresh_RMS_grad
@@ -344,11 +342,10 @@ END SUBROUTINE Read_QML_Opt
 
   END SUBROUTINE Write_QML_Opt
   SUBROUTINE QML_Opt(Q,QModel,Opt_param,Q0)
-  USE ADdnSVM_m
-  USE QMLLib_Matrix_m
-  USE QMLLib_diago_m
-  USE Model_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat, diagonalization, LinearSys_Solve
+    USE ADdnSVM_m
+    USE Model_m
+    IMPLICIT NONE
 
     real (kind=Rkind),  intent(inout)            :: Q(:)
     TYPE (Model_t),     intent(inout)            :: QModel
@@ -368,168 +365,167 @@ END SUBROUTINE Read_QML_Opt
     real (kind=Rkind)               :: max_disp,RMS_disp,norm_disp
     logical                         :: conv
 
-!----- for debuging --------------------------------------------------
+    !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='QML_Opt'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
+    !-----------------------------------------------------------
 
-  IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    IF (present(Q0)) write(out_unitp,*) '   Q0',Q0
-    CALL Write_QML_Opt(Opt_param)
-    CALL Write_Model(QModel)
-    flush(out_unitp)
-  ELSE
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      IF (present(Q0)) write(out_unitp,*) '   Q0',Q0
+      CALL Write_QML_Opt(Opt_param)
+      CALL Write_Model(QModel)
+      flush(out_unitp)
+    ELSE
+      write(out_unitp,*) '=================================================='
+      write(out_unitp,*) '=================================================='
+      write(out_unitp,*) '=== Optimization on the "',QModel%QM%pot_name,'" model.'
+      write(out_unitp,*) '=== model option:',QModel%QM%option
+      write(out_unitp,*) '=================================================='
+      write(out_unitp,*) '=================================================='
+      flush(out_unitp)
+    END IF
+
+    IF (Opt_param%Max_it < 0) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' Opt_param is not initialized'
+      STOP 'ERROR in QML_Opt: Opt_param is not initialized'
+    END IF
+  
+    nb_act = count(Opt_param%list_act>0)
+  
+    allocate(Qit_act(nb_act))
+    allocate(mDQit(nb_act))
+    allocate(grad(nb_act))
+    allocate(hess(nb_act,nb_act))
+    allocate(vec(nb_act,nb_act))
+    allocate(diag(nb_act))
+  
+    allocate(Q0_loc(QModel%ndim))
+    IF (present(Q0)) THEN
+      Q0_loc(:) = Q0
+    ELSE
+      CALL get_Q0_Model(Q0_loc,QModel,0)
+    END IF
+  
+    allocate(Qit(QModel%ndim))
+    Qit(:)     = Q0_loc
+    Qit_act(:) = Qit(Opt_param%list_act)
+  
+  
     write(out_unitp,*) '=================================================='
-    write(out_unitp,*) '=================================================='
-    write(out_unitp,*) '=== Optimization on the "',QModel%QM%pot_name,'" model.'
-    write(out_unitp,*) '=== model option:',QModel%QM%option
-    write(out_unitp,*) '=================================================='
-    write(out_unitp,*) '=================================================='
-    flush(out_unitp)
-  END IF
-
-  IF (Opt_param%Max_it < 0) THEN
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' Opt_param is not initialized'
-    STOP 'ERROR in QML_Opt: Opt_param is not initialized'
-  END IF
-
-  nb_act = count(Opt_param%list_act>0)
-
-  allocate(Qit_act(nb_act))
-  allocate(mDQit(nb_act))
-  allocate(grad(nb_act))
-  allocate(hess(nb_act,nb_act))
-  allocate(vec(nb_act,nb_act))
-  allocate(diag(nb_act))
-
-  allocate(Q0_loc(QModel%ndim))
-  IF (present(Q0)) THEN
-    Q0_loc(:) = Q0
-  ELSE
-    CALL get_Q0_Model(Q0_loc,QModel,0)
-  END IF
-
-  allocate(Qit(QModel%ndim))
-  Qit(:)     = Q0_loc
-  Qit_act(:) = Qit(Opt_param%list_act)
-
-
-  write(out_unitp,*) '=================================================='
-  DO it=0,Opt_param%Max_it
-
-    CALL Eval_Pot(QModel,Qit,PotVal,nderiv=2)
-    IF (debug) CALL Write_dnMat(PotVal,nio=out_unitp)
-
-    grad = PotVal%d1(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act)
-    hess = PotVal%d2(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act,Opt_param%list_act)
-
-    CALL diagonalization(hess,diag,Vec,nb_act)
-    write(out_unitp,*) 'diag',diag
-
-    tvec = transpose(vec)
-    IF (Opt_param%nb_neg == 0) THEN
-      DO i=1,nb_act
-        Vec(:,i) = Vec(:,i) * abs(diag(i))
+    DO it=0,Opt_param%Max_it
+  
+      CALL Eval_Pot(QModel,Qit,PotVal,nderiv=2)
+      IF (debug) CALL Write_dnMat(PotVal,nio=out_unitp)
+  
+      grad = PotVal%d1(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act)
+      hess = PotVal%d2(Opt_param%i_surf,Opt_param%i_surf,Opt_param%list_act,Opt_param%list_act)
+  
+      CALL diagonalization(hess,diag,Vec,nb_act)
+      write(out_unitp,*) 'diag',diag
+  
+      tvec = transpose(vec)
+      IF (Opt_param%nb_neg == 0) THEN
+        DO i=1,nb_act
+          Vec(:,i) = Vec(:,i) * abs(diag(i))
+        END DO
+        hess = matmul(Vec,tVec)
+      ELSE IF (count(diag < ZERO) /= Opt_param%nb_neg) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) '    Wrong number of negative hessian eigenvalues!'
+        write(out_unitp,*) '    Expected: ',Opt_param%nb_neg
+        write(out_unitp,*) '    it has: ',count(diag < ZERO)
+        STOP 'ERROR in QML_Opt: Wrong number of negative hessian eigenvalues'
+      END IF
+  
+  
+      !write(out_unitp,*) 'hess',hess
+      !write(out_unitp,*) 'hess?',matmul(Vec,tVec)
+  
+      mDQit = LinearSys_Solve(hess,grad)
+  
+  
+      max_grad = maxval(abs(grad))
+      RMS_grad = sqrt(dot_product(grad,grad)/nb_act)
+      max_disp = maxval(abs(mDQit))
+      RMS_disp = sqrt(dot_product(mDQit,mDQit)/nb_act)
+  
+      write(out_unitp,*) '--------------------------------------------------'
+      write(out_unitp,*) 'it,E',it,PotVal%d0(Opt_param%i_surf,Opt_param%i_surf)
+  
+      conv = (max_grad <= Opt_param%Thresh_max_grad)
+      write(out_unitp,*) 'max_grad,treshold',max_grad,Opt_param%Thresh_max_grad,conv
+      conv = (RMS_grad <= Opt_param%Thresh_RMS_grad)
+      write(out_unitp,*) 'RMS_grad,treshold',RMS_grad,Opt_param%Thresh_RMS_grad,conv
+      conv = (max_disp <= Opt_param%Thresh_max_disp)
+      write(out_unitp,*) 'max_disp,treshold',max_disp,Opt_param%Thresh_max_disp,conv
+      conv = (RMS_disp <= Opt_param%Thresh_RMS_disp)
+      write(out_unitp,*) 'RMS_disp,treshold',RMS_disp,Opt_param%Thresh_RMS_disp,conv
+  
+      norm_disp = sqrt(dot_product(mDQit,mDQit))
+      IF (norm_disp > Opt_param%Largest_disp) THEN
+        write(out_unitp,*) ' The displacements are too large.'
+        write(out_unitp,*) ' The displacements:',-mDQit
+        write(out_unitp,*) ' Its norm:',norm_disp
+        write(out_unitp,*) '  => They are scaled by ',Opt_param%Largest_disp/norm_disp
+        mDQit = mDQit * Opt_param%Largest_disp/norm_disp
+      END IF
+  
+      DO iq=1,nb_act
+        write(out_unitp,*) 'iq,Q(iq),grad(iq),DelatQ(iq)',iq,                     &
+                                                  Qit_act(iq),grad(iq),-mDQit(iq)
       END DO
-      hess = matmul(Vec,tVec)
-    ELSE IF (count(diag < ZERO) /= Opt_param%nb_neg) THEN
-      write(out_unitp,*) 'ERROR in ',name_sub
-      write(out_unitp,*) '    Wrong number of negative hessian eigenvalues!'
-      write(out_unitp,*) '    Expected: ',Opt_param%nb_neg
-      write(out_unitp,*) '    it has: ',count(diag < ZERO)
-      STOP 'ERROR in QML_Opt: Wrong number of negative hessian eigenvalues'
-    END IF
-
-
-    !write(out_unitp,*) 'hess',hess
-    !write(out_unitp,*) 'hess?',matmul(Vec,tVec)
-
-    CALL Linear_Sys(hess,grad,mDQit,nb_act)
-
-
-
-    max_grad = maxval(abs(grad))
-    RMS_grad = sqrt(dot_product(grad,grad)/nb_act)
-    max_disp = maxval(abs(mDQit))
-    RMS_disp = sqrt(dot_product(mDQit,mDQit)/nb_act)
-
-    write(out_unitp,*) '--------------------------------------------------'
-    write(out_unitp,*) 'it,E',it,PotVal%d0(Opt_param%i_surf,Opt_param%i_surf)
-
-    conv = (max_grad <= Opt_param%Thresh_max_grad)
-    write(out_unitp,*) 'max_grad,treshold',max_grad,Opt_param%Thresh_max_grad,conv
-    conv = (RMS_grad <= Opt_param%Thresh_RMS_grad)
-    write(out_unitp,*) 'RMS_grad,treshold',RMS_grad,Opt_param%Thresh_RMS_grad,conv
-    conv = (max_disp <= Opt_param%Thresh_max_disp)
-    write(out_unitp,*) 'max_disp,treshold',max_disp,Opt_param%Thresh_max_disp,conv
-    conv = (RMS_disp <= Opt_param%Thresh_RMS_disp)
-    write(out_unitp,*) 'RMS_disp,treshold',RMS_disp,Opt_param%Thresh_RMS_disp,conv
-
-    norm_disp = sqrt(dot_product(mDQit,mDQit))
-    IF (norm_disp > Opt_param%Largest_disp) THEN
-      write(out_unitp,*) ' The displacements are too large.'
-      write(out_unitp,*) ' The displacements:',-mDQit
-      write(out_unitp,*) ' Its norm:',norm_disp
-      write(out_unitp,*) '  => They are scaled by ',Opt_param%Largest_disp/norm_disp
-      mDQit = mDQit * Opt_param%Largest_disp/norm_disp
-    END IF
-
-    DO iq=1,nb_act
-      write(out_unitp,*) 'iq,Q(iq),grad(iq),DelatQ(iq)',iq,                     &
-                                                Qit_act(iq),grad(iq),-mDQit(iq)
+  
+      conv = (max_grad <= Opt_param%Thresh_max_grad) .AND.                               &
+             (RMS_grad <= Opt_param%Thresh_RMS_grad) .AND.                               &
+             (max_disp <= Opt_param%Thresh_max_disp) .AND.                               &
+             (RMS_disp <= Opt_param%Thresh_RMS_disp)
+  
+      Qit_act(:) = Qit_act-mDQit
+      CALL Qact_TO_Q(Qit_act,Qit,Opt_param%list_act)
+  
+      IF (conv) EXIT
     END DO
-
-    conv = (max_grad <= Opt_param%Thresh_max_grad) .AND.                               &
-           (RMS_grad <= Opt_param%Thresh_RMS_grad) .AND.                               &
-           (max_disp <= Opt_param%Thresh_max_disp) .AND.                               &
-           (RMS_disp <= Opt_param%Thresh_RMS_disp)
-
-    Qit_act(:) = Qit_act-mDQit
-    CALL Qact_TO_Q(Qit_act,Qit,Opt_param%list_act)
-
-    IF (conv) EXIT
-  END DO
-  IF (Opt_param%Max_it > 0) THEN
-    write(out_unitp,*) 'Geometry optimization is converged?',conv
-    write(out_unitp,*) 'Optimized geometry:'
-    DO iq=1,QModel%ndim
-      write(out_unitp,*) 'iq,Q(iq),',iq,Qit(iq)
-    END DO
-    Q(:) = Qit(:)
-  ELSE
-    write(out_unitp,*) 'No optimization (Max_it=0)'
-    Q(:) = Q0_loc(:)
-  END IF
-  write(out_unitp,*) '=================================================='
-  flush(out_unitp)
-
-  deallocate(Qit_act)
-  deallocate(Qit)
-  deallocate(Q0_loc)
-  deallocate(mDQit)
-  deallocate(grad)
-  deallocate(hess)
-  deallocate(vec)
-  deallocate(tvec)
-  deallocate(diag)
-
-  IF (debug) THEN
-    write(out_unitp,*) '   it',it
-    write(out_unitp,*) '   Q',Q
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
-  ELSE
-    write(out_unitp,*) '=================================================='
-    write(out_unitp,*) '=================================================='
-    write(out_unitp,*) '=== End of the optimization'
-    write(out_unitp,*) '=================================================='
+    IF (Opt_param%Max_it > 0) THEN
+      write(out_unitp,*) 'Geometry optimization is converged?',conv
+      write(out_unitp,*) 'Optimized geometry:'
+      DO iq=1,QModel%ndim
+        write(out_unitp,*) 'iq,Q(iq),',iq,Qit(iq)
+      END DO
+      Q(:) = Qit(:)
+    ELSE
+      write(out_unitp,*) 'No optimization (Max_it=0)'
+      Q(:) = Q0_loc(:)
+    END IF
     write(out_unitp,*) '=================================================='
     flush(out_unitp)
-  END IF
+  
+    deallocate(Qit_act)
+    deallocate(Qit)
+    deallocate(Q0_loc)
+    deallocate(mDQit)
+    deallocate(grad)
+    deallocate(hess)
+    deallocate(vec)
+    deallocate(tvec)
+    deallocate(diag)
+  
+    IF (debug) THEN
+      write(out_unitp,*) '   it',it
+      write(out_unitp,*) '   Q',Q
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    ELSE
+      write(out_unitp,*) '=================================================='
+      write(out_unitp,*) '=================================================='
+      write(out_unitp,*) '=== End of the optimization'
+      write(out_unitp,*) '=================================================='
+      write(out_unitp,*) '=================================================='
+      flush(out_unitp)
+    END IF
 
-END SUBROUTINE QML_Opt
+  END SUBROUTINE QML_Opt
 
 END MODULE Opt_m

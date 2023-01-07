@@ -133,8 +133,8 @@ PROGRAM TEST_model
 END PROGRAM TEST_model
 
 SUBROUTINE test_Tully
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : TO_string
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -184,7 +184,7 @@ SUBROUTINE test_Tully
     write(out_unitp,*) 'Energy (Hartree)'
     CALL Write_dnMat(PotVal,nio=out_unitp)
     ! For testing the model
-    CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='TULLY ' // int_TO_char(option))
+    CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='TULLY ' // TO_string(option))
 
     write(out_unitp,*) '---------------------------------------------'
     write(out_unitp,*) '- END CHECK POT -----------------------------'
@@ -194,7 +194,6 @@ SUBROUTINE test_Tully
     deallocate(q)
 
   END DO
-
 
 
   write(out_unitp,*) '---------------------------------------------'
@@ -239,8 +238,8 @@ SUBROUTINE test_Tully
 END SUBROUTINE test_Tully
 
 SUBROUTINE test_OneDSOC_1S1T
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -286,7 +285,7 @@ SUBROUTINE test_OneDSOC_1S1T
 
   write(out_unitp,*) 'ADIABATIC potential'
   write(out_unitp,*) 'Q (Bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
@@ -302,7 +301,7 @@ SUBROUTINE test_OneDSOC_1S1T
   write(out_unitp,*) 'DIABATIC potential'
   QModel%QM%adiabatic = .FALSE.
   write(out_unitp,*) 'Q (Bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
@@ -353,8 +352,8 @@ SUBROUTINE test_OneDSOC_1S1T
   CALL dealloc_dnMat(NAC)
 END SUBROUTINE test_OneDSOC_1S1T
 SUBROUTINE test_OneDSOC_2S1T
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -400,7 +399,7 @@ SUBROUTINE test_OneDSOC_2S1T
 
   write(out_unitp,*) 'ADIABATIC potential'
   write(out_unitp,*) 'Q (Bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
@@ -416,7 +415,7 @@ SUBROUTINE test_OneDSOC_2S1T
   write(out_unitp,*) 'DIABATIC potential'
   QModel%QM%adiabatic = .FALSE.
   write(out_unitp,*) 'Q (Bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
@@ -465,7 +464,7 @@ SUBROUTINE test_OneDSOC_2S1T
   CALL dealloc_dnMat(NAC)
 END SUBROUTINE test_OneDSOC_2S1T
 SUBROUTINE test_Morse
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -538,7 +537,7 @@ SUBROUTINE test_Morse
 
 END SUBROUTINE test_Morse
 SUBROUTINE test_Poly1D
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -594,7 +593,7 @@ SUBROUTINE test_Poly1D
 
 END SUBROUTINE test_Poly1D
 SUBROUTINE test_Buckingham
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -667,8 +666,8 @@ SUBROUTINE test_Buckingham
 END SUBROUTINE test_Buckingham
 
 SUBROUTINE test_Phenol
-  USE QMLLib_UtilLib_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -705,7 +704,7 @@ SUBROUTINE test_Phenol
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q (Angs, radian):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -715,7 +714,7 @@ SUBROUTINE test_Phenol
 
   write(out_unitp,*) 'ADIABATIC potential'
   write(out_unitp,*) 'Q (Angs, radian):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -729,7 +728,7 @@ SUBROUTINE test_Phenol
   write(out_unitp,*) 'DIABATIC potential'
   QModel%QM%adiabatic = .FALSE.
   write(out_unitp,*) 'Q (Angs, radian):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
@@ -782,8 +781,8 @@ SUBROUTINE test_Phenol
 
 END SUBROUTINE test_Phenol
 SUBROUTINE test_HenonHeiles
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -815,14 +814,14 @@ SUBROUTINE test_HenonHeiles
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -838,7 +837,7 @@ SUBROUTINE test_HenonHeiles
 
 END SUBROUTINE test_HenonHeiles
 SUBROUTINE test_LinearHBond
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -979,8 +978,8 @@ SUBROUTINE test_LinearHBond
 
 END SUBROUTINE test_LinearHBond
 SUBROUTINE test_Opt_LinearHBond
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   USE Opt_m
@@ -1018,7 +1017,7 @@ SUBROUTINE test_Opt_LinearHBond
   CALL QML_Opt(Q,QModel,Opt_param,Q0=[ 5._Rkind,0.1_Rkind ])
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   write(out_unitp,*) 'Potential+derivatives:'
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1032,8 +1031,8 @@ SUBROUTINE test_Opt_LinearHBond
 
 END SUBROUTINE test_Opt_LinearHBond
 SUBROUTINE test_Vib_adia
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Mat
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -1064,7 +1063,7 @@ SUBROUTINE test_Vib_adia
   Qact = [4._Rkind]
   CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
   write(out_unitp,*) 'NAC'
-  CALL Write_RMat(NAC%d1(:,:,1),out_unitp,6,name_info='NAC')
+  CALL Write_Mat(NAC%d1(:,:,1),out_unitp,6,info='NAC')
   write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
 
   ! For testing the model
@@ -1095,8 +1094,8 @@ SUBROUTINE test_Vib_adia
 
 END SUBROUTINE test_Vib_adia
 SUBROUTINE test2_Vib_adia
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Mat
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -1130,7 +1129,7 @@ SUBROUTINE test2_Vib_adia
   CALL Eval_tab_HMatVibAdia(QModel,Qact,tab_MatH)
 
   DO iterm=1,size(tab_MatH,dim=3)
-    CALL Write_RMat(tab_MatH(:,:,iterm),nio=out_unitp,nbcol1=5)
+    CALL Write_Mat(tab_MatH(:,:,iterm),nio=out_unitp,nbcol=5)
   END DO
 
   dQ = TWO / real(nq,kind=Rkind)
@@ -1149,8 +1148,7 @@ SUBROUTINE test2_Vib_adia
 
 END SUBROUTINE test2_Vib_adia
 SUBROUTINE test_PSB3
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
 
@@ -1234,8 +1232,7 @@ SUBROUTINE test_PSB3
 
 END SUBROUTINE test_PSB3
 SUBROUTINE test_Retinal_CP2000
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
 
@@ -1305,8 +1302,7 @@ SUBROUTINE test_Retinal_CP2000
 
 END SUBROUTINE test_Retinal_CP2000
 SUBROUTINE test_Retinal_JPCB2000
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
 
@@ -1426,8 +1422,8 @@ SUBROUTINE test_Retinal_JPCB2000
 
 END SUBROUTINE test_Retinal_JPCB2000
 SUBROUTINE test_HONO
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -1457,14 +1453,14 @@ SUBROUTINE test_HONO
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the trans minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1478,7 +1474,7 @@ SUBROUTINE test_HONO
   q(:) = [2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,2.23738_Rkind,1.975200_Rkind,ZERO]
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1512,8 +1508,8 @@ SUBROUTINE test_HONO
 
 END SUBROUTINE test_HONO
 SUBROUTINE test_HNNHp
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -1544,14 +1540,14 @@ SUBROUTINE test_HNNHp
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the trans minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1565,8 +1561,8 @@ SUBROUTINE test_HNNHp
 
 END SUBROUTINE test_HNNHp
 SUBROUTINE test_H2SiN
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -1603,14 +1599,14 @@ DO option=1,3
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at:'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1628,8 +1624,8 @@ END DO
 
 END SUBROUTINE test_H2SiN
 SUBROUTINE test_H2NSi
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -1664,14 +1660,14 @@ DO option=1,2
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at:'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1690,8 +1686,8 @@ END DO
 END SUBROUTINE test_H2NSi
 
 SUBROUTINE test_H2O
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -1720,7 +1716,7 @@ SUBROUTINE test_H2O
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -1728,14 +1724,14 @@ SUBROUTINE test_H2O
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1753,8 +1749,8 @@ SUBROUTINE test_H2O
 END SUBROUTINE test_H2O
 
 SUBROUTINE test_ClH2p_Botschwina
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -1784,7 +1780,7 @@ SUBROUTINE test_ClH2p_Botschwina
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -1792,14 +1788,14 @@ SUBROUTINE test_ClH2p_Botschwina
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1829,7 +1825,7 @@ SUBROUTINE test_ClH2p_Botschwina
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -1837,14 +1833,14 @@ SUBROUTINE test_ClH2p_Botschwina
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1860,8 +1856,8 @@ SUBROUTINE test_ClH2p_Botschwina
 
 END SUBROUTINE test_ClH2p_Botschwina
 SUBROUTINE test_ClH2p_op12
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -1890,7 +1886,7 @@ SUBROUTINE test_ClH2p_op12
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -1898,14 +1894,14 @@ SUBROUTINE test_ClH2p_op12
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1934,7 +1930,7 @@ SUBROUTINE test_ClH2p_op12
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -1942,14 +1938,14 @@ SUBROUTINE test_ClH2p_op12
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -1966,8 +1962,8 @@ SUBROUTINE test_ClH2p_op12
 
 END SUBROUTINE test_ClH2p_op12
 SUBROUTINE test_ClH2p_op34
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -1995,7 +1991,7 @@ SUBROUTINE test_ClH2p_op34
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -2003,14 +1999,14 @@ SUBROUTINE test_ClH2p_op34
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2063,7 +2059,7 @@ SUBROUTINE test_ClH2p_op34
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -2071,14 +2067,14 @@ SUBROUTINE test_ClH2p_op34
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2100,7 +2096,7 @@ SUBROUTINE test_ClH2p_op34
   DO i=1,size(EAbInitio)
     Q = Qtest(:,i)
     write(out_unitp,*) 'Q:'
-    CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+    CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=0)
     CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2119,8 +2115,8 @@ SUBROUTINE test_ClH2p_op34
 END SUBROUTINE test_ClH2p_op34
 
 SUBROUTINE test_ClH2p_op56
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   USE Opt_m
@@ -2151,7 +2147,7 @@ SUBROUTINE test_ClH2p_op56
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -2159,14 +2155,14 @@ SUBROUTINE test_ClH2p_op56
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2219,7 +2215,7 @@ SUBROUTINE test_ClH2p_op56
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -2227,14 +2223,14 @@ SUBROUTINE test_ClH2p_op56
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives at the minimum'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2246,7 +2242,7 @@ SUBROUTINE test_ClH2p_op56
   write(out_unitp,*) ' Find the true minimum'
   CALL get_Q0_Model(Q,QModel,option=0)
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
 
   CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=7)
   CALL QML_Opt(Q,QModel,Opt_p,Q0=Q)
@@ -2261,8 +2257,8 @@ SUBROUTINE test_ClH2p_op56
 END SUBROUTINE test_ClH2p_op56
 
 SUBROUTINE test_template
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -2299,7 +2295,7 @@ SUBROUTINE test_template
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -2309,7 +2305,7 @@ SUBROUTINE test_template
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   write(out_unitp,*) 'Energy (Hartree)'
   CALL Write_dnMat(PotVal,nio=out_unitp)
 
@@ -2327,8 +2323,8 @@ SUBROUTINE test_template
 
 END SUBROUTINE test_template
 SUBROUTINE test_TwoD
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -2364,7 +2360,7 @@ SUBROUTINE test_TwoD
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -2374,7 +2370,7 @@ SUBROUTINE test_TwoD
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
   write(out_unitp,*) 'Energy (Hartree)'
   CALL Write_dnMat(PotVal,nio=out_unitp)
 
@@ -2392,8 +2388,8 @@ SUBROUTINE test_TwoD
 
 END SUBROUTINE test_TwoD
 SUBROUTINE test_TwoD_RJDI2014
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -2423,7 +2419,7 @@ SUBROUTINE test_TwoD_RJDI2014
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -2433,7 +2429,7 @@ SUBROUTINE test_TwoD_RJDI2014
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
   write(out_unitp,*) 'Energy (Hartree)'
   CALL Write_dnMat(PotVal,nio=out_unitp)
 
@@ -2444,7 +2440,7 @@ SUBROUTINE test_TwoD_RJDI2014
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
   write(out_unitp,*) 'Energy (Hartree)'
   CALL Write_dnMat(PotVal,nio=out_unitp)
 
@@ -2460,8 +2456,8 @@ SUBROUTINE test_TwoD_RJDI2014
 
 END SUBROUTINE test_TwoD_RJDI2014
 SUBROUTINE test_TwoD_Valahu2022
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -2493,7 +2489,7 @@ SUBROUTINE test_TwoD_Valahu2022
   option = 1
   CALL get_Q0_Model(Q,QModel,option)
   write(out_unitp,*) 'Q(:) (no unit):'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   write(out_unitp,*) '---------------------------------------------'
@@ -2503,7 +2499,7 @@ SUBROUTINE test_TwoD_Valahu2022
   option = 1
   CALL get_Q0_Model(Q,QModel,option)
   write(out_unitp,*) 'Q(:) (no unit):'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv) 
   write(out_unitp,*) 'Energy (2*pi Hz)'
@@ -2523,8 +2519,8 @@ SUBROUTINE test_TwoD_Valahu2022
 
 END SUBROUTINE test_TwoD_Valahu2022
 SUBROUTINE test_HNO3
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -2556,7 +2552,7 @@ SUBROUTINE test_HNO3
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
 
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
@@ -2564,7 +2560,7 @@ SUBROUTINE test_HNO3
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2576,7 +2572,7 @@ SUBROUTINE test_HNO3
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Functions'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
 
   CALL Eval_Func(QModel,Q,Func,nderiv=nderiv)
 
@@ -2589,9 +2585,8 @@ SUBROUTINE test_HNO3
 
 END SUBROUTINE test_HNO3
 SUBROUTINE test_PH4
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -2624,7 +2619,7 @@ SUBROUTINE test_PH4
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
 
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
@@ -2632,7 +2627,7 @@ SUBROUTINE test_PH4
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2644,7 +2639,7 @@ SUBROUTINE test_PH4
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Functions'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
 
   DO i=0,200
     Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
@@ -2675,7 +2670,7 @@ SUBROUTINE test_PH4
   Q(2:9) = get_d0(Func(2:9))
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
 
@@ -2685,9 +2680,8 @@ SUBROUTINE test_PH4
 
 END SUBROUTINE test_PH4
 SUBROUTINE test_CH5
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -2720,7 +2714,7 @@ SUBROUTINE test_CH5
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
 
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
@@ -2728,7 +2722,7 @@ SUBROUTINE test_CH5
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Potential and derivatives'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
 
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2740,7 +2734,7 @@ SUBROUTINE test_CH5
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) ' Functions'
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
 
   DO i=0,200
     Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
@@ -2770,7 +2764,7 @@ SUBROUTINE test_CH5
   Q(2:12) = get_d0(Func(2:12))
 
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q,out_unitp,QModel%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
 
@@ -2780,8 +2774,8 @@ SUBROUTINE test_CH5
 
 END SUBROUTINE test_CH5
 SUBROUTINE test_HOO_DMBE
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -2824,7 +2818,7 @@ SUBROUTINE test_HOO_DMBE
   write(out_unitp,*) ' Potential and derivatives'
   DO i=1,size(Q,dim=2)
     write(out_unitp,*) 'Q:'
-    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+    CALL Write_Vec(Q(:,i),out_unitp,QModel%ndim)
 
     CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
     CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2866,9 +2860,8 @@ SUBROUTINE test_HOO_DMBE
 
 END SUBROUTINE test_HOO_DMBE
 SUBROUTINE test_H3
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
-  USE QMLLib_diago_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : diagonalization, Write_Vec, Write_Mat
   USE ADdnSVM_m
   USE Model_m
   USE Opt_m
@@ -2912,7 +2905,7 @@ SUBROUTINE test_H3
   write(out_unitp,*) ' Potential and derivatives'
   DO i=1,size(Q,dim=2)
     write(out_unitp,*) 'Q:'
-    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+    CALL Write_Vec(Q(:,i),out_unitp,QModel%ndim)
 
     CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
     CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2924,7 +2917,7 @@ SUBROUTINE test_H3
   write(out_unitp,*) ' Potential and derivatives at the asymptotic chanel'
   Q(:,2) = [1.4010443631833713_Rkind,1000._Rkind,1001.4010443631833713_Rkind]
   write(out_unitp,*) 'Q:'
-  CALL Write_RVec(Q(:,2),out_unitp,QModel%ndim)
+  CALL Write_Vec(Q(:,2),out_unitp,QModel%ndim)
 
   CALL Eval_Pot(QModel,Q(:,2),PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -2966,10 +2959,10 @@ SUBROUTINE test_H3
     MW_hessian(i,j) = MW_hessian(i,j) / sqrt( QModel%QM%masses((i-1)/3+1)*QModel%QM%masses((j-1)/3+1) )
   END DO
   END DO
-  !CALL Write_RMat(MW_hessian, out_unitp, 5, name_info='MWhessian')
+  !CALL Write_Mat(MW_hessian, out_unitp, 5, info='MWhessian')
   CALL diagonalization(MW_hessian,EigVal,EigVec,QModel%ndim)
   EigVal = sqrt(abs(EigVal))*auTOcm_inv
-  CALL Write_RVec(EigVal, out_unitp, 5, name_info='freq (cm-1):')
+  CALL Write_Vec(EigVal, out_unitp, 5, info='freq (cm-1):')
 
   deallocate(MW_hessian)
   deallocate(EigVal)
@@ -3007,10 +3000,10 @@ SUBROUTINE test_H3
     MW_hessian(i,j) = MW_hessian(i,j) / sqrt( QModel%QM%masses((i-1)/3+1)*QModel%QM%masses((j-1)/3+1) )
   END DO
   END DO
-  !CALL Write_RMat(MW_hessian, out_unitp, 5, name_info='MWhessian')
+  !CALL Write_Mat(MW_hessian, out_unitp, 5, info='MWhessian')
   CALL diagonalization(MW_hessian,EigVal,EigVec,QModel%ndim)
   EigVal = sqrt(abs(EigVal))*auTOcm_inv
-  CALL Write_RVec(EigVal, out_unitp, 5, name_info='freq (cm-1):')
+  CALL Write_Vec(EigVal, out_unitp, 5, info='freq (cm-1):')
 
   deallocate(MW_hessian)
   deallocate(EigVal)
@@ -3052,8 +3045,8 @@ SUBROUTINE test_H3
 
 END SUBROUTINE test_H3
 SUBROUTINE test_IRC_H3
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   USE Opt_m
@@ -3098,8 +3091,8 @@ SUBROUTINE test_IRC_H3
 END SUBROUTINE test_IRC_H3
 
 SUBROUTINE test_IRC_H3_AbInitio
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   USE Opt_m
@@ -3144,8 +3137,8 @@ SUBROUTINE test_IRC_H3_AbInitio
 END SUBROUTINE test_IRC_H3_AbInitio
 
 SUBROUTINE test_HCN_Murrell
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   USE Opt_m
@@ -3188,7 +3181,7 @@ SUBROUTINE test_HCN_Murrell
   write(out_unitp,*) ' Potential and derivatives'
   DO i=1,size(Q,dim=2)
     write(out_unitp,*) 'Q:'
-    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+    CALL Write_Vec(Q(:,i),out_unitp,QModel%ndim)
 
     CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
     CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -3280,7 +3273,7 @@ SUBROUTINE test_HCN_Murrell
   write(out_unitp,*) ' Potential and derivatives'
   DO i=1,size(Q,dim=2)
     write(out_unitp,*) 'Q:'
-    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+    CALL Write_Vec(Q(:,i),out_unitp,QModel%ndim)
 
     CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
     CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -3323,7 +3316,7 @@ SUBROUTINE test_HCN_Murrell
   write(out_unitp,*) ' Potential and derivatives'
   DO i=1,size(Q,dim=2)
     write(out_unitp,*) 'Q:'
-    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+    CALL Write_Vec(Q(:,i),out_unitp,QModel%ndim)
 
     CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
     CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -3361,7 +3354,7 @@ SUBROUTINE test_HCN_Murrell
   write(out_unitp,*) ' Potential and derivatives'
   DO i=1,size(Q,dim=2)
     write(out_unitp,*) 'Q:'
-    CALL Write_RVec(Q(:,i),out_unitp,QModel%ndim)
+    CALL Write_Vec(Q(:,i),out_unitp,QModel%ndim)
 
     CALL Eval_Pot(QModel,Q(:,i),PotVal,nderiv=nderiv)
     CALL Write_dnMat(PotVal,nio=out_unitp)
@@ -3419,8 +3412,8 @@ stop
 END SUBROUTINE test_HCN_Murrell
 
 SUBROUTINE test_Opt_MullerBrown
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : TO_string
   USE ADdnSVM_m
   USE Model_m
   USE Opt_m
@@ -3462,7 +3455,7 @@ SUBROUTINE test_Opt_MullerBrown
     flush(out_unitp)
 
     ! For testing the model
-    CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Müller-Brown' // int_TO_char(option))
+    CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='Müller-Brown' // TO_string(option))
     flush(out_unitp)
 
   END DO
@@ -3476,8 +3469,7 @@ SUBROUTINE test_Opt_MullerBrown
 
 END SUBROUTINE test_Opt_MullerBrown
 SUBROUTINE test_IRC_MullerBrown
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
   USE Opt_m
@@ -3519,8 +3511,8 @@ SUBROUTINE test_IRC_MullerBrown
 
 END SUBROUTINE test_IRC_MullerBrown
 SUBROUTINE test_Test
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -3554,7 +3546,7 @@ SUBROUTINE test_Test
   write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
 
   write(out_unitp,*) 'Q(:) (bohr):'
-  CALL Write_RVec(Q,out_unitp,QModel%QM%ndim)
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
   CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
 
   CALL dealloc_dnMat(PotVal)
@@ -3566,8 +3558,7 @@ SUBROUTINE test_Test
 
 END SUBROUTINE test_Test
 SUBROUTINE test_Tully_test
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -3607,8 +3598,7 @@ SUBROUTINE test_Tully_test
 
 END SUBROUTINE test_Tully_test
 SUBROUTINE test_PSB3_test
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
 
@@ -3654,8 +3644,7 @@ SUBROUTINE test_PSB3_test
 
 END SUBROUTINE test_PSB3_test
 SUBROUTINE test_PSB3_Retinal2000_test
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
 
@@ -3737,8 +3726,7 @@ SUBROUTINE test_PSB3_Retinal2000_test
 
 END SUBROUTINE test_PSB3_Retinal2000_test
 SUBROUTINE test_NO3_test
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
 

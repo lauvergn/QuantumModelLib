@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HOO_DMBE_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -115,7 +115,6 @@ MODULE QML_HOO_DMBE_m
     REAL (kind=Rkind), parameter :: R30 = 2.6469057_Rkind
 
 !   BLOCK DATA HO2DAT_HOO_DMBE4
-!   USE QMLLib_NumParameters_m
 !       IMPLICIT DOUBLE PRECISION(A-H,O-Z)
 !       COMMON/COEFF_HOO_DMBE4/C(52)
 !       COMMON/DISPC_HOO_DMBE4/COO(10),COH(10)
@@ -355,7 +354,6 @@ MODULE QML_HOO_DMBE_m
 
 
   SUBROUTINE HOO_DMBE4_pes(X,F)
-  USE QMLLib_NumParameters_m
   ! This is the DMBE IV potential energy surface for H + O2
   IMPLICIT NONE
 
@@ -379,8 +377,7 @@ MODULE QML_HOO_DMBE_m
   END SUBROUTINE HOO_DMBE4_pes
 
   FUNCTION THREBQ_HOO_DMBE4(Q1,Q2,Q3,R1,R2,R3)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: THREBQ_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: Q1,Q2,Q3,R1,R2,R3
@@ -430,8 +427,7 @@ MODULE QML_HOO_DMBE_m
 
   END FUNCTION THREBQ_HOO_DMBE4
   FUNCTION VOH_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: VOH_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
@@ -441,8 +437,8 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION VOH_HOO_DMBE4
 
   FUNCTION EHFOH_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
+
     REAL (kind=Rkind)             :: EHFOH_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
 
@@ -461,7 +457,6 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION EHFOH_HOO_DMBE4
 
   FUNCTION DISOH_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
     REAL (kind=Rkind)             :: DISOH_HOO_DMBE4
@@ -472,8 +467,8 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION DISOH_HOO_DMBE4
 
   FUNCTION VOO_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
   IMPLICIT NONE
+
     REAL (kind=Rkind)             :: VOO_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
 
@@ -484,8 +479,7 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION VOO_HOO_DMBE4
 
   FUNCTION EHFOO_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: EHFOO_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
@@ -505,8 +499,7 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION EHFOO_HOO_DMBE4
 
   FUNCTION DISOO_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: DISOO_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
@@ -517,8 +510,7 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION DISOO_HOO_DMBE4
 
   FUNCTION CEF_HOO_DMBE4(CAS,RK01,RK11,RK02,RK12,RE1,RE2,R1,R2)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: CEF_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: CAS
@@ -532,8 +524,7 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION CEF_HOO_DMBE4
 
   FUNCTION EXDIS_HOO_DMBE4(R1,R2,R3)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: EXDIS_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R1,R2,R3
@@ -558,7 +549,6 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION EXDIS_HOO_DMBE4
 
   FUNCTION ELECT_HOO_DMBE4(R1,R2,R3)
-  USE QMLLib_NumParameters_m
     IMPLICIT NONE
 
     REAL (kind=Rkind)             :: ELECT_HOO_DMBE4
@@ -621,8 +611,7 @@ MODULE QML_HOO_DMBE_m
 
   END FUNCTION ELECT_HOO_DMBE4
   FUNCTION DISP_HOO_DMBE4(R,C6,C8,C10,R0,RM)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: DISP_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R,C6,C8,C10,R0,RM

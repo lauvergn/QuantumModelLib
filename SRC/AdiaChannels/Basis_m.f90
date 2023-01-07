@@ -38,8 +38,7 @@
 !===========================================================================
 !===========================================================================
 MODULE AdiaChannels_Basis_m
-  USE QMLLib_NumParameters_m
-
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   IMPLICIT NONE
 
   PRIVATE
@@ -102,7 +101,7 @@ MODULE AdiaChannels_Basis_m
 
 CONTAINS
   FUNCTION QML_Basis_IS_allocated(Basis) RESULT(alloc)
-  USE QMLLib_UtilLib_m
+    IMPLICIT NONE
 
     TYPE(QML_Basis_t),   intent(in)  :: Basis
     logical                          :: alloc
@@ -115,7 +114,8 @@ CONTAINS
 
   END FUNCTION QML_Basis_IS_allocated
   RECURSIVE SUBROUTINE QML_Write_Basis(Basis)
-  USE QMLLib_UtilLib_m
+    USE QDUtil_m,         ONLY : Write_Vec, Write_Mat
+    IMPLICIT NONE
 
     TYPE(QML_Basis_t),       intent(in)  :: Basis
 
@@ -126,15 +126,15 @@ CONTAINS
     write(out_unitp,*) 'nb,nq',Basis%nb,Basis%nq
     write(out_unitp,*) 'Numero of the symmetry plan (symab):',Basis%symab
     IF (Basis_IS_allocated(Basis)) THEN
-      CALL Write_RVec(Basis%x,out_unitp,5,name_info='x')
+      CALL Write_Vec(Basis%x,out_unitp,5,info='x')
       write(out_unitp,*)
-      CALL Write_RVec(Basis%w,out_unitp,5,name_info='w')
+      CALL Write_Vec(Basis%w,out_unitp,5,info='w')
       write(out_unitp,*)
-      CALL Write_RMat(Basis%d0gb,out_unitp,5,name_info='d0gb')
+      CALL Write_Mat(Basis%d0gb,out_unitp,5,info='d0gb')
       write(out_unitp,*)
-      CALL Write_RMat(Basis%d1gb(:,:,1),out_unitp,5,name_info='d1gb')
+      CALL Write_Mat(Basis%d1gb(:,:,1),out_unitp,5,info='d1gb')
       write(out_unitp,*)
-      CALL Write_RMat(Basis%d2gb(:,:,1,1),out_unitp,5,name_info='d2gb')
+      CALL Write_Mat(Basis%d2gb(:,:,1,1),out_unitp,5,info='d2gb')
     ELSE
       write(out_unitp,*) ' Basis tables (x, w, dngb) are not allocated.'
     END IF
@@ -152,7 +152,8 @@ CONTAINS
 
   END SUBROUTINE QML_Write_Basis
   RECURSIVE SUBROUTINE QML_Read_Basis(Basis,nio)
-  USE QMLLib_UtilLib_m
+    USE QDUtil_m,         ONLY : TO_lowercase
+    IMPLICIT NONE
 
     TYPE(QML_Basis_t),       intent(inout)  :: Basis
     integer,             intent(in)     :: nio
@@ -201,8 +202,7 @@ CONTAINS
     END IF
 
     IF (nb_basis > 0) THEN
-      Basis%name      = 'direct-product'
-      CALL string_uppercase_TO_lowercase(Basis%name)
+      Basis%name      = TO_lowercase('direct-product')
 
       allocate(Basis%tab_basis(nb_basis))
       DO ib=1,nb_basis
@@ -215,8 +215,7 @@ CONTAINS
       Basis%nb        = nb
       Basis%nq        = nq
       Basis%symab     = symab
-      Basis%name      = trim(adjustl(name))
-      CALL string_uppercase_TO_lowercase(Basis%name)
+      Basis%name      = TO_lowercase(trim(adjustl(name)))
 
       SELECT CASE (Basis%name)
       CASE ('boxab')
@@ -237,8 +236,8 @@ CONTAINS
 
   END SUBROUTINE QML_Read_Basis
   SUBROUTINE QML_Construct_Basis_Sin(Basis) ! sin : boxAB with A=0 and B=pi
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m, ONLY : dnS_t,Variable,sub_get_dn,dnBox
+    USE ADdnSVM_m, ONLY : dnS_t,Variable,sub_get_dn,dnBox
+    IMPLICIT NONE
 
     TYPE(QML_Basis_t),       intent(inout)  :: Basis
 
@@ -276,7 +275,7 @@ CONTAINS
 
   END SUBROUTINE QML_Construct_Basis_Sin
   SUBROUTINE QML_Set_symab_Basis(Basis)
-  USE QMLLib_UtilLib_m
+    IMPLICIT NONE
 
     TYPE(QML_Basis_t),       intent(inout)  :: Basis
 
@@ -312,7 +311,8 @@ CONTAINS
 
   END SUBROUTINE QML_Set_symab_Basis
   SUBROUTINE QML_CheckOrtho_Basis(Basis,nderiv)
-  USE QMLLib_UtilLib_m
+    USE QDUtil_m,         ONLY : Write_Mat
+    IMPLICIT NONE
 
     TYPE(QML_Basis_t),       intent(in)     :: Basis
     integer,                 intent(in)     :: nderiv
@@ -330,7 +330,7 @@ CONTAINS
       END DO
 
       S = matmul(d0bgw,Basis%d0gb)
-      IF (nderiv > -1) CALL Write_RMat(S,out_unitp,5,name_info='S')
+      IF (nderiv > -1) CALL Write_Mat(S,out_unitp,5,info='S')
       Sii = ZERO
       Sij = ZERO
       DO ib=1,Basis%nb
@@ -342,12 +342,12 @@ CONTAINS
 
       IF (nderiv > 0) THEN
         S = matmul(d0bgw,Basis%d1gb(:,:,1))
-        CALL Write_RMat(S,out_unitp,5,name_info='<d0b|d1b>')
+        CALL Write_Mat(S,out_unitp,5,info='<d0b|d1b>')
       END IF
 
       IF (nderiv > 1) THEN
         S = matmul(d0bgw,Basis%d2gb(:,:,1,1))
-        CALL Write_RMat(S,out_unitp,5,name_info='<d0b|d2b>')
+        CALL Write_Mat(S,out_unitp,5,info='<d0b|d2b>')
       END IF
 
     ELSE
@@ -357,7 +357,7 @@ CONTAINS
 
   END SUBROUTINE QML_CheckOrtho_Basis
   SUBROUTINE QML_Scale_Basis(Basis,x0,sx)
-  USE QMLLib_UtilLib_m
+    IMPLICIT NONE
 
     TYPE(QML_Basis_t),       intent(inout)  :: Basis
     real(kind=Rkind),    intent(in)     :: x0,sx
@@ -382,8 +382,7 @@ CONTAINS
   END SUBROUTINE QML_Scale_Basis
 
   SUBROUTINE QML_BasisTOGrid_Basis(G,B,Basis)
-  USE QMLLib_UtilLib_m
-
+    IMPLICIT NONE
 
     TYPE(QML_Basis_t),    intent(in)    :: Basis
     real(kind=Rkind),     intent(in)    :: B(:)
@@ -406,7 +405,7 @@ CONTAINS
   END SUBROUTINE QML_BasisTOGrid_Basis
 
   SUBROUTINE QML_GridTOBasis_Basis(B,G,Basis)
-  USE QMLLib_UtilLib_m
+    IMPLICIT NONE
 
     TYPE(QML_Basis_t),   intent(in)    :: Basis
     real(kind=Rkind),    intent(in)    :: G(:)

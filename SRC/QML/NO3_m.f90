@@ -44,7 +44,7 @@
 !! @date 30/09/2021
 !!
 MODULE QML_NO3_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -655,7 +655,7 @@ MODULE QML_NO3_m
 !! @param QModel            CLASS(QML_NO3_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_NO3(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_NO3_t),   intent(in) :: QModel
     integer,               intent(in) :: nio
@@ -685,7 +685,7 @@ MODULE QML_NO3_m
 
   END SUBROUTINE Write_QML_NO3
   SUBROUTINE Write0_QML_NO3(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_NO3_t),   intent(in) :: QModel
     integer,               intent(in) :: nio

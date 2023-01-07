@@ -38,8 +38,8 @@
 !===========================================================================
 !===========================================================================
 MODULE IRC_m
-!$ USE omp_lib
-  USE QMLLib_NumParameters_m
+  !$ USE omp_lib
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Opt_m
 
   IMPLICIT NONE
@@ -87,6 +87,7 @@ CONTAINS
                           read_param,param_file_name,nio_param_file)
 
   USE QMLLib_UtilLib_m
+  USE QDUtil_m,         ONLY : TO_lowercase, TO_string
   USE Model_m
   IMPLICIT NONE
 
@@ -135,10 +136,10 @@ CONTAINS
   ELSE
     IF (present(param_file_name)) THEN
       IF (len_trim(param_file_name) == 0) THEN
-        param_file_name_loc = strdup("input.dat")
+        param_file_name_loc = trim("input.dat")
         nio_loc = 99
       ELSE
-        param_file_name_loc = strdup(param_file_name)
+        param_file_name_loc = trim(param_file_name)
         nio_loc = 99
       END IF
     ELSE
@@ -149,7 +150,7 @@ CONTAINS
   IF (debug) THEN
     write(out_unitp,*) '   read_param      ',read_param_loc
     write(out_unitp,*) '   nio             ',nio_loc
-    write(out_unitp,*) '   param_file_name ',strdup(param_file_name_loc)
+    write(out_unitp,*) '   param_file_name ',trim(param_file_name_loc)
     flush(out_unitp)
   END IF
 
@@ -196,9 +197,9 @@ CONTAINS
 
   IF (max_it < 0)   Max_it = 10
 
-  CALL string_uppercase_TO_lowercase(method2,lower=.TRUE.)
-  CALL string_uppercase_TO_lowercase(method,lower=.TRUE.)
-  CALL string_uppercase_TO_lowercase(Direction,lower=.TRUE.)
+  method2   = TO_lowercase(method2)
+  method    = TO_lowercase(method)
+  Direction = TO_lowercase(Direction)
   IF (Direction /= 'both' .AND. Direction /= 'forward' .AND. Direction /= 'reverse') THEN
     write(out_unitp,*) ' ERROR in ',name_sub
     write(out_unitp,*) ' Direction keyword is wrong',trim(Direction)
@@ -236,7 +237,7 @@ CONTAINS
   CALL Write_QML_IRC(IRC_p)
 
   IF (debug) THEN
-    !CALL Write_QML_IRC(IRC_p)
+    CALL Write_QML_IRC(IRC_p)
     write(out_unitp,*) ' END ',name_sub
     flush(out_unitp)
   END IF
@@ -272,12 +273,9 @@ CONTAINS
 
   END SUBROUTINE Write_QML_IRC
   SUBROUTINE QML_IRC(Q,QModel,IRC_p,Q0)
-  USE QMLLib_UtilLib_m
-  USE QMLLib_Matrix_m
-  USE QMLLib_diago_m
-  USE Model_m
-  USE Opt_m
-  IMPLICIT NONE
+    USE Model_m
+    USE Opt_m
+    IMPLICIT NONE
 
     real (kind=Rkind),  intent(inout)            :: Q(:)
     TYPE (Model_t),     intent(inout)            :: QModel
@@ -326,8 +324,6 @@ CONTAINS
   !first point + check if the geometry is a TS (s=0)
   CALL QML_IRC_at_TS(IRC_p,QModel)
   write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
-
-
 
 
   s       = ZERO
@@ -431,7 +427,6 @@ CONTAINS
   RECURSIVE SUBROUTINE QML_IRC_ODE(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,     &
                                    QModel,IRC_p,forward,                        &
                                    grad_AT_s,Method,order)
-  USE QMLLib_UtilLib_m
   USE Model_m
   IMPLICIT NONE
 
@@ -519,10 +514,9 @@ END SUBROUTINE QML_IRC_ODE
 
   SUBROUTINE QML_IRC_BS(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,                &
                         QModel,IRC_p,order,forward,grad_AT_s)
-  USE QMLLib_UtilLib_m
-  USE Model_m
-  USE Opt_m
-  IMPLICIT NONE
+
+    USE Model_m
+    IMPLICIT NONE
 
     real (kind=Rkind),  intent(in)               :: s
     real (kind=Rkind),  intent(in)               :: QactOld(:)
@@ -626,10 +620,8 @@ END SUBROUTINE QML_IRC_BS
 
 SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
                             QModel,IRC_p,m,forward,grad)
-  USE QMLLib_UtilLib_m
-  USE Model_m
-  USE Opt_m
-  IMPLICIT NONE
+    USE Model_m
+    IMPLICIT NONE
 
     real (kind=Rkind),  intent(in)               :: s
     real (kind=Rkind),  intent(in)               :: QactOld(:)
@@ -705,10 +697,8 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
   END SUBROUTINE QML_IRC_mEuler
   SUBROUTINE QML_IRC_ModMidPoint(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,       &
                                  QModel,IRC_p,m,forward,grad)
-  USE QMLLib_UtilLib_m
-  USE Model_m
-  USE Opt_m
-  IMPLICIT NONE
+    USE Model_m
+    IMPLICIT NONE
 
     real (kind=Rkind),  intent(in)               :: s
     real (kind=Rkind),  intent(in)               :: QactOld(:)
@@ -792,7 +782,6 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
   END SUBROUTINE QML_IRC_ModMidPoint
 
   SUBROUTINE QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward,Grad)
-  USE QMLLib_UtilLib_m
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -863,8 +852,6 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
 
 END SUBROUTINE QML_IRC_fcn
 SUBROUTINE QML_MassWeighted_Qact(s,Qact,QModel,IRC_p)
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -902,8 +889,6 @@ SUBROUTINE QML_MassWeighted_Qact(s,Qact,QModel,IRC_p)
 
 END SUBROUTINE QML_MassWeighted_Qact
 SUBROUTINE QML_UnMassWeighted_Qact(s,Qact,QModel,IRC_p)
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -941,8 +926,6 @@ SUBROUTINE QML_UnMassWeighted_Qact(s,Qact,QModel,IRC_p)
 
 END SUBROUTINE QML_UnMassWeighted_Qact
 SUBROUTINE QML_CenterOfMass(s,Qact,QModel,IRC_p)
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1014,8 +997,6 @@ SUBROUTINE QML_CenterOfMass(s,Qact,QModel,IRC_p)
 END SUBROUTINE QML_CenterOfMass
 
 SUBROUTINE QML_Recenter_CenterOfMass(s,Qact,QModel,IRC_p)
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
@@ -1086,13 +1067,10 @@ SUBROUTINE QML_Recenter_CenterOfMass(s,Qact,QModel,IRC_p)
 END SUBROUTINE QML_Recenter_CenterOfMass
 
   SUBROUTINE QML_IRC_at_TS(IRC_p,QModel)
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m
-  USE QMLLib_Matrix_m
-  USE QMLLib_diago_m
-  USE Model_m
-  USE Opt_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : diagonalization
+    USE ADdnSVM_m
+    USE Model_m
+    IMPLICIT NONE
 
     TYPE (QML_IRC_t),   intent(inout)            :: IRC_p
     TYPE (Model_t),     intent(inout)            :: QModel
@@ -1102,62 +1080,64 @@ END SUBROUTINE QML_Recenter_CenterOfMass
     real (kind=Rkind), allocatable  :: hess(:,:)
     real (kind=Rkind), allocatable  :: diag(:),Vec(:,:)
 
-!----- for debuging --------------------------------------------------
+    !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='QML_IRC_at_TS'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
+    !-----------------------------------------------------------
 
-  IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    flush(out_unitp)
-  END IF
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      flush(out_unitp)
+    END IF
+  
+    IF (IRC_p%Max_it < 0) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' IRC_p is not initialized'
+      STOP 'ERROR in QML_IRC_at_TS: IRC_p is not initialized'
+    END IF
+  
+    nb_act = size(IRC_p%list_actIRC)
+  
+    allocate(hess(nb_act,nb_act))
+    allocate(vec(nb_act,nb_act))
+    allocate(diag(nb_act))
+  
+  
+    !first check if the geometry in Q0 is a TS
+    CALL Eval_Pot(QModel,IRC_p%QTS,PotVal,nderiv=2)
+    hess              = PotVal%d2(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_actIRC,IRC_p%list_actIRC)
+    IRC_p%Grad_QactTS = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_actIRC)
+  
+    CALL diagonalization(hess,diag,Vec,nb_act,sort=1)
+    write(out_unitp,*) 'grad',IRC_p%Grad_QactTS
+    write(out_unitp,*) 'diag',diag
+    write(out_unitp,*) 'TS?',(count(diag < ZERO) == 1)
+    IF ((count(diag < ZERO) /= 1)) STOP 'STOP in QML_IRC_at_TS: Not a TS at s=0'
+  
+    !s=0 (TS)
+    IRC_p%Ene_TS          = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
+    IRC_p%QactTS          = IRC_p%QTS(IRC_p%list_actIRC)
+    IRC_p%EigenVec_QactTS = Vec(:,1)
+  
+    deallocate(hess)
+    deallocate(vec)
+    deallocate(diag)
 
-  IF (IRC_p%Max_it < 0) THEN
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' IRC_p is not initialized'
-    STOP 'ERROR in QML_IRC_at_TS: IRC_p is not initialized'
-  END IF
+    IF (debug) THEN
+      write(out_unitp,*) 's,Ene          ',ZERO,IRC_p%Ene_TS
+      write(out_unitp,*) 'Qact           ',IRC_p%QactTS
+      write(out_unitp,*) 'EigenVec_QactTS',IRC_p%EigenVec_QactTS
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    END IF
 
-  nb_act = size(IRC_p%list_actIRC)
+  END SUBROUTINE QML_IRC_at_TS
+  FUNCTION QML_BS_m(j,m0) RESULT(m)
+    IMPLICIT NONE
 
-  allocate(hess(nb_act,nb_act))
-  allocate(vec(nb_act,nb_act))
-  allocate(diag(nb_act))
-
-
-  !first check if the geometry in Q0 is a TS
-  CALL Eval_Pot(QModel,IRC_p%QTS,PotVal,nderiv=2)
-  hess              = PotVal%d2(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_actIRC,IRC_p%list_actIRC)
-  IRC_p%Grad_QactTS = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_actIRC)
-
-  CALL diagonalization(hess,diag,Vec,nb_act,sort=1)
-  write(out_unitp,*) 'grad',IRC_p%Grad_QactTS
-  write(out_unitp,*) 'diag',diag
-  write(out_unitp,*) 'TS?',(count(diag < ZERO) == 1)
-  IF ((count(diag < ZERO) /= 1)) STOP 'STOP in QML_IRC_at_TS: Not a TS at s=0'
-
-  !s=0 (TS)
-  IRC_p%Ene_TS          = PotVal%d0(IRC_p%i_surf,IRC_p%i_surf)
-  IRC_p%QactTS          = IRC_p%QTS(IRC_p%list_actIRC)
-  IRC_p%EigenVec_QactTS = Vec(:,1)
-
-  deallocate(hess)
-  deallocate(vec)
-  deallocate(diag)
-
-  IF (debug) THEN
-    write(out_unitp,*) 's,Ene          ',ZERO,IRC_p%Ene_TS
-    write(out_unitp,*) 'Qact           ',IRC_p%QactTS
-    write(out_unitp,*) 'EigenVec_QactTS',IRC_p%EigenVec_QactTS
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
-  END IF
-
-END SUBROUTINE QML_IRC_at_TS
-FUNCTION QML_BS_m(j,m0) RESULT(m)
-  integer :: m
-  integer, intent(in) :: j,m0
-  m = m0+2*j+2
-END FUNCTION QML_BS_m
+    integer :: m
+    integer, intent(in) :: j,m0
+    m = m0+2*j+2
+  END FUNCTION QML_BS_m
 END MODULE IRC_m

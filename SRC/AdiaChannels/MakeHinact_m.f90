@@ -38,20 +38,17 @@
 !===========================================================================
 !===========================================================================
 MODULE AdiaChannels_MakeHinact_m
-  USE QMLLib_NumParameters_m
-
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   IMPLICIT NONE
 
 CONTAINS
 
   SUBROUTINE QML_MakeHinact(Qact,QModel)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
-  USE QMLLib_diago_m
-  USE ADdnSVM_m
-  USE Model_m
-  USE AdiaChannels_Basis_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : diagonalization
+    USE ADdnSVM_m
+    USE Model_m
+    USE AdiaChannels_Basis_m
+    IMPLICIT NONE
 
   real (kind=Rkind), allocatable, intent(in)    :: Qact(:)
   TYPE (Model_t),                 intent(inout) :: QModel

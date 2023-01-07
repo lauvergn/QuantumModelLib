@@ -38,8 +38,7 @@
 !===========================================================================
 !===========================================================================
 SUBROUTINE sub_Read_Qmodel(ndim,nsurf,nio)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -65,8 +64,7 @@ SUBROUTINE sub_Read_Qmodel(ndim,nsurf,nio)
 
 END SUBROUTINE sub_Read_Qmodel
 SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -95,8 +93,7 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
 END SUBROUTINE sub_Init_Qmodel
 SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -136,7 +133,6 @@ SUBROUTINE sub_check_Init_Qmodel(check)
 END SUBROUTINE sub_check_Init_Qmodel
 
 FUNCTION get_Qmodel_ndim() RESULT(ndim)
-  USE QMLLib_UtilLib_m
   USE Model_m
   IMPLICIT NONE
 
@@ -148,7 +144,6 @@ FUNCTION get_Qmodel_ndim() RESULT(ndim)
 
 END FUNCTION get_Qmodel_ndim
 FUNCTION get_Qmodel_nsurf() RESULT(nsurf)
-  USE QMLLib_UtilLib_m
   USE Model_m
   IMPLICIT NONE
 
@@ -160,7 +155,6 @@ FUNCTION get_Qmodel_nsurf() RESULT(nsurf)
 
 END FUNCTION get_Qmodel_nsurf
 FUNCTION get_Qmodel_Vib_Adia() RESULT(Vib_Adia)
-  USE QMLLib_UtilLib_m
   USE Model_m
   IMPLICIT NONE
 
@@ -181,8 +175,7 @@ SUBROUTINE sub_Write_Qmodel(nio)
 
 END SUBROUTINE sub_Write_Qmodel
 SUBROUTINE sub_Qmodel_Opt(Q,i_surf,nb_deg,icv,Max_it)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   USE Opt_m
   IMPLICIT NONE
@@ -216,8 +209,7 @@ END SUBROUTINE sub_Qmodel_Opt
 ! get a reference geometry, Q0
 ! the option parameter is not used
 SUBROUTINE get_Qmodel_Q0(Q0,option)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -228,8 +220,7 @@ SUBROUTINE get_Qmodel_Q0(Q0,option)
 
 END SUBROUTINE get_Qmodel_Q0
 SUBROUTINE sub_Qmodel_V(V,Q)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -241,8 +232,7 @@ SUBROUTINE sub_Qmodel_V(V,Q)
 
 END SUBROUTINE sub_Qmodel_V
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
   USE Model_m
   IMPLICIT NONE
@@ -270,8 +260,7 @@ SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
 
 END SUBROUTINE sub_Qmodel_VVec
 SUBROUTINE sub_Qmodel_VG(V,G,Q)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -285,8 +274,7 @@ SUBROUTINE sub_Qmodel_VG(V,G,Q)
 
 END SUBROUTINE sub_Qmodel_VG
 SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
   IMPLICIT NONE
@@ -319,8 +307,7 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
 
 END SUBROUTINE sub_Qmodel_VG_NAC
 SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -336,8 +323,7 @@ SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
 
 END SUBROUTINE sub_Qmodel_VGH
 SUBROUTINE sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -364,8 +350,7 @@ SUBROUTINE sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
 
 END SUBROUTINE sub_Qmodel_tab_HMatVibAdia
 SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -376,8 +361,7 @@ SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
 
 END SUBROUTINE sub_Qmodel_Check_anaVSnum
 SUBROUTINE get_Qmodel_GGdef(GGdef)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -403,8 +387,7 @@ SUBROUTINE get_Qmodel_GGdef(GGdef)
 
 END SUBROUTINE get_Qmodel_GGdef
 SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -433,7 +416,7 @@ SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
 
 END SUBROUTINE set_Qmodel_GGdef
 SUBROUTINE set_Qmodel_step(step_in)
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -443,19 +426,17 @@ SUBROUTINE set_Qmodel_step(step_in)
 
 END SUBROUTINE set_Qmodel_step
 SUBROUTINE set_Qmodel_Print_level(printlevel)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
   integer,                intent(in)        :: printlevel
 
-  print_level = printlevel  ! from the module QMLLib_NumParameters_m.f90
+  CALL set_print_level(printlevel) ! from them module QDUtil lib
 
 END SUBROUTINE set_Qmodel_Print_level
 SUBROUTINE set_Qmodel_in_unitp(inunitp)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -465,8 +446,7 @@ SUBROUTINE set_Qmodel_in_unitp(inunitp)
 
 END SUBROUTINE set_Qmodel_in_unitp
 SUBROUTINE set_Qmodel_out_unitp(outunitp)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 
@@ -476,7 +456,6 @@ SUBROUTINE set_Qmodel_out_unitp(outunitp)
 
 END SUBROUTINE set_Qmodel_out_unitp
 SUBROUTINE set_Qmodel_Phase_Following(Phase_Following)
-  USE QMLLib_UtilLib_m
   USE Model_m
   IMPLICIT NONE
 
@@ -488,7 +467,6 @@ SUBROUTINE set_Qmodel_Phase_Following(Phase_Following)
 
 END SUBROUTINE set_Qmodel_Phase_Following
 SUBROUTINE set_Qmodel_Phase_Checking(Phase_Checking)
-  USE QMLLib_UtilLib_m
   USE Model_m
   IMPLICIT NONE
 
@@ -500,8 +478,7 @@ SUBROUTINE set_Qmodel_Phase_Checking(Phase_Checking)
 
 END SUBROUTINE set_Qmodel_Phase_Checking
 SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -536,8 +513,7 @@ SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
 
 END SUBROUTINE sub_model_V
 SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -584,8 +560,7 @@ SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
 END SUBROUTINE sub_model1_V
 
 SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -632,8 +607,7 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_VG
 SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
   !$ USE omp_lib
@@ -693,8 +667,7 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_VG_NAC
 SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -742,8 +715,7 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_VGH
 SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -800,8 +772,7 @@ SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_DiaV
 SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -849,8 +820,7 @@ SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_DiaVG
 SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -898,7 +868,6 @@ SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_DiaVGH
 SUBROUTINE get_Qmodel_nb_Func_ndimFunc(nb_Func,ndimFunc)
-  USE QMLLib_UtilLib_m
   USE Model_m
   IMPLICIT NONE
 
@@ -912,7 +881,6 @@ SUBROUTINE get_Qmodel_nb_Func_ndimFunc(nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_nb_Func_ndimFunc
 SUBROUTINE get_Qmodel_IndexesFunc(IndexFunc_Ene,IndexFunc_Qop,IndexFunc_Grad,IndexFunc_Hess)
-  USE QMLLib_UtilLib_m
   USE Model_m
   IMPLICIT NONE
 
@@ -931,8 +899,7 @@ SUBROUTINE get_Qmodel_IndexesFunc(IndexFunc_Ene,IndexFunc_Qop,IndexFunc_Grad,Ind
 END SUBROUTINE get_Qmodel_IndexesFunc
 
 SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
@@ -961,8 +928,7 @@ SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_d0Func
 SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
@@ -994,8 +960,7 @@ SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_d0d1Func
 SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
@@ -1027,8 +992,7 @@ SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_d0d1d2Func
 SUBROUTINE get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Q,nb_Func,ndimFunc)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE

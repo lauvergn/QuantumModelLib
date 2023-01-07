@@ -45,8 +45,8 @@
 !! @date 10/07/2019
 !!
 MODULE QML_Morse_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE QML_Empty_m
-  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
   PRIVATE
@@ -197,7 +197,7 @@ CONTAINS
 !! @param QModel         TYPE(QML_Morse_t):   derived type in which the parameters are set-up.
 !! @param nio                integer          :   file unit to read the parameters.
   SUBROUTINE Read_QML_Morse(D_inout,a_inout,req_inout,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     integer,           intent(in)    :: nio
     real (kind=Rkind), intent(inout) :: D_inout,a_inout,req_inout
@@ -242,7 +242,7 @@ CONTAINS
 !!
 !! @param nio                integer          :   file unit to print the parameters.
   SUBROUTINE Write0_QML_Morse(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_Morse_t),    intent(in) :: QModel
     integer,                intent(in) :: nio
@@ -272,7 +272,7 @@ CONTAINS
 !! @param QModel         TYPE(QML_Morse_t):   derived type with the Morse parameters.
 !! @param nio                integer          :   file unit to print the parameters.
   SUBROUTINE Write_QML_Morse(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_Morse_t),    intent(in) :: QModel
     integer,               intent(in) :: nio
@@ -301,8 +301,8 @@ CONTAINS
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Morse(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m, ONLY :  dnS_t,Write_dnS,get_d0
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY :  dnS_t,Write_dnS,get_d0
+    IMPLICIT NONE
 
     CLASS(QML_Morse_t), intent(in)      :: QModel
     TYPE(dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)
@@ -342,8 +342,8 @@ CONTAINS
 !! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param QModel         TYPE(QML_Morse_t):   derived type with the Morse parameters.
   FUNCTION QML_dnMorse(dnR,QModel)
-  USE ADdnSVM_m, ONLY :  dnS_t,exp,Write_dnS,get_d0,dealloc_dnS
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY :  dnS_t,exp,Write_dnS,get_d0,dealloc_dnS
+    IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnMorse
 

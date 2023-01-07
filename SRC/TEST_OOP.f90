@@ -38,9 +38,7 @@
 !===========================================================================
 !===========================================================================
 program prog
-  USE QML_Empty_m
-  USE QML_Template_m
-  USE QML_Morse_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -49,7 +47,7 @@ program prog
   real(kind=Rkind),  allocatable    :: Q(:)
   TYPE (dnS_t),      allocatable    :: dnQ(:)
   TYPE (dnS_t),      allocatable    :: Mat_OF_PotDia(:,:)
-    TYPE (dnMat_t)                  :: PotVal
+  TYPE (dnMat_t)                    :: PotVal
 
   TYPE(Model_t)                     :: QModel
 

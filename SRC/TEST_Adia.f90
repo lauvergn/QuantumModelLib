@@ -38,11 +38,9 @@
 !===========================================================================
 !===========================================================================
 PROGRAM TEST_adia
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m
   USE Model_m
-  !USE AdiaChannels_MakeHinact_m
   IMPLICIT NONE
 
 
@@ -50,9 +48,9 @@ PROGRAM TEST_adia
   real (kind=Rkind), allocatable  :: Qact(:)
   TYPE (dnMat_t)                  :: PotVal,NAC
 
-  real(kind=Rkind) :: dQ
-  integer :: i,iq
-  integer, parameter :: nq=100
+  real(kind=Rkind)            :: dQ
+  integer                     :: i,iq
+  integer,          parameter :: nq=100
   real(kind=Rkind), parameter :: auTOcm_inv = 219474.631443_Rkind
 
 
@@ -66,7 +64,5 @@ PROGRAM TEST_adia
     !CALL Write_RMat(NAC%d1(:,:,1),out_unitp,6,name_info='NAC')
     write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
   END DO
-
-
 
 END PROGRAM TEST_adia

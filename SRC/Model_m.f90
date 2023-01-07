@@ -38,11 +38,10 @@
 !===========================================================================
 !===========================================================================
 MODULE Model_m
-!$ USE omp_lib
-  USE QMLLib_NumParameters_m
+  !$ USE omp_lib
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE QML_Empty_m,          ONLY : QML_Empty_t,Qact_TO_Q
   USE AdiaChannels_Basis_m, ONLY : QML_Basis_t
-
   IMPLICIT NONE
 
   PRIVATE
@@ -134,8 +133,7 @@ CONTAINS
 
 
   SUBROUTINE Read_Model(QModel_inout,nio,read_nml1,opt1,IRC1)
-  USE QMLLib_UtilLib_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_Empty_t),  intent(inout) :: QModel_inout ! variable to transfer info to the init
     integer,             intent(in)    :: nio
@@ -144,6 +142,7 @@ CONTAINS
     ! local variable
     integer, parameter :: max_act = 10
     integer, parameter :: max_Op = 3
+
     integer :: ndim,nsurf,nderiv,option,printlevel,nb_Channels
     logical :: adiabatic,numeric,PubliUnit,read_nml
     logical :: Vib_adia,print_EigenVec_Grid,print_EigenVec_Basis
@@ -160,7 +159,7 @@ CONTAINS
     namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
                          Phase_Checking,Phase_Following,                        &
                          Cart_TO_Q,MassWeighted,AbInitio,                       &
-                         list_Op, &
+                         list_Op,                                               &
                          read_nml,printlevel,Vib_adia,nb_Channels,list_act,     &
                          print_EigenVec_Grid,print_EigenVec_Basis,opt,IRC
 
@@ -219,7 +218,7 @@ CONTAINS
     IRC1                              = IRC
 
     QModel_inout%option               = option
-    print_level                       = printlevel ! from them module QMLLib_NumParameters_m.f90
+    CALL set_print_level(printlevel) ! from them module QDUtil lib
     QModel_inout%ndim                 = ndim
     QModel_inout%nsurf                = nsurf
     QModel_inout%adiabatic            = adiabatic
@@ -278,7 +277,10 @@ CONTAINS
                         read_param,param_file_name,nio_param_file,              &
                         option,PubliUnit,Print_init,Vib_adia,                   &
                         Phase_Following,Phase_checking)
-  USE QMLLib_UtilLib_m
+  
+  USE QMLLib_UtilLib_m, ONLY : File_path
+  USE QDUtil_m,         ONLY : TO_lowercase
+
 
   USE QML_Empty_m
 
@@ -465,10 +467,10 @@ CONTAINS
     ELSE
       IF (present(param_file_name)) THEN
         IF (len_trim(param_file_name) == 0) THEN
-          param_file_name_loc = strdup("input.dat")
+          param_file_name_loc = trim("input.dat")
           nio_loc = 99 ! this value is not used
         ELSE
-          param_file_name_loc = strdup(param_file_name)
+          param_file_name_loc = trim(param_file_name)
           nio_loc = 99 ! this value is not used
         END IF
       ELSE
@@ -477,8 +479,7 @@ CONTAINS
     END IF
 
     IF (present(pot_name)) THEN
-      pot_name_loc  = strdup(pot_name)
-      CALL string_uppercase_TO_lowercase(pot_name_loc)
+      pot_name_loc   = TO_lowercase(trim(pot_name))
       read_param_loc = (read_param_loc .OR.  pot_name_loc == 'read_model')
     ELSE
       IF (.NOT. read_param_loc) THEN
@@ -519,7 +520,7 @@ CONTAINS
       write(out_unitp,*) 'You have decided to perform a numeric checking of the analytic formulas.'
     END IF
 
-    CALL string_uppercase_TO_lowercase(pot_name_loc)
+    pot_name_loc = TO_lowercase(pot_name_loc)
     IF (Print_init_loc) write(out_unitp,*) 'pot_name_loc: ',pot_name_loc
 
     SELECT CASE (pot_name_loc)
@@ -1043,8 +1044,7 @@ CONTAINS
 
   END SUBROUTINE Init_Model
   SUBROUTINE Set_step_epsi_Model(step_in,epsi_in)
-  USE QMLLib_UtilLib_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     real (kind=Rkind),  intent(in), optional  :: step_in,epsi_in
 
@@ -1080,8 +1080,8 @@ CONTAINS
   END SUBROUTINE Set_step_epsi_Model
 
   SUBROUTINE get_Q0_Model(Q0,QModel,option)
-  USE QMLLib_UtilLib_m
-  USE QML_Empty_m,          ONLY : get_Q0_QModel
+  USE QDUtil_m,         ONLY : Identity_Mat, TO_string, Write_Vec
+  USE QML_Empty_m,      ONLY : get_Q0_QModel
   IMPLICIT NONE
 
     real (kind=Rkind),  intent(inout)            :: Q0(:)
@@ -1122,7 +1122,7 @@ CONTAINS
     END IF
 
     IF (debug) THEN
-      CALL Write_RVec(Q0,out_unitp,nbcol1=5,name_info='Q0: ')
+      CALL Write_Vec(Q0,out_unitp,nbcol=5,info='Q0: ')
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)
     END IF
@@ -1130,9 +1130,8 @@ CONTAINS
   END SUBROUTINE get_Q0_Model
 
   SUBROUTINE check_QML_Path()
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
-  IMPLICIT NONE
+    USE QMLLib_UtilLib_m, ONLY : make_FileName
+    IMPLICIT NONE
 
   character (len=:), allocatable :: FileName
   logical :: file_exist
@@ -1155,8 +1154,7 @@ CONTAINS
 
   ! check if the QM [CLASS(QML_Empty_t)] is allocated
   SUBROUTINE check_alloc_QM(QModel,name_sub_in)
-  USE QMLLib_UtilLib_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (Model_t),     intent(in)     :: QModel
     character (len=*),  intent(in)     :: name_sub_in
@@ -1176,8 +1174,7 @@ CONTAINS
 
   ! check if the check_Init_QModel [TYPE(Model_t)] is initialized
   FUNCTION check_Init_QModel(QModel)
-  USE QMLLib_UtilLib_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     logical                             :: check_Init_QModel
     TYPE (Model_t),     intent(in)      :: QModel
@@ -1190,9 +1187,9 @@ CONTAINS
   END FUNCTION check_Init_QModel
 
   SUBROUTINE Eval_tab_HMatVibAdia(QModel,Qact,tab_MatH)
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Write_Mat
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
   TYPE (Model_t),                 intent(inout)            :: QModel
   real (kind=Rkind),              intent(in)               :: Qact(:)
@@ -1303,7 +1300,7 @@ CONTAINS
   IF (debug) THEN
     DO iterm=1,nb_terms
       write(out_unitp,*) iterm
-      CALL Write_RMat(tab_MatH(:,:,iterm),nio=out_unitp,nbcol1=5)
+      CALL Write_Mat(tab_MatH(:,:,iterm),nio=out_unitp,nbcol=5)
     END DO
     write(out_unitp,*) ' END ',name_sub
     flush(out_unitp)
@@ -1312,8 +1309,8 @@ CONTAINS
   END SUBROUTINE Eval_tab_HMatVibAdia
 
   SUBROUTINE Eval_Pot(QModel,Q,PotVal,nderiv,NAC,Vec,numeric)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (Model_t),     intent(inout)            :: QModel
     TYPE (dnMat_t),     intent(inout)            :: PotVal
@@ -1403,7 +1400,7 @@ CONTAINS
     END IF
 
     ! print the Vec%d0 if required
-    CALL Write_Vec(Q,Vec_loc,QModel,nio=out_unitp)
+    CALL Write_QML_EigenVec(Q,Vec_loc,QModel,nio=out_unitp)
 
     CALL dealloc_dnMat(NAC_loc)
     CALL dealloc_dnMat(Vec_loc)
@@ -1481,9 +1478,9 @@ CONTAINS
   END SUBROUTINE Eval_Pot
 
   SUBROUTINE Eval_Pot_ana(QModel,Q,PotVal,nderiv,NAC,Vec)
-  USE ADdnSVM_m, ONLY : dnS_t,alloc_dnS,dealloc_dnS,Variable, &
-     dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat,Write_dnMat
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnS_t,alloc_dnS,dealloc_dnS,Variable,                &
+             dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat,Write_dnMat
+    IMPLICIT NONE
 
     TYPE (Model_t),        intent(inout)            :: QModel
 
@@ -1510,7 +1507,6 @@ CONTAINS
       write(out_unitp,*) '   nderiv:       ',nderiv
       write(out_unitp,*) '   present(NAC): ',present(NAC)
       write(out_unitp,*) '   present(Vec): ',present(Vec)
-
       flush(out_unitp)
     END IF
 
@@ -1634,9 +1630,9 @@ CONTAINS
   END SUBROUTINE Eval_Pot_ana
 
   SUBROUTINE Eval_Pot_Numeric_dia_v4(QModel,Q,PotVal,nderiv)
-  USE QMLLib_FiniteDiff_m
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
-  IMPLICIT NONE
+    USE QMLLib_FiniteDiff_m
+    USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
+    IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
     TYPE (dnMat_t),    intent(inout)  :: PotVal
@@ -1729,9 +1725,9 @@ CONTAINS
 
   END SUBROUTINE Eval_Pot_Numeric_dia_v4
   SUBROUTINE Eval_Pot_Numeric_dia_v3(QModel,Q,PotVal,nderiv)
-  USE QMLLib_FiniteDiff_m
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
-  IMPLICIT NONE
+    USE QMLLib_FiniteDiff_m
+    USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
+    IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
     TYPE (dnMat_t),    intent(inout)  :: PotVal
@@ -1830,8 +1826,8 @@ CONTAINS
   END SUBROUTINE Eval_Pot_Numeric_dia_v3
 
   SUBROUTINE Eval_Pot_Numeric_dia_old(QModel,Q,PotVal,nderiv)
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
+    IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
     TYPE (dnMat_t),    intent(inout)  :: PotVal
@@ -1929,8 +1925,8 @@ CONTAINS
   END SUBROUTINE Eval_Pot_Numeric_dia_old
 
   SUBROUTINE Eval_Pot_Numeric_adia(QModel,Q,PotVal,nderiv,Vec,NAC,option)
-  USE ADdnSVM_m, ONLY : dnMat_t
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnMat_t
+    IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
     TYPE (dnMat_t),    intent(inout)  :: PotVal
@@ -1969,11 +1965,12 @@ CONTAINS
       write(out_unitp,*) ' END ',name_sub
       flush(out_unitp)
     END IF
+
   END SUBROUTINE Eval_Pot_Numeric_adia
   SUBROUTINE Eval_Pot_Numeric_adia_old(QModel,Q,PotVal,nderiv,Vec,NAC)
     USE QDUtil_m,  ONLY : Identity_Mat
     USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
     TYPE (dnMat_t),    intent(inout)  :: PotVal
@@ -2109,7 +2106,7 @@ CONTAINS
     USE QDUtil_m,         ONLY : Identity_Mat
     USE QMLLib_FiniteDiff_m
     USE ADdnSVM_m,        ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (Model_t),    intent(inout)  :: QModel
     TYPE (dnMat_t),    intent(inout)  :: PotVal
@@ -2268,10 +2265,12 @@ CONTAINS
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
   SUBROUTINE dia_TO_adia(PotVal_dia,PotVal_adia,Vec,Vec0,NAC,Phase_Following,   &
                          Phase_checking,nderiv,type_diag)
-    USE QMLLib_diago_m
+
     USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,Write_dnMat,DIAG_dnMat,  &
       Check_NotAlloc_dnMat,get_nsurf,get_nVar
-    IMPLICIT NONE
+    USE QDUtil_m,         ONLY : diagonalization
+
+      IMPLICIT NONE
 
     TYPE (dnMat_t), intent(in)               :: PotVal_dia
     TYPE (dnMat_t), intent(inout)            :: PotVal_adia,Vec,Vec0,NAC
@@ -2343,9 +2342,7 @@ CONTAINS
 
        allocate(Eig(nsurf))
 
-       CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,nsurf,sort=1,phase=.TRUE.,type_diag=type_diag_loc)
-       !write(out_unitp,*) 'Eig (full diag)',Eig(1:2)
-       !CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,n=2,sort=1,phase=.TRUE.,type_diag=5)
+       CALL diagonalization(PotVal_dia%d0,Eig,Vec0%d0,nsurf,sort=1,phase=.TRUE.,diago_type=type_diag_loc)
 
        deallocate(Eig)
 
@@ -2383,13 +2380,11 @@ CONTAINS
   END SUBROUTINE dia_TO_adia
 
   SUBROUTINE Eval_dnHVib_ana(QModel,Qact,dnH,nderiv)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m, ONLY : dnMat_t,dnS_t,alloc_dnMat,dnMat_TO_dnS,dot_product,       &
-    ReduceDerivatives_dnS2_TO_dnS1,Write_dnMat,Write_dnS,ReduceDerivatives_dnS2_TO_dnS1, &
-    dnS_TO_dnMat,SYM_dnMat
-  USE AdiaChannels_Basis_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Write_Mat
+    USE ADdnSVM_m, ONLY : dnMat_t,dnS_t,alloc_dnMat,dnMat_TO_dnS,dot_product,  &
+        ReduceDerivatives_dnS2_TO_dnS1,Write_dnMat,Write_dnS,dnS_TO_dnMat,SYM_dnMat
+    USE AdiaChannels_Basis_m
+    IMPLICIT NONE
 
   real (kind=Rkind),              intent(in)    :: Qact(:)
   TYPE (Model_t),                 intent(inout) :: QModel
@@ -2459,7 +2454,7 @@ CONTAINS
 
   dnH = SYM_dnMat(dnH)
 
-  !CALL Write_RMat(dnH%d0,6,5,name_info='H')
+  !CALL Write_Mat(dnH%d0,6,5,name_info='H')
 
   END SUBROUTINE Eval_dnHVib_ana
 
@@ -2530,8 +2525,7 @@ CONTAINS
 
   END SUBROUTINE Eval_Func
 
-  SUBROUTINE Write_Vec(Q,Vec,QModel,nio)
-  USE QMLLib_UtilLib_m
+  SUBROUTINE Write_QML_EigenVec(Q,Vec,QModel,nio)
   USE AdiaChannels_Basis_m
   USE ADdnSVM_m, ONLY : dnMat_t,Check_NotAlloc_dnMat
   IMPLICIT NONE
@@ -2550,7 +2544,7 @@ CONTAINS
       nio_loc = out_unitp
     END IF
 
-    CALL check_alloc_QM(QModel,'Write_Vec')
+    CALL check_alloc_QM(QModel,'Write_QML_EigenVec')
 
     IF (.NOT. QModel%QM%print_EigenVec_Basis .AND. .NOT. QModel%QM%print_EigenVec_Grid) RETURN
 
@@ -2584,12 +2578,11 @@ CONTAINS
       flush(nio_loc)
     END IF
 
-  END SUBROUTINE Write_Vec
-
+  END SUBROUTINE Write_QML_EigenVec
 
   SUBROUTINE Write_Model(QModel,nio)
-  USE QMLLib_UtilLib_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Write_Mat, Write_Vec
+    IMPLICIT NONE
 
     TYPE(Model_t),      intent(in)              :: QModel
     integer,            intent(in), optional    :: nio
@@ -2614,11 +2607,13 @@ CONTAINS
 
     CALL QModel%QM%Write_QModel(nio=nio_loc)
     write(nio_loc,*)
-    IF (allocated(QModel%QM%d0GGdef)) CALL Write_RMat(QModel%QM%d0GGdef,&
-                               nio_loc,5,name_info='d0GGdef')
+    IF (allocated(QModel%QM%d0GGdef)) THEN 
+      CALL Write_Mat(QModel%QM%d0GGdef,nio_loc,5,info='d0GGdef')
+    END IF
     write(nio_loc,*)
-    IF (allocated(QModel%QM%Q0)) CALL Write_RVec(QModel%QM%Q0,          &
-                               nio_loc,5,name_info='Q0')
+    IF (allocated(QModel%QM%Q0)) THEN
+      CALL Write_Vec(QModel%QM%Q0,nio_loc,5,info='Q0')
+    END IF
     write(nio_loc,*)
     write(nio_loc,*) '-----------------------------------------------'
     write(nio_loc,*) 'Extra action(s):'
@@ -2627,11 +2622,9 @@ CONTAINS
     write(nio_loc,*) '-----------------------------------------------'
     flush(nio_loc)
 
-
   END SUBROUTINE Write_Model
   SUBROUTINE Write0_Model(QModel,nio)
-  USE QMLLib_UtilLib_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE(Model_t),    intent(in)              :: QModel
     integer,          intent(in), optional    :: nio
@@ -2659,12 +2652,11 @@ CONTAINS
       close(nio_loc)
     END IF
 
-
   END SUBROUTINE Write0_Model
   SUBROUTINE Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec,NAC,info,name_file)
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE QMLLib_UtilLib_m, ONLY : file_open2
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (Model_t),    intent(in)           :: QModel
     TYPE (dnMat_t),    intent(in)           :: PotVal
@@ -2768,9 +2760,9 @@ CONTAINS
 
   END SUBROUTINE Write_QdnV_FOR_Model
   SUBROUTINE Check_analytical_numerical_derivatives(QModel,Q,nderiv)
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Write_dnMat, &
-    get_maxval_OF_dnMat, operator(-)
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Write_dnMat,       &
+                          get_maxval_OF_dnMat, operator(-)
+    IMPLICIT NONE
 
     TYPE (Model_t),       intent(inout)   :: QModel
     real (kind=Rkind),    intent(in)      :: Q(:)
@@ -2905,8 +2897,8 @@ CONTAINS
   END SUBROUTINE Check_analytical_numerical_derivatives
 
   SUBROUTINE Eval_pot_ON_Grid(QModel,Qmin,Qmax,nb_points,nderiv,grid_file)
-  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
+    IMPLICIT NONE
 
     TYPE (Model_t),               intent(inout)   :: QModel
     real (kind=Rkind),            intent(in)      :: Qmin(:),Qmax(:)
@@ -3048,8 +3040,8 @@ CONTAINS
 
 
   SUBROUTINE calc_pot(V,QModel,Q)
-  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
+    IMPLICIT NONE
 
     TYPE (Model_t),         intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
@@ -3068,8 +3060,8 @@ CONTAINS
 
   END SUBROUTINE calc_pot
   SUBROUTINE calc_pot_grad(V,g,QModel,Q)
-  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
+    IMPLICIT NONE
 
     TYPE (Model_t),         intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
@@ -3090,8 +3082,8 @@ CONTAINS
 
   END SUBROUTINE calc_pot_grad
   SUBROUTINE calc_grad(g,QModel,Q)
-  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
+    IMPLICIT NONE
 
     TYPE (Model_t),         intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
@@ -3110,8 +3102,8 @@ CONTAINS
 
   END SUBROUTINE calc_grad
   SUBROUTINE calc_pot_grad_hess(V,g,h,QModel,Q)
-  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
+    IMPLICIT NONE
 
     TYPE (Model_t),         intent(inout)   :: QModel
     real (kind=Rkind),      intent(in)      :: Q(:)
@@ -3135,8 +3127,8 @@ CONTAINS
 
   END SUBROUTINE calc_pot_grad_hess
   SUBROUTINE calc_hess(h,QModel,Q)
-  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
+    IMPLICIT NONE
 
     TYPE (Model_t),     intent(inout)     :: QModel
     real (kind=Rkind),  intent(in)        :: Q(:)

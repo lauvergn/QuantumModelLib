@@ -38,8 +38,7 @@
 !===========================================================================
 !===========================================================================
 PROGRAM TEST_grid
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE Model_m
   IMPLICIT NONE
 

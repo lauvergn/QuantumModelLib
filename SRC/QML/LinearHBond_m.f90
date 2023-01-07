@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_LinearHBond_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE QML_Empty_m
   USE QML_Morse_m
   USE QML_Buck_m
@@ -288,7 +288,7 @@ MODULE QML_LinearHBond_m
 !! @param QModel            CLASS(QML_LinearHBond_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_LinearHBond(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_LinearHBond_t),   intent(in) :: QModel
     integer,                    intent(in) :: nio
@@ -315,7 +315,7 @@ MODULE QML_LinearHBond_m
 !! @param QModel            CLASS(QML_LinearHBond_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write0_QML_LinearHBond(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_LinearHBond_t),   intent(in) :: QModel
     integer,                     intent(in) :: nio
@@ -372,8 +372,8 @@ MODULE QML_LinearHBond_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_LinearHBond(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_LinearHBond_t),  intent(in)    :: QModel
     TYPE (dnS_t),               intent(inout) :: Mat_OF_PotDia(:,:)
