@@ -3,14 +3,16 @@
 here=`pwd`
 ./clean
 
-F90=$1
-OMP=$2
+FC=$1
+OPT=$2
+OMP=$3
+LAPACK=$4
 
 
-echo $F90 $OMP
+echo $FC $OPT $OMP $LAPACK
 
 cd ..
-  make $F90 $OMP model > $here/comp.log 2>&1
+  make FC=$FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK ut > $here/comp.log 2>&1
 cd  $here
 nbOK=`grep -c "model (QML) compilation: OK" comp.log`
 
@@ -26,11 +28,13 @@ then
   exit
 fi
 
-echo "   OPT: " $ExternalOPT
-echo "   OMP: " $ExternalOMP
+echo "    FC: " $FC
+echo "   OPT: " $OPT
+echo "   OMP: " $OMP
+echo "LAPACK: " $LAPACK
 echo "=========================================="
 
-../ModLib.x < input.dat > res 2>error.log
+../TEST_model.x < input.dat > res 2>error.log
 ../bin/Compare_QML > Test_QML.log
 
 #grep "The structure of both files are different" Test_QML.log

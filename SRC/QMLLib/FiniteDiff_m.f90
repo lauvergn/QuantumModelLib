@@ -38,14 +38,14 @@
 !===========================================================================
 !===========================================================================
 MODULE QMLLib_FiniteDiff_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   IMPLICIT NONE
 
   PRIVATE
 
-    !--------------------------------------------------------------------------
-    integer, parameter :: list_1D_indDQ(1,4) = reshape([-2,-1, 1, 2],shape=[1,4])
-    integer, parameter :: list_2D_indDQ(2,8) = reshape([                &
+  !--------------------------------------------------------------------------
+  integer, parameter :: list_1D_indDQ(1,4) = reshape([-2,-1, 1, 2],shape=[1,4])
+  integer, parameter :: list_2D_indDQ(2,8) = reshape([                  &
                                                        -1,-1,           &
                                                         1,-1,           &
                                                        -1, 1,           &
@@ -55,55 +55,55 @@ MODULE QMLLib_FiniteDiff_m
                                                        -2, 2,           &
                                                         2, 2            &
                                                             ],shape=[2,8])
-    integer, parameter :: list_3D_indDQ(3,6) = reshape([                &
+  integer, parameter :: list_3D_indDQ(3,6) = reshape([                  &
                                                        -1,-1, 1,        &
                                                        -1, 1,-1,        &
                                                         1,-1,-1,        &
                                                         1, 1,-1,        &
                                                         1,-1, 1,        &
                                                        -1, 1, 1         &
-                                                            ],shape=[3,6])
-    !--------------------------------------------------------------------------
+                                                          ],shape=[3,6])
+  !--------------------------------------------------------------------------
 
-    !--------------------------------------------------------------------------
-    !for 1st derivatives
-    ! for d./dx
-    real (kind=Rkind), parameter ::   wD(-2:2) = [ONE/TWELVE,-EIGHT/TWELVE,ZERO,EIGHT/TWELVE,-ONE/TWELVE]
-    !--------------------------------------------------------------------------
+  !--------------------------------------------------------------------------
+  !for 1st derivatives
+  ! for d./dx
+  real (kind=Rkind), parameter ::   wD(-2:2) = [ONE/TWELVE,-EIGHT/TWELVE,ZERO,EIGHT/TWELVE,-ONE/TWELVE]
+  !--------------------------------------------------------------------------
 
-    !--------------------------------------------------------------------------
-    !for 2d derivatives
-    ! for d2./dx2
-    real (kind=Rkind), parameter ::  wDD(-2:2) = [-ONE/TWELVE,FOUR/THREE,-FIVE/TWO,FOUR/THREE,-ONE/TWELVE]
+  !--------------------------------------------------------------------------
+  !for 2d derivatives
+  ! for d2./dx2
+  real (kind=Rkind), parameter ::  wDD(-2:2) = [-ONE/TWELVE,FOUR/THREE,-FIVE/TWO,FOUR/THREE,-ONE/TWELVE]
 
-    ! for d2./dxdy
-    real (kind=Rkind), parameter ::  w11DD(-1:1,-1:1) = reshape([       &
+  ! for d2./dxdy
+  real (kind=Rkind), parameter ::  w11DD(-1:1,-1:1) = reshape([         &
                                             ONE/THREE,ZERO,-ONE/THREE,  &
                                              ZERO,    ZERO, ZERO,       &
                                            -ONE/THREE,ZERO, ONE/THREE   &
-                                                              ],shape=[3,3])
+                                                          ],shape=[3,3])
 
-    real (kind=Rkind), parameter ::  w22DD(-1:1,-1:1) = reshape([       &
+  real (kind=Rkind), parameter ::  w22DD(-1:1,-1:1) = reshape([         &
                                      -ONE/48._Rkind,ZERO, ONE/48._Rkind,&
                                           ZERO,     ZERO, ZERO,         &
                                       ONE/48._Rkind,ZERO,-ONE/48._Rkind &
-                                                              ],shape=[3,3])
-    !--------------------------------------------------------------------------
+                                                          ],shape=[3,3])
+  !--------------------------------------------------------------------------
 
-    !--------------------------------------------------------------------------
-    !for 3d derivatives
-    ! for d3./dx3
-    real (kind=Rkind), parameter :: wDDD(-2:2) = [-HALF,ONE,ZERO,-ONE,HALF]
+  !--------------------------------------------------------------------------
+  !for 3d derivatives
+  ! for d3./dx3
+  real (kind=Rkind), parameter :: wDDD(-2:2) = [-HALF,ONE,ZERO,-ONE,HALF]
 
-    ! for d3./dx2dy
-    real (kind=Rkind), parameter :: a = TWO/THREE
-    real (kind=Rkind), parameter :: b = ONE/48._Rkind
+  ! for d3./dx2dy
+  real (kind=Rkind), parameter :: a = TWO/THREE
+  real (kind=Rkind), parameter :: b = ONE/48._Rkind
 
-    real (kind=Rkind), parameter ::  w11DDD(-1:1,-1:1) = reshape([       &
+  real (kind=Rkind), parameter ::  w11DDD(-1:1,-1:1) = reshape([         &
                                              -a,  ZERO,-a,               &
                                              ZERO,ZERO, ZERO,            &
                                               a,  ZERO, a                &
-                                                              ],shape=[3,3])
+                                                          ],shape=[3,3])
 
     real (kind=Rkind), parameter ::  w22DDD(-1:1,-1:1) = reshape([       &
                                               b,  ZERO, b,               &
@@ -153,36 +153,37 @@ MODULE QMLLib_FiniteDiff_m
                                                            ],shape=[3,3,3])
     !--------------------------------------------------------------------------
 
-PUBLIC :: Get_nb_pts,Get_indDQ,Set_QplusDQ
-PUBLIC :: FiniteDiff_AddMat_TO_dnMat, FiniteDiff3_SymPerm_OF_dnMat, FiniteDiff_Finalize_dnMat
+  PUBLIC :: Get_nb_pts,Get_indDQ,Set_QplusDQ
+  PUBLIC :: FiniteDiff_AddMat_TO_dnMat, FiniteDiff3_SymPerm_OF_dnMat, FiniteDiff_Finalize_dnMat
 
-INTERFACE Get_nb_pts
-  MODULE PROCEDURE QML_Get_nb_pts
-END INTERFACE
+  INTERFACE Get_nb_pts
+    MODULE PROCEDURE QML_Get_nb_pts
+  END INTERFACE
 
-INTERFACE Get_indDQ
-  MODULE PROCEDURE QML_Get_indDQ
-END INTERFACE
+  INTERFACE Get_indDQ
+    MODULE PROCEDURE QML_Get_indDQ
+  END INTERFACE
 
-INTERFACE Set_QplusDQ
-  MODULE PROCEDURE QML_Set_QplusDQ
-END INTERFACE
+  INTERFACE Set_QplusDQ
+    MODULE PROCEDURE QML_Set_QplusDQ
+  END INTERFACE
 
-INTERFACE FiniteDiff_AddMat_TO_dnMat
-  MODULE PROCEDURE QML_FiniteDiff_AddMat_TO_dnMat
-END INTERFACE
+  INTERFACE FiniteDiff_AddMat_TO_dnMat
+    MODULE PROCEDURE QML_FiniteDiff_AddMat_TO_dnMat
+  END INTERFACE
 
-INTERFACE FiniteDiff3_SymPerm_OF_dnMat
-  MODULE PROCEDURE QML_FiniteDiff3_SymPerm_OF_dnMat
-END INTERFACE
+  INTERFACE FiniteDiff3_SymPerm_OF_dnMat
+    MODULE PROCEDURE QML_FiniteDiff3_SymPerm_OF_dnMat
+  END INTERFACE
 
-INTERFACE FiniteDiff_Finalize_dnMat
-  MODULE PROCEDURE QML_FiniteDiff_Finalize_dnMat
-END INTERFACE
+  INTERFACE FiniteDiff_Finalize_dnMat
+    MODULE PROCEDURE QML_FiniteDiff_Finalize_dnMat
+  END INTERFACE
 
 CONTAINS
   FUNCTION QML_Get_nb_pts(ndim) RESULT(nb_pts)
-  IMPLICIT NONE
+    IMPLICIT NONE
+
     integer                       :: nb_pts   ! number of points
     integer,           intent(in) :: ndim     ! indDQ(ndim)
 
@@ -201,7 +202,7 @@ CONTAINS
 
   END FUNCTION QML_Get_nb_pts
   SUBROUTINE QML_Get_indDQ(indDQ,i_pt)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     integer,           intent(inout) :: indDQ(:) ! amplitude of DQ
 
@@ -220,7 +221,7 @@ CONTAINS
   END SUBROUTINE QML_Get_indDQ
 
   SUBROUTINE QML_Set_QplusDQ(Qout,Qin,indQ,indDQ,step_sub)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     real (kind=Rkind), intent(inout)  :: Qout(:)
     real (kind=Rkind), intent(in)     :: Qin(:)
@@ -248,10 +249,9 @@ CONTAINS
 
   END SUBROUTINE QML_Set_QplusDQ
 
-
   SUBROUTINE QML_FiniteDiff_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ,option)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
     real (kind=Rkind), intent(in)            :: Mat(:,:)
@@ -310,8 +310,8 @@ CONTAINS
   END SUBROUTINE QML_FiniteDiff_AddMat_TO_dnMat
 
   SUBROUTINE QML_FiniteDiff4_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
     real (kind=Rkind), intent(in)            :: Mat(:,:)
@@ -471,8 +471,8 @@ CONTAINS
 
   END SUBROUTINE QML_FiniteDiff4_AddMat_TO_dnMat
   SUBROUTINE QML_FiniteDiff3_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
     real (kind=Rkind), intent(in)            :: Mat(:,:)
@@ -647,8 +647,8 @@ CONTAINS
   END SUBROUTINE QML_FiniteDiff3_AddMat_TO_dnMat
 
   SUBROUTINE QML_FiniteDiff3_SymPerm_OF_dnMat(dnMat,indQ)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)   :: dnMat
     integer,           intent(in)      :: indQ(:)  ! indexes of the variables along DQ is made
@@ -707,8 +707,8 @@ CONTAINS
 
   END SUBROUTINE QML_FiniteDiff3_SymPerm_OF_dnMat
   SUBROUTINE QML_FiniteDiff_Finalize_dnMat(dnMat,step)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
     real (kind=Rkind), intent(in)            :: step

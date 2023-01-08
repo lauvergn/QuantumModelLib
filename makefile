@@ -2,13 +2,8 @@
 #=================================================================================
 # Compiler?
 #Possible values: (Empty: gfortran)
-#                ifort (version: 19.0 linux)
-#                gfortran (version: >9.0 linux and osx)
-#                pgf90 (version: 17.10-0, linux)
-#                nagfor (version 7.0, osx)
-#FC = ifort
+#                gfortran (version: 9.0 linux and osx)
  FC = gfortran
-#FC = nagfor
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 1
@@ -18,469 +13,297 @@ OMP = 1
 LAPACK = 1
 #=================================================================================
 #=================================================================================
-
-QML_ver=$(shell awk '/QML/ {print $$3}' version-QML)
-QML_path:=$(shell pwd)
-ext_obj=_$(FC)_opt$(OPT)_omp$(OMP)
-
-
+ifeq ($(FC),)
+  FFC      := gfortran
+else
+  FFC      := $(FC)
+endif
+ifeq ($(OPT),)
+  OOPT      := 1
+else
+  OOPT      := $(OPT)
+endif
+ifeq ($(OMP),)
+  OOMP      := 1
+else
+  OOMP      := $(OMP)
+endif
+ifeq ($(LAPACK),)
+  LLAPACK      := 1
+else
+  LLAPACK      := $(LAPACK)
+endif
 #=================================================================================
-# Directories
-#=================================================================================
-DIR0       = $(QML_path)
-DIROBJ     = $(DIR0)/OBJ/obj$(ext_obj)
-$(shell [ -d $(DIROBJ) ] || mkdir -p $(DIROBJ))
-QMLMODDIR  = $(DIROBJ)
-
-#=================================================================================
-# External Libraries directory (dnSVM ...)
-ExtLibDIR=$(QML_path)/Ext_Lib
-
-# AD_dnSVM Lib
-AD_dnSVMLib_DIR      := $(ExtLibDIR)/AD_dnSVM-loc
-AD_dnSVMLib          := $(AD_dnSVMLib_DIR)/libAD_dnSVM$(ext_obj).a
-AD_dnSVMObj_DIR      := $(AD_dnSVMLib_DIR)/OBJ/obj$(ext_obj)
-# QDUtil Lib
-QDUtil_DIR           := $(ExtLibDIR)/QDUtilLib
-QDUtilMOD_DIR        := $(QDUtil_DIR)/OBJ/obj$(ext_obj)
-QDUTILLib            := $(QDUtil_DIR)/libQD$(ext_obj).a
-#===============================================================================
-
-
-#=================================================================================
+#
 # Operating system, OS? automatic using uname:
-#=================================================================================
-OS=$(shell uname)
-#=================================================================================
+OS :=$(shell uname)
+
+
+QML_ver  := $(shell awk '/QML/ {print $$3}' version-QML)
+QML_path := $(shell pwd)
+
+# Extension for the object directory and the library
+ext_obj=_$(FFC)_opt$(OOPT)_omp$(OOMP)
+
+# library name
+QMLIBA=libQMLib$(ext_obj).a
 #=================================================================================
 
+OBJ_DIR=OBJ/obj$(ext_obj)
+$(shell [ -d $(OBJ_DIR) ] || mkdir -p $(OBJ_DIR))
+
+MOD_DIR=$(OBJ_DIR)
+SRC_DIR=SRC
+MAIN_DIR=APP
+TESTS_DIR=Tests
+
+CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
+               -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
+               -D__COMPILER="'$(FFC)'" \
+               -D__COMPILER_VER="'$(FC_VER)'" \
+               -D__COMPILER_OPT="'$(FFLAGS0)'" \
+               -D__QMLPATH="'$(QML_path)'" \
+               -D__QML_VER='"$(QML_ver)"'
+#=================================================================================
+# External Libraries directory
+#
+ifeq ($(ExtLibDIR),)
+  ExtLibDIR := $(QML_path)/Ext_Lib
+endif
+
+QD_DIR    = $(ExtLibDIR)/QDUtilLib
+QDMOD_DIR = $(QD_DIR)/OBJ/obj$(ext_obj)
+QDLIBA    = $(QD_DIR)/libQD$(ext_obj).a
+
+AD_DIR    = $(ExtLibDIR)/AD_dnSVM
+ADMOD_DIR = $(AD_DIR)/OBJ/obj$(ext_obj)
+ADLIBA    = $(AD_DIR)/libAD_dnSVM$(ext_obj).a
+
+EXTMOD_DIR = $(QDMOD_DIR) $(ADMOD_DIR)
+EXTLib     = $(QDLIBA) $(ADLIBA)
+#===============================================================================
 #=================================================================================
 #=================================================================================
 # gfortran (osx and linux)
 #=================================================================================
- ifeq ($(FC),gfortran)
+ifeq ($(FFC),gfortran)
 
-   # for c++ preprocessing
-   CPPpre    = -cpp
+  ifeq ($(OOPT),1)
+    FFLAGS = -O5 -g -fbacktrace -funroll-loops -ftree-vectorize -falign-loops=16
+  else
+    FFLAGS = -Og -g -fbacktrace -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -finit-real=nan -finit-integer=nan
+    #FFLAGS = -O0 -fbounds-check -Wuninitialized
+  endif
 
-   # opt management
-   ifeq ($(OPT),1)
-      FCFLAGS = -O5 -g -fbacktrace -funroll-loops -ftree-vectorize -falign-loops=16
-   else
-      FCFLAGS = -Og -Wall -Wextra -Wimplicit-interface -fPIC -fmax-errors=1 -g -fcheck=all -fbacktrace
-   endif
   # omp management
-   ifeq ($(OMP),1)
-      FCFLAGS += -fopenmp
-   endif
+  ifeq ($(OOMP),1)
+    FFLAGS += -fopenmp
+  endif
+  FFLAGS0 := $(FFLAGS)
 
-   FCFLAGS0 := $(FCFLAGS)
+  FFLAGS +=-J$(MOD_DIR)
 
-   FCFLAGS += -I$(QDUtilMOD_DIR) -I$(AD_dnSVMObj_DIR) -I$(DIROBJ)
+  # some cpreprocessing
+  FFLAGS += -cpp $(CPPSHELL_QML)
 
-   FC_VER = $(shell $(FC) --version | head -1 )
+  # OS management
+  ifeq ($(LLAPACK),1)
+    ifeq ($(OS),Darwin)    # OSX
+      # OSX libs (included lapack+blas)
+      FLIB = -framework Accelerate
+    else                   # Linux
+      # linux libs
+      FLIB = -llapack -lblas
+      #
+      # linux libs with mkl and with openmp
+      #FLIB = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_gnu_thread
+      # linux libs with mkl and without openmp
+      #FLIB = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_sequential
+    endif
+  endif
 
-   # OS management
-   FCLIB =
-   ifeq ($(LAPACK),1)
-     ifeq ($(OS),Darwin)    # OSX
-        # OSX libs (included lapack+blas)
-        FCLIB = -framework Accelerate
-     else                   # Linux
-        # linux libs
-        FCLIB = -llapack -lblas
-     endif
-   endif
+  FC_VER = $(shell $(FFC) --version | head -1 )
+
+  FFLAGS += -I$(QDMOD_DIR) -I$(ADMOD_DIR)
+  FLIB += $(EXTLib)
 
 endif
-FC_FLAGS = $(FC) $(FCFLAGS)
-LYNK90   = $(FC_FLAGS)
+#=================================================================================
+#=================================================================================
 
-#=================================================================================
-# Other directories
-#=================================================================================
-DIRSRC     = $(DIR0)/SRC
-DIRLib     = $(DIRSRC)/QMLLib
-DIRModel   = $(DIRSRC)/QML
-DIRAdia    = $(DIRSRC)/AdiaChannels
-DIROpt     = $(DIRSRC)/Opt
-#=================================================================================
-#=================================================================================
 $(info ***********************************************************************)
 $(info ***********OS:           $(OS))
-$(info ***********COMPILER:     $(FC))
+$(info ***********COMPILER:     $(FFC))
 $(info ***********COMPILER_VER: $(FC_VER))
-$(info ***********OPTIMIZATION: $(OPT))
-$(info ***********OpenMP:       $(OMPFLAG))
-$(info ***********Arpack:       $(ARPACK))
-$(info ***********AD_dnSVMLib_DIR:  $(AD_dnSVMLib_DIR))
-$(info ***********FCFLAGS:      $(FCFLAGS))
-$(info ***********FCLIB:        $(FCLIB))
-$(info ***********QML_ver:      $(QML_ver))
-$(info ***********QML_path:     $(QML_path))
+$(info ***********OPTIMIZATION: $(OOPT))
+$(info ***********OpenMP:       $(OOMP))
+$(info ***********LAPACK:       $(LLAPACK))
+$(info ***********FFLAGS:       $(FFLAGS))
+$(info ***********FLIB:         $(FLIB))
+$(info ***********EXTMOD_DIR:   $(EXTMOD_DIR))
+$(info ***********ext_obj:      $(ext_obj))
 $(info ***********************************************************************)
 
-CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
-               -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
-               -D__COMPILER="'$(FC)'" \
-               -D__COMPILER_VER="'$(FC_VER)'" \
-               -D__COMPILER_OPT="'$(FCFLAGS0)'" \
-               -D__QMLPATH="'$(QML_path)'" \
-               -D__QML_VER='"$(QML_ver)"'
+VPATH = $(TESTS_DIR):$(MAIN_DIR):$(SRC_DIR): \
+        $(SRC_DIR)/QMLLib:$(SRC_DIR)/QML:$(SRC_DIR)/Opt:$(SRC_DIR)/AdiaChannels
 
-CPPSHELL_MATRIX  = -D__LAPACK="$(LAPACK)"
+MAIN=TEST_driver
+TESTS=TEST_model
+
+MAINSRCFILES=TEST_Adia.f90 TEST_OOP.f90 TEST_grid.f90 TEST_OMPloop.f90 TEST_driver.f90
+TESTSRCFILES=TEST_model.f90
+LIBSRCFILES=Model_driver.f90 Model_m.f90 \
+            IRC_m.f90    Opt_m.f90 \
+            Basis_m.f90  MakeHinact_m.f90
+
+QMLSRCFILES=Buck_m.f90 H3_m.f90 NO3_m.f90  Template_m.f90 \
+            CH5_m.f90 HCN_Murrell_m.f90    OneDSOC_1S1T_m.f90 Test_m.f90 \
+            ClH2p_Botschwina_m.f90         HNNHp_m.f90 OneDSOC_2S1T_m.f90 Tully_m.f90 \
+            ClH2p_m.f90  HNO3_m.f90        PH4_m.f90   TwoD_MullerBrown_m.f90 \
+            Empty_m.f90  HONO_m.f90        PSB3_m.f90  TwoD_RJDI2014_m.f90 \
+            H2NSi_m.f90  HOO_DMBE_m.f90    Phenol_m.f90           TwoD_Valahu2022_m.f90 \
+            H2O_m.f90    HenonHeiles_m.f90 Poly1D_m.f90           TwoD_m.f90 \
+            H2SiN_m.f90  LinearHBond_m.f90 Retinal_JPCB2000_m.f90   \
+            H2_m.f90     Morse_m.f90       Sigmoid_m.f90 \
+            FiniteDiff_m.f90  UtilLib_m.f90
+
+QMLOBJ0=${QMLSRCFILES:.f90=.o}
+QMLOBJ=$(addprefix $(OBJ_DIR)/, $(QMLOBJ0))
 
 
-#
-GRIDEXE    = Grid.x
-ADIAEXE    = Adia.x
-MODEXE     = ModLib.x
-TESTEXE    = testOOP.x
-DriverEXE  = Driver.x
 
-QMLib      = libQMLib$(ext_obj).a
-FCLIB += $(QDUTILLib) $(AD_dnSVMLib) $(QMLib)
+SRCFILES= $(QMLSRCFILES) $(LIBSRCFILES)
+OBJ0=${SRCFILES:.f90=.o}
+OBJ=$(addprefix $(OBJ_DIR)/, $(OBJ0))
 
-#
-OBJ_QML        = $(DIROBJ)/Empty_m.o \
-                 $(DIROBJ)/Sigmoid_m.o $(DIROBJ)/Morse_m.o $(DIROBJ)/Poly1D_m.o \
-                 $(DIROBJ)/H2_m.o $(DIROBJ)/Buck_m.o \
-                 $(DIROBJ)/Template_m.o $(DIROBJ)/Test_m.o \
-                 $(DIROBJ)/H2NSi_m.o $(DIROBJ)/H2SiN_m.o \
-                 $(DIROBJ)/HNNHp_m.o $(DIROBJ)/HONO_m.o \
-                 $(DIROBJ)/HNO3_m.o $(DIROBJ)/NO3_m.o \
-                 $(DIROBJ)/CH5_m.o $(DIROBJ)/PH4_m.o \
-                 $(DIROBJ)/HOO_DMBE_m.o \
-                 $(DIROBJ)/H3_m.o $(DIROBJ)/HCN_Murrell_m.o \
-                 $(DIROBJ)/H2O_m.o \
-                 $(DIROBJ)/ClH2p_m.o $(DIROBJ)/ClH2p_Botschwina_m.o\
-                 $(DIROBJ)/HenonHeiles_m.o $(DIROBJ)/LinearHBond_m.o \
-                 $(DIROBJ)/TwoD_MullerBrown_m.o \
-                 $(DIROBJ)/Phenol_m.o \
-                 $(DIROBJ)/TwoD_m.o $(DIROBJ)/TwoD_RJDI2014_m.o $(DIROBJ)/TwoD_Valahu2022_m.o \
-                 $(DIROBJ)/PSB3_m.o $(DIROBJ)/Retinal_JPCB2000_m.o \
-                 $(DIROBJ)/OneDSOC_1S1T_m.o $(DIROBJ)/OneDSOC_2S1T_m.o \
-                 $(DIROBJ)/Tully_m.o
-
-OBJ_Model      = $(DIROBJ)/Model_m.o $(DIROBJ)/Basis_m.o $(DIROBJ)/Opt_m.o $(DIROBJ)/IRC_m.o
-
-OBJ_lib        = $(DIROBJ)/FiniteDiff_m.o $(DIROBJ)/UtilLib_m.o 
-
-OBJ_all        = $(OBJ_lib) $(OBJ_QML) $(OBJ_Model)
-
-OBJ_test       = $(DIROBJ)/TEST_OOP.o
-OBJ_driver     = $(DIROBJ)/Model_driver.o
-OBJ_grid       = $(DIROBJ)/TEST_grid.o
-OBJ_adia       = $(DIROBJ)/TEST_Adia.o
-OBJ_testmod    = $(DIROBJ)/TEST_model.o
-OBJ_testdriver = $(DIROBJ)/TEST_driver.o
-
+#===============================================
+#============= Tests ===========================
+#===============================================
+.PHONY: ut UT
+UT ut: $(TESTS).x
+	@echo "model (QML) compilation: OK"
+#	./$(TESTS).x |	grep "Number of error(s)"
+#	@echo "  done Tests"
 
 
 #===============================================
-#============= Main program ====================
-#
+#============= all: lib, tests ...  ============
+#===============================================
 .PHONY: all
-all: lib model grid driver readme
-# model tests
-
-# test_OOP
-.PHONY: test
-test:$(TESTEXE)
-$(TESTEXE): $(OBJ_test) $(QMLib)
-	$(LYNK90)   -o $(TESTEXE) $(OBJ_test) $(FCLIB)
-
-.PHONY: model QML_Test
-model QML_Test:$(MODEXE)
-	echo "model (QML) compilation: OK"
-$(MODEXE): $(OBJ_testmod) $(QMLib)
-	$(LYNK90)   -o $(MODEXE) $(OBJ_testmod) $(FCLIB)
-#
-# grid
-.PHONY: grid testgrid
-grid testgrid:$(GRIDEXE)
-$(GRIDEXE): $(OBJ_grid) $(QMLib)
-	$(LYNK90)   -o $(GRIDEXE) $(OBJ_grid) $(FCLIB)
-#
-# Adia
-.PHONY: adia testadia
-adia testadia:$(ADIAEXE)
-$(ADIAEXE): $(OBJ_adia) $(QMLib)
-	$(LYNK90)   -o $(ADIAEXE) $(OBJ_adia) $(FCLIB)
-#
-#
-#driver
-.PHONY: driver
-driver:$(DriverEXE)
-$(DriverEXE): $(OBJ_testdriver) $(QMLib)
-	$(LYNK90)   -o $(DriverEXE) $(OBJ_testdriver) $(FCLIB)
-#
-#readme
-.PHONY: readme
-readme:
-	bin/extractReadMe
-
+all: $(QMLIBA) $(MAIN).x $(TESTS).x
 #===============================================
-#============= Qunatum Model Lib ===============
+#============= Main executable and tests  ======
 #===============================================
-#
+$(MAIN).x: $(OBJ_DIR)/$(MAIN).o $(QMLIBA)
+	$(FFC) $(FFLAGS) -o $(MAIN).x  $(OBJ_DIR)/$(MAIN).o $(FLIB) $(QMLIBA)
+
+$(TESTS).x: $(OBJ_DIR)/$(TESTS).o $(QMLIBA)
+	$(FFC) $(FFLAGS) -o $(TESTS).x  $(OBJ_DIR)/$(TESTS).o $(FLIB) $(QMLIBA)
+#===============================================
+#============= Library: libQD.a  ===============
+#===============================================
 .PHONY: lib
-lib: $(QMLib) readme
-$(QMLib): $(OBJ_driver) $(OBJ_all)
-	ar -r $(QMLib) $(OBJ_driver) $(OBJ_all)
-	echo "create the library: ",$(QMLib)
-#
-#
+lib: $(QMLIBA)
+
+$(QMLIBA): $(OBJ)
+	ar -cr $(QMLIBA) $(OBJ)
+	@echo "  done Library: "$(QMLIBA)
 #===============================================
-#===============================================
-.PHONY: clean
-clean:
-	rm -f  $(MODEXE) $(GRIDEXE) $(ADIAEXE) $(DriverEXE) $(TESTEXE)
-	rm -f  *.a
-	rm -f grid*
-	rm -fr *.dSYM comp.log
-	cd $(DIROBJ) ; rm -f *.o *.mod *.MOD
-	@cd Tests && ./clean
-	@echo "  done cleaning up the example directories"
-	@cd DOC && ./clean
-	@echo "  done cleaning up the documentation"
-#===============================================
-#===============================================
-#
-##################################################################################
-### Model libraries
-#
-$(DIROBJ)/Empty_m.o:$(DIRModel)/Empty_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/Empty_m.f90
-
-$(DIROBJ)/Morse_m.o:$(DIRModel)/Morse_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/Morse_m.f90
-
-$(DIROBJ)/Poly1D_m.o:$(DIRModel)/Poly1D_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/Poly1D_m.f90
-
-$(DIROBJ)/H2_m.o:$(DIRModel)/H2_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/H2_m.f90
-
-$(DIROBJ)/Template_m.o:$(DIRModel)/Template_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/Template_m.f90
-
-$(DIROBJ)/Test_m.o:$(DIRModel)/Test_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/Test_m.f90
-
-$(DIROBJ)/LinearHBond_m.o:$(DIRModel)/LinearHBond_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/LinearHBond_m.f90
-
-$(DIROBJ)/TwoD_MullerBrown_m.o:$(DIRModel)/TwoD_MullerBrown_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/TwoD_MullerBrown_m.f90
-
-$(DIROBJ)/Phenol_m.o:$(DIRModel)/Phenol_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/Phenol_m.f90
-
-$(DIROBJ)/PSB3_m.o:$(DIRModel)/PSB3_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/PSB3_m.f90
-
-$(DIROBJ)/Retinal_JPCB2000_m.o:$(DIRModel)/Retinal_JPCB2000_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/Retinal_JPCB2000_m.f90
-
-$(DIROBJ)/HONO_m.o:$(DIRModel)/HONO_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/HONO_m.f90
-
-$(DIROBJ)/HNO3_m.o:$(DIRModel)/HNO3_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/HNO3_m.f90
-
-$(DIROBJ)/NO3_m.o:$(DIRModel)/NO3_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/NO3_m.f90
-
-$(DIROBJ)/CH5_m.o:$(DIRModel)/CH5_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/CH5_m.f90
-
-$(DIROBJ)/PH4_m.o:$(DIRModel)/PH4_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/PH4_m.f90
-
-$(DIROBJ)/HOO_DMBE_m.o:$(DIRModel)/HOO_DMBE_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/HOO_DMBE_m.f90
-
-$(DIROBJ)/H3_m.o:$(DIRModel)/H3_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/H3_m.f90
-
-$(DIROBJ)/HCN_Murrell_m.o:$(DIRModel)/HCN_Murrell_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/HCN_Murrell_m.f90
-
-$(DIROBJ)/H2O_m.o:$(DIRModel)/H2O_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/H2O_m.f90
-$(DIROBJ)/ClH2p_m.o:$(DIRModel)/ClH2p_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/ClH2p_m.f90
-$(DIROBJ)/ClH2p_Botschwina_m.o:$(DIRModel)/ClH2p_Botschwina_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/ClH2p_Botschwina_m.f90
-
-$(DIROBJ)/HNNHp_m.o:$(DIRModel)/HNNHp_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/HNNHp_m.f90
-
-$(DIROBJ)/H2SiN_m.o:$(DIRModel)/H2SiN_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/H2SiN_m.f90
-
-$(DIROBJ)/H2NSi_m.o:$(DIRModel)/H2NSi_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/H2NSi_m.f90
-
-$(DIROBJ)/TwoD_m.o:$(DIRModel)/TwoD_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/TwoD_m.f90
-
-$(DIROBJ)/TwoD_RJDI2014_m.o:$(DIRModel)/TwoD_RJDI2014_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/TwoD_RJDI2014_m.f90
-
-$(DIROBJ)/TwoD_Valahu2022_m.o:$(DIRModel)/TwoD_Valahu2022_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/TwoD_Valahu2022_m.f90
-
-$(DIROBJ)/Tully_m.o:$(DIRModel)/Tully_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/Tully_m.f90
-
-$(DIROBJ)/OneDSOC_1S1T_m.o:$(DIRModel)/OneDSOC_1S1T_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/OneDSOC_1S1T_m.f90
-$(DIROBJ)/OneDSOC_2S1T_m.o:$(DIRModel)/OneDSOC_2S1T_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/OneDSOC_2S1T_m.f90
-
-$(DIROBJ)/Buck_m.o:$(DIRModel)/Buck_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/Buck_m.f90
-
-$(DIROBJ)/Sigmoid_m.o:$(DIRModel)/Sigmoid_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/Sigmoid_m.f90
-
-$(DIROBJ)/HenonHeiles_m.o:$(DIRModel)/HenonHeiles_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRModel)/HenonHeiles_m.f90
-#
-##################################################################################
-### QModel
-#
-$(DIROBJ)/Model_m.o:$(DIRSRC)/Model_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS) $(CPPpre) $(CPPSHELL_QML)  -c $(DIRSRC)/Model_m.f90
-#
-##################################################################################
-#
-#
-##################################################################################
-### AdiaChannels
-#
-$(DIROBJ)/MakeHinact_m.o:$(DIRAdia)/MakeHinact_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)  -c $(DIRAdia)/MakeHinact_m.f90
-$(DIROBJ)/Basis_m.o:$(DIRAdia)/Basis_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)  -c $(DIRAdia)/Basis_m.f90
-#
-##################################################################################
-#
-##################################################################################
-### Optimization + IRC
-#
-$(DIROBJ)/Opt_m.o:$(DIROpt)/Opt_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)  -c $(DIROpt)/Opt_m.f90
-$(DIROBJ)/IRC_m.o:$(DIROpt)/IRC_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)  -c $(DIROpt)/IRC_m.f90
-#
-##################################################################################
-
-#
-##################################################################################
-### Main + driver + tests
-#
-$(DIROBJ)/TEST_driver.o:$(DIRSRC)/TEST_driver.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRSRC)/TEST_driver.f90
-$(DIROBJ)/Model_driver.o:$(DIRSRC)/Model_driver.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRSRC)/Model_driver.f90
-$(DIROBJ)/TEST_model.o:$(DIRSRC)/TEST_model.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRSRC)/TEST_model.f90
-$(DIROBJ)/TEST_grid.o:$(DIRSRC)/TEST_grid.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRSRC)/TEST_grid.f90
-$(DIROBJ)/TEST_OOP.o:$(DIRSRC)/TEST_OOP.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRSRC)/TEST_OOP.f90
-$(DIROBJ)/TEST_Adia.o:$(DIRSRC)/TEST_Adia.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRSRC)/TEST_Adia.f90
-#
-##################################################################################
-#
-#
-##################################################################################
-### external libraries
+#=== external libraries ========================
 # AD_dnSVM + QDUTIL Lib
+#===============================================
 #
 $(ExtLibDIR):
 	@echo directory $(ExtLibDIR) does not exist
 	exit 1
 
-$(QDUTILLib): $(ExtLibDIR)
-	cd $(ExtLibDIR) ; ./get_QDUtilLib.sh $(OPT) $(OMP) $(LAPACK)
-	@echo "  done QDUtil Lib in QML"
-$(AD_dnSVMLib): $(ExtLibDIR)
-	cd $(ExtLibDIR) ; ./get_dnSVM.sh $(OPT) $(OMP) $(LAPACK)
-	@echo "  done AD_dnSVM Lib"
+$(QDLIBA): $(ExtLibDIR)
+	cd $(ExtLibDIR) ; ./get_QDUtilLib.sh $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(ExtLibDIR)
+	@echo "  done " $(QDLIBA) " in QML"
+
+$(ADLIBA): $(ExtLibDIR)
+	cd $(ExtLibDIR) ; ./get_dnSVM.sh $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(ExtLibDIR)
+	@echo "  done " $(AD_DIR) " in QML"
+#===============================================
 #
-##################################################################################
-### libraries
-#
-$(DIROBJ)/FiniteDiff_m.o:$(DIRLib)/FiniteDiff_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS) -c $(DIRLib)/FiniteDiff_m.f90
-$(DIROBJ)/UtilLib_m.o:$(DIRLib)/UtilLib_m.f90
-	cd $(DIROBJ) ; $(FC_FLAGS)   -c $(DIRLib)/UtilLib_m.f90
-#
-##################################################################################
-#
-#
+#===============================================
+#============= compilation =====================
+#===============================================
+$(OBJ_DIR)/%.o: %.f90
+	@echo "  compile: " $<
+	$(FFC) $(FFLAGS) -o $@ -c $<
+
+#===============================================
+#================ cleaning =====================
+.PHONY: clean cleanall
+clean:
+	cd $(TESTS_DIR) ; ./clean
+	rm -f $(OBJ_DIR)/*/*.o $(OBJ_DIR)/*.o
+	rm -f *.log 
+	rm -f TEST*.x
+	@echo "  done cleaning"
+
+cleanall : clean
+	cd $(ExtLibDIR) ; ./cleanlib
+	rm -fr OBJ/obj* OBJ/*mod build
+	rm -f lib*.a
+	rm -f TESTS/res* TESTS/*log
+	@echo "  done all cleaning"
+#===============================================
+#============= module dependencies =============
+#===============================================
 ##################################################################################
 ### dependencies
 #
-$(DIROBJ)/TEST_OOP.o:    $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
-$(DIROBJ)/TEST_model.o:  $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
-$(DIROBJ)/TEST_driver.o: $(QMLib)
-$(DIROBJ)/TEST_Adia.o:   $(QMLib)
+$(OBJ_DIR)/UtilLib_m.o:    $(EXTLib)
+$(OBJ_DIR)/FiniteDiff_m.o: $(EXTLib) $(OBJ_DIR)/UtilLib_m.o
+$(OBJ_DIR)/Basis_m.o:      $(OBJ_DIR)/UtilLib_m.o
+
+$(OBJ_DIR)/Empty_m.o:      $(OBJ_DIR)/UtilLib_m.o $(OBJ_DIR)/FiniteDiff_m.o
+
+$(OBJ_DIR)/Morse_m.o:      $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/Poly1D_m.o:     $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/H2_m.o:         $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/Buck_m.o:       $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/Sigmoid_m.o:    $(OBJ_DIR)/Empty_m.o
+
+$(OBJ_DIR)/Template_m.o:          $(OBJ_DIR)/Empty_m.o $(OBJ_DIR)/Morse_m.o
+$(OBJ_DIR)/Test_m.o:              $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/HenonHeiles_m.o:       $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/Tully_m.o:             $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/OneDSOC_1S1T_m.o:      $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/OneDSOC_2S1T_m.o:      $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/TwoD_m.o:              $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/TwoD_RJDI2014_m.o:     $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/TwoD_Valahu2022_m.o:   $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/PSB3_m.o:              $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/Retinal_JPCB2000_m.o:  $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/HONO_m.o:              $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/HNO3_m.o:              $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/NO3_m.o:               $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/HOO_DMBE_m.o:          $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/H3_m.o:                $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/HCN_Murrell_m.o:       $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/ClH2p_m.o:             $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/ClH2p_Botschwina_m.o:  $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/CH5_m.o:               $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/PH4_m.o:               $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/HNNHp_m.o:             $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/H2SiN_m.o:             $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/H2NSi_m.o:             $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/LinearHBond_m.o:       $(OBJ_DIR)/Empty_m.o $(OBJ_DIR)/Morse_m.o $(OBJ_DIR)/Buck_m.o
+$(OBJ_DIR)/TwoD_MullerBrown_m.o:  $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/Phenol_m.o:            $(OBJ_DIR)/Empty_m.o $(OBJ_DIR)/Morse_m.o $(OBJ_DIR)/Sigmoid_m.o
 
 
-$(DIROBJ)/Model_driver.o: $(OBJ_lib) $(OBJ_Model) $(OBJ_QML)
+$(OBJ_DIR)/Model_m.o:      $(QMLOBJ) $(OBJ_DIR)/Basis_m.o \
+                           $(OBJ_DIR)/UtilLib_m.o $(OBJ_DIR)/FiniteDiff_m.o
 
-$(DIROBJ)/Opt_m.o: $(OBJ_lib) $(DIROBJ)/Model_m.o $(OBJ_QML)
-$(DIROBJ)/IRC_m.o: $(OBJ_lib) $(DIROBJ)/Model_m.o $(DIROBJ)/Opt_m.o $(OBJ_QML)
+$(OBJ_DIR)/Opt_m.o:        $(OBJ_DIR)/Model_m.o
+$(OBJ_DIR)/IRC_m.o:        $(OBJ_DIR)/Opt_m.o $(OBJ_DIR)/Model_m.o
+$(OBJ_DIR)/MakeHinact_m.o: $(OBJ_DIR)/Model_m.o
 
-$(DIROBJ)/Model_m.o: $(DIROBJ)/Basis_m.o $(OBJ_lib) $(OBJ_QML)
+$(OBJ_DIR)/Model_driver.o: $(OBJ_DIR)/Model_m.o $(OBJ_DIR)/Opt_m.o $(OBJ_DIR)/IRC_m.o $(OBJ_DIR)/MakeHinact_m.o
 
-$(DIROBJ)/MakeHinact_m.o: $(DIROBJ)/Basis_m.o $(QMLib)
-
-
-$(DIROBJ)/Empty_m.o:   $(OBJ_lib) $(QDUTILLib)
-$(DIROBJ)/Morse_m.o:   $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/Poly1D_m.o:  $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/H2_m.o:      $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/Buck_m.o:    $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/Sigmoid_m.o: $(DIROBJ)/Empty_m.o $(OBJ_lib)
-
-$(DIROBJ)/Template_m.o:          $(OBJ_lib) $(DIROBJ)/Empty_m.o $(DIROBJ)/Morse_m.o
-$(DIROBJ)/Test_m.o:              $(OBJ_lib) $(DIROBJ)/Empty_m.o
-
-$(DIROBJ)/HenonHeiles_m.o:       $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/Tully_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/OneDSOC_1S1T_m.o:      $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/OneDSOC_2S1T_m.o:      $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/TwoD_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/TwoD_RJDI2014_m.o:     $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/TwoD_Valahu2022_m.o:   $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/PSB3_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/Retinal_JPCB2000_m.o:  $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/HONO_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/HNO3_m.o:              $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/NO3_m.o:               $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/HOO_DMBE_m.o:          $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/H3_m.o:                $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/HCN_Murrell_m.o:       $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/ClH2p_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/ClH2p_Botschwina_m.o:  $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/CH5_m.o:               $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/PH4_m.o:               $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/HNNHp_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/H2SiN_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/H2NSi_m.o:             $(DIROBJ)/Empty_m.o $(OBJ_lib)
-$(DIROBJ)/LinearHBond_m.o:       $(DIROBJ)/Empty_m.o $(OBJ_lib) \
-                                          $(DIROBJ)/Morse_m.o $(DIROBJ)/Buck_m.o
-$(DIROBJ)/TwoD_MullerBrown_m.o:  $(DIROBJ)/Empty_m.o $(AD_dnSVMLib) $(OBJ_lib)
-$(DIROBJ)/Phenol_m.o:            $(DIROBJ)/Empty_m.o $(AD_dnSVMLib) $(OBJ_lib) \
-                                       $(DIROBJ)/Morse_m.o $(DIROBJ)/Sigmoid_m.o
-#
-#
-$(DIROBJ)/UtilLib_m.o:    $(QDUTILLib)
-$(DIROBJ)/FiniteDiff_m.o: $(AD_dnSVMLib) $(QDUTILLib)
+$(OBJ_DIR)/TEST_model.o:   $(OBJ_DIR)/Model_m.o $(OBJ_DIR)/Opt_m.o $(OBJ_DIR)/IRC_m.o $(OBJ_DIR)/MakeHinact_m.o
+$(OBJ_DIR)/TEST_driver.o:  $(OBJ_DIR)/Model_driver.o

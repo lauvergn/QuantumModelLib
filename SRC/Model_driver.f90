@@ -716,6 +716,7 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 END SUBROUTINE sub_model1_VGH
 SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
   USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m, ONLY : TO_lowercase
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -743,8 +744,7 @@ SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
     write(out_unitp,*) 'ndim,nsurf,    : ',ndim,nsurf
     flush(out_unitp)
 
-    pot_name_loc = trim(adjustl(pot_name))
-    CALL string_uppercase_TO_lowercase(pot_name_loc)
+    pot_name_loc = TO_lowercase(trim(adjustl(pot_name)))
     IF (pot_name_loc == 'read_model') THEN
       CALL Init_Model(QuantumModel,read_param=.TRUE.,adiabatic=.FALSE.)
     ELSE

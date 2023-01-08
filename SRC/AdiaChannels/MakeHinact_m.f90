@@ -44,7 +44,7 @@ MODULE AdiaChannels_MakeHinact_m
 CONTAINS
 
   SUBROUTINE QML_MakeHinact(Qact,QModel)
-    USE QDUtil_m,         ONLY : diagonalization
+    USE QDUtil_m,         ONLY : diagonalization, Write_Mat, Write_Vec
     USE ADdnSVM_m
     USE Model_m
     USE AdiaChannels_Basis_m
@@ -99,16 +99,16 @@ CONTAINS
   END IF
 
   CALL DIAG_dnMat(dnH,dnHdiag,dnVec,dnVecProj,dnVec0=QModel%QM%Vec0)
-  !CALL Write_RMat(dnVec%d0(:,1:QModel%QM%nb_Channels),6,6,name_info='Vec')
+  !CALL Write_Mat(dnVec%d0(:,1:QModel%QM%nb_Channels),out_unitp,6,info='Vec')
   write(out_unitp,*) 'NAC'
   !CALL Write_dnMat(dnVecProj,nio=out_unitp)
-  CALL Write_RMat(dnVecProj%d1(1:QModel%QM%nb_Channels,1:QModel%QM%nb_Channels,1),out_unitp,6,name_info='NAC')
+  CALL Write_Mat(dnVecProj%d1(1:QModel%QM%nb_Channels,1:QModel%QM%nb_Channels,1),out_unitp,6,info='NAC')
 
   DO ib=1,nb
     Ene(ib) = dnHdiag%d0(ib,ib)
   END DO
   write(out_unitp,*) 'Ene'
-  CALL Write_RVec(Ene(1:QModel%QM%nb_Channels)*auTOcm_inv,out_unitp,6,name_info='Ene')
+  CALL Write_Vec(Ene(1:QModel%QM%nb_Channels)*auTOcm_inv,out_unitp,6,info='Ene')
 
   END SUBROUTINE QML_MakeHinact
 
