@@ -127,7 +127,7 @@ ifeq ($(FFC),gfortran)
   FC_VER = $(shell $(FFC) --version | head -1 )
 
   FFLAGS += -I$(QDMOD_DIR) -I$(ADMOD_DIR)
-  FLIB += $(EXTLib)
+  FLIB   += $(EXTLib)
 
 endif
 #=================================================================================
@@ -311,3 +311,46 @@ $(OBJ_DIR)/Model_driver.o: $(OBJ_DIR)/Model_m.o $(OBJ_DIR)/Opt_m.o $(OBJ_DIR)/IR
 
 $(OBJ_DIR)/TEST_model.o:   $(OBJ_DIR)/Model_m.o $(OBJ_DIR)/Opt_m.o $(OBJ_DIR)/IRC_m.o $(OBJ_DIR)/MakeHinact_m.o
 $(OBJ_DIR)/TEST_driver.o:  $(OBJ_DIR)/Model_driver.o
+#
+############################################################################
+
+
+
+#=================================================================================
+#=================================================================================
+# ifort compillation v17 v18 with mkl
+#=================================================================================
+ifeq ($(FFC),ifort)
+
+  # opt management
+  ifeq ($(OOPT),1)
+      #F90FLAGS = -O -parallel -g -traceback
+      FFLAGS = -O  -g -traceback
+  else
+      FFLAGS = -O0 -check all -g -traceback
+  endif
+
+  # where to store the modules
+  FFLAGS +=-module $(MOD_DIR)
+
+  # omp management
+  ifeq ($(OOMP),1)
+    FFLAGS += -qopenmp
+  endif
+
+  # lapack management with cpreprocessing
+  FFLAGS += -cpp -D__LAPACK="$(LLAPACK)"
+  FFLAGS += -I$(QDMOD_DIR) -I$(ADMOD_DIR)
+
+  ifeq ($(LLAPACK),1)
+    FLIB += -mkl -lpthread
+  else
+    FLIB += -lpthread
+  endif
+  FLIB   += $(EXTLib)
+
+  FC_VER = $(shell $(F90) --version | head -1 )
+
+endif
+#=================================================================================
+#=================================================================================
