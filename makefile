@@ -11,6 +11,8 @@ OPT = 1
 OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
+## how to get external libraries;  "loc" (default): from local zip file, Empty or something else (v0.5): from github
+EXTLIB_TYPE = loc
 #=================================================================================
 #=================================================================================
 ifeq ($(FC),)
@@ -43,7 +45,7 @@ QML_ver  := $(shell awk '/QML/ {print $$3}' version-QML)
 QML_path := $(shell pwd)
 
 # Extension for the object directory and the library
-ext_obj=_$(FFC)_opt$(OOPT)_omp$(OOMP)
+ext_obj=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)
 
 # library name
 QMLIBA=libQMLib$(ext_obj).a
@@ -213,16 +215,18 @@ $(QMLIBA): $(OBJ)
 # AD_dnSVM + QDUTIL Lib
 #===============================================
 #
-$(ExtLibDIR):
-	@echo directory $(ExtLibDIR) does not exist
-	exit 1
-
-$(QDLIBA): $(ExtLibDIR)
-	cd $(ExtLibDIR) ; ./get_QDUtilLib.sh $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(ExtLibDIR)
+$(QDLIBA):
+	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
+	@test -d $(QD_DIR) || (cd $(ExtLibDIR) ; ./get_QDUtilLib.sh $(EXTLIB_TYPE))
+	@test -d $(QD_DIR) || (echo $(QD_DIR) "does not exist" ; exit 1)
+	cd $(QD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR)
 	@echo "  done " $(QDLIBA) " in QML"
 
-$(ADLIBA): $(ExtLibDIR)
-	cd $(ExtLibDIR) ; ./get_dnSVM.sh $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(ExtLibDIR)
+$(ADLIBA):
+	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
+	@test -d $(AD_DIR) || (cd $(ExtLibDIR) ; ./get_dnSVM.sh  $(EXTLIB_TYPE))
+	@test -d $(AD_DIR) || (echo $(AD_DIR) "does not exist" ; exit 1)
+	cd $(AD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR)
 	@echo "  done " $(AD_DIR) " in QML"
 #===============================================
 #

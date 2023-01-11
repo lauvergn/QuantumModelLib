@@ -40,6 +40,9 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test_TwoD_Valahu2022() ; stop
+  !CALL test_H3()  ; stop
+
   !CALL test_ClH2p_op56() ; stop
     !CALL test_H3()  ; stop
 
@@ -2457,7 +2460,9 @@ SUBROUTINE test_TwoD_RJDI2014
 END SUBROUTINE test_TwoD_RJDI2014
 SUBROUTINE test_TwoD_Valahu2022
   USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
-  USE QDUtil_m,         ONLY : Write_Vec
+  USE QDUtil_m,         ONLY : Write_Vec, TO_string
+  USE QDUtil_Test_m
+
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -2467,6 +2472,25 @@ SUBROUTINE test_TwoD_Valahu2022
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
 
+  TYPE (test_t)                    :: test_var
+  logical                          :: val_test,res_test
+  real (kind=Rkind), parameter     :: ZeroTresh    = ONETENTH**10
+  real (kind=Rkind), parameter     :: Qref(*) = [-1.5_Rkind,0.0_Rkind]
+  real (kind=Rkind), parameter     :: d0V(*)  = [-4712.3889803846896_Rkind,ZERO, &
+                                                 ZERO,14137.166941154068_Rkind]
+  real (kind=Rkind), parameter     :: d1V(*)  = [-9.0949470177292824E-013_Rkind,ZERO,&
+                                                 ZERO,-12566.370614359173_Rkind,     &
+                                                 ZERO,ZERO,ZERO,ZERO]
+  real (kind=Rkind), parameter     :: d2V(*)  = [4188.7902047863909_Rkind,ZERO,ZERO, &
+                                                 4188.7902047863909_Rkind,ZERO,ZERO, &
+                                                 ZERO,ZERO,ZERO,ZERO,                &
+                                                 ZERO,ZERO,9.0949470177292824E-013_Rkind,&
+                                                 ZERO,ZERO,8377.5804095727799_Rkind]
+
+  real (kind=Rkind), parameter     :: dnV(*)  = [d0V,d1V,d2V]
+  real (kind=Rkind), parameter     :: Gref(*) = [4188.7902047863909_Rkind,ZERO,ZERO,4188.7902047863909_Rkind]
+
+  CALL Initialize_Test(test_var,test_name='TwoD_Valahu2022')
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -2480,6 +2504,7 @@ SUBROUTINE test_TwoD_Valahu2022
   allocate(Q(QModel%ndim))
 
   nderiv=2
+  CALL Append_Test(test_var,'== TESTING with nderiv= ' // TO_string(nderiv))
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '----- CHECK POT -----------------------------'
@@ -2490,7 +2515,9 @@ SUBROUTINE test_TwoD_Valahu2022
   CALL get_Q0_Model(Q,QModel,option)
   write(out_unitp,*) 'Q(:) (no unit):'
   CALL Write_Vec(Q,out_unitp,QModel%ndim)
-  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv,AnaNum_Test=res_test)
+
+  CALL Logical_Test(test_var,test1=res_test,info='Ana-Num test:   T ? ' // TO_string(res_test) )
 
   write(out_unitp,*) '---------------------------------------------'
   write(out_unitp,*) '---------------------------------------------'
@@ -2505,8 +2532,17 @@ SUBROUTINE test_TwoD_Valahu2022
   write(out_unitp,*) 'Energy (2*pi Hz)'
   CALL Write_dnMat(PotVal,nio=out_unitp)
 
-  ! For testing the model
-  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='TwoD_Valahu2022')
+  ! For testing the model, Q, PotVal, G
+  res_test = all(abs(Q-Qref) < ZeroTresh)
+  CALL Logical_Test(test_var,test1=res_test,info='Q == Qref:   T ? ' // TO_string(res_test) )
+
+  res_test = all(abs(get_Flatten(PotVal)-dnV) < ZeroTresh)
+  CALL Logical_Test(test_var,test1=res_test,info='PotVal == dnV:   T ? ' // TO_string(res_test) )
+
+  res_test = all(abs(reshape(QModel%QM%d0GGdef,[size(QModel%QM%d0GGdef)])-Gref) < ZeroTresh)
+  CALL Logical_Test(test_var,test1=res_test,info='d0GGdef == Gref:   T ? ' // TO_string(res_test) )
+  
+  CALL Flush_Test(test_var)
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
@@ -2515,7 +2551,8 @@ SUBROUTINE test_TwoD_Valahu2022
   write(out_unitp,*) '- END CHECK POT -----------------------------'
   write(out_unitp,*) '---------------------------------------------'
 
-
+  ! finalize the tests
+  CALL Finalize_Test(test_var)
 
 END SUBROUTINE test_TwoD_Valahu2022
 SUBROUTINE test_HNO3

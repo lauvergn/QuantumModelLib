@@ -2759,14 +2759,16 @@ CONTAINS
     close(nio_loc)
 
   END SUBROUTINE Write_QdnV_FOR_Model
-  SUBROUTINE Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  SUBROUTINE Check_analytical_numerical_derivatives(QModel,Q,nderiv,AnaNum_Test)
     USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Write_dnMat,       &
                           get_maxval_OF_dnMat, operator(-)
     IMPLICIT NONE
 
-    TYPE (Model_t),       intent(inout)   :: QModel
-    real (kind=Rkind),    intent(in)      :: Q(:)
-    integer,              intent(in)      :: nderiv
+    TYPE (Model_t),       intent(inout)           :: QModel
+    real (kind=Rkind),    intent(in)              :: Q(:)
+    integer,              intent(in)              :: nderiv
+    logical,              intent(inout), optional :: AnaNum_Test
 
     ! local variables
     TYPE (dnMat_t)            :: Mat_diff
@@ -2775,6 +2777,7 @@ CONTAINS
     TYPE (dnMat_t)            :: Vec_ana,Vec_num
 
     real (kind=Rkind)         :: MaxMat,MaxDiffMat
+    logical                   :: AnaNum_Test_loc
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Check_analytical_numerical_derivatives'
@@ -2834,7 +2837,9 @@ CONTAINS
     write(out_unitp,'(3a,l9)')   'With ',QModel%QM%pot_name,                    &
      ': Potential diff (numer-ana), ZERO?  ',(MaxDiffMat/MaxMat <= step)
 
-    IF (MaxDiffMat/MaxMat > step .OR. debug) THEN
+    AnaNum_Test_loc = (MaxDiffMat/MaxMat <= step)
+
+     IF (MaxDiffMat/MaxMat > step .OR. debug) THEN
       write(out_unitp,*)   'Potential diff (ana-numer)'
       CALL Write_dnMat(Mat_diff,nio=out_unitp)
     END IF
@@ -2850,6 +2855,9 @@ CONTAINS
                  ': max of the relative NAC diff:',MaxDiffMat/MaxMat
       write(out_unitp,'(3a,l9)')   'With ',QModel%QM%pot_name,                  &
        ': NAC diff (numer-ana), ZERO?  ',(MaxDiffMat/MaxMat <= step)
+
+      AnaNum_Test_loc = AnaNum_Test_loc .AND. (MaxDiffMat/MaxMat <= step)
+
 
       IF (MaxDiffMat/MaxMat > step .OR. debug) THEN
         write(out_unitp,*)   'NAC diff (ana-numer)'
@@ -2870,6 +2878,8 @@ CONTAINS
       write(out_unitp,'(3a,l9)')   'With ',QModel%QM%pot_name,            &
        ': Vec diff (numer-ana), ZERO?  ',(MaxDiffMat/MaxMat <= step)
 
+      AnaNum_Test_loc = AnaNum_Test_loc .AND. (MaxDiffMat/MaxMat <= step)
+
       IF (MaxDiffMat/MaxMat > step .OR. debug) THEN
         write(out_unitp,*)   'Vec diff (ana-numer)'
         CALL Write_dnMat(Mat_diff,nio=out_unitp)
@@ -2888,6 +2898,8 @@ CONTAINS
     CALL dealloc_dnMat(Vec_ana)
     CALL dealloc_dnMat(Vec_num)
     CALL dealloc_dnMat(Mat_diff)
+
+    IF (present(AnaNum_Test)) AnaNum_Test = AnaNum_Test_loc
 
     IF (debug) THEN
       write(out_unitp,*) ' END ',name_sub
