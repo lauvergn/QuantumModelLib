@@ -6,7 +6,7 @@ echo "In get_dnSVM.sh"
 pwd
 
 
-SAVE_version=Save_AD_dnSVM-3.1
+SAVE_version=Save_AD_dnSVM-3.2
 LOC_version=AD_dnSVM
 
 
@@ -15,7 +15,7 @@ rm -rf AD_dnSVM* #always remove the link
 
 #latest release
 #latest HEAD version (dev version)
- version=https://github.com/lauvergn/AD_dnSVM/archive/refs/tags/v3.1.zip
+ version=https://github.com/lauvergn/AD_dnSVM/archive/refs/tags/v3.2.zip
 
 
 test -z $EXTLIB_TYPE       &&    curl -LJ $version --output $LOC_version.zip

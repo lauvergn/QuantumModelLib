@@ -82,7 +82,7 @@ ADMOD_DIR = $(AD_DIR)/OBJ/obj$(ext_obj)
 ADLIBA    = $(AD_DIR)/libAD_dnSVM$(ext_obj).a
 
 EXTMOD_DIR = $(QDMOD_DIR) $(ADMOD_DIR)
-EXTLib     = $(QDLIBA) $(ADLIBA)
+EXTLib     = $(ADLIBA) $(QDLIBA)
 #===============================================================================
 #=================================================================================
 #=================================================================================
@@ -103,19 +103,24 @@ ifeq ($(FFC),gfortran)
   endif
   FFLAGS0 := $(FFLAGS)
 
+  # where to store the .mod files
   FFLAGS +=-J$(MOD_DIR)
+
+  # where to look the .mod files
+  FFLAGS += -I$(QDMOD_DIR) -I$(ADMOD_DIR)
 
   # some cpreprocessing
   FFLAGS += -cpp $(CPPSHELL_QML)
 
+  FLIB   = $(EXTLib)
   # OS management
   ifeq ($(LLAPACK),1)
     ifeq ($(OS),Darwin)    # OSX
       # OSX libs (included lapack+blas)
-      FLIB = -framework Accelerate
+      FLIB += -framework Accelerate
     else                   # Linux
       # linux libs
-      FLIB = -llapack -lblas
+      FLIB += -llapack -lblas
       #
       # linux libs with mkl and with openmp
       #FLIB = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_gnu_thread
@@ -125,9 +130,6 @@ ifeq ($(FFC),gfortran)
   endif
 
   FC_VER = $(shell $(FFC) --version | head -1 )
-
-  FFLAGS += -I$(QDMOD_DIR) -I$(ADMOD_DIR)
-  FLIB   += $(EXTLib)
 
 endif
 #=================================================================================
@@ -197,10 +199,10 @@ all: $(QMLIBA) $(MAIN).x $(TESTS).x
 #============= Main executable and tests  ======
 #===============================================
 $(MAIN).x: $(OBJ_DIR)/$(MAIN).o $(QMLIBA)
-	$(FFC) $(FFLAGS) -o $(MAIN).x  $(OBJ_DIR)/$(MAIN).o $(FLIB) $(QMLIBA)
+	$(FFC) $(FFLAGS) -o $(MAIN).x  $(OBJ_DIR)/$(MAIN).o $(QMLIBA) $(FLIB)
 
 $(TESTS).x: $(OBJ_DIR)/$(TESTS).o $(QMLIBA)
-	$(FFC) $(FFLAGS) -o $(TESTS).x  $(OBJ_DIR)/$(TESTS).o $(FLIB) $(QMLIBA)
+	$(FFC) $(FFLAGS) -o $(TESTS).x  $(OBJ_DIR)/$(TESTS).o $(QMLIBA) $(FLIB)
 #===============================================
 #============= Library: libQD.a  ===============
 #===============================================
@@ -338,16 +340,18 @@ ifeq ($(FFC),ifort)
     FFLAGS += -qopenmp
   endif
 
-  # lapack management with cpreprocessing
-  FFLAGS += -cpp -D__LAPACK="$(LLAPACK)"
+  # some cpreprocessing
+  FFLAGS += -cpp $(CPPSHELL_QML)
+
+  # where to look the .mod files
   FFLAGS += -I$(QDMOD_DIR) -I$(ADMOD_DIR)
 
+  FLIB    = $(EXTLib)
   ifeq ($(LLAPACK),1)
     FLIB += -mkl -lpthread
   else
     FLIB += -lpthread
   endif
-  FLIB   += $(EXTLib)
 
   FC_VER = $(shell $(F90) --version | head -1 )
 
