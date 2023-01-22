@@ -277,10 +277,8 @@ CONTAINS
                         read_param,param_file_name,nio_param_file,              &
                         option,PubliUnit,Print_init,Vib_adia,                   &
                         Phase_Following,Phase_checking)
-  
-  USE QMLLib_UtilLib_m, ONLY : File_path
-  USE QDUtil_m,         ONLY : TO_lowercase
 
+  USE QDUtil_m,         ONLY : TO_lowercase, File_path
 
   USE QML_Empty_m
 
@@ -1130,25 +1128,25 @@ CONTAINS
   END SUBROUTINE get_Q0_Model
 
   SUBROUTINE check_QML_Path()
-    USE QMLLib_UtilLib_m, ONLY : make_FileName
+    USE QDUtil_m, ONLY : make_FileName
     IMPLICIT NONE
 
-  character (len=:), allocatable :: FileName
-  logical :: file_exist
+    character (len=:), allocatable :: FileName
+    logical :: file_exist
 
 
-  FileName = make_FileName('InternalData/Test_QML_Path.txt')
+    FileName = make_FileName('InternalData/Test_QML_Path.txt')
 
-  inquire(file=FileName,exist=file_exist)
+    inquire(file=FileName,exist=file_exist)
 
-  IF (.NOT. file_exist) THEN
-    write(out_unitp,*) 'ERROR: the QML directory path is wrong !!'
-    write(out_unitp,*) ' FileName: ',FileName
-    write(out_unitp,*) ' QML_path: ',QML_path
-    write(out_unitp,*) ' Probably, the QML directory has been moved'
-    write(out_unitp,*) ' Recompile again QML.'
-    STOP 'ERROR in check_QML_Path: Wrong QML_path'
-  END IF
+    IF (.NOT. file_exist) THEN
+      write(out_unitp,*) 'ERROR: the QML directory path is wrong !!'
+      write(out_unitp,*) ' FileName: ',FileName
+      write(out_unitp,*) ' QML_path: ',QML_path
+      write(out_unitp,*) ' Probably, the QML directory has been moved'
+      write(out_unitp,*) ' Recompile again QML.'
+      STOP 'ERROR in check_QML_Path: Wrong QML_path'
+    END IF
 
   END SUBROUTINE check_QML_Path
 
@@ -2654,7 +2652,8 @@ CONTAINS
 
   END SUBROUTINE Write0_Model
   SUBROUTINE Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec,NAC,info,name_file)
-    USE QMLLib_UtilLib_m, ONLY : file_open2
+    USE QDUtil_m, ONLY : file_open2
+    !USE QMLLib_UtilLib_m, ONLY : file_open2
     USE ADdnSVM_m
     IMPLICIT NONE
 

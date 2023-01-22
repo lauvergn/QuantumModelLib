@@ -101,8 +101,7 @@ MODULE QML_CH5_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_CH5(QModel_in,read_param,nio_param_file) RESULT(QModel)
-    USE QDUtil_m,         ONLY : Identity_Mat, TO_string
-    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    USE QDUtil_m, ONLY : Identity_Mat, TO_string, make_FileName, file_open2
     IMPLICIT NONE
 
     TYPE (QML_CH5_t)                            :: QModel ! RESULT
@@ -634,7 +633,7 @@ MODULE QML_CH5_m
   END FUNCTION QML_sc_fit3
 
   SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist,print_info)
-    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    USE QDUtil_m, ONLY : make_FileName, file_open2
     IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim

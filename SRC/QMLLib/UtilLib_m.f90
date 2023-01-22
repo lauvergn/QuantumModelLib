@@ -44,24 +44,13 @@ MODULE QMLLib_UtilLib_m
 
   PRIVATE
 
-  character (len=Line_len), public :: File_path = ''
 
   PUBLIC :: time_perso
-  PUBLIC :: err_file_name,make_FileName,file_open2
   PUBLIC :: Find_Label,NFind_Label,FFind_Label
 
 
 INTERFACE time_perso
   MODULE PROCEDURE QML_time_perso
-END INTERFACE
-INTERFACE err_file_name
-  MODULE PROCEDURE QML_err_file_name
-END INTERFACE
-INTERFACE make_FileName
-  MODULE PROCEDURE QML_make_FileName
-END INTERFACE
-INTERFACE file_open2
-  MODULE PROCEDURE QML_file_open2
 END INTERFACE
 INTERFACE Find_Label
   MODULE PROCEDURE QML_Find_Label
@@ -165,130 +154,6 @@ CONTAINS
 
 
   END SUBROUTINE QML_time_perso
-
-  FUNCTION QML_err_file_name(file_name,name_sub)
-    USE QDUtil_m,         ONLY : string_IS_empty
-    IMPLICIT NONE
-
-    integer                                 :: QML_err_file_name
-    character (len=*), intent(in)           :: file_name
-    character (len=*), intent(in), optional :: name_sub
-
-    IF (string_IS_empty(file_name) ) THEN
-      IF (present(name_sub)) THEN
-        write(out_unitp,*) ' ERROR in QML_err_file_name, called from: ',name_sub
-      ELSE
-        write(out_unitp,*) ' ERROR in QML_err_file_name'
-      END IF
-      write(out_unitp,*) '   The file name is empty'
-      QML_err_file_name = 1
-    ELSE
-      QML_err_file_name = 0
-    END IF
-
-  END FUNCTION QML_err_file_name
-
-  FUNCTION QML_make_FileName(FileName)
-    character(len=*), intent(in)    :: FileName
-
-    character (len=:), allocatable  :: QML_make_FileName
-    integer :: ilast_char
-
-    ilast_char = len_trim(File_path)
-
-    IF (FileName(1:1) == "/" .OR. FileName(1:1) == "" .OR. ilast_char == 0) THEN
-      QML_make_FileName = trim(adjustl(FileName))
-    ELSE
-      IF (File_path(ilast_char:ilast_char) == "/") THEN
-        QML_make_FileName = trim(adjustl(File_path)) // trim(adjustl(FileName))
-      ELSE
-        QML_make_FileName = trim(adjustl(File_path)) // '/' // trim(adjustl(FileName))
-      END IF
-    END IF
-    !write(666,*) 'QML_make_FileName: ',QML_make_FileName
-    !stop
-  END FUNCTION QML_make_FileName
-  SUBROUTINE QML_file_open2(name_file,iunit,lformatted,append,old,err_file)
-
-  character (len=*),   intent(in)              :: name_file
-  integer,             intent(inout)           :: iunit
-  logical,             intent(in),    optional :: lformatted,append,old
-  integer,             intent(out),   optional :: err_file
-
-  character (len=20)   :: fform,fstatus,fposition
-  logical              :: unit_opened
-  integer              :: err_file_loc
-
-! - default for the open ---------------------------
-
-! - test if optional arguments are present ---------
-  IF (present(lformatted)) THEN
-    IF (.NOT. lformatted) THEN
-      fform = 'unformatted'
-    ELSE
-      fform = 'formatted'
-    END IF
-  ELSE
-    fform = 'formatted'
-  END IF
-
-  IF (present(append)) THEN
-    IF (append) THEN
-      fposition = 'append'
-    ELSE
-      fposition = 'asis'
-    END IF
-  ELSE
-    fposition = 'asis'
-  END IF
-
-  IF (present(old)) THEN
-    IF (old) THEN
-      fstatus = 'old'
-    ELSE
-      fstatus = 'unknown'
-    END IF
-  ELSE
-      fstatus = 'unknown'
-  END IF
-
-  err_file_loc = err_file_name(name_file,'QML_file_open2')
-  IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
-  IF (present(err_file)) err_file = err_file_loc
-
-! - check if the file is already open ------------------
-! write(out_unitp,*) 'name,unit,unit_opened ',name_file,unit,unit_opened
-
-  inquire(FILE=name_file,NUMBER=iunit,OPENED=unit_opened)
-! write(out_unitp,*) 'name,unit,unit_opened ',name_file,unit,unit_opened
-
-
-! - the file is not open, find an unused UNIT ---------
-  IF (unit_opened) RETURN ! the file is already open
-
-  iunit = 9
-  DO
-    iunit = iunit + 1
-    inquire(UNIT=iunit,OPENED=unit_opened)
-!   write(out_unitp,*) 'name,iunit,unit_opened ',name_file,iunit,unit_opened
-    IF (.NOT. unit_opened) exit
-  END DO
-
-
-! -- open the file
-  IF (present(err_file)) THEN
-    open(UNIT=iunit,FILE=name_file,FORM=fform,STATUS=fstatus,       &
-         POSITION=fposition,ACCESS='SEQUENTIAL',IOSTAT=err_file)
-  ELSE
-    open(UNIT=iunit,FILE=name_file,FORM=fform,STATUS=fstatus,       &
-         POSITION=fposition,ACCESS='SEQUENTIAL')
-  END IF
-
-! write(out_unitp,*) 'open ',name_file,iunit
-
-  END SUBROUTINE QML_file_open2
-
-
 
   SUBROUTINE QML_Find_Label(nio,label,located)
     USE QDUtil_m,         ONLY : TO_string

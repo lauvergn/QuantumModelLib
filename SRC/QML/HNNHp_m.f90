@@ -76,8 +76,7 @@ MODULE QML_HNNHp_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HNNHp(QModel_in,read_param,nio_param_file) RESULT(QModel)
-    USE QDUtil_m,         ONLY : Identity_Mat
-    USE QMLLib_UtilLib_m, ONLY : make_FileName, file_open2
+    USE QDUtil_m,         ONLY : Identity_Mat, make_FileName, file_open2
     IMPLICIT NONE
 
     TYPE (QML_HNNHp_t)                           :: QModel ! RESULT
