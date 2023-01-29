@@ -223,10 +223,10 @@ $(QDLIBA):
 	@test -d $(QD_DIR) || (echo $(QD_DIR) "does not exist" ; exit 1)
 	cd $(QD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR)
 	@echo "  done " $(QDLIBA) " in QML"
-
+#
 $(ADLIBA):
 	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
-	@test -d $(AD_DIR) || (cd $(ExtLibDIR) ; ./get_dnSVM.sh  $(EXTLIB_TYPE))
+	@test -d $(AD_DIR) || (cd $(ExtLibDIR) ; ./get_AD_dnSVM.sh  $(EXTLIB_TYPE))
 	@test -d $(AD_DIR) || (echo $(AD_DIR) "does not exist" ; exit 1)
 	cd $(AD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR)
 	@echo "  done " $(AD_DIR) " in QML"
@@ -255,6 +255,19 @@ cleanall : clean
 	rm -f lib*.a
 	rm -f TESTS/res* TESTS/*log
 	@echo "  done all cleaning"
+#===============================================
+#================ zip and copy the directory ===
+ExtLibSAVEDIR := /Users/lauvergn/git/Ext_Lib
+BaseName := QuantumModelLib
+.PHONY: zip
+zip: cleanall
+	test -d $(ExtLibSAVEDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
+	cd $(ExtLibSAVEDIR) ; rm -rf $(BaseName)_devloc
+	mkdir $(ExtLibSAVEDIR)/$(BaseName)_devloc
+	cp -r * $(ExtLibSAVEDIR)/$(BaseName)_devloc
+	cd $(ExtLibSAVEDIR) ; zip -r Save_$(BaseName)_devloc.zip $(BaseName)_devloc
+	cd $(ExtLibSAVEDIR) ; rm -rf $(BaseName)_devloc
+	@echo "  done zip"
 #===============================================
 #============= module dependencies =============
 #===============================================

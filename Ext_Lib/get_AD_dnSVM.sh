@@ -2,20 +2,21 @@
 
 EXTLIB_TYPE=$1
 
-echo "In get_dnSVM.sh"
-pwd
+BaseName=AD_dnSVM
+
+echo "In get_"$BaseName".sh"
 
 
-SAVE_version=Save_AD_dnSVM-3.3-dev
-LOC_version=AD_dnSVM
+SAVE_version="Save_"$BaseName"_devloc"
+LOC_version=$BaseName
 
 
-rm -rf AD_dnSVM* #always remove the link
+rm -rf $BaseName* #always remove the link
 
 
 #latest release
 #latest HEAD version (dev version)
- version=https://github.com/lauvergn/AD_dnSVM/archive/refs/tags/v3.3-dev.zip
+ version=https://github.com/lauvergn/AD_dnSVM/archive/refs/tags/v3.2.zip
 
 
 test -z $EXTLIB_TYPE       &&    curl -LJ $version --output $LOC_version.zip
@@ -27,10 +28,9 @@ unzip $LOC_version.zip
 rm -f $LOC_version.zip
 
 
-LIBDIR=`ls -d AD_dnSVM*`
+LIBDIR=`ls -d $BaseName*`
 #echo $LIBDIR
 
 ln -s $LIBDIR $LOC_version
 
-echo "End get_dnSVM.sh"
-
+echo "End get_"$BaseName".sh"

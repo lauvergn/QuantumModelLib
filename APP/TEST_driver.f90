@@ -193,7 +193,7 @@ SUBROUTINE test2_Vib_adia(nb_eval)
   deallocate(NAC)
 
   write(out_unitp,*) ' Test of evaluations of the potential ',pot_name
-  CALL time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // pot_name)
 
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
@@ -210,7 +210,7 @@ SUBROUTINE test2_Vib_adia(nb_eval)
   deallocate(Q)
   deallocate(V)
 
-  CALL time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // pot_name)
   write(out_unitp,*) '============================================================'
   write(out_unitp,*) '============================================================'
 
@@ -302,7 +302,8 @@ SUBROUTINE test_PSB3
   write(out_unitp,*) '============================================================'
   pot_name = 'PSB3'
   write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // pot_name)
+
 
   ndim     = 3
   nsurf    = 2
@@ -370,7 +371,7 @@ SUBROUTINE test_HBond
   write(out_unitp,*) '============================================================'
   pot_name = 'HBond'
   write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // pot_name)
 
   ndim     = 2
   nsurf    = 1
@@ -440,7 +441,7 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
   write(out_unitp,*) '============================================================'
   pot_name = 'phenol'
   write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // pot_name)
 
   ndim     = 2
   nsurf    = 3
@@ -475,7 +476,7 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
   deallocate(Q)
 
 
-  CALL time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // pot_name)
 
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
@@ -498,7 +499,7 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 
 !$OMP   END PARALLEL
 
-  CALL time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // pot_name)
   write(out_unitp,*) '============================================================'
   write(out_unitp,*) '============================================================'
 
@@ -634,7 +635,7 @@ SUBROUTINE test_henonheiles(nb_eval)
 
   write(out_unitp,*) '============================================================'
   write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // pot_name)
 
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
@@ -659,7 +660,7 @@ SUBROUTINE test_henonheiles(nb_eval)
 
 !$OMP   END PARALLEL
 
-  CALL time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // pot_name)
   write(out_unitp,*) '============================================================'
   write(out_unitp,*) '============================================================'
 
@@ -722,7 +723,7 @@ SUBROUTINE test_Vib_adia(nb_eval)
   deallocate(NAC)
 
   write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential (read_model)'
-  CALL time_perso('Test read_model')
+  CALL QML_time_perso('Test read_model')
 
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_eval,ndim,nsurf,maxth) &
@@ -748,7 +749,7 @@ SUBROUTINE test_Vib_adia(nb_eval)
 
 !$OMP   END PARALLEL
 
-  CALL time_perso('Test read_model')
+  CALL QML_time_perso('Test read_model')
   write(out_unitp,*) '============================================================'
   write(out_unitp,*) '============================================================'
 
@@ -807,99 +808,15 @@ SUBROUTINE test_PH4
 
 END SUBROUTINE test_PH4
 
-
-  SUBROUTINE time_perso(name)
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+SUBROUTINE QML_time_perso(name_sub)
+  USE QDUtil_m, ONLY : time_perso
   IMPLICIT NONE
 
-    character (len=*) :: name
+  character (len=*) :: name_sub
 
 
-    integer             :: tab_time(8) = 0
-    real (kind=real64)  :: t_real
-    integer             :: count,count_work,freq
-    real                :: t_cpu
-    integer             :: seconds,minutes,hours,days
+  !$OMP    CRITICAL (QML_time_perso_CRIT)
+  CALL time_perso(name_sub)
+  !$OMP   END CRITICAL (QML_time_perso_CRIT)
 
-    integer, save       :: count_old,count_ini
-    real,    save       :: t_cpu_old,t_cpu_ini
-    logical, save       :: begin = .TRUE.
-
-
-!$OMP    CRITICAL (time_perso_CRIT)
-
-    CALL date_and_time(values=tab_time)
-    write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
- 21 format('     Time and date in ',a,' : ',i2,'h:',                &
-            i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
-
-     CALL system_clock(count=count,count_rate=freq)
-     call cpu_time(t_cpu)
-
-     IF (begin) THEN
-       begin = .FALSE.
-       count_old = count
-       count_ini = count
-       t_cpu_old = t_cpu
-       t_cpu_ini = t_cpu
-     END IF
-
-
-     !============================================
-     !cpu time in the subroutine: "name"
-
-     count_work = count-count_old
-     seconds = count_work/freq
-
-     minutes = seconds/60
-     seconds = mod(seconds,60)
-     hours   = minutes/60
-     minutes = mod(minutes,60)
-     days    = hours/24
-     hours   = mod(hours,24)
-
-
-     t_real = real(count_work,kind=real64)/real(freq,kind=real64)
-     write(out_unitp,31) t_real,name
- 31  format('        real (s): ',f18.3,' in ',a)
-     write(out_unitp,32) days,hours,minutes,seconds,name
- 32  format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
-
-     write(out_unitp,33) t_cpu-t_cpu_old,name
- 33  format('        cpu (s): ',f18.3,' in ',a)
-
-
-     !============================================
-     !Total cpu time
-
-     count_work = count-count_ini
-     seconds = count_work/freq
-
-     minutes = seconds/60
-     seconds = mod(seconds,60)
-     hours   = minutes/60
-     minutes = mod(minutes,60)
-     days    = hours/24
-     hours   = mod(hours,24)
-
-     t_real = real(count_work,kind=real64)/real(freq,kind=real64)
-     write(out_unitp,41) t_real
- 41  format('  Total real (s): ',f18.3)
-     write(out_unitp,42) days,hours,minutes,seconds
- 42  format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
-     write(out_unitp,43) t_cpu-t_cpu_ini
- 43  format('  Total cpu (s): ',f18.3)
-
- 51  format(a,i10,a,a)
-
-
-     flush(6)
-     !============================================
-
-     count_old = count
-     t_cpu_old = t_cpu
-
-!$OMP   END CRITICAL (time_perso_CRIT)
-
-
-  END SUBROUTINE time_perso
+END SUBROUTINE QML_time_perso
