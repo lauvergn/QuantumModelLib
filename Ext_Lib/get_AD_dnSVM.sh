@@ -16,7 +16,7 @@ rm -rf $BaseName* #always remove the link
 
 #latest release
 #latest HEAD version (dev version)
- version=https://github.com/lauvergn/AD_dnSVM/archive/refs/tags/v3.2.zip
+ version=https://github.com/lauvergn/AD_dnSVM/archive/refs/tags/v3.4-dev.zip
 
 
 test -z $EXTLIB_TYPE       &&    curl -LJ $version --output $LOC_version.zip
