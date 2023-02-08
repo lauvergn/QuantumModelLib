@@ -126,7 +126,6 @@ character (len=*), parameter :: compiler_libs =                         &
       "unknown: -D__COMPILER_LIBS=?"
 #endif
 
-
   TYPE(Model_t), PUBLIC  :: QuantumModel
 
 CONTAINS
@@ -279,6 +278,7 @@ CONTAINS
                         Phase_Following,Phase_checking)
 
   USE QDUtil_m,         ONLY : TO_lowercase, File_path
+  USE QMLLib_UtilLib_m
 
   USE QML_Empty_m
 
@@ -323,6 +323,7 @@ CONTAINS
   USE QML_TwoD_m
   USE QML_TwoD_RJDI2014_m
   USE QML_TwoD_Valahu2022_m
+  USE QML_Vibronic_m
 
   USE AdiaChannels_Basis_m
 
@@ -353,7 +354,7 @@ CONTAINS
     integer                        :: i,nio_loc,i_inact,nb_inact
     logical                        :: read_param_loc,read_nml,Print_init_loc
     logical,           allocatable :: list_Q(:)
-    character (len=:), allocatable :: param_file_name_loc,pot_name_loc
+    character (len=:), allocatable :: param_file_name_loc,pot_name_loc,tab_pot_name(:)
     real (kind=Rkind), allocatable :: Q0(:)
 
     Print_init_loc = .TRUE.
@@ -519,9 +520,18 @@ CONTAINS
     END IF
 
     pot_name_loc = TO_lowercase(pot_name_loc)
-    IF (Print_init_loc) write(out_unitp,*) 'pot_name_loc: ',pot_name_loc
+    CALL Pot_Name_Analysis(pot_name_loc,tab_pot_name)
+    IF (size(tab_pot_name) < 1) STOP 'ERROR in Pot_Name_Analysis'
+    IF (Print_init_loc) THEN
+      write(out_unitp,*) 'pot_name_loc: ',pot_name_loc
+      IF (allocated(tab_pot_name)) THEN
+        DO i=1,size(tab_pot_name)
+          write(out_unitp,*) 'tab_pot_name(i): ',i,tab_pot_name(i)
+        END DO
+      END IF
+    END IF
 
-    SELECT CASE (pot_name_loc)
+    SELECT CASE (trim(tab_pot_name(1)))
     CASE ('morse')
       !! === README ==
       !! Morse potential: V(R) = D*(1-exp(-a*(r-Req))**2
@@ -757,8 +767,17 @@ CONTAINS
       !! === END README ==
 
       allocate(QML_Retinal_JPCB2000_t :: QModel%QM)
-      QModel%QM = Init_QML_Retinal_JPCB2000(QModel_in,                          &
-                                            read_param=read_nml,nio_param_file=nio_loc)
+      QModel%QM = Init_QML_Retinal_JPCB2000(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('vibronic')
+      allocate(QML_Vibronic_t :: QModel%QM)
+
+      IF (size(tab_pot_name) > 1) THEN
+        QModel%QM = Init_QML_Vibronic(QModel_in,read_param=read_nml,nio_param_file=nio_loc, &
+                                      Vibronic_name=trim(tab_pot_name(2)))
+      ELSE
+        QModel%QM = Init_QML_Vibronic(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+      END IF
 
     CASE ('hono')
       allocate(QML_HONO_t :: QModel%QM)
@@ -778,12 +797,12 @@ CONTAINS
 
     CASE ('hno3')
       allocate(QML_HNO3_t :: QModel%QM)
-      QModel%QM = Init_QML_HNO3(QModel_in,read_param=read_nml,  &
-                                  nio_param_file=nio_loc)
+      QModel%QM = Init_QML_HNO3(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
     CASE ('no3')
       allocate(QML_NO3_t :: QModel%QM)
-      QModel%QM = Init_QML_NO3(QModel_in,read_param=read_nml,  &
-                               nio_param_file=nio_loc)
+      QModel%QM = Init_QML_NO3(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
     CASE ('ch5')
       !! === README ==
       !! H + CH4 -> H-H + CH3 potential
@@ -798,8 +817,7 @@ CONTAINS
       !! option = 4 (default) or 5
       !! === END README ==
       allocate(QML_CH5_t :: QModel%QM)
-      QModel%QM = Init_QML_CH5(QModel_in,read_param=read_nml,  &
-                                 nio_param_file=nio_loc)
+      QModel%QM = Init_QML_CH5(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('ph4')
       !! === README ==
@@ -816,23 +834,19 @@ CONTAINS
       !! option = 4 (default)
       !! === END README ==
       allocate(QML_PH4_t :: QModel%QM)
-      QModel%QM = Init_QML_PH4(QModel_in,read_param=read_nml,  &
-                                 nio_param_file=nio_loc)
+      QModel%QM = Init_QML_PH4(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hnnhp')
       allocate(QML_HNNHp_t :: QModel%QM)
-      QModel%QM = Init_QML_HNNHp(QModel_in,read_param=read_nml, &
-                                   nio_param_file=nio_loc)
+      QModel%QM = Init_QML_HNNHp(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('h2sin')
       allocate(QML_H2SiN_t :: QModel%QM)
-      QModel%QM = Init_QML_H2SiN(QModel_in,read_param=read_nml, &
-                                   nio_param_file=nio_loc)
+      QModel%QM = Init_QML_H2SiN(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('h2nsi')
       allocate(QML_H2NSi_t :: QModel%QM)
-      QModel%QM = Init_QML_H2NSi(QModel_in,read_param=read_nml, &
-                                   nio_param_file=nio_loc)
+      QModel%QM = Init_QML_H2NSi(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hoo_dmbe')
       !! === README ==
@@ -844,8 +858,7 @@ CONTAINS
       !!         JCP, 1990, 94, 8073-8080, doi: 10.1021/j100384a019.
       !! === END README ==
       allocate(QML_HOO_DMBE_t :: QModel%QM)
-      QModel%QM = Init_QML_HOO_DMBE(QModel_in,read_param=read_nml,      &
-                                      nio_param_file=nio_loc)
+      QModel%QM = Init_QML_HOO_DMBE(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('h3_lsth','h3')
       !! === README ==
@@ -923,8 +936,7 @@ CONTAINS
       !!      DOI: 10.1039/F29888401263
       !! === END README ==
       allocate(QML_ClH2p_Botschwina_t :: QModel%QM)
-      QModel%QM = Init_QML_ClH2p_Botschwina(QModel_in,read_param=read_nml,      &
-                                            nio_param_file=nio_loc)
+      QModel%QM = Init_QML_ClH2p_Botschwina(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('template')
       !! 3D-potential with 1 surface
@@ -933,7 +945,7 @@ CONTAINS
 
     CASE ('test')
       !! test-potential
-      allocate(QML_Template_t :: QModel%QM)
+      allocate(QML_Test_t :: QModel%QM)
       QModel%QM = Init_QML_Test(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE DEFAULT

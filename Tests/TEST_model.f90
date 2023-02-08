@@ -40,6 +40,10 @@
 PROGRAM TEST_model
   IMPLICIT NONE
 
+  !CALL test_TwoD_RJDI2014()
+  !CALL test_Vibronic() ; stop
+
+  !CALL test_Test() ; stop
   !CALL test_TwoD_Valahu2022() ; stop
   !CALL test_H3()  ; stop
 
@@ -97,8 +101,10 @@ PROGRAM TEST_model
   CALL test_PSB3()
   CALL test_TwoD()
   CALL test_TwoD_RJDI2014()
+  CALL test_Vibronic()
   CALL test_TwoD_Valahu2022()
   CALL test_Retinal_JPCB2000()
+  
 
   ! 6D (full-D), One electronic surface (spectro)
   CALL test_HONO()
@@ -3594,6 +3600,65 @@ SUBROUTINE test_Test
   write(out_unitp,*) '---------------------------------------------'
 
 END SUBROUTINE test_Test
+SUBROUTINE test_Vibronic
+  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m,         ONLY : Write_Vec
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: NAC ! for non adiabatic couplings
+
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Vibronic potential (TwoD_RJDI2014)'
+  write(out_unitp,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  flush(out_unitp)
+
+  CALL Init_Model(QModel,pot_name='Vibronic  TwoD_RJDI2014',nsurf=2,ndim=1,adiabatic=.TRUE.)
+
+
+  Q = [ZERO,HALF]
+
+  nderiv=2
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '----- CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unitp,*) 'Q(:) (bohr):'
+  CALL Write_Vec(Q,out_unitp,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) ' Potential and derivatives',nderiv
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+
+  write(out_unitp,*) 'Q(:) (bohr):'
+  CALL Write_Vec(Q,out_unitp,QModel%ndim)
+  write(out_unitp,*) 'Energy (Hartree)'
+  CALL Write_dnMat(PotVal,nio=out_unitp)
+
+    ! For testing the model
+  CALL Write_QdnV_FOR_Model(Q,PotVal,QModel,info='vibronic')
+
+  write(out_unitp,*) '---------------------------------------------'
+  write(out_unitp,*) '- END CHECK POT -----------------------------'
+  write(out_unitp,*) '---------------------------------------------'
+
+END SUBROUTINE test_Vibronic
 SUBROUTINE test_Tully_test
   USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
   USE ADdnSVM_m

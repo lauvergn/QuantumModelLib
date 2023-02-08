@@ -49,16 +49,22 @@ MODULE QML_Test_m
   IMPLICIT NONE
 
   PRIVATE
+  ! add potential paramters (as Fortran parameters) here
+  real (kind =Rkind), parameter :: a = 0.5_Rkind
+  real (kind =Rkind), parameter :: b = -0.5_Rkind
 
 !> @brief Derived type in which the test parameters are set-up.
   TYPE, EXTENDS (QML_Empty_t) ::  QML_Test_t
 
-   PRIVATE
+    PRIVATE
 
-   CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Test
-    PROCEDURE :: Write_QModel    => Write_QML_Test
-    PROCEDURE :: Write0_QModel   => Write0_QML_Test
+    ! or add potential paramters here
+    real (kind =Rkind) :: c
+
+  CONTAINS
+    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_Test
+    PROCEDURE :: Write_QModel     => Write_QML_Test
+    PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_Test
   END TYPE QML_Test_t
 
   PUBLIC :: QML_Test_t,Init_QML_Test
@@ -71,12 +77,12 @@ MODULE QML_Test_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_Test(QModel_in,read_param,nio_param_file) RESULT(QModel)
-    USE QDUtil_m,         ONLY : Identity_Mat
-    IMPLICIT NONE
+    USE QDUtil_m, ONLY : Identity_Mat
+  IMPLICIT NONE
 
     TYPE (QML_Test_t)                           :: QModel ! RESULT
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -94,15 +100,25 @@ MODULE QML_Test_m
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
     QModel%nsurf    = 2
-    QModel%ndim     = 1
+    QModel%ndimCart = 9 ! 3 atoms
+    QModel%ndimQ    = 3 ! 3 internal coordinates (coordinates of the potential)
     QModel%pot_name = 'test'
 
+    IF (QModel%Cart_TO_Q) THEN
+      QModel%ndim       = QModel%ndimCart
+    ELSE
+      QModel%ndim       = QModel%ndimQ
+    END IF
+
+    ! add the value of c in Qmodel 
+    QModel%c = 3._Rkind
 
     IF (debug) write(out_unitp,*) 'init Q0 of test'
-    QModel%Q0 = [ZERO,ZERO,ZERO]
+    QModel%Q0 = [ZERO,ZERO,ZERO] ! change the values here
 
     IF (debug) write(out_unitp,*) 'init d0GGdef of test'
-    QModel%d0GGdef = Identity_Mat(QModel%ndim)
+    QModel%d0GGdef = Identity_Mat(QModel%ndim) ! change the values here
+
 
     IF (debug) THEN
       write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
@@ -116,30 +132,17 @@ MODULE QML_Test_m
 !! @param QModel            CLASS(QML_Test_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_Test(QModel,nio)
-    IMPLICIT NONE
+  IMPLICIT NONE
 
     CLASS(QML_Test_t),   intent(in) :: QModel
-    integer,              intent(in) :: nio
+    integer,             intent(in) :: nio
+
+    ! add somthing you want to print about your model (reference, system ...)
+    write(out_unitp,*) 'model name: ',QModel%pot_name
+    write(out_unitp,*) 'a,b',a,b
+    write(out_unitp,*) 'c',QModel%c
 
   END SUBROUTINE Write_QML_Test
-!> @brief Subroutine wich prints the default QML_Test parameters.
-!!
-!! @param QModel            CLASS(QML_Test_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_Test(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_Test_t),   intent(in) :: QModel
-    integer,              intent(in) :: nio
-
-    write(nio,*) 'test default parameters'
-    write(nio,*)
-    write(nio,*)
-    write(nio,*) 'end test default parameters'
-
-
-  END SUBROUTINE Write0_QML_Test
-
 !> @brief Subroutine wich calculates the test potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_Test_t):   derived type in which the parameters are set-up.
@@ -148,19 +151,127 @@ MODULE QML_Test_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Test(QModel,Mat_OF_PotDia,dnQ,nderiv)
-    USE ADdnSVM_m
-    IMPLICIT NONE
+  USE ADdnSVM_m
+  USE QDUtil_m, ONLY : TO_string
+  IMPLICIT NONE
 
-    CLASS(QML_Test_t),   intent(in)    :: QModel
+    CLASS(QML_Test_t),    intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
 
-    Mat_OF_PotDia(1,1) =  ONE+dnQ(1)**1
-    Mat_OF_PotDia(2,2) =  -Mat_OF_PotDia(1,1)
-    Mat_OF_PotDia(1,2) =  ONE
-    Mat_OF_PotDia(2,1) =  ONE
+    TYPE (dnS_t)   :: dnHarmo
+    integer        :: i
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='EvalPot_QML_Test'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) ' BEGINNING ',name_sub
+      write(out_unitp,*) ' nderiv    ',nderiv
+      !write(out_unitp,*) ' dnQ(:)%d0 ',get_d0(dnQ)
+      DO i=1,size(dnQ)
+        CALL Write_dnS(dnQ(i),info='dnQ(' // TO_string(i) // ')')
+      END DO
+      flush(out_unitp)
+    END IF
+
+    ! You can also add the potential parameters here
+    ! the Type dnS_t deal with automatic differentiation 
+    ! If you want to use intermediate variables, they must be of dnS_t type
+
+    dnHarmo = a * (dnQ(1)**2 + dnQ(2)**2 + dnQ(3)**2)
+    IF (debug) CALL Write_dnS(dnHarmo,info='dnHarmo') ; flush(out_unitp)
+
+    Mat_OF_PotDia(1,1) =  HALF*dnHarmo
+    IF (debug)  CALL Write_dnS(Mat_OF_PotDia(1,1),info='Mat_OF_PotDia(1,1)') ; flush(out_unitp)
+
+    Mat_OF_PotDia(2,2) =  HALF*dnHarmo + b
+    IF (debug) CALL Write_dnS(Mat_OF_PotDia(2,2),info='Mat_OF_PotDia(2,2)') ; flush(out_unitp)
+
+    Mat_OF_PotDia(1,2) =  dnQ(1) * QModel%c
+    IF (debug) CALL Write_dnS(Mat_OF_PotDia(1,2),info='Mat_OF_PotDia(1,2)') ; flush(out_unitp)
+
+    Mat_OF_PotDia(2,1) =  Mat_OF_PotDia(1,2)
+    IF (debug) CALL Write_dnS(Mat_OF_PotDia(2,1),info='Mat_OF_PotDia(2,1)') ; flush(out_unitp)
+
+    IF (debug) THEN
+      write(out_unitp,*) ' END ',name_sub
+      flush(out_unitp)
+    END IF
 
   END SUBROUTINE EvalPot_QML_Test
 
+
+
+  SUBROUTINE Cart_TO_Q_QML_Test(QModel,dnX,dnQ,nderiv)
+    USE QDUtil_m, ONLY : TO_String
+    USE ADdnSVM_m
+    IMPLICIT NONE
+  
+      CLASS(QML_Test_t),       intent(in)    :: QModel
+      TYPE (dnS_t),            intent(in)    :: dnX(:,:)
+      TYPE (dnS_t),            intent(inout) :: dnQ(:)
+      integer,                 intent(in)    :: nderiv
+  
+      ! local vectors
+      integer                   :: i,j
+      real (kind=Rkind)         :: sm1,sm2,sm3
+      TYPE (dnS_t)              :: Vec12(3),Vec13(3),Vec23(3)
+  
+      !----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='Cart_TO_Q_QML_Test'
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      !-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'size(dnQ)',size(dnQ)
+        write(out_unitp,*) 'dnQ:'
+        DO j=1,size(dnQ,dim=1)
+          CALL Write_dnS(dnQ(j),out_unitp,info='dnQ('// TO_String(j) // ')')
+        END DO
+        write(out_unitp,*) 'shape dnX',shape(dnX)
+        write(out_unitp,*) 'dnX'
+        DO i=1,size(dnX,dim=2)
+        DO j=1,size(dnX,dim=1)
+          CALL Write_dnS(dnX(j,i),out_unitp)
+        END DO
+        END DO
+        flush(out_unitp)
+      END IF
+
+      Vec23(:) = dnX(:,3)-dnX(:,2)
+      Vec12(:) = dnX(:,2)-dnX(:,1)
+      Vec13(:) = dnX(:,3)-dnX(:,1)
+  
+      IF (debug) THEN
+        write(out_unitp,*) 'in ',name_sub,' vect done'
+        flush(out_unitp)
+        DO j=1,size(Vec23,dim=1)
+          CALL Write_dnS(Vec23(j),out_unitp,info='Vec23')
+        END DO
+        DO j=1,size(Vec12,dim=1)
+          CALL Write_dnS(Vec23(j),out_unitp,info='Vec12')
+        END DO
+        DO j=1,size(Vec23,dim=1)
+          CALL Write_dnS(Vec13(j),out_unitp,info='Vec13')
+        END DO
+        flush(out_unitp)
+      END IF
+  
+      dnQ(1) = sqrt(dot_product(Vec23,Vec23))
+      dnQ(2) = sqrt(dot_product(Vec12,Vec12))
+      dnQ(3) = dot_product(Vec12,Vec23)/(dnQ(1)*dnQ(2)) ! cos(th) between Vec12 and Vec23
+  
+      IF (debug) THEN
+        CALL Write_dnS(dnQ(1),out_unitp,info='dnQ(1)')
+        CALL Write_dnS(dnQ(2),out_unitp,info='dnQ(2)')
+        CALL Write_dnS(dnQ(3),out_unitp,info='dnQ(3)')
+        write(out_unitp,*) 'END ',name_sub
+        flush(out_unitp)
+      END IF
+    END SUBROUTINE Cart_TO_Q_QML_Test
 END MODULE QML_Test_m

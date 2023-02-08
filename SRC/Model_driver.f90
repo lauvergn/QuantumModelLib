@@ -104,19 +104,25 @@ SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
   logical,                intent(in)        :: adiabatic
 
 !$OMP CRITICAL (CRIT_sub_Init_Qmodel_Cart)
-    !$ write(out_unitp,*) 'begining: max threads?',omp_get_max_threads()
-    write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
-    flush(out_unitp)
+  write(out_unitp,*) 'In sub_Init_Qmodel_Cart'
+  !$ write(out_unitp,*) 'begining: max threads?',omp_get_max_threads()
+  write(out_unitp,*) 'in sub_Init_Qmodel_Cart'
+  write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+  write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
+  flush(out_unitp)
 
-    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),              &
+  CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),              &
                     ndim=ndim,nsurf=nsurf,adiabatic=adiabatic,Cart_TO_Q=.TRUE., &
                     option=option)
 
-    CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Init_Qmodel_Cart in Model_driver.f90')
+  CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Init_Qmodel_Cart in Model_driver.f90')
 
-    ndim  = QuantumModel%ndim
-    nsurf = QuantumModel%nsurf
+  ndim  = QuantumModel%ndim
+  nsurf = QuantumModel%nsurf
+
+  write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
+  write(out_unitp,*) 'End sub_Init_Qmodel_Cart'
+  flush(out_unitp)
 
 !$OMP END CRITICAL (CRIT_sub_Init_Qmodel_Cart)
 

@@ -113,14 +113,15 @@ ifeq ($(FFC),gfortran)
   FFLAGS += -cpp $(CPPSHELL_QML)
 
   FLIB   = $(EXTLib)
+
   # OS management
   ifeq ($(LLAPACK),1)
     ifeq ($(OS),Darwin)    # OSX
       # OSX libs (included lapack+blas)
-      FLIB += -framework Accelerate
+      IntLIB = -framework Accelerate
     else                   # Linux
       # linux libs
-      FLIB += -llapack -lblas
+      IntLIB = -llapack -lblas
       #
       # linux libs with mkl and with openmp
       #FLIB = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_gnu_thread
@@ -128,6 +129,7 @@ ifeq ($(FFC),gfortran)
       #FLIB = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_sequential
     endif
   endif
+  FLIB += $(IntLIB)
 
   FC_VER = $(shell $(FFC) --version | head -1 )
 
@@ -167,7 +169,7 @@ QMLSRCFILES=Buck_m.f90 H3_m.f90 NO3_m.f90  Template_m.f90 \
             Empty_m.f90  HONO_m.f90        PSB3_m.f90  TwoD_RJDI2014_m.f90 \
             H2NSi_m.f90  HOO_DMBE_m.f90    Phenol_m.f90           TwoD_Valahu2022_m.f90 \
             H2O_m.f90    HenonHeiles_m.f90 Poly1D_m.f90           TwoD_m.f90 \
-            H2SiN_m.f90  LinearHBond_m.f90 Retinal_JPCB2000_m.f90   \
+            H2SiN_m.f90  LinearHBond_m.f90 Retinal_JPCB2000_m.f90  Vibronic_m.f90 \
             H2_m.f90     Morse_m.f90       Sigmoid_m.f90 \
             FiniteDiff_m.f90  UtilLib_m.f90
 
@@ -197,12 +199,12 @@ UT ut: $(TESTS).x
 all: $(QMLIBA) $(MAIN).x $(TESTS).x
 #===============================================
 #============= Main executable and tests  ======
-#===============================================
+#=============================================== libQMLibFull$(ext_obj).a
 $(MAIN).x: $(OBJ_DIR)/$(MAIN).o $(QMLIBA)
 	$(FFC) $(FFLAGS) -o $(MAIN).x  $(OBJ_DIR)/$(MAIN).o $(QMLIBA) $(FLIB)
 
 $(TESTS).x: $(OBJ_DIR)/$(TESTS).o $(QMLIBA)
-	$(FFC) $(FFLAGS) -o $(TESTS).x  $(OBJ_DIR)/$(TESTS).o $(QMLIBA) $(FLIB)
+	$(FFC) $(FFLAGS) -o $(TESTS).x  $(OBJ_DIR)/$(TESTS).o libQMLibFull$(ext_obj).a $(IntLIB)
 #===============================================
 #============= Library: libQD.a  ===============
 #===============================================
@@ -211,6 +213,7 @@ lib: $(QMLIBA)
 
 $(QMLIBA): $(OBJ)
 	ar -cr $(QMLIBA) $(OBJ)
+	ar -cr libQMLibFull$(ext_obj).a $(OBJ) $(ADMOD_DIR)/*.o $(QDMOD_DIR)/*.o
 	@echo "  done Library: "$(QMLIBA)
 #===============================================
 #===============================================
@@ -297,6 +300,7 @@ $(OBJ_DIR)/TwoD_RJDI2014_m.o:     $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/TwoD_Valahu2022_m.o:   $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/PSB3_m.o:              $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/Retinal_JPCB2000_m.o:  $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/Vibronic_m.o:          $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/HONO_m.o:              $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/HNO3_m.o:              $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/NO3_m.o:               $(OBJ_DIR)/Empty_m.o

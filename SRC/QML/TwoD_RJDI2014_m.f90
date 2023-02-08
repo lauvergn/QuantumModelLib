@@ -85,7 +85,7 @@ MODULE QML_TwoD_RJDI2014_m
     USE QDUtil_m,         ONLY : Identity_Mat
     IMPLICIT NONE
 
-    TYPE (QML_TwoD_RJDI2014_t)                          :: QModel ! RESULT
+    TYPE (QML_TwoD_RJDI2014_t)                   :: QModel ! RESULT
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file

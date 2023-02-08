@@ -44,18 +44,21 @@ MODULE QMLLib_UtilLib_m
 
   PRIVATE
 
-  PUBLIC :: Find_Label,NFind_Label,FFind_Label
+  PUBLIC :: Find_Label,NFind_Label,FFind_Label,Pot_Name_Analysis
 
-
-INTERFACE Find_Label
-  MODULE PROCEDURE QML_Find_Label
-END INTERFACE
-INTERFACE NFind_Label
-  MODULE PROCEDURE QML_NFind_Label
-END INTERFACE
-INTERFACE FFind_Label
-  MODULE PROCEDURE QML_FFind_Label
-END INTERFACE
+  
+  INTERFACE Pot_Name_Analysis
+    MODULE PROCEDURE QML_Pot_Name_Analysis
+  END INTERFACE
+  INTERFACE Find_Label
+    MODULE PROCEDURE QML_Find_Label
+  END INTERFACE
+  INTERFACE NFind_Label
+    MODULE PROCEDURE QML_NFind_Label
+  END INTERFACE
+  INTERFACE FFind_Label
+    MODULE PROCEDURE QML_FFind_Label
+  END INTERFACE
 CONTAINS
 
   SUBROUTINE QML_Find_Label(nio,label,located)
@@ -172,4 +175,75 @@ CONTAINS
 
   END SUBROUTINE QML_FFind_Label
 
+  SUBROUTINE QML_Pot_Name_Analysis(pot_name,tab_pot_name)
+    USE QDUtil_m
+    IMPLICIT NONE
+
+    character (len=*),              intent(in)    :: pot_name
+    character (len=:), allocatable, intent(inout) :: tab_pot_name(:)
+
+    character (len=:), allocatable :: name
+    integer :: nb_word,len_word,ioerr,i,iblank
+
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING QML_Pot_Name_Analysis'
+      write(out_unitp,*) 'pot_name: ',pot_name
+      flush(out_unitp)
+    END IF
+    !first the number of word
+    name     = pot_name ! for the allocation
+    nb_word  = 0
+    len_word = 0
+    DO
+      iblank = index(name,' ')
+      IF (iblank == 0) THEN
+        nb_word = nb_word + 1
+        len_word = max(len_word,len_trim(name))
+        EXIT
+      END IF
+
+      name = name(iblank+1:len(name))
+      name = trim(adjustl(name))
+
+      nb_word = nb_word + 1
+      len_word = max(len_word,iblank-1)
+      IF (debug) write(out_unitp,*) 'nb_word,len_word',nb_word,len_word,' ',name
+      flush(out_unitp)
+    END DO
+    IF (debug) write(out_unitp,*) 'nb_word,len_word',nb_word,len_word
+
+    !now create the table of string
+    allocate(character(len=len_word) :: tab_pot_name(nb_word))
+
+    name     = pot_name ! for the allocation
+    nb_word  = 0
+    len_word = 0
+    DO
+      iblank = index(name,' ')
+      IF (iblank == 0) THEN
+        nb_word = nb_word + 1
+        len_word = max(len_word,len_trim(name))
+        tab_pot_name(nb_word) = trim(adjustl(name))
+        IF (debug) write(out_unitp,*) 'nb_word',nb_word,' ',tab_pot_name(nb_word)
+        EXIT
+      END IF
+
+      nb_word = nb_word + 1
+      len_word = max(len_word,iblank-1)
+
+      tab_pot_name(nb_word) = trim(adjustl(name(1:iblank)))
+      IF (debug)write(out_unitp,*) 'nb_word',nb_word,' ',tab_pot_name(nb_word)
+
+      name = name(iblank+1:len(name))
+      name = trim(adjustl(name))
+      flush(out_unitp)
+    END DO
+    IF (debug) THEN
+      write(out_unitp,*) 'END QML_Pot_Name_Analysis'
+      flush(out_unitp)
+    END IF
+  END SUBROUTINE QML_Pot_Name_Analysis
 END MODULE QMLLib_UtilLib_m

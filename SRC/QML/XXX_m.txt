@@ -57,7 +57,6 @@ MODULE QML_XXX_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_XXX
     PROCEDURE :: Write_QModel    => Write_QML_XXX
-    PROCEDURE :: Write0_QModel   => Write0_QML_XXX
   END TYPE QML_XXX_t
 
   PUBLIC :: QML_XXX_t,Init_QML_XXX

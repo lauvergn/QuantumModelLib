@@ -38,8 +38,9 @@
 !===========================================================================
 !===========================================================================
 PROGRAM main_pot
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
   IMPLICIT NONE
+
+  CALL test_Test() ; stop
 
   CALL test_PSB3() ; stop
 
@@ -60,19 +61,19 @@ PROGRAM main_pot
 
 END PROGRAM main_pot
 SUBROUTINE test_Read_Model()
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT, Rkind => real64
   IMPLICIT NONE
 
-  real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option
-  real (kind=real64)                  :: DQ
+  real (kind=Rkind)                  :: DQ
 
   write(out_unitp,*) '============================================================'
   write(out_unitp,*) '============================================================'
@@ -99,7 +100,7 @@ SUBROUTINE test_Read_Model()
     allocate(NAC(nsurf,nsurf,ndim))
 
     CALL get_Qmodel_Q0(Q,0)
-    DQ = 0.1_real64
+    DQ = 0.1_Rkind
     DO k=1,4
       write(out_unitp,*) '------------------------------------------------------'
       CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
@@ -141,13 +142,13 @@ SUBROUTINE test_Read_Model()
 
 END SUBROUTINE test_Read_Model
 SUBROUTINE test2_Vib_adia(nb_eval)
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,Rkind => real64
   IMPLICIT NONE
 
-  real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
@@ -216,17 +217,17 @@ SUBROUTINE test2_Vib_adia(nb_eval)
 
 END SUBROUTINE test2_Vib_adia
 SUBROUTINE test_1DSOC_1S1T
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,Rkind => real64
 !$ USE omp_lib
   IMPLICIT NONE
 
-  real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: GGdef(:,:)
-  real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: Vec(:,:)
-  real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: h(:,:,:,:)
-  real (kind=real64),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: GGdef(:,:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: Vec(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: h(:,:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
@@ -253,7 +254,7 @@ SUBROUTINE test_1DSOC_1S1T
   allocate(Vec(nsurf,nsurf))
 
 
-  Q(:) = (/8.5_real64 /)
+  Q(:) = (/8.5_Rkind /)
 
   CALL sub_Qmodel_VVec(V,Vec,Q)
   write(out_unitp,*) ' Diabatic potential as a 4x4 matrix:'
@@ -274,37 +275,26 @@ SUBROUTINE test_1DSOC_1S1T
 
 END SUBROUTINE test_1DSOC_1S1T
 SUBROUTINE test_PSB3
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,Rkind => real64
 !$ USE omp_lib
   IMPLICIT NONE
 
-  real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: GGdef(:,:)
-  real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: Vec(:,:)
-  real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: h(:,:,:,:)
-  real (kind=real64),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: GGdef(:,:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: Vec(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: h(:,:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
 
-  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
+  integer                             :: i,j,k,ndim,nsurf,option
 
-  nb_eval = 1
-  write(out_unitp,*) '============================================================'
-  write(out_unitp,*) '============================================================'
-  maxth = 1
-  !$ maxth           = omp_get_max_threads()
-  write(out_unitp,*) '============================================================'
-  write(out_unitp,*) 'NTEST_driver. number of threads:',maxth
   write(out_unitp,*) '============================================================'
   write(out_unitp,*) '============================================================'
   pot_name = 'PSB3'
-  write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL QML_time_perso('Test ' // pot_name)
-
-
   ndim     = 3
   nsurf    = 2
   option   = 0
@@ -317,7 +307,7 @@ SUBROUTINE test_PSB3
   allocate(V(nsurf,nsurf))
 
 
-  Q(:) = (/0.1_real64,-3.14_real64,0.0_real64/)
+  Q(:) = (/0.1_Rkind,-3.14_Rkind,0.0_Rkind/)
 
   CALL sub_Qmodel_V(V,Q)
   write(out_unitp,*) ' Diabatic potential as a 2x2 matrix:'
@@ -341,38 +331,92 @@ SUBROUTINE test_PSB3
 
 END SUBROUTINE test_PSB3
 
-SUBROUTINE test_HBond
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
-!$ USE omp_lib
+SUBROUTINE test_Test
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT, out_unitp=>OUTPUT_UNIT, Rkind => real64
   IMPLICIT NONE
 
-  real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: GGdef(:,:)
-  real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: Vec(:,:)
-  real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: h(:,:,:,:)
-  real (kind=real64),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
-  nb_eval = 1
   write(out_unitp,*) '============================================================'
   write(out_unitp,*) '============================================================'
-  maxth = 1
-  !$ maxth           = omp_get_max_threads()
-  write(out_unitp,*) '============================================================'
-  write(out_unitp,*) 'NTEST_driver. number of threads:',maxth
+  pot_name = 'Test'
+  ndim      = 0
+  nsurf     = 0
+  option    = 0
+  adiabatic = .TRUE.
+
+  CALL sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
+  CALL set_Qmodel_Phase_Following(.FALSE.)
+ 
+  write(out_unitp,*) 'ndim,nsurf',ndim,nsurf
+  flush(out_unitp)
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+  allocate(g(nsurf,nsurf,ndim))
+  allocate(NAC(nsurf,nsurf,ndim))
+
+
+  Q = [1._Rkind,0._Rkind,0._Rkind,  0._Rkind,1._Rkind,0._Rkind,  0._Rkind,0._Rkind,1._Rkind]
+
+  CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
+
+  write(out_unitp,*) ' Q:',Q
+
+  write(out_unitp,*) ' Adiabatic potential as a 2x2 matrix:'
+  write(out_unitp,'(2f12.8)') V
+  write(out_unitp,*) ' Adiabatic gradient. Each component as a 2x2 matrix:'
+  DO i=1,ndim
+    write(out_unitp,*) ' Component:',i
+    write(out_unitp,'(2f12.8)') g(:,:,i)
+  END DO
+
+  write(out_unitp,*) ' NAC. Each component as a 2x2 matrix:'
+  DO i=1,ndim
+    write(out_unitp,*) ' Component:',i
+    write(out_unitp,'(2f12.8)') NAC(:,:,i)
+  END DO
+
+  deallocate(V)
+  deallocate(g)
+  deallocate(NAC)
+  deallocate(Q)
+
 
   write(out_unitp,*) '============================================================'
   write(out_unitp,*) '============================================================'
+
+END SUBROUTINE test_Test
+SUBROUTINE test_HBond
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,Rkind => real64
+!$ USE omp_lib
+  IMPLICIT NONE
+
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: GGdef(:,:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: Vec(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: h(:,:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
+
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
+
+  integer                             :: i,j,k,ndim,nsurf,option
+
+  write(out_unitp,*) '============================================================'
+  write(out_unitp,*) '============================================================'
+
   pot_name = 'HBond'
-  write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL QML_time_perso('Test ' // pot_name)
-
   ndim     = 2
   nsurf    = 1
   option   = 0
@@ -385,7 +429,7 @@ SUBROUTINE test_HBond
   allocate(V(nsurf,nsurf))
 
 
-  Q(:) = (/2._real64,0._real64/)
+  Q(:) = (/2._Rkind,0._Rkind/)
 
   CALL sub_Qmodel_V(V,Q)
   write(out_unitp,*) V
@@ -398,7 +442,7 @@ SUBROUTINE test_HBond
   write(out_unitp,*) 'gradiant',G
   write(out_unitp,*) 'hessian',H
 
-  CALL set_Qmodel_step(1.e-2_real64)
+  CALL set_Qmodel_step(1.e-2_Rkind)
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
 
   deallocate(V)
@@ -413,17 +457,17 @@ SUBROUTINE test_HBond
 END SUBROUTINE test_HBond
 
 SUBROUTINE test_Phenol_Dia(nb_eval)
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,Rkind => real64
 !$ USE omp_lib
   IMPLICIT NONE
 
-  real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: GGdef(:,:)
-  real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: Vec(:,:)
-  real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: h(:,:,:,:)
-  real (kind=real64),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: GGdef(:,:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: Vec(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: h(:,:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
@@ -464,7 +508,7 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
   END DO
 
 
-  Q = (/1.0_real64,-0.5_real64 /)
+  Q = (/1.0_Rkind,-0.5_Rkind /)
   CALL sub_Qmodel_V(V,Q)
   write(out_unitp,*) ' Diabatic potential as a 3x3 matrix:'
   write(out_unitp,'(3f12.8)') V
@@ -489,7 +533,7 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 !$OMP   DO SCHEDULE(STATIC)
   DO i=1,nb_eval
     CALL  random_number(Q)
-    Q = Q + (/1.0_real64,-0.5_real64 /)
+    Q = Q + (/1.0_Rkind,-0.5_Rkind /)
     CALL sub_Qmodel_V(V,Q)
   END DO
 !$OMP   END DO
@@ -506,17 +550,17 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 
 END SUBROUTINE test_Phenol_Dia
 SUBROUTINE test_Phenol_ADia
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,Rkind => real64
 !$ USE omp_lib
   IMPLICIT NONE
 
-  real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: GGdef(:,:)
-  real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: Vec(:,:)
-  real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: h(:,:,:,:)
-  real (kind=real64),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: GGdef(:,:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: Vec(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: h(:,:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
@@ -552,7 +596,7 @@ SUBROUTINE test_Phenol_ADia
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
   CALL set_Qmodel_Phase_Checking(.FALSE.)
 
-  Q = [1._real64,-0.5_real64 ]
+  Q = [1._Rkind,-0.5_Rkind ]
   CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
 
   write(out_unitp,*) ' Q:',Q
@@ -570,7 +614,7 @@ SUBROUTINE test_Phenol_ADia
     write(out_unitp,'(3f12.8)') NAC(:,:,i)
   END DO
 
-  Q = [1.1_real64,-0.5_real64 ]
+  Q = [1.1_Rkind,-0.5_Rkind ]
   CALL sub_Qmodel_VG_NAC(V,G,NAC,Q)
 
   write(out_unitp,*) ' Q:',Q
@@ -599,17 +643,17 @@ SUBROUTINE test_Phenol_ADia
 
 END SUBROUTINE test_Phenol_ADia
 SUBROUTINE test_henonheiles(nb_eval)
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,Rkind => real64
 !$ USE omp_lib
   IMPLICIT NONE
 
-  real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: GGdef(:,:)
-  real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: Vec(:,:)
-  real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: h(:,:,:,:)
-  real (kind=real64),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: GGdef(:,:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: Vec(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: h(:,:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
@@ -667,14 +711,14 @@ SUBROUTINE test_henonheiles(nb_eval)
 END SUBROUTINE test_henonheiles
 
 SUBROUTINE test_Vib_adia(nb_eval)
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,Rkind => real64
 !$ USE omp_lib
   IMPLICIT NONE
 
-  real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
 
   integer                             :: ndim,nsurf,nio_QML
@@ -756,16 +800,16 @@ SUBROUTINE test_Vib_adia(nb_eval)
 END SUBROUTINE test_Vib_adia
 
 SUBROUTINE test_PH4
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,real64
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unitp=>INPUT_UNIT,out_unitp=>OUTPUT_UNIT,Rkind => real64
 !$ USE omp_lib
   IMPLICIT NONE
 
-  real (kind=real64),      allocatable     :: Q(:)
-  real (kind=real64),      allocatable     :: GGdef(:,:)
-  real (kind=real64),      allocatable     :: V(:,:)
-  real (kind=real64),      allocatable     :: Vec(:,:)
-  real (kind=real64),      allocatable     :: g(:,:,:)
-  real (kind=real64),      allocatable     :: h(:,:,:,:)
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: GGdef(:,:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: Vec(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: h(:,:,:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
@@ -790,7 +834,7 @@ SUBROUTINE test_PH4
 
   DO i=-100,100
 
-    Q(1) = 0.1_real64 * i
+    Q(1) = 0.1_Rkind * i
 
     CALL sub_Qmodel_V(V,Q)
     write(out_unitp,*) Q,V
