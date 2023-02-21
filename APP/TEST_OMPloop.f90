@@ -51,27 +51,26 @@ PROGRAM main_pot
   integer                             :: i,ndim,nsurf,option,nb_eval,maxth
 
 
-  maxth = 1
-  !$ maxth           = omp_get_max_threads()
-  write(out_unitp,*) 'NTEST_driver. number of threads:',maxth
-
-  write(out_unitp,*) '============================================================'
-  write(out_unitp,*) '============================================================'
+  write(*,*) '============================================================'
+  write(*,*) '============================================================'
 
   ndim      = 6
   nsurf     = 1
   option    = 0
   adiabatic = .TRUE.
-  nb_eval   = 10**6
+  nb_eval   = 10**5
   pot_name  = 'HONO'
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
 
   allocate(Q0(ndim))
   CALL get_Qmodel_Q0(Q0,0) ! the option of get_Qmodel_Q0 enables to select different reference geometries.
 
-  write(out_unitp,*) '============================================================'
-  write(out_unitp,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL time_perso('Test ' // pot_name)
+  write(*,*) '============================================================'
+  write(*,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  maxth = 1
+  !$ maxth           = omp_get_max_threads()
+  write(*,*) 'NTEST_driver. number of threads:',maxth
+  CALL QML_time_perso('Test ' // pot_name)
 
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_eval,ndim,nsurf,maxth,Q0) &
@@ -80,7 +79,7 @@ PROGRAM main_pot
 
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
-  write(out_unitp,*) 'alloc Q and V'
+  write(*,*) 'alloc Q and V'
 !$OMP BARRIER
 
 !$OMP   DO SCHEDULE(STATIC)
@@ -91,23 +90,23 @@ PROGRAM main_pot
 
     CALL sub_Qmodel_V(V,Q)
 
-    !write(out_unitp,*) Q,(V(k,k),k=1,nsurf)
+    !write(*,*) Q,(V(k,k),k=1,nsurf)
   END DO
 !$OMP   END DO
 
 !$OMP BARRIER
   deallocate(Q)
   deallocate(V)
-  write(out_unitp,*) 'dealloc Q and V'
+  write(*,*) 'dealloc Q and V'
 
 !$OMP   END PARALLEL
 
   deallocate(Q0)
 
 
-  CALL time_perso('Test ' // pot_name)
-  write(out_unitp,*) '============================================================'
-  write(out_unitp,*) '============================================================'
+  CALL QML_time_perso('Test ' // pot_name)
+  write(*,*) '============================================================'
+  write(*,*) '============================================================'
 
 END PROGRAM main_pot
 SUBROUTINE QML_time_perso(name_sub)

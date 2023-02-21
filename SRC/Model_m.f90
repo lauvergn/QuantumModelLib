@@ -770,8 +770,6 @@ CONTAINS
       QModel%QM = Init_QML_Retinal_JPCB2000(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('vibronic')
-      allocate(QML_Vibronic_t :: QModel%QM)
-
       IF (size(tab_pot_name) > 1) THEN
         QModel%QM = Init_QML_Vibronic(QModel_in,read_param=read_nml,nio_param_file=nio_loc, &
                                       Vibronic_name=trim(tab_pot_name(2)))
@@ -945,7 +943,6 @@ CONTAINS
 
     CASE ('test')
       !! test-potential
-      allocate(QML_Test_t :: QModel%QM)
       QModel%QM = Init_QML_Test(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE DEFAULT

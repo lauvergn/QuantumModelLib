@@ -7,26 +7,29 @@ FC=$1
 OPT=$2
 OMP=$3
 LAPACK=$4
+FromMakefile=$5
 
 
-echo $FC $OPT $OMP $LAPACK
 
-cd ..
-  make FC=$FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK ut > $here/comp.log 2>&1
-cd  $here
-nbOK=`grep -c "model (QML) compilation: OK" comp.log`
+echo $FC OPT: $OPT OMP: $OMP LAPACK: $LAPACK FromMakefile: $FromMakefile
 
+if [ "$FromMakefile" != 1 ]
+then
+  cd ..
+    make FC=$FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK ut > $here/comp.log 2>&1
+  cd  $here
+  nbOK=`grep -c "model (QML) compilation: OK" comp.log`
+  if [ "$nbOK" = 0 ]
+  then
+    echo " model (QML) compilation ERROR"
+    exit
+  fi
+fi
 
 
 echo "=========================================="
 echo " TESTING the internal potentials of ModLib"
 echo " ... with respect to old files"
-
-if [ "$nbOK" = 0 ]
-then
-  echo " model (QML) compilation ERROR"
-  exit
-fi
 
 echo "    FC: " $FC
 echo "   OPT: " $OPT
@@ -35,6 +38,10 @@ echo "LAPACK: " $LAPACK
 echo "=========================================="
 
 ../TEST_model.x < input.dat > res 2>error.log
+
+echo "=== TEST_model.x: done ==================="
+echo "=========================================="
+
 ../bin/Compare_QML > Test_QML.log
 
 #grep "The structure of both files are different" Test_QML.log

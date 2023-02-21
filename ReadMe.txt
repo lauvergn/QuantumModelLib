@@ -18,23 +18,32 @@
 =========================================
  1) Installation
    From the QuantumModelLib directory, when make is executated, 
-   the "libQMLib_XXX_OMPy.a" ("libpot.a") and "libAD_dnSVM_XXX_OMPy.a" must be created.
-   XXX is the compiler name and y is 0/1 when OpenMP flag is turn off/on. 
+   the "libQMLibFull_XXX_optx_ompy_lapakz.a" must be created (ex: libQMLibFull_gfortran_opt1_omp1_lapack1).
+   XXX is the compiler name and x,y and z are 0/1 when flags are turn off/on. 
+   They correspond to OPT (compiler optimzation), OpenMP and Lapack/blas, respectively.
 
    This version works with:
        gfortran 9.0 (linux and macOS)
        ifort    19
-       pgf90    ?
-       nagfor   ?
 
- 2) Link "libAD_dnSVM.a" to your code
+ 2) Link the library to your code
 
-   gfortran ....   -L$QuantumModelLib_path --LQMLib_XXX_OMPy -lAD_dnSVM_XXX_OMPy
+When lapack/blas are not linked to the library:
+
+   gfortran ....   /libQMLibFull_XXX_optx_ompy_lapak0.a
+
+or with  lapack/blas (linux)
+
+   gfortran ....   /libQMLibFull_XXX_optx_ompy_lapak0.a -llapack -lblas
 
       QuantumModelLib_path contains the path of the QuantumModelLib
 
 
  3) In your fortan code
+
+ In the following, it shows how to initialize, compute with the driver subroutines 
+ (only the full library is needed, the Fortran module files are not required)
+
  3a1) Initialization of the model (the Potential)
 
         CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
@@ -178,6 +187,41 @@
         where
            ndim       is the number of degree(s) of freedom it MUST be indentical to the initialized value (with sub_Init_Qmodel)
            GGdef(:,)  is the new metric tensor a ndim x ndim matrix of real (kind=8)
+
+ 5) Examples and Tests
+
+ With "make all", the libraries are created and several main programs.
+
+ 5a) To test the implementation
+ From the main QuantumModelLib directory:
+
+    make ut
+
+ From the Tests directory
+
+    ./run_test_QML
+
+  => Some options are possible, the compiler, OPT, OMP, Lapack
+
+  Or you can run:
+    ./run_tests
+
+  => All possible combinations between OPT=0/1, OMP=0/1, Lapack=0/1 will be tested. Beware, this test is long.
+
+ 5b) To run examples
+From the main QuantumModelLib directory:
+
+  ./TEST_driver.x < Tests/DAT_files/Vibadia_HBond.dat > res_driver
+=> Test sevral models (1 or several surfaces, optimization, Vibration adiabatic separation)
+
+  ./TEST_VibAdia.x < Tests/DAT_files/Vibadia_HBond.dat > res_VibAdia
+=> Test a Vibration adiabatic separation model.
+
+  ./TEST_grid.x > res_grid
+=> Test the 1D and 2D-cut generation for HenonHeiles potential (it uses subroutines with Fortran modules)
+
+  ./TEST_OMPloop.x > res_loop
+=> Test an OpenMP loop (10^5) on the HONO model (several seconds)
 
 =========================================
 =========================================

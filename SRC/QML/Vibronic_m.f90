@@ -88,7 +88,7 @@ MODULE QML_Vibronic_m
 
     IMPLICIT NONE
 
-    TYPE (QML_Vibronic_t)                             :: QModel
+    TYPE (QML_Vibronic_t), allocatable                :: QModel
     TYPE(QML_Empty_t),           intent(in)           :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)           :: nio_param_file
     logical,                     intent(in)           :: read_param
@@ -97,6 +97,8 @@ MODULE QML_Vibronic_m
     integer :: i,j
     real (kind=Rkind), allocatable :: d1(:),d2(:,:)
 
+
+    allocate(QML_Vibronic_t :: QModel)
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
     IF (present(Vibronic_name)) QModel%Vibronic_name = Vibronic_name
@@ -155,6 +157,8 @@ MODULE QML_Vibronic_m
     SELECT CASE (QModel%Vibronic_name)
     CASE ('twod_rjdi2014')
       CALL Internal_QML_RJDI2014(QModel)
+    CASE ('xxx')
+      CALL Internal_QML_XXX(QModel)
     CASE Default
       STOP 'no default in Internal_QML_Vibronic'
     END SELECT
@@ -212,7 +216,73 @@ MODULE QML_Vibronic_m
     QModel%Diab(i,j)%Qref = QModel%Diab(j,i)%Qref
 
   END SUBROUTINE Internal_QML_RJDI2014
-  !> @brief Subroutine wich prints the Phenol potential parameters.
+  SUBROUTINE Internal_QML_XXX(QModel)
+    USE QDUtil_m,         ONLY : Identity_Mat
+    USE ADdnSVM_m,        ONLY : dnS_t, set_dnS
+    IMPLICIT NONE
+
+    CLASS (QML_Vibronic_t), intent(inout)   :: QModel
+
+
+
+    integer :: i,j,k
+    real (kind=Rkind), allocatable :: d1(:),d2(:,:)
+
+
+    QModel%ndim  = 7
+    QModel%nsurf = 2
+
+    allocate(QModel%Diab(QModel%nsurf,QModel%nsurf))
+    allocate(d1(QModel%ndim))
+    allocate(d2(QModel%ndim,QModel%ndim))
+    !V11:
+    i=1
+
+    allocate(QModel%Diab(i,i)%Qref(QModel%ndim))
+    QModel%Diab(i,i)%Qref(:) = ZERO
+
+    d1(:) = ZERO ! gradient
+
+    d2(:,:) = ZERO ! hessian
+    DO k=1,QModel%ndim
+      d2(k,k) = ONE
+    END DO
+ 
+    CALL set_dnS(QModel%Diab(i,i)%Ene,d0=ZERO,d1=d1,d2=d2)
+
+    !V22: 
+    i=2
+    allocate(QModel%Diab(i,i)%Qref(QModel%ndim))
+    QModel%Diab(i,i)%Qref(:) = ZERO
+
+    d1(:) = ZERO ! gradient
+
+    d2(:,:) = ZERO ! hessian
+    DO k=1,QModel%ndim
+      d2(k,k) = ONE
+    END DO
+    CALL set_dnS(QModel%Diab(i,i)%Ene,d0=ONE,d1=d1,d2=d2)
+
+    ! V12: 1 * Q(1) (linear coupling)
+    i=2 ; j=1
+    allocate(QModel%Diab(j,i)%Qref(QModel%ndim))
+    QModel%Diab(j,i)%Qref(:) = ZERO
+
+    !d1(:) = ZERO ! gradient
+    !d1(1) = ONE
+    d1(:) = [ONE,ZERO,ZERO,ZERO,ZERO,ZERO,ZERO]
+
+
+    CALL set_dnS(QModel%Diab(j,i)%Ene,d0=ZERO,d1=d1)
+
+    ! V21
+    QModel%Diab(i,j)%Ene  = QModel%Diab(j,i)%Ene
+    QModel%Diab(i,j)%Qref = QModel%Diab(j,i)%Qref
+
+    QModel%d0GGdef      = Identity_Mat(QModel%ndim)
+
+  END SUBROUTINE Internal_QML_XXX
+!> @brief Subroutine wich prints the vibronic parameters.
 !!
 !> @author David Lauvergnat
 !! @date 07/02/2023
@@ -247,7 +317,7 @@ MODULE QML_Vibronic_m
 
   END SUBROUTINE Write_QML_Vibronic
 
-!> @brief Subroutine wich calculates the Phenol potential with derivatives up to the 2d order if required.
+!> @brief Subroutine wich calculates the Phenol potential with derivatives up to the 3d order if required.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017

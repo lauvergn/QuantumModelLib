@@ -39,6 +39,7 @@
 !===========================================================================
 PROGRAM TEST_grid
   USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_m, ONLY : TO_string
   USE Model_m
   IMPLICIT NONE
 
@@ -59,7 +60,7 @@ PROGRAM TEST_grid
     Qmax = ZERO
     Qmax(i) = a
     Qmin = -Qmax
-    grid_file = strdup('grid1D_' // int_TO_char(i) )
+    grid_file = 'grid1D_' // TO_string(i)
     CALL Eval_pot_ON_Grid(QModel,Qmin=Qmin,Qmax=Qmax,       &
                           nb_points=101,nderiv=0,grid_file=grid_file)
   END DO
@@ -74,7 +75,7 @@ PROGRAM TEST_grid
 
     Qmin = -Qmax
 
-    grid_file = strdup('grid2D_' // int_TO_char(i) // '-' // int_TO_char(j))
+    grid_file = 'grid2D_' // TO_string(i) // '-' // TO_string(j)
 
     CALL Eval_pot_ON_Grid(QModel,Qmin=Qmin,Qmax=Qmax,       &
                           nb_points=101,nderiv=0,grid_file=grid_file)

@@ -150,13 +150,16 @@ $(info ***********EXTMOD_DIR:   $(EXTMOD_DIR))
 $(info ***********ext_obj:      $(ext_obj))
 $(info ***********************************************************************)
 
-VPATH = $(TESTS_DIR):$(MAIN_DIR):$(SRC_DIR): \
-        $(SRC_DIR)/QMLLib:$(SRC_DIR)/QML:$(SRC_DIR)/Opt:$(SRC_DIR)/AdiaChannels
+VPATH = $(TESTS_DIR) $(MAIN_DIR) $(SRC_DIR)  \
+        $(SRC_DIR)/QMLLib $(SRC_DIR)/QML $(SRC_DIR)/Opt $(SRC_DIR)/AdiaChannels
 
-MAIN=TEST_driver
+MAINS= TEST_driver TEST_VibAdia TEST_grid TEST_OMPloop
+MAINSx=$(addsuffix .x,$(MAINS))
+$(info ***********MAINSx:      $(MAINSx))
+
 TESTS=TEST_model
 
-MAINSRCFILES=TEST_Adia.f90 TEST_OOP.f90 TEST_grid.f90 TEST_OMPloop.f90 TEST_driver.f90
+MAINSRCFILES=TEST_VibAdia.f90 TEST_grid.f90 TEST_OMPloop.f90 TEST_driver.f90
 TESTSRCFILES=TEST_model.f90
 LIBSRCFILES=Model_driver.f90 Model_m.f90 \
             IRC_m.f90    Opt_m.f90 \
@@ -188,21 +191,30 @@ OBJ=$(addprefix $(OBJ_DIR)/, $(OBJ0))
 .PHONY: ut UT
 UT ut: $(TESTS).x
 	@echo "model (QML) compilation: OK"
+	cd Tests ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) 1
+#	cd Tests ; ../$(TESTS).x  < input.dat > res 2>error.log
+
 #	./$(TESTS).x |	grep "Number of error(s)"
 #	@echo "  done Tests"
-
-
 #===============================================
 #============= all: lib, tests ...  ============
 #===============================================
 .PHONY: all
-all: $(QMLIBA) $(MAIN).x $(TESTS).x
+all: $(QMLIBA) $(MAINSx) $(TESTS).x
 #===============================================
 #============= Main executable and tests  ======
 #=============================================== libQMLibFull$(ext_obj).a
-$(MAIN).x: $(OBJ_DIR)/$(MAIN).o $(QMLIBA)
-	$(FFC) $(FFLAGS) -o $(MAIN).x  $(OBJ_DIR)/$(MAIN).o $(QMLIBA) $(FLIB)
-
+TEST_VibAdia.x: $(OBJ_DIR)/TEST_VibAdia.o $(QMLIBA)
+	$(FFC) $(FFLAGS) -o TEST_VibAdia.x  $(OBJ_DIR)/TEST_VibAdia.o libQMLibFull$(ext_obj).a $(IntLIB)
+TEST_OOP.x: $(OBJ_DIR)/TEST_OOP.o $(QMLIBA)
+	$(FFC) $(FFLAGS) -o TEST_OOP.x  $(OBJ_DIR)/TEST_OOP.o libQMLibFull$(ext_obj).a $(IntLIB)
+TEST_grid.x: $(OBJ_DIR)/TEST_grid.o $(QMLIBA)
+	$(FFC) $(FFLAGS) -o TEST_grid.x  $(OBJ_DIR)/TEST_grid.o libQMLibFull$(ext_obj).a $(IntLIB)
+TEST_OMPloop.x: $(OBJ_DIR)/TEST_OMPloop.o $(QMLIBA)
+	$(FFC) $(FFLAGS) -o TEST_OMPloop.x  $(OBJ_DIR)/TEST_OMPloop.o libQMLibFull$(ext_obj).a $(IntLIB)
+TEST_driver.x: $(OBJ_DIR)/TEST_driver.o $(QMLIBA)
+	$(FFC) $(FFLAGS) -o TEST_driver.x  $(OBJ_DIR)/TEST_driver.o libQMLibFull$(ext_obj).a $(IntLIB)
+#
 $(TESTS).x: $(OBJ_DIR)/$(TESTS).o $(QMLIBA)
 	$(FFC) $(FFLAGS) -o $(TESTS).x  $(OBJ_DIR)/$(TESTS).o libQMLibFull$(ext_obj).a $(IntLIB)
 #===============================================
@@ -224,14 +236,13 @@ $(QMLIBA): $(OBJ)
 $(OBJ_DIR)/%.o: %.f90
 	@echo "  compile: " $<
 	$(FFC) $(FFLAGS) -o $@ -c $<
-
 #===============================================
 #================ cleaning =====================
 .PHONY: clean cleanall
 clean:
 	cd $(TESTS_DIR) ; ./clean
 	rm -f $(OBJ_DIR)/*/*.o $(OBJ_DIR)/*.o
-	rm -f *.log 
+	rm -f *.log grid* res*
 	rm -f TEST*.x
 	@echo "  done cleaning"
 
@@ -241,6 +252,11 @@ cleanall : clean
 	rm -f lib*.a
 	rm -f TESTS/res* TESTS/*log
 	@echo "  done all cleaning"
+#===============================================
+#================ make the readme.txt ==========
+.PHONY: readme
+readme:
+	./bin/extractReadMe
 #===============================================
 #================ zip and copy the directory ===
 ExtLibSAVEDIR := /Users/lauvergn/git/Ext_Lib

@@ -40,15 +40,6 @@
 PROGRAM main_pot
   IMPLICIT NONE
 
-  CALL test_Test() ; stop
-
-  CALL test_PSB3() ; stop
-
-  CALL test_Read_Model() ; stop
-  !CALL test_Phenol_ADia() ; stop
-  !CALL test_HBond() ; stop
-  CALL test_Vib_adia(1) ; stop
-
 
   CALL test_PH4()
   CALL test_HBond()
@@ -58,6 +49,8 @@ PROGRAM main_pot
   CALL test_Phenol_ADia()
   CALL test_henonheiles(10**7)
   CALL test_Vib_adia(1000)
+  CALL test_Test()
+  !CALL test_Read_Model() ; stop
 
 END PROGRAM main_pot
 SUBROUTINE test_Read_Model()
