@@ -58,7 +58,7 @@ PROGRAM main_pot
   nsurf     = 1
   option    = 0
   adiabatic = .TRUE.
-  nb_eval   = 10**5
+  nb_eval   = 10**6
   pot_name  = 'HONO'
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
 
@@ -109,15 +109,3 @@ PROGRAM main_pot
   write(*,*) '============================================================'
 
 END PROGRAM main_pot
-SUBROUTINE QML_time_perso(name_sub)
-  USE QDUtil_m, ONLY : time_perso
-  IMPLICIT NONE
-
-  character (len=*) :: name_sub
-
-
-  !$OMP    CRITICAL (QML_time_perso_CRIT)
-  CALL time_perso(name_sub)
-  !$OMP   END CRITICAL (QML_time_perso_CRIT)
-
-END SUBROUTINE QML_time_perso

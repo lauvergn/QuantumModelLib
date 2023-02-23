@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_TwoD_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -68,9 +68,8 @@ MODULE QML_TwoD_m
    real (kind=Rkind)    :: muY  = 6667._Rkind
 
    CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_TwoD
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_TwoD
     PROCEDURE :: Write_QModel    => Write_QML_TwoD
-    PROCEDURE :: Write0_QModel   => Write0_QML_TwoD
   END TYPE QML_TwoD_t
 
   PUBLIC :: QML_TwoD_t,Init_QML_TwoD
@@ -103,8 +102,8 @@ MODULE QML_TwoD_m
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -114,7 +113,7 @@ MODULE QML_TwoD_m
     QModel%pot_name = 'twod'
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of TwoD'
+    IF (debug) write(out_unit,*) 'init Q0 of TwoD'
     SELECT CASE (QModel%option)
     CASE (1) ! minimum of V(1,1)
       QModel%Q0 = [QModel%X1,ZERO]
@@ -124,15 +123,15 @@ MODULE QML_TwoD_m
       QModel%Q0 = [QModel%X1,ZERO]
     END SELECT
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of TwoD'
+    IF (debug) write(out_unit,*) 'init d0GGdef of TwoD'
     QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = ONE/QModel%muX
     QModel%d0GGdef(2,2) = ONE/QModel%muY
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_TwoD
@@ -179,52 +178,6 @@ MODULE QML_TwoD_m
     write(nio,*) 'end TwoD parameters'
 
   END SUBROUTINE Write_QML_TwoD
-!> @brief Subroutine wich prints the default QML_TwoD parameters.
-!!
-!! @param QModel            CLASS(QML_TwoD_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_TwoD(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_TwoD_t),   intent(in) :: QModel
-    integer,              intent(in) :: nio
-
-    write(nio,*) 'TwoD default parameters'
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) '---- WARNNING ---------------------------'
-    write(nio,*) 'The parameters are different from the published ones: '
-    write(nio,*) ' A. Ferretti, G. Granucci, A. Lami, M. Persico, G. Villani, ...'
-    write(nio,*) '  .... J. Chem. Phys. 104, 5517 (1996); https://doi.org/10.1063/1.471791'
-    write(nio,*) 'with the X=Q(1), Y=Q(2) in bohr.'
-    write(nio,*) '     and the energy in Hartree.'
-    write(nio,*)
-    write(nio,*) 'Diabatic Potential Values (in Hartree) at: R=3.875 bohr and theta=0.5 bohr'
-    write(nio,*) '1        0.05765625  0.00343645'
-    write(nio,*) '2        0.00343645  0.05765625'
-
-
-    write(nio,*) 'PubliUnit: ',QModel%PubliUnit
-
-    write(nio,*)
-    write(nio,*) 'Default parameters:'
-    write(nio,*) 'KX    = 0.02'
-    write(nio,*) 'KY    = 0.1'
-    write(nio,*) 'DELTA =0.01'
-    write(nio,*) 'X1    = 6.'
-    write(nio,*) 'X2    = 2.'
-    write(nio,*) 'X3    = 31./8.'
-    write(nio,*) 'GAMMA = 0.01'
-    write(nio,*) 'ALPHA = 3.'
-    write(nio,*) 'BETA  = 1.5'
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) 'MuX = 20000.'
-    write(nio,*) 'MuY = 6667.'
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) 'Q0  = [6.,0.]'
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) 'end TwoD default parameters'
-
-  END SUBROUTINE Write0_QML_TwoD
 
 !> @brief Subroutine wich calculates the TwoD potential with derivatives up to the 2d order.
 !!

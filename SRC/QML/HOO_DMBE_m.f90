@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HOO_DMBE_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -183,8 +183,8 @@ MODULE QML_HOO_DMBE_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -203,17 +203,17 @@ MODULE QML_HOO_DMBE_m
     QModel%no_ana_der = .TRUE.
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of HOO_DMBE (HOO minimum)'
+    IF (debug) write(out_unit,*) 'init Q0 of HOO_DMBE (HOO minimum)'
     QModel%Q0 = [2.806_Rkind,2.271_Rkind,2.271_Rkind]
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of HOO_DMBE'
+    IF (debug) write(out_unit,*) 'init d0GGdef of HOO_DMBE'
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
-      CALL Write_QML_HOO_DMBE(QModel,nio=out_unitp)
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      CALL Write_QML_HOO_DMBE(QModel,nio=out_unit)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_HOO_DMBE
@@ -320,20 +320,20 @@ MODULE QML_HOO_DMBE_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) 'dnX'
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) 'dnX'
       DO i=1,size(dnX,dim=2)
       DO j=1,size(dnX,dim=1)
-        CALL Write_dnS(dnX(j,i),out_unitp)
+        CALL Write_dnS(dnX(j,i),out_unit)
       END DO
       END DO
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     VecOO(:)  = dnX(:,3)-dnX(:,2)
     VecHO2(:) = dnX(:,2)-dnX(:,1)
     VecHO3(:) = dnX(:,3)-dnX(:,1)
-    IF (debug) write(out_unitp,*) 'Cart_TO_Q_QML_HOO_DMBE vect done'
+    IF (debug) write(out_unit,*) 'Cart_TO_Q_QML_HOO_DMBE vect done'
 
     dnQ(1) = sqrt(dot_product(VecOO,VecOO))
     dnQ(2) = sqrt(dot_product(VecHO2,VecHO2))
@@ -344,11 +344,11 @@ MODULE QML_HOO_DMBE_m
     CALL dealloc_dnS(VecHO3)
 
     IF (debug) THEN
-      CALL Write_dnS(dnQ(1),out_unitp,info='dnQ(1)')
-      CALL Write_dnS(dnQ(2),out_unitp,info='dnQ(2)')
-      CALL Write_dnS(dnQ(3),out_unitp,info='dnQ(3)')
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      CALL Write_dnS(dnQ(1),out_unit,info='dnQ(1)')
+      CALL Write_dnS(dnQ(2),out_unit,info='dnQ(2)')
+      CALL Write_dnS(dnQ(3),out_unit,info='dnQ(3)')
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
   END SUBROUTINE Cart_TO_Q_QML_HOO_DMBE
 

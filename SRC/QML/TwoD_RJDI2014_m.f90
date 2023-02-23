@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_TwoD_RJDI2014_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -65,7 +65,6 @@ MODULE QML_TwoD_RJDI2014_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_TwoD_RJDI2014
     PROCEDURE :: Write_QModel    => Write_QML_TwoD_RJDI2014
-    PROCEDURE :: Write0_QModel   => Write0_QML_TwoD_RJDI2014
   END TYPE QML_TwoD_RJDI2014_t
 
   PUBLIC :: QML_TwoD_RJDI2014_t,Init_QML_TwoD_RJDI2014
@@ -98,8 +97,8 @@ MODULE QML_TwoD_RJDI2014_m
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -109,7 +108,7 @@ MODULE QML_TwoD_RJDI2014_m
     QModel%pot_name = 'TwoD_RJDI2014'
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of TwoD_RJDI2014'
+    IF (debug) write(out_unit,*) 'init Q0 of TwoD_RJDI2014'
     SELECT CASE (QModel%option)
     CASE (1) ! minimum of V(1,1)
       QModel%Q0 = [-QModel%a/TWO,ZERO]
@@ -134,15 +133,15 @@ MODULE QML_TwoD_RJDI2014_m
 
     END SELECT
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of TwoD_RJDI2014'
+    IF (debug) write(out_unit,*) 'init d0GGdef of TwoD_RJDI2014'
     QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = ONE/QModel%muX
     QModel%d0GGdef(2,2) = ONE/QModel%muY
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_TwoD_RJDI2014
@@ -191,26 +190,6 @@ MODULE QML_TwoD_RJDI2014_m
     write(nio,*) 'end TwoD_RJDI2014 parameters'
 
   END SUBROUTINE Write_QML_TwoD_RJDI2014
-!> @brief Subroutine wich prints the default QML_TwoD_RJDI2014 parameters.
-!!
-!! @param QModel            CLASS(QML_TwoD_RJDI2014_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_TwoD_RJDI2014(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_TwoD_RJDI2014_t),   intent(in) :: QModel
-    integer,              intent(in) :: nio
-
-    write(nio,*) 'TwoD_RJDI2014 default parameters'
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) 'Published model from: '
-    write(nio,*) ' Ilya G. Ryabinkin, Loïc Joubert-Doriol, and Artur F. Izmaylov, ...'
-    write(nio,*) '  .... J. Chem. Phys. 140, 214116 (2014); https://doi.org/10.1063/1.4881147'
-    write(nio,*) 'with the X=Q(1), Y=Q(2) in bohr.'
-    write(nio,*) '     and the energy in Hartree.'
-    write(nio,*) 'end TwoD_RJDI2014 default parameters'
-
-  END SUBROUTINE Write0_QML_TwoD_RJDI2014
 
 !> @brief Subroutine wich calculates the TwoD_RJDI2014 potential with derivatives up to the 2d order.
 !!

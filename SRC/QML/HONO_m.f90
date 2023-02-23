@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HONO_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -98,8 +98,8 @@ MODULE QML_HONO_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -110,7 +110,7 @@ MODULE QML_HONO_m
 
     IF (QModel%option < 0 .OR. QModel%option > 2) QModel%option = 1
 
-    IF (debug) write(out_unitp,*) 'init Q0 of HONO'
+    IF (debug) write(out_unit,*) 'init Q0 of HONO'
     SELECT CASE (QModel%option)
     CASE (0) ! ref
       QModel%Q0 = QModel%Qref
@@ -120,27 +120,27 @@ MODULE QML_HONO_m
       QModel%Q0 = QModel%Qcis
     CASE Default
 
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 0,1,2'
+      write(out_unit,*) ' ERROR in ',name_sub
+      write(out_unit,*) ' This option is not possible. option: ',QModel%option
+      write(out_unit,*) ' Its value MUST be 0,1,2'
 
       STOP
     END SELECT
 
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of HONO'
+    IF (debug) write(out_unit,*) 'init d0GGdef of HONO'
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (QModel%PubliUnit) THEN
-      write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
+      write(out_unit,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
     ELSE
-      write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
+      write(out_unit,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
     END IF
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_HONO
@@ -210,9 +210,9 @@ MODULE QML_HONO_m
     CONTINUE
 
     CASE Default
-        write(out_unitp,*) ' ERROR in Write_QML_HONO '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 0,1,2'
+        write(out_unit,*) ' ERROR in Write_QML_HONO '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 0,1,2'
 
         STOP
     END SELECT
@@ -257,9 +257,9 @@ MODULE QML_HONO_m
       CALL EvalPot1_QML_HONO(Mat_OF_PotDia,dnQ)
 
     CASE Default
-      write(out_unitp,*) ' ERROR in EvalPot_QML_HONO '
-      write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1'
+      write(out_unit,*) ' ERROR in EvalPot_QML_HONO '
+      write(out_unit,*) ' This option is not possible. option: ',QModel%option
+      write(out_unit,*) ' Its value MUST be 1'
 
       STOP
     END SELECT

@@ -38,7 +38,7 @@
 !===========================================================================
 !===========================================================================
 PROGRAM TEST_adia
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
@@ -60,9 +60,9 @@ PROGRAM TEST_adia
   DO iq=0,nq
     Qact = [4.0_Rkind+iq*dQ]
     CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
-    !write(out_unitp,*) 'NAC'
-    !CALL Write_RMat(NAC%d1(:,:,1),out_unitp,6,name_info='NAC')
-    write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
+    !write(out_unit,*) 'NAC'
+    !CALL Write_RMat(NAC%d1(:,:,1),out_unit,6,name_info='NAC')
+    write(out_unit,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
   END DO
 
 END PROGRAM TEST_adia

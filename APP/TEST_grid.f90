@@ -38,7 +38,7 @@
 !===========================================================================
 !===========================================================================
 PROGRAM TEST_grid
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE QDUtil_m, ONLY : TO_string
   USE Model_m
   IMPLICIT NONE

@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_TwoD_MullerBrown_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -82,7 +82,6 @@ MODULE QML_TwoD_MullerBrown_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_TwoD_MullerBrown
     PROCEDURE :: Write_QModel    => Write_QML_TwoD_MullerBrown
-    PROCEDURE :: Write0_QModel   => Write0_QML_TwoD_MullerBrown
   END TYPE QML_TwoD_MullerBrown_t
 
   PUBLIC :: QML_TwoD_MullerBrown_t,Init_QML_TwoD_MullerBrown
@@ -115,8 +114,8 @@ MODULE QML_TwoD_MullerBrown_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -127,18 +126,18 @@ MODULE QML_TwoD_MullerBrown_m
 
     IF (QModel%option < 1 .OR. QModel%option > 5) QModel%option = 1
 
-    IF (debug) write(out_unitp,*) 'init Q0 of TwoD_MullerBrown'
+    IF (debug) write(out_unit,*) 'init Q0 of TwoD_MullerBrown'
     QModel%Q0 = QModel%tab_Q0(:,QModel%option)
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of TwoD_MullerBrown'
+    IF (debug) write(out_unit,*) 'init d0GGdef of TwoD_MullerBrown'
     QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = ONE/QModel%muX
     QModel%d0GGdef(2,2) = ONE/QModel%muY
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_TwoD_MullerBrown
@@ -173,37 +172,6 @@ MODULE QML_TwoD_MullerBrown_m
     write(nio,*) 'end TwoD_MullerBrown parameters'
 
   END SUBROUTINE Write_QML_TwoD_MullerBrown
-!> @brief Subroutine wich prints the default QML_TwoD_MullerBrown parameters.
-!!
-!! @param QModel            CLASS(QML_TwoD_MullerBrown_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_TwoD_MullerBrown(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_TwoD_MullerBrown_t),   intent(in) :: QModel
-    integer,              intent(in) :: nio
-
-    write(nio,*) 'TwoD_MullerBrown default parameters'
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) 'The parameters are different from the published ones: '
-    write(nio,*) ' Klaus Müller and Leo D. Brown, ...'
-    write(nio,*) '  ....Theoret. Chim. Acta (Berl.) 53, 75-93 (1979; https://doi.org/10.1007/BF00547608'
-    write(nio,*) 'no unit, we assume atomic units'
-
-
-    write(nio,*) 'PubliUnit: ',QModel%PubliUnit
-    write(nio,*)
-    write(nio,*) ' Potential with published parameters.'
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) 'MuX =',QModel%MuX
-    write(nio,*) 'MuY =',QModel%MuY
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) 'Q0     =',QModel%Q0
-    write(nio,*) 'E(Q0)  =',QModel%tab_Ene(QModel%option)
-    write(nio,*) '-----------------------------------------'
-    write(nio,*) 'end TwoD_MullerBrown default parameters'
-
-  END SUBROUTINE Write0_QML_TwoD_MullerBrown
 
 !> @brief Subroutine wich calculates the TwoD_MullerBrown potential with derivatives up to the 2d order.
 !!

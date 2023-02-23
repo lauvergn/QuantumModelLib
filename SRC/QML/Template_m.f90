@@ -38,7 +38,7 @@
 !===========================================================================
 !===========================================================================
 module QML_Template_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   USE QML_Morse_m
   IMPLICIT NONE
@@ -54,9 +54,8 @@ module QML_Template_m
      real(kind=Rkind)     :: kXmY=0.1_Rkind
 
   CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Template
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Template
     PROCEDURE :: Write_QModel    => Write_QML_Template
-    PROCEDURE :: Write0_QModel   => Write0_QML_Template
   END TYPE QML_Template_t
 
   PUBLIC :: QML_Template_t,Init_QML_Template
@@ -83,10 +82,10 @@ contains
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) '  read_param:     ',read_param
-      write(out_unitp,*) '  nio_param_file: ',nio_param_file
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) '  read_param:     ',read_param
+      write(out_unit,*) '  nio_param_file: ',nio_param_file
+      flush(out_unit)
     END IF
 
     !QModel%QML_Empty_t = Init_QML_Empty(QModel_in) ! it does not work with nagfor
@@ -95,29 +94,29 @@ contains
     QModel%nsurf    = 1
     QModel%ndim     = 3
 
-    IF (debug) write(out_unitp,*) 'init QModel%morseXpY'
+    IF (debug) write(out_unit,*) 'init QModel%morseXpY'
     ! V(1,1) term, all parameters in atomic unit (Hartree, bohr)
     !QModel%morseXpY = Init_QML_Morse(D=0.1_Rkind, a=1._Rkind,req=2._Rkind) ! does not work !!
     XpYeq = 2._Rkind
     CALL Init0_QML_Morse(QModel%morseXpY,D=0.1_Rkind,a=1._Rkind,req=XpYeq,model_name='morseXpY')
 
-    IF (debug) write(out_unitp,*) 'init QModel%morseZ'
+    IF (debug) write(out_unit,*) 'init QModel%morseZ'
     !QModel%morseZ   = Init_QML_Morse(D=0.08_Rkind,a=1._Rkind,req=2._Rkind) ! does not work !!
     Zeq  = 2._Rkind
     CALL Init0_QML_Morse(QModel%morseZ,D=0.08_Rkind,a=1._Rkind,req=Zeq,model_name='morseZ')
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of Template'
+    IF (debug) write(out_unit,*) 'init Q0 of Template'
     QModel%Q0 = [XpYeq/TWO,XpYeq/TWO,Zeq]
 
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of Template'
+    IF (debug) write(out_unit,*) 'init d0GGdef of Template'
     QModel%d0GGdef = Identity_Mat(QModel%ndim) / 2000._Rkind
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_Template
@@ -141,11 +140,11 @@ contains
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) ' QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) ' nderiv:',nderiv
-      write(out_unitp,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) ' QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) ' nderiv:',nderiv
+      write(out_unit,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
+      flush(out_unit)
     END IF
 
     Mat_OF_PotDia(1,1) = QModel%kXmY*HALF
@@ -166,38 +165,17 @@ contains
     CALL dealloc_dnS(vXmY)
 
     IF (debug) THEN
-      write(out_unitp,*) 'Mat_OF_PotDia'
+      write(out_unit,*) 'Mat_OF_PotDia'
       CALL Write_dnS( Mat_OF_PotDia(1,1),6)
-      write(out_unitp,*)
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*)
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END SUBROUTINE EvalPot_QML_Template
 
   SUBROUTINE Write_QML_Template(QModel,nio)
     IMPLICIT NONE
-
-    CLASS(QML_Template_t), intent(in) :: QModel
-    integer,                intent(in) :: nio
-
-    write(nio,*) '========================================'
-    write(nio,*) 'QML_Template current parameters'
-    CALL QModel%QML_Empty_t%Write_QModel(nio)
-    write(nio,*)
-    CALL Write_QML_Morse(QModel%morseXpY,nio)
-    write(nio,*)
-    CALL Write_QML_Morse(QModel%morseZ,nio)
-    write(nio,*)
-    write(nio,*) ' kXmY:',QModel%kXmY
-    write(nio,*)
-    write(nio,*) 'end QML_Template current parameters'
-    write(nio,*) '========================================'
-    flush(nio)
-
-  END SUBROUTINE Write_QML_Template
-  SUBROUTINE Write0_QML_Template(QModel,nio)
-  IMPLICIT NONE
 
     CLASS(QML_Template_t), intent(in) :: QModel
     integer,                intent(in) :: nio
@@ -229,7 +207,20 @@ contains
     write(nio,*)
     write(nio,*) 'end QML_Template default parameters'
     flush(nio)
+    write(nio,*) '========================================'
+    write(nio,*) 'QML_Template current parameters'
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
+    write(nio,*)
+    CALL Write_QML_Morse(QModel%morseXpY,nio)
+    write(nio,*)
+    CALL Write_QML_Morse(QModel%morseZ,nio)
+    write(nio,*)
+    write(nio,*) ' kXmY:',QModel%kXmY
+    write(nio,*)
+    write(nio,*) 'end QML_Template current parameters'
+    write(nio,*) '========================================'
+    flush(nio)
 
-  END SUBROUTINE Write0_QML_Template
+  END SUBROUTINE Write_QML_Template
 
 end module QML_Template_m

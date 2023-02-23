@@ -42,7 +42,7 @@
 !! @date 07/02/2023
 !!
 MODULE QML_Vibronic_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE ADdnSVM_m, ONLY : dnS_t
   USE QML_Empty_m
   IMPLICIT NONE
@@ -138,10 +138,10 @@ MODULE QML_Vibronic_m
       END DO
       END DO
 
-      !write(out_unitp,*) 'nderiv:'
+      !write(out_unit,*) 'nderiv:'
       !DO i=1,QModel%nsurf
       !DO j=1,QModel%nsurf
-      !  write(out_unitp,*) 'i,j',get_nderiv(QModel%Diab(j,i)%Ene)
+      !  write(out_unit,*) 'i,j',get_nderiv(QModel%Diab(j,i)%Ene)
       !END DO
       !END DO
     END IF
@@ -341,11 +341,11 @@ MODULE QML_Vibronic_m
 
     DO i=1,QModel%nsurf
       DeltaQ = dnQ - QModel%Diab(i,i)%Qref
-      !write(out_unitp,*) i,i,'DeltaQ',get_d0(DeltaQ)
+      !write(out_unit,*) i,i,'DeltaQ',get_d0(DeltaQ)
       Mat_OF_PotDia(i,i) = TO_Taylor(QModel%Diab(i,i)%Ene,DeltaQ)
       DO j=i+1,QModel%nsurf
         DeltaQ = dnQ - QModel%Diab(j,i)%Qref
-        !write(out_unitp,*) i,j,'DeltaQ',get_d0(DeltaQ)
+        !write(out_unit,*) i,j,'DeltaQ',get_d0(DeltaQ)
         Mat_OF_PotDia(j,i) = TO_Taylor(QModel%Diab(j,i)%Ene,DeltaQ)
         Mat_OF_PotDia(i,j) = Mat_OF_PotDia(j,i)
       END DO

@@ -39,7 +39,7 @@
 !===========================================================================
 MODULE IRC_m
   !$ USE omp_lib
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Opt_m
 
   IMPLICIT NONE
@@ -117,11 +117,11 @@ CONTAINS
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    write(out_unitp,*) '   read_param      present?',present(read_param)
-    write(out_unitp,*) '   nio_param_file  present?',present(nio_param_file)
-    write(out_unitp,*) '   param_file_name present?',present(param_file_name)
-    flush(out_unitp)
+    write(out_unit,*) ' BEGINNING ',name_sub
+    write(out_unit,*) '   read_param      present?',present(read_param)
+    write(out_unit,*) '   nio_param_file  present?',present(nio_param_file)
+    write(out_unit,*) '   param_file_name present?',present(param_file_name)
+    flush(out_unit)
   END IF
 
   CALL check_alloc_QM(QModel,name_sub)
@@ -143,15 +143,15 @@ CONTAINS
         nio_loc = 99
       END IF
     ELSE
-    nio_loc = in_unitp
+    nio_loc = in_unit
     END IF
   END IF
 
   IF (debug) THEN
-    write(out_unitp,*) '   read_param      ',read_param_loc
-    write(out_unitp,*) '   nio             ',nio_loc
-    write(out_unitp,*) '   param_file_name ',trim(param_file_name_loc)
-    flush(out_unitp)
+    write(out_unit,*) '   read_param      ',read_param_loc
+    write(out_unit,*) '   nio             ',nio_loc
+    write(out_unit,*) '   param_file_name ',trim(param_file_name_loc)
+    flush(out_unit)
   END IF
 
   allocate(list_actIRC(QModel%ndim))
@@ -167,7 +167,7 @@ CONTAINS
   m0_BS           = 0
 
   IF (read_param_loc) THEN
-    IF (nio_loc /= in_unitp) THEN
+    IF (nio_loc /= in_unit) THEN
       open(unit=nio_loc,file=param_file_name_loc,status='old',form='formatted')
     END IF
 
@@ -179,17 +179,17 @@ CONTAINS
 
     read(nio_loc,nml=IRC,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' End-of-file or End-of-record'
-      write(out_unitp,*) ' The namelist "IRC" is probably absent'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,*)
+      write(out_unit,*) ' ERROR in ',name_sub
+      write(out_unit,*) ' End-of-file or End-of-record'
+      write(out_unit,*) ' The namelist "IRC" is probably absent'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
       STOP ' ERROR in Init_QML_IRC'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' Some parameter names of the namelist "IRC" are probaly wrong'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,nml=IRC)
+      write(out_unit,*) ' ERROR in ',name_sub
+      write(out_unit,*) ' Some parameter names of the namelist "IRC" are probaly wrong'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,nml=IRC)
       STOP ' ERROR in Init_QML_IRC'
     END IF
 
@@ -201,10 +201,10 @@ CONTAINS
   method    = TO_lowercase(method)
   Direction = TO_lowercase(Direction)
   IF (Direction /= 'both' .AND. Direction /= 'forward' .AND. Direction /= 'reverse') THEN
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' Direction keyword is wrong',trim(Direction)
-    write(out_unitp,*) ' The possibles values: "both", "forward", "reverse"'
-    write(out_unitp,*) ' check your data!'
+    write(out_unit,*) ' ERROR in ',name_sub
+    write(out_unit,*) ' Direction keyword is wrong',trim(Direction)
+    write(out_unit,*) ' The possibles values: "both", "forward", "reverse"'
+    write(out_unit,*) ' check your data!'
     STOP ' ERROR in Init_QML_IRC'
   END IF
 
@@ -238,8 +238,8 @@ CONTAINS
 
   IF (debug) THEN
     CALL Write_QML_IRC(IRC_p)
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
   END SUBROUTINE Init_QML_IRC
@@ -254,22 +254,22 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
-    write(out_unitp,*) ' BEGINNING ',name_sub
+    write(out_unit,*) ' BEGINNING ',name_sub
 
     CALL Write_QML_Opt(IRC_p%QML_Opt_t)
-    write(out_unitp,*) ' list_actIRC     ',IRC_p%list_actIRC
-    write(out_unitp,*) ' IRC_Maxt_it     ',IRC_p%IRC_Max_it
-    write(out_unitp,*) ' Delta_s         ',IRC_p%Delta_s
-    write(out_unitp,*) ' Direction       ',IRC_p%Direction
-    write(out_unitp,*) ' Method          ',IRC_p%Method
-    write(out_unitp,*) ' Method2         ',IRC_p%Method2
-    write(out_unitp,*) ' order2          ',IRC_p%order2
-    write(out_unitp,*) ' m0_BS           ',IRC_p%m0_BS
+    write(out_unit,*) ' list_actIRC     ',IRC_p%list_actIRC
+    write(out_unit,*) ' IRC_Maxt_it     ',IRC_p%IRC_Max_it
+    write(out_unit,*) ' Delta_s         ',IRC_p%Delta_s
+    write(out_unit,*) ' Direction       ',IRC_p%Direction
+    write(out_unit,*) ' Method          ',IRC_p%Method
+    write(out_unit,*) ' Method2         ',IRC_p%Method2
+    write(out_unit,*) ' order2          ',IRC_p%order2
+    write(out_unit,*) ' m0_BS           ',IRC_p%m0_BS
 
-    write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+    write(out_unit,*) ' nb_PotEval      ',nb_PotEval
 
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
 
   END SUBROUTINE Write_QML_IRC
   SUBROUTINE QML_IRC(Q,QModel,IRC_p,Q0)
@@ -297,16 +297,16 @@ CONTAINS
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    IF (present(Q0)) write(out_unitp,*) '   Q0',Q0
+    write(out_unit,*) ' BEGINNING ',name_sub
+    IF (present(Q0)) write(out_unit,*) '   Q0',Q0
     CALL Write_QML_IRC(IRC_p)
     CALL Write_Model(QModel)
-    flush(out_unitp)
+    flush(out_unit)
   END IF
 
   IF (IRC_p%Max_it < 0) THEN
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' IRC_p is not initialized'
+    write(out_unit,*) ' ERROR in ',name_sub
+    write(out_unit,*) ' IRC_p is not initialized'
     STOP 'ERROR in QML_IRC: IRC_p is not initialized'
   END IF
 
@@ -320,10 +320,10 @@ CONTAINS
 
   CALL QML_Opt(IRC_p%QTS,QModel,IRC_p%QML_Opt_t,Q0=IRC_p%QTS)
 
-  write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+  write(out_unit,*) ' nb_PotEval      ',nb_PotEval
   !first point + check if the geometry is a TS (s=0)
   CALL QML_IRC_at_TS(IRC_p,QModel)
-  write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+  write(out_unit,*) ' nb_PotEval      ',nb_PotEval
 
 
   s       = ZERO
@@ -344,7 +344,7 @@ CONTAINS
                        QModel,IRC_p,forward=forward,                            &
                        Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
 
-      write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+      write(out_unit,*) ' nb_PotEval      ',nb_PotEval
       CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s,QModel,IRC_p)
 
       s       = s + forward*IRC_p%Delta_s
@@ -356,7 +356,7 @@ CONTAINS
     nb_PotEval = nb_PotEval + 1
     CALL QML_IRC_fcn(s,QactOld,dQactds_AT_s,Ene_AT_s,QModel,IRC_p,forward,grad)
 
-    write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+    write(out_unit,*) ' nb_PotEval      ',nb_PotEval
     CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s,QModel,IRC_p)
   END IF
 
@@ -371,7 +371,7 @@ CONTAINS
                        QModel,IRC_p,forward=forward,                            &
                        Method=IRC_p%Method,order=IRC_p%order2,grad_AT_s=grad)
 
-      write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+      write(out_unit,*) ' nb_PotEval      ',nb_PotEval
       CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s,QModel,IRC_p)
 
       s       = s + forward*IRC_p%Delta_s
@@ -383,13 +383,13 @@ CONTAINS
     nb_PotEval = nb_PotEval + 1
     CALL QML_IRC_fcn(s,QactOld,dQactds_AT_s,Ene_AT_s,QModel,IRC_p,forward,grad)
 
-    write(out_unitp,*) ' nb_PotEval      ',nb_PotEval
+    write(out_unit,*) ' nb_PotEval      ',nb_PotEval
     CALL QML_write_IRC_Res(QactOld,s,grad,Ene_AT_s,dQactds_AT_s,QModel,IRC_p)
   END IF
 
   IF (debug) THEN
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
   END SUBROUTINE QML_IRC
@@ -412,15 +412,15 @@ CONTAINS
       Qact_loc = Qact
       grad_loc = grad
       CALL QML_UnMassWeighted_Qact(s,Qact_loc,QModel,IRC_p)
-      write(out_unitp,*) 's,QxyzMW,|grad|,E',s,Qact,norm2(grad),Ene
-      write(out_unitp,*) 's,Qxyz,|grad|,E',s,Qact_loc,norm2(grad),Ene
+      write(out_unit,*) 's,QxyzMW,|grad|,E',s,Qact,norm2(grad),Ene
+      write(out_unit,*) 's,Qxyz,|grad|,E',s,Qact_loc,norm2(grad),Ene
     ELSE
-      write(out_unitp,*) 's,Qact,|grad|,E',s,Qact,norm2(grad),Ene
+      write(out_unit,*) 's,Qact,|grad|,E',s,Qact,norm2(grad),Ene
     END IF
-    write(out_unitp,*) 's,grad',s,grad
-    write(out_unitp,*) 's,g_mt',s,dot_product(dQactds,dQactds)
-    !IF (Print_extral) write(out_unitp,*) 's,g_mt',s,dot_product(grad,grad)
-    flush(out_unitp)
+    write(out_unit,*) 's,grad',s,grad
+    write(out_unit,*) 's,g_mt',s,dot_product(dQactds,dQactds)
+    !IF (Print_extral) write(out_unit,*) 's,g_mt',s,dot_product(grad,grad)
+    flush(out_unit)
 
   END SUBROUTINE QML_write_IRC_Res
 
@@ -455,11 +455,11 @@ CONTAINS
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    write(out_unitp,*) '   s      ',s
-    write(out_unitp,*) '   QactOld',QactOld
-    write(out_unitp,*) '   forward',forward
-    flush(out_unitp)
+    write(out_unit,*) ' BEGINNING ',name_sub
+    write(out_unit,*) '   s      ',s
+    write(out_unit,*) '   QactOld',QactOld
+    write(out_unit,*) '   forward',forward
+    flush(out_unit)
   END IF
 
   IF (present(order)) THEN
@@ -506,8 +506,8 @@ CONTAINS
   END IF
 
   IF (debug) THEN
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
 END SUBROUTINE QML_IRC_ODE
@@ -547,19 +547,19 @@ END SUBROUTINE QML_IRC_ODE
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    write(out_unitp,*) '   s      ',s
-    write(out_unitp,*) '   QactOld',QactOld
-    write(out_unitp,*) '   forward',forward
-    write(out_unitp,*) '   order  ',order
-    write(out_unitp,*) '   m0_BS  ',IRC_p%m0_BS
-    flush(out_unitp)
+    write(out_unit,*) ' BEGINNING ',name_sub
+    write(out_unit,*) '   s      ',s
+    write(out_unit,*) '   QactOld',QactOld
+    write(out_unit,*) '   forward',forward
+    write(out_unit,*) '   order  ',order
+    write(out_unit,*) '   m0_BS  ',IRC_p%m0_BS
+    flush(out_unit)
   END IF
 
   IF (order < 1) THEN
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' order < 1. order:',order
-    write(out_unitp,*) ' order MUST be larger than 0'
+    write(out_unit,*) ' ERROR in ',name_sub
+    write(out_unit,*) ' order < 1. order:',order
+    write(out_unit,*) ' order MUST be larger than 0'
     STOP 'ERROR in QML_IRC_BS: order < 1.'
   END IF
   nb_act = size(QactOld)
@@ -606,14 +606,14 @@ END SUBROUTINE QML_IRC_ODE
 
     err0 = err1
   END DO
-  write(out_unitp,*) 'end QML_IRC_BS',min(j,order),err1
+  write(out_unit,*) 'end QML_IRC_BS',min(j,order),err1
 
   QactNew(:) = yt0(:,min(j,order))
 
 
   IF (debug) THEN
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
 END SUBROUTINE QML_IRC_BS
@@ -647,16 +647,16 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    write(out_unitp,*) '   s      ',s
-    write(out_unitp,*) '   QactOld',QactOld
-    flush(out_unitp)
+    write(out_unit,*) ' BEGINNING ',name_sub
+    write(out_unit,*) '   s      ',s
+    write(out_unit,*) '   QactOld',QactOld
+    flush(out_unit)
   END IF
 
   IF (m < 1) THEN
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' m < 1',m
-    write(out_unitp,*) ' m MUST be larger than 0'
+    write(out_unit,*) ' ERROR in ',name_sub
+    write(out_unit,*) ' m < 1',m
+    write(out_unit,*) ' m MUST be larger than 0'
     STOP 'ERROR in QML_IRC_mEuler: m < 1'
   END IF
 
@@ -679,8 +679,8 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
       CALL QML_IRC_fcn(s_loc,Qact,dQact,Ene_loc,QModel,IRC_p,forward)
     END IF
     nb_PotEval = nb_PotEval + 1
-    IF (debug) write(out_unitp,*) 's,Qact,E',s_loc,Qact,Ene_loc
-    IF (debug) flush(out_unitp)
+    IF (debug) write(out_unit,*) 's,Qact,E',s_loc,Qact,Ene_loc
+    IF (debug) flush(out_unit)
 
     s_loc = s_loc + forward * Delta_s
     Qact  = Qact  +   dQact * Delta_s
@@ -690,8 +690,8 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
 
 
   IF (debug) THEN
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
   END SUBROUTINE QML_IRC_mEuler
@@ -725,16 +725,16 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    write(out_unitp,*) '   s      ',s
-    write(out_unitp,*) '   QactOld',QactOld
-    flush(out_unitp)
+    write(out_unit,*) ' BEGINNING ',name_sub
+    write(out_unit,*) '   s      ',s
+    write(out_unit,*) '   QactOld',QactOld
+    flush(out_unit)
   END IF
 
   IF (m < 1) THEN
-    write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) ' m < 1',m
-    write(out_unitp,*) ' m MUST be larger than 0'
+    write(out_unit,*) ' ERROR in ',name_sub
+    write(out_unit,*) ' m < 1',m
+    write(out_unit,*) ' m MUST be larger than 0'
     STOP 'ERROR in QML_IRC_ModMidPoint: m < 1'
   END IF
 
@@ -775,8 +775,8 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
 
 
   IF (debug) THEN
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
   END SUBROUTINE QML_IRC_ModMidPoint
@@ -807,10 +807,10 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    write(out_unitp,*) 's,forward  ',s,forward
+    write(out_unit,*) ' BEGINNING ',name_sub
+    write(out_unit,*) 's,forward  ',s,forward
 
-    flush(out_unitp)
+    flush(out_unit)
   END IF
 
   IF (s == ZERO) THEN
@@ -830,9 +830,9 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
 
     CALL QML_Recenter_CenterOfMass(s,dQact,QModel,IRC_p)
 
-    !write(out_unitp,*) 'grad at s',s,norm2(dQact)
-    !write(out_unitp,*) 'grad/s at s',s,norm2(dQact)/abs(s)
-    IF (norm2(dQact) < IRC_p%Thresh_RMS_grad*TEN) write(out_unitp,*) 'WARNING small grad at s',s
+    !write(out_unit,*) 'grad at s',s,norm2(dQact)
+    !write(out_unit,*) 'grad/s at s',s,norm2(dQact)/abs(s)
+    IF (norm2(dQact) < IRC_p%Thresh_RMS_grad*TEN) write(out_unit,*) 'WARNING small grad at s',s
     IF (present(grad)) grad = dQact
 
 
@@ -843,11 +843,11 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
   END IF
 
   IF (debug) THEN
-    write(out_unitp,*) 's,Ene    ',s,Ene_AT_s
-    write(out_unitp,*) 'Qact     ',Qact
-    write(out_unitp,*) 'dQact    ',dQact
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) 's,Ene    ',s,Ene_AT_s
+    write(out_unit,*) 'Qact     ',Qact
+    write(out_unit,*) 'dQact    ',dQact
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
 END SUBROUTINE QML_IRC_fcn
@@ -870,8 +870,8 @@ SUBROUTINE QML_MassWeighted_Qact(s,Qact,QModel,IRC_p)
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' BEGINNING ',name_sub
+    flush(out_unit)
   END IF
 
   IF (QModel%QM%Cart_TO_Q .AND. QModel%QM%MassWeighted) THEN
@@ -882,9 +882,9 @@ SUBROUTINE QML_MassWeighted_Qact(s,Qact,QModel,IRC_p)
   END IF
 
   IF (debug) THEN
-    write(out_unitp,*) 'Qact     ',Qact
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) 'Qact     ',Qact
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
 END SUBROUTINE QML_MassWeighted_Qact
@@ -907,8 +907,8 @@ SUBROUTINE QML_UnMassWeighted_Qact(s,Qact,QModel,IRC_p)
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' BEGINNING ',name_sub
+    flush(out_unit)
   END IF
 
   IF (QModel%QM%Cart_TO_Q .AND. QModel%QM%MassWeighted) THEN
@@ -919,9 +919,9 @@ SUBROUTINE QML_UnMassWeighted_Qact(s,Qact,QModel,IRC_p)
   END IF
 
   IF (debug) THEN
-    write(out_unitp,*) 'Qact     ',Qact
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) 'Qact     ',Qact
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
 END SUBROUTINE QML_UnMassWeighted_Qact
@@ -947,8 +947,8 @@ SUBROUTINE QML_CenterOfMass(s,Qact,QModel,IRC_p)
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' BEGINNING ',name_sub
+    flush(out_unit)
   END IF
 
   IF (QModel%QM%Cart_TO_Q) THEN
@@ -986,12 +986,12 @@ SUBROUTINE QML_CenterOfMass(s,Qact,QModel,IRC_p)
     END IF
   END IF
 
-  write(out_unitp,*) s,'QCOM    ',QCOM
+  write(out_unit,*) s,'QCOM    ',QCOM
 
   IF (debug) THEN
-    write(out_unitp,*) 'Qact     ',Qact
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) 'Qact     ',Qact
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
 END SUBROUTINE QML_CenterOfMass
@@ -1017,8 +1017,8 @@ SUBROUTINE QML_Recenter_CenterOfMass(s,Qact,QModel,IRC_p)
 !-----------------------------------------------------------
 
   IF (debug) THEN
-    write(out_unitp,*) ' BEGINNING ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) ' BEGINNING ',name_sub
+    flush(out_unit)
   END IF
 
   IF (QModel%QM%Cart_TO_Q) THEN
@@ -1058,10 +1058,10 @@ SUBROUTINE QML_Recenter_CenterOfMass(s,Qact,QModel,IRC_p)
 
 
   IF (debug) THEN
-    write(out_unitp,*) 'Qact     ',Qact
-    write(out_unitp,*) s,'QCOM    ',QCOM
-    write(out_unitp,*) ' END ',name_sub
-    flush(out_unitp)
+    write(out_unit,*) 'Qact     ',Qact
+    write(out_unit,*) s,'QCOM    ',QCOM
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
   END IF
 
 END SUBROUTINE QML_Recenter_CenterOfMass
@@ -1087,13 +1087,13 @@ END SUBROUTINE QML_Recenter_CenterOfMass
     !-----------------------------------------------------------
 
     IF (debug) THEN
-      write(out_unitp,*) ' BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
     END IF
   
     IF (IRC_p%Max_it < 0) THEN
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' IRC_p is not initialized'
+      write(out_unit,*) ' ERROR in ',name_sub
+      write(out_unit,*) ' IRC_p is not initialized'
       STOP 'ERROR in QML_IRC_at_TS: IRC_p is not initialized'
     END IF
   
@@ -1110,9 +1110,9 @@ END SUBROUTINE QML_Recenter_CenterOfMass
     IRC_p%Grad_QactTS = PotVal%d1(IRC_p%i_surf,IRC_p%i_surf,IRC_p%list_actIRC)
   
     CALL diagonalization(hess,diag,Vec,nb_act,sort=1)
-    write(out_unitp,*) 'grad',IRC_p%Grad_QactTS
-    write(out_unitp,*) 'diag',diag
-    write(out_unitp,*) 'TS?',(count(diag < ZERO) == 1)
+    write(out_unit,*) 'grad',IRC_p%Grad_QactTS
+    write(out_unit,*) 'diag',diag
+    write(out_unit,*) 'TS?',(count(diag < ZERO) == 1)
     IF ((count(diag < ZERO) /= 1)) STOP 'STOP in QML_IRC_at_TS: Not a TS at s=0'
   
     !s=0 (TS)
@@ -1125,11 +1125,11 @@ END SUBROUTINE QML_Recenter_CenterOfMass
     deallocate(diag)
 
     IF (debug) THEN
-      write(out_unitp,*) 's,Ene          ',ZERO,IRC_p%Ene_TS
-      write(out_unitp,*) 'Qact           ',IRC_p%QactTS
-      write(out_unitp,*) 'EigenVec_QactTS',IRC_p%EigenVec_QactTS
-      write(out_unitp,*) ' END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 's,Ene          ',ZERO,IRC_p%Ene_TS
+      write(out_unit,*) 'Qact           ',IRC_p%QactTS
+      write(out_unit,*) 'EigenVec_QactTS',IRC_p%EigenVec_QactTS
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
     END IF
 
   END SUBROUTINE QML_IRC_at_TS

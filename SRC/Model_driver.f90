@@ -38,7 +38,7 @@
 !===========================================================================
 !===========================================================================
 SUBROUTINE sub_Read_Qmodel(ndim,nsurf,nio)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -47,10 +47,10 @@ SUBROUTINE sub_Read_Qmodel(ndim,nsurf,nio)
   integer,                intent(in)        :: nio
 
 !$OMP CRITICAL (CRIT_sub_Read_Qmodel)
-    !$ write(out_unitp,*) 'begining: max threads?',omp_get_max_threads()
-    write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
-    write(out_unitp,*) 'nio            : ',nio
-    flush(out_unitp)
+    !$ write(out_unit,*) 'begining: max threads?',omp_get_max_threads()
+    write(out_unit,*) 'ndim,nsurf     : ',ndim,nsurf
+    write(out_unit,*) 'nio            : ',nio
+    flush(out_unit)
 
     CALL Init_Model(QuantumModel,ndim=ndim,nsurf=nsurf,                         &
                     read_param=.TRUE.,nio_param_file=nio)
@@ -64,7 +64,7 @@ SUBROUTINE sub_Read_Qmodel(ndim,nsurf,nio)
 
 END SUBROUTINE sub_Read_Qmodel
 SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -75,10 +75,10 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
   logical,                intent(in)        :: adiabatic
 
 !$OMP CRITICAL (CRIT_sub_Init_Qmodel)
-    !$ write(out_unitp,*) 'begining: max threads?',omp_get_max_threads()
-    write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
-    flush(out_unitp)
+    !$ write(out_unit,*) 'begining: max threads?',omp_get_max_threads()
+    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(out_unit,*) 'ndim,nsurf     : ',ndim,nsurf
+    flush(out_unit)
 
     CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),              &
                     ndim=ndim,nsurf=nsurf,adiabatic=adiabatic,option=option)
@@ -93,7 +93,7 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
 END SUBROUTINE sub_Init_Qmodel
 SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -104,12 +104,12 @@ SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
   logical,                intent(in)        :: adiabatic
 
 !$OMP CRITICAL (CRIT_sub_Init_Qmodel_Cart)
-  write(out_unitp,*) 'In sub_Init_Qmodel_Cart'
-  !$ write(out_unitp,*) 'begining: max threads?',omp_get_max_threads()
-  write(out_unitp,*) 'in sub_Init_Qmodel_Cart'
-  write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-  write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
-  flush(out_unitp)
+  write(out_unit,*) 'In sub_Init_Qmodel_Cart'
+  !$ write(out_unit,*) 'begining: max threads?',omp_get_max_threads()
+  write(out_unit,*) 'in sub_Init_Qmodel_Cart'
+  write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+  write(out_unit,*) 'ndim,nsurf     : ',ndim,nsurf
+  flush(out_unit)
 
   CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),              &
                     ndim=ndim,nsurf=nsurf,adiabatic=adiabatic,Cart_TO_Q=.TRUE., &
@@ -120,9 +120,9 @@ SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
   ndim  = QuantumModel%ndim
   nsurf = QuantumModel%nsurf
 
-  write(out_unitp,*) 'ndim,nsurf     : ',ndim,nsurf
-  write(out_unitp,*) 'End sub_Init_Qmodel_Cart'
-  flush(out_unitp)
+  write(out_unit,*) 'ndim,nsurf     : ',ndim,nsurf
+  write(out_unit,*) 'End sub_Init_Qmodel_Cart'
+  flush(out_unit)
 
 !$OMP END CRITICAL (CRIT_sub_Init_Qmodel_Cart)
 
@@ -181,7 +181,7 @@ SUBROUTINE sub_Write_Qmodel(nio)
 
 END SUBROUTINE sub_Write_Qmodel
 SUBROUTINE sub_Qmodel_Opt(Q,i_surf,nb_deg,icv,Max_it)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   USE Opt_m
   IMPLICIT NONE
@@ -215,7 +215,7 @@ END SUBROUTINE sub_Qmodel_Opt
 ! get a reference geometry, Q0
 ! the option parameter is not used
 SUBROUTINE get_Qmodel_Q0(Q0,option)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
@@ -226,7 +226,7 @@ SUBROUTINE get_Qmodel_Q0(Q0,option)
 
 END SUBROUTINE get_Qmodel_Q0
 SUBROUTINE sub_Qmodel_V(V,Q)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
@@ -238,7 +238,7 @@ SUBROUTINE sub_Qmodel_V(V,Q)
 
 END SUBROUTINE sub_Qmodel_V
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
   USE Model_m
   IMPLICIT NONE
@@ -266,7 +266,7 @@ SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
 
 END SUBROUTINE sub_Qmodel_VVec
 SUBROUTINE sub_Qmodel_VG(V,G,Q)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
@@ -280,7 +280,7 @@ SUBROUTINE sub_Qmodel_VG(V,G,Q)
 
 END SUBROUTINE sub_Qmodel_VG
 SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
   IMPLICIT NONE
@@ -313,7 +313,7 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
 
 END SUBROUTINE sub_Qmodel_VG_NAC
 SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
@@ -329,7 +329,7 @@ SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
 
 END SUBROUTINE sub_Qmodel_VGH
 SUBROUTINE sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
@@ -344,19 +344,19 @@ SUBROUTINE sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
   CALL Eval_tab_HMatVibAdia(QuantumModel,Q,tab_MatH_loc)
 
   IF ( any(shape(tab_MatH_loc) /= shape(tab_MatH) )) THEN
-    write(out_unitp,*) ' ERROR in sub_Qmodel_tab_HMatVibAdia'
-    write(out_unitp,*) ' The shapes of tab_MatH and the one from Eval_tab_HMatVibAdia() are different'
-    write(out_unitp,*) ' shape(tab_MatH)    ',shape(tab_MatH)
-    write(out_unitp,*) ' shape(tab_MatH_loc)',shape(tab_MatH_loc)
-    write(out_unitp,*) ' check the fortran!'
-    write(out_unitp,*)
+    write(out_unit,*) ' ERROR in sub_Qmodel_tab_HMatVibAdia'
+    write(out_unit,*) ' The shapes of tab_MatH and the one from Eval_tab_HMatVibAdia() are different'
+    write(out_unit,*) ' shape(tab_MatH)    ',shape(tab_MatH)
+    write(out_unit,*) ' shape(tab_MatH_loc)',shape(tab_MatH_loc)
+    write(out_unit,*) ' check the fortran!'
+    write(out_unit,*)
     STOP ' ERROR in sub_Qmodel_tab_HMatVibAdia'
   END IF
   tab_MatH(:,:,:) = tab_MatH_loc
 
 END SUBROUTINE sub_Qmodel_tab_HMatVibAdia
 SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
@@ -367,7 +367,7 @@ SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
 
 END SUBROUTINE sub_Qmodel_Check_anaVSnum
 SUBROUTINE get_Qmodel_GGdef(GGdef)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
@@ -380,12 +380,12 @@ SUBROUTINE get_Qmodel_GGdef(GGdef)
   GGdef_loc = QuantumModel%QM%get_d0GGdef_QModel()
 
   IF (any(shape(GGdef) /= shape(GGdef_loc))) THEN
-      write(out_unitp,*) ' ERROR in get_Qmodel_GGdef'
-      write(out_unitp,*) ' The shapes of GGdef and the one from get_d0GGdef_QModel() are different'
-      write(out_unitp,*) ' shape(GGdef)    ',shape(GGdef)
-      write(out_unitp,*) ' shape(GGdef_loc)',shape(GGdef_loc)
-      write(out_unitp,*) ' check the fortran!'
-      write(out_unitp,*)
+      write(out_unit,*) ' ERROR in get_Qmodel_GGdef'
+      write(out_unit,*) ' The shapes of GGdef and the one from get_d0GGdef_QModel() are different'
+      write(out_unit,*) ' shape(GGdef)    ',shape(GGdef)
+      write(out_unit,*) ' shape(GGdef_loc)',shape(GGdef_loc)
+      write(out_unit,*) ' check the fortran!'
+      write(out_unit,*)
       STOP ' ERROR in get_Qmodel_GGdef'
   END IF
 
@@ -393,7 +393,7 @@ SUBROUTINE get_Qmodel_GGdef(GGdef)
 
 END SUBROUTINE get_Qmodel_GGdef
 SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
@@ -403,13 +403,13 @@ SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
   CALL check_alloc_QM(QuantumModel,name_sub_in='set_Qmodel_GGdef in Model_driver.f90')
 
   IF (.NOT. allocated(QuantumModel%QM%d0GGdef) .OR. ndim /= QuantumModel%ndim) THEN
-      write(out_unitp,*) ' ERROR in set_Qmodel_GGdef'
-      write(out_unitp,*) ' QuantumModel%QM%d0GGdef is not allocated or'
-      write(out_unitp,*) ' ndim /= QuantumModel%ndim'
-      write(out_unitp,*) ' Probably, the initialization is not done!!'
-      write(out_unitp,*) '   => CALL sub_Init_Qmodel(...)'
-      write(out_unitp,*) ' check the fortran!'
-      write(out_unitp,*)
+      write(out_unit,*) ' ERROR in set_Qmodel_GGdef'
+      write(out_unit,*) ' QuantumModel%QM%d0GGdef is not allocated or'
+      write(out_unit,*) ' ndim /= QuantumModel%ndim'
+      write(out_unit,*) ' Probably, the initialization is not done!!'
+      write(out_unit,*) '   => CALL sub_Init_Qmodel(...)'
+      write(out_unit,*) ' check the fortran!'
+      write(out_unit,*)
       STOP ' ERROR in set_Qmodel_GGdef'
   END IF
 
@@ -422,7 +422,7 @@ SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
 
 END SUBROUTINE set_Qmodel_GGdef
 SUBROUTINE set_Qmodel_step(step_in)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
@@ -432,7 +432,7 @@ SUBROUTINE set_Qmodel_step(step_in)
 
 END SUBROUTINE set_Qmodel_step
 SUBROUTINE set_Qmodel_Print_level(printlevel)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
@@ -441,26 +441,26 @@ SUBROUTINE set_Qmodel_Print_level(printlevel)
   CALL set_print_level(printlevel) ! from them module QDUtil lib
 
 END SUBROUTINE set_Qmodel_Print_level
-SUBROUTINE set_Qmodel_in_unitp(inunitp)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+SUBROUTINE set_Qmodel_in_unit(inunitp)
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
   integer,                intent(in)        :: inunitp
 
-  in_unitp = inunitp  ! from the module QMLLib_NumParameters_m.f90
+  in_unit = inunitp  ! from the module QMLLib_NumParameters_m.f90
 
-END SUBROUTINE set_Qmodel_in_unitp
-SUBROUTINE set_Qmodel_out_unitp(outunitp)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+END SUBROUTINE set_Qmodel_in_unit
+SUBROUTINE set_Qmodel_out_unit(outunitp)
+  USE QDUtil_NumParameters_m
   USE Model_m
   IMPLICIT NONE
 
   integer,                intent(in)        :: outunitp
 
-  out_unitp = outunitp  ! from the module QMLLib_NumParameters_m.f90
+  out_unit = outunitp  ! from the module QMLLib_NumParameters_m.f90
 
-END SUBROUTINE set_Qmodel_out_unitp
+END SUBROUTINE set_Qmodel_out_unit
 SUBROUTINE set_Qmodel_Phase_Following(Phase_Following)
   USE Model_m
   IMPLICIT NONE
@@ -484,7 +484,7 @@ SUBROUTINE set_Qmodel_Phase_Checking(Phase_Checking)
 
 END SUBROUTINE set_Qmodel_Phase_Checking
 SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -498,17 +498,17 @@ SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
 
 !$OMP CRITICAL (CRIT_sub_model_V)
   IF (begin) THEN
-    !$ write(out_unitp,*) 'begining: max threads?',begin,omp_get_max_threads()
+    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
     CALL Init_Model(QuantumModel,pot_name='HenonHeiles',ndim=ndim,      &
                     read_param=.FALSE.,adiabatic=.TRUE.)
     IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unitp,*) ' ERROR in sub_model_V'
-      write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unitp,*) '   .... with the intialized ones !!'
-      write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unitp,*) '   CHECK your data !!'
+      write(out_unit,*) ' ERROR in sub_model_V'
+      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
+      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
+      write(out_unit,*) '   .... with the intialized ones !!'
+      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
+      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
+      write(out_unit,*) '   CHECK your data !!'
       STOP 'ERROR in sub_model_V: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
@@ -519,7 +519,7 @@ SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
 
 END SUBROUTINE sub_model_V
 SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -540,20 +540,20 @@ SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
 
 !$OMP CRITICAL (CRIT_sub_model1_V)
   IF (begin .OR. option < 0) THEN
-    !$ write(out_unitp,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unitp,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unitp)
+    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
+    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
+    flush(out_unit)
     CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
              ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.TRUE.)
     IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unitp,*) ' ERROR in sub_model1_V'
-      write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unitp,*) '   .... with the intialized ones !!'
-      write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unitp,*) '   CHECK your data !!'
+      write(out_unit,*) ' ERROR in sub_model1_V'
+      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
+      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
+      write(out_unit,*) '   .... with the intialized ones !!'
+      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
+      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
+      write(out_unit,*) '   CHECK your data !!'
       STOP 'ERROR in sub_model1_V: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
@@ -566,7 +566,7 @@ SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
 END SUBROUTINE sub_model1_V
 
 SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -587,21 +587,21 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
 
 !$OMP CRITICAL (CRIT_sub_model1_VG)
   IF (begin) THEN
-    !$ write(out_unitp,*) 'begining: max threads?',begin,omp_get_max_threads()
+    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
     QuantumModel%QM%adiabatic = .TRUE.
-    write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unitp,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unitp)
+    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
+    flush(out_unit)
     CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),ndim=ndim,read_param=.FALSE.,option=option)
 
     IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unitp,*) ' ERROR in sub_model1_VG'
-      write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unitp,*) '   .... with the intialized ones !!'
-      write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unitp,*) '   CHECK your data !!'
+      write(out_unit,*) ' ERROR in sub_model1_VG'
+      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
+      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
+      write(out_unit,*) '   .... with the intialized ones !!'
+      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
+      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
+      write(out_unit,*) '   CHECK your data !!'
       STOP 'ERROR in sub_model1_VG: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
@@ -613,7 +613,7 @@ SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_VG
 SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
   !$ USE omp_lib
@@ -638,21 +638,21 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
 
 !$OMP CRITICAL (CRIT_sub_model1_VG)
   IF (begin) THEN
-    !$ write(out_unitp,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unitp,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unitp)
+    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
+    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
+    flush(out_unit)
     CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
              ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.TRUE.)
 
     IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unitp,*) ' ERROR in sub_model1_VG'
-      write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unitp,*) '   .... with the intialized ones !!'
-      write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unitp,*) '   CHECK your data !!'
+      write(out_unit,*) ' ERROR in sub_model1_VG'
+      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
+      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
+      write(out_unit,*) '   .... with the intialized ones !!'
+      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
+      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
+      write(out_unit,*) '   CHECK your data !!'
       STOP 'ERROR in sub_model1_VG: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
@@ -673,7 +673,7 @@ SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_VG_NAC
 SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -695,21 +695,21 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 
 !$OMP CRITICAL (CRIT_sub_model1_VGH)
   IF (begin) THEN
-    !$ write(out_unitp,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unitp,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unitp)
+    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
+    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
+    flush(out_unit)
     CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
              ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.TRUE.)
 
     IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unitp,*) ' ERROR in sub_model1_VGH'
-      write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unitp,*) '   .... with the intialized ones !!'
-      write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unitp,*) '   CHECK your data !!'
+      write(out_unit,*) ' ERROR in sub_model1_VGH'
+      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
+      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
+      write(out_unit,*) '   .... with the intialized ones !!'
+      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
+      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
+      write(out_unit,*) '   CHECK your data !!'
       STOP 'ERROR in sub_model1_VGH: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
@@ -721,7 +721,7 @@ SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_VGH
 SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE QDUtil_m, ONLY : TO_lowercase
   USE Model_m
   !$ USE omp_lib
@@ -745,10 +745,10 @@ SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
 
 !$OMP CRITICAL (CRIT_sub_model1_DiaV)
   IF (begin .OR. option < 0) THEN
-    !$ write(out_unitp,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unitp,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unitp)
+    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
+    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
+    flush(out_unit)
 
     pot_name_loc = TO_lowercase(trim(adjustl(pot_name)))
     IF (pot_name_loc == 'read_model') THEN
@@ -757,13 +757,13 @@ SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
       CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
                     ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.FALSE.)
       IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-        write(out_unitp,*) ' ERROR in sub_model1_DiaV'
-        write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
-        write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-        write(out_unitp,*) '   .... with the intialized ones !!'
-        write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
-        write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-        write(out_unitp,*) '   CHECK your data !!'
+        write(out_unit,*) ' ERROR in sub_model1_DiaV'
+        write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
+        write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
+        write(out_unit,*) '   .... with the intialized ones !!'
+        write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
+        write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
+        write(out_unit,*) '   CHECK your data !!'
         STOP 'ERROR in sub_model1_DiaV: wrong ndim or nsurf'
       END IF
     END IF
@@ -778,7 +778,7 @@ SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_DiaV
 SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -800,21 +800,21 @@ SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
 
 !$OMP CRITICAL (CRIT_sub_model1_DiaVG)
   IF (begin) THEN
-    !$ write(out_unitp,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unitp,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unitp)
+    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
+    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
+    flush(out_unit)
     CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
                     ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.FALSE.)
 
     IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unitp,*) ' ERROR in sub_model1_DiaVG'
-      write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unitp,*) '   .... with the intialized ones !!'
-      write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unitp,*) '   CHECK your data !!'
+      write(out_unit,*) ' ERROR in sub_model1_DiaVG'
+      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
+      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
+      write(out_unit,*) '   .... with the intialized ones !!'
+      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
+      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
+      write(out_unit,*) '   CHECK your data !!'
       STOP 'ERROR in sub_model1_DiaVG: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
@@ -826,7 +826,7 @@ SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
 
 END SUBROUTINE sub_model1_DiaVG
 SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
@@ -848,21 +848,21 @@ SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
 
 !$OMP CRITICAL (CRIT_sub_model1_DiaVGH)
   IF (begin) THEN
-    !$ write(out_unitp,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unitp,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unitp,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unitp)
+    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
+    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
+    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
+    flush(out_unit)
     CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
                     ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.FALSE.)
 
     IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unitp,*) ' ERROR in sub_model1_DiaVGH'
-      write(out_unitp,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unitp,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unitp,*) '   .... with the intialized ones !!'
-      write(out_unitp,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unitp,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unitp,*) '   CHECK your data !!'
+      write(out_unit,*) ' ERROR in sub_model1_DiaVGH'
+      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
+      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
+      write(out_unit,*) '   .... with the intialized ones !!'
+      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
+      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
+      write(out_unit,*) '   CHECK your data !!'
       STOP 'ERROR in sub_model1_DiaVGH: wrong ndim or nsurf'
     END IF
     begin = .FALSE.
@@ -905,7 +905,7 @@ SUBROUTINE get_Qmodel_IndexesFunc(IndexFunc_Ene,IndexFunc_Qop,IndexFunc_Grad,Ind
 END SUBROUTINE get_Qmodel_IndexesFunc
 
 SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
@@ -934,7 +934,7 @@ SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_d0Func
 SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
@@ -966,7 +966,7 @@ SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_d0d1Func
 SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
@@ -998,7 +998,7 @@ SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
 
 END SUBROUTINE get_Qmodel_d0d1d2Func
 SUBROUTINE get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Q,nb_Func,ndimFunc)
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE Model_m
   USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
   IMPLICIT NONE
@@ -1030,3 +1030,15 @@ SUBROUTINE get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Q,nb_Func,ndimFun
   deallocate(Func)
 
 END SUBROUTINE get_Qmodel_d0d1d2d3Func
+SUBROUTINE QML_time_perso(name_sub)
+  USE QDUtil_m, ONLY : time_perso
+  IMPLICIT NONE
+
+  character (len=*) :: name_sub
+
+
+  !$OMP    CRITICAL (QML_time_perso_CRIT)
+  CALL time_perso(name_sub)
+  !$OMP   END CRITICAL (QML_time_perso_CRIT)
+
+END SUBROUTINE QML_time_perso

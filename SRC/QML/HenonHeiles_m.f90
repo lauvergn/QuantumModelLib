@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HenonHeiles_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -90,9 +90,9 @@ MODULE QML_HenonHeiles_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      CALL QModel_in%Write_QModel(out_unitp)
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      CALL QModel_in%Write_QModel(out_unit)
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -110,25 +110,25 @@ MODULE QML_HenonHeiles_m
     END IF
 
     IF (QModel%ndim < 1) THEN
-      write(out_unitp,*) ' ERROR in Init_QML_HenonHeiles'
-      write(out_unitp,*) ' ndim MUST be > 0. ndim: ',QModel%ndim
-      write(out_unitp,*) ' Its value MUST be given in with Init_Model or Read_Model subroutines.'
+      write(out_unit,*) ' ERROR in Init_QML_HenonHeiles'
+      write(out_unit,*) ' ndim MUST be > 0. ndim: ',QModel%ndim
+      write(out_unit,*) ' Its value MUST be given in with Init_Model or Read_Model subroutines.'
       STOP 'ERROR in Init_QML_HenonHeiles: Wrong ndim value.'
     END IF
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of HenonHeiles'
+    IF (debug) write(out_unit,*) 'init Q0 of HenonHeiles'
     allocate(QModel%Q0(QModel%ndim))
     QModel%Q0 = ZERO
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of HenonHeiles'
+    IF (debug) write(out_unit,*) 'init d0GGdef of HenonHeiles'
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_HenonHeiles
@@ -156,21 +156,21 @@ MODULE QML_HenonHeiles_m
 
     read(nio,nml=HenonHeiles,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_HenonHeiles'
-      write(out_unitp,*) ' End-of-file or End-of-record'
-      write(out_unitp,*) ' The namelist "HenonHeiles" is probably absent'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,*)
+      write(out_unit,*) ' ERROR in Read_QML_HenonHeiles'
+      write(out_unit,*) ' End-of-file or End-of-record'
+      write(out_unit,*) ' The namelist "HenonHeiles" is probably absent'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
       STOP ' ERROR in Read_HenonHeilesPot'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_HenonHeiles'
-      write(out_unitp,*) ' Some parameter names of the namelist "HenonHeiles" are probaly wrong'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,nml=HenonHeiles)
+      write(out_unit,*) ' ERROR in Read_QML_HenonHeiles'
+      write(out_unit,*) ' Some parameter names of the namelist "HenonHeiles" are probaly wrong'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,nml=HenonHeiles)
       STOP ' ERROR in Read_HenonHeilesPot'
     END IF
 
-    !write(out_unitp,nml=HenonHeiles)
+    !write(out_unit,nml=HenonHeiles)
     QModel%lambda = lambda
 
   END SUBROUTINE Read_QML_HenonHeiles

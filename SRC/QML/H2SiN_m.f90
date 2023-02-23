@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_H2SiN_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -95,8 +95,8 @@ MODULE QML_H2SiN_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -120,7 +120,7 @@ MODULE QML_H2SiN_m
        k = 0
        DO
         nb_columns = min(6,QModel%nb_funcModel-k)
-        !write(out_unitp,*) k+1,k+nb_columns,nb_columns
+        !write(out_unit,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
  11      format(6i1,f15.8,5(2x,6i1,f15.8))
@@ -143,7 +143,7 @@ MODULE QML_H2SiN_m
        k = 0
        DO
         nb_columns = min(6,QModel%nb_funcModel-k)
-        !write(out_unitp,*) k+1,k+nb_columns,nb_columns
+        !write(out_unit,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
          k = k + nb_columns
@@ -165,7 +165,7 @@ MODULE QML_H2SiN_m
        k = 0
        DO
         nb_columns = min(6,QModel%nb_funcModel-k)
-        !write(out_unitp,*) k+1,k+nb_columns,nb_columns
+        !write(out_unit,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
          k = k + nb_columns
@@ -177,22 +177,22 @@ MODULE QML_H2SiN_m
 
     CASE Default
 
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1,2 or 3'
+      write(out_unit,*) ' ERROR in ',name_sub
+      write(out_unit,*) ' This option is not possible. option: ',QModel%option
+      write(out_unit,*) ' Its value MUST be 1,2 or 3'
       STOP
     END SELECT
 
-    IF (debug) write(out_unitp,*) 'init Q0 of H2SiN'
+    IF (debug) write(out_unit,*) 'init Q0 of H2SiN'
     QModel%Q0 = QModel%Qref([3,1,4,2,5,6])
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of H2SiN'
+    IF (debug) write(out_unit,*) 'init d0GGdef of H2SiN'
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_H2SiN
@@ -303,9 +303,9 @@ MODULE QML_H2SiN_m
     CONTINUE
 
     CASE Default
-        write(out_unitp,*) ' ERROR in Write_QML_H2SiN '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1,2,3'
+        write(out_unit,*) ' ERROR in Write_QML_H2SiN '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1,2,3'
 
         STOP
     END SELECT
@@ -350,9 +350,9 @@ MODULE QML_H2SiN_m
       CALL EvalPot1_QML_H2SiN(Mat_OF_PotDia,dnQ,QModel)
 
     CASE Default
-        write(out_unitp,*) ' ERROR in EvalPot_QML_H2SiN '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1, 2 or 3'
+        write(out_unit,*) ' ERROR in EvalPot_QML_H2SiN '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1, 2 or 3'
 
         STOP
     END SELECT
@@ -380,7 +380,7 @@ MODULE QML_H2SiN_m
     TYPE (dnS_t)        :: Vtemp
     integer             :: i,j
 
-    !write(out_unitp,*) ' sub EvalPot1_QML_H2SiN' ; flush(6)
+    !write(out_unit,*) ' sub EvalPot1_QML_H2SiN' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,4,1,3,5,6]) - QModel%Qref(:)
@@ -408,7 +408,7 @@ MODULE QML_H2SiN_m
    CALL dealloc_dnS(Vtemp)
    CALL dealloc_dnS(DQ)
 
-   !write(out_unitp,*) ' end EvalPot1_QML_H2SiN' ; flush(6)
+   !write(out_unit,*) ' end EvalPot1_QML_H2SiN' ; flush(6)
 
   END SUBROUTINE EvalPot1_QML_H2SiN
 

@@ -44,7 +44,7 @@
 !! @date 24/11/2022
 !!
 MODULE QML_H2O_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -93,8 +93,8 @@ MODULE QML_H2O_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -117,33 +117,33 @@ MODULE QML_H2O_m
         QModel%Qref = [1.8107934895553828_Rkind,1.8107934895553828_Rkind,1.8230843491285216_Rkind]
 
         IF (QModel%PubliUnit) THEN
-          write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad], Energy: [Hartree]'
+          write(out_unit,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad], Energy: [Hartree]'
         ELSE
-          write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad]:, Energy: [Hartree]'
+          write(out_unit,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad]:, Energy: [Hartree]'
         END IF
 
       CASE Default
 
-      write(out_unitp,*) ' ERROR in Init_QML_H2O '
-      write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1'
+      write(out_unit,*) ' ERROR in Init_QML_H2O '
+      write(out_unit,*) ' This option is not possible. option: ',QModel%option
+      write(out_unit,*) ' Its value MUST be 1'
       STOP 'ERROR in Init_QML_H2O: wrong option'
 
     END SELECT
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of H2O'
+    IF (debug) write(out_unit,*) 'init Q0 of H2O'
     allocate(QModel%Q0(QModel%ndim))
     CALL get_Q0_QML_H2O(QModel%Q0,QModel,option=0)
-    IF (debug) write(out_unitp,*) 'QModel%Q0',QModel%Q0
+    IF (debug) write(out_unit,*) 'QModel%Q0',QModel%Q0
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of H2O'
-    flush(out_unitp)
+    IF (debug) write(out_unit,*) 'init d0GGdef of H2O'
+    flush(out_unit)
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_H2O
@@ -208,9 +208,9 @@ MODULE QML_H2O_m
       write(nio,*) ' with Tnum at the minimun.             '
       write(nio,*) '                                       '
     CASE Default
-        write(out_unitp,*) ' ERROR in write_QModel '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1'
+        write(out_unit,*) ' ERROR in write_QModel '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1'
         STOP
     END SELECT
     write(nio,*) '---------------------------------------'
@@ -227,9 +227,9 @@ MODULE QML_H2O_m
     integer,                     intent(in)    :: option
 
     IF (size(Q0) /= 3) THEN
-      write(out_unitp,*) ' ERROR in get_Q0_QML_H2O '
-      write(out_unitp,*) ' The size of Q0 is not ndim=3: '
-      write(out_unitp,*) ' size(Q0)',size(Q0)
+      write(out_unit,*) ' ERROR in get_Q0_QML_H2O '
+      write(out_unit,*) ' The size of Q0 is not ndim=3: '
+      write(out_unit,*) ' size(Q0)',size(Q0)
       STOP 'ERROR in get_Q0_QML_H2O: wrong Q0 size'
     END IF
 
@@ -242,9 +242,9 @@ MODULE QML_H2O_m
       Q0(:) = [QModel%Qref(2),QModel%Qref(2),QModel%Qref(1)]
 
     CASE Default
-      write(out_unitp,*) ' ERROR in get_Q0_QML_H2O '
-      write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1,2,3,4,5,6'
+      write(out_unit,*) ' ERROR in get_Q0_QML_H2O '
+      write(out_unit,*) ' This option is not possible. option: ',QModel%option
+      write(out_unit,*) ' Its value MUST be 1,2,3,4,5,6'
       STOP 'ERROR in get_Q0_QML_H2O: wrong option'
     END SELECT
 
@@ -273,9 +273,9 @@ MODULE QML_H2O_m
     CASE (1) ! R1,R2,a
       CALL EvalPot1_QML_H2O(QModel,Mat_OF_PotDia,dnQ,nderiv)
     CASE Default
-      write(out_unitp,*) ' ERROR in EvalPot_QML_H2O '
-      write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1'
+      write(out_unit,*) ' ERROR in EvalPot_QML_H2O '
+      write(out_unit,*) ' This option is not possible. option: ',QModel%option
+      write(out_unit,*) ' Its value MUST be 1'
       STOP 'ERROR in EvalPot_QML_H2O: wrong option'
     END SELECT
 
@@ -302,11 +302,11 @@ MODULE QML_H2O_m
 
 
     Mat_OF_PotDia(1,1) = HALF*a * (DQ(1)**2 + DQ(2)**2) + HALF*b * DQ(3)**2
-    !CALL Write_dnS(Mat_OF_PotDia(1,1),nio=out_unitp)
+    !CALL Write_dnS(Mat_OF_PotDia(1,1),nio=out_unit)
 
    CALL dealloc_dnS(DQ)
 
-   !write(out_unitp,*) ' end EvalPot1_QML_H2O' ; flush(6)
+   !write(out_unit,*) ' end EvalPot1_QML_H2O' ; flush(6)
 
  END SUBROUTINE EvalPot1_QML_H2O
 END MODULE QML_H2O_m

@@ -44,7 +44,7 @@
 !! @date 18/10/2021
 !!
 MODULE QML_H2_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -97,10 +97,10 @@ CONTAINS
     !-----------------------------------------------------------
 
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) '  read_param:     ',read_param
-      write(out_unitp,*) '  nio_param_file: ',nio_param_file
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) '  read_param:     ',read_param
+      write(out_unit,*) '  nio_param_file: ',nio_param_file
+      flush(out_unit)
     END IF
 
 
@@ -112,29 +112,29 @@ CONTAINS
     QModel%nsurf    = 1
 
 
-    IF (debug) write(out_unitp,*) 'init default H2 parameters (HF)'
+    IF (debug) write(out_unit,*) 'init default H2 parameters (HF)'
     QModel%E0  = -1.17404460_Rkind
     QModel%Req = 1.4_Rkind
 
     IF (read_param) THEN
       CALL Read_QML_H2(QModel%Req,QModel%E0,nio_param_file)
     ELSE
-      IF (debug) write(out_unitp,*) 'init H2 parameters, if present'
+      IF (debug) write(out_unit,*) 'init H2 parameters, if present'
     END IF
 
     SELECT CASE (QModel%option)
     CASE (1)
-      write(out_unitp,*) 'Fourth order expansion in (R-Req)'
+      write(out_unit,*) 'Fourth order expansion in (R-Req)'
 
       QModel%TaylorPot = [-0.000498716666667_Rkind,0.185668083333_Rkind,-0.219403333333_Rkind,0.182041666667_Rkind]
 
-      IF (debug) write(out_unitp,*) 'init Q0 of H2'
+      IF (debug) write(out_unit,*) 'init Q0 of H2'
       QModel%Q0 = [QModel%req]
 
-      IF (debug) write(out_unitp,*) 'init d0GGdef of H2'
+      IF (debug) write(out_unit,*) 'init d0GGdef of H2'
       QModel%d0GGdef = reshape([ONE/QModel%mu],shape=[1,1])
     CASE(2) ! The coordinate x is defined as x = Req/R
-      write(out_unitp,*) 'Fourth order expansion in (x-1) with x = Req/R'
+      write(out_unit,*) 'Fourth order expansion in (x-1) with x = Req/R'
 
       ! with DQ=+/-0.1 and +/- 0.2
       !QModel%TaylorPot = [-0.000753325_Rkind,0.363249875_Rkind,-0.1412875_Rkind,0.0165625_Rkind]
@@ -148,16 +148,16 @@ CONTAINS
       !  and xeq = 1.
       QModel%d0GGdef = reshape([ONE/QModel%req**2 * ONE/QModel%mu],shape=[1,1])
     CASE default
-      write(out_unitp,*) 'ERROR in Init_QML_H2'
-      write(out_unitp,*) 'Possible option: 1,2'
-      write(out_unitp,*) 'Actual value, option=',QModel%option
+      write(out_unit,*) 'ERROR in Init_QML_H2'
+      write(out_unit,*) 'Possible option: 1,2'
+      write(out_unit,*) 'Actual value, option=',QModel%option
       STOP 'ERROR in Init_QML_H2: wrong option value'
     END SELECT
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_H2
@@ -184,24 +184,24 @@ CONTAINS
 
     E0  = E0_inout
     Req = Req_inout
-    write(out_unitp,*) 'read H2 namelist ...'
+    write(out_unit,*) 'read H2 namelist ...'
 
     read(nio,nml=H2,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_H2'
-      write(out_unitp,*) ' End-of-file or End-of-record'
-      write(out_unitp,*) ' The namelist "H2" is probably absent'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,*)
+      write(out_unit,*) ' ERROR in Read_QML_H2'
+      write(out_unit,*) ' End-of-file or End-of-record'
+      write(out_unit,*) ' The namelist "H2" is probably absent'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
       STOP ' ERROR in Read_QML_H2'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_H2'
-      write(out_unitp,*) ' Some parameter names of the namelist "H2" are probaly wrong'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,nml=H2)
+      write(out_unit,*) ' ERROR in Read_QML_H2'
+      write(out_unit,*) ' Some parameter names of the namelist "H2" are probaly wrong'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,nml=H2)
       STOP ' ERROR in Read_QML_H2'
     END IF
-    !write(out_unitp,nml=H2)
+    !write(out_unit,nml=H2)
 
     E0_inout   = E0
     Req_inout  = Req
@@ -288,20 +288,20 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) ' QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) ' nderiv:',nderiv
-      write(out_unitp,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) ' QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) ' nderiv:',nderiv
+      write(out_unit,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
     END IF
 
     Mat_OF_PotDia(1,1) = QML_dnH2(dnQ(1),QModel)
 
     IF (debug) THEN
-      write(out_unitp,*) 'Mat_OF_PotDia'
+      write(out_unit,*) 'Mat_OF_PotDia'
       CALL Write_dnS( Mat_OF_PotDia(1,1),6)
-      write(out_unitp,*)
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*)
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
   END SUBROUTINE EvalPot_QML_H2
 
@@ -329,7 +329,7 @@ CONTAINS
     logical, parameter  :: debug = .FALSE.
 
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING in QML_dnH2'
+      write(out_unit,*) 'BEGINNING in QML_dnH2'
       CALL Write_dnS(dnQ,info='dnQ')
     END IF
 
@@ -349,10 +349,10 @@ CONTAINS
     CALL dealloc_dnS(dnDeltaQ)
 
     IF (debug) THEN
-      write(out_unitp,*) 'H2 at',get_d0(dnQ)
+      write(out_unit,*) 'H2 at',get_d0(dnQ)
       CALL Write_dnS(QML_dnH2)
-      write(out_unitp,*) 'END in QML_dnH2'
-      flush(out_unitp)
+      write(out_unit,*) 'END in QML_dnH2'
+      flush(out_unit)
     END IF
 
   END FUNCTION QML_dnH2

@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_PSB3_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -87,9 +87,8 @@ MODULE QML_PSB3_m
     ! Warning the parameters are given as in the publication.
     !   Therefore, the BLA(=Q(1)) is in Angstrom and the energy is in kcal.mol^-1.
    CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_PSB3
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_PSB3
     PROCEDURE :: Write_QModel    => Write_QML_PSB3
-    PROCEDURE :: Write0_QModel   => Write0_QML_PSB3
   END TYPE QML_PSB3_t
 
   PUBLIC :: QML_PSB3_t,Init_QML_PSB3
@@ -118,8 +117,8 @@ MODULE QML_PSB3_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -174,25 +173,25 @@ MODULE QML_PSB3_m
       QModel%k3       = 1.1347_Rkind
 
     CASE Default
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' This option is not possible. option:',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1, 3 or 2'
+        write(out_unit,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' This option is not possible. option:',QModel%option
+        write(out_unit,*) ' Its value MUST be 1, 3 or 2'
         STOP
     END SELECT
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of PSB3'
+    IF (debug) write(out_unit,*) 'init Q0 of PSB3'
     QModel%Q0 = [0.172459_Rkind, -3.14_Rkind, ZERO]
-    IF (debug) write(out_unitp,*) 'init d0GGdef of PSB3'
+    IF (debug) write(out_unit,*) 'init d0GGdef of PSB3'
     QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,:) = [0.00007981_Rkind, ZERO,             ZERO            ]
     QModel%d0GGdef(2,:) = [ZERO,             0.00002599_Rkind, 0.00004025_Rkind]
     QModel%d0GGdef(3,:) = [ZERO,             0.00004025_Rkind, 0.00040375_Rkind]
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_PSB3
@@ -206,6 +205,13 @@ MODULE QML_PSB3_m
     CLASS(QML_PSB3_t),   intent(in) :: QModel
     integer,               intent(in) :: nio
 
+    write(nio,*) 'PSB3 default parameters'
+    write(nio,*)
+    write(nio,*) ' Warning the parameters are given as in the publication.'
+    write(nio,*) '  Therefore, the BLA(=Q(1)) is in Angstrom and the energy is in kcal.mol^-1.'
+    write(nio,*)
+    write(nio,*) 'end PSB3 default parameters'
+    write(nio,*)
     write(nio,*) 'PSB3 current parameters'
     write(nio,*)
     write(nio,*) '  PubliUnit:      ',QModel%PubliUnit
@@ -257,9 +263,9 @@ MODULE QML_PSB3_m
     write(nio,*) '  k3       :      ',QModel%k3
 
     CASE Default
-        write(out_unitp,*) ' ERROR in Write_QML_PSB3 '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1 or 2 '
+        write(out_unit,*) ' ERROR in Write_QML_PSB3 '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1 or 2 '
         STOP
     END SELECT
 
@@ -267,22 +273,6 @@ MODULE QML_PSB3_m
     write(nio,*) 'end PSB3 current parameters'
 
   END SUBROUTINE Write_QML_PSB3
-  SUBROUTINE Write0_QML_PSB3(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_PSB3_t),   intent(in) :: QModel
-    integer,               intent(in) :: nio
-
-    write(nio,*) 'PSB3 default parameters'
-    write(nio,*)
-    write(nio,*) ' Warning the parameters are given as in the publication.'
-    write(nio,*) '  Therefore, the BLA(=Q(1)) is in Angstrom and the energy is in kcal.mol^-1.'
-    write(nio,*)
-    write(nio,*) 'end PSB3 default parameters'
-
-
-  END SUBROUTINE Write0_QML_PSB3
-
 !> @brief Subroutine wich calculates the PSB3 potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_PSB3_t):  derived type in which the parameters are set-up.
@@ -308,9 +298,9 @@ MODULE QML_PSB3_m
       CALL EvalPot2_QML_PSB3(Mat_OF_PotDia,dnQ,QModel,nderiv)
 
     CASE Default
-        write(out_unitp,*) ' ERROR in EvalPot_QML_PSB3'
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1,3 or 2 '
+        write(out_unit,*) ' ERROR in EvalPot_QML_PSB3'
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1,3 or 2 '
 
         STOP
     END SELECT

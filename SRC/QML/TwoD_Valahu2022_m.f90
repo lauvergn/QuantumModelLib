@@ -43,7 +43,7 @@
 !! @date 21/12/2022
 !!
 MODULE QML_TwoD_Valahu2022_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -92,9 +92,9 @@ MODULE QML_TwoD_Valahu2022_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) 'EnergyConv ',EnergyConv
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) 'EnergyConv ',EnergyConv
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -108,7 +108,7 @@ MODULE QML_TwoD_Valahu2022_m
       QModel%k = QModel%k*EnergyConv
     END IF
 
-    IF (debug) write(out_unitp,*) 'init Q0 of TwoD_Valahu2022'
+    IF (debug) write(out_unit,*) 'init Q0 of TwoD_Valahu2022'
 
     SELECT CASE (QModel%option)
     CASE (1) ! minimum of V(1,1)
@@ -119,14 +119,14 @@ MODULE QML_TwoD_Valahu2022_m
       QModel%Q0 = [-QModel%k/QModel%w,ZERO]
     END SELECT
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of TwoD_Valahu2022'
+    IF (debug) write(out_unit,*) 'init d0GGdef of TwoD_Valahu2022'
     QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = QModel%w
     QModel%d0GGdef(2,2) = QModel%w
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_TwoD_Valahu2022

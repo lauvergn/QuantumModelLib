@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_Retinal_JPCB2000_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -89,9 +89,8 @@ MODULE QML_Retinal_JPCB2000_m
    !                                 14,15,16,17,18,19,20,21,22,23,24,25]
 
    CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Retinal_JPCB2000
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Retinal_JPCB2000
     PROCEDURE :: Write_QModel    => Write_QML_Retinal_JPCB2000
-    PROCEDURE :: Write0_QModel   => Write0_QML_Retinal_JPCB2000
   END TYPE QML_Retinal_JPCB2000_t
 
   PUBLIC :: QML_Retinal_JPCB2000_t,Init_QML_Retinal_JPCB2000
@@ -125,8 +124,8 @@ MODULE QML_Retinal_JPCB2000_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -143,13 +142,13 @@ MODULE QML_Retinal_JPCB2000_m
 
     !The value of QModel%ndim must be in [2:25]
     IF (QModel%ndim < 2 .OR. QModel%ndim > 25) THEN
-       write(out_unitp,*) 'Write_QModel'
-       CALL QModel%Write_QModel(out_unitp)
-       write(out_unitp,*) ' ERROR in ',name_sub
-       write(out_unitp,*) ' ndim range MUST be [2:25]. ndim: ',QModel%ndim
+       write(out_unit,*) 'Write_QModel'
+       CALL QModel%Write_QModel(out_unit)
+       write(out_unit,*) ' ERROR in ',name_sub
+       write(out_unit,*) ' ndim range MUST be [2:25]. ndim: ',QModel%ndim
        STOP 'ERROR in Init_QML_Retinal_JPCB2000: ndim range MUST be [2:25]'
     END IF
-    IF (debug) write(out_unitp,*) 'ndim',QModel%ndim
+    IF (debug) write(out_unit,*) 'ndim',QModel%ndim
 
     IF (allocated(QModel%BathMode_Order)) deallocate(QModel%BathMode_Order)
     IF (allocated(QModel%wi))             deallocate(QModel%wi)
@@ -167,8 +166,8 @@ MODULE QML_Retinal_JPCB2000_m
     ELSE
       QModel%BathMode_Order(:) = [(i,i=1,QModel%ndim)]
     END IF
-    write(out_unitp,*) 'BathMode_Order (internal)',QModel%BathMode_Order(3:QModel%ndim)
-    write(out_unitp,*) 'BathMode_Order (read    )',QModel%BathMode_Order(3:QModel%ndim)-2
+    write(out_unit,*) 'BathMode_Order (internal)',QModel%BathMode_Order(3:QModel%ndim)
+    write(out_unit,*) 'BathMode_Order (read    )',QModel%BathMode_Order(3:QModel%ndim)-2
 
 
     IF (.NOT. QModel%PubliUnit) THEN
@@ -194,11 +193,11 @@ MODULE QML_Retinal_JPCB2000_m
       QModel%ci(:) = QModel%ciwi_inv_pub(QModel%BathMode_Order) * QModel%wi
     END IF
 
-    IF (debug) write(out_unitp,*) 'init Q0 of Retinal_JPCB2000'
+    IF (debug) write(out_unit,*) 'init Q0 of Retinal_JPCB2000'
     allocate(QModel%Q0(QModel%ndim))
     QModel%Q0 = ZERO
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of Retinal_JPCB2000'
+    IF (debug) write(out_unit,*) 'init d0GGdef of Retinal_JPCB2000'
     QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = ONE/QModel%m
     QModel%d0GGdef(2,2) = QModel%w
@@ -208,9 +207,9 @@ MODULE QML_Retinal_JPCB2000_m
     END DO
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_Retinal_JPCB2000
@@ -219,46 +218,6 @@ MODULE QML_Retinal_JPCB2000_m
 !! @param QModel            CLASS(QML_Retinal_JPCB2000_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_Retinal_JPCB2000(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_Retinal_JPCB2000_t),   intent(in) :: QModel
-    integer,              intent(in) :: nio
-
-    write(nio,*)
-    write(nio,*) 'Retinal_JPCB2000 current parameters'
-    write(nio,*) '   Parameters of the model from:'
-    write(nio,*) '  S. Hahn, G. Stock / Chemical Physics 259 (2000) 297-312'
-    write(nio,*) '     doi: 10.1016/S0301-0104(00)00201-9'
-    write(nio,*)
-    IF (QModel%PubliUnit) THEN
-      write(nio,*) ' Unit in eV (as in the publication)'
-    ELSE
-      write(nio,*) ' Unit in au (atomic units)'
-    END IF
-    write(nio,*)
-    write(nio,*) '   1/m    = ',ONE/QModel%m
-    write(nio,*) '   m      = ',QModel%m
-    write(nio,*) '   E1     = ',QModel%E1
-    write(nio,*) '   W0     = ',QModel%W0
-    write(nio,*) '   W1     = ',QModel%W1
-    write(nio,*) '   w      = ',QModel%w
-    write(nio,*) '   kappa  = ',QModel%kappa
-    write(nio,*) '   lambda = ',QModel%lambda
-    write(nio,*)
-    IF (QModel%ndim > 2) THEN
-      write(nio,*) '    wi    =',QModel%wi(3:QModel%ndim)
-      write(nio,*) '    ci/wi =',QModel%ci(3:QModel%ndim)/QModel%wi(3:QModel%ndim)
-      write(nio,*) '    ci    =',QModel%ci(3:QModel%ndim)
-    END IF
-    write(nio,*) 'end Retinal_JPCB2000 default parameters'
-    write(nio,*)
-
-  END SUBROUTINE Write_QML_Retinal_JPCB2000
-!> @brief Subroutine wich prints the default QML_Retinal_JPCB2000 parameters.
-!!
-!! @param QModel            CLASS(QML_Retinal_JPCB2000_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_Retinal_JPCB2000(QModel,nio)
     IMPLICIT NONE
 
     CLASS(QML_Retinal_JPCB2000_t),   intent(in) :: QModel
@@ -280,9 +239,31 @@ MODULE QML_Retinal_JPCB2000_m
     write(nio,*)
     write(nio,*) 'end Retinal_JPCB2000 default parameters'
     write(nio,*)
+    write(nio,*) 'Retinal_JPCB2000 current parameters'
+    IF (QModel%PubliUnit) THEN
+      write(nio,*) ' Unit in eV (as in the publication)'
+    ELSE
+      write(nio,*) ' Unit in au (atomic units)'
+    END IF
+    write(nio,*)
+    write(nio,*) '   1/m    = ',ONE/QModel%m
+    write(nio,*) '   m      = ',QModel%m
+    write(nio,*) '   E1     = ',QModel%E1
+    write(nio,*) '   W0     = ',QModel%W0
+    write(nio,*) '   W1     = ',QModel%W1
+    write(nio,*) '   w      = ',QModel%w
+    write(nio,*) '   kappa  = ',QModel%kappa
+    write(nio,*) '   lambda = ',QModel%lambda
+    write(nio,*)
+    IF (QModel%ndim > 2) THEN
+      write(nio,*) '    wi    =',QModel%wi(3:QModel%ndim)
+      write(nio,*) '    ci/wi =',QModel%ci(3:QModel%ndim)/QModel%wi(3:QModel%ndim)
+      write(nio,*) '    ci    =',QModel%ci(3:QModel%ndim)
+    END IF
+    write(nio,*) 'end Retinal_JPCB2000 current parameters'
+    write(nio,*)
 
-  END SUBROUTINE Write0_QML_Retinal_JPCB2000
-
+  END SUBROUTINE Write_QML_Retinal_JPCB2000
 !> @brief Subroutine wich calculates the Retinal_JPCB2000 potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_Retinal_JPCB2000_t):   derived type in which the parameters are set-up.

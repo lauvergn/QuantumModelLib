@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_Tully_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -64,9 +64,8 @@ MODULE QML_Tully_m
 
 
    CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Tully
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Tully
     PROCEDURE :: Write_QModel    => Write_QML_Tully
-    PROCEDURE :: Write0_QModel   => Write0_QML_Tully
   END TYPE QML_Tully_t
 
   PUBLIC :: QML_Tully_t,Init_QML_Tully
@@ -96,8 +95,8 @@ MODULE QML_Tully_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -132,9 +131,9 @@ MODULE QML_Tully_m
       QModel%C = 0.90_Rkind
 
     CASE Default
-      write(out_unitp,*) 'ERROR in ',name_sub
-      write(out_unitp,*) ' This option is not possible. option:',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1 or 2 or 3'
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) ' This option is not possible. option:',QModel%option
+      write(out_unit,*) ' Its value MUST be 1 or 2 or 3'
       STOP
     END SELECT
 
@@ -167,24 +166,24 @@ MODULE QML_Tully_m
         IF (present(C)) QModel%C = C
 
       CASE Default
-          write(out_unitp,*) 'ERROR in ',name_sub
-          write(out_unitp,*) ' This option is not possible. option:',QModel%option
-          write(out_unitp,*) ' Its value MUST be 1 or 2 or 3'
+          write(out_unit,*) 'ERROR in ',name_sub
+          write(out_unit,*) ' This option is not possible. option:',QModel%option
+          write(out_unit,*) ' Its value MUST be 1 or 2 or 3'
           STOP
       END SELECT
     END IF
 
-    IF (debug) write(out_unitp,*) 'init Q0 of Tully'
+    IF (debug) write(out_unit,*) 'init Q0 of Tully'
     QModel%Q0 = [ZERO]
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of Tully'
+    IF (debug) write(out_unit,*) 'init d0GGdef of Tully'
     QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = ONE/QModel%mu
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_Tully
@@ -216,17 +215,17 @@ MODULE QML_Tully_m
 
     read(nio,Tully,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_Tully'
-      write(out_unitp,*) ' End-of-file or End-of-record'
-      write(out_unitp,*) ' The namelist "Tully" is probably absent'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,*)
+      write(out_unit,*) ' ERROR in Read_QML_Tully'
+      write(out_unit,*) ' End-of-file or End-of-record'
+      write(out_unit,*) ' The namelist "Tully" is probably absent'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
       STOP ' ERROR in Read_QML_Tully'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_Tully'
-      write(out_unitp,*) ' Some parameter names of the namelist "Tully" are probaly wrong'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,nml=Tully)
+      write(out_unit,*) ' ERROR in Read_QML_Tully'
+      write(out_unit,*) ' Some parameter names of the namelist "Tully" are probaly wrong'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,nml=Tully)
       STOP ' ERROR in Read_QML_Tully'
     END IF
 
@@ -246,29 +245,6 @@ MODULE QML_Tully_m
 
     CLASS(QML_Tully_t),  intent(in) :: QModel
     integer,              intent(in) :: nio
-
-    write(nio,*) 'Tully current parameters:'
-    write(nio,*)
-    write(nio,*) '  A:      ',QModel%A
-    write(nio,*) '  B:      ',QModel%B
-    write(nio,*) '  C:      ',QModel%C
-    write(nio,*) '  D:      ',QModel%D
-    write(nio,*) '  E0:     ',QModel%E0
-    write(nio,*) '  option: ',QModel%option
-    write(nio,*)
-    write(nio,*) 'end Tully parameters'
-
-  END SUBROUTINE Write_QML_Tully
-!> @brief Subroutine wich prints the default QML_Tully parameters.
-!!
-!! @param QModel            CLASS(QML_Tully_t):  derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_Tully(QModel,nio)
-  IMPLICIT NONE
-
-    CLASS(QML_Tully_t),   intent(in) :: QModel
-    integer,               intent(in) :: nio
-
     write(nio,*) 'Tully default parameters, from reference:'
     write(nio,*) '  Reference: Tully, J. Chem. Phys. V93, pp15, 1990'
     write(nio,*)
@@ -313,10 +289,18 @@ MODULE QML_Tully_m
     write(nio,*) 'hessian  = [-0.030102,  0.030102] '
     write(nio,*)
     write(nio,*) 'end Tully default parameters'
+    write(nio,*) 'Tully current parameters:'
+    write(nio,*)
+    write(nio,*) '  A:      ',QModel%A
+    write(nio,*) '  B:      ',QModel%B
+    write(nio,*) '  C:      ',QModel%C
+    write(nio,*) '  D:      ',QModel%D
+    write(nio,*) '  E0:     ',QModel%E0
+    write(nio,*) '  option: ',QModel%option
+    write(nio,*)
+    write(nio,*) 'end Tully parameters'
 
-
-  END SUBROUTINE Write0_QML_Tully
-
+  END SUBROUTINE Write_QML_Tully
 !> @brief Subroutine wich calculates the Tully potential (for the 3 models) with derivatives up to the 2d order is required.
 !!
 !! @param QModel             CLASS(QML_Tully_t):  derived type in which the parameters are set-up.
@@ -341,9 +325,9 @@ MODULE QML_Tully_m
     CASE (3)
       CALL EvalPot3_QML_Tully(Mat_OF_PotDia,dnQ(1),QModel,nderiv)
     CASE Default
-        write(out_unitp,*) 'ERROR in EvalPot_QML_Tully'
-        write(out_unitp,*) ' This option is not possible. option:',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1 or 3 or 3'
+        write(out_unit,*) 'ERROR in EvalPot_QML_Tully'
+        write(out_unit,*) ' This option is not possible. option:',QModel%option
+        write(out_unit,*) ' Its value MUST be 1 or 3 or 3'
         STOP
     END SELECT
 

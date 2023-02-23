@@ -38,13 +38,13 @@
 !===========================================================================
 !===========================================================================
 MODULE QMLLib_UtilLib_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   !$ USE omp_lib
   IMPLICIT NONE
 
   PRIVATE
 
-  PUBLIC :: Find_Label,NFind_Label,FFind_Label,Pot_Name_Analysis
+  PUBLIC :: Find_Label,NFind_Label,FFind_Label,Pot_Name_Analysis,Read_alloc_Vect
 
   
   INTERFACE Pot_Name_Analysis
@@ -59,7 +59,11 @@ MODULE QMLLib_UtilLib_m
   INTERFACE FFind_Label
     MODULE PROCEDURE QML_FFind_Label
   END INTERFACE
-CONTAINS
+  INTERFACE Read_alloc_Vect
+    MODULE PROCEDURE QML_Read_alloc_Vect
+  END INTERFACE
+
+  CONTAINS
 
   SUBROUTINE QML_Find_Label(nio,label,located)
     USE QDUtil_m,         ONLY : TO_string
@@ -77,8 +81,8 @@ CONTAINS
         located = .FALSE.
         format_label='(A' // TO_string(len(label)) // ')'
 
-        !write(out_unitp,*) 'format_label',format_label
-  !     write(out_unitp,*) 'label to find:',label,located
+        !write(out_unit,*) 'format_label',format_label
+  !     write(out_unit,*) 'label to find:',label,located
         DO
           i_line = i_line + 1
 
@@ -86,7 +90,7 @@ CONTAINS
 
           located = (labelR .EQ. label)
           !located = verify(label,labelR) == 0
-          !write(out_unitp,*) i_line,located,labelR
+          !write(out_unit,*) i_line,located,labelR
           IF (located) EXIT
           read(nio,*,end=999,err=888)
 
@@ -97,7 +101,7 @@ CONTAINS
    999  CONTINUE
         i_line = 0
 
-        !write(out_unitp,*) 'Find_Label: ',label,located
+        !write(out_unit,*) 'Find_Label: ',label,located
   END SUBROUTINE QML_Find_Label
 
   SUBROUTINE QML_NFind_Label(nio,label,located,iformat)
@@ -117,19 +121,19 @@ CONTAINS
         located = .FALSE.
 
         IF (iformat < 1) THEN
-          write(out_unitp,*) ' ERROR in NFind_Label'
-          write(out_unitp,*) ' iformat < 1',iformat
+          write(out_unit,*) ' ERROR in NFind_Label'
+          write(out_unit,*) ' iformat < 1',iformat
           STOP
         END IF
         fformat='(A' // TO_string(iformat) // ')'
-        !write(out_unitp,*) iformat,fformat
-        !write(out_unitp,*) 'label to find:',label,located
+        !write(out_unit,*) iformat,fformat
+        !write(out_unit,*) 'label to find:',label,located
         DO
           i_line = i_line + 1
           read(nio,fformat,end=999,eor=888,err=888,advance='no') labelR
 
           located = verify(label,labelR) == 0
-          !write(out_unitp,*) i_line,located,labelR
+          !write(out_unit,*) i_line,located,labelR
           IF (located) EXIT
           read(nio,*,end=999,err=888)
 
@@ -154,14 +158,14 @@ CONTAINS
 
         located = .FALSE.
 
-        !write(out_unitp,*) 'label to find:',label,located
+        !write(out_unit,*) 'label to find:',label,located
         DO
           i_line = i_line + 1
           read(nio,fformat,end=999,eor=888,err=888,advance='no') labelR
 
 
           located = verify(label,labelR) == 0
-          !write(out_unitp,*) i_line,located,labelR
+          !write(out_unit,*) i_line,located,labelR
           IF (located) EXIT
           read(nio,*,end=999,err=888)
 
@@ -189,9 +193,9 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
 
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING QML_Pot_Name_Analysis'
-      write(out_unitp,*) 'pot_name: ',pot_name
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING QML_Pot_Name_Analysis'
+      write(out_unit,*) 'pot_name: ',pot_name
+      flush(out_unit)
     END IF
     !first the number of word
     name     = pot_name ! for the allocation
@@ -210,10 +214,10 @@ CONTAINS
 
       nb_word = nb_word + 1
       len_word = max(len_word,iblank-1)
-      IF (debug) write(out_unitp,*) 'nb_word,len_word',nb_word,len_word,' ',name
-      flush(out_unitp)
+      IF (debug) write(out_unit,*) 'nb_word,len_word',nb_word,len_word,' ',name
+      flush(out_unit)
     END DO
-    IF (debug) write(out_unitp,*) 'nb_word,len_word',nb_word,len_word
+    IF (debug) write(out_unit,*) 'nb_word,len_word',nb_word,len_word
 
     !now create the table of string
     allocate(character(len=len_word) :: tab_pot_name(nb_word))
@@ -227,7 +231,7 @@ CONTAINS
         nb_word = nb_word + 1
         len_word = max(len_word,len_trim(name))
         tab_pot_name(nb_word) = trim(adjustl(name))
-        IF (debug) write(out_unitp,*) 'nb_word',nb_word,' ',tab_pot_name(nb_word)
+        IF (debug) write(out_unit,*) 'nb_word',nb_word,' ',tab_pot_name(nb_word)
         EXIT
       END IF
 
@@ -235,15 +239,35 @@ CONTAINS
       len_word = max(len_word,iblank-1)
 
       tab_pot_name(nb_word) = trim(adjustl(name(1:iblank)))
-      IF (debug)write(out_unitp,*) 'nb_word',nb_word,' ',tab_pot_name(nb_word)
+      IF (debug)write(out_unit,*) 'nb_word',nb_word,' ',tab_pot_name(nb_word)
 
       name = name(iblank+1:len(name))
       name = trim(adjustl(name))
-      flush(out_unitp)
+      flush(out_unit)
     END DO
     IF (debug) THEN
-      write(out_unitp,*) 'END QML_Pot_Name_Analysis'
-      flush(out_unitp)
+      write(out_unit,*) 'END QML_Pot_Name_Analysis'
+      flush(out_unit)
     END IF
   END SUBROUTINE QML_Pot_Name_Analysis
+  FUNCTION QML_Read_alloc_Vect(nio,err_io) RESULT (Vec)
+    IMPLICIT NONE
+
+    integer, intent(in)           :: nio
+    integer, intent(inout)        :: err_io
+    real(kind=Rkind), allocatable :: Vec(:) ! result
+
+    integer :: nsize
+    character (len=Line_len) :: name_dum
+
+    read(nio,*,IOSTAT=err_io)
+
+    read(nio,*,IOSTAT=err_io) nsize
+    IF (err_io /= 0) RETURN
+    allocate(Vec(nsize))
+    read(nio,*,IOSTAT=err_io) Vec
+    !write(out_unit,*) 'read ',nsize,' real'
+    !flush(out_unit)
+
+  END FUNCTION QML_Read_alloc_Vect
 END MODULE QMLLib_UtilLib_m

@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_LinearHBond_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE QML_Empty_m
   USE QML_Morse_m
   USE QML_Buck_m
@@ -117,8 +117,8 @@ MODULE QML_LinearHBond_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -169,7 +169,7 @@ MODULE QML_LinearHBond_m
     CALL Init0_QML_Buck(QModel%Buck,A=Abuck_loc,B=Bbuck_loc,C=Cbuck_loc,model_name='Buck')
     QModel%Eref2 = -D_loc*epsi_loc**2
 
-    write(out_unitp,*) 'option',QModel%option
+    write(out_unit,*) 'option',QModel%option
 
     QModel%QQcutm = QQcutm_loc
     QModel%QQcutp = QQcutp_loc
@@ -178,29 +178,29 @@ MODULE QML_LinearHBond_m
     QModel%Dm     = Dm_loc
     QModel%Dp     = Dp_loc
 
-    !write(out_unitp,*) 'D.exp( beta.(QQ-Q0))',QModel%Dp,QModel%betap,QModel%QQcutp
-    !write(out_unitp,*) 'D.exp(-beta.(QQ-Q0))',QModel%Dm,QModel%betam,QModel%QQcutm
+    !write(out_unit,*) 'D.exp( beta.(QQ-Q0))',QModel%Dp,QModel%betap,QModel%QQcutp
+    !write(out_unit,*) 'D.exp(-beta.(QQ-Q0))',QModel%Dm,QModel%betam,QModel%QQcutm
 
     IF (QModel%PubliUnit) THEN
-      write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Angs,Angs], Energy: [kcal.mol^-1]'
+      write(out_unit,*) 'PubliUnit=.TRUE.,  Q:[Angs,Angs], Energy: [kcal.mol^-1]'
     ELSE
-      write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr], Energy: [Hartree]'
+      write(out_unit,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr], Energy: [Hartree]'
     END IF
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of LinearHBond'
+    IF (debug) write(out_unit,*) 'init Q0 of LinearHBond'
     QModel%Q0 = [2.75_Rkind,ZERO] ! in Angstrom
     IF (.NOT. QModel%PubliUnit) QModel%Q0 = QModel%Q0/a0    ! in Bohr
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of LinearHBond'
+    IF (debug) write(out_unit,*) 'init d0GGdef of LinearHBond'
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = ONE/QModel%muQQ
     QModel%d0GGdef(2,2) = ONE/QModel%muq
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_LinearHBond
@@ -252,20 +252,20 @@ MODULE QML_LinearHBond_m
 
     read(nio,nml=LinearHBond,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_LinearHBond'
-      write(out_unitp,*) ' End-of-file or End-of-record'
-      write(out_unitp,*) ' The namelist "LinearHBond" is probably absent'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,*)
+      write(out_unit,*) ' ERROR in Read_QML_LinearHBond'
+      write(out_unit,*) ' End-of-file or End-of-record'
+      write(out_unit,*) ' The namelist "LinearHBond" is probably absent'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
       STOP ' ERROR in Read_LinearHBondPot'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_LinearHBond'
-      write(out_unitp,*) ' Some parameter names of the namelist "LinearHBond" are probaly wrong'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,nml=LinearHBond)
+      write(out_unit,*) ' ERROR in Read_QML_LinearHBond'
+      write(out_unit,*) ' Some parameter names of the namelist "LinearHBond" are probaly wrong'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,nml=LinearHBond)
       STOP ' ERROR in Read_QML_LinearHBond'
     END IF
-    !write(out_unitp,nml=LinearHBond)
+    !write(out_unit,nml=LinearHBond)
 
     Dsub     = D
     asub     = a
@@ -391,20 +391,20 @@ MODULE QML_LinearHBond_m
     !logical, parameter :: debug=.TRUE.
     logical, parameter :: debug=.FALSE.
     IF (debug .OR. print_level > 0) THEN
-      write(out_unitp,*) 'BEGINNING EvalPot_QML_LinearHBond'
-      write(out_unitp,*) 'r(:) or QQ,q: ',get_d0(dnQ(:))
-      write(out_unitp,*) 'nderiv',nderiv
-      write(out_unitp,*) 'PubliUnit',QModel%PubliUnit
-      write(out_unitp,*) 'option',QModel%option
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING EvalPot_QML_LinearHBond'
+      write(out_unit,*) 'r(:) or QQ,q: ',get_d0(dnQ(:))
+      write(out_unit,*) 'nderiv',nderiv
+      write(out_unit,*) 'PubliUnit',QModel%PubliUnit
+      write(out_unit,*) 'option',QModel%option
+      flush(out_unit)
     END IF
 
     IF (debug .OR. print_level > 1) THEN
-      write(out_unitp,*) 'dnQQ'
+      write(out_unit,*) 'dnQQ'
       CALL Write_dnS(dnQ(1),all_type=.TRUE.)
-      write(out_unitp,*) 'dnsq'
+      write(out_unit,*) 'dnsq'
       CALL Write_dnS(dnQ(2),all_type=.TRUE.)
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     IF (.NOT. QModel%PubliUnit) THEN
@@ -412,11 +412,11 @@ MODULE QML_LinearHBond_m
        dnsq = a0*dnQ(2) ! to convert the bhor into Angstrom.
 
       IF (debug .OR. print_level > 1) THEN
-        write(out_unitp,*) 'dnQQ in Angs'
+        write(out_unit,*) 'dnQQ in Angs'
         CALL Write_dnS(dnQQ,all_type=.TRUE.)
-        write(out_unitp,*) 'dnsq in Angs'
+        write(out_unit,*) 'dnsq in Angs'
         CALL Write_dnS(dnsq,all_type=.TRUE.)
-        flush(out_unitp)
+        flush(out_unit)
       END IF
 
     ELSE
@@ -430,20 +430,20 @@ MODULE QML_LinearHBond_m
     dnY = dnQQ/TWO - dnsq
 
     IF (debug .OR. print_level > 1) THEN
-      write(out_unitp,*) 'dnX'
-      flush(out_unitp)
+      write(out_unit,*) 'dnX'
+      flush(out_unit)
       CALL Write_dnS(dnX)
-      write(out_unitp,*) 'dnY'
-      flush(out_unitp)
+      write(out_unit,*) 'dnY'
+      flush(out_unit)
       CALL Write_dnS(dnY)
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     PotVal_m1 = QML_dnMorse(dnX,QModel%Morse1)
     IF (debug .OR. print_level > 1) THEN
-      write(out_unitp,*) 'PotVal_m1. x:',get_d0(dnX)
+      write(out_unit,*) 'PotVal_m1. x:',get_d0(dnX)
       CALL Write_dnS(PotVal_m1)
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     !PotVal_m2 = QML_dnMorse(dnY,QModel%Morse2)+QModel%Eref2 ! with ifort19 this doesn't work, it has to be split
@@ -451,24 +451,24 @@ MODULE QML_LinearHBond_m
     PotVal_m2 = PotVal_m2+QModel%Eref2
 
     IF (debug .OR. print_level > 1) THEN
-      write(out_unitp,*) 'PotVal_m2. y:',get_d0(dnY)
+      write(out_unit,*) 'PotVal_m2. y:',get_d0(dnY)
       CALL Write_dnS(PotVal_m2)
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     PotVal_Buck = QML_dnBuck(dnQQ,QModel%Buck)
     IF (debug .OR. print_level > 1) THEN
-      write(out_unitp,*) 'PotVal_Buck. QQ:',get_d0(dnQQ)
+      write(out_unit,*) 'PotVal_Buck. QQ:',get_d0(dnQQ)
       CALL Write_dnS(PotVal_Buck)
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     Mat_OF_PotDia(1,1) = PotVal_m1 + PotVal_m2 + PotVal_Buck
 
     IF (debug .OR. print_level > 1) THEN
-      write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
+      write(out_unit,*) 'Mat_OF_PotDia(1,1):'
       CALL Write_dnS(Mat_OF_PotDia(1,1))
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     IF (QModel%option == 2) THEN
@@ -490,11 +490,11 @@ MODULE QML_LinearHBond_m
     CALL dealloc_dnS(PotVal_Buck)
 
     IF (debug .OR. print_level > 0) THEN
-      write(out_unitp,*) 'Mat_OF_PotDia(1,1):'
+      write(out_unit,*) 'Mat_OF_PotDia(1,1):'
       CALL Write_dnS(Mat_OF_PotDia(1,1))
-      flush(out_unitp)
-      write(out_unitp,*) 'END EvalPot_QML_LinearHBond'
-      flush(out_unitp)
+      flush(out_unit)
+      write(out_unit,*) 'END EvalPot_QML_LinearHBond'
+      flush(out_unit)
     END IF
 
 

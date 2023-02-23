@@ -44,7 +44,7 @@
 !! @date 30/11/2021
 !!
 MODULE QML_Poly1D_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -72,7 +72,6 @@ MODULE QML_Poly1D_m
   CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Poly1D
     PROCEDURE :: Write_QModel    => Write_QML_Poly1D
-    PROCEDURE :: Write0_QModel   => Write0_QML_Poly1D
   END TYPE QML_Poly1D_t
 
   PUBLIC :: QML_Poly1D_t,Init_QML_Poly1D,Write_QML_Poly1D
@@ -111,10 +110,10 @@ CONTAINS
     !-----------------------------------------------------------
 
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) '  read_param:     ',read_param
-      write(out_unitp,*) '  nio_param_file: ',nio_param_file
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) '  read_param:     ',read_param
+      write(out_unit,*) '  nio_param_file: ',nio_param_file
+      flush(out_unit)
     END IF
 
 
@@ -126,7 +125,7 @@ CONTAINS
     QModel%nsurf    = 1
 
 
-    IF (debug) write(out_unitp,*) 'init default Poly1D parameters'
+    IF (debug) write(out_unit,*) 'init default Poly1D parameters'
     QModel%norder = 2
     allocate(QModel%coef(0:QModel%norder))
     QModel%coef   = [ZERO,ZERO,k/two]
@@ -136,16 +135,16 @@ CONTAINS
       CALL Read_QML_Poly1D(QModel,nio_param_file)
     END IF
 
-    IF (debug) write(out_unitp,*) 'init Q0 of Poly1D'
+    IF (debug) write(out_unit,*) 'init Q0 of Poly1D'
     QModel%Q0 = [QModel%req]
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of Poly1D'
+    IF (debug) write(out_unit,*) 'init d0GGdef of Poly1D'
     QModel%d0GGdef = reshape([ONE/QModel%mu],shape=[1,1])
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_Poly1D
@@ -176,25 +175,25 @@ CONTAINS
     coef = huge(one)
     coef(0:Qmodel%norder)    = Qmodel%coef
     req     = QModel%req
-    write(out_unitp,*) 'read Poly1D namelist ...'
-    flush(out_unitp)
+    write(out_unit,*) 'read Poly1D namelist ...'
+    flush(out_unit)
 
     read(nio,nml=Poly1D,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_Poly1D'
-      write(out_unitp,*) ' End-of-file or End-of-record'
-      write(out_unitp,*) ' The namelist "Poly1D" is probably absent'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,*)
+      write(out_unit,*) ' ERROR in Read_QML_Poly1D'
+      write(out_unit,*) ' End-of-file or End-of-record'
+      write(out_unit,*) ' The namelist "Poly1D" is probably absent'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
       STOP ' ERROR in Read_QML_Poly1D'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_Poly1D'
-      write(out_unitp,*) ' Some parameter names of the namelist "Poly1D" are probaly wrong'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,nml=Poly1D)
+      write(out_unit,*) ' ERROR in Read_QML_Poly1D'
+      write(out_unit,*) ' Some parameter names of the namelist "Poly1D" are probaly wrong'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,nml=Poly1D)
       STOP ' ERROR in Read_QML_Poly1D'
     END IF
-    !write(out_unitp,nml=Poly1D)
+    !write(out_unit,nml=Poly1D)
 
     n = count(coef /= huge(one))
 
@@ -207,33 +206,6 @@ CONTAINS
 
 
   END SUBROUTINE Read_QML_Poly1D
-!> @brief Subroutine wich prints the Poly1D parameters.
-!!
-!> @author David Lauvergnat
-!! @date 30/07/2019
-!!
-!! @param nio                integer          :   file unit to print the parameters.
-  SUBROUTINE Write0_QML_Poly1D(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_Poly1D_t),    intent(in) :: QModel
-    integer,                intent(in) :: nio
-
-    write(nio,*) 'Poly1D parameters:'
-    write(nio,*)
-    write(nio,*) ' For H-F (Default values, from Morse parameters):'
-    write(nio,*) '    V(R) = 0.620329864 * (R-req)^2'
-    write(nio,*) '  req = 1.7329 bohr'
-    write(nio,*) '  mu  = 1744.60504565084306291455 au'
-    write(nio,*)
-    write(nio,*) 'Value at: R=req Bohr'
-    write(nio,*) 'V        = 0.0 Hartree'
-    write(nio,*) 'gradient = 0.0'
-    write(nio,*) 'hessian  = 0.620329864'
-    write(nio,*)
-    write(nio,*) 'end Poly1D parameters'
-
-  END SUBROUTINE Write0_QML_Poly1D
 !> @brief Subroutine wich prints the Poly1D current parameters.
 !!
 !> @author David Lauvergnat
@@ -247,7 +219,20 @@ CONTAINS
     CLASS(QML_Poly1D_t),    intent(in) :: QModel
     integer,                intent(in) :: nio
 
-
+    write(nio,*) 'Poly1D default parameters:'
+    write(nio,*)
+    write(nio,*) ' For H-F (Default values, from Morse parameters):'
+    write(nio,*) '    V(R) = 0.620329864 * (R-req)^2'
+    write(nio,*) '  req = 1.7329 bohr'
+    write(nio,*) '  mu  = 1744.60504565084306291455 au'
+    write(nio,*)
+    write(nio,*) 'Value at: R=req Bohr'
+    write(nio,*) 'V        = 0.0 Hartree'
+    write(nio,*) 'gradient = 0.0'
+    write(nio,*) 'hessian  = 0.620329864'
+    write(nio,*)
+    write(nio,*) 'end Poly1D default parameters'
+    write(nio,*)
     write(nio,*) 'Poly1D current parameters:'
     CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*)
@@ -288,10 +273,10 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) ' QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) ' nderiv:',nderiv
-      write(out_unitp,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) ' QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) ' nderiv:',nderiv
+      write(out_unit,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
     END IF
 
     dnDR  = dnQ(1)-QModel%req
@@ -303,11 +288,11 @@ CONTAINS
     END DO
 
     IF (debug) THEN
-      write(out_unitp,*) 'Mat_OF_PotDia'
+      write(out_unit,*) 'Mat_OF_PotDia'
       CALL Write_dnS( Mat_OF_PotDia(1,1),6)
-      write(out_unitp,*)
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*)
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
   END SUBROUTINE EvalPot_QML_Poly1D
 

@@ -44,7 +44,7 @@
 !! @date 30/09/2021
 !!
 MODULE QML_NO3_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -115,12 +115,12 @@ MODULE QML_NO3_m
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      Write(out_unitp,*)'# dated:30/09/2021'
-      Write(out_unitp,*)'# From cartesian to symmetrized internar coord'
-      Write(out_unitp,*)'# Scaled umbrella     '
-      Write(out_unitp,*)'# NO3 E'' JCP2017 case '
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      Write(out_unit,*)'# dated:30/09/2021'
+      Write(out_unit,*)'# From cartesian to symmetrized internar coord'
+      Write(out_unit,*)'# Scaled umbrella     '
+      Write(out_unit,*)'# NO3 E'' JCP2017 case '
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -149,10 +149,10 @@ MODULE QML_NO3_m
       QModel%le_ref   = 2.344419_Rkind
       !for completness reno=2.344419d0,reoo=4.0606528d0,rad=0.017453293d0)
       QModel%beta_ref = pi*HALF
-      Write(out_unitp,*)'# ref geometry:'
-      Write(out_unitp,*)'# phi_ref: ',QModel%phi_ref
-      Write(out_unitp,*)'# le_ref:  ',QModel%le_ref
-      Write(out_unitp,*)'# beta_ref:',QModel%beta_ref
+      Write(out_unit,*)'# ref geometry:'
+      Write(out_unit,*)'# phi_ref: ',QModel%phi_ref
+      Write(out_unit,*)'# le_ref:  ',QModel%le_ref
+      Write(out_unit,*)'# beta_ref:',QModel%beta_ref
 
 
       ! tmc-ang-prec-37um2b_extra_b5_20150316.par
@@ -569,24 +569,24 @@ MODULE QML_NO3_m
             QModel%pst(1, 30)=336
             QModel%pst(2, 30)=  2
 
-                   Write(out_unitp,*)'# NO3 E" 2 states 16/03/2015'
-                   Write(out_unitp,*)'# tmc-ang-prec-37um2b_extra_b5_20150316.par  '
-                   Write(out_unitp,*)'# switching method with total energy and polynomial'
-                   Write(out_unitp,*)'# iref ',QModel%iref
-                   Write(out_unitp,*)'# iref is not used'
-                   Write(out_unitp,*)'# npar ',QModel%n
+                   Write(out_unit,*)'# NO3 E" 2 states 16/03/2015'
+                   Write(out_unit,*)'# tmc-ang-prec-37um2b_extra_b5_20150316.par  '
+                   Write(out_unit,*)'# switching method with total energy and polynomial'
+                   Write(out_unit,*)'# iref ',QModel%iref
+                   Write(out_unit,*)'# iref is not used'
+                   Write(out_unit,*)'# npar ',QModel%n
                    do i=1,QModel%npst
-                     Write(out_unitp,2)i,QModel%pst(1,i),i,QModel%pst(2,i)
+                     Write(out_unit,2)i,QModel%pst(1,i),i,QModel%pst(2,i)
                    enddo
                    2    format('# pst(1,',i3,')=',i5,' pst(2,',i3,')=',i5)
 
                    do i=1,QModel%n
-                     Write(out_unitp,1)i,QModel%p(i)
+                     Write(out_unit,1)i,QModel%p(i)
                    enddo
                    1    format('# p(',i3,')=',f16.10)
 
-                   Write(out_unitp,*)'# e0ref au and ev', QModel%e0ref,QModel%e0ref*27.21d0
-                   Write(out_unitp,*)'# e0rho ',QModel%e0rho
+                   Write(out_unit,*)'# e0ref au and ev', QModel%e0ref,QModel%e0ref*27.21d0
+                   Write(out_unit,*)'# e0rho ',QModel%e0rho
 
 
              ! tmc parameter
@@ -608,7 +608,7 @@ MODULE QML_NO3_m
                    j=1
                    do i=QModel%pst(1,28),QModel%pst(1,28)+20
                      QModel%a(j)=QModel%p(i)
-                     !Write(out_unitp,*)'ici',i,QModel%p(i)
+                     !Write(out_unit,*)'ici',i,QModel%p(i)
                      j=j+1
                    enddo
                    QModel%a(2)=abs(QModel%a(2))  ! DML: it was in ff subroutine
@@ -619,8 +619,8 @@ MODULE QML_NO3_m
                    QModel%npoly(1)=5
                    QModel%npoly(2)=5
 
-                   Write(out_unitp,*)'# TMC     npoly(1) : ',QModel%npoly(1)
-                   Write(out_unitp,*)'# TMC     npoly(2) : ',QModel%npoly(2)
+                   Write(out_unit,*)'# TMC     npoly(1) : ',QModel%npoly(1)
+                   Write(out_unit,*)'# TMC     npoly(2) : ',QModel%npoly(2)
 
              ! A Viel 2013.09.05
              ! rs.f put at the end
@@ -631,22 +631,22 @@ MODULE QML_NO3_m
              ! ATTENTION limited to 32 threads (mx=32)
 
     CASE Default
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' This option is not possible. option:',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1'
+        write(out_unit,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' This option is not possible. option:',QModel%option
+        write(out_unit,*) ' Its value MUST be 1'
         STOP
     END SELECT
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of NO3'
+    IF (debug) write(out_unit,*) 'init Q0 of NO3'
     QModel%Q0 = [ZERO,ZERO,ZERO,ZERO,ZERO,ZERO]
-    IF (debug) write(out_unitp,*) 'init d0GGdef of NO3'
+    IF (debug) write(out_unit,*) 'init d0GGdef of NO3'
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_NO3
@@ -674,9 +674,9 @@ MODULE QML_NO3_m
 
 
     CASE Default
-        write(out_unitp,*) ' ERROR in Write_QML_NO3 '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1'
+        write(out_unit,*) ' ERROR in Write_QML_NO3 '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1'
         STOP
     END SELECT
 
@@ -719,9 +719,9 @@ MODULE QML_NO3_m
       CALL EvalPot1_QML_NO3(Mat_OF_PotDia,dnQ,QModel,nderiv)
 
     CASE Default
-        write(out_unitp,*) ' ERROR in EvalPot_QML_NO3'
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1'
+        write(out_unit,*) ' ERROR in EvalPot_QML_NO3'
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1'
         STOP
     END SELECT
 
@@ -837,7 +837,7 @@ MODULE QML_NO3_m
 
 ! compute symmetrized internal coordinate for PES
    call trans_coord(x,qinter,QModel)
-   !write(out_unitp,99)(qinter(i),i=1,7)
+   !write(out_unit,99)(qinter(i),i=1,7)
 99   format(7g20.10)
 
 ! PES computation
@@ -869,85 +869,85 @@ STOP 'DML'
 !..   a1 symmetric stretch:
 !      call Epolynom(dum,itd, p(pst(1,1)), pst(2,1), itemp)
   dum=pa(1,itd) * QModel%p(QModel%pst(1,1))+pa(2,itd) * QModel%p(QModel%pst(1,1)+1)
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref=eref+dum
 
 ! umbrella mode
 !..   a2 umbrella:
 !      call Epolynom2(dum,itd, p(pst(1,2)), pst(2,2), itemp)
   dum=pb(1,itd) * QModel%p(QModel%pst(1,2))
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref=eref+dum*damp
 
 ! e stretching mode:
 ! e bending mode:
 !      call Evjt6a(dum,itd, p(pst(1,3)), pst(2,3), itemp)
   dum= QModel%p(QModel%pst(1,3)) * va(1,itd)
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum
 !      call Evjt6b(dum,itd, p(pst(1,4)), pst(2,4), itemp)
   dum= QModel%p(QModel%pst(1,4)) * vb(1,itd)
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum
 
 !..   mode-mode coupling of a1-e
 !      call Evcoup_e1a(dum,itd, p(pst(1,6)), pst(2,6), itemp)  ! e-a coupling 1. e mode
   dum= (QModel%p(QModel%pst(1,6))*pa(1,itd)*va(1,itd))
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum
 !      call Evcoup_e2a(dum,itd, p(pst(1,7)), pst(2,7), itemp)  ! e-a coupling 2. e mode
   dum=(QModel%p(QModel%pst(1,7))*pa(1,itd)*vb(1,itd))
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum
 
 !..   mode-mode coupling of a2-e
 !      call Evcoup_e1a2(dum,itd, p(pst(1,13)), pst(2,13), itemp)     !  coupling with asym. str.
   dum=QModel%p(QModel%pst(1,13))*pb(1,itd)*va(1,itd)
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum*damp
 !      call Evcoup_e2a2(dum,itd, p(pst(1,14)), pst(2,14), itemp)     !  coupling with asym. bend
   dum=QModel%p(QModel%pst(1,14))*pb(1,itd)*vb(1,itd)
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum*damp
 
 
 !..   mode-mode coupling of a1-a2
 !      call Evcoup_aa(dum,itd,p(pst(1,17)),pst(2,17), itemp)         !  coupling of a1 and a2
   dum=QModel%p(QModel%pst(1,17)) * pa(1,itd) * pb(1,itd)
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum*damp
 
 
 !..   mode-mode coupling e-e
 !      call Evcoup_ee(dum,itd, p(pst(1,5)), pst(2,5), itemp)        ! e-e coupling
   dum=QModel%p(QModel%pst(1,5)) * vee(1,itd)
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum
 
 
 !..   3-mode coupling e-e-a2
 !      call Evcoup_eea2(dum,itd,p(pst(1,18)),pst(2,18),itemp)        !  e-e-a2 coupling
   dum=QModel%p(QModel%pst(1,18)) * pb(1,itd) * vee(1,itd)
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum*damp
 
 
 !..   3-mode coupling e-a1-a2
 !      call Evcoup_e1aa2(dum,itd,p(pst(1,20)),pst(2,20),itemp)        !  e-a1-a2 coupling (asym. stretch)
   dum=(QModel%p(QModel%pst(1,20)) * pa(1,itd) * pb(1,itd) * va(1,itd))
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
 !      eref = eref + dum BUG detected 30.09.2015
   eref = eref + dum*damp
 !      call Evcoup_e2aa2(dum,itd,p(pst(1,21)),pst(2,21),itemp)        !  e-a1-a2 coupling (asym. bend)
   dum=(QModel%p(QModel%pst(1,21)) * pa(1,itd) * pb(1,itd) * vb(1,itd))
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum*damp
 
 
 !..   3-mode coupling e-e-a1
 !      call Evcoup_eea1(dum,itd,p(pst(1,24)),pst(2,24),itemp)        !  e-e-a1 coupling
   dum=QModel%p(QModel%pst(1,24)) * pa(1,itd) * vee(1,itd)
-!      write(out_unitp,*)'dum low',dum
+!      write(out_unit,*)'dum low',dum
   eref = eref + dum
 !
 !..   dynamic damping depending on lowest reference state energy:
@@ -1256,7 +1256,7 @@ SUBROUTINE trans_coord (x,qinter,QModel)
 
         ! write cartesian
         !do i=0,3
-        ! write(out_unitp,*)'cart',i,(x(i,j),j=1,3)
+        ! write(out_unit,*)'cart',i,(x(i,j),j=1,3)
         !enddo
 
   ! copy of internal.f subroutine
@@ -1322,7 +1322,7 @@ SUBROUTINE trans_coord (x,qinter,QModel)
   !      xintern(i+3)=xintern(i+3)-phi_ref angle not displaced
         enddo
         xintern(0)=xintern(0)-QModel%beta_ref ! planar = 0 for Eisfeld PES
-  !      write(out_unitp,*)xintern(0),"umbrella"  ! printPES
+  !      write(out_unit,*)xintern(0),"umbrella"  ! printPES
 
   ! compute morse or tmc morse
         do i=1,3
@@ -1374,10 +1374,10 @@ subroutine ff(x,ii,f,QModel)
       ! Power series in Tunable Morse coordinates of order m
       ! exponent is polynomial of order npoly * gaussian + switching function
 
-      !      write(out_unitp,*) 'x:', x
-      !      write(out_unitp,'(10f12.6)') (a(i), i=1,6)
-      !      write(out_unitp,'(10f12.6)') (a(i), i=7,11)
-      !      write(out_unitp,'(10f12.6)') (a(i), i=12,14)
+      !      write(out_unit,*) 'x:', x
+      !      write(out_unit,'(10f12.6)') (a(i), i=1,6)
+      !      write(out_unit,'(10f12.6)') (a(i), i=7,11)
+      !      write(out_unit,'(10f12.6)') (a(i), i=12,14)
       !      stop
 
       !.....set r  r-r_e
@@ -1404,7 +1404,7 @@ subroutine ff(x,ii,f,QModel)
 
       !..   set up full exponent function:
             f=QModel%a(2)  + skew + gaus*poly
-      !      write(out_unitp,*) ii, a(ii,2)
+      !      write(out_unit,*) ii, a(ii,2)
 end subroutine ff
 
 SUBROUTINE vwzprec(n,q)

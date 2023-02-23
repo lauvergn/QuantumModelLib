@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_CH5_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -121,8 +121,8 @@ MODULE QML_CH5_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -135,10 +135,10 @@ MODULE QML_CH5_m
 
     !The value of QModel%ndim must be 1 or 12
     IF (QModel%ndim /= 1 .AND. QModel%ndim /= 12 .AND. QModel%ndim /= 2 ) THEN
-       write(out_unitp,*) 'Write_QModel'
-       CALL QModel%Write_QModel(out_unitp)
-       write(out_unitp,*) ' ERROR in ',name_sub
-       write(out_unitp,*) ' ndim MUST equal to 1 or 2 or 12. ndim: ',QModel%ndim
+       write(out_unit,*) 'Write_QModel'
+       CALL QModel%Write_QModel(out_unit)
+       write(out_unit,*) ' ERROR in ',name_sub
+       write(out_unit,*) ' ndim MUST equal to 1 or 2 or 12. ndim: ',QModel%ndim
        STOP 'ERROR in Init_QML_CH5: ndim MUST equal to 1 or 2 or 12'
     END IF
 
@@ -170,11 +170,11 @@ MODULE QML_CH5_m
       FileName = make_FileName(base_fit4_fileName // TO_string(ii))
     END SELECT
 
-    !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
+    !write(out_unit,*) ii,'FileName: ',FileName ; flush(out_unit)
     CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),     &
                          QModel%nn(:,ii,jj),ndim,QModel%nt(ii,jj),max_nn,       &
                          FileName,QModel%file_exist(ii,jj),print_info=debug)
-    !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
+    !write(out_unit,*) ii,'Read done' ; flush(out_unit)
     IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 energy parameters'
     QModel%ifunc_TO_i1i2(:,ifunc) = [0,0]
     QModel%i1i2_TO_ifunc(0,0)     = ifunc
@@ -199,11 +199,11 @@ MODULE QML_CH5_m
         FileName = make_FileName(base_fit4_fileName // TO_string(ii))
       END SELECT
 
-      !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
+      !write(out_unit,*) ii,'FileName: ',FileName ; flush(out_unit)
       CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),   &
                            QModel%nn(:,ii,jj),ndim,QModel%nt(ii,jj),max_nn,     &
                            FileName,QModel%file_exist(ii,jj),print_info=debug)
-      !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
+      !write(out_unit,*) ii,'Read done' ; flush(out_unit)
 
       IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 Qop parameters'
 
@@ -252,9 +252,9 @@ MODULE QML_CH5_m
 
     deallocate(FileName)
 
-    IF (debug) write(out_unitp,*) 'largest_nn',QModel%largest_nn
+    IF (debug) write(out_unit,*) 'largest_nn',QModel%largest_nn
 
-    IF (debug) write(out_unitp,*) 'init Q0 of CH5' ! for the rigid constraints
+    IF (debug) write(out_unit,*) 'init Q0 of CH5' ! for the rigid constraints
 
     SELECT CASE (QModel%option)
     CASE (3,4)
@@ -274,14 +274,14 @@ MODULE QML_CH5_m
                    TWO*PI/THREE,-TWO*PI/THREE,PI/TWO,PI/TWO]
     END SELECT
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of CH5'
+    IF (debug) write(out_unit,*) 'init d0GGdef of CH5'
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_CH5
@@ -478,11 +478,11 @@ MODULE QML_CH5_m
     integer         :: i,kl,iiq,jjq
     TYPE (dnS_t)    :: tRm ! transformation of Rm
 
-    !write(out_unitp,*) 'in QML_dnvfour_fit3',iq,jq
+    !write(out_unit,*) 'in QML_dnvfour_fit3',iq,jq
 
     IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
-      write(out_unitp,*) ' ERROR in dnvfour'
-      write(out_unitp,*) ' wrong value for iq or jq',iq,jq
+      write(out_unit,*) ' ERROR in dnvfour'
+      write(out_unit,*) ' wrong value for iq or jq',iq,jq
       STOP ' ERROR in QML_dnvfour_fit3: wrong value for iq or jq'
     END IF
 
@@ -556,11 +556,11 @@ MODULE QML_CH5_m
 
     integer         :: i,kl,iiq,jjq,np
 
-    !write(out_unitp,*) 'in QML_dnvfour_fit3',iq,jq
+    !write(out_unit,*) 'in QML_dnvfour_fit3',iq,jq
     dnvfour = ZERO
     IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
-      write(out_unitp,*) ' ERROR in dnvfour'
-      write(out_unitp,*) ' wrong value for iq or jq',iq,jq
+      write(out_unit,*) ' ERROR in dnvfour'
+      write(out_unit,*) ' wrong value for iq or jq',iq,jq
       STOP ' ERROR in QML_dnvfour_fit3: wrong value for iq or jq'
     END IF
 
@@ -645,7 +645,7 @@ MODULE QML_CH5_m
 
    integer :: no,ios,kl,i
 
-   IF (print_info) write(out_unitp,*) 'QML_read_para4d: nom1,max_points: ',nom1,max_points
+   IF (print_info) write(out_unit,*) 'QML_read_para4d: nom1,max_points: ',nom1,max_points
 
 
    CALL file_open2(name_file=nom1,iunit=no,lformatted=.TRUE.,                   &
@@ -654,18 +654,18 @@ MODULE QML_CH5_m
 
      read(no,*) i ! for nb_fit (not used)
 
-     IF (print_info) write(out_unitp,*) 'nom1,nt,ndim: ',nom1,nt,ndim
+     IF (print_info) write(out_unit,*) 'nom1,nt,ndim: ',nom1,nt,ndim
      read(no,*) n(0:ndim)
-     IF (print_info) write(out_unitp,*) 'nom1,n ',nom1,n(0:ndim)
+     IF (print_info) write(out_unit,*) 'nom1,n ',nom1,n(0:ndim)
      IF (n(0) > max_points) THEN
-         write(out_unitp,*) ' ERROR : The number of coefficients (',n(0),') >'
-         write(out_unitp,*) '         than max_points (',max_points,')'
-         write(out_unitp,*) '         STOP in QML_read_para4d'
+         write(out_unit,*) ' ERROR : The number of coefficients (',n(0),') >'
+         write(out_unit,*) '         than max_points (',max_points,')'
+         write(out_unit,*) '         STOP in QML_read_para4d'
          STOP 'ERROR in QML_read_para4d'
      END IF
      DO kl=1,n(0)
         read(no,*) F(kl)
-!       write(out_unitp,*) F(kl)
+!       write(out_unit,*) F(kl)
      END DO
 
      read(no,*) a,b
@@ -673,7 +673,7 @@ MODULE QML_CH5_m
      CLOSE(no)
      exist = .TRUE.
    ELSE
-     IF (print_info) write(out_unitp,*) 'The file (',nom1,') does not exist !!'
+     IF (print_info) write(out_unit,*) 'The file (',nom1,') does not exist !!'
      exist = .FALSE.
    END IF
 

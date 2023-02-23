@@ -45,7 +45,7 @@
 !! @date 10/07/2019
 !!
 MODULE QML_Morse_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -105,10 +105,10 @@ CONTAINS
     !-----------------------------------------------------------
 
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) '  read_param:     ',read_param
-      write(out_unitp,*) '  nio_param_file: ',nio_param_file
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) '  read_param:     ',read_param
+      write(out_unit,*) '  nio_param_file: ',nio_param_file
+      flush(out_unit)
     END IF
 
 
@@ -120,7 +120,7 @@ CONTAINS
     QModel%nsurf    = 1
 
 
-    IF (debug) write(out_unitp,*) 'init default morse parameters (HF)'
+    IF (debug) write(out_unit,*) 'init default morse parameters (HF)'
     ! the initialization with QML_Morse_t does not work. Why ???
     !QModel = QML_Morse_t(D=0.225_Rkind,a=1.1741_Rkind,Req=1.7329_Rkind) ! default values (HF)
     CALL Init0_QML_Morse(QModel,D=0.225_Rkind,a=1.1741_Rkind,req=1.7329_Rkind)
@@ -128,22 +128,22 @@ CONTAINS
     IF (read_param) THEN
       CALL Read_QML_Morse(QModel%D,QModel%a,QModel%req,nio_param_file)
     ELSE
-      IF (debug) write(out_unitp,*) 'init morse parameters (D,a,req), if present'
+      IF (debug) write(out_unit,*) 'init morse parameters (D,a,req), if present'
       IF (present(D))   QModel%D   = D
       IF (present(a))   QModel%a   = a
       IF (present(req)) QModel%req = req
     END IF
 
-    IF (debug) write(out_unitp,*) 'init Q0 of morse'
+    IF (debug) write(out_unit,*) 'init Q0 of morse'
     QModel%Q0 = [QModel%req]
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of morse'
+    IF (debug) write(out_unit,*) 'init d0GGdef of morse'
     QModel%d0GGdef = reshape([ONE/QModel%mu],shape=[1,1])
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_Morse
@@ -162,8 +162,8 @@ CONTAINS
     !-----------------------------------------------------------
 
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     QModel%In_a_Model = .TRUE.
@@ -173,17 +173,17 @@ CONTAINS
 
     IF (present(model_name)) QModel%pot_name = model_name
 
-    IF (debug) write(out_unitp,*) 'init morse parameters (D,a,req), if present'
+    IF (debug) write(out_unit,*) 'init morse parameters (D,a,req), if present'
 
     IF (present(D))   QModel%D   = D
     IF (present(a))   QModel%a   = a
     IF (present(req)) QModel%req = req
 
     IF (debug) THEN
-      write(out_unitp,*) 'D,a,req: ',QModel%D,QModel%a,QModel%req
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'D,a,req: ',QModel%D,QModel%a,QModel%req
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END SUBROUTINE Init0_QML_Morse
@@ -211,24 +211,24 @@ CONTAINS
     D   = D_inout
     a   = a_inout
     req = req_inout
-    write(out_unitp,*) 'read Morse namelist ...'
+    write(out_unit,*) 'read Morse namelist ...'
 
     read(nio,nml=Morse,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_Morse'
-      write(out_unitp,*) ' End-of-file or End-of-record'
-      write(out_unitp,*) ' The namelist "Morse" is probably absent'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,*)
+      write(out_unit,*) ' ERROR in Read_QML_Morse'
+      write(out_unit,*) ' End-of-file or End-of-record'
+      write(out_unit,*) ' The namelist "Morse" is probably absent'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
       STOP ' ERROR in Read_QML_Morse'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_Morse'
-      write(out_unitp,*) ' Some parameter names of the namelist "Morse" are probaly wrong'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,nml=Morse)
+      write(out_unit,*) ' ERROR in Read_QML_Morse'
+      write(out_unit,*) ' Some parameter names of the namelist "Morse" are probaly wrong'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,nml=Morse)
       STOP ' ERROR in Read_QML_Morse'
     END IF
-    !write(out_unitp,nml=Morse)
+    !write(out_unit,nml=Morse)
 
     D_inout    = D
     a_inout    = a
@@ -316,20 +316,20 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) ' QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) ' nderiv:',nderiv
-      write(out_unitp,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) ' QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) ' nderiv:',nderiv
+      write(out_unit,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
     END IF
 
     Mat_OF_PotDia(1,1) = QML_dnMorse(dnQ(1),QModel)
 
     IF (debug) THEN
-      write(out_unitp,*) 'Mat_OF_PotDia'
+      write(out_unit,*) 'Mat_OF_PotDia'
       CALL Write_dnS( Mat_OF_PotDia(1,1),6)
-      write(out_unitp,*)
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*)
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
   END SUBROUTINE EvalPot_QML_Morse
 
@@ -353,22 +353,22 @@ CONTAINS
     !local variable
     TYPE (dnS_t)     :: dnbeta
 
-    !write(out_unitp,*) 'BEGINNING in QML_dnMorse'
-    !write(out_unitp,*) 'dnR'
+    !write(out_unit,*) 'BEGINNING in QML_dnMorse'
+    !write(out_unit,*) 'dnR'
     !CALL Write_dnS(dnR)
 
     dnbeta  = exp(-QModel%a*(dnR-QModel%req))
-    !write(out_unitp,*) 'dnbeta'
+    !write(out_unit,*) 'dnbeta'
     !CALL Write_dnS(dnbeta)
 
     QML_dnMorse = QModel%D * (ONE-dnbeta)**2
 
      CALL dealloc_dnS(dnbeta)
 
-    !write(out_unitp,*) 'Morse at',get_d0(dnR)
+    !write(out_unit,*) 'Morse at',get_d0(dnR)
     !CALL Write_dnS(QML_dnMorse)
-    !write(out_unitp,*) 'END in QML_dnMorse'
-    !flush(out_unitp)
+    !write(out_unit,*) 'END in QML_dnMorse'
+    !flush(out_unit)
 
   END FUNCTION QML_dnMorse
 

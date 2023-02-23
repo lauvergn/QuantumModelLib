@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_XXX_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -85,8 +85,8 @@ MODULE QML_XXX_m
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -96,16 +96,16 @@ MODULE QML_XXX_m
     QModel%pot_name = 'xxx'
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of XXX'
+    IF (debug) write(out_unit,*) 'init Q0 of XXX'
     QModel%Q0 = ....
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of XXX'
+    IF (debug) write(out_unit,*) 'init d0GGdef of XXX'
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_XXX

@@ -38,7 +38,7 @@
 !===========================================================================
 !===========================================================================
 MODULE QML_Empty_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE ADdnSVM_m, ONLY : dnMat_t
   IMPLICIT NONE
 
@@ -132,17 +132,17 @@ MODULE QML_Empty_m
 !-----------------------------------------------------------
 
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
 
     CALL Init0_QML_Empty(QModel,QModel_in)
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_Empty
@@ -161,8 +161,8 @@ MODULE QML_Empty_m
 !-----------------------------------------------------------
 
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     !QModel = QModel_in   ! it does not work always with nagfor
@@ -188,14 +188,14 @@ MODULE QML_Empty_m
     QModel%nb_ScalOp        = QModel_in%nb_ScalOp
 
     IF (QModel%adiabatic) THEN
-      write(out_unitp,*) 'Adiabatic potential . . .'
+      write(out_unit,*) 'Adiabatic potential . . .'
     ELSE
-      write(out_unitp,*) 'Non-adiabatic potential . . .'
+      write(out_unit,*) 'Non-adiabatic potential . . .'
     END IF
-    flush(out_unitp)
+    flush(out_unit)
 
     IF (QModel%numeric) THEN
-      write(out_unitp,*) 'You have decided to perform a numeric checking of the analytic formulas.'
+      write(out_unit,*) 'You have decided to perform a numeric checking of the analytic formulas.'
     END IF
 
     IF (allocated(QModel%pot_name)) deallocate(QModel%pot_name )
@@ -228,9 +228,9 @@ MODULE QML_Empty_m
     IF (allocated(QModel%list_inact)) deallocate(QModel%list_inact)
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END SUBROUTINE Init0_QML_Empty
@@ -298,7 +298,7 @@ MODULE QML_Empty_m
       END DO
     END IF
 
-    !write(out_unitp,*) 'alloc Q0',allocated(Q0)
+    !write(out_unit,*) 'alloc Q0',allocated(Q0)
 
   END FUNCTION get_d0GGdef_QML_Empty
   SUBROUTINE EvalPot_QML_Empty(QModel,Mat_OF_PotDia,dnQ,nderiv)
@@ -356,16 +356,16 @@ MODULE QML_Empty_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) ' BEGINNING ',name_sub
-      write(out_unitp,*) '   nderiv:       ',nderiv
-      flush(out_unitp)
+      write(out_unit,*) ' BEGINNING ',name_sub
+      write(out_unit,*) '   nderiv:       ',nderiv
+      flush(out_unit)
     END IF
 
     ! check if Cart_TO_Q=t
     IF (.NOT. QModel%Cart_TO_Q) THEN
-      write(out_unitp,*) 'ERROR in EvalPotAbInitio_QML_Empty'
-      write(out_unitp,*) 'Cartessian coordinates must be used and Cart_TO_Q=F'
-      write(out_unitp,*) 'Check your data'
+      write(out_unit,*) 'ERROR in EvalPotAbInitio_QML_Empty'
+      write(out_unit,*) 'Cartessian coordinates must be used and Cart_TO_Q=F'
+      write(out_unit,*) 'Check your data'
       STOP 'ERROR in EvalPotAbInitio_QML_Empty'
     END IF
 
@@ -404,14 +404,14 @@ MODULE QML_Empty_m
     open(newunit=nio_otf,file='xx.log',status='old',position='append',form='formatted')
     backspace(nio_otf,err=999)
     read(nio_otf,'(a32)',err=999) labelR
-    !write(out_unitp,*) 'last line: ',labelR
+    !write(out_unit,*) 'last line: ',labelR
     located = verify(labelR,' Normal termination of Gaussian') == 0
     close(nio_otf)
 999 CONTINUE
     IF (.NOT. located) THEN
-      write(out_unitp,*) 'ERROR in EvalPotAbInitio_QML_Empty'
-      write(out_unitp,*) 'no line: "Normal termination of Gaussian"'
-      write(out_unitp,*) 'log file last line: ',labelR
+      write(out_unit,*) 'ERROR in EvalPotAbInitio_QML_Empty'
+      write(out_unit,*) 'no line: "Normal termination of Gaussian"'
+      write(out_unit,*) 'log file last line: ',labelR
       STOP
     END IF
 
@@ -419,7 +419,7 @@ MODULE QML_Empty_m
     !- read the energy from the file energy
     open(newunit=nio_otf,file='xx.fchk',status='old',form='formatted')
     CALL Find_Label(nio_otf,'Total Energy',located)
-    IF (debug) write(out_unitp,*) 'located: Total Energy',located
+    IF (debug) write(out_unit,*) 'located: Total Energy',located
     IF (located) THEN
       read(nio_otf,*,iostat=err) name1_i,d0E
     ELSE
@@ -427,9 +427,9 @@ MODULE QML_Empty_m
     END IF
 
     IF (.NOT. located .OR. err /=0) THEN
-      write(out_unitp,*) 'ERROR in ',name_sub
-      write(out_unitp,*) 'I cannot find the energy in : xx.fchk'
-      write(out_unitp,*) 'located,err',located,err
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'I cannot find the energy in : xx.fchk'
+      write(out_unit,*) 'located,err',located,err
       STOP
     END IF
     close(nio_otf)
@@ -440,15 +440,15 @@ MODULE QML_Empty_m
       open(newunit=nio_otf,file='xx.fchk',status='old',form='formatted')
 
       CALL Find_Label(nio_otf,'Cartesian Gradient',located)
-      IF (debug) write(out_unitp,*) 'located: Cartesian Gradient',located
+      IF (debug) write(out_unit,*) 'located: Cartesian Gradient',located
       IF (located) THEN
         read(nio_otf,*,iostat=err)
         read(nio_otf,*,iostat=err) d1E(:)
       END IF
       IF (.NOT. located .OR. err /=0) THEN
-        write(out_unitp,*) 'ERROR in ',name_sub
-        write(out_unitp,*) 'I cannot find the Gradient in : xx.fchk'
-        write(out_unitp,*) 'located,err',located,err
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'I cannot find the Gradient in : xx.fchk'
+        write(out_unit,*) 'located,err',located,err
         STOP
       END IF
       close(nio_otf)
@@ -458,15 +458,15 @@ MODULE QML_Empty_m
       allocate(d2E(QModel%ndimCart,QModel%ndimCart))
       open(newunit=nio_otf,file='xx.fchk',status='old',form='formatted')
       CALL Find_Label(nio_otf,'Cartesian Force Constants',located)
-      IF (debug) write(out_unitp,*) 'located: Cartesian Force Constants (hessian)',located
+      IF (debug) write(out_unit,*) 'located: Cartesian Force Constants (hessian)',located
       IF (located) THEN
         read(nio_otf,*,iostat=err)
         read(nio_otf,*,iostat=err) ((d2E(i,j),i=1,j),j=1,QModel%ndimCart)
       END IF
       IF (.NOT. located .OR. err /=0) THEN
-        write(out_unitp,*) 'ERROR in ',name_sub
-        write(out_unitp,*) 'I cannot find the hessian in : xx.fchk'
-        write(out_unitp,*) 'located,err',located,err
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'I cannot find the hessian in : xx.fchk'
+        write(out_unit,*) 'located,err',located,err
         STOP
       END IF
 
@@ -488,8 +488,8 @@ MODULE QML_Empty_m
 
     IF (debug) THEN
       CALL write_dnS(Mat_OF_PotDia(1,1),info='dnE')
-      write(out_unitp,*) ' END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
     END IF
 
   END SUBROUTINE EvalPotAbInitio_QML_Empty

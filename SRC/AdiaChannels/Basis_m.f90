@@ -38,7 +38,7 @@
 !===========================================================================
 !===========================================================================
 MODULE AdiaChannels_Basis_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit, in_unitp => in_unit
+  USE QDUtil_NumParameters_m
   IMPLICIT NONE
 
   PRIVATE
@@ -121,34 +121,34 @@ CONTAINS
 
     integer :: ib
 
-    write(out_unitp,*) '-------------------------------------------------'
-    write(out_unitp,*) 'Write_Basis'
-    write(out_unitp,*) 'nb,nq',Basis%nb,Basis%nq
-    write(out_unitp,*) 'Numero of the symmetry plan (symab):',Basis%symab
+    write(out_unit,*) '-------------------------------------------------'
+    write(out_unit,*) 'Write_Basis'
+    write(out_unit,*) 'nb,nq',Basis%nb,Basis%nq
+    write(out_unit,*) 'Numero of the symmetry plan (symab):',Basis%symab
     IF (Basis_IS_allocated(Basis)) THEN
-      CALL Write_Vec(Basis%x,out_unitp,5,info='x')
-      write(out_unitp,*)
-      CALL Write_Vec(Basis%w,out_unitp,5,info='w')
-      write(out_unitp,*)
-      CALL Write_Mat(Basis%d0gb,out_unitp,5,info='d0gb')
-      write(out_unitp,*)
-      CALL Write_Mat(Basis%d1gb(:,:,1),out_unitp,5,info='d1gb')
-      write(out_unitp,*)
-      CALL Write_Mat(Basis%d2gb(:,:,1,1),out_unitp,5,info='d2gb')
+      CALL Write_Vec(Basis%x,out_unit,5,info='x')
+      write(out_unit,*)
+      CALL Write_Vec(Basis%w,out_unit,5,info='w')
+      write(out_unit,*)
+      CALL Write_Mat(Basis%d0gb,out_unit,5,info='d0gb')
+      write(out_unit,*)
+      CALL Write_Mat(Basis%d1gb(:,:,1),out_unit,5,info='d1gb')
+      write(out_unit,*)
+      CALL Write_Mat(Basis%d2gb(:,:,1,1),out_unit,5,info='d2gb')
     ELSE
-      write(out_unitp,*) ' Basis tables (x, w, dngb) are not allocated.'
+      write(out_unit,*) ' Basis tables (x, w, dngb) are not allocated.'
     END IF
 
-    write(out_unitp,*)
-    write(out_unitp,*)
-    write(out_unitp,*) 'nb_basis',Basis%nb_basis
+    write(out_unit,*)
+    write(out_unit,*)
+    write(out_unit,*) 'nb_basis',Basis%nb_basis
     !IF (allocated(Basis%tab_basis)) THEN
     IF (associated(Basis%tab_basis)) THEN
       DO ib=1,size(Basis%tab_basis)
         CALL Write_Basis(Basis%tab_basis(ib))
       END DO
     END IF
-    write(out_unitp,*) '-------------------------------------------------'
+    write(out_unit,*) '-------------------------------------------------'
 
   END SUBROUTINE QML_Write_Basis
   RECURSIVE SUBROUTINE QML_Read_Basis(Basis,nio)
@@ -182,22 +182,22 @@ CONTAINS
 
 
     read(nio,nml=basis_nD,IOSTAT=err_io)
-    write(out_unitp,nml=basis_nD)
+    write(out_unit,nml=basis_nD)
     IF (err_io < 0) THEN
-      write(out_unitp,basis_nD)
-      write(out_unitp,*) ' ERROR in QML_Read_Basis'
-      write(out_unitp,*) '  while reading the namelist "basis_nD"'
-      write(out_unitp,*) ' end of file or end of record'
-      write(out_unitp,*) ' Probably, you forget a basis set ...'
-      write(out_unitp,*) ' Check your data !!'
+      write(out_unit,basis_nD)
+      write(out_unit,*) ' ERROR in QML_Read_Basis'
+      write(out_unit,*) '  while reading the namelist "basis_nD"'
+      write(out_unit,*) ' end of file or end of record'
+      write(out_unit,*) ' Probably, you forget a basis set ...'
+      write(out_unit,*) ' Check your data !!'
       STOP ' ERROR in Read_Basis: problems with the namelist.'
     END IF
     IF (err_io > 0) THEN
-      write(out_unitp,basis_nD)
-      write(out_unitp,*) ' ERROR in QML_Read_Basis'
-      write(out_unitp,*) '  while reading the namelist "basis_nD"'
-      write(out_unitp,*) ' Probably, some arguments of namelist are wrong.'
-      write(out_unitp,*) ' Check your data !!'
+      write(out_unit,basis_nD)
+      write(out_unit,*) ' ERROR in QML_Read_Basis'
+      write(out_unit,*) '  while reading the namelist "basis_nD"'
+      write(out_unit,*) ' Probably, some arguments of namelist are wrong.'
+      write(out_unit,*) ' Check your data !!'
       STOP ' ERROR in Read_Basis: problems with the namelist.'
     END IF
 
@@ -286,8 +286,8 @@ CONTAINS
     integer                   :: iq,ib,jb,nb,nq
 
     IF (.NOT. Basis_IS_allocated(Basis)) THEN
-      write(out_unitp,*) ' ERROR in QML_Set_symab_Basis'
-      write(out_unitp,*) ' the basis is not allocated.'
+      write(out_unit,*) ' ERROR in QML_Set_symab_Basis'
+      write(out_unit,*) ' the basis is not allocated.'
       STOP 'ERROR in QML_Set_symab_Basis: the basis is not allocated'
     END IF
 
@@ -302,10 +302,10 @@ CONTAINS
         Basis%tab_symab(ib) = Basis%symab
       END DO
     CASE DEFAULT
-      write(out_unitp,*) ' ERROR in QML_Set_symab_Basis'
-      write(out_unitp,*) '  Wrong symab value:',Basis%symab
-      write(out_unitp,*) ' Its values must be: [-1,0,1...,7]'
-      write(out_unitp,*) ' CHECK your data!!'
+      write(out_unit,*) ' ERROR in QML_Set_symab_Basis'
+      write(out_unit,*) '  Wrong symab value:',Basis%symab
+      write(out_unit,*) ' Its values must be: [-1,0,1...,7]'
+      write(out_unit,*) ' CHECK your data!!'
       STOP 'ERROR in QML_Set_symab_Basis: Wrong symab value'
     END SELECT
 
@@ -330,7 +330,7 @@ CONTAINS
       END DO
 
       S = matmul(d0bgw,Basis%d0gb)
-      IF (nderiv > -1) CALL Write_Mat(S,out_unitp,5,info='S')
+      IF (nderiv > -1) CALL Write_Mat(S,out_unit,5,info='S')
       Sii = ZERO
       Sij = ZERO
       DO ib=1,Basis%nb
@@ -338,21 +338,21 @@ CONTAINS
         S(ib,ib) = ZERO
       END DO
       Sij = maxval(S)
-      write(out_unitp,*) 'Sii,Sij',Sii,Sij
+      write(out_unit,*) 'Sii,Sij',Sii,Sij
 
       IF (nderiv > 0) THEN
         S = matmul(d0bgw,Basis%d1gb(:,:,1))
-        CALL Write_Mat(S,out_unitp,5,info='<d0b|d1b>')
+        CALL Write_Mat(S,out_unit,5,info='<d0b|d1b>')
       END IF
 
       IF (nderiv > 1) THEN
         S = matmul(d0bgw,Basis%d2gb(:,:,1,1))
-        CALL Write_Mat(S,out_unitp,5,info='<d0b|d2b>')
+        CALL Write_Mat(S,out_unit,5,info='<d0b|d2b>')
       END IF
 
     ELSE
-      write(out_unitp,*) ' WARNNING in QML_CheckOrtho_Basis'
-      write(out_unitp,*) ' the basis is not allocated.'
+      write(out_unit,*) ' WARNNING in QML_CheckOrtho_Basis'
+      write(out_unit,*) ' the basis is not allocated.'
     END IF
 
   END SUBROUTINE QML_CheckOrtho_Basis
@@ -372,10 +372,10 @@ CONTAINS
       Basis%d1gb(:,:,:)   = Basis%d1gb(:,:,:)   * sqrt(sx)*sx
       Basis%d2gb(:,:,:,:) = Basis%d2gb(:,:,:,:) * sqrt(sx)*sx*sx
     ELSE
-      write(out_unitp,*) ' ERROR in QML_Scale_Basis'
-      write(out_unitp,*) ' nb_basis > 0     or ...'
-      write(out_unitp,*) ' sx is too small  or ...'
-      write(out_unitp,*) ' the basis is not allocated.'
+      write(out_unit,*) ' ERROR in QML_Scale_Basis'
+      write(out_unit,*) ' nb_basis > 0     or ...'
+      write(out_unit,*) ' sx is too small  or ...'
+      write(out_unit,*) ' the basis is not allocated.'
       STOP 'ERROR in Scale_Basis: nb_basis > 0'
     END IF
 
@@ -389,14 +389,14 @@ CONTAINS
     real(kind=Rkind),     intent(inout) :: G(:)
 
     IF (.NOT. Basis_IS_allocated(Basis)) THEN
-      write(out_unitp,*) ' ERROR in QML_BasisTOGrid_Basis'
-      write(out_unitp,*) ' the basis is not allocated.'
+      write(out_unit,*) ' ERROR in QML_BasisTOGrid_Basis'
+      write(out_unit,*) ' the basis is not allocated.'
       STOP 'ERROR in QML_BasisTOGrid_Basis: the basis is not allocated.'
     END IF
     IF (size(B) /= Basis%nb) THEN
-      write(out_unitp,*) ' ERROR in QML_BasisTOGrid_Basis'
-      write(out_unitp,*) ' the size of B is different from nb.'
-      write(out_unitp,*) ' size(B), Basis%nb',size(B),Basis%nb
+      write(out_unit,*) ' ERROR in QML_BasisTOGrid_Basis'
+      write(out_unit,*) ' the size of B is different from nb.'
+      write(out_unit,*) ' size(B), Basis%nb',size(B),Basis%nb
       STOP 'ERROR in QML_BasisTOGrid_Basis: wrong B size.'
     END IF
 
@@ -412,20 +412,20 @@ CONTAINS
     real(kind=Rkind),    intent(inout) :: B(:)
 
     IF (.NOT. Basis_IS_allocated(Basis)) THEN
-      write(out_unitp,*) ' ERROR in QML_GridTOBasis_Basis'
-      write(out_unitp,*) ' the basis is not allocated.'
+      write(out_unit,*) ' ERROR in QML_GridTOBasis_Basis'
+      write(out_unit,*) ' the basis is not allocated.'
       STOP 'ERROR in QML_GridTOBasis_Basis: the basis is not allocated.'
     END IF
     IF (size(B) /= Basis%nb) THEN
-      write(out_unitp,*) ' ERROR in QML_GridTOBasis_Basis'
-      write(out_unitp,*) ' the size of B is different from nb.'
-      write(out_unitp,*) ' size(B), Basis%nb',size(B),Basis%nb
+      write(out_unit,*) ' ERROR in QML_GridTOBasis_Basis'
+      write(out_unit,*) ' the size of B is different from nb.'
+      write(out_unit,*) ' size(B), Basis%nb',size(B),Basis%nb
       STOP 'ERROR in QML_GridTOBasis_Basis: wrong B size.'
     END IF
     IF (size(G) /= Basis%nq) THEN
-      write(out_unitp,*) ' ERROR in QML_GridTOBasis_Basis'
-      write(out_unitp,*) ' the size of G is different from nq.'
-      write(out_unitp,*) ' size(G), Basis%nq',size(G),Basis%nq
+      write(out_unit,*) ' ERROR in QML_GridTOBasis_Basis'
+      write(out_unit,*) ' the size of G is different from nq.'
+      write(out_unit,*) ' size(G), Basis%nq',size(G),Basis%nq
       STOP 'ERROR in QML_GridTOBasis_Basis: wrong G size.'
     END IF
 

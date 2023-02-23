@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HCN_Murrell_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -89,8 +89,8 @@ MODULE QML_HCN_Murrell_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -133,27 +133,27 @@ MODULE QML_HCN_Murrell_m
 
       QModel%pot_name       = 'HCN_Murrell_MEP'
     CASE Default
-       write(out_unitp,*) 'Write_QModel'
-       CALL QModel%Write_QModel(out_unitp)
-       write(out_unitp,*) ' ERROR in ',name_sub
-       write(out_unitp,*) ' option: ',QModel%option
-       write(out_unitp,*) ' the possible option are: 0, 1, 11 (3D) or 2,21 (1D-MEP)'
+       write(out_unit,*) 'Write_QModel'
+       CALL QModel%Write_QModel(out_unit)
+       write(out_unit,*) ' ERROR in ',name_sub
+       write(out_unit,*) ' option: ',QModel%option
+       write(out_unit,*) ' the possible option are: 0, 1, 11 (3D) or 2,21 (1D-MEP)'
        STOP 'ERROR in Init_QML_HCN_Murrell: wrong option'
     END SELECT
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of HCN_Murrell (HCN_Murrell minimum)'
+    IF (debug) write(out_unit,*) 'init Q0 of HCN_Murrell (HCN_Murrell minimum)'
     QModel%Q0 = [ZERO,3.18722_Rkind,2.17926_Rkind]
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of HCN_Murrell'
+    IF (debug) write(out_unit,*) 'init d0GGdef of HCN_Murrell'
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
-      CALL Write_QML_HCN_Murrell(QModel,nio=out_unitp)
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      CALL Write_QML_HCN_Murrell(QModel,nio=out_unit)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_HCN_Murrell
@@ -267,7 +267,7 @@ MODULE QML_HCN_Murrell_m
       R2 = dnQ(2)
       R3 = dnQ(3)
     END IF
-    !write(out_unitp,*) 'R1,R2,R3',get_d0(R1),get_d0(R2),get_d0(R3)
+    !write(out_unit,*) 'R1,R2,R3',get_d0(R1),get_d0(R2),get_d0(R3)
 
     R1=R1*autoA
     R2=R2*autoA
@@ -356,20 +356,20 @@ MODULE QML_HCN_Murrell_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) 'size(dnQ)',size(dnQ)
-      write(out_unitp,*) 'dnQ:'
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) 'size(dnQ)',size(dnQ)
+      write(out_unit,*) 'dnQ:'
       DO j=1,size(dnQ,dim=1)
-        CALL Write_dnS(dnQ(j),out_unitp,info='dnQ('// TO_string(j) // ')')
+        CALL Write_dnS(dnQ(j),out_unit,info='dnQ('// TO_string(j) // ')')
       END DO
-      write(out_unitp,*) 'shape dnX',shape(dnX)
-      write(out_unitp,*) 'dnX'
+      write(out_unit,*) 'shape dnX',shape(dnX)
+      write(out_unit,*) 'dnX'
       DO i=1,size(dnX,dim=2)
       DO j=1,size(dnX,dim=1)
-        CALL Write_dnS(dnX(j,i),out_unitp)
+        CALL Write_dnS(dnX(j,i),out_unit)
       END DO
       END DO
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     allocate(Vec23(3))
@@ -381,18 +381,18 @@ MODULE QML_HCN_Murrell_m
     Vec13(:) = dnX(:,3)-dnX(:,1) ! CH
 
     IF (debug) THEN
-      write(out_unitp,*) 'Cart_TO_Q_QML_HCN_Murrell vect done'
-      flush(out_unitp)
+      write(out_unit,*) 'Cart_TO_Q_QML_HCN_Murrell vect done'
+      flush(out_unit)
       DO j=1,size(Vec23,dim=1)
-        CALL Write_dnS(Vec23(j),out_unitp,info='Vec23')
+        CALL Write_dnS(Vec23(j),out_unit,info='Vec23')
       END DO
       DO j=1,size(Vec12,dim=1)
-        CALL Write_dnS(Vec23(j),out_unitp,info='Vec12')
+        CALL Write_dnS(Vec23(j),out_unit,info='Vec12')
       END DO
       DO j=1,size(Vec23,dim=1)
-        CALL Write_dnS(Vec13(j),out_unitp,info='Vec13')
+        CALL Write_dnS(Vec13(j),out_unit,info='Vec13')
       END DO
-      flush(out_unitp)
+      flush(out_unit)
     END IF
     dnQ(1) = sqrt(dot_product(Vec13,Vec13)) ! CH
     dnQ(2) = sqrt(dot_product(Vec12,Vec12)) ! CN
@@ -403,11 +403,11 @@ MODULE QML_HCN_Murrell_m
     CALL dealloc_dnS(Vec13)
 
     IF (debug) THEN
-      CALL Write_dnS(dnQ(1),out_unitp,info='dnQ(1)')
-      CALL Write_dnS(dnQ(2),out_unitp,info='dnQ(2)')
-      CALL Write_dnS(dnQ(3),out_unitp,info='dnQ(3)')
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      CALL Write_dnS(dnQ(1),out_unit,info='dnQ(1)')
+      CALL Write_dnS(dnQ(2),out_unit,info='dnQ(2)')
+      CALL Write_dnS(dnQ(3),out_unit,info='dnQ(3)')
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
   END SUBROUTINE Cart_TO_Q_QML_HCN_Murrell
 

@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_ClH2p_m
-  USE QDUtil_NumParameters_m, out_unitp => out_unit
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -123,8 +123,8 @@ MODULE QML_ClH2p_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
@@ -204,43 +204,43 @@ MODULE QML_ClH2p_m
 
     CASE Default
 
-      write(out_unitp,*) ' ERROR in Init_QML_ClH2p '
-      write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1,2,3,4,5,6'
+      write(out_unit,*) ' ERROR in Init_QML_ClH2p '
+      write(out_unit,*) ' This option is not possible. option: ',QModel%option
+      write(out_unit,*) ' Its value MUST be 1,2,3,4,5,6'
       STOP 'ERROR in Init_QML_ClH2p: wrong option'
 
     END SELECT
-    IF (debug) write(out_unitp,*) 'FileName',FileName
-    flush(out_unitp)
+    IF (debug) write(out_unit,*) 'FileName',FileName
+    flush(out_unit)
 
 
     read(nio_fit,*) name_Qref,nFit
 
-    IF (debug) write(out_unitp,*) 'nFit',nFit
-    flush(out_unitp)
+    IF (debug) write(out_unit,*) 'nFit',nFit
+    flush(out_unit)
 
     ! first the number of points
     QModel%nb_funcModel = 0
     DO ifit=1,nFit
 
       read(nio_fit,nDFitW)
-      IF (debug) write(out_unitp,nDFitW)
-      flush(out_unitp)
+      IF (debug) write(out_unit,nDFitW)
+      flush(out_unit)
 
       IF (err_read < 0) THEN
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' End-of-file or End-of-record'
-        write(out_unitp,*) ' The namelist "nDFitW" is probably absent'
-        write(out_unitp,*) ' from the file: ',trim(adjustl(FileName))
-        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' End-of-file or End-of-record'
+        write(out_unit,*) ' The namelist "nDFitW" is probably absent'
+        write(out_unit,*) ' from the file: ',trim(adjustl(FileName))
+        write(out_unit,*) ' ERROR in ',name_sub
         STOP
       ELSE IF (err_read > 0) THEN
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' Some parameter name of the namelist "nDFitW" are probaly wrong'
-        write(out_unitp,*) ' in the file: ',trim(adjustl(FileName))
-        write(out_unitp,*) ' It should never append !!'
-        write(out_unitp,*) ' Check the fortran'
-        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' Some parameter name of the namelist "nDFitW" are probaly wrong'
+        write(out_unit,*) ' in the file: ',trim(adjustl(FileName))
+        write(out_unit,*) ' It should never append !!'
+        write(out_unit,*) ' Check the fortran'
+        write(out_unit,*) ' ERROR in ',name_sub
         STOP
       END IF
 
@@ -249,7 +249,7 @@ MODULE QML_ClH2p_m
       QModel%nb_funcModel = QModel%nb_funcModel + nb_WB
     END DO
 
-    IF (debug) write(out_unitp,*) 'nb_funcModel',QModel%nb_funcModel
+    IF (debug) write(out_unit,*) 'nb_funcModel',QModel%nb_funcModel
 
     close(nio_fit)
     CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
@@ -262,21 +262,21 @@ MODULE QML_ClH2p_m
     DO ifit=1,nFit
 
       read(nio_fit,nDFitW)
-      IF (debug) write(out_unitp,nDFitW)
+      IF (debug) write(out_unit,nDFitW)
       IF (err_read < 0) THEN
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' End-of-file or End-of-record'
-        write(out_unitp,*) ' The namelist "nDFitW" is probably absent'
-        write(out_unitp,*) ' from the file: ',trim(adjustl(FileName))
-        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' End-of-file or End-of-record'
+        write(out_unit,*) ' The namelist "nDFitW" is probably absent'
+        write(out_unit,*) ' from the file: ',trim(adjustl(FileName))
+        write(out_unit,*) ' ERROR in ',name_sub
         STOP
       ELSE IF (err_read > 0) THEN
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' Some parameter name of the namelist "nDFitW" are probaly wrong'
-        write(out_unitp,*) ' in the file: ',trim(adjustl(FileName))
-        write(out_unitp,*) ' It should never append !!'
-        write(out_unitp,*) ' Check the fortran'
-        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' Some parameter name of the namelist "nDFitW" are probaly wrong'
+        write(out_unit,*) ' in the file: ',trim(adjustl(FileName))
+        write(out_unit,*) ' It should never append !!'
+        write(out_unit,*) ' Check the fortran'
+        write(out_unit,*) ' ERROR in ',name_sub
         STOP
       END IF
 
@@ -289,45 +289,45 @@ MODULE QML_ClH2p_m
         iFunc = iFunc + 1
         read(nio_fit,*) idum,QModel%tab_func(:,iFunc),QModel%F(iFunc)
         QModel%tab_func(3,iFunc) = 2*QModel%tab_func(3,iFunc) ! for even momomials
-        IF (debug) write(out_unitp,*) 'iFunc,tab_func,F',                       &
+        IF (debug) write(out_unit,*) 'iFunc,tab_func,F',                       &
                                   iFunc,QModel%tab_func(:,iFunc),QModel%F(iFunc)
-        flush(out_unitp)
+        flush(out_unit)
       END DO
 
     END DO
-    flush(out_unitp)
+    flush(out_unit)
 
     close(nio_fit)
     deallocate(FileName)
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of ClH2p'
+    IF (debug) write(out_unit,*) 'init Q0 of ClH2p'
     allocate(QModel%Q0(QModel%ndim))
     CALL get_Q0_QML_ClH2p(QModel%Q0,QModel,option=0)
-    IF (debug) write(out_unitp,*) 'QModel%Q0',QModel%Q0
+    IF (debug) write(out_unit,*) 'QModel%Q0',QModel%Q0
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of ClH2p'
+    IF (debug) write(out_unit,*) 'init d0GGdef of ClH2p'
 
     SELECT CASE (QModel%option)
     CASE (1,3)
       IF (QModel%PubliUnit) THEN
-        write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Rad,Bohr,Bohr], Energy: [Hartree]'
+        write(out_unit,*) 'PubliUnit=.TRUE.,  Q:[Rad,Bohr,Bohr], Energy: [Hartree]'
       ELSE
-        write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Rad,Bohr,Bohr], Energy: [Hartree]'
+        write(out_unit,*) 'PubliUnit=.FALSE., Q:[Rad,Bohr,Bohr], Energy: [Hartree]'
       END IF
     CASE (2)
       IF (QModel%PubliUnit) THEN
-        write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad], Energy: [Hartree]'
+        write(out_unit,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad], Energy: [Hartree]'
       ELSE
-        write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad]:, Energy: [Hartree]'
+        write(out_unit,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad]:, Energy: [Hartree]'
       END IF
     END SELECT
-    flush(out_unitp)
+    flush(out_unit)
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_ClH2p
@@ -498,9 +498,9 @@ MODULE QML_ClH2p_m
       write(nio,*) ' with Tnum at the minimun.             '
       write(nio,*) '                                       '
     CASE Default
-        write(out_unitp,*) ' ERROR in write_QModel '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1,2,3,4,5,6'
+        write(out_unit,*) ' ERROR in write_QModel '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1,2,3,4,5,6'
         STOP
     END SELECT
     write(nio,*) '---------------------------------------'
@@ -517,9 +517,9 @@ MODULE QML_ClH2p_m
     integer,                     intent(in)    :: option
 
     IF (size(Q0) /= 3) THEN
-      write(out_unitp,*) ' ERROR in get_Q0_QML_ClH2p '
-      write(out_unitp,*) ' The size of Q0 is not ndim=3: '
-      write(out_unitp,*) ' size(Q0)',size(Q0)
+      write(out_unit,*) ' ERROR in get_Q0_QML_ClH2p '
+      write(out_unit,*) ' The size of Q0 is not ndim=3: '
+      write(out_unit,*) ' size(Q0)',size(Q0)
       STOP 'ERROR in get_Q0_QML_ClH2p: wrong Q0 size'
     END IF
 
@@ -532,9 +532,9 @@ MODULE QML_ClH2p_m
       Q0(:) = [QModel%Qref(2),QModel%Qref(2),QModel%Qref(1)]
 
     CASE Default
-      write(out_unitp,*) ' ERROR in get_Q0_QML_ClH2p '
-      write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1,2,3,4,5,6'
+      write(out_unit,*) ' ERROR in get_Q0_QML_ClH2p '
+      write(out_unit,*) ' This option is not possible. option: ',QModel%option
+      write(out_unit,*) ' Its value MUST be 1,2,3,4,5,6'
       STOP 'ERROR in get_Q0_QML_ClH2p: wrong option'
     END SELECT
 
@@ -568,9 +568,9 @@ MODULE QML_ClH2p_m
       CALL EvalPot1_QML_ClH2p(QModel,Mat_OF_PotDia,dnQsym,nderiv)
 
     CASE Default
-      write(out_unitp,*) ' ERROR in EvalPot_QML_ClH2p '
-      write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1,2,3,4,5,6'
+      write(out_unit,*) ' ERROR in EvalPot_QML_ClH2p '
+      write(out_unit,*) ' This option is not possible. option: ',QModel%option
+      write(out_unit,*) ' Its value MUST be 1,2,3,4,5,6'
       STOP 'ERROR in EvalPot_QML_ClH2p: wrong option'
     END SELECT
 
@@ -591,21 +591,21 @@ MODULE QML_ClH2p_m
     TYPE (dnS_t)              :: Vtemp
     integer                   :: i,j,max_exp
 
-    !write(out_unitp,*) ' sub EvalPot1_QML_ClH2p' ; flush(6)
+    !write(out_unit,*) ' sub EvalPot1_QML_ClH2p' ; flush(6)
     max_exp = maxval(QModel%tab_func)
-    !write(out_unitp,*) ' max_exp',max_exp ; flush(6)
+    !write(out_unit,*) ' max_exp',max_exp ; flush(6)
 
     allocate(DQ(QModel%ndim,max_exp))
     DQ(:,1) = dnQ(:) - QModel%Qref(:)
     DO j=2,size(DQ,dim=2)
       DQ(:,j) = DQ(:,j-1) * DQ(:,1)
     END DO
-    !write(out_unitp,*) ' DQ done' ; flush(6)
+    !write(out_unit,*) ' DQ done' ; flush(6)
 
 
     Mat_OF_PotDia(1,1) = QModel%E0
     Vtemp = Mat_OF_PotDia(1,1) ! to have a correct initialization
-    !write(out_unitp,*) ' Vtemp init done' ; flush(6)
+    !write(out_unit,*) ' Vtemp init done' ; flush(6)
 
 
 
@@ -618,7 +618,7 @@ MODULE QML_ClH2p_m
         END DO
         Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1) + Vtemp
       END DO
-      !CALL Write_dnS(Mat_OF_PotDia(1,1),nio=out_unitp)
+      !CALL Write_dnS(Mat_OF_PotDia(1,1),nio=out_unit)
 
 
 !-----------------------------------------------------------------------!
@@ -626,7 +626,7 @@ MODULE QML_ClH2p_m
    CALL dealloc_dnS(Vtemp)
    CALL dealloc_dnS(DQ)
 
-   !write(out_unitp,*) ' end EvalPot1_QML_ClH2p' ; flush(6)
+   !write(out_unit,*) ' end EvalPot1_QML_ClH2p' ; flush(6)
 
  END SUBROUTINE EvalPot1_QML_ClH2p
 END MODULE QML_ClH2p_m
