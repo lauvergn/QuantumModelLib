@@ -76,7 +76,8 @@ MODULE QML_H2SiN_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_H2SiN(QModel_in,read_param,nio_param_file) RESULT(QModel)
-    USE QDUtil_m,         ONLY : Identity_Mat, make_FileName, file_open2
+    USE QDUtil_m,         ONLY : Identity_Mat, file_open2
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName
     IMPLICIT NONE
 
     TYPE (QML_H2SiN_t)                          :: QModel ! RESULT
@@ -110,7 +111,7 @@ MODULE QML_H2SiN_m
     SELECT CASE (QModel%option)
     CASE (1)
 
-      FileName = make_FileName('InternalData/H2SiN/h2sinf12a.pot')
+      FileName = make_QMLInternalFileName('InternalData/H2SiN/h2sinf12a.pot')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       read(nio_fit,*) QModel%nb_funcModel
       allocate(QModel%Qref(QModel%ndim))
@@ -133,7 +134,7 @@ MODULE QML_H2SiN_m
 
     CASE (2)
 
-      FileName = make_FileName('InternalData/H2SiN/h2sinf12b.pot')
+      FileName = make_QMLInternalFileName('InternalData/H2SiN/h2sinf12b.pot')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       read(nio_fit,*) QModel%nb_funcModel
       allocate(QModel%Qref(QModel%ndim))
@@ -155,7 +156,7 @@ MODULE QML_H2SiN_m
 
     CASE (3)
 
-      FileName = make_FileName('InternalData/H2SiN/h2sincc.pot')
+      FileName = make_QMLInternalFileName('InternalData/H2SiN/h2sincc.pot')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       read(nio_fit,*) QModel%nb_funcModel
       allocate(QModel%Qref(QModel%ndim))

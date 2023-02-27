@@ -80,7 +80,8 @@ MODULE QML_H2NSi_m
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_H2NSi(QModel_in,read_param,nio_param_file) RESULT(QModel)
-    USE QDUtil_m, ONLY : Identity_Mat, make_FileName, file_open2
+    USE QDUtil_m,         ONLY : Identity_Mat, file_open2
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName
     IMPLICIT NONE
 
     TYPE (QML_H2NSi_t)                           :: QModel
@@ -115,7 +116,7 @@ MODULE QML_H2NSi_m
     SELECT CASE (QModel%option)
     CASE (1)
 
-      FileName = make_FileName('InternalData/H2NSi/h2nsif12a.txt')
+      FileName = make_QMLInternalFileName('InternalData/H2NSi/h2nsif12a.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       allocate(QModel%Qref(QModel%ndim))
 
@@ -139,7 +140,7 @@ MODULE QML_H2NSi_m
 
     CASE (2)
 
-      FileName = make_FileName('InternalData/H2NSi/h2nsicc.pot')
+      FileName = make_QMLInternalFileName('InternalData/H2NSi/h2nsicc.pot')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       read(nio_fit,*) QModel%nb_funcModel
       allocate(QModel%Qref(QModel%ndim))

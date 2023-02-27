@@ -79,48 +79,41 @@ MODULE Model_m
       'unknown: -D__QML_VER=?'
 #endif
 
-character (len=*), parameter :: QML_path   =                            &
-#if defined(__QMLPATH)
-       __QMLPATH
-#else
-      '~/QuantumModelLib'
-#endif
-
-character (len=*), parameter :: compile_date =                          &
+  character (len=*), parameter :: compile_date =                          &
 #if defined(__COMPILE_DATE)
       __COMPILE_DATE
 #else
       'unknown: -D__COMPILE_DATE=?'
 #endif
 
-character (len=*), parameter :: compile_host =                          &
+  character (len=*), parameter :: compile_host =                          &
 #if defined(__COMPILE_HOST)
       __COMPILE_HOST
 #else
       "unknown: -D__COMPILE_HOST=?"
 #endif
 
-character (len=*), parameter :: compiler =                              &
+  character (len=*), parameter :: compiler =                              &
 #if defined(__COMPILER)
       __COMPILER
 #else
       "unknown: -D__COMPILER=?"
 #endif
 
-character (len=*), parameter :: compiler_ver =                          &
+  character (len=*), parameter :: compiler_ver =                          &
 #if defined(__COMPILER_VER)
       __COMPILER_VER
 #else
       "unknown: -D__COMPILER_VER=?"
 #endif
 
-character (len=*), parameter :: compiler_opt =                          &
+  character (len=*), parameter :: compiler_opt =                          &
 #if defined(__COMPILER_OPT)
       __COMPILER_OPT
 #else
       "unknown: -D__COMPILER_OPT=?"
 #endif
-character (len=*), parameter :: compiler_libs =                         &
+  character (len=*), parameter :: compiler_libs =                         &
 #if defined(__COMPILER_LIBS)
        __COMPILER_LIBS
 #else
@@ -278,7 +271,7 @@ CONTAINS
                         option,PubliUnit,Print_init,Vib_adia,                   &
                         Phase_Following,Phase_checking)
 
-  USE QDUtil_m,         ONLY : TO_lowercase, File_path
+  USE QDUtil_m,         ONLY : TO_lowercase
   USE QMLLib_UtilLib_m
 
   USE QML_Empty_m
@@ -389,9 +382,6 @@ CONTAINS
       write(out_unit,*) '================================================='
       write(out_unit,*) '== Initialization of the Model =================='
     END IF
-
-    ! set the "File_path" in the Lib_module.f90
-    File_path = trim(adjustl(QML_path))
 
     ! test the QML_path variable (it enables to test is the QML directory has been moved)
     CALL check_QML_Path()
@@ -1138,14 +1128,14 @@ CONTAINS
   END SUBROUTINE get_Q0_Model
 
   SUBROUTINE check_QML_Path()
-    USE QDUtil_m, ONLY : make_FileName
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName, QML_path
     IMPLICIT NONE
 
     character (len=:), allocatable :: FileName
     logical :: file_exist
 
 
-    FileName = make_FileName('InternalData/Test_QML_Path.txt')
+    FileName = make_QMLInternalFileName('InternalData/Test_QML_Path.txt')
 
     inquire(file=FileName,exist=file_exist)
 

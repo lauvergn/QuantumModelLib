@@ -76,7 +76,9 @@ MODULE QML_HNNHp_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HNNHp(QModel_in,read_param,nio_param_file) RESULT(QModel)
-    USE QDUtil_m,         ONLY : Identity_Mat, make_FileName, file_open2
+    USE QDUtil_m,         ONLY : Identity_Mat, file_open2
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName
+
     IMPLICIT NONE
 
     TYPE (QML_HNNHp_t)                           :: QModel ! RESULT
@@ -109,7 +111,7 @@ MODULE QML_HNNHp_m
     SELECT CASE (QModel%option)
     CASE (1)
 
-      FileName = make_FileName('InternalData/HNNHp/n2h2pcc5.txt')
+      FileName = make_QMLInternalFileName('InternalData/HNNHp/n2h2pcc5.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       read(nio_fit,*) QModel%nb_funcModel
       !write(out_unit,*) 'nb_funcModel',QModel%nb_funcModel

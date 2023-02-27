@@ -82,7 +82,8 @@ MODULE QML_HNO3_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HNO3(QModel_in,read_param,nio_param_file) RESULT(QModel)
-    USE QDUtil_m,         ONLY : Identity_Mat, TO_string, make_FileName, file_open2
+    USE QDUtil_m,         ONLY : Identity_Mat, TO_string, file_open2
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName
     IMPLICIT NONE
 
     TYPE (QML_HNO3_t)                           :: QModel ! RESULT
@@ -133,7 +134,7 @@ MODULE QML_HNO3_m
     jj=0
     DO ii=0,max_fit
 
-      FileName = make_FileName('InternalData/HNO3/inter_' // TO_string(ii))
+      FileName = make_QMLInternalFileName('InternalData/HNO3/inter_' // TO_string(ii))
       CALL QML_read_para4d_HNO3(QModel%F(:,ii,jj),QModel%nn(:,ii,jj),ndim,       &
                                 QModel%nt(ii,jj),max_nn,FileName,exist)
       IF ( .NOT. exist) STOP ' ERROR while reading HNO3 parameters'
@@ -143,7 +144,7 @@ MODULE QML_HNO3_m
     !hess(i,j)
     DO jj=1,max_fit
     DO ii=1,max_fit
-      FileName = make_FileName('InternalData/HNO3/inter_' //            &
+      FileName = make_QMLInternalFileName('InternalData/HNO3/inter_' //            &
                                 TO_string(ii) // '_' // TO_string(jj) )
       CALL QML_read_para4d_HNO3(QModel%F(:,ii,jj),QModel%nn(:,ii,jj),ndim,       &
                                 QModel%nt(ii,jj),max_nn,FileName,exist)

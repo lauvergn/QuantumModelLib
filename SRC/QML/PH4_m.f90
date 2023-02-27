@@ -107,7 +107,8 @@ MODULE QML_PH4_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_PH4(QModel_in,read_param,nio_param_file) RESULT(QModel)
-    USE QDUtil_m,         ONLY : Identity_Mat, TO_string, make_FileName, file_open2
+    USE QDUtil_m,         ONLY : Identity_Mat, TO_string, file_open2
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName
     IMPLICIT NONE
 
     TYPE (QML_PH4_t)                             :: QModel ! RESULT
@@ -197,11 +198,11 @@ MODULE QML_PH4_m
     read_ab = .FALSE.
     SELECT CASE (QModel%option)
     CASE (3)
-      FileName = make_FileName(base_fit3_Ene1_fileName)
+      FileName = make_QMLInternalFileName(base_fit3_Ene1_fileName)
     CASE (4,5) ! 4 harmonic along the path, 5 harmonic + anharmonic(Rp) along the path
-      FileName = make_FileName(base_fit3_Ene2_fileName)
+      FileName = make_QMLInternalFileName(base_fit3_Ene2_fileName)
     CASE Default
-      FileName = make_FileName(base_fit3_Ene2_fileName)
+      FileName = make_QMLInternalFileName(base_fit3_Ene2_fileName)
     END SELECT
 
     !write(out_unit,*) i,'FileName: ',FileName ; flush(out_unit)
@@ -222,9 +223,9 @@ MODULE QML_PH4_m
 
       SELECT CASE (QModel%option)
       CASE (3,4,5)
-        FileName = make_FileName(base_fit3_Qopt_fileName // TO_string(i))
+        FileName = make_QMLInternalFileName(base_fit3_Qopt_fileName // TO_string(i))
       CASE Default
-        FileName = make_FileName(base_fit3_Qopt_fileName // TO_string(i))
+        FileName = make_QMLInternalFileName(base_fit3_Qopt_fileName // TO_string(i))
       END SELECT
 
       read_ab = (i == 2)
@@ -250,9 +251,9 @@ MODULE QML_PH4_m
 
       SELECT CASE (QModel%option)
       CASE (3,4,5)
-        FileName = make_FileName(base_fit3_grad_fileName // TO_string(i))
+        FileName = make_QMLInternalFileName(base_fit3_grad_fileName // TO_string(i))
       CASE Default
-        FileName = make_FileName(base_fit3_grad_fileName // TO_string(i))
+        FileName = make_QMLInternalFileName(base_fit3_grad_fileName // TO_string(i))
       END SELECT
 
       !write(out_unit,*) i,'FileName: ',FileName ; flush(out_unit)
@@ -275,10 +276,10 @@ MODULE QML_PH4_m
 
       SELECT CASE (QModel%option)
       CASE (3,4,5)
-        FileName = make_FileName(base_fit3_hess_fileName //                     &
+        FileName = make_QMLInternalFileName(base_fit3_hess_fileName //                     &
                                        TO_string(i) // '_' // TO_string(j) )
       CASE Default
-        FileName = make_FileName(base_fit3_hess_fileName //                     &
+        FileName = make_QMLInternalFileName(base_fit3_hess_fileName //                     &
                                        TO_string(i) // '_' // TO_string(j) )
       END SELECT
 
@@ -301,7 +302,7 @@ MODULE QML_PH4_m
 
         read_ab = .FALSE.
 
-        FileName = make_FileName(base_fit3_AnHar_fileName // TO_string(i-1))
+        FileName = make_QMLInternalFileName(base_fit3_AnHar_fileName // TO_string(i-1))
 
         !write(out_unit,*) i,'FileName: ',FileName ; flush(out_unit)
         CALL QML_read_para4d(QModel%a(ifunc),QModel%b(ifunc),QModel%F(:,ifunc), &

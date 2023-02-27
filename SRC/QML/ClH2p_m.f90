@@ -80,7 +80,8 @@ MODULE QML_ClH2p_m
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_ClH2p(QModel_in,read_param,nio_param_file) RESULT(QModel)
-    USE QDUtil_m, ONLY : make_FileName, file_open2
+    USE QDUtil_m,         ONLY : file_open2
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName
     IMPLICIT NONE
 
     TYPE (QML_ClH2p_t)                           :: QModel
@@ -143,7 +144,7 @@ MODULE QML_ClH2p_m
         -0.0000062919_Rkind, 0.0002793633_Rkind,0.0000000000_Rkind,             &
         -0.0000000000_Rkind,-0.0000000000_Rkind,0.0002806450_Rkind],shape=[3,3])
 
-      FileName = make_FileName('InternalData/ClH2p/ClH2p_B3LYP_cc-pVTZ.txt')
+      FileName = make_QMLInternalFileName('InternalData/ClH2p/ClH2p_B3LYP_cc-pVTZ.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       QModel%E0 = ZERO
 
@@ -154,7 +155,7 @@ MODULE QML_ClH2p_m
         -0.0000012817_Rkind, 0.0005600083_Rkind,-0.0000062919_Rkind,            &
         -0.0000062919_Rkind,-0.0000062919_Rkind,0.0001817892_Rkind],shape=[3,3])
 
-        FileName = make_FileName('InternalData/ClH2p/ClH2p_B3LYP_cc-pVTZ.txt')
+        FileName = make_QMLInternalFileName('InternalData/ClH2p/ClH2p_B3LYP_cc-pVTZ.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       QModel%E0 = ZERO
 
@@ -165,7 +166,7 @@ MODULE QML_ClH2p_m
         -0.0000062919_Rkind, 0.0002793633_Rkind,0.0000000000_Rkind,             &
         -0.0000000000_Rkind,-0.0000000000_Rkind,0.0002806450_Rkind],shape=[3,3])
 
-      FileName = make_FileName('InternalData/ClH2p/ClH2p_B3LYP_cc-pVTZ_v2.txt')
+      FileName = make_QMLInternalFileName('InternalData/ClH2p/ClH2p_B3LYP_cc-pVTZ_v2.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       QModel%E0 = -461.06327752734671_Rkind
 
@@ -176,7 +177,7 @@ MODULE QML_ClH2p_m
         -0.0000012817_Rkind, 0.0005600083_Rkind,-0.0000062919_Rkind,            &
         -0.0000062919_Rkind,-0.0000062919_Rkind,0.0001817892_Rkind],shape=[3,3])
 
-        FileName = make_FileName('InternalData/ClH2p/ClH2p_B3LYP_cc-pVTZ_v2.txt')
+        FileName = make_QMLInternalFileName('InternalData/ClH2p/ClH2p_B3LYP_cc-pVTZ_v2.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       QModel%E0 = -461.06327752734671_Rkind
 
@@ -187,7 +188,7 @@ MODULE QML_ClH2p_m
         -0.0000063402_Rkind, 0.0002794155_Rkind,0.0000000000_Rkind,             &
         -0.0000000000_Rkind,-0.0000000000_Rkind,0.0002805928_Rkind],shape=[3,3])
 
-      FileName = make_FileName('InternalData/ClH2p/ClH2p_CCSDTF12_cc-pVTZ.txt')
+      FileName = make_QMLInternalFileName('InternalData/ClH2p/ClH2p_CCSDTF12_cc-pVTZ.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       QModel%E0 = -460.59052688_Rkind
 
@@ -198,7 +199,7 @@ MODULE QML_ClH2p_m
         -0.0000011773_Rkind, 0.0005600083_Rkind,-0.0000063402_Rkind,            &
         -0.0000063402_Rkind,-0.0000063402_Rkind, 0.0001843648_Rkind],shape=[3,3])
 
-        FileName = make_FileName('InternalData/ClH2p/ClH2p_CCSDTF12_cc-pVTZ.txt')
+        FileName = make_QMLInternalFileName('InternalData/ClH2p/ClH2p_CCSDTF12_cc-pVTZ.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       QModel%E0 = -460.59052688_Rkind
 

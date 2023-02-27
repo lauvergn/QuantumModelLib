@@ -44,7 +44,15 @@ MODULE QMLLib_UtilLib_m
 
   PRIVATE
 
-  PUBLIC :: Find_Label,NFind_Label,FFind_Label,Pot_Name_Analysis,Read_alloc_Vect
+  character (len=*), parameter :: QML_path   =                         &
+#if defined(__QMLPATH)
+    __QMLPATH
+#else
+    '~/QuantumModelLib'
+#endif
+
+  PUBLIC :: Find_Label,NFind_Label,FFind_Label,Pot_Name_Analysis,      &
+            Read_alloc_Vect,make_QMLInternalFileName,QML_path
 
   
   INTERFACE Pot_Name_Analysis
@@ -270,4 +278,43 @@ MODULE QMLLib_UtilLib_m
     !flush(out_unit)
 
   END FUNCTION QML_Read_alloc_Vect
+
+  FUNCTION make_QMLInternalFileName(FileName,FPath) RESULT(make_FileName)
+    USE QDUtil_m, ONLY : err_FileName
+    IMPLICIT NONE
+
+    character (len=:), allocatable          :: make_FileName
+
+    character(len=*), intent(in)            :: FileName
+    character(len=*), intent(in), optional  :: FPath
+
+    character (len=:), allocatable          :: FPath_loc
+
+
+    integer :: ilast_char,err
+
+    IF (present(FPath)) THEN
+      FPath_loc = FPath
+    ELSE
+      FPath_loc = QML_path
+    END IF
+
+    err = err_FileName(FileName,name_sub='make_QMLInternalFileName')
+    IF (err /= 0) STOP 'ERROR in make_QMLInternalFileName: problem with the FileName'
+
+    ilast_char = len_trim(FPath_loc)
+
+    IF (FileName(1:1) == "/" .OR. FileName(1:1) == "~" .OR. ilast_char == 0) THEN
+      make_FileName = trim(adjustl(FileName))
+    ELSE
+      IF (FPath_loc(ilast_char:ilast_char) == "/") THEN
+        make_FileName = trim(adjustl(FPath_loc)) // trim(adjustl(FileName))
+      ELSE
+        make_FileName = trim(adjustl(FPath_loc)) // '/' // trim(adjustl(FileName))
+      END IF
+    END IF
+
+    IF (allocated(FPath_loc)) deallocate(FPath_loc)
+
+  END FUNCTION make_QMLInternalFileName
 END MODULE QMLLib_UtilLib_m
