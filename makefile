@@ -136,7 +136,50 @@ ifeq ($(FFC),gfortran)
 endif
 #=================================================================================
 #=================================================================================
+#=================================================================================
+#=================================================================================
+# ifort compillation v17 v18 with mkl
+#=================================================================================
+ifeq ($(FFC),ifort)
 
+  # opt management
+  ifeq ($(OOPT),1)
+      #FFLAGS = -O -parallel -g -traceback
+      FFLAGS = -O  -g -traceback
+  else
+      FFLAGS = -O0 -check all -g -traceback
+  endif
+
+  # where to store the modules
+  FFLAGS +=-module $(MOD_DIR)
+
+  # omp management
+  ifeq ($(OOMP),1)
+    FFLAGS += -qopenmp
+  endif
+
+  # some cpreprocessing
+  FFLAGS += -cpp $(CPPSHELL_QML)
+
+  # where to look the .mod files
+  FFLAGS += -I$(QDMOD_DIR) -I$(ADMOD_DIR)
+
+  FLIB    = $(EXTLib)
+  ifeq ($(LLAPACK),1)
+    #FLIB += -mkl -lpthread
+    #FLIB += -qmkl -lpthread
+    IntLIB =  ${MKLROOT}/lib/libmkl_blas95_ilp64.a ${MKLROOT}/lib/libmkl_lapack95_ilp64.a ${MKLROOT}/lib/libmkl_intel_ilp64.a \
+             ${MKLROOT}/lib/libmkl_intel_thread.a ${MKLROOT}/lib/libmkl_core.a -liomp5 -lpthread -lm -ldl
+  else
+    IntLIB = -lpthread
+  endif
+  FLIB += $(IntLIB)
+
+  FC_VER = $(shell $(FFC) --version | head -1 )
+
+endif
+#=================================================================================
+#=================================================================================
 $(info ***********************************************************************)
 $(info ***********OS:           $(OS))
 $(info ***********COMPILER:     $(FFC))
@@ -349,49 +392,3 @@ $(OBJ_DIR)/TEST_model.o:   $(OBJ_DIR)/Model_m.o $(OBJ_DIR)/Opt_m.o $(OBJ_DIR)/IR
 $(OBJ_DIR)/TEST_driver.o:  $(OBJ_DIR)/Model_driver.o
 #
 ############################################################################
-
-
-
-#=================================================================================
-#=================================================================================
-# ifort compillation v17 v18 with mkl
-#=================================================================================
-ifeq ($(FFC),ifort)
-
-  # opt management
-  ifeq ($(OOPT),1)
-      #F90FLAGS = -O -parallel -g -traceback
-      FFLAGS = -O  -g -traceback
-  else
-      FFLAGS = -O0 -check all -g -traceback
-  endif
-
-  # where to store the modules
-  FFLAGS +=-module $(MOD_DIR)
-
-  # omp management
-  ifeq ($(OOMP),1)
-    FFLAGS += -qopenmp
-  endif
-
-  # some cpreprocessing
-  FFLAGS += -cpp $(CPPSHELL_QML)
-
-  # where to look the .mod files
-  FFLAGS += -I$(QDMOD_DIR) -I$(ADMOD_DIR)
-
-  FLIB    = $(EXTLib)
-  ifeq ($(LLAPACK),1)
-    #FLIB += -mkl -lpthread
-    #FLIB += -qmkl -lpthread
-    FLIB +=  ${MKLROOT}/lib/libmkl_blas95_ilp64.a ${MKLROOT}/lib/libmkl_lapack95_ilp64.a ${MKLROOT}/lib/libmkl_intel_ilp64.a \
-             ${MKLROOT}/lib/libmkl_intel_thread.a ${MKLROOT}/lib/libmkl_core.a -liomp5 -lpthread -lm -ldl
-  else
-    FLIB += -lpthread
-  endif
-
-  FC_VER = $(shell $(F90) --version | head -1 )
-
-endif
-#=================================================================================
-#=================================================================================

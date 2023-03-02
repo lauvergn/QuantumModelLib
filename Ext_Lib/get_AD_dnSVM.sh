@@ -15,7 +15,6 @@ if (test -d $LOC_version) then
   exit 0
 fi
 
-
 rm -rf $BaseName* #always remove the link
 
 
