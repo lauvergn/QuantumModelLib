@@ -296,7 +296,7 @@ CONTAINS
   USE QML_H2O_m
   USE QML_ClH2p_m
   USE QML_ClH2p_Botschwina_m
-  USE QML_H2O_m
+  USE QML_Bottleneck_m
   USE QML_HNO3_m
   USE QML_NO3_m
   USE QML_CH5_m
@@ -892,6 +892,8 @@ CONTAINS
       allocate(QML_H2O_t :: QModel%QM)
       QModel%QM = Init_QML_H2O(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
+    CASE ('bottleneck')
+      QModel%QM = Init_QML_Bottleneck(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
     CASE ('clh2+','clh2p')
       !! === README ==
       !! ClH2+ potential:
