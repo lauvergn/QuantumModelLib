@@ -892,7 +892,21 @@ CONTAINS
       allocate(QML_H2O_t :: QModel%QM)
       QModel%QM = Init_QML_H2O(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
-    CASE ('bottleneck')
+    CASE ('bottleneck','eckart')
+      !! === README ==
+      !!Bottleneck potential: 1D Eckart Barrier + quadratic contributions'
+      !! pot_name  = 'Bottleneck' or 'Eckart'
+      !! option    = 1, 2 (default 2)
+      !! ndim      >= 1
+      !! nsurf     = 1
+      !!
+      !! ref (option 1): Trahan, Wyatt and Poirier, J Chem Phys 122, 164104 (2005)'
+      !!   Multidimensional quantum trajectories: Applications of the derivative propagation method.'
+      !! ref (option 2): Dupuy, Lauvergnat and Scribano, CPL 787, 139241 (2022)'
+      !!   Smolyak representations with absorbing boundary conditions ...'
+      !!       for reaction path Hamiltonian model of reactive scattering.'
+      !!   DOI: 10.1016/j.cplett.2021.139241'
+      !! === END README ==
       QModel%QM = Init_QML_Bottleneck(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
     CASE ('clh2+','clh2p')
       !! === README ==

@@ -1,7 +1,7 @@
 =========================================
 =========================================
  QuantumModelLib* is a free software under the MIT Licence.
-  date: 25/11/2022
+  date: 21/02/2023
 
     Copyright (c) 2022 David Lauvergnat [1]
       with contributions of:
@@ -39,10 +39,9 @@ or with  lapack/blas (linux)
       QuantumModelLib_path contains the path of the QuantumModelLib
 
 
- 3) In your fortan code
+ 3) In your Fortan code
 
- In the following, it shows how to initialize, compute with the driver subroutines 
- (only the full library is needed, the Fortran module files are not required)
+ In the following, it shows how to initialize, compute with the driver subroutines (the full library is needed, the Fortran module files are not required)
 
  3a1) Initialization of the model (the Potential)
 
@@ -65,8 +64,6 @@ or with  lapack/blas (linux)
         It initializes the phenol potential (2D and 3 PES).
         => Computation of the diabatic surface
 
-
-        See the list of models below.
 
  3a2) Initialization of the potential (reading the model)
 
@@ -442,6 +439,24 @@ From the main QuantumModelLib directory:
       !! nsurf     = 1
       !! refs: Quadratic model potential for H2O; TIPS force constants taken from:  
       !!       Dang and Pettitt, J. Chem. Phys. 91 (1987)
+=========================================
+=========================================
+=========================================
+=========================================
+      !! pot_name  = 'Bottleneck' or 'Eckart'
+=========================================
+      !!Bottleneck potential: 1D Eckart Barrier + quadratic contributions'
+      !! pot_name  = 'Bottleneck' or 'Eckart'
+      !! option    = 1, 2 (default 2)
+      !! ndim      >= 1
+      !! nsurf     = 1
+      !!
+      !! ref (option 1): Trahan, Wyatt and Poirier, J Chem Phys 122, 164104 (2005)'
+      !!   Multidimensional quantum trajectories: Applications of the derivative propagation method.'
+      !! ref (option 2): Dupuy, Lauvergnat and Scribano, CPL 787, 139241 (2022)'
+      !!   Smolyak representations with absorbing boundary conditions ...'
+      !!       for reaction path Hamiltonian model of reactive scattering.'
+      !!   DOI: 10.1016/j.cplett.2021.139241'
 =========================================
 =========================================
 =========================================

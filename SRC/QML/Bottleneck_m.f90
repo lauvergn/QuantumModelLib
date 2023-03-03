@@ -111,11 +111,13 @@ MODULE QML_Bottleneck_m
 
     CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
 
-    QModel%nsurf    = 1
     QModel%pot_name = 'Bottleneck'
+    QModel%nsurf    = 1
     QModel%ndim     = max(QModel%ndim,1)
+    IF (QModel%ndim == 1) QModel%pot_name = 'Eckart'
 
-    IF (QModel%option <= 1 .OR. QModel%option >= 2) QModel%option = 1
+
+    IF (QModel%option < 1 .OR. QModel%option > 2) QModel%option = 2
 
     SELECT CASE (QModel%option)
     CASE (1)
@@ -244,7 +246,7 @@ MODULE QML_Bottleneck_m
     write(nio,*) ' option 1:                             '
     write(nio,*) ' ref: Trahan, Wyatt and Poirier, J Chem Phys 122, 164104 (2005)'
     write(nio,*) '   Multidimensional quantum trajectories: Applications of the derivative propagation method.'
-    write(nio,*) ' option 2:                             '
+    write(nio,*) ' option 2 (default):                             '
     write(nio,*) ' ref: Dupuy, Lauvergnat and Scribano, CPL 787, 139241 (2022)'
     write(nio,*) '   Smolyak representations with absorbing boundary conditions ...'
     write(nio,*) '       for reaction path Hamiltonian model of reactive scattering.'
