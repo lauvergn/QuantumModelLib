@@ -180,14 +180,14 @@ SUBROUTINE sub_Write_Qmodel(nio)
   CALL Write_Model(QuantumModel,nio)
 
 END SUBROUTINE sub_Write_Qmodel
-SUBROUTINE sub_Qmodel_Opt(Q,i_surf,nb_deg,icv,Max_it)
+SUBROUTINE sub_Qmodel_Opt(Q,i_surf,nb_neg,icv,Max_it)
   USE QDUtil_NumParameters_m
   USE Model_m
   USE Opt_m
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(inout)     :: Q(QuantumModel%ndim) ! intial and final geometry
-  integer,                intent(in)        :: i_surf,nb_deg,icv,Max_it
+  integer,                intent(in)        :: i_surf,nb_neg,icv,Max_it
 
   !local variables
   TYPE (QML_Opt_t)               :: Opt_param
@@ -202,7 +202,7 @@ SUBROUTINE sub_Qmodel_Opt(Q,i_surf,nb_deg,icv,Max_it)
   Opt_param%i_surf = i_surf
   IF (Opt_param%i_surf < 1) Opt_param%i_surf = 1
 
-  Opt_param%nb_neg = nb_deg
+  Opt_param%nb_neg = nb_neg
 
   Opt_param%max_it = Max_it
 
