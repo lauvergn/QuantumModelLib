@@ -224,7 +224,7 @@ MODULE QML_ClH2p_m
     QModel%nb_funcModel = 0
     DO ifit=1,nFit
 
-      read(nio_fit,nDFitW)
+      read(nio_fit,nDFitW,IOSTAT=err_read)
       IF (debug) write(out_unit,nDFitW)
       flush(out_unit)
 
