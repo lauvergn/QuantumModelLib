@@ -628,8 +628,9 @@ MODULE QML_Empty_m
     TYPE (dnS_t),            intent(inout) :: dnQ(:)
     integer,                 intent(in)    :: nderiv
 
-
-    dnQ(:) = ZERO
+    write(out_unit,*) 'ERROR in Cart_TO_Q_QModel (Cart_TO_Q_QML_Empty)'
+    write(out_unit,*) '  The intialized model does not have Cart_TO_Q transformation!'
+    STOP 'ERROR in Cart_TO_Q_QModel: he intialized model does not have Cart_TO_Q transformation'
 
   END SUBROUTINE Cart_TO_Q_QML_Empty
   SUBROUTINE Qact_TO_Q_QML_Empty(Qact,Q,list_act)
