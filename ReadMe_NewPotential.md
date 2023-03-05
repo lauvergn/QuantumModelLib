@@ -112,12 +112,8 @@ In the select case of the **Init_Model** subroutine, add those Fortran lines:
 
 ## 3) **makefile** modifications
 
-Two modifications must be made in the **makefile**.
+To create the source file list and the dependencies run:
 
-- In the **QMLSRCFILES** variable (around line 168), add: **XXX_m.f90**
-
-- At the end of the **makefile**, add the dependency.
-
+```bash
+  make dep
 ```
-$(OBJ_DIR)/XXX_m.o:              $(OBJ_DIR)/Empty_m.o
-````
