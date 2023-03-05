@@ -209,7 +209,7 @@ LIBSRCFILES=Model_driver.f90 Model_m.f90 \
             Basis_m.f90  MakeHinact_m.f90
 
 QMLSRCFILES=Buck_m.f90 H3_m.f90 NO3_m.f90  Template_m.f90 \
-            CH5_m.f90 HCN_Murrell_m.f90    OneDSOC_1S1T_m.f90 Test_m.f90 \
+            CH5_m.f90 CNH_Murrell_m.f90    OneDSOC_1S1T_m.f90 Test_m.f90 \
             ClH2p_Botschwina_m.f90         HNNHp_m.f90 OneDSOC_2S1T_m.f90 Tully_m.f90 \
             ClH2p_m.f90  HNO3_m.f90        PH4_m.f90   TwoD_MullerBrown_m.f90 \
             Empty_m.f90  HONO_m.f90        PSB3_m.f90  TwoD_RJDI2014_m.f90 \
@@ -366,7 +366,7 @@ $(OBJ_DIR)/HNO3_m.o:              $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/NO3_m.o:               $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/HOO_DMBE_m.o:          $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/H3_m.o:                $(OBJ_DIR)/Empty_m.o
-$(OBJ_DIR)/HCN_Murrell_m.o:       $(OBJ_DIR)/Empty_m.o
+$(OBJ_DIR)/CNH_Murrell_m.o:       $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/ClH2p_m.o:             $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/ClH2p_Botschwina_m.o:  $(OBJ_DIR)/Empty_m.o
 $(OBJ_DIR)/CH5_m.o:               $(OBJ_DIR)/Empty_m.o

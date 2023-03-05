@@ -105,8 +105,8 @@ PROGRAM TEST_model
   CALL test_ClH2p_Botschwina()
 
 
-  ! 3D (full-D), One electronic surface (spectro): HCN Murrell
-  CALL test_HCN_Murrell
+  ! 3D (full-D), One electronic surface (spectro): CNH Murrell
+  CALL test_CNH_Murrell
 
   ! 3D (full-D), One electronic surface for collision
   CALL test_HOO_DMBE()
@@ -3174,7 +3174,7 @@ SUBROUTINE test_IRC_H3_AbInitio
 
 END SUBROUTINE test_IRC_H3_AbInitio
 
-SUBROUTINE test_HCN_Murrell
+SUBROUTINE test_CNH_Murrell
   USE QDUtil_NumParameters_m
   USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
@@ -3198,8 +3198,8 @@ SUBROUTINE test_HCN_Murrell
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '------------ 3D-HCN ------------------------'
-  CALL Init_Model(QModel,pot_name='HCN_Murrell',option=1) ! jacobi
+  write(out_unit,*) '------------ 3D-CNH ------------------------'
+  CALL Init_Model(QModel,pot_name='CNH_Murrell',option=1) ! jacobi
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
@@ -3225,7 +3225,7 @@ SUBROUTINE test_HCN_Murrell
     CALL Write_dnMat(PotVal,nio=out_unit)
 
     ! For testing the model
-    CALL Test_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HCN_Murrell',test_var=test_var)
+    CALL Test_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='CNH_Murrell',test_var=test_var)
   END DO
   CALL dealloc_dnMat(PotVal)
   write(out_unit,*) ' END Potential and derivatives'
@@ -3247,7 +3247,7 @@ SUBROUTINE test_HCN_Murrell
   CALL Eval_Pot(QModel,Qopt,PotVal,nderiv=2)
   CALL Write_dnMat(PotVal,nio=out_unit)
 
-  CALL Test_QdnV_FOR_Model(Qopt,PotVal,QModel,info='HCN_Murrell',test_var=test_var)
+  CALL Test_QdnV_FOR_Model(Qopt,PotVal,QModel,info='CNH_Murrell',test_var=test_var)
 
 
   write(out_unit,*) '---------------------------------------------'
@@ -3262,7 +3262,7 @@ SUBROUTINE test_HCN_Murrell
   CALL Write_dnMat(PotVal,nio=out_unit)
   flush(out_unit)
 
-  CALL Test_QdnV_FOR_Model(Qopt,PotVal,QModel,info='HCN_Murrell',test_var=test_var)
+  CALL Test_QdnV_FOR_Model(Qopt,PotVal,QModel,info='CNH_Murrell',test_var=test_var)
 
 
   write(out_unit,*) '---------------------------------------------'
@@ -3276,7 +3276,7 @@ SUBROUTINE test_HCN_Murrell
   CALL Eval_Pot(QModel,Qopt,PotVal,nderiv=2)
   CALL Write_dnMat(PotVal,nio=out_unit)
 
-  CALL Test_QdnV_FOR_Model(Qopt,PotVal,QModel,info='HCN_Murrell',test_var=test_var)
+  CALL Test_QdnV_FOR_Model(Qopt,PotVal,QModel,info='CNH_Murrell',test_var=test_var)
 
 
 
@@ -3294,8 +3294,8 @@ SUBROUTINE test_HCN_Murrell
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '------------ 3D-HCN ------------------------'
-  CALL Init_Model(QModel,pot_name='HCN_Murrell',option=11) ! jacobi
+  write(out_unit,*) '------------ 3D-CNH ------------------------'
+  CALL Init_Model(QModel,pot_name='CNH_Murrell',option=11) ! jacobi
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
@@ -3320,7 +3320,7 @@ SUBROUTINE test_HCN_Murrell
     CALL Write_dnMat(PotVal,nio=out_unit)
 
     ! For testing the model
-    CALL Test_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HCN_Murrell',test_var=test_var,last_test=(i==size(Q,dim=2)))
+    CALL Test_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='CNH_Murrell',test_var=test_var,last_test=(i==size(Q,dim=2)))
   END DO
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
@@ -3334,8 +3334,8 @@ SUBROUTINE test_HCN_Murrell
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '------------ 1D-HCN ------------------------'
-  CALL Init_Model(QModel,pot_name='HCN_Murrell',option=2) ! jacobi
+  write(out_unit,*) '------------ 1D-CNH ------------------------'
+  CALL Init_Model(QModel,pot_name='CNH_Murrell',option=2) ! jacobi
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) 'IndexFunc_Ene:             ',QModel%QM%IndexFunc_Ene
@@ -3365,7 +3365,7 @@ SUBROUTINE test_HCN_Murrell
     CALL Write_dnMat(PotVal,nio=out_unit)
 
     ! For testing the model
-    CALL Test_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HCN_Murrell', &
+    CALL Test_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='CNH_Murrell', &
         test_var=test_var,last_test=.FALSE.)
 
   END DO
@@ -3379,8 +3379,8 @@ SUBROUTINE test_HCN_Murrell
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '------------ 1D-HCN ------------------------'
-  CALL Init_Model(QModel,pot_name='HCN_Murrell',option=21) ! jacobi
+  write(out_unit,*) '------------ 1D-CNH ------------------------'
+  CALL Init_Model(QModel,pot_name='CNH_Murrell',option=21) ! jacobi
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
@@ -3405,7 +3405,7 @@ SUBROUTINE test_HCN_Murrell
     CALL Write_dnMat(PotVal,nio=out_unit)
 
     ! For testing the model
-    CALL Test_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='HCN_Murrell', &
+    CALL Test_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='CNH_Murrell', &
         test_var=test_var,last_test=(i == size(Q,dim=2)))
 
   END DO
@@ -3420,13 +3420,13 @@ SUBROUTINE test_HCN_Murrell
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' IRC with the HCN Murrell potential'
+  write(out_unit,*) ' IRC with the CNH Murrell potential'
   write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   flush(out_unit)
-  CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,pot_name='HCN_Murrell')
+  CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,pot_name='CNH_Murrell')
 
   Opt_p%nb_neg = 0
   CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=10,list_act=[6,7,9])
@@ -3440,7 +3440,7 @@ SUBROUTINE test_HCN_Murrell
   CALL QML_Opt(Qopt,QModel,Opt_p,Q0=Qcart)
 stop
 
-  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='DAT_files/irc_hcn.dat')
+  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='DAT_files/irc_CNH.dat')
 
   Qcart(:) = [ZERO,             ZERO, ZERO,              &
               ZERO,             ZERO, 2.153159998_Rkind, &
@@ -3457,7 +3457,7 @@ stop
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
 
-END SUBROUTINE test_HCN_Murrell
+END SUBROUTINE test_CNH_Murrell
 
 SUBROUTINE test_Opt_MullerBrown
   USE QDUtil_NumParameters_m
