@@ -384,6 +384,7 @@ MODULE QML_H3_m
     write(nio,*) '-------------------------------------------------------------'
     write(nio,*) 'H3 LSTH current parameters'
     write(nio,*)
+    write(nio,*) ' Units: Energy in Hartree and distances in bohr'
     write(nio,*) 'refs: '
     write(nio,*) ' P. Siegbahn, B. Liu,  J. Chem. Phys. 68, 2457(1978).'
     write(nio,*) ' D.G. Truhlar and C.J. Horowitz, J. Chem. Phys. 68, 2466 (1978); https://doi.org/10.1063/1.436019'

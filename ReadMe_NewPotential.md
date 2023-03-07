@@ -7,11 +7,11 @@ Three (or four) main steps are required:
 1. Creation of a Fortran file, **XXX_m.f90**, containing the potential/model in the SRC/QML directory.
 All the required subroutines and the new type (**QML_XXX_t**) are stored in this Fortran file.
 
-2. The Fortran file, **Model_m.f90**, in the SRC diretory has to be modified.
+2. Modification of fhe Fortran file, **Model_m.f90**, in the SRC diretory.
 
-3. The **makefile** has to be modified.
+3. Modification of the **makefile**.
 
-4. It is higly recomended to add a procedure to test the potential in the **SRC/TEST_model.f90** file.
+4. It is highly recommended to add a procedure to test the potential in the **SRC/TEST_model.f90** file.
 
 ## 1) **XXX_m.f90** file
 

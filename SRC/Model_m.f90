@@ -856,6 +856,7 @@ CONTAINS
       !! option    = 0,1,10,11 (LSTH)
       !! ndim      = 3   (the 3 H-H distances)
       !! nsurf     = 1
+      !! Units: Energy in Hartree and distances in bohr.
       !! refs (option=0):
       !! P. Siegbahn, B. Liu,  J. Chem. Phys. 68, 2457(1978).
       !! D.G. Truhlar and C.J. Horowitz, J. Chem. Phys. 68, 2466 (1978); https://doi.org/10.1063/1.436019

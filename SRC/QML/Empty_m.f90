@@ -104,7 +104,9 @@ MODULE QML_Empty_m
      !PROCEDURE :: get2_Q0_QModel         => get2_Q0_QML_Empty
       PROCEDURE :: get_d0GGdef_QModel     => get_d0GGdef_QML_Empty
       PROCEDURE :: Cart_TO_Q_QModel       => Cart_TO_Q_QML_Empty
-  END TYPE QML_Empty_t
+      !PROCEDURE, PRIVATE :: Init0_QML_Empty
+      !GENERIC,   PUBLIC  :: assignment(=) => Init0_QML_Empty
+      END TYPE QML_Empty_t
 
   INTERFACE get_Q0_QModel
     MODULE PROCEDURE get_Q0_QML_Empty
@@ -303,14 +305,16 @@ MODULE QML_Empty_m
   END FUNCTION get_d0GGdef_QML_Empty
   SUBROUTINE EvalPot_QML_Empty(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m, ONLY : dnS_t
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS (QML_Empty_t),    intent(in)     :: QModel
     TYPE (dnS_t),           intent(in)     :: dnQ(:)
     TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,                intent(in)     :: nderiv
 
-
+    write(out_unit,*) 'ERROR in EvalPot_QModel (EvalPot_QML_Empty)'
+    write(out_unit,*) '  The intialized model does not have EvalPot_QModel subroutine!'
+    STOP 'ERROR in EvalPot_QML_Empty: the intialized model does not have EvalPot_QModel subroutine'
     Mat_OF_PotDia(:,:) = ZERO
 
   END SUBROUTINE EvalPot_QML_Empty
@@ -326,7 +330,9 @@ MODULE QML_Empty_m
       TYPE (dnS_t),           intent(inout)  :: Mat_OF_ScalOpDia(:,:,:)
       integer,                intent(in)     :: nderiv
   
-  
+      write(out_unit,*) 'ERROR in EvalScalOp_QModel (EvalScalOp_QML_Empty)'
+      write(out_unit,*) '  The intialized model does not have EvalScalOp_QModel subroutine!'
+      STOP 'ERROR in EvalScalOp_QML_Empty: the intialized model does not have EvalScalOp_QModel subroutine'
       Mat_OF_ScalOpDia(:,:,:) = ZERO
   
   END SUBROUTINE EvalScalOp_QML_Empty
@@ -505,6 +511,9 @@ MODULE QML_Empty_m
 
     integer :: i
 
+    write(out_unit,*) 'ERROR in EvalFunc_QModel (EvalFunc_QML_Empty)'
+    write(out_unit,*) '  The intialized model does not have EvalFunc_QModel subroutine!'
+    STOP 'ERROR in EvalFunc_QML_Empty: the intialized model does not have EvalFunc_QModel subroutine'
     DO i=1,size(Func)
       Func(i) = ZERO
     END DO
@@ -630,7 +639,7 @@ MODULE QML_Empty_m
 
     write(out_unit,*) 'ERROR in Cart_TO_Q_QModel (Cart_TO_Q_QML_Empty)'
     write(out_unit,*) '  The intialized model does not have Cart_TO_Q transformation!'
-    STOP 'ERROR in Cart_TO_Q_QModel: he intialized model does not have Cart_TO_Q transformation'
+    STOP 'ERROR in Cart_TO_Q_QML_Empty: the intialized model does not have Cart_TO_Q transformation'
 
   END SUBROUTINE Cart_TO_Q_QML_Empty
   SUBROUTINE Qact_TO_Q_QML_Empty(Qact,Q,list_act)
