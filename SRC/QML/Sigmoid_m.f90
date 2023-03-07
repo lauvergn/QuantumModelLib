@@ -102,9 +102,7 @@ CONTAINS
       flush(out_unit)
     END IF
 
-
-    !QModel_loc%QML_Empty_t = Init_QML_Empty(QModel_in) ! it does not work with nagfor
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     IF (debug) write(out_unit,*) 'init default Sigmoid parameters'
     CALL Init0_QML_Sigmoid(QModel,A=ONE,B=ZERO,C=ONE,e=ONE,model_name='sigmoid')

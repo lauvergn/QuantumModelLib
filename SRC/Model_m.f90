@@ -40,7 +40,7 @@
 MODULE Model_m
   !$ USE omp_lib
   USE QDUtil_NumParameters_m
-  USE QML_Empty_m,          ONLY : QML_Empty_t,Qact_TO_Q
+  USE QML_Empty_m
   USE AdiaChannels_Basis_m, ONLY : QML_Basis_t
   IMPLICIT NONE
 
@@ -417,7 +417,6 @@ CONTAINS
     ELSE
       QModel_in%option = -1
     END IF
-    !IF (Print_init_loc) write(out_unit,*) 'option: ',QModel_in%option
 
     IF (present(Vib_adia)) THEN
       QModel_in%Vib_adia = Vib_adia
@@ -1099,7 +1098,7 @@ CONTAINS
 
   SUBROUTINE get_Q0_Model(Q0,QModel,option)
   USE QDUtil_m,         ONLY : Identity_Mat, TO_string, Write_Vec
-  USE QML_Empty_m,      ONLY : get_Q0_QModel
+  USE QML_Empty_m
   IMPLICIT NONE
 
     real (kind=Rkind),  intent(inout)            :: Q0(:)

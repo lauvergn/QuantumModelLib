@@ -88,8 +88,7 @@ contains
       flush(out_unit)
     END IF
 
-    !QModel%QML_Empty_t = Init_QML_Empty(QModel_in) ! it does not work with nagfor
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
     QModel%pot_name = 'template'
     QModel%nsurf    = 1
     QModel%ndim     = 3

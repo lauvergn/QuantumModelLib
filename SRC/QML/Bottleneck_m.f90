@@ -109,7 +109,7 @@ MODULE QML_Bottleneck_m
 
     allocate(QML_Bottleneck_t :: QModel)
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    CALL Empty2_TO_Empty1(QModel%QML_Empty_t,QModel_in)
 
     QModel%pot_name = 'Bottleneck'
     QModel%nsurf    = 1

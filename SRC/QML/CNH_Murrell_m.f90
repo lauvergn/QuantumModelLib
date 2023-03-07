@@ -95,7 +95,7 @@ MODULE QML_CNH_Murrell_m
 
     allocate(QML_CNH_Murrell_t :: QModel)
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf      = 1
     QModel%ndimCart   = 9

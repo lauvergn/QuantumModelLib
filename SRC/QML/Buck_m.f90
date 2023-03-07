@@ -108,7 +108,7 @@ CONTAINS
       flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     !Default for Ar-Ar
     CALL Init0_QML_Buck(QModel,A=387.63744459726228783977_Rkind,      &
