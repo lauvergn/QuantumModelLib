@@ -88,7 +88,9 @@ MODULE QML_Vibronic_m
 
     IMPLICIT NONE
 
-    TYPE (QML_Vibronic_t), allocatable                :: QModel
+    !TYPE (QML_Vibronic_t), allocatable                :: QModel
+    TYPE (QML_Vibronic_t)                             :: QModel
+
     TYPE(QML_Empty_t),           intent(in)           :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)           :: nio_param_file
     logical,                     intent(in)           :: read_param
@@ -98,7 +100,7 @@ MODULE QML_Vibronic_m
     real (kind=Rkind), allocatable :: d1(:),d2(:,:)
 
 
-    allocate(QML_Vibronic_t :: QModel)
+    !allocate(QML_Vibronic_t :: QModel)
 
     QModel%QML_Empty_t = QModel_in
     IF (present(Vibronic_name)) QModel%Vibronic_name = Vibronic_name

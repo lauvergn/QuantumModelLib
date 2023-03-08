@@ -76,7 +76,8 @@ MODULE QML_CNH_Murrell_m
     USE QDUtil_m,         ONLY : Identity_Mat
     IMPLICIT NONE
 
-    TYPE (QML_CNH_Murrell_t), allocatable        :: QModel ! RESULT
+    !TYPE (QML_CNH_Murrell_t), allocatable        :: QModel ! RESULT
+    TYPE (QML_CNH_Murrell_t)                     :: QModel ! RESULT
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -93,7 +94,7 @@ MODULE QML_CNH_Murrell_m
       flush(out_unit)
     END IF
 
-    allocate(QML_CNH_Murrell_t :: QModel)
+    !allocate(QML_CNH_Murrell_t :: QModel)
 
     QModel%QML_Empty_t = QModel_in
 

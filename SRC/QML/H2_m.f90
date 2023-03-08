@@ -83,7 +83,8 @@ CONTAINS
   FUNCTION Init_QML_H2(QModel_in,read_param,nio_param_file) RESULT(QModel)
     IMPLICIT NONE
 
-    TYPE (QML_H2_t), allocatable                 :: QModel
+    !TYPE (QML_H2_t), allocatable                 :: QModel
+    TYPE (QML_H2_t)                              :: QModel
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -102,7 +103,7 @@ CONTAINS
       flush(out_unit)
     END IF
 
-    allocate(QML_H2_t :: QModel)
+    !allocate(QML_H2_t :: QModel)
     QModel%QML_Empty_t = QModel_in
 
     QModel%pot_name = 'h2'

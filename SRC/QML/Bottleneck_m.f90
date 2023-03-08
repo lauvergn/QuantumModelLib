@@ -88,7 +88,8 @@ MODULE QML_Bottleneck_m
     USE QDUtil_m,         ONLY : Identity_Mat
     IMPLICIT NONE
 
-    TYPE (QML_Bottleneck_t), allocatable         :: QModel
+    !TYPE (QML_Bottleneck_t), allocatable         :: QModel
+    TYPE (QML_Bottleneck_t)                      :: QModel
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -107,7 +108,7 @@ MODULE QML_Bottleneck_m
       flush(out_unit)
     END IF
 
-    allocate(QML_Bottleneck_t :: QModel)
+    !allocate(QML_Bottleneck_t :: QModel)
 
     CALL Empty2_TO_Empty1(QModel%QML_Empty_t,QModel_in)
 

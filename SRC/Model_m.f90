@@ -559,6 +559,7 @@ CONTAINS
       !! options:(3) extract for the H+H2 LSTH potential
       !! reduced mass      = 1837.1526464003414/2 au
       !! === END README ==
+      allocate(QML_H2_t :: QModel%QM)
       QModel%QM = Init_QML_H2(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('sigmoid')
@@ -760,6 +761,7 @@ CONTAINS
       QModel%QM = Init_QML_Retinal_JPCB2000(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('vibronic')
+      allocate(QML_Vibronic_t :: QModel%QM)
       IF (size(tab_pot_name) > 1) THEN
         QModel%QM = Init_QML_Vibronic(QModel_in,read_param=read_nml,nio_param_file=nio_loc, &
                                       Vibronic_name=trim(tab_pot_name(2)))
@@ -880,6 +882,7 @@ CONTAINS
       !! ref: J. N. Murrell, S. Carter and L. O. Halonene, J. Mol. Spectrosc. vo93 p307 1982
       !!  doi: https://doi.org/10.1016/0022-2852(82)90170-9
       !! === END README ==
+      allocate(QML_CNH_Murrell_t :: QModel%QM)
       QModel%QM = Init_QML_CNH_Murrell(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('h2o','water')
@@ -910,6 +913,7 @@ CONTAINS
       !!       for reaction path Hamiltonian model of reactive scattering.'
       !!   DOI: 10.1016/j.cplett.2021.139241'
       !! === END README ==
+      allocate(QML_Bottleneck_t :: QModel%QM)
       QModel%QM = Init_QML_Bottleneck(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
     CASE ('clh2+','clh2p')
       !! === README ==
