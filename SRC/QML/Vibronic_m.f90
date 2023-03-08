@@ -100,7 +100,7 @@ MODULE QML_Vibronic_m
 
     allocate(QML_Vibronic_t :: QModel)
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
     IF (present(Vibronic_name)) QModel%Vibronic_name = Vibronic_name
 
     QModel%pot_name      = 'Vibronic'

@@ -138,7 +138,7 @@ CONTAINS
       flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
     QModel%pot_name = 'phenol'
     QModel%ndim     = 2
     QModel%nsurf    = 3

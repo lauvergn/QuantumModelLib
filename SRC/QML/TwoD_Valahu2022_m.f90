@@ -97,7 +97,7 @@ MODULE QML_TwoD_Valahu2022_m
       flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf    = 2
     QModel%ndim     = 2

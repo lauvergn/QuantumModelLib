@@ -113,7 +113,7 @@ MODULE QML_OneDSOC_2S1T_m
       flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf    = 4
     QModel%ndim     = 1

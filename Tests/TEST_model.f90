@@ -3254,14 +3254,10 @@ SUBROUTINE test_CNH_Murrell
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: Q(:,:),Qopt(:),Q1D(:),Qcart(:)
+  real (kind=Rkind), allocatable :: Q(:,:),Qopt(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
   TYPE (QML_Opt_t)               :: Opt_p
-  TYPE (QML_IRC_t)               :: IRC_p
-
-
-  TYPE (dnS_t),    allocatable :: Func(:)
 
 
   nderiv = 2
@@ -3371,7 +3367,7 @@ SUBROUTINE test_CNH_Murrell
 
   allocate(Q(QModel%ndim,3))
 
-  Q(:,1) = [ONE,               3.18722_Rkind,2.17926_Rkind]
+  Q(:,1) = [ ONE,              3.18722_Rkind,2.17926_Rkind]
   Q(:,2) = [-ONE,              2.89321_Rkind,2.20061_Rkind]
   Q(:,3) = [cos(1.16809_Rkind),2.28376_Rkind,2.15316_Rkind]
 
@@ -3401,12 +3397,12 @@ SUBROUTINE test_CNH_Murrell
   write(out_unit,*) '---------------------------------------------'
 
 
-
   nderiv = 2
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '------------ 1D-CNH ------------------------'
+  IF (allocated(QModel%QM)) deallocate(QModel%QM)
   CALL Init_Model(QModel,pot_name='CNH_Murrell',option=2) ! jacobi
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -3488,49 +3484,6 @@ SUBROUTINE test_CNH_Murrell
   deallocate(Q)
   write(out_unit,*) ' END Potential and derivatives'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-
-  RETURN
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' IRC with the CNH Murrell potential'
-  write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  flush(out_unit)
-  CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,pot_name='CNH_Murrell')
-
-  Opt_p%nb_neg = 0
-  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=10,list_act=[6,7,9])
-
-  allocate(Qcart(QModel%QM%ndim))
-  allocate(Qopt(QModel%QM%ndim))
-
-  Qcart(:) = [ZERO,             ZERO, ZERO,              &
-              ZERO,             ZERO, 2.14864946_Rkind, &
-              1.925191385_Rkind,ZERO, 2.017487565_Rkind]
-  CALL QML_Opt(Qopt,QModel,Opt_p,Q0=Qcart)
-
-
-  CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='DAT_files/irc_CNH.dat')
-
-  Qcart(:) = [ZERO,             ZERO, ZERO,              &
-              ZERO,             ZERO, 2.153159998_Rkind, &
-              2.101067716_Rkind,ZERO, 0.264483773_Rkind]
-
-
-  CALL QML_IRC(Qcart,QModel,IRC_p,Q0=Qcart)
-
-
-  deallocate(Qcart)
-  deallocate(Q)
-  CALL dealloc_Model(QModel)
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
 
 END SUBROUTINE test_CNH_Murrell

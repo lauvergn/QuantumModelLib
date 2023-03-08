@@ -99,7 +99,7 @@ MODULE QML_Test_m
 
     allocate(QML_Test_t :: QModel)
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf    = 2
     QModel%ndimCart = 9 ! 3 atoms

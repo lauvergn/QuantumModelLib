@@ -103,7 +103,7 @@ CONTAINS
     END IF
 
     allocate(QML_H2_t :: QModel)
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     QModel%pot_name = 'h2'
     QModel%ndim     = 1

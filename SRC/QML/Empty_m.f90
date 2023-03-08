@@ -116,58 +116,32 @@ MODULE QML_Empty_m
     MODULE PROCEDURE Qact_TO_Q_QML_Empty
   END INTERFACE
 
-  PUBLIC :: QML_Empty_t, Init_QML_Empty, Init0_QML_Empty
+  INTERFACE Empty2_TO_Empty1
+    MODULE PROCEDURE Empty2_TO_Empty1_QML_Empty
+  END INTERFACE
+
+  PUBLIC :: QML_Empty_t,Empty2_TO_Empty1
   PUBLIC :: get_Q0_QModel, get2_Q0_QML_Empty, Qact_TO_Q
 
   CONTAINS
 
-  FUNCTION Init_QML_Empty(QModel_in) RESULT(QModel)
+  SUBROUTINE Empty2_TO_Empty1_QML_Empty(QModel,QModel_in)
+    USE ADdnSVM_m, ONLY : dealloc_dnMat
     IMPLICIT NONE
 
-    TYPE(QML_Empty_t)                  :: QModel
-    TYPE(QML_Empty_t),  intent(in)     :: QModel_in ! variable to transfer info to the init
+    TYPE (QML_Empty_t),  intent(inout)   :: QModel
+    TYPE (QML_Empty_t),  intent(in)      :: QModel_in ! variable to transfer info to the init
 
-!----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_QML_Empty'
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Empty2_TO_Empty1_QML_Empty'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
+    !-----------------------------------------------------------
 
     IF (debug) THEN
       write(out_unit,*) 'BEGINNING ',name_sub
       flush(out_unit)
     END IF
-
-
-    CALL Init0_QML_Empty(QModel,QModel_in)
-
-    IF (debug) THEN
-      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unit,*) 'END ',name_sub
-      flush(out_unit)
-    END IF
-
-  END FUNCTION Init_QML_Empty
-  SUBROUTINE Init0_QML_Empty(QModel,QModel_in)
-  USE ADdnSVM_m, ONLY : dealloc_dnMat
-  IMPLICIT NONE
-
-    TYPE (QML_Empty_t), intent(inout)   :: QModel
-
-    TYPE(QML_Empty_t),  intent(in)      :: QModel_in ! variable to transfer info to the init
-
-!----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init0_QML_Empty'
-    logical, parameter :: debug = .FALSE.
-    !logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
-
-    IF (debug) THEN
-      write(out_unit,*) 'BEGINNING ',name_sub
-      flush(out_unit)
-    END IF
-
-    !QModel = QModel_in   ! it does not work always with nagfor
     QModel%Init             = QModel_in%Init
 
     QModel%nsurf            = QModel_in%nsurf
@@ -235,7 +209,7 @@ MODULE QML_Empty_m
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Init0_QML_Empty
+  END SUBROUTINE Empty2_TO_Empty1_QML_Empty
   SUBROUTINE get2_Q0_QML_Empty(QModel,Q0)
     IMPLICIT NONE
 

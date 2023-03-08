@@ -113,7 +113,7 @@ MODULE QML_OneDSOC_1S1T_m
       flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     IF (QModel%nsurf == 0) THEN
       ! it means that nsurf was not present in the CALL Init_Model().
