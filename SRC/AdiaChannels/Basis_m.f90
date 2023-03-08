@@ -42,7 +42,7 @@ MODULE AdiaChannels_Basis_m
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: QML_Basis_t,Read_Basis,Write_Basis, &
+  PUBLIC :: QML_Basis_t,Read_Basis,dealloc_Basis,Write_Basis, &
             GridTOBasis_Basis,BasisTOGrid_Basis
 
   TYPE :: QML_Basis_t
@@ -76,6 +76,9 @@ MODULE AdiaChannels_Basis_m
   END INTERFACE
   INTERFACE Read_Basis
       MODULE PROCEDURE QML_Read_Basis
+  END INTERFACE
+  INTERFACE dealloc_Basis
+      MODULE PROCEDURE QML_dealloc_Basis
   END INTERFACE
   INTERFACE Construct_Basis_Sin
       MODULE PROCEDURE QML_Construct_Basis_Sin
@@ -235,6 +238,40 @@ CONTAINS
     END IF
 
   END SUBROUTINE QML_Read_Basis
+  RECURSIVE SUBROUTINE QML_dealloc_Basis(Basis)
+    IMPLICIT NONE
+
+    TYPE(QML_Basis_t),       intent(inout)  :: Basis
+
+
+
+    integer                         :: ib
+
+
+    Basis%nb_basis   = 0
+
+    Basis%nb         = 0
+    Basis%nq         = 0
+
+    Basis%symab      = 0
+    IF (allocated(Basis%tab_symab)) deallocate(Basis%tab_symab)
+
+    IF (allocated(Basis%name))      deallocate(Basis%name)
+
+    IF (allocated(Basis%x))         deallocate(Basis%x)
+    IF (allocated(Basis%w))         deallocate(Basis%w)
+    IF (allocated(Basis%d0gb))      deallocate(Basis%d0gb)
+    IF (allocated(Basis%d1gb))      deallocate(Basis%d1gb)
+    IF (allocated(Basis%d2gb))      deallocate(Basis%d2gb)
+
+    IF (associated(Basis%tab_basis)) THEN
+      DO ib=1,size(Basis%tab_basis)
+        CALL dealloc_Basis(Basis%tab_basis(ib))
+      END DO
+      nullify(Basis%tab_basis)
+    END IF
+
+  END SUBROUTINE QML_dealloc_Basis
   SUBROUTINE QML_Construct_Basis_Sin(Basis) ! sin : boxAB with A=0 and B=pi
     USE ADdnSVM_m, ONLY : dnS_t,Variable,sub_get_dn,dnBox
     IMPLICIT NONE

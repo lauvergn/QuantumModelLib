@@ -45,7 +45,7 @@ PROGRAM TEST_model
 
   CALL Initialize_Test(test_var,test_name='QModel')
 
-  !CALL test_HOO_DMBE  ; CALL Finalize_Test(test_var) ; stop
+  !CALL test_H2()  ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_TwoD_RJDI2014()
   !CALL test_Vibronic() ; stop
@@ -145,10 +145,6 @@ SUBROUTINE test_Tully
   write(out_unit,*) ' Tully potential'
   write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
   write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='Tully',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
 
   DO option=1,3
     CALL Init_Model(QModel,pot_name='Tully',Print_init=.FALSE.,option=option)
@@ -186,7 +182,7 @@ SUBROUTINE test_Tully
 
     CALL dealloc_dnMat(PotVal)
     deallocate(q)
-
+    CALL dealloc_Model(QModel)
   END DO
 
   write(out_unit,*) '---------------------------------------------'
@@ -197,8 +193,9 @@ SUBROUTINE test_Tully
   write(out_unit,*) '   Tully, J. Chem. Phys. V93, pp15, 1990.'
   write(out_unit,*) ' Be carrefull, the non-adiabatic coupling is scaled by -1/50.'
   CALL Init_Model(QModel,pot_name='Tully',Print_init=.FALSE.,option=1)
-  CALL Eval_pot_ON_Grid(QModel,Qmin=(/-TEN/),Qmax=(/TEN/),nb_points=1001, &
-                        grid_file='grid_Tully1')
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-TEN],Qmax=[TEN],nb_points=1001,grid_file='grid_Tully1')
+
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '-----------TULLY 2 on a grid ----------------'
@@ -209,8 +206,9 @@ SUBROUTINE test_Tully
   write(out_unit,*) ' Be carrefull, the non-adiabatic coupling is scaled by -1/12.'
 
   CALL Init_Model(QModel,pot_name='Tully',Print_init=.FALSE.,option=2)
-  CALL Eval_pot_ON_Grid(QModel,Qmin=(/-TEN/),Qmax=(/TEN/),nb_points=1001, &
-                        grid_file='grid_Tully2')
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-TEN],Qmax=[TEN],nb_points=1001,grid_file='grid_Tully2')
+
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '-----------TULLY 3 on a grid ----------------'
@@ -221,8 +219,9 @@ SUBROUTINE test_Tully
   write(out_unit,*) ' Be carrefull, the sign of non-adiabatic coupling is changed.'
 
   CALL Init_Model(QModel,pot_name='Tully',Print_init=.FALSE.,option=3)
-  CALL Eval_pot_ON_Grid(QModel,Qmin=(/-TEN/),Qmax=(/TEN/),nb_points=1001, &
-                        grid_file='grid_Tully3')
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-TEN],Qmax=[TEN],nb_points=1001,grid_file='grid_Tully3')
+
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -250,15 +249,12 @@ SUBROUTINE test_OneDSOC_1S1T
   write(out_unit,*) ' 1D-SOC_1S1T potential'
   write(out_unit,*) ' With units: Bohr Hartree (au)'
   write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='1DSOC_1S1T',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
-  write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
   CALL Init_Model(QModel,nsurf=4,pot_name='1DSOC_1S1T')
 
   allocate(q(QModel%QM%ndim))
-  q(:) = (/ 9.5_Rkind /) ! one evaluation to get vec0%d0(:,:)
+  q(:) = [ 9.5_Rkind ] ! one evaluation to get vec0%d0(:,:)
   write(out_unit,*) ' ref Eigenvectors at Q:',Q
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=0)
   ! ref Eigenvectors
@@ -307,6 +303,7 @@ SUBROUTINE test_OneDSOC_1S1T
 
   CALL dealloc_dnMat(PotVal)
   CALL dealloc_dnMat(NAC)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -327,7 +324,7 @@ SUBROUTINE test_OneDSOC_1S1T
   QModel%QM%adiabatic = .TRUE.
   flush(out_unit)
 
-  q(:) = (/ 9.5_Rkind /) ! one evaluation to get vec0%d0(:,:)
+  q(:) = [ 9.5_Rkind ] ! one evaluation to get vec0%d0(:,:)
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=1)
 
   ! ref Eigenvectors
@@ -335,7 +332,7 @@ SUBROUTINE test_OneDSOC_1S1T
   CALL Write_dnMat(QModel%QM%vec0,nio=out_unit)
 
 
-  CALL Eval_pot_ON_Grid(QModel,Qmin=(/3._Rkind/),Qmax=(/20._Rkind/), &
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[3._Rkind],Qmax=[20._Rkind], &
                         nb_points=1001,nderiv=0,grid_file='grid_1DSOC_1S1T')
 
   write(out_unit,*) '---------------------------------------------'
@@ -345,6 +342,8 @@ SUBROUTINE test_OneDSOC_1S1T
   deallocate(q)
   CALL dealloc_dnMat(PotVal)
   CALL dealloc_dnMat(NAC)
+  CALL dealloc_Model(QModel)
+
 END SUBROUTINE test_OneDSOC_1S1T
 SUBROUTINE test_OneDSOC_2S1T
   USE QDUtil_NumParameters_m
@@ -366,15 +365,12 @@ SUBROUTINE test_OneDSOC_2S1T
   write(out_unit,*) ' 1D-SOC_2S1T potential'
   write(out_unit,*) ' With units: Bohr Hartree (au)'
   write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='1DSOC_2S1T')
-  CALL Write0_Model(QModel)
-  write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
   CALL Init_Model(QModel,pot_name='1DSOC_2S1T',Print_init=.FALSE.)
 
   allocate(q(QModel%QM%ndim))
-  q(:) = (/ 9.5_Rkind /) ! one evaluation to get vec0%d0(:,:)
+  q(:) = [ 9.5_Rkind ] ! one evaluation to get vec0%d0(:,:)
   write(out_unit,*) ' ref Eigenvectors at Q:',Q
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=0)
   ! ref Eigenvectors
@@ -422,6 +418,7 @@ SUBROUTINE test_OneDSOC_2S1T
 
   CALL dealloc_dnMat(PotVal)
   CALL dealloc_dnMat(NAC)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -440,7 +437,7 @@ SUBROUTINE test_OneDSOC_2S1T
   QModel%QM%adiabatic = .TRUE.
   flush(out_unit)
 
-  q(:) = (/ 9.5_Rkind /) ! one evaluation to get vec0%d0(:,:)
+  q(:) = [ 9.5_Rkind ] ! one evaluation to get vec0%d0(:,:)
   CALL Eval_Pot(QModel,Q,PotVal,NAC=NAC,nderiv=1)
 
   ! ref Eigenvectors
@@ -448,7 +445,7 @@ SUBROUTINE test_OneDSOC_2S1T
   CALL Write_dnMat(QModel%QM%vec0,nio=out_unit)
 
 
-  CALL Eval_pot_ON_Grid(QModel,Qmin=(/3._Rkind/),Qmax=(/20._Rkind/), &
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[3._Rkind],Qmax=[20._Rkind], &
                         nb_points=1001,nderiv=0,grid_file='grid_1DSOC_2S1T')
 
   write(out_unit,*) '---------------------------------------------'
@@ -458,6 +455,8 @@ SUBROUTINE test_OneDSOC_2S1T
   deallocate(q)
   CALL dealloc_dnMat(PotVal)
   CALL dealloc_dnMat(NAC)
+  CALL dealloc_Model(QModel)
+
 END SUBROUTINE test_OneDSOC_2S1T
 SUBROUTINE test_Morse
   USE QDUtil_NumParameters_m
@@ -477,9 +476,6 @@ SUBROUTINE test_Morse
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Morse potential (H-F parameters)'
   write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
-  write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='Morse',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
@@ -524,12 +520,13 @@ SUBROUTINE test_Morse
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '   file name: "grid_Morse"'
 
-  CALL Eval_pot_ON_Grid(QModel,Qmin=(/1._Rkind/),Qmax=(/5._Rkind/),nb_points=1001,&
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[1._Rkind],Qmax=[5._Rkind],nb_points=1001,&
                         grid_file='grid_Morse')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
+  CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_Morse
 SUBROUTINE test_Poly1D
@@ -587,8 +584,85 @@ SUBROUTINE test_Poly1D
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
+  CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_Poly1D
+SUBROUTINE test_H2
+  USE QDUtil_NumParameters_m
+  USE ADdnSVM_m
+  USE Model_m
+  USE Opt_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: nderiv
+  TYPE (dnMat_t)                 :: PotVal
+
+  TYPE (QML_Opt_t)               :: Opt_p
+
+  nderiv = 2
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' H2 potential'
+  write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unit,*) '---------------------------------------------'
+  CALL Init_Model(QModel,pot_name='H2',Print_init=.TRUE.,option=3)
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+
+  allocate(Q(QModel%QM%ndim))
+  Q(:) = QModel%QM%Q0
+
+  nderiv=2
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '----- CHECK POT -----------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unit,'(a,f12.6)') 'R (Bohr)',Q(:)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv,test_var)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Potential and derivatives'
+
+  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=9)
+  CALL QML_Opt(Q,QModel,Opt_p,Q0=[1.4_Rkind])
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  write(out_unit,'(a,f12.6)') 'R (Bohr)',Q(:)
+  write(out_unit,*) 'Energy (Hartree)'
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  ! For testing the model
+  !CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='Poly1D_HF',test_var=test_var,last_test=.TRUE.)
+
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '- END CHECK POT -----------------------------'
+  write(out_unit,*) '---------------------------------------------'
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Potential on a 1D grid (as a function of R)'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '   file name: "grid_H2"'
+
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[0.7_Rkind],Qmax=[20._Rkind],nb_points=1001,grid_file='grid_H2')
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Q)
+  CALL dealloc_Model(QModel)
+
+END SUBROUTINE test_H2
 SUBROUTINE test_Buckingham
   USE QDUtil_NumParameters_m
   USE ADdnSVM_m
@@ -654,12 +728,13 @@ SUBROUTINE test_Buckingham
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '   file name: "grid_Buck"'
 
-  CALL Eval_pot_ON_Grid(QModel,Qmin=(/6._Rkind/),Qmax=(/20._Rkind/),nb_points=1001,&
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[6._Rkind],Qmax=[20._Rkind],nb_points=1001,&
                         grid_file='grid_Buck')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
+  CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_Buckingham
 
@@ -683,9 +758,6 @@ SUBROUTINE test_Phenol
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Phenol potential'
   write(out_unit,*) ' With units: Angs and eV'
-  write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='Phenol',Print_init=.TRUE.)
-  CALL Write0_Model(QModel)
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
@@ -757,6 +829,7 @@ SUBROUTINE test_Phenol
   CALL dealloc_dnMat(PotVal)
   CALL dealloc_dnMat(NAC)
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
 
   write(out_unit,*) '---------------------------------------------'
@@ -770,15 +843,15 @@ SUBROUTINE test_Phenol
   write(out_unit,*) '   Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, ...'
   write(out_unit,*) '  .... J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218)'
 
-  CALL Init_Model(QModel,pot_name='phenol',PubliUnit=.TRUE.,Print_init=.FALSE.)
-  QModel%QM%adiabatic = .FALSE.
+  CALL Init_Model(QModel,pot_name='phenol',PubliUnit=.TRUE.,Print_init=.FALSE.,adiabatic = .FALSE.)
 
-  CALL Eval_pot_ON_Grid(QModel,Qmin=(/0.5_Rkind,ZERO/),Qmax=(/5._Rkind,ZERO/), &
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[0.5_Rkind,ZERO],Qmax=[5._Rkind,ZERO], &
                         nb_points=1001,grid_file='grid_Phenol')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
+  CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_Phenol
 SUBROUTINE test_HenonHeiles
@@ -799,15 +872,12 @@ SUBROUTINE test_HenonHeiles
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '------------ 4D-HenonHeiles -----------------'
-  CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=4,Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
-  write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
   CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=4)
 
   allocate(q(QModel%QM%ndim))
-  q(:) = (/ (0.1_Rkind*real(i,kind=Rkind),i=1,QModel%QM%ndim) /)
+  q(:) = [ (0.1_Rkind*real(i,kind=Rkind),i=1,QModel%QM%ndim) ]
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '----- CHECK POT -----------------------------'
@@ -833,6 +903,8 @@ SUBROUTINE test_HenonHeiles
 
   CALL dealloc_dnMat(PotVal)
   deallocate(q)
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -856,9 +928,6 @@ SUBROUTINE test_LinearHBond
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Linear H-Bond (symmetric one and the default parameters)'
   write(out_unit,*) ' With units: Angs and kcal.mol^-1'
-  write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='HBond',PubliUnit=.TRUE.,Print_init=.TRUE.)
-  !CALL Write0_Model(QModel)
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
@@ -922,6 +991,8 @@ SUBROUTINE test_LinearHBond
                         Qmin=[2.75_Rkind,-0.6_Rkind],Qmax=[2.75_Rkind,0.6_Rkind],nb_points=1001,&
                         grid_file='grid_Hbond-sym')
 
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -978,6 +1049,7 @@ SUBROUTINE test_LinearHBond
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
+  CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_LinearHBond
 SUBROUTINE test_Opt_LinearHBond
@@ -1007,10 +1079,6 @@ SUBROUTINE test_Opt_LinearHBond
   flush(out_unit)
   CALL Init_Model(QModel,pot_name='HBond',PubliUnit=.FALSE.)
 
-  !CALL Eval_pot_ON_Grid(QModel, &
-  !                      Qmin=[3.5_Rkind,-2.0_Rkind],Qmax=[10.0_Rkind,2.0_Rkind],&
-  !                      nb_points=101, grid_file='grid_Hbond2D')
-
 
   CALL Init_QML_Opt(Opt_param,QModel,read_param=.TRUE.,param_file_name='DAT_files/opt_hbond.dat')
 
@@ -1027,6 +1095,7 @@ SUBROUTINE test_Opt_LinearHBond
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -1059,7 +1128,6 @@ SUBROUTINE test_Vib_adia
   write(out_unit,*) '---------------------------------------------'
   CALL Init_Model(QModel,Print_init=.TRUE.,Vib_adia=.TRUE.,PubliUnit=.TRUE.,   &
                   param_file_name='DAT_files/Vibadia_HBond.dat')
-  CALL Write0_Model(QModel)
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
@@ -1097,6 +1165,7 @@ SUBROUTINE test_Vib_adia
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Qact)
+  CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_Vib_adia
 SUBROUTINE test2_Vib_adia
@@ -1127,7 +1196,6 @@ SUBROUTINE test2_Vib_adia
   write(out_unit,*) '---------------------------------------------'
   CALL Init_Model(QModel,Print_init=.TRUE.,Vib_adia=.TRUE.,PubliUnit=.TRUE.,   &
                   param_file_name='DAT_files/Vibadia_HBond.dat')
-  CALL Write0_Model(QModel)
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
@@ -1151,6 +1219,7 @@ SUBROUTINE test2_Vib_adia
   write(out_unit,*) '---------------------------------------------'
 
   deallocate(Qact)
+  CALL dealloc_Model(QModel)
 
 END SUBROUTINE test2_Vib_adia
 SUBROUTINE test_PSB3
@@ -1170,16 +1239,13 @@ SUBROUTINE test_PSB3
   write(out_unit,*) ' PSB3 potential'
   write(out_unit,*) ' With units: Atomic Units (Angstrom, Rad, Rad, kcal.mol^-1)'
   write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='PSB3',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
-  write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
   CALL Init_Model(QModel,pot_name='PSB3',PubliUnit=.FALSE.)
 
   allocate(q(QModel%QM%ndim))
 
-  q(:) = (/0.172459_Rkind,-3.14_Rkind,0._Rkind/)
+  q(:) = [0.172459_Rkind,-3.14_Rkind,0._Rkind]
   nderiv=3
 
   write(out_unit,*) '---------------------------------------------'
@@ -1221,6 +1287,8 @@ SUBROUTINE test_PSB3
   CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,NAC=NAC,info='PSB3', &
       test_var=test_var,last_test=.TRUE.)
 
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Check analytical derivatives with PubliUnit=.FALSE.'
   DO option=1,2
@@ -1230,6 +1298,7 @@ SUBROUTINE test_PSB3
     CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv)
     CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
     CALL Write_dnMat(PotVal,nio=out_unit)
+    CALL dealloc_Model(QModel)
   END DO
   write(out_unit,*) '---------- END CHECK POT --------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -1307,6 +1376,7 @@ SUBROUTINE test_Retinal_CP2000
   CALL dealloc_dnMat(PotVal)
   CALL dealloc_dnMat(NAC)
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_Retinal_CP2000
 SUBROUTINE test_Retinal_JPCB2000
@@ -1392,6 +1462,7 @@ SUBROUTINE test_Retinal_JPCB2000
 
   CALL dealloc_dnMat(PotVal)
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Retinal_JPCB2000 potential+Bath'
@@ -1428,6 +1499,7 @@ SUBROUTINE test_Retinal_JPCB2000
 
   CALL dealloc_dnMat(PotVal)
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_Retinal_JPCB2000
 SUBROUTINE test_HONO
@@ -1514,6 +1586,8 @@ SUBROUTINE test_HONO
                               2.23738_Rkind,1.975200_Rkind,pi],          &
                         nb_points=1001, grid_file='grid_HONO')
 
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -1537,8 +1611,6 @@ SUBROUTINE test_HNNHp
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '------------ 6D-HNNH+ -----------------------'
-  CALL Init_Model(QModel,pot_name='HNNHp',Print_init=.TRUE.)
-  write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
   CALL Init_Model(QModel,pot_name='HNNHp',Print_init=.FALSE.)
@@ -1569,6 +1641,8 @@ SUBROUTINE test_HNNHp
       test_var=test_var,last_test=.TRUE.)
 
 
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -1591,17 +1665,12 @@ SUBROUTINE test_H2SiN
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '------------ 6D-H2SiN -----------------------'
-  CALL Init_Model(QModel,pot_name='H2SiN',Print_init=.TRUE.)
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-DO option=1,3
+
+  DO option=1,3
   write(out_unit,*) '------------ 6D-H2SiN -----------------------'
   write(out_unit,'(a,i0,a)') ' ------------ option: ',option,' ----------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-
-
   CALL Init_Model(QModel,pot_name='H2SiN',option=option,Print_init=.FALSE.)
 
   allocate(q(QModel%QM%ndim))
@@ -1632,6 +1701,7 @@ DO option=1,3
 
   CALL dealloc_dnMat(PotVal)
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -1654,10 +1724,6 @@ SUBROUTINE test_H2NSi
 
   nderiv = 2
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '------------ 6D-H2NSi -----------------------'
-  CALL Init_Model(QModel,pot_name='H2NSi',Print_init=.TRUE.)
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 DO option=1,2
@@ -1695,6 +1761,7 @@ DO option=1,2
 
   CALL dealloc_dnMat(PotVal)
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -1759,6 +1826,7 @@ SUBROUTINE test_H2O
       test_var=test_var,last_test=.TRUE.)
 
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -1823,6 +1891,7 @@ SUBROUTINE test_ClH2p_Botschwina
       test_var=test_var,last_test=.FALSE.)
 
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -1870,6 +1939,7 @@ SUBROUTINE test_ClH2p_Botschwina
       test_var=test_var,last_test=.TRUE.)
 
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -1932,6 +2002,7 @@ SUBROUTINE test_ClH2p_op12
   CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='ClH2p_op12',test_var=test_var)
 
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -1977,6 +2048,7 @@ SUBROUTINE test_ClH2p_op12
   CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='ClH2p_op12',test_var=test_var)
 
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -2062,6 +2134,7 @@ SUBROUTINE test_ClH2p_op34
                                Qmax=[2.6_Rkind,Q(2), 0.5_Rkind], &
                         nb_points=101,grid_file='grid_ClH2+_op34_Q13.tab')
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -2131,6 +2204,7 @@ SUBROUTINE test_ClH2p_op34
   END DO
 
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -2219,6 +2293,7 @@ SUBROUTINE test_ClH2p_op56
                                Qmax=[2.6_Rkind,Q(2), 0.5_Rkind], &
                         nb_points=101,grid_file='grid_ClH2+_op56_Q13.tab')
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -2274,6 +2349,7 @@ SUBROUTINE test_ClH2p_op56
 
   deallocate(Q)
   CALL dealloc_dnMat(PotVal)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -2300,10 +2376,6 @@ SUBROUTINE test_template
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Template potential'
   write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
-  write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='template',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
-  write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   flush(out_unit)
 
@@ -2340,6 +2412,7 @@ SUBROUTINE test_template
 
   CALL dealloc_dnMat(PotVal)
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -2366,9 +2439,6 @@ SUBROUTINE test_TwoD
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' TwoD potential'
   write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
-  write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='TwoD',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   flush(out_unit)
@@ -2407,6 +2477,7 @@ SUBROUTINE test_TwoD
 
   CALL dealloc_dnMat(PotVal)
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -2475,12 +2546,11 @@ SUBROUTINE test_TwoD_RJDI2014
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
-
-
 
 END SUBROUTINE test_TwoD_RJDI2014
 SUBROUTINE test_TwoD_Valahu2022
@@ -2539,6 +2609,7 @@ SUBROUTINE test_TwoD_Valahu2022
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -2564,9 +2635,6 @@ SUBROUTINE test_HNO3
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '------------ 9D-HNO3 ------------------------'
-  CALL Init_Model(QModel,pot_name='HNO3',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
-  write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
   CALL Init_Model(QModel,ndim=9,pot_name='HNO3')
@@ -2609,6 +2677,8 @@ SUBROUTINE test_HNO3
   DO i=1,size(Func)
     CALL Write_dnS(Func(i))
   END DO
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -2632,11 +2702,6 @@ SUBROUTINE test_PH4
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '------------ 9D-PH4: H+PH3 -> H2+PH2 --------'
-  write(out_unit,*) ' Qmodel, init: ',check_Init_QModel(QModel)
-  CALL Init_Model(QModel,pot_name='PH4',Print_init=.FALSE.)
-  write(out_unit,*) ' Qmodel, init: ',check_Init_QModel(QModel)
-  CALL Write0_Model(QModel)
-  write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
   CALL Init_Model(QModel,ndim=9,pot_name='PH4',option=4,Print_init=.FALSE.)
@@ -2706,6 +2771,8 @@ SUBROUTINE test_PH4
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unit)
 
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -2729,11 +2796,6 @@ SUBROUTINE test_CH5
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '------------ 12D-CH5: H+CH4 -> H2+CH3 -------'
-  write(out_unit,*) ' Qmodel, init: ',check_Init_QModel(QModel)
-  CALL Init_Model(QModel,pot_name='CH5',Print_init=.FALSE.)
-  write(out_unit,*) ' Qmodel, init: ',check_Init_QModel(QModel)
-  CALL Write0_Model(QModel)
-  write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
   CALL Init_Model(QModel,ndim=12,pot_name='CH5',option=5,Print_init=.FALSE.)
@@ -2802,6 +2864,8 @@ SUBROUTINE test_CH5
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unit)
 
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -2825,9 +2889,7 @@ SUBROUTINE test_HOO_DMBE
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '------------ 3D-HOO_DMBE --------------------'
-  CALL Init_Model(QModel,pot_name='HOO_DMBE',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
-  write(out_unit,*) '---------------------------------------------'
+
   write(out_unit,*) '---------------------------------------------'
 
   CALL Init_Model(QModel,pot_name='HOO_DMBE',Print_init=.FALSE.)
@@ -2863,6 +2925,8 @@ SUBROUTINE test_HOO_DMBE
   END DO
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) ' END Potential and derivatives'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -2888,6 +2952,7 @@ SUBROUTINE test_HOO_DMBE
   write(out_unit,*) ' END Potential and derivatives'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -3008,6 +3073,7 @@ SUBROUTINE test_H3
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Qcart)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -3050,6 +3116,7 @@ SUBROUTINE test_H3
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Qcart)
+  CALL dealloc_Model(QModel)
 
 
   write(out_unit,*) '---------------------------------------------'
@@ -3076,6 +3143,7 @@ SUBROUTINE test_H3
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q1D)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -3121,6 +3189,7 @@ SUBROUTINE test_IRC_H3
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -3167,6 +3236,7 @@ SUBROUTINE test_IRC_H3_AbInitio
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -3228,6 +3298,7 @@ SUBROUTINE test_CNH_Murrell
     CALL Test_QdnV_FOR_Model(Q(:,i),PotVal,QModel,info='CNH_Murrell',test_var=test_var)
   END DO
   CALL dealloc_dnMat(PotVal)
+
   write(out_unit,*) ' END Potential and derivatives'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -3282,8 +3353,7 @@ SUBROUTINE test_CNH_Murrell
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Qopt)
-
-
+  CALL dealloc_Model(QModel)
   deallocate(Q)
 
   write(out_unit,*) '---------------------------------------------'
@@ -3324,6 +3394,8 @@ SUBROUTINE test_CNH_Murrell
   END DO
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) ' END Potential and derivatives'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -3371,6 +3443,8 @@ SUBROUTINE test_CNH_Murrell
   END DO
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) ' END Potential and derivatives'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -3410,6 +3484,7 @@ SUBROUTINE test_CNH_Murrell
 
   END DO
   CALL dealloc_dnMat(PotVal)
+  CALL dealloc_Model(QModel)
   deallocate(Q)
   write(out_unit,*) ' END Potential and derivatives'
   write(out_unit,*) '---------------------------------------------'
@@ -3438,7 +3513,7 @@ SUBROUTINE test_CNH_Murrell
               ZERO,             ZERO, 2.14864946_Rkind, &
               1.925191385_Rkind,ZERO, 2.017487565_Rkind]
   CALL QML_Opt(Qopt,QModel,Opt_p,Q0=Qcart)
-stop
+
 
   CALL Init_QML_IRC(IRC_p,QModel,read_param=.TRUE.,param_file_name='DAT_files/irc_CNH.dat')
 
@@ -3452,6 +3527,7 @@ stop
 
   deallocate(Qcart)
   deallocate(Q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -3484,8 +3560,6 @@ SUBROUTINE test_Opt_MullerBrown
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   flush(out_unit)
-  CALL Init_Model(QModel,pot_name='2D_MB',PubliUnit=.TRUE.,Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
 
   DO option=1,5
 
@@ -3507,6 +3581,7 @@ SUBROUTINE test_Opt_MullerBrown
         test_var=test_var,last_test=(option == 5))
 
     flush(out_unit)
+    CALL dealloc_Model(QModel)
 
   END DO
 
@@ -3554,6 +3629,7 @@ SUBROUTINE test_IRC_MullerBrown
 
 
   deallocate(Q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -3601,6 +3677,7 @@ SUBROUTINE test_Test
 
   CALL dealloc_dnMat(PotVal)
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
@@ -3662,6 +3739,8 @@ SUBROUTINE test_Vibronic
   CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='vibronic', &
       test_var=test_var,last_test=.TRUE.)
 
+  CALL dealloc_Model(QModel)
+
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -3685,13 +3764,10 @@ SUBROUTINE test_NO3_test
   write(out_unit,*) ' NO3 potential'
   write(out_unit,*) ' With units: Atomic Units  ??? '
   write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='NO3',Print_init=.TRUE.)
-  CALL Write0_Model(QModel)
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-STOP
-  CALL Init_Model(QModel,pot_name='NO3',PubliUnit=.FALSE.)
 
+  CALL Init_Model(QModel,pot_name='NO3',PubliUnit=.FALSE.)
+STOP
   allocate(q(QModel%QM%ndim))
 
   q(:) = ZERO
@@ -3712,6 +3788,7 @@ STOP
 
   CALL dealloc_dnMat(PotVal)
   deallocate(q)
+  CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_NO3_test
 END PROGRAM TEST_model

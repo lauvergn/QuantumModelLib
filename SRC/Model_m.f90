@@ -46,7 +46,7 @@ MODULE Model_m
 
   PRIVATE
   PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func,Eval_tab_HMatVibAdia,Eval_dnHVib_ana
-  PUBLIC :: check_alloc_QM,check_Init_QModel
+  PUBLIC :: check_alloc_QM,check_Init_QModel,dealloc_Model
   PUBLIC :: Write0_Model,Write_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
@@ -386,8 +386,8 @@ CONTAINS
     ! test the QML_path variable (it enables to test is the QML directory has been moved)
     CALL check_QML_Path()
 
-
-    IF (allocated(QModel%QM)) deallocate(QModel%QM)
+    CALL dealloc_Model(QModel)
+    !IF (allocated(QModel%QM)) deallocate(QModel%QM)
 
     IF (present(ndim)) THEN
       QModel_in%ndim      = ndim
@@ -555,11 +555,11 @@ CONTAINS
       !! pot_name  = 'H2'
       !! ndim      = 1
       !! nsurf     = 1
+      !! options: (1,2) Talyor expansion 
+      !!     Level: CCSD(T)-F12B/VTZ-F12 (with molpro 2010)
+      !! options:(3) extract for the H+H2 LSTH potential
       !! reduced mass      = 1837.1526464003414/2 au
-      !! Level: CCSD(T)-F12B/VTZ-F12 (with molpro 2010)
       !! === END README ==
-
-      allocate(QML_H2_t :: QModel%QM)
       QModel%QM = Init_QML_H2(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('sigmoid')
@@ -1061,6 +1061,20 @@ CONTAINS
     END IF
 
   END SUBROUTINE Init_Model
+  SUBROUTINE dealloc_Model(Model)
+    USE AdiaChannels_Basis_m, ONLY : QML_Basis_t,dealloc_Basis
+    IMPLICIT NONE
+
+    TYPE(Model_t),      intent(inout)           :: Model
+
+    IF (allocated(Model%QM))    deallocate(Model%QM)
+    IF (allocated(Model%Basis)) CALL dealloc_Basis(Model%Basis)
+    Model%nsurf       = 0
+    Model%ndim        = 0
+    Model%opt         = .FALSE.
+    Model%irc         = .FALSE.
+
+  END SUBROUTINE dealloc_Model
   SUBROUTINE Set_step_epsi_Model(step_in,epsi_in)
     IMPLICIT NONE
 
