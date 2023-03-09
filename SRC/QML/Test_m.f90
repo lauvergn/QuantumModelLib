@@ -80,7 +80,7 @@ MODULE QML_Test_m
     USE QDUtil_m, ONLY : Identity_Mat
   IMPLICIT NONE
 
-    TYPE (QML_Test_t), allocatable               :: QModel ! RESULT
+    TYPE (QML_Test_t)                            :: QModel ! RESULT
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -97,7 +97,6 @@ MODULE QML_Test_m
       flush(out_unit)
     END IF
 
-    allocate(QML_Test_t :: QModel)
 
     QModel%QML_Empty_t = QModel_in
 

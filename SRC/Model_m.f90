@@ -957,6 +957,7 @@ CONTAINS
 
     CASE ('test')
       !! test-potential
+      allocate(QML_Test_t :: QModel%QM)
       QModel%QM = Init_QML_Test(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE DEFAULT

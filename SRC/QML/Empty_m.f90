@@ -104,8 +104,8 @@ MODULE QML_Empty_m
      !PROCEDURE :: get2_Q0_QModel         => get2_Q0_QML_Empty
       PROCEDURE :: get_d0GGdef_QModel     => get_d0GGdef_QML_Empty
       PROCEDURE :: Cart_TO_Q_QModel       => Cart_TO_Q_QML_Empty
-      !PROCEDURE, PRIVATE :: Init0_QML_Empty
-      !GENERIC,   PUBLIC  :: assignment(=) => Init0_QML_Empty
+      PROCEDURE, PRIVATE :: Empty2_TO_Empty1_QML_Empty
+      GENERIC,   PUBLIC  :: assignment(=) => Empty2_TO_Empty1_QML_Empty
       END TYPE QML_Empty_t
 
   INTERFACE get_Q0_QModel
@@ -116,11 +116,11 @@ MODULE QML_Empty_m
     MODULE PROCEDURE Qact_TO_Q_QML_Empty
   END INTERFACE
 
-  INTERFACE Empty2_TO_Empty1
-    MODULE PROCEDURE Empty2_TO_Empty1_QML_Empty
-  END INTERFACE
+  !INTERFACE Empty2_TO_Empty1
+  !  MODULE PROCEDURE Empty2_TO_Empty1_QML_Empty
+  !END INTERFACE
 
-  PUBLIC :: QML_Empty_t,Empty2_TO_Empty1
+  PUBLIC :: QML_Empty_t
   PUBLIC :: get_Q0_QModel, get2_Q0_QML_Empty, Qact_TO_Q
 
   CONTAINS
@@ -129,7 +129,7 @@ MODULE QML_Empty_m
     USE ADdnSVM_m, ONLY : dealloc_dnMat
     IMPLICIT NONE
 
-    TYPE (QML_Empty_t),  intent(inout)   :: QModel
+    CLASS (QML_Empty_t),  intent(inout)   :: QModel
     TYPE (QML_Empty_t),  intent(in)      :: QModel_in ! variable to transfer info to the init
 
     !----- for debuging --------------------------------------------------
