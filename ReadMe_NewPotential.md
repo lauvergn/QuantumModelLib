@@ -105,8 +105,9 @@ Add the use of the new module **QML_XXX_m** in the **Init_Model** subroutine.
 In the select case of the **Init_Model** subroutine, add those Fortran lines:
 
 ```fortran
-  CASE ('xxx') ! the potential/model name MUST in lowercase letters
+  CASE ('xxx') ! the potential/model name MUST be in lowercase letters
     !! xxx-potential
+    allocate(QML_XXX_t :: QModel%QM)
     QModel%QM = Init_QML_XXX(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 ```
 

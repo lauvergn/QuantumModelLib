@@ -205,16 +205,16 @@ MODULE QML_PSB3_m
     CLASS(QML_PSB3_t),   intent(in) :: QModel
     integer,               intent(in) :: nio
 
-    write(nio,*) 'PSB3 default parameters'
+    write(nio,*) 'PSB3 parameters'
     write(nio,*)
     write(nio,*) ' Warning the parameters are given as in the publication.'
-    write(nio,*) '  Therefore, the BLA(=Q(1)) is in Angstrom and the energy is in kcal.mol^-1.'
-    write(nio,*)
-    write(nio,*) 'end PSB3 default parameters'
-    write(nio,*)
-    write(nio,*) 'PSB3 current parameters'
-    write(nio,*)
     write(nio,*) '  PubliUnit:      ',QModel%PubliUnit
+    IF (QModel%PubliUnit) THEN
+      write(nio,*) '  The BLA(=Q(1)) is in Angstrom and the energy is in kcal.mol^-1.'
+    ELSE
+      write(nio,*) '  The BLA(=Q(1)) is in bohr and the energy is in Hartree.'
+
+    END IF
     write(nio,*)
     write(nio,*) '  adiabatic:      ',QModel%adiabatic
     write(nio,*) '  Option   :      ',QModel%option
@@ -265,12 +265,12 @@ MODULE QML_PSB3_m
     CASE Default
         write(out_unit,*) ' ERROR in Write_QML_PSB3 '
         write(out_unit,*) ' This option is not possible. option: ',QModel%option
-        write(out_unit,*) ' Its value MUST be 1 or 2 '
+        write(out_unit,*) ' Its value MUST be 1, 2 or 3 '
         STOP
     END SELECT
 
     write(nio,*)
-    write(nio,*) 'end PSB3 current parameters'
+    write(nio,*) 'end PSB3 parameters'
 
   END SUBROUTINE Write_QML_PSB3
 !> @brief Subroutine wich calculates the PSB3 potential with derivatives up to the 2d order.

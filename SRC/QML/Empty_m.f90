@@ -134,8 +134,8 @@ MODULE QML_Empty_m
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Empty2_TO_Empty1_QML_Empty'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
 
     IF (debug) THEN
