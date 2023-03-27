@@ -47,6 +47,7 @@ MODULE Model_m
   PRIVATE
   PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func,Eval_tab_HMatVibAdia,Eval_dnHVib_ana
   PUBLIC :: check_alloc_QM,check_Init_QModel,dealloc_Model
+  PUBLIC :: check_alloc_d0GGdef
   PUBLIC :: Write0_Model,Write_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
@@ -211,7 +212,7 @@ CONTAINS
     IRC1                              = IRC
 
     QModel_inout%option               = option
-    CALL set_print_level(printlevel) ! from them module QDUtil lib
+    CALL set_print_level(printlevel) ! from the module QDUtil lib
     QModel_inout%ndim                 = ndim
     QModel_inout%nsurf                = nsurf
     QModel_inout%adiabatic            = adiabatic
@@ -1221,7 +1222,15 @@ CONTAINS
     END IF
 
   END FUNCTION check_Init_QModel
+  FUNCTION check_alloc_d0GGdef(QModel) RESULT(alloc)
+    IMPLICIT NONE
 
+    logical                           :: alloc
+    CLASS(QML_Empty_t), intent(in)    :: QModel
+
+    alloc = allocated(QModel%d0GGdef)
+
+  END FUNCTION check_alloc_d0GGdef
   SUBROUTINE Eval_tab_HMatVibAdia(QModel,Qact,tab_MatH)
     USE QDUtil_m,         ONLY : Write_Mat
     USE ADdnSVM_m
@@ -2684,7 +2693,7 @@ CONTAINS
     CALL QModel%QM%Write0_QModel(nio=nio_loc)
 
 
-     IF (nio_loc /= out_unit) THEN
+    IF (nio_loc /= out_unit) THEN
       close(nio_loc)
     END IF
 
@@ -2823,6 +2832,7 @@ CONTAINS
 
     real (kind=Rkind), parameter   :: ZeroTresh    = ONETENTH**9
     logical :: res_test
+    character(len=Name_longlen) ::dum_name
 
     ! open file to write
     IF (present(name_file)) THEN
@@ -2836,7 +2846,7 @@ CONTAINS
       write(out_unit,*) ' Impossible to open the file: ',write_file_name
       STOP 'ERROR in Test_QdnV_FOR_Model: Impossible to open the file'
     END IF
-
+    
     ! check if the file to be read is open, then get the unit. Otherwise, open it
     read_file_name = 'RES_old/' // write_file_name
     inquire(FILE=read_file_name, OPENED=read_file_open, EXIST=read_file_exist, NUMBER=read_file_unit)
@@ -2886,12 +2896,14 @@ CONTAINS
     IF (read_file_open) THEN
       Qref = Read_alloc_Vect(read_file_unit,err_io)
       ! For testing the model, Q, PotVal, G
-      res_test = all(abs(Q-Qref) < ZeroTresh) .AND. (err_io == 0)
+      res_test = (err_io == 0)
+      IF (res_test) res_test = all(abs(Q-Qref) < ZeroTresh)
       CALL Logical_Test(test_var,test1=res_test,info=info_loc // ': Q == Qref:   T ? ' // TO_string(res_test) )
       IF (.NOT. res_test) THEN
+        IF (err_io /= 0) write(out_unit,*) 'Problem while reading the old file: ',read_file_name
         write(out_unit,*) info_loc // ', Q:   ',Q
-        write(out_unit,*) info_loc // ', Qref:',Qref
-        write(out_unit,*) info_loc // ', Diff:',Q-Qref
+        IF (err_io == 0) write(out_unit,*) info_loc // ', Qref:',Qref
+        IF (err_io == 0) write(out_unit,*) info_loc // ', Diff:',Q-Qref
       END IF
     END IF
 
@@ -2922,12 +2934,14 @@ CONTAINS
       PotValref%d2 = reshape(Read_alloc_Vect(read_file_unit,err_io),shape=shape(PotValref%d2))
     END IF
     IF (read_file_open) THEN
-      res_test = all(abs(get_Flatten(PotVal)-get_Flatten(PotValref)) < ZeroTresh)  .AND. (err_io == 0)
+      res_test = (err_io == 0)
+      IF (res_test) res_test = all(abs(get_Flatten(PotVal)-get_Flatten(PotValref)) < ZeroTresh)
       CALL Logical_Test(test_var,test1=res_test,info=info_loc // ': PotVal == PotValref:   T ? ' // TO_string(res_test) )
       IF (.NOT. res_test) THEN
+        IF (err_io /= 0) write(out_unit,*) 'Problem while reading the old file: ',read_file_name
         CALL Write_dnMat(PotVal,          nio=out_unit,info=info_loc // ', PotVal')
-        CALL Write_dnMat(PotValref,       nio=out_unit,info=info_loc // ', PotValref')
-        CALL Write_dnMat(PotVal-PotValref,nio=out_unit,info=info_loc // ', diff')
+        IF (err_io == 0) CALL Write_dnMat(PotValref,       nio=out_unit,info=info_loc // ', PotValref')
+        IF (err_io == 0) CALL Write_dnMat(PotVal-PotValref,nio=out_unit,info=info_loc // ', diff')
       END IF
     END IF
   
@@ -2960,12 +2974,14 @@ CONTAINS
         Vecref%d2 = reshape(Read_alloc_Vect(read_file_unit,err_io),shape=shape(Vecref%d2))
       END IF
       IF (read_file_open) THEN
-        res_test = all(abs(get_Flatten(Vec)-get_Flatten(Vecref)) < ZeroTresh) .AND. (err_io == 0)
+        res_test = (err_io == 0)
+        IF (res_test) res_test = all(abs(get_Flatten(Vec)-get_Flatten(Vecref)) < ZeroTresh)
         CALL Logical_Test(test_var,test1=res_test,info=info_loc // ': Vec == Vecref:   T ? ' // TO_string(res_test) )
         IF (.NOT. res_test) THEN
+          IF (err_io /= 0) write(out_unit,*) 'Problem while reading the old file: ',read_file_name
           CALL Write_dnMat(Vec,       nio=out_unit,info=info_loc // ', Vec')
-          CALL Write_dnMat(Vecref,    nio=out_unit,info=info_loc // ', Vecref')
-          CALL Write_dnMat(Vec-Vecref,nio=out_unit,info=info_loc // ', diff')
+          IF (err_io == 0) CALL Write_dnMat(Vecref,    nio=out_unit,info=info_loc // ', Vecref')
+          IF (err_io == 0) CALL Write_dnMat(Vec-Vecref,nio=out_unit,info=info_loc // ', diff')
         END IF
       END IF
 
@@ -2979,12 +2995,14 @@ CONTAINS
       END IF
       IF (read_file_open .AND. allocated(NAC%d1)) THEN
         d1NAC = Read_alloc_Vect(read_file_unit,err_io)
-        res_test = all(abs(reshape(NAC%d1,shape=[size(NAC%d1)])-d1NAC) < ZeroTresh) .AND. (err_io == 0)
+        res_test = (err_io == 0)
+        IF (res_test) res_test = all(abs(reshape(NAC%d1,shape=[size(NAC%d1)])-d1NAC) < ZeroTresh)
         CALL Logical_Test(test_var,test1=res_test,info=info_loc // ': NAC == NACref:   T ? ' // TO_string(res_test) )
         IF (.NOT. res_test) THEN
+          IF (err_io /= 0) write(out_unit,*) 'Problem while reading the old file: ',read_file_name
           write(out_unit,*) info_loc // ', NAC:    ',NAC%d1
-          write(out_unit,*) info_loc // ', QNACref:',d1NAC
-          write(out_unit,*) info_loc // ', diff:   ',reshape(NAC%d1,shape=[size(NAC%d1)])-d1NAC
+          IF (err_io == 0) write(out_unit,*) info_loc // ', QNACref:',d1NAC
+          IF (err_io == 0) write(out_unit,*) info_loc // ', diff:   ',reshape(NAC%d1,shape=[size(NAC%d1)])-d1NAC
         END IF
       END IF
     END IF
@@ -2996,20 +3014,27 @@ CONTAINS
     END IF
     IF (read_file_open .AND. allocated(QModel%QM%d0GGdef)) THEN
       Gdef = Read_alloc_Vect(read_file_unit,err_io)
-      res_test = all(abs(reshape(QModel%QM%d0GGdef,shape=[size(QModel%QM%d0GGdef)])-Gdef) < ZeroTresh) .AND. (err_io == 0)
+      res_test = (err_io == 0)
+      IF (res_test) res_test = all(abs(reshape(QModel%QM%d0GGdef,shape=[size(QModel%QM%d0GGdef)])-Gdef) < ZeroTresh)
       CALL Logical_Test(test_var,test1=res_test,info=info_loc // ': d0GGdef == Gref:   T ? ' // TO_string(res_test) )
       IF (.NOT. res_test) THEN
+        IF (err_io /= 0) write(out_unit,*) 'Problem while reading the old file: ',read_file_name
         CALL Write_Mat(QModel%QM%d0GGdef,                            &
             nio=out_unit,nbcol=5,info=info_loc // ', d0GGdef')
-        CALL Write_Mat(reshape(Gdef,shape=shape(QModel%QM%d0GGdef)), &
+        IF (err_io == 0) CALL Write_Mat(reshape(Gdef,shape=shape(QModel%QM%d0GGdef)), &
             nio=out_unit,nbcol=5,info=info_loc // ', Gref')
-        CALL Write_Mat(QModel%QM%d0GGdef-reshape(Gdef,shape=shape(QModel%QM%d0GGdef)), &
+        IF (err_io == 0) CALL Write_Mat(QModel%QM%d0GGdef-reshape(Gdef,shape=shape(QModel%QM%d0GGdef)), &
             nio=out_unit,nbcol=5,info=info_loc // ', diff')
       END IF
     END IF
 
     write(write_file_unit,'(a)',advance='no') 'END_TEST output: '
-    IF (read_file_open) read(read_file_unit,*)
+    IF (read_file_open) THEN
+      DO
+        read(read_file_unit,*) dum_name
+        IF (dum_name == 'END_TEST') EXIT
+      END DO
+    END IF
 
     close(write_file_unit)
     IF (last_test_loc .AND. read_file_open) THEN
@@ -3208,8 +3233,8 @@ CONTAINS
       IF (len_trim(grid_file) == 0) THEN
         unit_grid_file = out_unit
       ELSE
-        unit_grid_file = 99
-        open(unit=unit_grid_file,file=trim(grid_file) )
+        unit_grid_file = 99 ! not used
+        open(newunit=unit_grid_file,file=trim(grid_file) )
       END IF
     ELSE
       unit_grid_file = out_unit

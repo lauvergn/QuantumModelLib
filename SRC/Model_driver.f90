@@ -366,6 +366,16 @@ SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
   CALL Check_analytical_numerical_derivatives(QuantumModel,Q,nderiv=2)
 
 END SUBROUTINE sub_Qmodel_Check_anaVSnum
+SUBROUTINE sub_Qmodel_check_alloc_d0GGdef(check)
+  USE Model_m
+  IMPLICIT NONE
+
+  logical,            intent(inout)    :: check
+
+  check = check_Init_QModel(QuantumModel) ! check if QuantumModel%QM is allocated and initialized
+  IF (check) check = check_alloc_d0GGdef(QuantumModel%QM)
+
+END SUBROUTINE sub_Qmodel_check_alloc_d0GGdef
 SUBROUTINE get_Qmodel_GGdef(GGdef)
   USE QDUtil_NumParameters_m
   USE Model_m
@@ -438,7 +448,7 @@ SUBROUTINE set_Qmodel_Print_level(printlevel)
 
   integer,                intent(in)        :: printlevel
 
-  CALL set_print_level(printlevel) ! from them module QDUtil lib
+  CALL set_print_level(printlevel,force=.TRUE.) ! from them module QDUtil lib
 
 END SUBROUTINE set_Qmodel_Print_level
 SUBROUTINE set_Qmodel_in_unit(inunitp)

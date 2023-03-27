@@ -375,8 +375,8 @@ MODULE QML_H3_m
     IF (debug) write(out_unit,*) 'init Q0 of H3 (H3 minimum)'
     QModel%Q0 = [2.806_Rkind,2.271_Rkind,2.271_Rkind]
 
-    IF (debug) write(out_unit,*) 'init d0GGdef of H3'
-    QModel%d0GGdef = Identity_Mat(QModel%ndim)
+    !IF (debug) write(out_unit,*) 'init d0GGdef of H3'
+    !QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
       CALL Write_QML_H3(QModel,nio=out_unit)

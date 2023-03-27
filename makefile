@@ -291,11 +291,7 @@ BaseName := QuantumModelLib
 .PHONY: zip
 zip: cleanall
 	test -d $(ExtLibSAVEDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
-	cd $(ExtLibSAVEDIR) ; rm -rf $(BaseName)_devloc
-	mkdir $(ExtLibSAVEDIR)/$(BaseName)_devloc
-	cp -r * $(ExtLibSAVEDIR)/$(BaseName)_devloc
-	cd $(ExtLibSAVEDIR) ; zip -r Save_$(BaseName)_devloc.zip $(BaseName)_devloc
-	cd $(ExtLibSAVEDIR) ; rm -rf $(BaseName)_devloc
+	$(ExtLibSAVEDIR)/makezip.sh $(BaseName)
 	cd $(ExtLibSAVEDIR) ; ./cp_QML.sh
 	@echo "  done zip"
 #=== external libraries ========================
