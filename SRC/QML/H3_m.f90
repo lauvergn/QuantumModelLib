@@ -350,15 +350,38 @@ MODULE QML_H3_m
       QModel%ndim     = 1
 
       QModel%ndimFunc = 1
-      QModel%nb_Func  = 3 ! V, Rho, Hessian 
+      QModel%nb_Func  = 3 ! V, Hessian, Rho 
 
       QModel%IndexFunc_Ene  = 1
-      QModel%IndexFunc_Qop  = 2
+      QModel%IndexFunc_Qop  = 3
       QModel%IndexFunc_Grad = 0
-      QModel%IndexFunc_Hess = 0
+      QModel%IndexFunc_Hess = 2
 
       QModel%pot_name   = 'h3_jo'
       QModel%no_ana_der = .FALSE.
+
+    CASE (3) ! 2d avec le rho fitté de 31
+      IF (QModel%ndim == 2) THEN
+        QModel%ndimQ      = 2
+      ELSE
+        QModel%ndimQ      = 3
+      END IF
+      IF (QModel%Cart_TO_Q) THEN
+        QModel%ndim       = QModel%ndimCart
+      ELSE
+        QModel%ndim       = QModel%ndimQ
+      END IF
+
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 3 ! V, Hessian, Rho 
+
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 3
+      QModel%IndexFunc_Grad = 0
+      QModel%IndexFunc_Hess = 2
+
+      QModel%pot_name   = 'H3_LSTH'
+      QModel%no_ana_der = .TRUE.
 
     CASE Default
        write(out_unit,*) 'Write_QModel'
@@ -375,8 +398,8 @@ MODULE QML_H3_m
     IF (debug) write(out_unit,*) 'init Q0 of H3 (H3 minimum)'
     QModel%Q0 = [2.806_Rkind,2.271_Rkind,2.271_Rkind]
 
-    !IF (debug) write(out_unit,*) 'init d0GGdef of H3'
-    !QModel%d0GGdef = Identity_Mat(QModel%ndim)
+    IF (debug) write(out_unit,*) 'init d0GGdef of H3'
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
       CALL Write_QML_H3(QModel,nio=out_unit)
@@ -437,6 +460,11 @@ MODULE QML_H3_m
       write(nio,*) 'Third (correct?) 1D-IRC H3 LSTH model'
     CASE (31) 
             write(nio,*) 'Case 31 for Jo'
+    CASE (3) ! 2D 
+        IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances, FOR Jo'
+        IF (QModel%ndim == 3) write(nio,*) '3D-H3 LSTH model, with 3 distances'
+        IF (QModel%ndim == 9) write(nio,*) 'Cartessian H3 LSTH model'
+
     END SELECT
     write(nio,*)
 
@@ -472,7 +500,7 @@ MODULE QML_H3_m
 
 
     SELECT CASE(QModel%option)
-    CASE (0,10,20) ! 2D or 3D
+    CASE (0,10,20,3) ! 2D or 3D
       IF (size(dnQ) == 2) THEN
         Q(1:2) = get_d0(dnQ)
         Q(3)   = Q(1) + Q(2)
@@ -874,7 +902,7 @@ MODULE QML_H3_m
       CALL EvalFunc_QML_H3_v11(QModel,Func,dnQ,nderiv)
     CASE (20,21) ! IRC
       CALL EvalFunc_QML_H3_v21(QModel,Func,dnQ,nderiv)
-    CASE (31) ! IRC
+    CASE (31,3) ! IRC
       CALL EvalFunc_QML_H3_v31(QModel,Func,dnQ,nderiv)
     END SELECT
 

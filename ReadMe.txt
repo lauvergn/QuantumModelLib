@@ -121,7 +121,7 @@ or with  lapack/blas (linux)
             non-adiabatic couplings (NAC).
             NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
 
- 3c) Potential energy surface with vibrational adiabatic separation
+ 3c) Potential energy surfaces with vibrational adiabatic separation
     This feature can be used only when the "model" is read.
     Therefore in the initialization with sub_Init_Qmodel "pot_name" must be "read_model".
     Then:
