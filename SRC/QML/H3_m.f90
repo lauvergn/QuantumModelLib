@@ -383,6 +383,45 @@ MODULE QML_H3_m
       QModel%pot_name   = 'H3_LSTH'
       QModel%no_ana_der = .TRUE.
 
+    CASE (41) !CASE 31 avec transfo de coordonnée sinh(s)
+      QModel%ndimQ    = 1
+      QModel%ndim     = 1
+
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 3 ! V, Hessian, Rho 
+
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 3
+      QModel%IndexFunc_Grad = 0
+      QModel%IndexFunc_Hess = 2
+
+      QModel%pot_name   = 'h3_jo'
+      QModel%no_ana_der = .FALSE.
+
+    CASE (4) ! 2d avec le rho fitté de 41 (sinh(s))
+        IF (QModel%ndim == 2) THEN
+          QModel%ndimQ      = 2
+        ELSE
+          QModel%ndimQ      = 3
+        END IF
+        IF (QModel%Cart_TO_Q) THEN
+          QModel%ndim       = QModel%ndimCart
+        ELSE
+          QModel%ndim       = QModel%ndimQ
+        END IF
+  
+        QModel%ndimFunc = 1
+        QModel%nb_Func  = 3 ! V, Hessian, Rho 
+  
+        QModel%IndexFunc_Ene  = 1
+        QModel%IndexFunc_Qop  = 3
+        QModel%IndexFunc_Grad = 0
+        QModel%IndexFunc_Hess = 2
+  
+        QModel%pot_name   = 'H3_LSTH'
+        QModel%no_ana_der = .TRUE.
+
+
     CASE Default
        write(out_unit,*) 'Write_QModel'
        CALL QModel%Write_QModel(out_unit)
@@ -460,10 +499,20 @@ MODULE QML_H3_m
       write(nio,*) 'Third (correct?) 1D-IRC H3 LSTH model'
     CASE (31) 
             write(nio,*) 'Case 31 for Jo'
+
+    CASE (41)
+            write(nio,*) 'Case 41 for Jo : 31 + transfo ts=sinh(s)'
+
     CASE (3) ! 2D 
-        IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances, FOR Jo'
+        IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances, FOR Jo case 3'
         IF (QModel%ndim == 3) write(nio,*) '3D-H3 LSTH model, with 3 distances'
         IF (QModel%ndim == 9) write(nio,*) 'Cartessian H3 LSTH model'
+
+    CASE (4) ! 2D 
+          IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances, FOR Jo case 4 ts=sinh(s)'
+          IF (QModel%ndim == 3) write(nio,*) '3D-H3 LSTH model, with 3 distances'
+          IF (QModel%ndim == 9) write(nio,*) 'Cartessian H3 LSTH model'
+
 
     END SELECT
     write(nio,*)
@@ -500,7 +549,7 @@ MODULE QML_H3_m
 
 
     SELECT CASE(QModel%option)
-    CASE (0,10,20,3) ! 2D or 3D
+    CASE (0,10,20,3,4) ! 2D or 3D
       IF (size(dnQ) == 2) THEN
         Q(1:2) = get_d0(dnQ)
         Q(3)   = Q(1) + Q(2)
@@ -522,11 +571,14 @@ MODULE QML_H3_m
       CALL EvalFunc_QML_H3_v11(QModel,Func,dnQ,nderiv)
       Mat_OF_PotDia(1,1) = Func(1)
 
-    CASE (31) ! IRC
+    CASE (31)
       CALL EvalFunc_QML_H3_v31(QModel,Func,dnQ,nderiv)
       Mat_OF_PotDia(1,1) = Func(1)
-    END SELECT
 
+    CASE (41) 
+      CALL EvalFunc_QML_H3_v41(QModel,Func,dnQ,nderiv)
+      Mat_OF_PotDia(1,1) = Func(1)
+    END SELECT
 
   END SUBROUTINE EvalPot_QML_H3
 
@@ -570,7 +622,6 @@ MODULE QML_H3_m
     allocate(Vec23(3))
     allocate(Vec12(3))
     allocate(Vec13(3))
-
     IF (QModel%MassWeighted) THEN
       ! here dnX are mass weighted, we have to un-mass weighted the vectors
       sm1 = ONE/sqrt(QModel%masses(1))
@@ -902,10 +953,11 @@ MODULE QML_H3_m
       CALL EvalFunc_QML_H3_v11(QModel,Func,dnQ,nderiv)
     CASE (20,21) ! IRC
       CALL EvalFunc_QML_H3_v21(QModel,Func,dnQ,nderiv)
-    CASE (31,3) ! IRC
+    CASE (31,3) 
       CALL EvalFunc_QML_H3_v31(QModel,Func,dnQ,nderiv)
+    CASE (41,4) 
+      CALL EvalFunc_QML_H3_v41(QModel,Func,dnQ,nderiv)
     END SELECT
-
   END SUBROUTINE EvalFunc_QML_H3
 
   ! for IRC, RPH
@@ -1355,6 +1407,7 @@ MODULE QML_H3_m
       (0.0007092933469349128_Rkind) * tab_Pl(14) +  &
       (0.007085765600105608_Rkind) * tab_Pl(16)
                                      
+      write(out_unit,*) " hi universe we're in the EvalFunc 31 !!"
 
       DO i=0,max_deg
         CALL dealloc_dnS(tab_Pl(i))
@@ -1363,6 +1416,74 @@ MODULE QML_H3_m
       CALL dealloc_dnS(ts)
 
     END SUBROUTINE EvalFunc_QML_H3_v31
+
+     SUBROUTINE EvalFunc_QML_H3_v41(QModel,Func,dnQ,nderiv)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+      CLASS(QML_H3_t),      intent(in)    :: QModel
+      TYPE (dnS_t),         intent(inout) :: Func(:)
+      TYPE (dnS_t),         intent(in)    :: dnQ(:)
+      integer,              intent(in)    :: nderiv
+
+      TYPE (dnS_t)                  :: s,ts,am,ap
+      integer                       :: i
+      integer,           parameter  :: max_deg = 20
+      TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
+      real (kind=Rkind), parameter  :: betaQ = 1._Rkind
+
+
+      !s  = dnQ(1)
+      s  = sinh(dnQ(1))
+      ts = tanh(s*betaQ)
+      DO i=0,max_deg
+        tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
+      END DO
+     
+      !  V
+      Func(1)= &
+      (-0.16597446466905263_Rkind) * tab_Pl(0) +  &
+      (-0.012383613848784496_Rkind) * tab_Pl(2) +  &
+      (0.003326606346209517_Rkind) * tab_Pl(4) +  &
+      (0.0008779335935679601_Rkind) * tab_Pl(6) +  &
+      (-0.00024065622197537675_Rkind) * tab_Pl(8) +  &
+      (-0.0001241975119023965_Rkind) * tab_Pl(10) +  &
+      (-1.3361183199880677e-05_Rkind) * tab_Pl(12) +  &
+      (8.34191640793267e-05_Rkind) * tab_Pl(14) +  &
+      (-3.0024892518874162e-06_Rkind) * tab_Pl(16)
+      
+      ! hessian
+      Func(2) = &
+      (0.5160182951754864_Rkind) * tab_Pl(0) +  &
+      (-0.17971203676655206_Rkind) * tab_Pl(2) +  &
+      (0.065778695179622_Rkind) * tab_Pl(4) +  &
+      (-0.056073060962388566_Rkind) * tab_Pl(6) +  &
+      (0.004030092812838212_Rkind) * tab_Pl(8) +  &
+      (0.021678208287918613_Rkind) * tab_Pl(10) +  &
+      (0.00825140847920465_Rkind) * tab_Pl(12) +  &
+      (-0.007827161286743232_Rkind) * tab_Pl(14) +  &
+      (-0.005497405564310822_Rkind) * tab_Pl(16)        
+
+      ! rho
+      Func(3) = &
+      (1.2933688878722176_Rkind) * tab_Pl(0) +  &
+      (0.08694736684022922_Rkind) * tab_Pl(2) +  &
+      (-0.016117447456099533_Rkind) * tab_Pl(4) +  &
+      (0.011110605473470134_Rkind) * tab_Pl(6) +  &
+      (0.009578713881238925_Rkind) * tab_Pl(8) +  &
+      (0.0015319141117551551_Rkind) * tab_Pl(10) +  &
+      (-0.001136293339165834_Rkind) * tab_Pl(12) +  &
+      (0.0007092933469349128_Rkind) * tab_Pl(14) +  &
+      (0.007085765600105608_Rkind) * tab_Pl(16)
+                                     
+      write(out_unit,*) 'new s,s,V',get_d0(dnQ(1)),get_d0(s),get_d0(Func(1))
+
+      DO i=0,max_deg
+        CALL dealloc_dnS(tab_Pl(i))
+      END DO
+      CALL dealloc_dnS(s)
+      CALL dealloc_dnS(ts)
+    END SUBROUTINE EvalFunc_QML_H3_v41
 
   FUNCTION QML_dnSigmoid_H3(x,sc)
     USE ADdnSVM_m
