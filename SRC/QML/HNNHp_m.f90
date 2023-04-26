@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HNNHp_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -76,7 +76,10 @@ MODULE QML_HNNHp_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HNNHp(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat, file_open2
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName
+
+    IMPLICIT NONE
 
     TYPE (QML_HNNHp_t)                           :: QModel ! RESULT
 
@@ -93,11 +96,11 @@ MODULE QML_HNNHp_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf    = 1
     QModel%ndim     = 6
@@ -108,10 +111,10 @@ MODULE QML_HNNHp_m
     SELECT CASE (QModel%option)
     CASE (1)
 
-      FileName = make_FileName('InternalData/HNNHp/n2h2pcc5.txt')
+      FileName = make_QMLInternalFileName('InternalData/HNNHp/n2h2pcc5.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       read(nio_fit,*) QModel%nb_funcModel
-      !write(out_unitp,*) 'nb_funcModel',QModel%nb_funcModel
+      !write(out_unit,*) 'nb_funcModel',QModel%nb_funcModel
 
       allocate(QModel%Qref(QModel%ndim))
       allocate(QModel%F(QModel%nb_funcModel))
@@ -120,14 +123,14 @@ MODULE QML_HNNHp_m
        k = 0
        DO
         nb_columns = min(6,QModel%nb_funcModel-k)
-        !write(out_unitp,*) k+1,k+nb_columns,nb_columns
+        !write(out_unit,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
  11      format(6i1,f15.8,5(2x,6i1,f15.8))
          k = k + nb_columns
        END DO
        read(nio_fit,*) QModel%Qref(:)
-       !write(out_unitp,*) 'Qref',QModel%Qref
+       !write(out_unit,*) 'Qref',QModel%Qref
 
        close(nio_fit)
        deallocate(FileName)
@@ -135,26 +138,26 @@ MODULE QML_HNNHp_m
 
     CASE Default
 
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1'
+        write(out_unit,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1'
 
         STOP
 
     END SELECT
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of HNNHp'
+    IF (debug) write(out_unit,*) 'init Q0 of HNNHp'
     QModel%Q0 = QModel%Qref([2,1,4,3,5,6])
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of HNNHp'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    IF (debug) write(out_unit,*) 'init d0GGdef of HNNHp'
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_HNNHp
@@ -163,7 +166,7 @@ MODULE QML_HNNHp_m
 !! @param QModel            CLASS(QML_HNNHp_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.
   SUBROUTINE Write_QML_HNNHp(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_HNNHp_t),   intent(in) :: QModel
     integer,                intent(in) :: nio
@@ -227,9 +230,9 @@ MODULE QML_HNNHp_m
     CONTINUE
 
     CASE Default
-        write(out_unitp,*) ' ERROR in Write_QML_HNNHp'
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1'
+        write(out_unit,*) ' ERROR in Write_QML_HNNHp'
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1'
 
         STOP
     END SELECT
@@ -239,7 +242,7 @@ MODULE QML_HNNHp_m
 
   END SUBROUTINE Write_QML_HNNHp
   SUBROUTINE Write0_QML_HNNHp(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_HNNHp_t),   intent(in) :: QModel
     integer,                intent(in) :: nio
@@ -274,9 +277,9 @@ MODULE QML_HNNHp_m
       CALL EvalPot1_QML_HNNHp(Mat_OF_PotDia,dnQ,QModel)
 
     CASE Default
-        write(out_unitp,*) ' ERROR in eval_HNNHpPot '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1'
+        write(out_unit,*) ' ERROR in eval_HNNHpPot '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1'
 
         STOP
     END SELECT
@@ -291,8 +294,8 @@ MODULE QML_HNNHp_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_HNNHp(Mat_OF_PotDia,dnQ,QModel)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t),      intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),      intent(in)    :: dnQ(:)
@@ -303,7 +306,7 @@ MODULE QML_HNNHp_m
     TYPE (dnS_t)        :: Vtemp
     integer             :: i,j
 
-    !write(out_unitp,*) ' sub EvalPot1_QML_HNNHp' ; flush(6)
+    !write(out_unit,*) ' sub EvalPot1_QML_HNNHp' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,1,4,3,5,6]) - QModel%Qref(:)
@@ -333,15 +336,15 @@ MODULE QML_HNNHp_m
    CALL dealloc_dnS(Vtemp)
    CALL dealloc_dnS(DQ)
 
-   !write(out_unitp,*) ' end EvalPot1_QML_HNNHp' ; flush(6)
+   !write(out_unit,*) ' end EvalPot1_QML_HNNHp' ; flush(6)
 
   END SUBROUTINE EvalPot1_QML_HNNHp
 
   ! here we suppose that the atom ordering: N1-N2-H1-H2
   ! the bounds are N1-N2, N1-H1, n2-H2
   SUBROUTINE Cart_TO_Q_QML_HNNHp(dnX,dnQ,QModel,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t),        intent(in)    :: dnX(:,:)
     TYPE (dnS_t),        intent(inout) :: dnQ(:)

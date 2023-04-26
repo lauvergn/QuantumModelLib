@@ -46,7 +46,7 @@
 !! @date 03/08/2017
 !!
 MODULE QML_Phenol_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   USE QML_Morse_m
   USE QML_Sigmoid_m
@@ -98,9 +98,8 @@ MODULE QML_Phenol_m
      real (kind=Rkind), PUBLIC :: G_RR    = 0.0005786177_Rkind
      real (kind=Rkind), PUBLIC :: G_ThTh  = 0.0002550307_Rkind
   CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Phenol
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Phenol
     PROCEDURE :: Write_QModel    => Write_QML_Phenol
-    PROCEDURE :: Write0_QModel   => Write0_QML_Phenol
   END TYPE QML_Phenol_t
 
   PUBLIC :: QML_Phenol_t,Init_QML_Phenol
@@ -115,7 +114,7 @@ CONTAINS
 !!
 !! @param PhenolPot          TYPE(PhenolPot_t):   derived type in which the parameters are set-up.
   FUNCTION Init_QML_Phenol(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  USE QMLLib_UtilLib_m
+  USE QDUtil_m,         ONLY : Identity_Mat
   IMPLICIT NONE
 
     TYPE (QML_Phenol_t)               :: QModel
@@ -133,17 +132,17 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) '  read_param:     ',read_param
-      write(out_unitp,*) '  nio_param_file: ',nio_param_file
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) '  read_param:     ',read_param
+      write(out_unit,*) '  nio_param_file: ',nio_param_file
+      flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
     QModel%pot_name = 'phenol'
     QModel%ndim     = 2
     QModel%nsurf    = 3
-    flush(out_unitp)
+    flush(out_unit)
 
     ! Warning the parameters are given as in the publication.
     !   Therefore, the OH distance R(=Q(1)) is in Angstrom and the energy is in eV.
@@ -194,41 +193,44 @@ CONTAINS
 
     IF (debug) THEN
       IF (QModel%PubliUnit) THEN
-        write(out_unitp,*) 'init Q0 of Phenol [Angs,Rad]'
+        write(out_unit,*) 'init Q0 of Phenol [Angs,Rad]'
       ELSE
-        write(out_unitp,*) 'init Q0 of Phenol [Bohr,Rad]'
+        write(out_unit,*) 'init Q0 of Phenol [Bohr,Rad]'
       END IF
     END IF
     QModel%Q0 = [Req,ZERO]
     IF (.NOT. QModel%PubliUnit) QModel%Q0(1) = QModel%Q0(1) /a0
 
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of Phenol [au]'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    IF (debug) write(out_unit,*) 'init d0GGdef of Phenol [au]'
+    QModel%d0GGdef      = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = QModel%G_RR
     QModel%d0GGdef(2,2) = QModel%G_ThTh
 
 
     IF (QModel%PubliUnit) THEN
-      write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Angs,Rad], Energy: [eV]'
+      write(out_unit,*) 'PubliUnit=.TRUE.,  Q:[Angs,Rad], Energy: [eV]'
     ELSE
-      write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Rad], Energy: [Hartree]'
+      write(out_unit,*) 'PubliUnit=.FALSE., Q:[Bohr,Rad], Energy: [Hartree]'
     END IF
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_Phenol
 !> @brief Subroutine wich prints the Phenol potential parameters.
 !!
 !> @author David Lauvergnat
-!! @date 30/07/2019
+!! @date 03/08/2017
 !!
-!! @param nio                integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_Phenol(QModel,nio)
+!! @param QModel        CLASS(PhenolPot_t):   derived type with the Phenol potential parameters.
+!! @param nio           integer:              file unit to print the parameters.
+  SUBROUTINE Write_QML_Phenol(QModel,nio)
+    IMPLICIT NONE
+
     CLASS(QML_Phenol_t),    intent(in) :: QModel
     integer,                 intent(in) :: nio
 
@@ -252,19 +254,6 @@ CONTAINS
     write(nio,*) '3        0.000000       0.000000       5.699040'
     write(nio,*)
     write(nio,*) 'end Phenol parameters'
-
-  END SUBROUTINE Write0_QML_Phenol
-!> @brief Subroutine wich prints the Phenol potential parameters.
-!!
-!> @author David Lauvergnat
-!! @date 03/08/2017
-!!
-!! @param QModel        CLASS(PhenolPot_t):   derived type with the Phenol potential parameters.
-!! @param nio           integer:              file unit to print the parameters.
-  SUBROUTINE Write_QML_Phenol(QModel,nio)
-    CLASS(QML_Phenol_t),    intent(in) :: QModel
-    integer,                 intent(in) :: nio
-
     write(nio,*) 'Phenol current parameters'
 
     write(nio,*) 'PubliUnit: ',QModel%PubliUnit
@@ -320,6 +309,8 @@ CONTAINS
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Phenol(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
+    IMPLICIT NONE
+
     CLASS(QML_Phenol_t),    intent(in) :: QModel
 
     TYPE (dnS_t),         intent(inout)  :: Mat_OF_PotDia(:,:)
@@ -342,7 +333,7 @@ CONTAINS
     real (kind=Rkind) :: auTOeV  = 27.211384_Rkind
 
 
-   !write(out_unitp,*) 'phenol pot in:'
+   !write(out_unit,*) 'phenol pot in:'
 
    dnR     = dnQ(1)
    dnth    = dnQ(2)
@@ -353,14 +344,14 @@ CONTAINS
 
    !--------------------------------------------------------------------
    ! for V(1,1): first diabatic state
-   !write(out_unitp,*) 'morse:'
+   !write(out_unit,*) 'morse:'
    v10R = QML_dnMorse(dnR,QModel%v10)
    !CALL Write_dnS(v10R,6)
-   !write(out_unitp,*) 'sigmoid:'
+   !write(out_unit,*) 'sigmoid:'
    v11R = QML_dnSigmoid(dnR,QModel%v11)
    !CALL Write_dnS(v11R,6)
 
-   !write(out_unitp,*) 'f(th):'
+   !write(out_unit,*) 'f(th):'
    v11th = ONE-cos(dnth+dnth)
    !CALL Write_dnS(v11th,6)
 
@@ -386,7 +377,7 @@ CONTAINS
    v20R  = HALF*(v20pR - (v20mR**TWO + QModel%X20)**HALF)
 
 
-   !write(out_unitp,*) 'sigmoid:'
+   !write(out_unit,*) 'sigmoid:'
    v211R = QML_dnSigmoid(dnR,QModel%v211)
    
    !v212R = QML_dnSigmoid(dnR,QModel%v212) + QModel%B217 ! pb with ifort19
@@ -432,23 +423,23 @@ CONTAINS
 
    !--------------------------------------------------------------------
    ! for V(3,3): 3d diabatic state
-   !write(out_unitp,*) 'morse:'
+   !write(out_unit,*) 'morse:'
    !v30R = QML_dnMorse(dnR,QModel%v30) + QModel%a30 ! with ifort19 this doesn't work, it has to be split
    v30R = QML_dnMorse(dnR,QModel%v30)
    v30R = v30R + QModel%a30
 
    !CALL Write_dnMat(v30R,6)
-   !write(out_unitp,*) 'sigmoid:'
+   !write(out_unit,*) 'sigmoid:'
    v31R = QML_dnSigmoid(dnR,QModel%v31)
    !CALL Write_dnMat(v31R,6)
 
-   !write(out_unitp,*) 'f(th):'
+   !write(out_unit,*) 'f(th):'
    v31th = ONE-cos(dnth+dnth)
    !CALL Write_dnS(v11th,6)
 
    Mat_OF_PotDia(3,3) = v30R+v31R*v31th
 
-   !write(out_unitp,*) 'phenol pot diabatic:',nderiv
+   !write(out_unit,*) 'phenol pot diabatic:',nderiv
    !CALL Write_dnMat(PotVal,6)
 
    CALL dealloc_dnS(v30R)
@@ -492,10 +483,10 @@ CONTAINS
    END IF
 
 
-   !write(out_unitp,*) 'phenol pot diabatic:',nderiv
+   !write(out_unit,*) 'phenol pot diabatic:',nderiv
    !CALL Write_dnMat(PotVal,6)
-   !write(out_unitp,*)
-   !flush(out_unitp)
+   !write(out_unit,*)
+   !flush(out_unit)
 
   END SUBROUTINE EvalPot_QML_Phenol
 

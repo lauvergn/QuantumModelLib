@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HNO3_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -67,7 +67,7 @@ MODULE QML_HNO3_m
 
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_HNO3
-    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_HNO3
+    PROCEDURE :: EvalFunc_QModel => EvalFunc_QML_HNO3
     PROCEDURE :: Write_QModel     => Write_QML_HNO3
     PROCEDURE :: Write0_QModel    => Write0_QML_HNO3
   END TYPE QML_HNO3_t
@@ -82,7 +82,9 @@ MODULE QML_HNO3_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HNO3(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat, TO_string, file_open2
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName
+    IMPLICIT NONE
 
     TYPE (QML_HNO3_t)                           :: QModel ! RESULT
 
@@ -101,11 +103,11 @@ MODULE QML_HNO3_m
     logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     IF (QModel%ndim == 0) THEN
       ! it means that ndim was not present in the CALL Init_Model().
@@ -115,10 +117,10 @@ MODULE QML_HNO3_m
 
     !The value of QModel%ndim must be 1 or 9
     IF (QModel%ndim /= 1 .AND. QModel%ndim /= 9) THEN
-       write(out_unitp,*) 'Write_QModel'
-       CALL QModel%Write_QModel(out_unitp)
-       write(out_unitp,*) ' ERROR in ',name_sub
-       write(out_unitp,*) ' ndim MUST equal to 1 or 9. ndim: ',QModel%ndim
+       write(out_unit,*) 'Write_QModel'
+       CALL QModel%Write_QModel(out_unit)
+       write(out_unit,*) ' ERROR in ',name_sub
+       write(out_unit,*) ' ndim MUST equal to 1 or 9. ndim: ',QModel%ndim
        STOP 'ERROR in Init_QML_HNO3: ndim MUST equal to 1 or 9'
     END IF
 
@@ -132,10 +134,9 @@ MODULE QML_HNO3_m
     jj=0
     DO ii=0,max_fit
 
-      FileName = make_FileName('InternalData/HNO3/inter_' //            &
-                                int_TO_char(ii))
+      FileName = make_QMLInternalFileName('InternalData/HNO3/inter_' // TO_string(ii))
       CALL QML_read_para4d_HNO3(QModel%F(:,ii,jj),QModel%nn(:,ii,jj),ndim,       &
-                       QModel%nt(ii,jj),max_nn,FileName,exist)
+                                QModel%nt(ii,jj),max_nn,FileName,exist)
       IF ( .NOT. exist) STOP ' ERROR while reading HNO3 parameters'
     END DO
 
@@ -143,27 +144,27 @@ MODULE QML_HNO3_m
     !hess(i,j)
     DO jj=1,max_fit
     DO ii=1,max_fit
-      FileName = make_FileName('InternalData/HNO3/inter_' //            &
-                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+      FileName = make_QMLInternalFileName('InternalData/HNO3/inter_' //            &
+                                TO_string(ii) // '_' // TO_string(jj) )
       CALL QML_read_para4d_HNO3(QModel%F(:,ii,jj),QModel%nn(:,ii,jj),ndim,       &
-                       QModel%nt(ii,jj),max_nn,FileName,exist)
+                                QModel%nt(ii,jj),max_nn,FileName,exist)
       IF ( .NOT. exist) STOP ' ERROR while reading HNO3 parameters'
     END DO
     END DO
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of HNO3' ! for the rigid constraints
+    IF (debug) write(out_unit,*) 'init Q0 of HNO3' ! for the rigid constraints
     QModel%Q0 = [2.65450_Rkind,2.28_Rkind,2.0_Rkind,Pi/TWO,             &
                  ZERO,ZERO,1.83492_Rkind,1.77157_Rkind,Pi/TWO]
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of HNO3'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    IF (debug) write(out_unit,*) 'init d0GGdef of HNO3'
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_HNO3
@@ -204,8 +205,8 @@ MODULE QML_HNO3_m
 !! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_HNO3(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_HNO3_t),  intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -234,8 +235,8 @@ MODULE QML_HNO3_m
   END SUBROUTINE EvalPot_QML_HNO3
 
   SUBROUTINE EvalFunc_QML_HNO3(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_HNO3_t),  intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
@@ -265,8 +266,8 @@ MODULE QML_HNO3_m
   END SUBROUTINE EvalFunc_QML_HNO3
 
   FUNCTION QML_dnvfour_HNO3(rot,iq,jq,QModel)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnvfour_HNO3
 
@@ -277,8 +278,8 @@ MODULE QML_HNO3_m
     integer :: i,kl
 
     IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
-      write(out_unitp,*) ' ERROR in QML_dnvfour_HNO3'
-      write(out_unitp,*) ' wrong value for iq or jq E [0...8]',iq,jq
+      write(out_unit,*) ' ERROR in QML_dnvfour_HNO3'
+      write(out_unit,*) ' wrong value for iq or jq E [0...8]',iq,jq
       STOP ' ERROR in QML_dnvfour_HNO3: wrong value for iq or jq E [0...8]'
     END IF
 
@@ -295,7 +296,8 @@ MODULE QML_HNO3_m
 
   END FUNCTION QML_dnvfour_HNO3
   SUBROUTINE QML_read_para4d_HNO3(F,n,ndim,nt,max_points,nom1,exist)
-  IMPLICIT NONE
+    USE QDUtil_m, ONLY : file_open2
+    IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim
    integer,           intent(inout) :: n(0:ndim),nt
@@ -305,7 +307,7 @@ MODULE QML_HNO3_m
 
    integer :: no,ios,kl,i
 
-   write(out_unitp,*) 'QML_read_para4d_HNO3: nom1,max_points: ',nom1,max_points
+   write(out_unit,*) 'QML_read_para4d_HNO3: nom1,max_points: ',nom1,max_points
 
 
    CALL file_open2(name_file=nom1,iunit=no,lformatted=.TRUE.,           &
@@ -315,23 +317,23 @@ MODULE QML_HNO3_m
      read(no,*) nt
      read(no,*) i ! for nb_fit (not used)
 
-     write(out_unitp,*) 'nom1,nt,ndim: ',nom1,nt,ndim
+     write(out_unit,*) 'nom1,nt,ndim: ',nom1,nt,ndim
      read(no,*) n(0:ndim)
-     write(out_unitp,*) 'nom1,n ',nom1,n(0:ndim)
+     write(out_unit,*) 'nom1,n ',nom1,n(0:ndim)
      IF (n(0) > max_points) THEN
-         write(out_unitp,*) ' ERROR : The number of coefficients (',n(0),') >'
-         write(out_unitp,*) '         than max_points (',max_points,')'
-         write(out_unitp,*) '         STOP in QML_read_para4d_HNO3'
+         write(out_unit,*) ' ERROR : The number of coefficients (',n(0),') >'
+         write(out_unit,*) '         than max_points (',max_points,')'
+         write(out_unit,*) '         STOP in QML_read_para4d_HNO3'
          STOP 'ERROR in QML_read_para4d_HNO3'
        END IF
        DO kl=1,n(0)
         read(no,*) F(kl)
-!       write(out_unitp,*) F(kl)
+!       write(out_unit,*) F(kl)
        END DO
      CLOSE(no)
      exist = .TRUE.
    ELSE
-     write(out_unitp,*) 'The file (',nom1,') does not exist !!'
+     write(out_unit,*) 'The file (',nom1,') does not exist !!'
      exist = .FALSE.
    END IF
 

@@ -3,55 +3,60 @@
 here=`pwd`
 ./clean
 
-cd ..
-  make model > $here/comp.log 2>&1
-cd  $here
-nbOK=`grep -c "model (QML) compilation: OK" comp.log`
+FC=$1
+OPT=$2
+OMP=$3
+LAPACK=$4
+FromMakefile=$5
 
+
+
+echo $FC OPT: $OPT OMP: $OMP LAPACK: $LAPACK FromMakefile: $FromMakefile
+
+if [ "$FromMakefile" != 1 ]
+then
+  cd ..
+    make FC=$FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK ut > $here/comp.log 2>&1
+  cd  $here
+  nbOK=`grep -c "model (QML) compilation: OK" comp.log`
+  if [ "$nbOK" = 0 ]
+  then
+    echo " model (QML) compilation ERROR"
+    exit
+  fi
+fi
 
 
 echo "=========================================="
 echo " TESTING the internal potentials of ModLib"
 echo " ... with respect to old files"
 
-if [ "$nbOK" = 0 ]
-then
-  echo " model (QML) compilation ERROR"
-  exit
-fi
-
-echo "   OPT: " $ExternalOPT
-echo "   OMP: " $ExternalOMP
+echo "    FC: " $FC
+echo "   OPT: " $OPT
+echo "   OMP: " $OMP
+echo "LAPACK: " $LAPACK
 echo "=========================================="
 
-../ModLib.x < input.dat > res 2>error.log
-../bin/Compare_QML > Test_QML.log
+../TEST_model.x < input.dat > res 2>error.log
 
-#grep "The structure of both files are different" Test_QML.log
-nb_e=`grep -c "The structure of both files are different" Test_QML.log`
-if test $nb_e -gt 0
-then
-   echo "  Warning: different xxxx.txt file structure!!"
-else
-   echo "  No Warning: identical xxxx.txt file structure!"
-fi
-echo ""
+echo "=== TEST_model.x: done ==================="
+echo "=========================================="
+
+grep "TESTING" QModel.log | grep "Number of error"
 
 # test if the analytical and numerical derivatives match.
 echo "=========================================="
-nb_err_ana_num=`grep "Potential diff (numer-ana), ZERO?" res | awk '{print $7}' | grep -c -i "F"`
+nb_err_ana_num=`grep "ana == numer" QModel.log | grep -c "Err"`
 if test $nb_err_ana_num -gt 0
 then
-   grep "Potential diff (numer-ana), ZERO?" res | grep -i "f$"
+   grep "ana == numer" QModel.log | grep "Err"
    echo "Error(s) on the analytical/numerical derivatives detected!!"
 else
    echo "No error on the analytical/numerical derivatives!"
 fi
 echo "=========================================="
 
-
-grep "PROBLEM" Test_QML.log
-nb_pb=`grep -c "PROBLEM(S)" Test_QML.log`
+nb_pb=`grep "TESTING QModel module. Number of error" QModel.log | LANG=C awk -F: '{print $2}'`
 
 if test $nb_pb -gt 0
 then

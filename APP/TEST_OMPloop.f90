@@ -37,36 +37,75 @@
 !
 !===========================================================================
 !===========================================================================
-PROGRAM TEST_adia
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m
-  USE Model_m
-  !USE AdiaChannels_MakeHinact_m
+PROGRAM main_pot
+!$ USE omp_lib
   IMPLICIT NONE
 
+  real (kind=8),      allocatable     :: Q(:)
+  real (kind=8),      allocatable     :: Q0(:)
+  real (kind=8),      allocatable     :: V(:,:)
 
-  TYPE (Model_t)                  :: QModel
-  real (kind=Rkind), allocatable  :: Qact(:)
-  TYPE (dnMat_t)                  :: PotVal,NAC
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
 
-  real(kind=Rkind) :: dQ
-  integer :: i,iq
-  integer, parameter :: nq=100
-  real(kind=Rkind), parameter :: auTOcm_inv = 219474.631443_Rkind
+  integer                             :: i,ndim,nsurf,option,nb_eval,maxth
 
 
-  CALL Init_Model(QModel,Print_init=.FALSE.,Vib_adia=.TRUE.)
+  write(*,*) '============================================================'
+  write(*,*) '============================================================'
 
-  dQ = TWO / real(nq,kind=Rkind)
-  DO iq=0,nq
-    Qact = [4.0_Rkind+iq*dQ]
-    CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
-    !write(out_unitp,*) 'NAC'
-    !CALL Write_RMat(NAC%d1(:,:,1),out_unitp,6,name_info='NAC')
-    write(out_unitp,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
+  ndim      = 6
+  nsurf     = 1
+  option    = 0
+  adiabatic = .TRUE.
+  nb_eval   = 10**6
+  pot_name  = 'HONO'
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
+
+  allocate(Q0(ndim))
+  CALL get_Qmodel_Q0(Q0,0) ! the option of get_Qmodel_Q0 enables to select different reference geometries.
+
+  write(*,*) '============================================================'
+  write(*,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  maxth = 1
+  !$ maxth           = omp_get_max_threads()
+  write(*,*) 'NTEST_driver. number of threads:',maxth
+  CALL QML_time_perso('Test ' // pot_name)
+
+!$OMP   PARALLEL DEFAULT(NONE) &
+!$OMP   SHARED(nb_eval,ndim,nsurf,maxth,Q0) &
+!$OMP   PRIVATE(i,Q,V) &
+!$OMP   NUM_THREADS(maxth)
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+  write(*,*) 'alloc Q and V'
+!$OMP BARRIER
+
+!$OMP   DO SCHEDULE(STATIC)
+  DO i=1,nb_eval
+
+    CALL  random_number(Q)
+    Q = Q0 + (Q-0.5d0)/10.d0
+
+    CALL sub_Qmodel_V(V,Q)
+
+    !write(*,*) Q,(V(k,k),k=1,nsurf)
   END DO
+!$OMP   END DO
+
+!$OMP BARRIER
+  deallocate(Q)
+  deallocate(V)
+  write(*,*) 'dealloc Q and V'
+
+!$OMP   END PARALLEL
+
+  deallocate(Q0)
 
 
+  CALL QML_time_perso('Test ' // pot_name)
+  write(*,*) '============================================================'
+  write(*,*) '============================================================'
 
-END PROGRAM TEST_adia
+END PROGRAM main_pot

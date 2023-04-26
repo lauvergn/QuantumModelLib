@@ -1,7 +1,0 @@
-for f in sqrt abs exp log log10 sin asin cos acos tan atan sinh asinh cosh acosh tanh atanh 
-do
-   echo "   Sana = "$f"(dnX)"
-   echo "   Snum = get_Num_dnS_FROM_f_x(x,d"$f",nderiv=2)"
-   echo "   write(out_unitp,*) '"$f": (Sana-Snum)==0?',Check_dnS_IS_ZERO(Sana-Snum,ONETENTH**4)"
-   echo ""
-done

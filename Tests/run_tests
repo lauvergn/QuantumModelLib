@@ -5,33 +5,24 @@
 here=`pwd`
 
 
-#for ExternalF90 in gfortran ifort pgf90 nagfor
-for ExternalF90 in gfortran
+for FC in gfortran
 do
-  export ExternalF90
+for OPT in 0 1
+do
+for OMP in 0 1
+do
+for LAPACK in 0 1
+do
   echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-  echo $ExternalF90
+  echo $FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK
   echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-  for ExternalOPT in 0 1
-  do
-    export ExternalOPT
+  echo
 
-    for ExternalOMP in 0 1
-    do
-      export ExternalOMP
-
-      echo
-
-      cd ..
-        make clean > $here/comp.log 2>&1
-      cd  $here
-
-      ./run_test_QML
+  ./run_test_QML $FC $OPT $OMP $LAPACK
   
-
-    done
-  done
-
+done
+done
+done
 done

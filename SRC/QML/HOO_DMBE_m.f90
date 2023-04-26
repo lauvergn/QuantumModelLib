@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HOO_DMBE_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -115,7 +115,6 @@ MODULE QML_HOO_DMBE_m
     REAL (kind=Rkind), parameter :: R30 = 2.6469057_Rkind
 
 !   BLOCK DATA HO2DAT_HOO_DMBE4
-!   USE QMLLib_NumParameters_m
 !       IMPLICIT DOUBLE PRECISION(A-H,O-Z)
 !       COMMON/COEFF_HOO_DMBE4/C(52)
 !       COMMON/DISPC_HOO_DMBE4/COO(10),COH(10)
@@ -168,7 +167,8 @@ MODULE QML_HOO_DMBE_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HOO_DMBE(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_HOO_DMBE_t)                           :: QModel ! RESULT
 
@@ -183,11 +183,11 @@ MODULE QML_HOO_DMBE_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf      = 1
     QModel%ndimQ      = 3
@@ -203,18 +203,17 @@ MODULE QML_HOO_DMBE_m
     QModel%no_ana_der = .TRUE.
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of HOO_DMBE (HOO minimum)'
+    IF (debug) write(out_unit,*) 'init Q0 of HOO_DMBE (HOO minimum)'
     QModel%Q0 = [2.806_Rkind,2.271_Rkind,2.271_Rkind]
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of HOO_DMBE'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
-
+    IF (debug) write(out_unit,*) 'init d0GGdef of HOO_DMBE'
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
-      !CALL Write_QML_HOO_DMBE(QModel,nio=out_unitp)
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      CALL Write_QML_HOO_DMBE(QModel,nio=out_unit)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_HOO_DMBE
@@ -230,7 +229,7 @@ MODULE QML_HOO_DMBE_m
 
     write(nio,*) 'HOO_DMBE IV current parameters'
 
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
 
     write(nio,*) 'end HOO_DMBE IV current parameters'
 
@@ -321,20 +320,20 @@ MODULE QML_HOO_DMBE_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) 'dnX'
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) 'dnX'
       DO i=1,size(dnX,dim=2)
       DO j=1,size(dnX,dim=1)
-        CALL Write_dnS(dnX(j,i),out_unitp)
+        CALL Write_dnS(dnX(j,i),out_unit)
       END DO
       END DO
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     VecOO(:)  = dnX(:,3)-dnX(:,2)
     VecHO2(:) = dnX(:,2)-dnX(:,1)
     VecHO3(:) = dnX(:,3)-dnX(:,1)
-    IF (debug) write(out_unitp,*) 'Cart_TO_Q_QML_HOO_DMBE vect done'
+    IF (debug) write(out_unit,*) 'Cart_TO_Q_QML_HOO_DMBE vect done'
 
     dnQ(1) = sqrt(dot_product(VecOO,VecOO))
     dnQ(2) = sqrt(dot_product(VecHO2,VecHO2))
@@ -345,17 +344,16 @@ MODULE QML_HOO_DMBE_m
     CALL dealloc_dnS(VecHO3)
 
     IF (debug) THEN
-      CALL Write_dnS(dnQ(1),out_unitp,info='dnQ(1)')
-      CALL Write_dnS(dnQ(2),out_unitp,info='dnQ(2)')
-      CALL Write_dnS(dnQ(3),out_unitp,info='dnQ(3)')
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      CALL Write_dnS(dnQ(1),out_unit,info='dnQ(1)')
+      CALL Write_dnS(dnQ(2),out_unit,info='dnQ(2)')
+      CALL Write_dnS(dnQ(3),out_unit,info='dnQ(3)')
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
   END SUBROUTINE Cart_TO_Q_QML_HOO_DMBE
 
 
   SUBROUTINE HOO_DMBE4_pes(X,F)
-  USE QMLLib_NumParameters_m
   ! This is the DMBE IV potential energy surface for H + O2
   IMPLICIT NONE
 
@@ -379,8 +377,7 @@ MODULE QML_HOO_DMBE_m
   END SUBROUTINE HOO_DMBE4_pes
 
   FUNCTION THREBQ_HOO_DMBE4(Q1,Q2,Q3,R1,R2,R3)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: THREBQ_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: Q1,Q2,Q3,R1,R2,R3
@@ -430,8 +427,7 @@ MODULE QML_HOO_DMBE_m
 
   END FUNCTION THREBQ_HOO_DMBE4
   FUNCTION VOH_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: VOH_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
@@ -441,8 +437,8 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION VOH_HOO_DMBE4
 
   FUNCTION EHFOH_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
+
     REAL (kind=Rkind)             :: EHFOH_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
 
@@ -461,7 +457,6 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION EHFOH_HOO_DMBE4
 
   FUNCTION DISOH_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
   IMPLICIT NONE
 
     REAL (kind=Rkind)             :: DISOH_HOO_DMBE4
@@ -472,8 +467,8 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION DISOH_HOO_DMBE4
 
   FUNCTION VOO_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
   IMPLICIT NONE
+
     REAL (kind=Rkind)             :: VOO_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
 
@@ -484,8 +479,7 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION VOO_HOO_DMBE4
 
   FUNCTION EHFOO_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: EHFOO_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
@@ -505,8 +499,7 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION EHFOO_HOO_DMBE4
 
   FUNCTION DISOO_HOO_DMBE4(R)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: DISOO_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R
@@ -517,8 +510,7 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION DISOO_HOO_DMBE4
 
   FUNCTION CEF_HOO_DMBE4(CAS,RK01,RK11,RK02,RK12,RE1,RE2,R1,R2)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: CEF_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: CAS
@@ -532,8 +524,7 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION CEF_HOO_DMBE4
 
   FUNCTION EXDIS_HOO_DMBE4(R1,R2,R3)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: EXDIS_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R1,R2,R3
@@ -558,7 +549,6 @@ MODULE QML_HOO_DMBE_m
   END FUNCTION EXDIS_HOO_DMBE4
 
   FUNCTION ELECT_HOO_DMBE4(R1,R2,R3)
-  USE QMLLib_NumParameters_m
     IMPLICIT NONE
 
     REAL (kind=Rkind)             :: ELECT_HOO_DMBE4
@@ -621,8 +611,7 @@ MODULE QML_HOO_DMBE_m
 
   END FUNCTION ELECT_HOO_DMBE4
   FUNCTION DISP_HOO_DMBE4(R,C6,C8,C10,R0,RM)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     REAL (kind=Rkind)             :: DISP_HOO_DMBE4
     REAL (kind=Rkind), intent(in) :: R,C6,C8,C10,R0,RM

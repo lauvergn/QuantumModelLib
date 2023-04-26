@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_H2NSi_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -80,7 +80,10 @@ MODULE QML_H2NSi_m
 !! @param nio                integer (optional): file unit to read the parameters.
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_H2NSi(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat, file_open2
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName
+    IMPLICIT NONE
+
     TYPE (QML_H2NSi_t)                           :: QModel
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
@@ -98,11 +101,11 @@ MODULE QML_H2NSi_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf    = 1
     QModel%ndim     = 6
@@ -113,7 +116,7 @@ MODULE QML_H2NSi_m
     SELECT CASE (QModel%option)
     CASE (1)
 
-      FileName = make_FileName('InternalData/H2NSi/h2nsif12a.txt')
+      FileName = make_QMLInternalFileName('InternalData/H2NSi/h2nsif12a.txt')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       allocate(QModel%Qref(QModel%ndim))
 
@@ -137,7 +140,7 @@ MODULE QML_H2NSi_m
 
     CASE (2)
 
-      FileName = make_FileName('InternalData/H2NSi/h2nsicc.pot')
+      FileName = make_QMLInternalFileName('InternalData/H2NSi/h2nsicc.pot')
       CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
       read(nio_fit,*) QModel%nb_funcModel
       allocate(QModel%Qref(QModel%ndim))
@@ -147,7 +150,7 @@ MODULE QML_H2NSi_m
        k = 0
        DO
         nb_columns = min(6,QModel%nb_funcModel-k)
-        !write(out_unitp,*) k+1,k+nb_columns,nb_columns
+        !write(out_unit,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
          read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
  11      format(6i1,f15.8,5(2x,6i1,f15.8))
@@ -161,31 +164,32 @@ MODULE QML_H2NSi_m
 
     CASE Default
 
-          write(out_unitp,*) ' ERROR in Init_QML_H2NSi '
-          write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-          write(out_unitp,*) ' Its value MUST be 1 or 2'
+          write(out_unit,*) ' ERROR in Init_QML_H2NSi '
+          write(out_unit,*) ' This option is not possible. option: ',QModel%option
+          write(out_unit,*) ' Its value MUST be 1 or 2'
 
           STOP
 
       END SELECT
 
 
-     IF (debug) write(out_unitp,*) 'init Q0 of H2NSi'
+     IF (debug) write(out_unit,*) 'init Q0 of H2NSi'
      QModel%Q0 = QModel%Qref([3,1,4,2,5,6])
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of H2NSi'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    IF (debug) write(out_unit,*) 'init d0GGdef of H2NSi'
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
+
 
     IF (QModel%PubliUnit) THEN
-      write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
+      write(out_unit,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
     ELSE
-      write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
+      write(out_unit,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad,Bohr,Rad,Rad], Energy: [Hartree]'
     END IF
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_H2NSi
@@ -194,6 +198,7 @@ MODULE QML_H2NSi_m
 !! @param QModel            CLASS(QML_H2NSi_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:            file unit to print the parameters.
   SUBROUTINE Write_QML_H2NSi(QModel,nio)
+    IMPLICIT NONE
 
     CLASS(QML_H2NSi_t), intent(in) :: QModel
     integer,              intent(in) :: nio
@@ -277,9 +282,9 @@ MODULE QML_H2NSi_m
     write(nio,*) ' Unpublished potential                 '
 
     CASE Default
-        write(out_unitp,*) ' ERROR in write_QModel '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1 or 2'
+        write(out_unit,*) ' ERROR in write_QModel '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1 or 2'
 
         STOP
     END SELECT
@@ -297,9 +302,9 @@ MODULE QML_H2NSi_m
     integer,                     intent(in)    :: option
 
     IF (size(Q0) /= 6) THEN
-      write(out_unitp,*) ' ERROR in get_Q0_QML_H2NSi '
-      write(out_unitp,*) ' The size of Q0 is not ndim=6: '
-      write(out_unitp,*) ' size(Q0)',size(Q0)
+      write(out_unit,*) ' ERROR in get_Q0_QML_H2NSi '
+      write(out_unit,*) ' The size of Q0 is not ndim=6: '
+      write(out_unit,*) ' size(Q0)',size(Q0)
       STOP
     END IF
 
@@ -320,6 +325,7 @@ MODULE QML_H2NSi_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H2NSi(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H2NSi_t), intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
@@ -332,9 +338,9 @@ MODULE QML_H2NSi_m
       CALL EvalPot1_QML_H2NSi(Mat_OF_PotDia,dnQ,QModel)
 
     CASE Default
-        write(out_unitp,*) ' ERROR in EvalPot_QML_H2NSi '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1 or 2'
+        write(out_unit,*) ' ERROR in EvalPot_QML_H2NSi '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1 or 2'
 
         STOP
     END SELECT
@@ -352,6 +358,7 @@ MODULE QML_H2NSi_m
   SUBROUTINE EvalPot1_QML_H2NSi(Mat_OF_PotDia,dnQ,QModel)
     !Unpublished model potential
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t),        intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),        intent(in)    :: dnQ(:)
@@ -362,7 +369,7 @@ MODULE QML_H2NSi_m
     TYPE (dnS_t)        :: Vtemp
     integer            :: i,j
 
-    !write(out_unitp,*) ' sub EvalPot1_QML_H2NSi' ; flush(6)
+    !write(out_unit,*) ' sub EvalPot1_QML_H2NSi' ; flush(6)
 
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,4,1,3,5,6]) - QModel%Qref(:)
@@ -390,7 +397,7 @@ MODULE QML_H2NSi_m
    CALL dealloc_dnS(Vtemp)
    CALL dealloc_dnS(DQ)
 
-   !write(out_unitp,*) ' end EvalPot1_QML_H2NSi' ; flush(6)
+   !write(out_unit,*) ' end EvalPot1_QML_H2NSi' ; flush(6)
 
   END SUBROUTINE EvalPot1_QML_H2NSi
 

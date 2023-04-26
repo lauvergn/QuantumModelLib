@@ -38,14 +38,14 @@
 !===========================================================================
 !===========================================================================
 MODULE QMLLib_FiniteDiff_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m
   IMPLICIT NONE
 
   PRIVATE
 
-    !--------------------------------------------------------------------------
-    integer, parameter :: list_1D_indDQ(1,4) = reshape([-2,-1, 1, 2],shape=[1,4])
-    integer, parameter :: list_2D_indDQ(2,8) = reshape([                &
+  !--------------------------------------------------------------------------
+  integer, parameter :: list_1D_indDQ(1,4) = reshape([-2,-1, 1, 2],shape=[1,4])
+  integer, parameter :: list_2D_indDQ(2,8) = reshape([                  &
                                                        -1,-1,           &
                                                         1,-1,           &
                                                        -1, 1,           &
@@ -55,55 +55,55 @@ MODULE QMLLib_FiniteDiff_m
                                                        -2, 2,           &
                                                         2, 2            &
                                                             ],shape=[2,8])
-    integer, parameter :: list_3D_indDQ(3,6) = reshape([                &
+  integer, parameter :: list_3D_indDQ(3,6) = reshape([                  &
                                                        -1,-1, 1,        &
                                                        -1, 1,-1,        &
                                                         1,-1,-1,        &
                                                         1, 1,-1,        &
                                                         1,-1, 1,        &
                                                        -1, 1, 1         &
-                                                            ],shape=[3,6])
-    !--------------------------------------------------------------------------
+                                                          ],shape=[3,6])
+  !--------------------------------------------------------------------------
 
-    !--------------------------------------------------------------------------
-    !for 1st derivatives
-    ! for d./dx
-    real (kind=Rkind), parameter ::   wD(-2:2) = [ONE/TWELVE,-EIGHT/TWELVE,ZERO,EIGHT/TWELVE,-ONE/TWELVE]
-    !--------------------------------------------------------------------------
+  !--------------------------------------------------------------------------
+  !for 1st derivatives
+  ! for d./dx
+  real (kind=Rkind), parameter ::   wD(-2:2) = [ONE/TWELVE,-EIGHT/TWELVE,ZERO,EIGHT/TWELVE,-ONE/TWELVE]
+  !--------------------------------------------------------------------------
 
-    !--------------------------------------------------------------------------
-    !for 2d derivatives
-    ! for d2./dx2
-    real (kind=Rkind), parameter ::  wDD(-2:2) = [-ONE/TWELVE,FOUR/THREE,-FIVE/TWO,FOUR/THREE,-ONE/TWELVE]
+  !--------------------------------------------------------------------------
+  !for 2d derivatives
+  ! for d2./dx2
+  real (kind=Rkind), parameter ::  wDD(-2:2) = [-ONE/TWELVE,FOUR/THREE,-FIVE/TWO,FOUR/THREE,-ONE/TWELVE]
 
-    ! for d2./dxdy
-    real (kind=Rkind), parameter ::  w11DD(-1:1,-1:1) = reshape([       &
+  ! for d2./dxdy
+  real (kind=Rkind), parameter ::  w11DD(-1:1,-1:1) = reshape([         &
                                             ONE/THREE,ZERO,-ONE/THREE,  &
                                              ZERO,    ZERO, ZERO,       &
                                            -ONE/THREE,ZERO, ONE/THREE   &
-                                                              ],shape=[3,3])
+                                                          ],shape=[3,3])
 
-    real (kind=Rkind), parameter ::  w22DD(-1:1,-1:1) = reshape([       &
+  real (kind=Rkind), parameter ::  w22DD(-1:1,-1:1) = reshape([         &
                                      -ONE/48._Rkind,ZERO, ONE/48._Rkind,&
                                           ZERO,     ZERO, ZERO,         &
                                       ONE/48._Rkind,ZERO,-ONE/48._Rkind &
-                                                              ],shape=[3,3])
-    !--------------------------------------------------------------------------
+                                                          ],shape=[3,3])
+  !--------------------------------------------------------------------------
 
-    !--------------------------------------------------------------------------
-    !for 3d derivatives
-    ! for d3./dx3
-    real (kind=Rkind), parameter :: wDDD(-2:2) = [-HALF,ONE,ZERO,-ONE,HALF]
+  !--------------------------------------------------------------------------
+  !for 3d derivatives
+  ! for d3./dx3
+  real (kind=Rkind), parameter :: wDDD(-2:2) = [-HALF,ONE,ZERO,-ONE,HALF]
 
-    ! for d3./dx2dy
-    real (kind=Rkind), parameter :: a = TWO/THREE
-    real (kind=Rkind), parameter :: b = ONE/48._Rkind
+  ! for d3./dx2dy
+  real (kind=Rkind), parameter :: a = TWO/THREE
+  real (kind=Rkind), parameter :: b = ONE/48._Rkind
 
-    real (kind=Rkind), parameter ::  w11DDD(-1:1,-1:1) = reshape([       &
+  real (kind=Rkind), parameter ::  w11DDD(-1:1,-1:1) = reshape([         &
                                              -a,  ZERO,-a,               &
                                              ZERO,ZERO, ZERO,            &
                                               a,  ZERO, a                &
-                                                              ],shape=[3,3])
+                                                          ],shape=[3,3])
 
     real (kind=Rkind), parameter ::  w22DDD(-1:1,-1:1) = reshape([       &
                                               b,  ZERO, b,               &
@@ -153,36 +153,37 @@ MODULE QMLLib_FiniteDiff_m
                                                            ],shape=[3,3,3])
     !--------------------------------------------------------------------------
 
-PUBLIC :: Get_nb_pts,Get_indDQ,Set_QplusDQ
-PUBLIC :: FiniteDiff_AddMat_TO_dnMat, FiniteDiff3_SymPerm_OF_dnMat, FiniteDiff_Finalize_dnMat
+  PUBLIC :: Get_nb_pts,Get_indDQ,Set_QplusDQ
+  PUBLIC :: FiniteDiff_AddMat_TO_dnMat, FiniteDiff3_SymPerm_OF_dnMat, FiniteDiff_Finalize_dnMat
 
-INTERFACE Get_nb_pts
-  MODULE PROCEDURE QML_Get_nb_pts
-END INTERFACE
+  INTERFACE Get_nb_pts
+    MODULE PROCEDURE QML_Get_nb_pts
+  END INTERFACE
 
-INTERFACE Get_indDQ
-  MODULE PROCEDURE QML_Get_indDQ
-END INTERFACE
+  INTERFACE Get_indDQ
+    MODULE PROCEDURE QML_Get_indDQ
+  END INTERFACE
 
-INTERFACE Set_QplusDQ
-  MODULE PROCEDURE QML_Set_QplusDQ
-END INTERFACE
+  INTERFACE Set_QplusDQ
+    MODULE PROCEDURE QML_Set_QplusDQ
+  END INTERFACE
 
-INTERFACE FiniteDiff_AddMat_TO_dnMat
-  MODULE PROCEDURE QML_FiniteDiff_AddMat_TO_dnMat
-END INTERFACE
+  INTERFACE FiniteDiff_AddMat_TO_dnMat
+    MODULE PROCEDURE QML_FiniteDiff_AddMat_TO_dnMat
+  END INTERFACE
 
-INTERFACE FiniteDiff3_SymPerm_OF_dnMat
-  MODULE PROCEDURE QML_FiniteDiff3_SymPerm_OF_dnMat
-END INTERFACE
+  INTERFACE FiniteDiff3_SymPerm_OF_dnMat
+    MODULE PROCEDURE QML_FiniteDiff3_SymPerm_OF_dnMat
+  END INTERFACE
 
-INTERFACE FiniteDiff_Finalize_dnMat
-  MODULE PROCEDURE QML_FiniteDiff_Finalize_dnMat
-END INTERFACE
+  INTERFACE FiniteDiff_Finalize_dnMat
+    MODULE PROCEDURE QML_FiniteDiff_Finalize_dnMat
+  END INTERFACE
 
 CONTAINS
   FUNCTION QML_Get_nb_pts(ndim) RESULT(nb_pts)
-  IMPLICIT NONE
+    IMPLICIT NONE
+
     integer                       :: nb_pts   ! number of points
     integer,           intent(in) :: ndim     ! indDQ(ndim)
 
@@ -201,7 +202,7 @@ CONTAINS
 
   END FUNCTION QML_Get_nb_pts
   SUBROUTINE QML_Get_indDQ(indDQ,i_pt)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     integer,           intent(inout) :: indDQ(:) ! amplitude of DQ
 
@@ -220,7 +221,7 @@ CONTAINS
   END SUBROUTINE QML_Get_indDQ
 
   SUBROUTINE QML_Set_QplusDQ(Qout,Qin,indQ,indDQ,step_sub)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     real (kind=Rkind), intent(inout)  :: Qout(:)
     real (kind=Rkind), intent(in)     :: Qin(:)
@@ -232,12 +233,12 @@ CONTAINS
 
     IF (size(Qin) /= size(Qout) .OR. size(indQ) /= size(indDQ) .OR.     &
         minval(indQ) < 1 .OR. maxval(indQ) > size(Qin)) THEN
-      write(out_unitp,*) ' ERROR in QML_Set_QplusDQ'
-      write(out_unitp,*) ' Inconsitent parameters.'
-      write(out_unitp,*) ' size(Qin),size(Qout)  ',size(Qin),size(Qout)
-      write(out_unitp,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
-      write(out_unitp,*) ' indQ(:)',indQ
-      write(out_unitp,*) ' indDQ(:)',indDQ
+      write(out_unit,*) ' ERROR in QML_Set_QplusDQ'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' size(Qin),size(Qout)  ',size(Qin),size(Qout)
+      write(out_unit,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
+      write(out_unit,*) ' indQ(:)',indQ
+      write(out_unit,*) ' indDQ(:)',indDQ
       STOP 'STOP in QML_Set_QplusDQ: Inconsitent parameters.'
     END IF
 
@@ -248,10 +249,9 @@ CONTAINS
 
   END SUBROUTINE QML_Set_QplusDQ
 
-
   SUBROUTINE QML_FiniteDiff_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ,option)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
     real (kind=Rkind), intent(in)            :: Mat(:,:)
@@ -277,13 +277,13 @@ CONTAINS
         CALL QML_FiniteDiff4_AddMat_TO_dnMat(dnMat,Mat)
 
       ELSE
-        write(out_unitp,*) ' ERROR in QML_FiniteDiff_AddMat_TO_dnMat'
-        write(out_unitp,*) ' Inconsitent parameters.'
-        write(out_unitp,*) ' Both indQ and indDQ MUST be present'
-        write(out_unitp,*) '     or '
-        write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
-        write(out_unitp,*) ' present(indQ) ',present(indQ)
-        write(out_unitp,*) ' present(indDQ)',present(indDQ)
+        write(out_unit,*) ' ERROR in QML_FiniteDiff_AddMat_TO_dnMat'
+        write(out_unit,*) ' Inconsitent parameters.'
+        write(out_unit,*) ' Both indQ and indDQ MUST be present'
+        write(out_unit,*) '     or '
+        write(out_unit,*) ' Both indQ and indDQ MUST be absent'
+        write(out_unit,*) ' present(indQ) ',present(indQ)
+        write(out_unit,*) ' present(indDQ)',present(indDQ)
         STOP 'STOP in QML_FiniteDiff_AddMat_TO_dnMat: Inconsitent parameters.'
       END IF
     ELSE ! option_loc == 3
@@ -296,13 +296,13 @@ CONTAINS
         CALL QML_FiniteDiff3_AddMat_TO_dnMat(dnMat,Mat)
 
       ELSE
-        write(out_unitp,*) ' ERROR in QML_FiniteDiff_AddMat_TO_dnMat'
-        write(out_unitp,*) ' Inconsitent parameters.'
-        write(out_unitp,*) ' Both indQ and indDQ MUST be present'
-        write(out_unitp,*) '     or '
-        write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
-        write(out_unitp,*) ' present(indQ) ',present(indQ)
-        write(out_unitp,*) ' present(indDQ)',present(indDQ)
+        write(out_unit,*) ' ERROR in QML_FiniteDiff_AddMat_TO_dnMat'
+        write(out_unit,*) ' Inconsitent parameters.'
+        write(out_unit,*) ' Both indQ and indDQ MUST be present'
+        write(out_unit,*) '     or '
+        write(out_unit,*) ' Both indQ and indDQ MUST be absent'
+        write(out_unit,*) ' present(indQ) ',present(indQ)
+        write(out_unit,*) ' present(indDQ)',present(indDQ)
         STOP 'STOP in QML_FiniteDiff_AddMat_TO_dnMat: Inconsitent parameters.'
       END IF
     END IF
@@ -310,8 +310,8 @@ CONTAINS
   END SUBROUTINE QML_FiniteDiff_AddMat_TO_dnMat
 
   SUBROUTINE QML_FiniteDiff4_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
     real (kind=Rkind), intent(in)            :: Mat(:,:)
@@ -326,40 +326,40 @@ CONTAINS
     ndim   = get_nVar(dnMat)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in QML_FiniteDiff4_AddMat_TO_dnMat'
-      write(out_unitp,*) ' Inconsitent parameters.'
-      write(out_unitp,*) ' nderiv < 0',nderiv
-      write(out_unitp,*) '  => dnMat is not allocated'
+      write(out_unit,*) ' ERROR in QML_FiniteDiff4_AddMat_TO_dnMat'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' nderiv < 0',nderiv
+      write(out_unit,*) '  => dnMat is not allocated'
       STOP 'STOP in QML_FiniteDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
     IF (.NOT. all(shape(Mat) == shape(dnMat%d0))) THEN
-      write(out_unitp,*) ' ERROR in QML_FiniteDiff4_AddMat_TO_dnMat'
-      write(out_unitp,*) ' Inconsitent parameters.'
-      write(out_unitp,*) ' shape(Mat),shape(dnMat%d0)',shape(Mat),shape(dnMat%d0)
+      write(out_unit,*) ' ERROR in QML_FiniteDiff4_AddMat_TO_dnMat'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' shape(Mat),shape(dnMat%d0)',shape(Mat),shape(dnMat%d0)
       STOP 'STOP in QML_FiniteDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
     IF (present(indQ) .AND. present(indDQ)) THEN
       IF (size(indQ) /= size(indDQ) .OR. minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
-        write(out_unitp,*) ' ERROR in QML_FiniteDiff4_AddMat_TO_dnMat'
-        write(out_unitp,*) ' Inconsitent parameters.'
-        write(out_unitp,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
-        write(out_unitp,*) ' ndim',ndim
-        write(out_unitp,*) ' indQ(:)',indQ
-        write(out_unitp,*) ' indDQ(:)',indDQ
+        write(out_unit,*) ' ERROR in QML_FiniteDiff4_AddMat_TO_dnMat'
+        write(out_unit,*) ' Inconsitent parameters.'
+        write(out_unit,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
+        write(out_unit,*) ' ndim',ndim
+        write(out_unit,*) ' indQ(:)',indQ
+        write(out_unit,*) ' indDQ(:)',indDQ
         STOP 'STOP in QML_FiniteDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
       END IF
 
     ELSE IF ( (.NOT. present(indQ) .AND.       present(indDQ)) .OR.     &
               (      present(indQ) .AND. .NOT. present(indDQ)) ) THEN
-        write(out_unitp,*) ' ERROR in QML_FiniteDiff4_AddMat_TO_dnMat'
-        write(out_unitp,*) ' Inconsitent parameters.'
-        write(out_unitp,*) ' Both indQ and indDQ MUST be present'
-        write(out_unitp,*) '     or '
-        write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
-        write(out_unitp,*) ' present(indQ) ',present(indQ)
-        write(out_unitp,*) ' present(indDQ)',present(indDQ)
+        write(out_unit,*) ' ERROR in QML_FiniteDiff4_AddMat_TO_dnMat'
+        write(out_unit,*) ' Inconsitent parameters.'
+        write(out_unit,*) ' Both indQ and indDQ MUST be present'
+        write(out_unit,*) '     or '
+        write(out_unit,*) ' Both indQ and indDQ MUST be absent'
+        write(out_unit,*) ' present(indQ) ',present(indQ)
+        write(out_unit,*) ' present(indDQ)',present(indDQ)
         STOP 'STOP in QML_FiniteDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
@@ -471,8 +471,8 @@ CONTAINS
 
   END SUBROUTINE QML_FiniteDiff4_AddMat_TO_dnMat
   SUBROUTINE QML_FiniteDiff3_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
     real (kind=Rkind), intent(in)            :: Mat(:,:)
@@ -487,40 +487,40 @@ CONTAINS
     ndim   = get_nVar(dnMat)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_dnMat'
-      write(out_unitp,*) ' Inconsitent parameters.'
-      write(out_unitp,*) ' nderiv < 0',nderiv
-      write(out_unitp,*) '  => dnMat is not allocated'
+      write(out_unit,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_dnMat'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' nderiv < 0',nderiv
+      write(out_unit,*) '  => dnMat is not allocated'
       STOP 'STOP in QML_FiniteDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
     IF (.NOT. all(shape(Mat) == shape(dnMat%d0))) THEN
-      write(out_unitp,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_dnMat'
-      write(out_unitp,*) ' Inconsitent parameters.'
-      write(out_unitp,*) ' shape(Mat),shape(dnMat%d0)',shape(Mat),shape(dnMat%d0)
+      write(out_unit,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_dnMat'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' shape(Mat),shape(dnMat%d0)',shape(Mat),shape(dnMat%d0)
       STOP 'STOP in QML_FiniteDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
     IF (present(indQ) .AND. present(indDQ)) THEN
       IF (size(indQ) /= size(indDQ) .OR. minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
-        write(out_unitp,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_dnMat'
-        write(out_unitp,*) ' Inconsitent parameters.'
-        write(out_unitp,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
-        write(out_unitp,*) ' ndim',ndim
-        write(out_unitp,*) ' indQ(:)',indQ
-        write(out_unitp,*) ' indDQ(:)',indDQ
+        write(out_unit,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_dnMat'
+        write(out_unit,*) ' Inconsitent parameters.'
+        write(out_unit,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
+        write(out_unit,*) ' ndim',ndim
+        write(out_unit,*) ' indQ(:)',indQ
+        write(out_unit,*) ' indDQ(:)',indDQ
         STOP 'STOP in QML_FiniteDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
       END IF
 
     ELSE IF ( (.NOT. present(indQ) .AND.       present(indDQ)) .OR.     &
               (      present(indQ) .AND. .NOT. present(indDQ)) ) THEN
-        write(out_unitp,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_dnMat'
-        write(out_unitp,*) ' Inconsitent parameters.'
-        write(out_unitp,*) ' Both indQ and indDQ MUST be present'
-        write(out_unitp,*) '     or '
-        write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
-        write(out_unitp,*) ' present(indQ) ',present(indQ)
-        write(out_unitp,*) ' present(indDQ)',present(indDQ)
+        write(out_unit,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_dnMat'
+        write(out_unit,*) ' Inconsitent parameters.'
+        write(out_unit,*) ' Both indQ and indDQ MUST be present'
+        write(out_unit,*) '     or '
+        write(out_unit,*) ' Both indQ and indDQ MUST be absent'
+        write(out_unit,*) ' present(indQ) ',present(indQ)
+        write(out_unit,*) ' present(indDQ)',present(indDQ)
         STOP 'STOP in QML_FiniteDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
@@ -647,8 +647,8 @@ CONTAINS
   END SUBROUTINE QML_FiniteDiff3_AddMat_TO_dnMat
 
   SUBROUTINE QML_FiniteDiff3_SymPerm_OF_dnMat(dnMat,indQ)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)   :: dnMat
     integer,           intent(in)      :: indQ(:)  ! indexes of the variables along DQ is made
@@ -661,18 +661,18 @@ CONTAINS
     ndim   = get_nVar(dnMat)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in QML_FiniteDiff3_SymPerm_OF_dnMat'
-      write(out_unitp,*) ' Inconsitent parameters.'
-      write(out_unitp,*) ' nderiv < 0',nderiv
-      write(out_unitp,*) '  => dnMat is not allocated'
+      write(out_unit,*) ' ERROR in QML_FiniteDiff3_SymPerm_OF_dnMat'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' nderiv < 0',nderiv
+      write(out_unit,*) '  => dnMat is not allocated'
       STOP 'STOP in QML_FiniteDiff3_SymPerm_OF_dnMat: Inconsitent parameters.'
     END IF
 
     IF (minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
-      write(out_unitp,*) ' ERROR in QML_FiniteDiff3_SymPerm_OF_dnMat'
-      write(out_unitp,*) ' Inconsitent parameters.'
-      write(out_unitp,*) ' ndim',ndim
-      write(out_unitp,*) ' indQ(:)',indQ
+      write(out_unit,*) ' ERROR in QML_FiniteDiff3_SymPerm_OF_dnMat'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' ndim',ndim
+      write(out_unit,*) ' indQ(:)',indQ
       STOP 'STOP in QML_FiniteDiff3_SymPerm_OF_dnMat: Inconsitent parameters.'
     END IF
 
@@ -707,8 +707,8 @@ CONTAINS
 
   END SUBROUTINE QML_FiniteDiff3_SymPerm_OF_dnMat
   SUBROUTINE QML_FiniteDiff_Finalize_dnMat(dnMat,step)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnMat_t),    intent(inout)         :: dnMat
     real (kind=Rkind), intent(in)            :: step
@@ -718,10 +718,10 @@ CONTAINS
     nderiv = get_nderiv(dnMat)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in QML_FiniteDiff_Finalize_dnMat'
-      write(out_unitp,*) ' Inconsitent parameters.'
-      write(out_unitp,*) ' nderiv < 0',nderiv
-      write(out_unitp,*) '  => dnMat is not allocated'
+      write(out_unit,*) ' ERROR in QML_FiniteDiff_Finalize_dnMat'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' nderiv < 0',nderiv
+      write(out_unit,*) '  => dnMat is not allocated'
       STOP 'STOP in QML_FiniteDiff_Finalize_dnMat: Inconsitent parameters.'
     END IF
 

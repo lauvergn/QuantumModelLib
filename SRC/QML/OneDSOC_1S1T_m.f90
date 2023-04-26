@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_OneDSOC_1S1T_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -85,7 +85,8 @@ MODULE QML_OneDSOC_1S1T_m
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_OneDSOC_1S1T(QModel_in,read_param,nio_param_file,&
                                    Rsig_in) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_OneDSOC_1S1T_t)                  :: QModel ! RESULT
 
@@ -107,12 +108,12 @@ MODULE QML_OneDSOC_1S1T_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      CALL QModel_in%Write_QModel(out_unitp)
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      CALL QModel_in%Write_QModel(out_unit)
+      flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     IF (QModel%nsurf == 0) THEN
       ! it means that nsurf was not present in the CALL Init_Model().
@@ -125,10 +126,10 @@ MODULE QML_OneDSOC_1S1T_m
 
     !The value of QModel%nsurf must be 2 or 4
     IF (QModel%nsurf /= 2 .AND. QModel%nsurf /= 4) THEN
-       write(out_unitp,*) 'Write_QModel'
-       CALL QModel%Write_QModel(out_unitp)
-       write(out_unitp,*) ' ERROR in ',name_sub
-       write(out_unitp,*) ' nsurf MUST equal to 4 or 2. nusrf: ',QModel%nsurf
+       write(out_unit,*) 'Write_QModel'
+       CALL QModel%Write_QModel(out_unit)
+       write(out_unit,*) ' ERROR in ',name_sub
+       write(out_unit,*) ' nsurf MUST equal to 4 or 2. nusrf: ',QModel%nsurf
        STOP 'ERROR in Init_QML_OneDSOC_1S1T: nsurf MUST equal to 4 or 2'
     END IF
 
@@ -141,17 +142,17 @@ MODULE QML_OneDSOC_1S1T_m
       read(nio_param_file,OneD_SOC_Model,IOSTAT=err_read)
 
       IF (err_read < 0) THEN
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' End-of-file or End-of-record'
-        write(out_unitp,*) ' The namelist "OneD_SOC_Model" is probably absent'
-        write(out_unitp,*) ' check your data!'
-        write(out_unitp,*)
+        write(out_unit,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' End-of-file or End-of-record'
+        write(out_unit,*) ' The namelist "OneD_SOC_Model" is probably absent'
+        write(out_unit,*) ' check your data!'
+        write(out_unit,*)
         STOP ' ERROR in Init_QML_OneDSOC_1S1T'
       ELSE IF (err_read > 0) THEN
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' Some parameter names of the namelist "OneD_SOC_Model" are probaly wrong'
-        write(out_unitp,*) ' check your data!'
-        write(out_unitp,nml=OneD_SOC_Model)
+        write(out_unit,*) ' ERROR in ',name_sub
+        write(out_unit,*) ' Some parameter names of the namelist "OneD_SOC_Model" are probaly wrong'
+        write(out_unit,*) ' check your data!'
+        write(out_unit,nml=OneD_SOC_Model)
         STOP ' ERROR in Init_QML_OneDSOC_1S1T'
       END IF
 
@@ -166,17 +167,17 @@ MODULE QML_OneDSOC_1S1T_m
     END IF
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of OneDSOC_1S1T'
+    IF (debug) write(out_unit,*) 'init Q0 of OneDSOC_1S1T'
     QModel%Q0 = [9.5_Rkind]
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of OneDSOC_1S1T'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    IF (debug) write(out_unit,*) 'init d0GGdef of OneDSOC_1S1T'
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
     QModel%d0GGdef(1,1) = ONE/QModel%mu
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_OneDSOC_1S1T
@@ -185,7 +186,7 @@ MODULE QML_OneDSOC_1S1T_m
 !! @param QModel            CLASS(QML_OneDSOC_1S1T_t): derived type in which the parameters are set-up.
 !! @param nio               integer:                     file unit to print the parameters.
   SUBROUTINE Write_QML_OneDSOC_1S1T(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_OneDSOC_1S1T_t), intent(in) :: QModel
     integer,                     intent(in) :: nio
@@ -219,7 +220,7 @@ MODULE QML_OneDSOC_1S1T_m
 !! @param QModel            CLASS(QML_OneDSOC_1S1T_t):  derived type in which the parameters are set-up.
 !! @param nio               integer:                      file unit to print the parameters.
   SUBROUTINE Write0_QML_OneDSOC_1S1T(QModel,nio)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     CLASS(QML_OneDSOC_1S1T_t),   intent(in) :: QModel
     integer,                       intent(in) :: nio
@@ -272,8 +273,8 @@ MODULE QML_OneDSOC_1S1T_m
 !! @param nderiv             integer:                     it enables to specify up to which derivatives the potential is calculated:
 !!                                                        the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_OneDSOC_1S1T(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_OneDSOC_1S1T_t), intent(in)    :: QModel
     TYPE (dnS_t),                intent(inout) :: Mat_OF_PotDia(:,:)

@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_CH5_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -86,7 +86,7 @@ MODULE QML_CH5_m
 
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_CH5
-    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_CH5
+    PROCEDURE :: EvalFunc_QModel => EvalFunc_QML_CH5
     PROCEDURE :: Write_QModel     => Write_QML_CH5
     PROCEDURE :: Write0_QModel    => Write0_QML_CH5
   END TYPE QML_CH5_t
@@ -101,13 +101,16 @@ MODULE QML_CH5_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_CH5(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat, TO_string, file_open2
+    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName
 
-    TYPE (QML_CH5_t)                           :: QModel ! RESULT
+    IMPLICIT NONE
+
+    TYPE (QML_CH5_t)                            :: QModel ! RESULT
 
     TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
-    integer,                     intent(in)      :: nio_param_file
-    logical,                     intent(in)      :: read_param
+    integer,                    intent(in)      :: nio_param_file
+    logical,                    intent(in)      :: read_param
 
 
     integer :: ii,jj,ifunc
@@ -120,11 +123,11 @@ MODULE QML_CH5_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     IF (QModel%ndim == 0) THEN
       ! it means that ndim was not present in the CALL Init_Model().
@@ -134,10 +137,10 @@ MODULE QML_CH5_m
 
     !The value of QModel%ndim must be 1 or 12
     IF (QModel%ndim /= 1 .AND. QModel%ndim /= 12 .AND. QModel%ndim /= 2 ) THEN
-       write(out_unitp,*) 'Write_QModel'
-       CALL QModel%Write_QModel(out_unitp)
-       write(out_unitp,*) ' ERROR in ',name_sub
-       write(out_unitp,*) ' ndim MUST equal to 1 or 2 or 12. ndim: ',QModel%ndim
+       write(out_unit,*) 'Write_QModel'
+       CALL QModel%Write_QModel(out_unit)
+       write(out_unit,*) ' ERROR in ',name_sub
+       write(out_unit,*) ' ndim MUST equal to 1 or 2 or 12. ndim: ',QModel%ndim
        STOP 'ERROR in Init_QML_CH5: ndim MUST equal to 1 or 2 or 12'
     END IF
 
@@ -160,20 +163,20 @@ MODULE QML_CH5_m
 
     SELECT CASE (QModel%option)
     CASE (3)
-      FileName = make_FileName(base_fit3_fileName // int_TO_char(ii))
+      FileName = make_QMLInternalFileName(base_fit3_fileName // TO_string(ii))
     CASE (4)
-      FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+      FileName = make_QMLInternalFileName(base_fit4_fileName // TO_string(ii))
     CASE (5)
-      FileName = make_FileName(base_fit5_fileName // int_TO_char(ii))
+      FileName = make_QMLInternalFileName(base_fit5_fileName // TO_string(ii))
     CASE Default
-      FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+      FileName = make_QMLInternalFileName(base_fit4_fileName // TO_string(ii))
     END SELECT
 
-    !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
+    !write(out_unit,*) ii,'FileName: ',FileName ; flush(out_unit)
     CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),     &
                          QModel%nn(:,ii,jj),ndim,QModel%nt(ii,jj),max_nn,       &
                          FileName,QModel%file_exist(ii,jj),print_info=debug)
-    !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
+    !write(out_unit,*) ii,'Read done' ; flush(out_unit)
     IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 energy parameters'
     QModel%ifunc_TO_i1i2(:,ifunc) = [0,0]
     QModel%i1i2_TO_ifunc(0,0)     = ifunc
@@ -189,20 +192,20 @@ MODULE QML_CH5_m
 
       SELECT CASE (QModel%option)
       CASE (3)
-        FileName = make_FileName(base_fit3_fileName // int_TO_char(ii))
+        FileName = make_QMLInternalFileName(base_fit3_fileName // TO_string(ii))
       CASE (4)
-        FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+        FileName = make_QMLInternalFileName(base_fit4_fileName // TO_string(ii))
       CASE (5)
-        FileName = make_FileName(base_fit5_fileName // int_TO_char(ii))
+        FileName = make_QMLInternalFileName(base_fit5_fileName // TO_string(ii))
       CASE Default
-        FileName = make_FileName(base_fit4_fileName // int_TO_char(ii))
+        FileName = make_QMLInternalFileName(base_fit4_fileName // TO_string(ii))
       END SELECT
 
-      !write(out_unitp,*) ii,'FileName: ',FileName ; flush(out_unitp)
+      !write(out_unit,*) ii,'FileName: ',FileName ; flush(out_unit)
       CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),   &
                            QModel%nn(:,ii,jj),ndim,QModel%nt(ii,jj),max_nn,     &
                            FileName,QModel%file_exist(ii,jj),print_info=debug)
-      !write(out_unitp,*) ii,'Read done' ; flush(out_unitp)
+      !write(out_unit,*) ii,'Read done' ; flush(out_unit)
 
       IF ( .NOT. QModel%file_exist(ii,jj)) STOP ' ERROR while reading CH5 Qop parameters'
 
@@ -225,17 +228,17 @@ MODULE QML_CH5_m
 
       SELECT CASE (QModel%option)
       CASE (3)
-        FileName = make_FileName(base_fit3_hess_fileName //                     &
-                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+        FileName = make_QMLInternalFileName(base_fit3_hess_fileName //                     &
+                                        TO_string(ii) // '_' // TO_string(jj) )
       CASE (4)
-        FileName = make_FileName(base_fit4_hess_fileName //                     &
-                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+        FileName = make_QMLInternalFileName(base_fit4_hess_fileName //                     &
+                                        TO_string(ii) // '_' // TO_string(jj) )
       CASE (5)
-        FileName = make_FileName(base_fit5_hess_fileName //                     &
-                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+        FileName = make_QMLInternalFileName(base_fit5_hess_fileName //                     &
+                                        TO_string(ii) // '_' // TO_string(jj) )
       CASE Default
-        FileName = make_FileName(base_fit4_hess_fileName //                     &
-                             int_TO_char(ii) // '_' // int_TO_char(jj) )
+        FileName = make_QMLInternalFileName(base_fit4_hess_fileName //                     &
+                                        TO_string(ii) // '_' // TO_string(jj) )
       END SELECT
 
       CALL QML_read_para4d(QModel%a(ii,jj),QModel%b(ii,jj),QModel%F(:,ii,jj),   &
@@ -251,9 +254,9 @@ MODULE QML_CH5_m
 
     deallocate(FileName)
 
-    IF (debug) write(out_unitp,*) 'largest_nn',QModel%largest_nn
+    IF (debug) write(out_unit,*) 'largest_nn',QModel%largest_nn
 
-    IF (debug) write(out_unitp,*) 'init Q0 of CH5' ! for the rigid constraints
+    IF (debug) write(out_unit,*) 'init Q0 of CH5' ! for the rigid constraints
 
     SELECT CASE (QModel%option)
     CASE (3,4)
@@ -273,14 +276,14 @@ MODULE QML_CH5_m
                    TWO*PI/THREE,-TWO*PI/THREE,PI/TWO,PI/TWO]
     END SELECT
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of CH5'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    IF (debug) write(out_unit,*) 'init d0GGdef of CH5'
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_CH5
@@ -291,7 +294,7 @@ MODULE QML_CH5_m
   SUBROUTINE Write_QML_CH5(QModel,nio)
   IMPLICIT NONE
 
-    CLASS(QML_CH5_t),   intent(in) :: QModel
+    CLASS(QML_CH5_t),     intent(in) :: QModel
     integer,              intent(in) :: nio
 
   END SUBROUTINE Write_QML_CH5
@@ -364,7 +367,7 @@ MODULE QML_CH5_m
   USE ADdnSVM_m
   IMPLICIT NONE
 
-    CLASS(QML_CH5_t),   intent(in)    :: QModel
+    CLASS(QML_CH5_t),     intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -477,11 +480,11 @@ MODULE QML_CH5_m
     integer         :: i,kl,iiq,jjq
     TYPE (dnS_t)    :: tRm ! transformation of Rm
 
-    !write(out_unitp,*) 'in QML_dnvfour_fit3',iq,jq
+    !write(out_unit,*) 'in QML_dnvfour_fit3',iq,jq
 
     IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
-      write(out_unitp,*) ' ERROR in dnvfour'
-      write(out_unitp,*) ' wrong value for iq or jq',iq,jq
+      write(out_unit,*) ' ERROR in dnvfour'
+      write(out_unit,*) ' wrong value for iq or jq',iq,jq
       STOP ' ERROR in QML_dnvfour_fit3: wrong value for iq or jq'
     END IF
 
@@ -555,11 +558,11 @@ MODULE QML_CH5_m
 
     integer         :: i,kl,iiq,jjq,np
 
-    !write(out_unitp,*) 'in QML_dnvfour_fit3',iq,jq
+    !write(out_unit,*) 'in QML_dnvfour_fit3',iq,jq
     dnvfour = ZERO
     IF (iq > max_fit .OR. iq < 0 .OR. jq > max_fit .OR. jq < 0) THEN
-      write(out_unitp,*) ' ERROR in dnvfour'
-      write(out_unitp,*) ' wrong value for iq or jq',iq,jq
+      write(out_unit,*) ' ERROR in dnvfour'
+      write(out_unit,*) ' wrong value for iq or jq',iq,jq
       STOP ' ERROR in QML_dnvfour_fit3: wrong value for iq or jq'
     END IF
 
@@ -621,6 +624,7 @@ MODULE QML_CH5_m
   END FUNCTION QML_sc2_fit3
   FUNCTION QML_sc_fit3(x,a,b)
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t)                          :: QML_sc_fit3
     TYPE (dnS_t),           intent(in)    :: x
@@ -631,7 +635,8 @@ MODULE QML_CH5_m
   END FUNCTION QML_sc_fit3
 
   SUBROUTINE QML_read_para4d(a,b,F,n,ndim,nt,max_points,nom1,exist,print_info)
-  IMPLICIT NONE
+    USE QDUtil_m, ONLY : file_open2
+    IMPLICIT NONE
 
    integer,           intent(in)    :: max_points,ndim
    integer,           intent(inout) :: n(0:ndim),nt
@@ -642,7 +647,7 @@ MODULE QML_CH5_m
 
    integer :: no,ios,kl,i
 
-   IF (print_info) write(out_unitp,*) 'QML_read_para4d: nom1,max_points: ',nom1,max_points
+   IF (print_info) write(out_unit,*) 'QML_read_para4d: nom1,max_points: ',nom1,max_points
 
 
    CALL file_open2(name_file=nom1,iunit=no,lformatted=.TRUE.,                   &
@@ -651,18 +656,18 @@ MODULE QML_CH5_m
 
      read(no,*) i ! for nb_fit (not used)
 
-     IF (print_info) write(out_unitp,*) 'nom1,nt,ndim: ',nom1,nt,ndim
+     IF (print_info) write(out_unit,*) 'nom1,nt,ndim: ',nom1,nt,ndim
      read(no,*) n(0:ndim)
-     IF (print_info) write(out_unitp,*) 'nom1,n ',nom1,n(0:ndim)
+     IF (print_info) write(out_unit,*) 'nom1,n ',nom1,n(0:ndim)
      IF (n(0) > max_points) THEN
-         write(out_unitp,*) ' ERROR : The number of coefficients (',n(0),') >'
-         write(out_unitp,*) '         than max_points (',max_points,')'
-         write(out_unitp,*) '         STOP in QML_read_para4d'
+         write(out_unit,*) ' ERROR : The number of coefficients (',n(0),') >'
+         write(out_unit,*) '         than max_points (',max_points,')'
+         write(out_unit,*) '         STOP in QML_read_para4d'
          STOP 'ERROR in QML_read_para4d'
      END IF
      DO kl=1,n(0)
         read(no,*) F(kl)
-!       write(out_unitp,*) F(kl)
+!       write(out_unit,*) F(kl)
      END DO
 
      read(no,*) a,b
@@ -670,7 +675,7 @@ MODULE QML_CH5_m
      CLOSE(no)
      exist = .TRUE.
    ELSE
-     IF (print_info) write(out_unitp,*) 'The file (',nom1,') does not exist !!'
+     IF (print_info) write(out_unit,*) 'The file (',nom1,') does not exist !!'
      exist = .FALSE.
    END IF
 

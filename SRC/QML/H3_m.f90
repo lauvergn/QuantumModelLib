@@ -43,7 +43,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_H3_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -266,7 +266,7 @@ MODULE QML_H3_m
     PROCEDURE :: EvalPot_QModel   => EvalPot_QML_H3
     PROCEDURE :: Write_QModel     => Write_QML_H3
     PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_H3
-    PROCEDURE :: Eval_QModel_Func => EvalFunc_QML_H3
+    PROCEDURE :: EvalFunc_QModel => EvalFunc_QML_H3
   END TYPE QML_H3_t
 
   PUBLIC :: QML_H3_t,Init_QML_H3
@@ -280,7 +280,8 @@ MODULE QML_H3_m
 !! @param nio_param_file     integer:             file unit to read the parameters.
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_H3(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : Identity_Mat
+    IMPLICIT NONE
 
     TYPE (QML_H3_t)                              :: QModel ! RESULT
 
@@ -292,15 +293,15 @@ MODULE QML_H3_m
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_H3'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf      = 1
     QModel%ndimCart   = 9
@@ -343,29 +344,107 @@ MODULE QML_H3_m
 
       QModel%pot_name   = 'H3_LSTH_IRC'
       QModel%no_ana_der = .FALSE.
+
+    CASE (31)
+      QModel%ndimQ    = 1
+      QModel%ndim     = 1
+
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 3 ! V, Hessian, Rho 
+
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 3
+      QModel%IndexFunc_Grad = 0
+      QModel%IndexFunc_Hess = 2
+
+      QModel%pot_name   = 'h3_jo'
+      QModel%no_ana_der = .FALSE.
+
+    CASE (3) ! 2d avec le rho fitté de 31
+      IF (QModel%ndim == 2) THEN
+        QModel%ndimQ      = 2
+      ELSE
+        QModel%ndimQ      = 3
+      END IF
+      IF (QModel%Cart_TO_Q) THEN
+        QModel%ndim       = QModel%ndimCart
+      ELSE
+        QModel%ndim       = QModel%ndimQ
+      END IF
+
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 3 ! V, Hessian, Rho 
+
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 3
+      QModel%IndexFunc_Grad = 0
+      QModel%IndexFunc_Hess = 2
+
+      QModel%pot_name   = 'H3_LSTH'
+      QModel%no_ana_der = .TRUE.
+
+    CASE (41) !CASE 31 avec transfo de coordonnée sinh(s)
+      QModel%ndimQ    = 1
+      QModel%ndim     = 1
+
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 3 ! V, Hessian, Rho 
+
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 3
+      QModel%IndexFunc_Grad = 0
+      QModel%IndexFunc_Hess = 2
+
+      QModel%pot_name   = 'h3_jo'
+      QModel%no_ana_der = .FALSE.
+
+    CASE (4) ! 2d avec le rho fitté de 41 (sinh(s))
+        IF (QModel%ndim == 2) THEN
+          QModel%ndimQ      = 2
+        ELSE
+          QModel%ndimQ      = 3
+        END IF
+        IF (QModel%Cart_TO_Q) THEN
+          QModel%ndim       = QModel%ndimCart
+        ELSE
+          QModel%ndim       = QModel%ndimQ
+        END IF
+  
+        QModel%ndimFunc = 1
+        QModel%nb_Func  = 3 ! V, Hessian, Rho 
+  
+        QModel%IndexFunc_Ene  = 1
+        QModel%IndexFunc_Qop  = 3
+        QModel%IndexFunc_Grad = 0
+        QModel%IndexFunc_Hess = 2
+  
+        QModel%pot_name   = 'H3_LSTH'
+        QModel%no_ana_der = .TRUE.
+
+
     CASE Default
-       write(out_unitp,*) 'Write_QModel'
-       CALL QModel%Write_QModel(out_unitp)
-       write(out_unitp,*) ' ERROR in ',name_sub
-       write(out_unitp,*) ' option: ',QModel%option
-       write(out_unitp,*) ' the possible option are: 0,10,20 (3D) or 1,11,21 (1D-IRC)'
+       write(out_unit,*) 'Write_QModel'
+       CALL QModel%Write_QModel(out_unit)
+       write(out_unit,*) ' ERROR in ',name_sub
+       write(out_unit,*) ' option: ',QModel%option
+       write(out_unit,*) ' the possible option are: 0,10,20 (3D) or 1,11,21 (1D-IRC)'
        STOP 'ERROR in Init_QML_H3: wrong option'
     END SELECT
 
     IF (QModel%AbInitio) QModel%no_ana_der = .FALSE.
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of H3 (H3 minimum)'
+    IF (debug) write(out_unit,*) 'init Q0 of H3 (H3 minimum)'
     QModel%Q0 = [2.806_Rkind,2.271_Rkind,2.271_Rkind]
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of H3'
-    CALL Init_IdMat(QModel%d0GGdef,QModel%ndim)
+    IF (debug) write(out_unit,*) 'init d0GGdef of H3'
+    QModel%d0GGdef = Identity_Mat(QModel%ndim)
 
     IF (debug) THEN
-      !CALL Write_QML_H3(QModel,nio=out_unitp)
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      CALL Write_QML_H3(QModel,nio=out_unit)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_H3
@@ -383,6 +462,7 @@ MODULE QML_H3_m
     write(nio,*) '-------------------------------------------------------------'
     write(nio,*) 'H3 LSTH current parameters'
     write(nio,*)
+    write(nio,*) ' Units: Energy in Hartree and distances in bohr'
     write(nio,*) 'refs: '
     write(nio,*) ' P. Siegbahn, B. Liu,  J. Chem. Phys. 68, 2457(1978).'
     write(nio,*) ' D.G. Truhlar and C.J. Horowitz, J. Chem. Phys. 68, 2466 (1978); https://doi.org/10.1063/1.436019'
@@ -417,12 +497,29 @@ MODULE QML_H3_m
       write(nio,*) 'Second 1D-IRC H3 LSTH model (from sum and difference)'
     CASE (21) ! IRC
       write(nio,*) 'Third (correct?) 1D-IRC H3 LSTH model'
+    CASE (31) 
+            write(nio,*) 'Case 31 for Jo'
+
+    CASE (41)
+            write(nio,*) 'Case 41 for Jo : 31 + transfo ts=sinh(s)'
+
+    CASE (3) ! 2D 
+        IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances, FOR Jo case 3'
+        IF (QModel%ndim == 3) write(nio,*) '3D-H3 LSTH model, with 3 distances'
+        IF (QModel%ndim == 9) write(nio,*) 'Cartessian H3 LSTH model'
+
+    CASE (4) ! 2D 
+          IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances, FOR Jo case 4 ts=sinh(s)'
+          IF (QModel%ndim == 3) write(nio,*) '3D-H3 LSTH model, with 3 distances'
+          IF (QModel%ndim == 9) write(nio,*) 'Cartessian H3 LSTH model'
+
+
     END SELECT
     write(nio,*)
 
     write(nio,*)
     write(nio,*) '-------------------------------------------------------------'
-    CALL Write_QML_Empty(QModel%QML_Empty_t,nio)
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*) '-------------------------------------------------------------'
     write(nio,*)
     write(nio,*) 'end H3 LSTH current parameters'
@@ -452,7 +549,7 @@ MODULE QML_H3_m
 
 
     SELECT CASE(QModel%option)
-    CASE (0,10,20) ! 2D or 3D
+    CASE (0,10,20,3,4) ! 2D or 3D
       IF (size(dnQ) == 2) THEN
         Q(1:2) = get_d0(dnQ)
         Q(3)   = Q(1) + Q(2)
@@ -473,14 +570,22 @@ MODULE QML_H3_m
     CASE (21) ! IRC
       CALL EvalFunc_QML_H3_v11(QModel,Func,dnQ,nderiv)
       Mat_OF_PotDia(1,1) = Func(1)
-    END SELECT
 
+    CASE (31)
+      CALL EvalFunc_QML_H3_v31(QModel,Func,dnQ,nderiv)
+      Mat_OF_PotDia(1,1) = Func(1)
+
+    CASE (41) 
+      CALL EvalFunc_QML_H3_v41(QModel,Func,dnQ,nderiv)
+      Mat_OF_PotDia(1,1) = Func(1)
+    END SELECT
 
   END SUBROUTINE EvalPot_QML_H3
 
   SUBROUTINE Cart_TO_Q_QML_H3(QModel,dnX,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : TO_string
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H3_t),         intent(in)    :: QModel
     TYPE (dnS_t),            intent(in)    :: dnX(:,:)
@@ -498,26 +603,25 @@ MODULE QML_H3_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) 'size(dnQ)',size(dnQ)
-      write(out_unitp,*) 'dnQ:'
+      write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) 'size(dnQ)',size(dnQ)
+      write(out_unit,*) 'dnQ:'
       DO j=1,size(dnQ,dim=1)
-        CALL Write_dnS(dnQ(j),out_unitp,info='dnQ('// int_to_char(j) // ')')
+        CALL Write_dnS(dnQ(j),out_unit,info='dnQ('// TO_string(j) // ')')
       END DO
-      write(out_unitp,*) 'shape dnX',shape(dnX)
-      write(out_unitp,*) 'dnX'
+      write(out_unit,*) 'shape dnX',shape(dnX)
+      write(out_unit,*) 'dnX'
       DO i=1,size(dnX,dim=2)
       DO j=1,size(dnX,dim=1)
-        CALL Write_dnS(dnX(j,i),out_unitp)
+        CALL Write_dnS(dnX(j,i),out_unit)
       END DO
       END DO
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     allocate(Vec23(3))
     allocate(Vec12(3))
     allocate(Vec13(3))
-
     IF (QModel%MassWeighted) THEN
       ! here dnX are mass weighted, we have to un-mass weighted the vectors
       sm1 = ONE/sqrt(QModel%masses(1))
@@ -534,18 +638,18 @@ MODULE QML_H3_m
     END IF
 
     IF (debug) THEN
-      write(out_unitp,*) 'Cart_TO_Q_QML_H3 vect done'
-      flush(out_unitp)
+      write(out_unit,*) 'Cart_TO_Q_QML_H3 vect done'
+      flush(out_unit)
       DO j=1,size(Vec23,dim=1)
-        CALL Write_dnS(Vec23(j),out_unitp,info='Vec23')
+        CALL Write_dnS(Vec23(j),out_unit,info='Vec23')
       END DO
       DO j=1,size(Vec12,dim=1)
-        CALL Write_dnS(Vec23(j),out_unitp,info='Vec12')
+        CALL Write_dnS(Vec23(j),out_unit,info='Vec12')
       END DO
       DO j=1,size(Vec23,dim=1)
-        CALL Write_dnS(Vec13(j),out_unitp,info='Vec13')
+        CALL Write_dnS(Vec13(j),out_unit,info='Vec13')
       END DO
-      flush(out_unitp)
+      flush(out_unit)
     END IF
 
     dnQ(1) = sqrt(dot_product(Vec23,Vec23))
@@ -557,17 +661,16 @@ MODULE QML_H3_m
     CALL dealloc_dnS(Vec13)
 
     IF (debug) THEN
-      CALL Write_dnS(dnQ(1),out_unitp,info='dnQ(1)')
-      CALL Write_dnS(dnQ(2),out_unitp,info='dnQ(2)')
-      CALL Write_dnS(dnQ(3),out_unitp,info='dnQ(3)')
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      CALL Write_dnS(dnQ(1),out_unit,info='dnQ(1)')
+      CALL Write_dnS(dnQ(2),out_unit,info='dnQ(2)')
+      CALL Write_dnS(dnQ(3),out_unit,info='dnQ(3)')
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
   END SUBROUTINE Cart_TO_Q_QML_H3
 
   SUBROUTINE QML_LSTH_refactoring(X,VXD)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
 !       tag='LSTH PES of H2+H. [P. Siegbahn, B. Liu, D.G. Truhlar and C.J.Horowitz, JCP 68, 2457(1978)'
 !       X refers to the three hh distances.
@@ -654,8 +757,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_LSTH_refactoring
 
   SUBROUTINE QML_LSTH(X,VXD)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
 !       tag='LSTH PES of H2+H. [P. Siegbahn, B. Liu, D.G. Truhlar and C.J.Horowitz, JCP 68, 2457(1978)'
 !       X refers to the three hh distances.
@@ -742,8 +844,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_LSTH
 
   SUBROUTINE QML_VH2(X,S1,S2,S3)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
         real(kind=Rkind), intent(in)    :: X(3)
         real(kind=Rkind), intent(inout) :: S1(3),S2(3),S3(3)
 
@@ -767,8 +868,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_VH2
 !       *************************************************************
   SUBROUTINE QML_VBIGR(X,S)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
         real(kind=Rkind), intent(in)    ::  X
         real(kind=Rkind), intent(inout) ::  S(3)
 
@@ -786,8 +886,7 @@ MODULE QML_H3_m
   END SUBROUTINE QML_VBIGR
 
   SUBROUTINE QML_SPLID2(N,X,FF,W,IJ,Y,TAB)
-  USE QMLLib_NumParameters_m
-  IMPLICIT NONE
+    IMPLICIT NONE
 
         integer,          intent(in)    :: N,IJ
         real(kind=Rkind), intent(in)    :: X(N)
@@ -839,8 +938,8 @@ MODULE QML_H3_m
   END SUBROUTINE QML_SPLID2
 
   SUBROUTINE EvalFunc_QML_H3(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H3_t),      intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
@@ -854,14 +953,17 @@ MODULE QML_H3_m
       CALL EvalFunc_QML_H3_v11(QModel,Func,dnQ,nderiv)
     CASE (20,21) ! IRC
       CALL EvalFunc_QML_H3_v21(QModel,Func,dnQ,nderiv)
+    CASE (31,3) 
+      CALL EvalFunc_QML_H3_v31(QModel,Func,dnQ,nderiv)
+    CASE (41,4) 
+      CALL EvalFunc_QML_H3_v41(QModel,Func,dnQ,nderiv)
     END SELECT
-
   END SUBROUTINE EvalFunc_QML_H3
 
   ! for IRC, RPH
   SUBROUTINE EvalFunc_QML_H3_v11(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H3_t),      intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
@@ -970,8 +1072,8 @@ MODULE QML_H3_m
 
 
   SUBROUTINE EvalFunc_QML_H3_v1(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_H3_t),      intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
@@ -1246,9 +1348,146 @@ MODULE QML_H3_m
   
     END SUBROUTINE EvalFunc_QML_H3_v21
 
+     SUBROUTINE EvalFunc_QML_H3_v31(QModel,Func,dnQ,nderiv)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+      CLASS(QML_H3_t),      intent(in)    :: QModel
+      TYPE (dnS_t),         intent(inout) :: Func(:)
+      TYPE (dnS_t),         intent(in)    :: dnQ(:)
+      integer,              intent(in)    :: nderiv
+
+      TYPE (dnS_t)                  :: s,ts,am,ap
+      integer                       :: i
+      integer,           parameter  :: max_deg = 20
+      TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
+      real (kind=Rkind), parameter  :: betaQ = 1._Rkind
+
+
+      s  = dnQ(1)
+      ts = tanh(s*betaQ)
+
+      DO i=0,max_deg
+        tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
+      END DO
+     
+      !  V
+      Func(1)= &
+      (-0.16597446466905263_Rkind) * tab_Pl(0) +  &
+      (-0.012383613848784496_Rkind) * tab_Pl(2) +  &
+      (0.003326606346209517_Rkind) * tab_Pl(4) +  &
+      (0.0008779335935679601_Rkind) * tab_Pl(6) +  &
+      (-0.00024065622197537675_Rkind) * tab_Pl(8) +  &
+      (-0.0001241975119023965_Rkind) * tab_Pl(10) +  &
+      (-1.3361183199880677e-05_Rkind) * tab_Pl(12) +  &
+      (8.34191640793267e-05_Rkind) * tab_Pl(14) +  &
+      (-3.0024892518874162e-06_Rkind) * tab_Pl(16)
+      
+      ! hessian
+      Func(2) = &
+      (0.5160182951754864_Rkind) * tab_Pl(0) +  &
+      (-0.17971203676655206_Rkind) * tab_Pl(2) +  &
+      (0.065778695179622_Rkind) * tab_Pl(4) +  &
+      (-0.056073060962388566_Rkind) * tab_Pl(6) +  &
+      (0.004030092812838212_Rkind) * tab_Pl(8) +  &
+      (0.021678208287918613_Rkind) * tab_Pl(10) +  &
+      (0.00825140847920465_Rkind) * tab_Pl(12) +  &
+      (-0.007827161286743232_Rkind) * tab_Pl(14) +  &
+      (-0.005497405564310822_Rkind) * tab_Pl(16)        
+
+      ! rho
+      Func(3) = &
+      (1.2933688878722176_Rkind) * tab_Pl(0) +  &
+      (0.08694736684022922_Rkind) * tab_Pl(2) +  &
+      (-0.016117447456099533_Rkind) * tab_Pl(4) +  &
+      (0.011110605473470134_Rkind) * tab_Pl(6) +  &
+      (0.009578713881238925_Rkind) * tab_Pl(8) +  &
+      (0.0015319141117551551_Rkind) * tab_Pl(10) +  &
+      (-0.001136293339165834_Rkind) * tab_Pl(12) +  &
+      (0.0007092933469349128_Rkind) * tab_Pl(14) +  &
+      (0.007085765600105608_Rkind) * tab_Pl(16)
+                                     
+      write(out_unit,*) " hi universe we're in the EvalFunc 31 !!"
+
+      DO i=0,max_deg
+        CALL dealloc_dnS(tab_Pl(i))
+      END DO
+      CALL dealloc_dnS(s)
+      CALL dealloc_dnS(ts)
+
+    END SUBROUTINE EvalFunc_QML_H3_v31
+
+     SUBROUTINE EvalFunc_QML_H3_v41(QModel,Func,dnQ,nderiv)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+      CLASS(QML_H3_t),      intent(in)    :: QModel
+      TYPE (dnS_t),         intent(inout) :: Func(:)
+      TYPE (dnS_t),         intent(in)    :: dnQ(:)
+      integer,              intent(in)    :: nderiv
+
+      TYPE (dnS_t)                  :: s,ts,am,ap
+      integer                       :: i
+      integer,           parameter  :: max_deg = 20
+      TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
+      real (kind=Rkind), parameter  :: betaQ = 1._Rkind
+
+
+      !s  = dnQ(1)
+      s  = sinh(dnQ(1))
+      ts = tanh(s*betaQ)
+      DO i=0,max_deg
+        tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
+      END DO
+     
+      !  V
+      Func(1)= &
+      (-0.16597446466905263_Rkind) * tab_Pl(0) +  &
+      (-0.012383613848784496_Rkind) * tab_Pl(2) +  &
+      (0.003326606346209517_Rkind) * tab_Pl(4) +  &
+      (0.0008779335935679601_Rkind) * tab_Pl(6) +  &
+      (-0.00024065622197537675_Rkind) * tab_Pl(8) +  &
+      (-0.0001241975119023965_Rkind) * tab_Pl(10) +  &
+      (-1.3361183199880677e-05_Rkind) * tab_Pl(12) +  &
+      (8.34191640793267e-05_Rkind) * tab_Pl(14) +  &
+      (-3.0024892518874162e-06_Rkind) * tab_Pl(16)
+      
+      ! hessian
+      Func(2) = &
+      (0.5160182951754864_Rkind) * tab_Pl(0) +  &
+      (-0.17971203676655206_Rkind) * tab_Pl(2) +  &
+      (0.065778695179622_Rkind) * tab_Pl(4) +  &
+      (-0.056073060962388566_Rkind) * tab_Pl(6) +  &
+      (0.004030092812838212_Rkind) * tab_Pl(8) +  &
+      (0.021678208287918613_Rkind) * tab_Pl(10) +  &
+      (0.00825140847920465_Rkind) * tab_Pl(12) +  &
+      (-0.007827161286743232_Rkind) * tab_Pl(14) +  &
+      (-0.005497405564310822_Rkind) * tab_Pl(16)        
+
+      ! rho
+      Func(3) = &
+      (1.2933688878722176_Rkind) * tab_Pl(0) +  &
+      (0.08694736684022922_Rkind) * tab_Pl(2) +  &
+      (-0.016117447456099533_Rkind) * tab_Pl(4) +  &
+      (0.011110605473470134_Rkind) * tab_Pl(6) +  &
+      (0.009578713881238925_Rkind) * tab_Pl(8) +  &
+      (0.0015319141117551551_Rkind) * tab_Pl(10) +  &
+      (-0.001136293339165834_Rkind) * tab_Pl(12) +  &
+      (0.0007092933469349128_Rkind) * tab_Pl(14) +  &
+      (0.007085765600105608_Rkind) * tab_Pl(16)
+                                     
+      write(out_unit,*) 'new s,s,V',get_d0(dnQ(1)),get_d0(s),get_d0(Func(1))
+
+      DO i=0,max_deg
+        CALL dealloc_dnS(tab_Pl(i))
+      END DO
+      CALL dealloc_dnS(s)
+      CALL dealloc_dnS(ts)
+    END SUBROUTINE EvalFunc_QML_H3_v41
+
   FUNCTION QML_dnSigmoid_H3(x,sc)
-  USE ADdnSVM_m
-  IMPLICIT NONE
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
     TYPE (dnS_t)                        :: QML_dnSigmoid_H3
 

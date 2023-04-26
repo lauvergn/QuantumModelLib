@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_ClH2p_Botschwina_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -124,7 +124,8 @@ MODULE QML_ClH2p_Botschwina_m
 !! @param nio                  integer (optional): file unit to read the parameters.
 !! @param read_param           logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_ClH2p_Botschwina(QModel_in,read_param,nio_param_file) RESULT(QModel)
-  IMPLICIT NONE
+    IMPLICIT NONE
+
     TYPE (QML_ClH2p_Botschwina_t)                :: QModel
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
@@ -135,8 +136,6 @@ MODULE QML_ClH2p_Botschwina_m
     integer                         :: i,ifunc,i1,i2,i3
 
 
-
-
     !-----------------------------------------------------------------
 
     !----- for debuging --------------------------------------------------
@@ -145,11 +144,11 @@ MODULE QML_ClH2p_Botschwina_m
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf    = 1
     QModel%ndim     = 3
@@ -165,7 +164,7 @@ MODULE QML_ClH2p_Botschwina_m
       QModel%nb_funcModel = QModel%nb_funcModel + 1
       IF (i1 /= i2) QModel%nb_funcModel = QModel%nb_funcModel + 1
     END DO
-    write(out_unitp,*) 'QModel%nb_funcModel',QModel%nb_funcModel
+    write(out_unit,*) 'QModel%nb_funcModel',QModel%nb_funcModel
 
     allocate(QModel%tab_func(3,QModel%nb_funcModel))
     QModel%tab_func(:,:) = 0
@@ -266,43 +265,43 @@ MODULE QML_ClH2p_Botschwina_m
 
     CASE Default
 
-      write(out_unitp,*) ' ERROR in Init_QML_ClH2p_Botschwina '
-      write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-      write(out_unitp,*) ' Its value MUST be 1,2'
+      write(out_unit,*) ' ERROR in Init_QML_ClH2p_Botschwina '
+      write(out_unit,*) ' This option is not possible. option: ',QModel%option
+      write(out_unit,*) ' Its value MUST be 1,2'
       STOP 'ERROR in Init_QML_ClH2p_Botschwina: wrong option'
 
     END SELECT
-    flush(out_unitp)
+    flush(out_unit)
 
 
 
-    IF (debug) write(out_unitp,*) 'init Q0 of ClH2p_Botschwina'
+    IF (debug) write(out_unit,*) 'init Q0 of ClH2p_Botschwina'
     allocate(QModel%Q0(QModel%ndim))
     CALL get_Q0_QML_ClH2p_Botschwina(QModel%Q0,QModel,option=0)
-    IF (debug) write(out_unitp,*) 'QModel%Q0',QModel%Q0
+    IF (debug) write(out_unit,*) 'QModel%Q0',QModel%Q0
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of ClH2p_Botschwina'
+    IF (debug) write(out_unit,*) 'init d0GGdef of ClH2p_Botschwina'
 
     SELECT CASE (QModel%option)
     CASE (1,3)
       IF (QModel%PubliUnit) THEN
-        write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Rad,Bohr,Bohr], Energy: [Hartree]'
+        write(out_unit,*) 'PubliUnit=.TRUE.,  Q:[Rad,Bohr,Bohr], Energy: [Hartree]'
       ELSE
-        write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Rad,Bohr,Bohr], Energy: [Hartree]'
+        write(out_unit,*) 'PubliUnit=.FALSE., Q:[Rad,Bohr,Bohr], Energy: [Hartree]'
       END IF
     CASE (2)
       IF (QModel%PubliUnit) THEN
-        write(out_unitp,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad], Energy: [Hartree]'
+        write(out_unit,*) 'PubliUnit=.TRUE.,  Q:[Bohr,Bohr,Rad], Energy: [Hartree]'
       ELSE
-        write(out_unitp,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad]:, Energy: [Hartree]'
+        write(out_unit,*) 'PubliUnit=.FALSE., Q:[Bohr,Bohr,Rad]:, Energy: [Hartree]'
       END IF
     END SELECT
-    flush(out_unitp)
+    flush(out_unit)
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_ClH2p_Botschwina
@@ -311,6 +310,7 @@ MODULE QML_ClH2p_Botschwina_m
 !! @param QModel            CLASS(QML_ClH2p_Botschwina_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:            file unit to print the parameters.
   SUBROUTINE Write_QML_ClH2p_Botschwina(QModel,nio)
+    IMPLICIT NONE
 
     CLASS(QML_ClH2p_Botschwina_t), intent(in) :: QModel
     integer,                       intent(in) :: nio
@@ -391,9 +391,9 @@ MODULE QML_ClH2p_Botschwina_m
       write(nio,*) ' with Tnum at the minimun.             '
       write(nio,*) '                                       '
     CASE Default
-        write(out_unitp,*) ' ERROR in write_QModel '
-        write(out_unitp,*) ' This option is not possible. option: ',QModel%option
-        write(out_unitp,*) ' Its value MUST be 1,2'
+        write(out_unit,*) ' ERROR in write_QModel '
+        write(out_unit,*) ' This option is not possible. option: ',QModel%option
+        write(out_unit,*) ' Its value MUST be 1,2'
         STOP
     END SELECT
     write(nio,*) '---------------------------------------'
@@ -410,9 +410,9 @@ MODULE QML_ClH2p_Botschwina_m
     integer,                       intent(in)    :: option
 
     IF (size(Q0) /= 3) THEN
-      write(out_unitp,*) ' ERROR in get_Q0_QML_ClH2p_Botschwina '
-      write(out_unitp,*) ' The size of Q0 is not ndim=3: '
-      write(out_unitp,*) ' size(Q0)',size(Q0)
+      write(out_unit,*) ' ERROR in get_Q0_QML_ClH2p_Botschwina '
+      write(out_unit,*) ' The size of Q0 is not ndim=3: '
+      write(out_unit,*) ' size(Q0)',size(Q0)
       STOP 'ERROR in get_Q0_QML_ClH2p_Botschwina: wrong Q0 size'
     END IF
 
@@ -428,6 +428,7 @@ MODULE QML_ClH2p_Botschwina_m
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_ClH2p_Botschwina(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_ClH2p_Botschwina_t), intent(in)    :: QModel
     TYPE (dnS_t),                  intent(inout) :: Mat_OF_PotDia(:,:)
@@ -440,6 +441,7 @@ MODULE QML_ClH2p_Botschwina_m
 
   SUBROUTINE EvalPot1_QML_ClH2p_Botschwina(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
+    IMPLICIT NONE
 
     CLASS(QML_ClH2p_Botschwina_t),  intent(in)    :: QModel
     TYPE (dnS_t),                   intent(inout) :: Mat_OF_PotDia(:,:)
@@ -451,21 +453,21 @@ MODULE QML_ClH2p_Botschwina_m
     TYPE (dnS_t)              :: Vtemp
     integer                   :: i,j,max_exp
 
-    !write(out_unitp,*) ' sub EvalPot1_QML_ClH2p_Botschwina' ; flush(6)
+    !write(out_unit,*) ' sub EvalPot1_QML_ClH2p_Botschwina' ; flush(6)
     max_exp = 10
-    !write(out_unitp,*) ' max_exp',max_exp ; flush(6)
+    !write(out_unit,*) ' max_exp',max_exp ; flush(6)
 
     allocate(DQ(QModel%ndim,max_exp))
     DQ(:,1) = dnQ(:) - QModel%Qref(:)
     DO j=2,size(DQ,dim=2)
       DQ(:,j) = DQ(:,j-1) * DQ(:,1)
     END DO
-    !write(out_unitp,*) ' DQ done' ; flush(6)
+    !write(out_unit,*) ' DQ done' ; flush(6)
 
 
     Mat_OF_PotDia(1,1) = ZERO
     Vtemp = Mat_OF_PotDia(1,1) ! to have a correct initialization
-    !write(out_unitp,*) ' Vtemp init done' ; flush(6)
+    !write(out_unit,*) ' Vtemp init done' ; flush(6)
 
 
 
@@ -478,7 +480,7 @@ MODULE QML_ClH2p_Botschwina_m
         END DO
         Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1) + Vtemp
       END DO
-      !CALL Write_dnS(Mat_OF_PotDia(1,1),nio=out_unitp)
+      !CALL Write_dnS(Mat_OF_PotDia(1,1),nio=out_unit)
 
 
 !-----------------------------------------------------------------------!
@@ -486,7 +488,7 @@ MODULE QML_ClH2p_Botschwina_m
    CALL dealloc_dnS(Vtemp)
    CALL dealloc_dnS(DQ)
 
-   !write(out_unitp,*) ' end EvalPot1_QML_ClH2p_Botschwina' ; flush(6)
+   !write(out_unit,*) ' end EvalPot1_QML_ClH2p_Botschwina' ; flush(6)
 
  END SUBROUTINE EvalPot1_QML_ClH2p_Botschwina
 END MODULE QML_ClH2p_Botschwina_m

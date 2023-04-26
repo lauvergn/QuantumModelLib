@@ -38,20 +38,17 @@
 !===========================================================================
 !===========================================================================
 MODULE AdiaChannels_MakeHinact_m
-  USE QMLLib_NumParameters_m
-
+  USE QDUtil_NumParameters_m
   IMPLICIT NONE
 
 CONTAINS
 
   SUBROUTINE QML_MakeHinact(Qact,QModel)
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
-  USE QMLLib_diago_m
-  USE ADdnSVM_m
-  USE Model_m
-  USE AdiaChannels_Basis_m
-  IMPLICIT NONE
+    USE QDUtil_m,         ONLY : diagonalization, Write_Mat, Write_Vec
+    USE ADdnSVM_m
+    USE Model_m
+    USE AdiaChannels_Basis_m
+    IMPLICIT NONE
 
   real (kind=Rkind), allocatable, intent(in)    :: Qact(:)
   TYPE (Model_t),                 intent(inout) :: QModel
@@ -97,21 +94,21 @@ CONTAINS
 !$OMP CRITICAL (CRIT_QML_MakeHinact)
     CALL alloc_dnMat(QModel%QM%Vec0,nsurf=nb,nVar=ndim_act,nderiv=0)
     CALL diagonalization(dnH%d0,Ene,QModel%QM%Vec0%d0,nb,sort=1,phase=.TRUE.)
-    write(out_unitp,*) 'init Vec0 done'
+    write(out_unit,*) 'init Vec0 done'
 !$OMP END CRITICAL (CRIT_QML_MakeHinact)
   END IF
 
   CALL DIAG_dnMat(dnH,dnHdiag,dnVec,dnVecProj,dnVec0=QModel%QM%Vec0)
-  !CALL Write_RMat(dnVec%d0(:,1:QModel%QM%nb_Channels),6,6,name_info='Vec')
-  write(out_unitp,*) 'NAC'
-  !CALL Write_dnMat(dnVecProj,nio=out_unitp)
-  CALL Write_RMat(dnVecProj%d1(1:QModel%QM%nb_Channels,1:QModel%QM%nb_Channels,1),out_unitp,6,name_info='NAC')
+  !CALL Write_Mat(dnVec%d0(:,1:QModel%QM%nb_Channels),out_unit,6,info='Vec')
+  write(out_unit,*) 'NAC'
+  !CALL Write_dnMat(dnVecProj,nio=out_unit)
+  CALL Write_Mat(dnVecProj%d1(1:QModel%QM%nb_Channels,1:QModel%QM%nb_Channels,1),out_unit,6,info='NAC')
 
   DO ib=1,nb
     Ene(ib) = dnHdiag%d0(ib,ib)
   END DO
-  write(out_unitp,*) 'Ene'
-  CALL Write_RVec(Ene(1:QModel%QM%nb_Channels)*auTOcm_inv,out_unitp,6,name_info='Ene')
+  write(out_unit,*) 'Ene'
+  CALL Write_Vec(Ene(1:QModel%QM%nb_Channels)*auTOcm_inv,out_unit,6,info='Ene')
 
   END SUBROUTINE QML_MakeHinact
 

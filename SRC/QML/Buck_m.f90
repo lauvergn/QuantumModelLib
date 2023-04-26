@@ -43,7 +43,7 @@
 !! @date 03/08/2017
 !!
 MODULE QML_Buck_m
-  USE QMLLib_NumParameters_m
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -68,7 +68,7 @@ MODULE QML_Buck_m
      ! C= 102 10^-12 erg A^-6 = 106.54483566475760255666 Hartree bohr^-6
      real (kind=Rkind) :: mu  = 36423.484024390622_Rkind        ! au
   CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_Buck
+    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Buck
     PROCEDURE :: Write_QModel    => Write_QML_Buck
     PROCEDURE :: Write0_QModel   => Write0_QML_Buck
   END TYPE QML_Buck_t
@@ -86,7 +86,7 @@ CONTAINS
 !! @param read_param         logical (optional): when it is .TRUE., the parameters are read. Otherwise, they are initialized.
 !! @param A,B,C              real (optional):    parameters
   FUNCTION Init_QML_Buck(QModel_in,read_param,nio_param_file,A,B,C) RESULT(QModel)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_Buck_t)                            :: QModel
 
@@ -104,17 +104,17 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
-    CALL Init0_QML_Empty(QModel%QML_Empty_t,QModel_in)
+    QModel%QML_Empty_t = QModel_in
 
     !Default for Ar-Ar
-    CALL Init0_QML_Buck(QModel,A=387.63744459726228783977_Rkind,       &
-                                 B=1.93837805257707347985_Rkind,        &
-                                 C=106.54483566475760255666_Rkind,      &
-                                 model_name='buck')
+    CALL Init0_QML_Buck(QModel,A=387.63744459726228783977_Rkind,      &
+                               B=1.93837805257707347985_Rkind,        &
+                               C=106.54483566475760255666_Rkind,      &
+                               model_name='buck')
 
     IF (read_param) THEN
       CALL Read_QML_Buck(QModel,nio_param_file)
@@ -124,23 +124,23 @@ CONTAINS
       IF (present(C))   QModel%C = C
     END IF
 
-    IF (debug) write(out_unitp,*) 'init Q0 of Buck'
+    IF (debug) write(out_unit,*) 'init Q0 of Buck'
     CALL get_Q0_QML_Buck(R0,QModel) ! no analytical value
     QModel%Q0 = [R0]
 
-    IF (debug) write(out_unitp,*) 'init d0GGdef of Buck'
+    IF (debug) write(out_unit,*) 'init d0GGdef of Buck'
     QModel%d0GGdef = reshape([ONE/QModel%mu],shape=[1,1])
 
     IF (debug) THEN
-      write(out_unitp,*) 'A,B,C: ',QModel%A,QModel%B,QModel%C
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'A,B,C: ',QModel%A,QModel%B,QModel%C
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END FUNCTION Init_QML_Buck
   SUBROUTINE Init0_QML_Buck(QModel,A,B,C,model_name)
-  IMPLICIT NONE
+    IMPLICIT NONE
 
     TYPE (QML_Buck_t),            intent(inout)   :: QModel
     real (kind=Rkind), optional,   intent(in)      :: A,B,C
@@ -153,8 +153,8 @@ CONTAINS
     !-----------------------------------------------------------
 
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
 
     QModel%In_a_Model = .TRUE.
@@ -164,17 +164,17 @@ CONTAINS
     QModel%pot_name   = 'Buck'
     IF (present(model_name)) QModel%pot_name = model_name
 
-    IF (debug) write(out_unitp,*) 'init Buck parameters (A,B,C), if present'
+    IF (debug) write(out_unit,*) 'init Buck parameters (A,B,C), if present'
 
     IF (present(A))   QModel%A   = A
     IF (present(B))   QModel%B   = B
     IF (present(C))   QModel%C   = C
 
     IF (debug) THEN
-      write(out_unitp,*) 'A,B,C: ',QModel%A,QModel%B,QModel%C
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'A,B,C: ',QModel%A,QModel%B,QModel%C
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
   END SUBROUTINE Init0_QML_Buck
@@ -187,6 +187,8 @@ CONTAINS
 !! @param QModel          TYPE(QML_Buck_t):    derived type in which the parameters are set-up.
 !! @param nio                integer:             file unit to read the parameters.
   SUBROUTINE Read_QML_Buck(QModel,nio)
+    IMPLICIT NONE
+
     TYPE (QML_Buck_t), intent(inout) :: QModel
     integer,            intent(in)    :: nio
 
@@ -200,21 +202,21 @@ CONTAINS
 
     read(nio,nml=Buck,IOSTAT=err_read)
     IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_Buck'
-      write(out_unitp,*) ' End-of-file or End-of-record'
-      write(out_unitp,*) ' The namelist "Buck" is probably absent'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,*)
+      write(out_unit,*) ' ERROR in Read_QML_Buck'
+      write(out_unit,*) ' End-of-file or End-of-record'
+      write(out_unit,*) ' The namelist "Buck" is probably absent'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
       STOP ' ERROR in Read_QML_Buck'
     ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in Read_QML_Buck'
-      write(out_unitp,*) ' Some parameter names of the namelist "Buck" are probaly wrong'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,nml=Buck)
+      write(out_unit,*) ' ERROR in Read_QML_Buck'
+      write(out_unit,*) ' Some parameter names of the namelist "Buck" are probaly wrong'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,nml=Buck)
       STOP ' ERROR in Read_QML_Buck'
     END IF
 
-    !write(out_unitp,nml=Buck)
+    !write(out_unit,nml=Buck)
     QModel%A = A
     QModel%B = B
     QModel%C = C
@@ -227,6 +229,8 @@ CONTAINS
 !!
 !! @param nio                integer:             file unit to print the parameters.
   SUBROUTINE Write0_QML_Buck(QModel,nio)
+    IMPLICIT NONE
+
     CLASS (QML_Buck_t), intent(in) :: QModel
     integer,             intent(in) :: nio
 
@@ -256,6 +260,8 @@ CONTAINS
 !! @param QModel          TYPE(QML_Buck_t):    derived type with the Buckingham parameters.
 !! @param nio                integer:             file unit to print the parameters.
   SUBROUTINE Write_QML_Buck(QModel,nio)
+    IMPLICIT NONE
+
     CLASS (QML_Buck_t), intent(in) :: QModel
     integer,             intent(in) :: nio
 
@@ -283,7 +289,7 @@ CONTAINS
     DO i=1,100
       !Rt2 = (QModel%B*QModel%A/(SIX*QModel%C)*exp(-QModel%B*Rt1))**(-ONE/SEVEN)
       Rt2 = -ONE/QModel%B* log(SIX*QModel%C/(QModel%B*QModel%A)*Rt1**(-7))
-      !write(out_unitp,*) i,RT2
+      !write(out_unit,*) i,RT2
       IF (abs(Rt1-Rt2) < ONETENTH**10) EXIT
       Rt1 = Rt2
     END DO
@@ -310,12 +316,12 @@ CONTAINS
     TYPE(dnS_t),         intent(in)     :: dnQ(:)
     integer,             intent(in)     :: nderiv
 
-    !write(out_unitp,*) 'BEGINNING in EvalPot_QML_Buck'
+    !write(out_unit,*) 'BEGINNING in EvalPot_QML_Buck'
 
     Mat_OF_PotDia(1,1) = QML_dnBuck(dnQ(1),QModel)
 
-    !write(out_unitp,*) 'END in EvalPot_QML_Buck'
-    !flush(out_unitp)
+    !write(out_unit,*) 'END in EvalPot_QML_Buck'
+    !flush(out_unit)
 
   END SUBROUTINE EvalPot_QML_Buck
 
@@ -330,7 +336,7 @@ CONTAINS
 !! @param BuckPot          TYPE(QML_Buck_t):    derived type with the Buckingham parameters.
   FUNCTION QML_dnBuck(dnR,BuckPot)
     USE ADdnSVM_m
-
+    IMPLICIT NONE
 
     TYPE (dnS_t)                          :: QML_dnBuck
     TYPE (dnS_t),          intent(in)     :: dnR
@@ -338,16 +344,16 @@ CONTAINS
     TYPE (QML_Buck_t),    intent(in)     :: BuckPot
 
 
-    !write(out_unitp,*) 'BEGINNING in QML_dnBuck'
-    !write(out_unitp,*) 'dnR'
+    !write(out_unit,*) 'BEGINNING in QML_dnBuck'
+    !write(out_unit,*) 'dnR'
     !CALL Write_dnS(dnR)
 
     QML_dnBuck = BuckPot%A * exp(-BuckPot%B*dnR) - BuckPot%C * dnR**(-6)
 
-    !write(out_unitp,*) 'Buckingham at',get_d0_FROM_dnS(dnR)
+    !write(out_unit,*) 'Buckingham at',get_d0_FROM_dnS(dnR)
     !CALL Write_dnS(QML_dnBuck)
-    !write(out_unitp,*) 'END in QML_dnBuck'
-    !flush(out_unitp)
+    !write(out_unit,*) 'END in QML_dnBuck'
+    !flush(out_unit)
 
   END FUNCTION QML_dnBuck
 

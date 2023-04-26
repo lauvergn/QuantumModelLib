@@ -5,6 +5,7 @@
 .settings
 *.x
 *.a
+*.log
 SRC/AdiaChannels/mod_Basis.f90-pointer
 SRC/AdiaChannels/mod_Basis.f90.i
 SRC/AdiaChannels/mod_Basis.f90.corrfort17
@@ -17,3 +18,4 @@ Tests/res*
 Tests/irc
 SRC/QML/chqml
 OBJ
+Examples

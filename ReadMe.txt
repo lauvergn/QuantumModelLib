@@ -1,7 +1,7 @@
 =========================================
 =========================================
  QuantumModelLib* is a free software under the MIT Licence.
-  date: 25/11/2022
+  date: 21/02/2023
 
     Copyright (c) 2022 David Lauvergnat [1]
       with contributions of:
@@ -18,23 +18,31 @@
 =========================================
  1) Installation
    From the QuantumModelLib directory, when make is executated, 
-   the "libQMLib_XXX_OMPy.a" ("libpot.a") and "libAD_dnSVM_XXX_OMPy.a" must be created.
-   XXX is the compiler name and y is 0/1 when OpenMP flag is turn off/on. 
+   the "libQMLibFull_XXX_optx_ompy_lapakz.a" must be created (ex: libQMLibFull_gfortran_opt1_omp1_lapack1).
+   XXX is the compiler name and x,y and z are 0/1 when flags are turn off/on. 
+   They correspond to OPT (compiler optimzation), OpenMP and Lapack/blas, respectively.
 
    This version works with:
        gfortran 9.0 (linux and macOS)
        ifort    19
-       pgf90    ?
-       nagfor   ?
 
- 2) Link "libAD_dnSVM.a" to your code
+ 2) Link the library to your code
 
-   gfortran ....   -L$QuantumModelLib_path --LQMLib_XXX_OMPy -lAD_dnSVM_XXX_OMPy
+When lapack/blas are not linked to the library:
+
+   gfortran ....   /libQMLibFull_XXX_optx_ompy_lapak0.a
+
+or with  lapack/blas (linux)
+
+   gfortran ....   /libQMLibFull_XXX_optx_ompy_lapak0.a -llapack -lblas
 
       QuantumModelLib_path contains the path of the QuantumModelLib
 
 
- 3) In your fortan code
+ 3) In your Fortan code
+
+ In the following, it shows how to initialize, compute with the driver subroutines (the full library is needed, the Fortran module files are not required)
+
  3a1) Initialization of the model (the Potential)
 
         CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
@@ -56,8 +64,6 @@
         It initializes the phenol potential (2D and 3 PES).
         => Computation of the diabatic surface
 
-
-        See the list of models below.
 
  3a2) Initialization of the potential (reading the model)
 
@@ -115,7 +121,7 @@
             non-adiabatic couplings (NAC).
             NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
 
- 3c) Potential energy surface with vibrational adiabatic separation
+ 3c) Potential energy surfaces with vibrational adiabatic separation
     This feature can be used only when the "model" is read.
     Therefore in the initialization with sub_Init_Qmodel "pot_name" must be "read_model".
     Then:
@@ -178,6 +184,41 @@
         where
            ndim       is the number of degree(s) of freedom it MUST be indentical to the initialized value (with sub_Init_Qmodel)
            GGdef(:,)  is the new metric tensor a ndim x ndim matrix of real (kind=8)
+
+ 5) Examples and Tests
+
+ With "make all", the libraries are created and several main programs.
+
+ 5a) To test the implementation
+ From the main QuantumModelLib directory:
+
+    make ut
+
+ From the Tests directory
+
+    ./run_test_QML
+
+  => Some options are possible, the compiler, OPT, OMP, Lapack
+
+  Or you can run:
+    ./run_tests
+
+  => All possible combinations between OPT=0/1, OMP=0/1, Lapack=0/1 will be tested. Beware, this test is long.
+
+ 5b) To run examples
+From the main QuantumModelLib directory:
+
+  ./TEST_driver.x < Tests/DAT_files/Vibadia_HBond.dat > res_driver
+=> Test sevral models (1 or several surfaces, optimization, Vibration adiabatic separation)
+
+  ./TEST_VibAdia.x < Tests/DAT_files/Vibadia_HBond.dat > res_VibAdia
+=> Test a Vibration adiabatic separation model.
+
+  ./TEST_grid.x > res_grid
+=> Test the 1D and 2D-cut generation for HenonHeiles potential (it uses subroutines with Fortran modules)
+
+  ./TEST_OMPloop.x > res_loop
+=> Test an OpenMP loop (10^5) on the HONO model (several seconds)
 
 =========================================
 =========================================
@@ -398,6 +439,24 @@
       !! nsurf     = 1
       !! refs: Quadratic model potential for H2O; TIPS force constants taken from:  
       !!       Dang and Pettitt, J. Chem. Phys. 91 (1987)
+=========================================
+=========================================
+=========================================
+=========================================
+      !! pot_name  = 'Bottleneck' or 'Eckart'
+=========================================
+      !!Bottleneck potential: 1D Eckart Barrier + quadratic contributions'
+      !! pot_name  = 'Bottleneck' or 'Eckart'
+      !! option    = 1, 2 (default 2)
+      !! ndim      >= 1
+      !! nsurf     = 1
+      !!
+      !! ref (option 1): Trahan, Wyatt and Poirier, J Chem Phys 122, 164104 (2005)'
+      !!   Multidimensional quantum trajectories: Applications of the derivative propagation method.'
+      !! ref (option 2): Dupuy, Lauvergnat and Scribano, CPL 787, 139241 (2022)'
+      !!   Smolyak representations with absorbing boundary conditions ...'
+      !!       for reaction path Hamiltonian model of reactive scattering.'
+      !!   DOI: 10.1016/j.cplett.2021.139241'
 =========================================
 =========================================
 =========================================

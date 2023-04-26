@@ -38,10 +38,11 @@
 !===========================================================================
 !===========================================================================
 MODULE QML_Empty_m
-  USE QMLLib_NumParameters_m
-  USE QMLLib_UtilLib_m
+  USE QDUtil_NumParameters_m, out_unit => out_unit
   USE ADdnSVM_m, ONLY : dnMat_t
   IMPLICIT NONE
+
+  PRIVATE
 
   TYPE :: QML_Empty_t
     logical :: Init        = .FALSE.
@@ -67,6 +68,8 @@ MODULE QML_Empty_m
     logical :: Cart_TO_Q        = .FALSE. ! to perform the Cartesian to model coordinates
     logical :: MassWeighted     = .FALSE. ! Cartesian with mass Weighted
     logical :: AbInitio         = .FALSE. ! To use abitio calculation (experimental)
+    integer :: nb_ScalOp        = 1 ! number scalar operators including the potential
+                                    ! numbering: [0: potential, 1...: other operators]
 
     logical :: Phase_Following  = .TRUE.
     logical :: Phase_Checking   = .TRUE.
@@ -94,13 +97,16 @@ MODULE QML_Empty_m
     CONTAINS
       PROCEDURE :: EvalPot_QModel         => EvalPot_QML_Empty
       PROCEDURE :: EvalPotAbInitio_QModel => EvalPotAbInitio_QML_Empty
-      PROCEDURE :: Eval_QModel_Func       => EvalFunc_QML_Empty
+      PROCEDURE :: EvalScalOp_QModel      => EvalScalOp_QML_Empty
+      PROCEDURE :: EvalFunc_QModel        => EvalFunc_QML_Empty
       PROCEDURE :: Write_QModel           => Write_QML_Empty
       PROCEDURE :: Write0_QModel          => Write0_QML_Empty
      !PROCEDURE :: get2_Q0_QModel         => get2_Q0_QML_Empty
       PROCEDURE :: get_d0GGdef_QModel     => get_d0GGdef_QML_Empty
       PROCEDURE :: Cart_TO_Q_QModel       => Cart_TO_Q_QML_Empty
-  END TYPE QML_Empty_t
+      PROCEDURE, PRIVATE :: Empty2_TO_Empty1_QML_Empty
+      GENERIC,   PUBLIC  :: assignment(=) => Empty2_TO_Empty1_QML_Empty
+      END TYPE QML_Empty_t
 
   INTERFACE get_Q0_QModel
     MODULE PROCEDURE get_Q0_QML_Empty
@@ -110,57 +116,32 @@ MODULE QML_Empty_m
     MODULE PROCEDURE Qact_TO_Q_QML_Empty
   END INTERFACE
 
-CONTAINS
+  !INTERFACE Empty2_TO_Empty1
+  !  MODULE PROCEDURE Empty2_TO_Empty1_QML_Empty
+  !END INTERFACE
 
-  FUNCTION Init_QML_Empty(QModel_in) RESULT(QModel)
-  USE QMLLib_UtilLib_m
-  IMPLICIT NONE
+  PUBLIC :: QML_Empty_t
+  PUBLIC :: get_Q0_QModel, get2_Q0_QML_Empty, Qact_TO_Q
 
-    TYPE(QML_Empty_t)                  :: QModel
-    TYPE(QML_Empty_t),  intent(in)     :: QModel_in ! variable to transfer info to the init
+  CONTAINS
 
-!----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init_QML_Empty'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
+  SUBROUTINE Empty2_TO_Empty1_QML_Empty(QModel,QModel_in)
+    USE ADdnSVM_m, ONLY : dealloc_dnMat
+    IMPLICIT NONE
 
-    IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
-    END IF
+    CLASS (QML_Empty_t),  intent(inout)   :: QModel
+    TYPE (QML_Empty_t),  intent(in)      :: QModel_in ! variable to transfer info to the init
 
-
-    CALL Init0_QML_Empty(QModel,QModel_in)
-
-    IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
-    END IF
-
-  END FUNCTION Init_QML_Empty
-  SUBROUTINE Init0_QML_Empty(QModel,QModel_in)
-  USE QMLLib_UtilLib_m
-  USE ADdnSVM_m, ONLY : dealloc_dnMat
-  IMPLICIT NONE
-
-    TYPE (QML_Empty_t), intent(inout)   :: QModel
-
-    TYPE(QML_Empty_t),  intent(in)      :: QModel_in ! variable to transfer info to the init
-
-!----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Init0_QML_Empty'
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Empty2_TO_Empty1_QML_Empty'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
+    !-----------------------------------------------------------
 
     IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'BEGINNING ',name_sub
+      flush(out_unit)
     END IF
-
-    !QModel = QModel_in   ! it does not work always with nagfor
     QModel%Init             = QModel_in%Init
 
     QModel%nsurf            = QModel_in%nsurf
@@ -180,16 +161,17 @@ CONTAINS
     QModel%MassWeighted     = QModel_in%MassWeighted
 
     QModel%AbInitio         = QModel_in%AbInitio
+    QModel%nb_ScalOp        = QModel_in%nb_ScalOp
 
     IF (QModel%adiabatic) THEN
-      write(out_unitp,*) 'Adiabatic potential . . .'
+      write(out_unit,*) 'Adiabatic potential . . .'
     ELSE
-      write(out_unitp,*) 'Non-adiabatic potential . . .'
+      write(out_unit,*) 'Non-adiabatic potential . . .'
     END IF
-    flush(out_unitp)
+    flush(out_unit)
 
     IF (QModel%numeric) THEN
-      write(out_unitp,*) 'You have decided to perform a numeric checking of the analytic formulas.'
+      write(out_unit,*) 'You have decided to perform a numeric checking of the analytic formulas.'
     END IF
 
     IF (allocated(QModel%pot_name)) deallocate(QModel%pot_name )
@@ -222,17 +204,17 @@ CONTAINS
     IF (allocated(QModel%list_inact)) deallocate(QModel%list_inact)
 
     IF (debug) THEN
-      write(out_unitp,*) 'QModel%pot_name: ',QModel%pot_name
-      write(out_unitp,*) 'END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
+      write(out_unit,*) 'END ',name_sub
+      flush(out_unit)
     END IF
 
-  END SUBROUTINE Init0_QML_Empty
+  END SUBROUTINE Empty2_TO_Empty1_QML_Empty
   SUBROUTINE get2_Q0_QML_Empty(QModel,Q0)
     IMPLICIT NONE
 
     real (kind=Rkind),    intent(inout)  :: Q0(:)
-    CLASS(QML_Empty_t),  intent(in)     :: QModel
+    CLASS(QML_Empty_t),   intent(in)     :: QModel
 
     IF (size(Q0) /= QModel%ndim) THEN
       STOP 'STOP in get_Q0_QML_Empty, wrong ndim size.'
@@ -246,9 +228,10 @@ CONTAINS
   END SUBROUTINE get2_Q0_QML_Empty
 
   SUBROUTINE get_Q0_QML_Empty(QModel,Q0,err_Q0)
+    USE QDUtil_m, ONLY : Rkind
     IMPLICIT NONE
 
-    CLASS(QML_Empty_t),  intent(in)              :: QModel
+    CLASS(QML_Empty_t),   intent(in)              :: QModel
     real (kind=Rkind),    intent(inout)           :: Q0(:)
     integer,              intent(inout), optional ::  err_Q0
 
@@ -268,7 +251,7 @@ CONTAINS
   FUNCTION get_d0GGdef_QML_Empty(QModel) RESULT(d0GGdef)
     IMPLICIT NONE
 
-    real (kind=Rkind),   allocatable               :: d0GGdef(:,:)
+    real (kind=Rkind),   allocatable              :: d0GGdef(:,:)
     CLASS(QML_Empty_t),             intent(in)    :: QModel
 
     integer :: i,nact
@@ -291,26 +274,47 @@ CONTAINS
       END DO
     END IF
 
-    !write(out_unitp,*) 'alloc Q0',allocated(Q0)
+    !write(out_unit,*) 'alloc Q0',allocated(Q0)
 
   END FUNCTION get_d0GGdef_QML_Empty
   SUBROUTINE EvalPot_QML_Empty(QModel,Mat_OF_PotDia,dnQ,nderiv)
-  USE ADdnSVM_m, ONLY :  dnS_t
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
 
     CLASS (QML_Empty_t),    intent(in)     :: QModel
     TYPE (dnS_t),           intent(in)     :: dnQ(:)
     TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
     integer,                intent(in)     :: nderiv
 
-
+    write(out_unit,*) 'ERROR in EvalPot_QModel (EvalPot_QML_Empty)'
+    write(out_unit,*) '  The intialized model does not have EvalPot_QModel subroutine!'
+    STOP 'ERROR in EvalPot_QML_Empty: the intialized model does not have EvalPot_QModel subroutine'
     Mat_OF_PotDia(:,:) = ZERO
 
   END SUBROUTINE EvalPot_QML_Empty
 
+  SUBROUTINE EvalScalOp_QML_Empty(QModel,Mat_OF_ScalOpDia,list_Op,dnQ,nderiv)
+    USE QDUtil_m,  ONLY : ZERO
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
+  
+      CLASS (QML_Empty_t),    intent(in)     :: QModel
+      TYPE (dnS_t),           intent(in)     :: dnQ(:)
+      integer,                intent(in)     :: list_Op(:)
+      TYPE (dnS_t),           intent(inout)  :: Mat_OF_ScalOpDia(:,:,:)
+      integer,                intent(in)     :: nderiv
+  
+      write(out_unit,*) 'ERROR in EvalScalOp_QModel (EvalScalOp_QML_Empty)'
+      write(out_unit,*) '  The intialized model does not have EvalScalOp_QModel subroutine!'
+      STOP 'ERROR in EvalScalOp_QML_Empty: the intialized model does not have EvalScalOp_QModel subroutine'
+      Mat_OF_ScalOpDia(:,:,:) = ZERO
+  
+  END SUBROUTINE EvalScalOp_QML_Empty
+
   SUBROUTINE EvalPotAbInitio_QML_Empty(QModel,Mat_OF_PotDia,dnX,nderiv)
-  USE ADdnSVM_m, ONLY :  dnS_t, get_d0, set_dnS, write_dnS
-  IMPLICIT NONE
+    USE QMLLib_UtilLib_m, ONLY : Find_Label
+    USE ADdnSVM_m, ONLY :  dnS_t, get_d0, set_dnS, write_dnS
+    IMPLICIT NONE
 
     CLASS (QML_Empty_t),    intent(in)     :: QModel
     TYPE (dnS_t),           intent(in)     :: dnX(:,:)
@@ -332,16 +336,16 @@ CONTAINS
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
     IF (debug) THEN
-      write(out_unitp,*) ' BEGINNING ',name_sub
-      write(out_unitp,*) '   nderiv:       ',nderiv
-      flush(out_unitp)
+      write(out_unit,*) ' BEGINNING ',name_sub
+      write(out_unit,*) '   nderiv:       ',nderiv
+      flush(out_unit)
     END IF
 
     ! check if Cart_TO_Q=t
     IF (.NOT. QModel%Cart_TO_Q) THEN
-      write(out_unitp,*) 'ERROR in EvalPotAbInitio_QML_Empty'
-      write(out_unitp,*) 'Cartessian coordinates must be used and Cart_TO_Q=F'
-      write(out_unitp,*) 'Check your data'
+      write(out_unit,*) 'ERROR in EvalPotAbInitio_QML_Empty'
+      write(out_unit,*) 'Cartessian coordinates must be used and Cart_TO_Q=F'
+      write(out_unit,*) 'Check your data'
       STOP 'ERROR in EvalPotAbInitio_QML_Empty'
     END IF
 
@@ -380,14 +384,14 @@ CONTAINS
     open(newunit=nio_otf,file='xx.log',status='old',position='append',form='formatted')
     backspace(nio_otf,err=999)
     read(nio_otf,'(a32)',err=999) labelR
-    !write(out_unitp,*) 'last line: ',labelR
+    !write(out_unit,*) 'last line: ',labelR
     located = verify(labelR,' Normal termination of Gaussian') == 0
     close(nio_otf)
-999  CONTINUE
+999 CONTINUE
     IF (.NOT. located) THEN
-      write(out_unitp,*) 'ERROR in EvalPotAbInitio_QML_Empty'
-      write(out_unitp,*) 'no line: "Normal termination of Gaussian"'
-      write(out_unitp,*) 'log file last line: ',labelR
+      write(out_unit,*) 'ERROR in EvalPotAbInitio_QML_Empty'
+      write(out_unit,*) 'no line: "Normal termination of Gaussian"'
+      write(out_unit,*) 'log file last line: ',labelR
       STOP
     END IF
 
@@ -395,7 +399,7 @@ CONTAINS
     !- read the energy from the file energy
     open(newunit=nio_otf,file='xx.fchk',status='old',form='formatted')
     CALL Find_Label(nio_otf,'Total Energy',located)
-    IF (debug) write(out_unitp,*) 'located: Total Energy',located
+    IF (debug) write(out_unit,*) 'located: Total Energy',located
     IF (located) THEN
       read(nio_otf,*,iostat=err) name1_i,d0E
     ELSE
@@ -403,9 +407,9 @@ CONTAINS
     END IF
 
     IF (.NOT. located .OR. err /=0) THEN
-      write(out_unitp,*) 'ERROR in ',name_sub
-      write(out_unitp,*) 'I cannot find the energy in : xx.fchk'
-      write(out_unitp,*) 'located,err',located,err
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'I cannot find the energy in : xx.fchk'
+      write(out_unit,*) 'located,err',located,err
       STOP
     END IF
     close(nio_otf)
@@ -416,15 +420,15 @@ CONTAINS
       open(newunit=nio_otf,file='xx.fchk',status='old',form='formatted')
 
       CALL Find_Label(nio_otf,'Cartesian Gradient',located)
-      IF (debug) write(out_unitp,*) 'located: Cartesian Gradient',located
+      IF (debug) write(out_unit,*) 'located: Cartesian Gradient',located
       IF (located) THEN
         read(nio_otf,*,iostat=err)
         read(nio_otf,*,iostat=err) d1E(:)
       END IF
       IF (.NOT. located .OR. err /=0) THEN
-        write(out_unitp,*) 'ERROR in ',name_sub
-        write(out_unitp,*) 'I cannot find the Gradient in : xx.fchk'
-        write(out_unitp,*) 'located,err',located,err
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'I cannot find the Gradient in : xx.fchk'
+        write(out_unit,*) 'located,err',located,err
         STOP
       END IF
       close(nio_otf)
@@ -434,15 +438,15 @@ CONTAINS
       allocate(d2E(QModel%ndimCart,QModel%ndimCart))
       open(newunit=nio_otf,file='xx.fchk',status='old',form='formatted')
       CALL Find_Label(nio_otf,'Cartesian Force Constants',located)
-      IF (debug) write(out_unitp,*) 'located: Cartesian Force Constants (hessian)',located
+      IF (debug) write(out_unit,*) 'located: Cartesian Force Constants (hessian)',located
       IF (located) THEN
         read(nio_otf,*,iostat=err)
         read(nio_otf,*,iostat=err) ((d2E(i,j),i=1,j),j=1,QModel%ndimCart)
       END IF
       IF (.NOT. located .OR. err /=0) THEN
-        write(out_unitp,*) 'ERROR in ',name_sub
-        write(out_unitp,*) 'I cannot find the hessian in : xx.fchk'
-        write(out_unitp,*) 'located,err',located,err
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'I cannot find the hessian in : xx.fchk'
+        write(out_unit,*) 'located,err',located,err
         STOP
       END IF
 
@@ -464,15 +468,15 @@ CONTAINS
 
     IF (debug) THEN
       CALL write_dnS(Mat_OF_PotDia(1,1),info='dnE')
-      write(out_unitp,*) ' END ',name_sub
-      flush(out_unitp)
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
     END IF
 
   END SUBROUTINE EvalPotAbInitio_QML_Empty
 
   SUBROUTINE EvalFunc_QML_Empty(QModel,Func,dnQ,nderiv)
-  USE ADdnSVM_m, ONLY :  dnS_t
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
 
     CLASS (QML_Empty_t),    intent(in)     :: QModel
     TYPE (dnS_t),           intent(in)     :: dnQ(:)
@@ -481,6 +485,9 @@ CONTAINS
 
     integer :: i
 
+    write(out_unit,*) 'ERROR in EvalFunc_QModel (EvalFunc_QML_Empty)'
+    write(out_unit,*) '  The intialized model does not have EvalFunc_QModel subroutine!'
+    STOP 'ERROR in EvalFunc_QML_Empty: the intialized model does not have EvalFunc_QModel subroutine'
     DO i=1,size(Func)
       Func(i) = ZERO
     END DO
@@ -488,7 +495,8 @@ CONTAINS
   END SUBROUTINE EvalFunc_QML_Empty
 
   SUBROUTINE Write_QML_Empty(QModel,nio)
-  IMPLICIT NONE
+    USE QDUtil_m,  ONLY : Write_RMat => Write_Mat, Write_RVec => Write_Vec
+    IMPLICIT NONE
 
     CLASS (QML_Empty_t), intent(in)    :: QModel
     integer,             intent(in)    :: nio
@@ -540,27 +548,27 @@ CONTAINS
 
     IF (allocated(QModel%d0GGdef)) THEN
       write(nio,*) 'Deformation metric tensor (~ 1/Mii)'
-      CALL Write_RMat(QModel%d0GGdef,nio,nbcol1=5)
+      CALL Write_RMat(QModel%d0GGdef,nio,nbcol=5)
     END IF
 
     IF (allocated(QModel%Q0)) THEN
       write(nio,*) 'Reference Coordinate values, Q0(:)'
-      CALL Write_RVec(QModel%Q0,nio,nbcol1=5)
+      CALL Write_RVec(QModel%Q0,nio,nbcol=5)
     END IF
 
     IF (allocated(QModel%masses)) THEN
       write(nio,*) 'Masses in au'
-      CALL Write_RVec(QModel%masses,nio,nbcol1=5)
+      CALL Write_RVec(QModel%masses,nio,nbcol=5)
     END IF
     flush(nio)
 
-
   END SUBROUTINE Write_QML_Empty
   SUBROUTINE Write0_QML_Empty(QModel,nio)
-  IMPLICIT NONE
+    USE QDUtil_m,  ONLY : Write_RMat => Write_Mat
+    IMPLICIT NONE
 
     CLASS (QML_Empty_t), intent(in)    :: QModel
-    integer,              intent(in)    :: nio
+    integer,             intent(in)    :: nio
 
 
     write(nio,*) 'QUANTUM MODEL default parameters'
@@ -585,7 +593,7 @@ CONTAINS
 
     IF (allocated(QModel%d0GGdef)) THEN
      write(nio,*) 'Deformation metric tensor (~ 1/Mii)'
-     CALL Write_RMat(QModel%d0GGdef,nio,nbcol1=5)
+     CALL Write_RMat(QModel%d0GGdef,nio,nbcol=5)
     END IF
 
     write(nio,*) 'END QUANTUM MODEL default parameters'
@@ -595,20 +603,22 @@ CONTAINS
   END SUBROUTINE Write0_QML_Empty
 
   SUBROUTINE Cart_TO_Q_QML_Empty(QModel,dnX,dnQ,nderiv)
-  USE ADdnSVM_m, ONLY :  dnS_t
-  IMPLICIT NONE
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
 
     CLASS(QML_Empty_t),      intent(in)    :: QModel
     TYPE (dnS_t),            intent(in)    :: dnX(:,:)
     TYPE (dnS_t),            intent(inout) :: dnQ(:)
     integer,                 intent(in)    :: nderiv
 
-
-    dnQ(:) = ZERO
+    write(out_unit,*) 'ERROR in Cart_TO_Q_QModel (Cart_TO_Q_QML_Empty)'
+    write(out_unit,*) '  The intialized model does not have Cart_TO_Q transformation!'
+    STOP 'ERROR in Cart_TO_Q_QML_Empty: the intialized model does not have Cart_TO_Q transformation'
 
   END SUBROUTINE Cart_TO_Q_QML_Empty
   SUBROUTINE Qact_TO_Q_QML_Empty(Qact,Q,list_act)
-  IMPLICIT NONE
+    USE QDUtil_m,  ONLY : Rkind
+    IMPLICIT NONE
 
     real (kind=Rkind),       intent(in)    :: Qact(:)
     integer,                 intent(in)    :: list_act(:)

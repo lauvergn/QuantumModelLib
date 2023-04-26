@@ -1,0 +1,2 @@
+rm -rf QDUtilLib*
+rm -rf AD_dnSVM*
