@@ -596,7 +596,7 @@ MODULE QML_NO3_m
       !enddo
 1    format('# p(',i3,')=',f16.10)
 
-      Write(out_unit,*)'# e0ref au and ev',QModel%no3minus_pot%e0ref,QModel%no3minus_pot%e0ref*27.21d0
+      Write(out_unit,*)'# e0ref au and ev',QModel%no3minus_pot%e0ref,QModel%no3minus_pot%e0ref*27.21_Rkind
       Write(out_unit,*)'# e0rho ',QModel%no3minus_pot%e0rho
 
 
@@ -817,7 +817,8 @@ MODULE QML_NO3_m
 !-----------------------------------------------------------
   subroutine QML_NO3_potential(x,vdia,QModel)
     !$      use omp_lib
-          implicit none
+    USE QDUtil_m
+    implicit none
           real (kind=Rkind),   intent(in)         :: x(0:3,3)  ! DML erreur x(0-3,3)
           real (kind=Rkind),   intent(inout)      :: vdia(2,2)
           TYPE(QML_NO3_t),     intent(in), target :: QModel
@@ -832,9 +833,7 @@ MODULE QML_NO3_m
           real (kind=Rkind) :: dum
           real (kind=Rkind) :: eloworder(2,2),vloworder(2),uloworder(2,2)
           real (kind=Rkind) :: fv1(2),fv2(2)
-          integer ierr,nmat
-          !integer iref,pst(2,100)
-          !real (kind=Rkind) :: p(337),e0ref,e0rho
+
           real (kind=Rkind) :: etest(2,2),vtest(2),utest(2,2)
 
           integer,           pointer :: iref,pst(:,:)
@@ -870,15 +869,14 @@ MODULE QML_NO3_m
           e0rho => QModel%no3minus_pot%e0rho
 
           call QML_NO3_trans_coord(x,qinter,QModel%transformcoordblock,QModel%tmc)
-          !write(6,'(7g20.10)')(qinter(i),i=1,7)
+          ! write(out_unit,'(7g20.10)')(qinter(i),i=1,7)
 
-      ! PES computation
     ! PES diabatic matrix computation
     
     
     ! vertical excitation
     !      e=p(pst(1,27))  !in low order term eref
-           e=0.d0
+           e=ZERO
     !..   damping factor for umbrella motion, using hyperradius:
     ! qinter(7): (no1+no2+no3)/3
           damp=exp(-abs(p(pst(1,26))*qinter(7)))       !damping of pure umbrella mode
@@ -897,85 +895,85 @@ MODULE QML_NO3_m
     !..   a1 symmetric stretch:
     !      call Epolynom(dum,itd, p(pst(1,1)), pst(2,1), itemp)
           dum=pa(1) * p(pst(1,1))+pa(2) * p(pst(1,1)+1)
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref=eref+dum
     
     ! umbrella mode
     !..   a2 umbrella:
     !      call Epolynom2(dum,itd, p(pst(1,2)), pst(2,2), itemp)
           dum=pb(1) * p(pst(1,2))
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref=eref+dum*damp
     
     ! e stretching mode:
     ! e bending mode:
     !      call Evjt6a(dum,itd, p(pst(1,3)), pst(2,3), itemp)
           dum= p(pst(1,3)) * va(1)
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum
     !      call Evjt6b(dum,itd, p(pst(1,4)), pst(2,4), itemp)
           dum= p(pst(1,4)) * vb(1)
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum
     
     !..   mode-mode coupling of a1-e
     !      call Evcoup_e1a(dum,itd, p(pst(1,6)), pst(2,6), itemp)  ! e-a coupling 1. e mode
           dum= (p(pst(1,6))*pa(1)*va(1))
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum
     !      call Evcoup_e2a(dum,itd, p(pst(1,7)), pst(2,7), itemp)  ! e-a coupling 2. e mode
           dum=(p(pst(1,7))*pa(1)*vb(1))
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum
     
     !..   mode-mode coupling of a2-e
     !      call Evcoup_e1a2(dum,itd, p(pst(1,13)), pst(2,13), itemp)     !  coupling with asym. str.
           dum=p(pst(1,13))*pb(1)*va(1)
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum*damp
     !      call Evcoup_e2a2(dum,itd, p(pst(1,14)), pst(2,14), itemp)     !  coupling with asym. bend
           dum=p(pst(1,14))*pb(1)*vb(1)
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum*damp
     
     
     !..   mode-mode coupling of a1-a2
     !      call Evcoup_aa(dum,itd,p(pst(1,17)),pst(2,17), itemp)         !  coupling of a1 and a2
           dum=p(pst(1,17)) * pa(1) * pb(1)
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum*damp
     
     
     !..   mode-mode coupling e-e
     !      call Evcoup_ee(dum,itd, p(pst(1,5)), pst(2,5), itemp)        ! e-e coupling
           dum=p(pst(1,5)) * vee(1)
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum
     
     
     !..   3-mode coupling e-e-a2
     !      call Evcoup_eea2(dum,itd,p(pst(1,18)),pst(2,18),itemp)        !  e-e-a2 coupling
           dum=p(pst(1,18)) * pb(1) * vee(1)
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum*damp
     
     
     !..   3-mode coupling e-a1-a2
     !      call Evcoup_e1aa2(dum,itd,p(pst(1,20)),pst(2,20),itemp)        !  e-a1-a2 coupling (asym. stretch)
           dum=(p(pst(1,20)) * pa(1) * pb(1) * va(1))
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
     !      eref = eref + dum BUG detected 30.09.2015
           eref = eref + dum*damp
     !      call Evcoup_e2aa2(dum,itd,p(pst(1,21)),pst(2,21),itemp)        !  e-a1-a2 coupling (asym. bend)
           dum=(p(pst(1,21)) * pa(1) * pb(1) * vb(1))
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum*damp
     
     
     !..   3-mode coupling e-e-a1
     !      call Evcoup_eea1(dum,itd,p(pst(1,24)),pst(2,24),itemp)        !  e-e-a1 coupling
           dum=p(pst(1,24)) * pa(1) * vee(1)
-    !      write(6,*)'dum low',dum
+    !       write(out_unit,*)'dum low',dum
           eref = eref + dum
     !
     !..   dynamic damping depending on lowest reference state energy:
@@ -1082,20 +1080,17 @@ MODULE QML_NO3_m
           eloworder(1,2)= z
           eloworder(2,1)= z
     
-    ! diagonalize
-          nmat=2
-          call  tred2_NO3(nmat,nmat,eloworder,vloworder,fv1,uloworder)
-          call  tql2_NO3(nmat,nmat,vloworder,fv1,uloworder,ierr)
+          CALL diagonalization(eloworder,vloworder,uloworder)
     
     !.. damping high order
     ! from Eisfeld 09.03.2015
            dum=(vloworder(1)-e0ref)/e0rho        !shift energy to onset
-           if (dum.lt.0.d0) then
-             damplow=1.d0
-           elseif (dum.gt.1.d0) then
-             damplow=0.d0
+           if (dum.lt.ZERO) then
+             damplow=ONE
+           elseif (dum.gt.ONE) then
+             damplow=ZERO
            else
-           damplow=1.d0 - dum**2 * (2.d0 - dum**2)
+            damplow=ONE - dum**2 * (TWO - dum**2)
            endif
     
     !
@@ -1159,7 +1154,7 @@ MODULE QML_NO3_m
           call Evcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,24):),pst(2,24),iref,avv)        !  e-e-a1 coupling
           e = e + dum
     
-          w=0.d0
+          w=ZERO
     !..   add JT coupling for 1. e mode
           call Ewjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,8):), pst(2,8), iref,avv)
           w = dum
@@ -1200,7 +1195,7 @@ MODULE QML_NO3_m
     !
     !--------------------------------------------------
     ! off diagonal term  e(1,2) : z
-          z=0.d0
+          z=ZERO
     !..   add JT coupling for 1. e mode
           call Ezjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,8):), pst(2,8), iref,avv)
           z = dum
@@ -1261,7 +1256,7 @@ MODULE QML_NO3_m
     real (kind=Rkind),            intent(inout)      :: f
 
     integer i, pn, nmax
-    double precision r, gaus, poly, skew
+    real (kind=Rkind) :: r, gaus, poly, skew
 
     
     ! a(1):        position of equilibrium
@@ -1277,10 +1272,10 @@ MODULE QML_NO3_m
     ! Power series in Tunable Morse coordinates of order m
     ! exponent is polynomial of order npoly * gaussian + switching function
     
-    !      write(6,*) 'x:', x
-    !      write(6,'(10f12.6)') (a(i), i=1,6)
-    !      write(6,'(10f12.6)') (a(i), i=7,11)
-    !      write(6,'(10f12.6)') (a(i), i=12,14)
+    !       write(out_unit,*) 'x:', x
+    !       write(out_unit,'(10f12.6)') (a(i), i=1,6)
+    !       write(out_unit,'(10f12.6)') (a(i), i=7,11)
+    !       write(out_unit,'(10f12.6)') (a(i), i=12,14)
     !      stop
     
     !.....set r  r-r_e
@@ -1290,22 +1285,22 @@ MODULE QML_NO3_m
           !a(5)=abs(a(5))
     
     !..   set up skewing function:
-    !      skew=0.5d0 * a(ii,3) *(tanh(a(ii,4)*r) + 1.d0)
-          skew=0.5d0 * tmc%a(3) *(tanh(tmc%a(4)*(r-tmc%a(6))) + 1.d0)
+    !      skew=HALF * a(ii,3) *(tanh(a(ii,4)*r) + ONE)
+          skew=HALF * tmc%a(3) *(tanh(tmc%a(4)*(r-tmc%a(6))) + ONE)
     
     !..   set up gaussian function:
     !      gaus=exp(-abs(a(ii,5))*(r+a(ii,6))**2)
           gaus=exp(-tmc%a(5)*r**2)
     
     !..   set up power series:
-          poly=0.d0
+          poly=ZERO
           do i=0,tmc%npoly(ii)-1
             poly=poly+tmc%a(7+i)*r**i
           enddo
     
     !..   set up full exponent function:
           f=tmc%a(2)  + skew + gaus*poly
-    !      write(6,*) ii, a(ii,2)
+    !       write(out_unit,*) ii, a(ii,2)
     
     end subroutine ff
     
@@ -1483,7 +1478,7 @@ MODULE QML_NO3_m
     pa => avv%pa
     va => avv%va
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j) 
 
     !     3rd order
@@ -1517,7 +1512,7 @@ MODULE QML_NO3_m
     pa => avv%pa
     vb => avv%vb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     3rd order
@@ -1551,7 +1546,7 @@ MODULE QML_NO3_m
     pa => avv%pa
     wa => avv%wa
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     2nd order
@@ -1593,7 +1588,7 @@ MODULE QML_NO3_m
     pa => avv%pa
     wb => avv%wb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     2nd order
@@ -1638,7 +1633,7 @@ MODULE QML_NO3_m
     pa => avv%pa
     za => avv%za
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     2nd order
@@ -1682,7 +1677,7 @@ MODULE QML_NO3_m
     pa => avv%pa
     zb => avv%zb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     2nd order
@@ -1725,7 +1720,7 @@ MODULE QML_NO3_m
     pa => avv%pa
     pb => avv%pb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !..   third order
@@ -1760,29 +1755,24 @@ MODULE QML_NO3_m
     va => avv%va
     pb => avv%pb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
  
     !     4th order
-          vcoup_e1a2 = p(1)*pb(1)*va(1)
+    vcoup_e1a2 = p(1)*pb(1)*va(1)
     
     !     5th order
-          vcoup_e1a2 = vcoup_e1a2 + p(2)*pb(1)*va(2)                                &
-         & ! /fact(5)
+    vcoup_e1a2 = vcoup_e1a2 + p(2)*pb(1)*va(2) 
     
     !     6th order
-          vcoup_e1a2 = vcoup_e1a2 + p(3)*pb(1)*va(3)                                &
-         &                    + p(4)*pb(2)*va(1)
+    vcoup_e1a2 = vcoup_e1a2 + p(3)*pb(1)*va(3) + p(4)*pb(2)*va(1)
     
     !     7th order
-          vcoup_e1a2 = vcoup_e1a2 + p(5)*pb(1)*va(4)                                &
-         &                      + p(6)*pb(2)*va(2)
+    vcoup_e1a2 = vcoup_e1a2 + p(5)*pb(1)*va(4) + p(6)*pb(2)*va(2)
     
     !     8th order
-          vcoup_e1a2 = vcoup_e1a2 + p(7)*pb(1)*va(5)                                &
-         &                      + p(8)*pb(1)*va(6)                                  &
-         &                      + p(9)*pb(2)*va(3)
+    vcoup_e1a2 = vcoup_e1a2 + p(7)*pb(1)*va(5) + p(8)*pb(1)*va(6) + p(9)*pb(2)*va(3)
     
   end subroutine Evcoup_e1a2
     
@@ -1804,7 +1794,7 @@ MODULE QML_NO3_m
     vb => avv%vb
     pb => avv%pb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     4th order
@@ -1847,7 +1837,7 @@ MODULE QML_NO3_m
     wa => avv%wa
     pb => avv%pb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     3rd order
@@ -1896,7 +1886,7 @@ MODULE QML_NO3_m
     wb => avv%wb
     pb => avv%pb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
  
@@ -1946,7 +1936,7 @@ MODULE QML_NO3_m
     pb => avv%pb
     za => avv%za
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     3rd order
@@ -1995,7 +1985,7 @@ MODULE QML_NO3_m
     pb => avv%pb
     zb => avv%zb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     3rd order
@@ -2044,7 +2034,7 @@ MODULE QML_NO3_m
     pa  => avv%pa
     vee => avv%vee
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     3rd order
@@ -2090,7 +2080,7 @@ MODULE QML_NO3_m
     pa  => avv%pa
     wee => avv%wee
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     3rd order
@@ -2147,7 +2137,7 @@ MODULE QML_NO3_m
     pa  => avv%pa
     zee => avv%zee
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
  
     !     3rd order
@@ -2205,7 +2195,7 @@ MODULE QML_NO3_m
     pb  => avv%pb
     vee => avv%vee
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     4th order
@@ -2239,7 +2229,7 @@ MODULE QML_NO3_m
     pb  => avv%pb
     wee => avv%wee
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     4th order
@@ -2275,7 +2265,7 @@ MODULE QML_NO3_m
     pb  => avv%pb
     zee => avv%zee
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     4th order
@@ -2311,7 +2301,7 @@ MODULE QML_NO3_m
     pb => avv%pb
     va => avv%va
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     5th order
@@ -2342,7 +2332,7 @@ MODULE QML_NO3_m
     pb => avv%pb
     vb => avv%vb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     5th order
@@ -2374,7 +2364,7 @@ MODULE QML_NO3_m
     pb => avv%pb
     wa => avv%wa
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     4th order
@@ -2413,7 +2403,7 @@ MODULE QML_NO3_m
     pb => avv%pb
     wb => avv%wb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     4th order
@@ -2452,7 +2442,7 @@ MODULE QML_NO3_m
     pb => avv%pb
     za => avv%za
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
  
     !     4th order
@@ -2491,7 +2481,7 @@ MODULE QML_NO3_m
     pb => avv%pb
     zb => avv%zb
 
-    p(:)   = 0.d0
+    p(:)   = ZERO
     p(2:j) = par(2:j)
 
     !     4th order
@@ -2513,834 +2503,350 @@ MODULE QML_NO3_m
     real(kind=Rkind),       intent(in)             :: q(6)
     TYPE(acoord_vjt_vee_t), intent(inout), target  :: avv
     
-          integer :: j
-          real(kind=Rkind) :: a, b, x3, x4, y3, y4
+    integer :: j
+    real(kind=Rkind) :: a, b, x3, x4, y3, y4
 
-          real(kind=Rkind), pointer :: pa(:), pb(:)
-          real(kind=Rkind), pointer :: va(:), vb(:)
-          real(kind=Rkind), pointer :: wa(:), wb(:)
-          real(kind=Rkind), pointer :: za(:), zb(:)
-          real(kind=Rkind), pointer :: vee(:),  wee(:), zee(:)
+    real(kind=Rkind), pointer :: pa(:), pb(:)
+    real(kind=Rkind), pointer :: va(:), vb(:)
+    real(kind=Rkind), pointer :: wa(:), wb(:)
+    real(kind=Rkind), pointer :: za(:), zb(:)
+    real(kind=Rkind), pointer :: vee(:),  wee(:), zee(:)
 
-          pa => avv%pa
-          pb => avv%pb
-          va => avv%va
-          vb => avv%vb
-          wa => avv%wa
-          wb => avv%wb
-          za => avv%za
-          zb => avv%zb
+    pa => avv%pa
+    pb => avv%pb
+    va => avv%va
+    vb => avv%vb
+    wa => avv%wa
+    wb => avv%wb
+    za => avv%za
+    zb => avv%zb
 
-          vee => avv%vee
-          wee => avv%wee
-          zee => avv%zee
+    vee => avv%vee
+    wee => avv%wee
+    zee => avv%zee
 
-          a=q(1)
-          b=q(2)
-          x3=q(3)
-          y3=q(4)
-          x4=q(5)
-          y4=q(6)
+    a=q(1)
+    b=q(2)
+    x3=q(3)
+    y3=q(4)
+    x4=q(5)
+    y4=q(6)
     
-    !     compute powers of a1 mode:
-          pa(1) = a
-          pa(2) = a**2
-          pa(3) = a**3
-          pa(4) = a**4
-          pa(5) = a**5
-          pa(6) = a**6
-          pa(7) = a**7
-          pa(8) = a**8
-    
+    ! compute powers of a1 mode:
+    pa(1) = a
+    pa(2) = a**2
+    pa(3) = a**3
+    pa(4) = a**4
+    pa(5) = a**5
+    pa(6) = a**6
+    pa(7) = a**7
+    pa(8) = a**8
+
     !     compute powers of a2 mode:
-          pb(1) = b**2
-          pb(2) = b**4
-          pb(3) = b**6
-          pb(4) = b**8
-    
-    !..   compute vjt terms for first e set:
-          va(1) = x3**2 + y3**2
-          va(2) = 2.d0 * x3**3 - 6.d0 * x3 * y3**2
-          va(3) = x3**4 + 2.d0 * x3**2 * y3**2 + y3**4
-          va(4) = 2.d0 * x3**5 - 4.d0 * x3**3 * y3**2 - 6.d0 * x3 * y3**4
-          va(5) = 2.d0 * x3**6 - 30.d0*x3**4*y3**2 + 30.d0*x3**2*y3**4 -2.d0 * y3**6
-          va(6) = x3**6 + 3.d0 * x3**4 * y3**2 + 3.d0 * x3**2 * y3**4 + y3**6
-    
-    !..   compute vjt terms for second e set:
-          vb(1) = x4**2 + y4**2
-          vb(2) = 2.d0 * x4**3 - 6.d0 * x4 * y4**2
-          vb(3) = x4**4 + 2.d0 * x4**2 * y4**2 + y4**4
-          vb(4) = 2.d0 * x4**5 - 4.d0 * x4**3 * y4**2 - 6.d0 * x4 * y4**4
-          vb(5) = 2.d0 * x4**6 - 30.d0*x4**4*y4**2 + 30.d0*x4**2*y4**4 -2.d0 * y4**6
-          vb(6) = x4**6 + 3.d0 * x4**4 * y4**2 + 3.d0 * x4**2 * y4**4 + y4**6
-    
-    !..   compute wjt terms for first e set:
-          wa(1) = x3
-          wa(2) = x3**2 - y3**2
-          wa(3) = x3**3 + x3*y3**2
-          wa(4) = x3**4 - 6.d0 * x3**2 * y3**2 + y3**4
-          wa(5) = x3**4 - y3**4
-          wa(6) = x3**5 - 10.d0 * x3**3 * y3**2 + 5.d0 * x3 * y3**4
-          wa(7) = x3**5 + 2.d0 * x3**3 * y3**2 + x3 * y3**4
-          wa(8) = x3**6 - 5.d0 * x3**4 * y3**2 - 5.d0 * x3**2*y3**4+y3**6
-          wa(9) = x3**6 + x3**4 * y3**2 - x3**2 * y3**4 - y3**6
-    
-    !..   compute wjt terms for second e set:
-          wb(1) = x4
-          wb(2) = x4**2 - y4**2
-          wb(3) = x4**3 + x4*y4**2
-          wb(4) = x4**4 - 6.d0 * x4**2 * y4**2 + y4**4
-          wb(5) = x4**4 - y4**4
-          wb(6) = x4**5 - 10.d0 * x4**3 * y4**2 + 5.d0 * x4 * y4**4
-          wb(7) = x4**5 + 2.d0 * x4**3 * y4**2 + x4 * y4**4
-          wb(8) = x4**6 - 5.d0 * x4**4 * y4**2 - 5.d0 * x4**2*y4**4+y4**6
-          wb(9) = x4**6 + x4**4 * y4**2 - x4**2 * y4**4 - y4**6
-    
-    !..   compute zjt terms for first e set:
-          za(1) = y3
-          za(2) = -2.d0*x3*y3
-          za(3) = y3**3 + y3*x3**2
-          za(4) = 4.d0*x3**3*y3 - 4.d0*x3*y3**3
-          za(5) = -2.d0*x3**3*y3 - 2.d0*x3*y3**3
-          za(6) = -5.d0*x3**4*y3 + 10.d0*x3**2*y3**3 - y3**5
-          za(7) =  x3**4*y3 + 2.d0*x3**2*y3**3 + y3**5
-          za(8) = 4.d0*x3**5*y3 - 4.d0*x3*y3**5
-          za(9) = -2.d0*x3**5*y3 - 4.d0*x3**3*y3**3 - 2.d0*x3*y3**5
-    
-    !..   compute zjt terms for second e set:
-          zb(1) = y4
-          zb(2) = -2.d0*x4*y4
-          zb(3) = y4**3 + y4*x4**2
-          zb(4) = 4.d0*x4**3*y4 - 4.d0*x4*y4**3
-          zb(5) = -2.d0*x4**3*y4 - 2.d0*x4*y4**3
-          zb(6) = -5.d0*x4**4*y4 + 10.d0*x4**2*y4**3 - y4**5
-          zb(7) =  x4**4*y4 + 2.d0*x4**2*y4**3 + y4**5
-          zb(8) = 4.d0*x4**5*y4 - 4.d0*x4*y4**5
-          zb(9) = -2.d0*x4**5*y4 - 4.d0*x4**3*y4**3 - 2.d0*x4*y4**5
-    
-    !..   compute Vcoup_ee terms:
-          vee(1) =  2.d0*x3*x4 + 2.d0*y3*y4
-          vee(2) = 2.d0*x3*x4**2 - 2.d0*x3*y4**2 - 4.d0*x4*y3*y4
-          vee(3) = 2.d0*x3**2*x4 - 2.d0*x4*y3**2 - 4.d0*x3*y3*y4
-          vee(4) = 2.d0*x3**2*x4**2 - 2.d0*x3**2*y4**2                                &
-         &          - 2.d0*x4**2*y3**2 + 2.d0*y3**2*y4**2                               &
-         &          + 8.d0*x3*x4*y3*y4
-          vee(5) = 2.d0*x3**3*x4 + 2.d0*x3**2*y3*y4                                   &
-         &          + 2.d0*x3*x4*y3**2 + 2.d0*y3**3*y4
-          vee(6) = 2.d0*x4**3*x3 + 2.d0*x3*x4*y4**2                                   &
-         &         + 2.d0*x4**2*y3*y4 + 2.d0*y4**3*y3
-          vee(7) = x3**2*x4**2 + x3**2*y4**2                                          &
-         &          + x4**2*y3**2 + y3**2*y4**2
-    
-          vee(8) = x3*y4**4-4*x4*y3*y4**3-6*x3*x4**2*y4**2+4*x4**3*y3*y4              &
-         &          +x3*x4**4
-          vee(9) = (y4**2+x4**2)*(x3*y4**2+2*x4*y3*y4-x3*x4**2)
-          vee(10) = (y3**2+x3**2)*(x3*y4**2+2*x4*y3*y4-x3*x4**2)
-          vee(11) = x4*(y3**2+x3**2)*(3.d0*y4**2-x4**2)
-          vee(12) = (2.d0*x3*y3*y4+x4*y3**2-x3**2*x4)*(y4**2+x4**2)
-          vee(13) = x3*(3.d0*y3**2-x3**2)*(y4**2+x4**2)
-          vee(14) = 4.d0*x3*y3**3*y4-4.d0*x3**3*y3*y4-x4*y3**4                        &
-         &          +6.d0*x3**2*x4*y3**2-x3**4*x4
-          vee(15) = (y3**2+x3**2)*(2.d0*x3*y3*y4+x4*y3**2-x3**2*x4)
-    
-    
-          vee(16) = (y3*y4**5-5.d0*x3*x4*y4**4-10.d0*x4**2*y3*y4**3                   &
-         &          +10.d0*x3*x4**3*y4**2+5.d0*x4**4*y3*y4-x3*x4**5)
-          vee(17) = (y3*y4**2-x3*y4**2-2.d0*x4*y3*y4-2.d0*x3*x4*y4                    &
-         &          -x4**2*y3+x3*x4**2)*(y3*y4**2+x3*y4**2+2.d0*x4*y3*y4                &
-         &          -2.d0*x3*x4*y4-x4**2*y3-x3*x4**2)
-          vee(18) = (y3*y4-x3*x4)*(y3**2*y4**2-3.d0*x3**2*y4**2                       &
-         &          -8.d0*x3*x4*y3*y4-3.d0*x4**2*y3**2+x3**2*x4**2)
-          vee(19) = (y3**2*y4-2.d0*x3*y3*y4-x3**2*y4-x4*y3**2                         &
-         &          -2.d0*x3*x4*y3+x3**2*x4)*(y3**2*y4+2.d0*x3*y3*y4                    &
-         &          -x3**2*y4+x4*y3**2-2.d0*x3*x4*y3-x3**2*x4)
-          vee(20) = (y3**5*y4-10.d0*x3**2*y3**3*y4+5.d0*x3**4*y3*y4                   &
-         &          -5.d0*x3*x4*y3**4+10.d0*x3**3*x4*y3**2-x3**5*x4)
-    
-          vee(21) = (y3*y4+x3*x4)*(y4**2+x4**2)**2
-          vee(22) = (y3*y4-x3*y4+x4*y3+x3*x4)*(y3*y4+x3*y4                            &
-         &          -x4*y3+x3*x4)*(y4**2+x4**2)
-          vee(23) = (y3**2+x3**2)*(y4**2+x4**2)**2
-          vee(24) = (y3*y4+x3*x4)*(y3**2*y4**2-3.d0*x3**2*y4**2                       &
-         &          +8.d0*x3*x4*y3*y4-3.d0*x4**2*y3**2+x3**2*x4**2)
-          vee(25) = (y3**2+x3**2)*(y3*y4+x3*x4)*(y4**2+x4**2)
-          vee(26) = (y3**2+x3**2)*(y3*y4-x3*y4+x4*y3+x3*x4)                           &
-         &          *(y3*y4+x3*y4-x4*y3+x3*x4)
-          vee(27) = (y3**2+x3**2)**2*(y4**2+x4**2)
-          vee(28) = (y3**2+x3**2)**2*(y3*y4+x3*x4)
-    
-    !..   compute Wcoup_ee terms:
-          wee(1) = x3 * x4 - y3 * y4
-          wee(2) = x3**2 * x4 + x4 * y3**2
-          wee(3) = x3 * y4**2 + x3 * x4**2
-          wee(4) = 2.d0 * x3 * y3 * y4 + x3**2 * x4 - x4 * y3**2
-          wee(5) = x3 * x4**2 + 2.d0 * x4 * y3*y4 - x3 * y4**2
-          wee(6) = x3**3 * x4 - 3.d0 * x3**2 *y3*y4                                   &
-         &            - 3.d0*x3*x4*y3**2 + y3**3*y4
-          wee(7) = x3**2*x4**2 - x3**2*y4**2 - x4**2*y3**2 + y3**2*y4**2              &
-         & - 4.d0*x3*x4*y3*y4
-          wee(8) =x4**3*x3 - 3.d0*x3*x4*y4**2 - 3.d0*x4**2*y3*y4+y4**3*y3
-    !               wee44(9) =x3**3*x4 - 3.d0*x3**2*y3*y4 -3.d0*x3*x4*y3**2-y3**3*y4
-          wee(9) =x3**3*x4 + 3.d0*x3**2*y3*y4 - 3.d0*x3*x4*y3**2-y3**3*y4
-    !               wee45(10) =x4**3*x3 - 3.d0*x3*x4*y4**2 - 3.d0*x4**2*y3*y4-y4**3*y3
-          wee(10) =x4**3*x3 - 3.d0*x3*x4*y4**2 + 3.d0*x4**2*y3*y4-y4**3*y3
-          wee(11) = x3**3*x4 - x3**2*y3*y4 + x3*x4*y3**2 - y3**3*y4
-          wee(12) = x3**2*x4**2 + x3**2*y4**2 - x4**2*y3**2 - y3**2*y4**2
-          wee(13) = x3**2*x4**2 - x3**2*y4**2 + x4**2*y3**2 - y3**2*y4**2
-          wee(14) = x3*x4**3 + x3*x4*y4**2 - x4**2*y3*y4 - y4**3*y3
-    
-          wee(15) = (x3*y4**4+4.d0*x4*y3*y4**3-6.d0*x3*x4**2*y4**2                    &
-         &          -4.d0*x4**3*y3*y4+x3*x4**4)
-          wee(16) = (2.d0*x3*y3*y4**3+3.d0*x4*y3**2*y4**2                             &
-         & -3.d0*x3**2*x4*y4**2-6.d0*x3*x4**2*y3*y4-x4**3*y3**2+x3**2*x4**3)
-          wee(17) = (3.d0*x3*y3**2*y4**2-x3**3*y4**2+2.d0*x4*y3**3*y4                 &
-         &          -6.d0*x3**2*x4*y3*y4-3.d0*x3*x4**2*y3**2+x3**3*x4**2)
-          wee(18) = (4.d0*x3*y3**3*y4-4.d0*x3**3*y3*y4+x4*y3**4                       &
-         &          -6.d0*x3**2*x4*y3**2+x3**4*x4)
-    
-          wee(19) = -(y4**2+x4**2)*(x3*y4**2-2.d0*x4*y3*y4-x3*x4**2)
-          wee(20) = x3*(y4**2+x4**2)**2
-          wee(21) = -(2.d0*x3*y3*y4**3-3.d0*x4*y3**2*y4**2+3.d0*x3**2                 &
-         &          *x4*y4**2-6.d0*x3*x4**2*y3*y4+x4**3*y3**2-x3**2*x4**3)
-          wee(22) = x4*(y3**2+x3**2)*(y4**2+x4**2)
-          wee(23) = -(y3**2+x3**2)*(x3*y4**2-2.d0*x4*y3*y4-x3*x4**2)
-          wee(24) = x3*(y3**2+x3**2)*(y4**2+x4**2)
-          wee(25) = x4*(y3**2+x3**2)**2
-          wee(26) = (y3**2+x3**2)*(2.d0*x3*y3*y4-x4*y3**2+x3**2*x4)
-    
-          wee(27) = (y3*y4**5+5.d0*x3*x4*y4**4-10.d0*x4**2*y3*y4**3               &
-         &    -10.d0*x3*x4**3*y4**2+5.d0*x4**4*y3*y4+x3*x4**5)
-          wee(28) = (y4**2+x4**2)*(y3*y4**3-3.d0*x3*x4*y4**2                      &
-         &    -3.d0*x4**2*y3*y4+x3*x4**3)
-          wee(29) = (y3**2+x3**2)*(y4**2-2.d0*x4*y4-x4**2)                        &
-         &    *(y4**2+2.d0*x4*y4-x4**2)
-          wee(30) = (y3*y4-x3*y4-x4*y3-x3*x4)*(y3*y4+x3*y4                        &
-         &    +x4*y3-x3*x4)*(y4**2+x4**2)
-          wee(31) = (y3**2+x3**2)*(y3*y4**3-3.d0*x3*x4*y4**2                      &
-         &    -3.d0*x4**2*y3*y4+x3*x4**3)
-          wee(32) = (y3**3*y4-3.d0*x3**2*y3*y4-3.d0*x3*x4*y3**2+x3**3*x4)         &
-         &    *(y4**2+x4**2)
-          wee(33) = (y3**2+x3**2)*(y3*y4-x3*y4-x4*y3-x3*x4)                       &
-         &    *(y3*y4+x3*y4+x4*y3-x3*x4)
-          wee(34) = (y3**2-2.d0*x3*y3-x3**2)*(y3**2+2.d0*x3*y3-x3**2)             &
-         &    *(y4**2+x4**2)
-          wee(35) = (y3**2+x3**2)*(y3**3*y4-3.d0*x3**2*y3*y4                      &
-         &    -3.d0*x3*x4*y3**2+x3**3*x4)
-          wee(36)= (y3**5*y4-10.d0*x3**2*y3**3*y4+5.d0*x3**4*y3*y4                &
-         &    +5.d0*x3*x4*y3**4-10.d0*x3**3*x4*y3**2+x3**5*x4)
-    
-          wee(37) = (y3*y4-x3*x4)*(y4**2+x4**2)**2
-          wee(38) = (y4**2+x4**2)*(y3*y4**3+3.d0*x3*x4*y4**2                      &
-         &    -3.d0*x4**2*y3*y4-x3*x4**3)
-          wee(39) = (y3**2+x3**2)*(y4-x4)*(y4+x4)*(y4**2+x4**2)
-          wee(40) = (y3-x3)*(y3+x3)*(y4**2+x4**2)**2
-          wee(41) = (y3*y4**2-x3*y4**2+2.d0*x4*y3*y4+2.d0*x3*x4*y4                &
-         &    -x4**2*y3+x3*x4**2)*(y3*y4**2+x3*y4**2-2.d0*x4*y3*y4                  &
-         &    +2.d0*x3*x4*y4-x4**2*y3-x3*x4**2)
-          wee(42) = (y3**3*y4-3.d0*x3**2*y3*y4+3.d0*x3*x4*y3**2-x3**3*x4)         &
-         &    *(y4**2+x4**2)
-          wee(43) = (y3**2+x3**2)*(y3*y4-x3*x4)*(y4**2+x4**2)
-          wee(44) = (y3**2+x3**2)*(y3*y4**3+3.d0*x3*x4*y4**2                      &
-         &    -3.d0*x4**2*y3*y4-x3*x4**3)
-          wee(45) = (y3**2*y4-2.d0*x3*y3*y4-x3**2*y4+x4*y3**2                     &
-         &    +2.d0*x3*x4*y3-x3**2*x4)*(y3**2*y4+2.d0*x3*y3*y4-x3**2*y4             &
-         &    -x4*y3**2+2.d0*x3*x4*y3+x3**2*x4)
-          wee(46) = (y3-x3)*(y3+x3)*(y3**2+x3**2)*(y4**2+x4**2)
-          wee(47) = (y3**2+x3**2)**2*(y4-x4)*(y4+x4)
-          wee(48) = (y3**2+x3**2)*(y3**3*y4-3.d0*x3**2*y3*y4                      &
-         &    +3.d0*x3*x4*y3**2-x3**3*x4)
-          wee(49) = (y3**2+x3**2)**2*(y3*y4-x3*x4)
-    
-    !..   compute Zcoup_ee terms:
-          zee(1) = -x3*y4 - x4*y3
-    
-          zee(2) = y3**2*y4 + x3**2*y4
-          zee(3) = y3*y4**2 + x4**2*y3
-          zee(4) = y3**2*y4 + 2.d0*x3*x4*y3 - x3**2*y4
-          zee(5) = y4**2*y3 + 2.d0*x3*x4*y4 - x4**2*y3
-    
-          zee(6) = x3**3*y4 + 3.d0*x3**2*x4*y3                                        &
-         &          - 3.d0*x3*y3**2*y4 - x4*y3**3
-          zee(7) = 2.d0*x3**2*x4*y4 + 2.d0*x3*x4**2*y3 - 2.d0*x3*y3*y4**2             &
-         & - 2.d0*x4*y3**2*y4
-          zee(8) =x4**3*y3 +3.d0*x3*x4**2*y4 - 3.d0*x4*y3*y4**2 - x3*y4**3
-          zee(9) =x3**3*y4 -3.d0*x3**2*x4*y3 - 3.d0*x3*y3**2*y4 + x4*y3**3
-          zee(10)=x4**3*y3 -3.d0*x3*x4**2*y4 - 3.d0*x4*y3*y4**2 + x3*y4**3
-          zee(11) = - x3**3*y4 - x3**2*x4*y3 - x3*y3**2*y4 - x4*y3**3
-          zee(12) = - 2.d0*x3*x4**2*y3 - 2.d0*x3*y3*y4**2
-          zee(13) = - 2.d0*x3**2*x4*y4 - 2.d0*x4*y3**2*y4
-          zee(14) = - y4**3*x3 - x3*x4**2*y4 - x4*y3*y4**2 - y3*x4**3
-    
-          zee(15) = -(y3*y4**4-4.d0*x3*x4*y4**3-6.d0*x4**2*y3*y4**2                                   &
-         &           +4.d0*x3*x4**3*y4+x4**4*y3)
-          zee(16) = -(y3**2*y4**3-x3**2*y4**3-6.d0*x3*x4*y3*y4**2                                     &
-         &     -3.d0*x4**2*y3**2*y4+3.d0*x3**2*x4**2*y4+2.d0*x3*x4**3*y3)
-          zee(17) = -(y3**3*y4**2-3.d0*x3**2*y3*y4**2-6.d0*x3*x4*y3**2*y4                             &
-         &           +2.d0*x3**3*x4*y4-x4**2*y3**3+3.d0*x3**2*x4**2*y3)
-          zee(18)=-(y3**4*y4-6.d0*x3**2*y3**2*y4+x3**4*y4-4.d0*x3*x4*y3**3                          &
-         &           +4.d0*x3**3*x4*y3)
-    
-          zee(19) = (y4**2+x4**2)*(y3*y4**2+2.d0*x3*x4*y4-x4**2*y3)
-          zee(20) = y3*(y4**2+x4**2)**2
-          zee(21) = (y3**2*y4**3-x3**2*y4**3+6.d0*x3*x4*y3*y4**2                                      &
-         &     -3.d0*x4**2*y3**2*y4+3.d0*x3**2*x4**2*y4-2.d0*x3*x4**3*y3)
-          zee(22) = (y3**2+x3**2)*y4*(y4**2+x4**2)
-          zee(23) = (y3**2+x3**2)*(y3*y4**2+2.d0*x3*x4*y4-x4**2*y3)
-          zee(24) = y3*(y3**2+x3**2)*(y4**2+x4**2)
-          zee(25) = (y3**2+x3**2)**2*y4
-          zee(26) = (y3**2+x3**2)*(y3**2*y4-x3**2*y4+2.d0*x3*x4*y3)
-    
-          zee(27) = (x3*y4**5-5.d0*x4*y3*y4**4-10.d0*x3*x4**2*y4**3               &
-         &   +10.d0*x4**3*y3*y4**2+5.d0*x3*x4**4*y4-x4**5*y3)
-          zee(28) = -(y4**2+x4**2)*(x3*y4**3+3.d0*x4*y3*y4**2                     &
-         &   -3.d0*x3*x4**2*y4-x4**3*y3)
-          zee(29) = -4.d0*x4*(y3**2+x3**2)*y4*(y4-x4)*(y4+x4)
-          zee(30) = -2.d0*(x3*y4+x4*y3)*(y3*y4-x3*x4)*(y4**2+x4**2)
-          zee(31) = -(y3**2+x3**2)*(x3*y4**3+3.d0*x4*y3*y4**2                     &
-         &   -3.d0*x3*x4**2*y4-x4**3*y3)
-          zee(32) = -(3.d0*x3*y3**2*y4-x3**3*y4+x4*y3**3                          &
-         &   -3.d0*x3**2*x4*y3)*(y4**2+x4**2)
-          zee(33) = -2.d0*(y3**2+x3**2)*(x3*y4+x4*y3)*(y3*y4-x3*x4)
-          zee(34) = -4.d0*x3*y3*(y3-x3)*(y3+x3)*(y4**2+x4**2)
-          zee(35) = -(y3**2+x3**2)*(3.d0*x3*y3**2*y4-x3**3*y4+x4*y3**3            &
-         &   -3.d0*x3**2*x4*y3)
-          zee(36)= -(5.d0*x3*y3**4*y4-10.d0*x3**3*y3**2*y4+x3**5*y4              &
-         &   -x4*y3**5+10.d0*x3**2*x4*y3**3-5.d0*x3**4*x4*y3)
-    
-    
-          zee(37) = (x3*y4+x4*y3)*(y4**2+x4**2)**2
-          zee(38) = -(y4**2+x4**2)*(x3*y4**3-3.d0*x4*y3*y4**2                    &
-         &   -3.d0*x3*x4**2*y4+x4**3*y3)
-          zee(40) = 2.d0*x3*y3*(y4**2+x4**2)**2                 !permutation 39/40 DML 5/10/2021
-          zee(39) = 2.d0*x4*(y3**2+x3**2)*y4*(y4**2+x4**2)      !permutation 39/40 DML 5/10/2021
-          zee(41) = -2.d0*(x3*y4**2-2.d0*x4*y3*y4-x3*x4**2)                      &
-         &   *(y3*y4**2+2.d0*x3*x4*y4-x4**2*y3)
-          zee(42) = (3.d0*x3*y3**2*y4-x3**3*y4-x4*y3**3+3.d0*x3**2*x4*y3)        &
-         &   *(y4**2+x4**2)
-          zee(43) = (y3**2+x3**2)*(x3*y4+x4*y3)*(y4**2+x4**2)
-          zee(44) = -(y3**2+x3**2)*(x3*y4**3-3.d0*x4*y3*y4**2                    &
-         &   -3.d0*x3*x4**2*y4+x4**3*y3)
-          zee(45) = 2.d0*(2.d0*x3*y3*y4-x4*y3**2+x3**2*x4)                       &
-         &   *(y3**2*y4-x3**2*y4+2.d0*x3*x4*y3)
-          zee(46) = 2.d0*x3*y3*(y3**2+x3**2)*(y4**2+x4**2)
-          zee(47) = 2.d0*x4*(y3**2+x3**2)**2*y4
-          zee(48) = (y3**2+x3**2)*(3.d0*x3*y3**2*y4-x3**3*y4-x4*y3**3            &
-         &   +3.d0*x3**2*x4*y3)
-          zee(49) = (y3**2+x3**2)**2*(x3*y4+x4*y3)
+    pb(1) = b**2
+    pb(2) = b**4
+    pb(3) = b**6
+    pb(4) = b**8
+
+!..   compute vjt terms for first e set:
+    va(1) = x3**2 + y3**2
+    va(2) = TWO * x3**3 - SIX * x3 * y3**2
+    va(3) = x3**4 + TWO * x3**2 * y3**2 + y3**4
+    va(4) = TWO * x3**5 - FOUR * x3**3 * y3**2 - SIX * x3 * y3**4
+    va(5) = TWO * x3**6 - 30._Rkind*x3**4*y3**2 + 30._Rkind*x3**2*y3**4 -TWO * y3**6
+    va(6) = x3**6 + THREE * x3**4 * y3**2 + THREE * x3**2 * y3**4 + y3**6
+
+!..   compute vjt terms for second e set:
+    vb(1) = x4**2 + y4**2
+    vb(2) = TWO * x4**3 - SIX * x4 * y4**2
+    vb(3) = x4**4 + TWO * x4**2 * y4**2 + y4**4
+    vb(4) = TWO * x4**5 - FOUR * x4**3 * y4**2 - SIX * x4 * y4**4
+    vb(5) = TWO * x4**6 - 30._Rkind*x4**4*y4**2 + 30._Rkind*x4**2*y4**4 -TWO * y4**6
+    vb(6) = x4**6 + THREE * x4**4 * y4**2 + THREE * x4**2 * y4**4 + y4**6
+
+!..   compute wjt terms for first e set:
+    wa(1) = x3
+    wa(2) = x3**2 - y3**2
+    wa(3) = x3**3 + x3*y3**2
+    wa(4) = x3**4 - SIX * x3**2 * y3**2 + y3**4
+    wa(5) = x3**4 - y3**4
+    wa(6) = x3**5 - TEN * x3**3 * y3**2 + FIVE * x3 * y3**4
+    wa(7) = x3**5 + TWO * x3**3 * y3**2 + x3 * y3**4
+    wa(8) = x3**6 - FIVE * x3**4 * y3**2 - FIVE * x3**2*y3**4+y3**6
+    wa(9) = x3**6 + x3**4 * y3**2 - x3**2 * y3**4 - y3**6
+
+!..   compute wjt terms for second e set:
+    wb(1) = x4
+    wb(2) = x4**2 - y4**2
+    wb(3) = x4**3 + x4*y4**2
+    wb(4) = x4**4 - SIX * x4**2 * y4**2 + y4**4
+    wb(5) = x4**4 - y4**4
+    wb(6) = x4**5 - TEN * x4**3 * y4**2 + FIVE * x4 * y4**4
+    wb(7) = x4**5 + TWO * x4**3 * y4**2 + x4 * y4**4
+    wb(8) = x4**6 - FIVE * x4**4 * y4**2 - FIVE * x4**2*y4**4+y4**6
+    wb(9) = x4**6 + x4**4 * y4**2 - x4**2 * y4**4 - y4**6
+
+!..   compute zjt terms for first e set:
+    za(1) = y3
+    za(2) = -TWO*x3*y3
+    za(3) = y3**3 + y3*x3**2
+    za(4) = FOUR*x3**3*y3 - FOUR*x3*y3**3
+    za(5) = -TWO*x3**3*y3 - TWO*x3*y3**3
+    za(6) = -FIVE*x3**4*y3 + TEN*x3**2*y3**3 - y3**5
+    za(7) =  x3**4*y3 + TWO*x3**2*y3**3 + y3**5
+    za(8) = FOUR*x3**5*y3 - FOUR*x3*y3**5
+    za(9) = -TWO*x3**5*y3 - FOUR*x3**3*y3**3 - TWO*x3*y3**5
+
+!..   compute zjt terms for second e set:
+    zb(1) = y4
+    zb(2) = -TWO*x4*y4
+    zb(3) = y4**3 + y4*x4**2
+    zb(4) = FOUR*x4**3*y4 - FOUR*x4*y4**3
+    zb(5) = -TWO*x4**3*y4 - TWO*x4*y4**3
+    zb(6) = -FIVE*x4**4*y4 + TEN*x4**2*y4**3 - y4**5
+    zb(7) =  x4**4*y4 + TWO*x4**2*y4**3 + y4**5
+    zb(8) = FOUR*x4**5*y4 - FOUR*x4*y4**5
+    zb(9) = -TWO*x4**5*y4 - FOUR*x4**3*y4**3 - TWO*x4*y4**5
+
+!..   compute Vcoup_ee terms:
+    vee(1) =  TWO*x3*x4 + TWO*y3*y4
+    vee(2) = TWO*x3*x4**2 - TWO*x3*y4**2 - FOUR*x4*y3*y4
+    vee(3) = TWO*x3**2*x4 - TWO*x4*y3**2 - FOUR*x3*y3*y4
+    vee(4) = TWO*x3**2*x4**2 - TWO*x3**2*y4**2                                &
+   &          - TWO*x4**2*y3**2 + TWO*y3**2*y4**2                               &
+   &          + EIGHT*x3*x4*y3*y4
+    vee(5) = TWO*x3**3*x4 + TWO*x3**2*y3*y4                                   &
+   &          + TWO*x3*x4*y3**2 + TWO*y3**3*y4
+    vee(6) = TWO*x4**3*x3 + TWO*x3*x4*y4**2                                   &
+   &         + TWO*x4**2*y3*y4 + TWO*y4**3*y3
+    vee(7) = x3**2*x4**2 + x3**2*y4**2                                          &
+   &          + x4**2*y3**2 + y3**2*y4**2
+
+    vee(8) = x3*y4**4-4*x4*y3*y4**3-6*x3*x4**2*y4**2+4*x4**3*y3*y4              &
+   &          +x3*x4**4
+    vee(9) = (y4**2+x4**2)*(x3*y4**2+2*x4*y3*y4-x3*x4**2)
+    vee(10) = (y3**2+x3**2)*(x3*y4**2+2*x4*y3*y4-x3*x4**2)
+    vee(11) = x4*(y3**2+x3**2)*(THREE*y4**2-x4**2)
+    vee(12) = (TWO*x3*y3*y4+x4*y3**2-x3**2*x4)*(y4**2+x4**2)
+    vee(13) = x3*(THREE*y3**2-x3**2)*(y4**2+x4**2)
+    vee(14) = FOUR*x3*y3**3*y4-FOUR*x3**3*y3*y4-x4*y3**4                        &
+   &          +SIX*x3**2*x4*y3**2-x3**4*x4
+    vee(15) = (y3**2+x3**2)*(TWO*x3*y3*y4+x4*y3**2-x3**2*x4)
+
+
+    vee(16) = (y3*y4**5-FIVE*x3*x4*y4**4-TEN*x4**2*y3*y4**3                   &
+   &          +TEN*x3*x4**3*y4**2+FIVE*x4**4*y3*y4-x3*x4**5)
+    vee(17) = (y3*y4**2-x3*y4**2-TWO*x4*y3*y4-TWO*x3*x4*y4                    &
+   &          -x4**2*y3+x3*x4**2)*(y3*y4**2+x3*y4**2+TWO*x4*y3*y4                &
+   &          -TWO*x3*x4*y4-x4**2*y3-x3*x4**2)
+    vee(18) = (y3*y4-x3*x4)*(y3**2*y4**2-THREE*x3**2*y4**2                       &
+   &          -EIGHT*x3*x4*y3*y4-THREE*x4**2*y3**2+x3**2*x4**2)
+    vee(19) = (y3**2*y4-TWO*x3*y3*y4-x3**2*y4-x4*y3**2                         &
+   &          -TWO*x3*x4*y3+x3**2*x4)*(y3**2*y4+TWO*x3*y3*y4                    &
+   &          -x3**2*y4+x4*y3**2-TWO*x3*x4*y3-x3**2*x4)
+    vee(20) = (y3**5*y4-TEN*x3**2*y3**3*y4+FIVE*x3**4*y3*y4                   &
+   &          -FIVE*x3*x4*y3**4+TEN*x3**3*x4*y3**2-x3**5*x4)
+
+    vee(21) = (y3*y4+x3*x4)*(y4**2+x4**2)**2
+    vee(22) = (y3*y4-x3*y4+x4*y3+x3*x4)*(y3*y4+x3*y4                            &
+   &          -x4*y3+x3*x4)*(y4**2+x4**2)
+    vee(23) = (y3**2+x3**2)*(y4**2+x4**2)**2
+    vee(24) = (y3*y4+x3*x4)*(y3**2*y4**2-THREE*x3**2*y4**2                       &
+   &          +EIGHT*x3*x4*y3*y4-THREE*x4**2*y3**2+x3**2*x4**2)
+    vee(25) = (y3**2+x3**2)*(y3*y4+x3*x4)*(y4**2+x4**2)
+    vee(26) = (y3**2+x3**2)*(y3*y4-x3*y4+x4*y3+x3*x4)                           &
+   &          *(y3*y4+x3*y4-x4*y3+x3*x4)
+    vee(27) = (y3**2+x3**2)**2*(y4**2+x4**2)
+    vee(28) = (y3**2+x3**2)**2*(y3*y4+x3*x4)
+
+!..   compute Wcoup_ee terms:
+    wee(1) = x3 * x4 - y3 * y4
+    wee(2) = x3**2 * x4 + x4 * y3**2
+    wee(3) = x3 * y4**2 + x3 * x4**2
+    wee(4) = TWO * x3 * y3 * y4 + x3**2 * x4 - x4 * y3**2
+    wee(5) = x3 * x4**2 + TWO * x4 * y3*y4 - x3 * y4**2
+    wee(6) = x3**3 * x4 - THREE * x3**2 *y3*y4                                   &
+   &            - THREE*x3*x4*y3**2 + y3**3*y4
+    wee(7) = x3**2*x4**2 - x3**2*y4**2 - x4**2*y3**2 + y3**2*y4**2              &
+   & - FOUR*x3*x4*y3*y4
+    wee(8) =x4**3*x3 - THREE*x3*x4*y4**2 - THREE*x4**2*y3*y4+y4**3*y3
+!               wee44(9) =x3**3*x4 - THREE*x3**2*y3*y4 -THREE*x3*x4*y3**2-y3**3*y4
+    wee(9) =x3**3*x4 + THREE*x3**2*y3*y4 - THREE*x3*x4*y3**2-y3**3*y4
+!               wee45(10) =x4**3*x3 - THREE*x3*x4*y4**2 - THREE*x4**2*y3*y4-y4**3*y3
+    wee(10) =x4**3*x3 - THREE*x3*x4*y4**2 + THREE*x4**2*y3*y4-y4**3*y3
+    wee(11) = x3**3*x4 - x3**2*y3*y4 + x3*x4*y3**2 - y3**3*y4
+    wee(12) = x3**2*x4**2 + x3**2*y4**2 - x4**2*y3**2 - y3**2*y4**2
+    wee(13) = x3**2*x4**2 - x3**2*y4**2 + x4**2*y3**2 - y3**2*y4**2
+    wee(14) = x3*x4**3 + x3*x4*y4**2 - x4**2*y3*y4 - y4**3*y3
+
+    wee(15) = (x3*y4**4+FOUR*x4*y3*y4**3-SIX*x3*x4**2*y4**2                    &
+   &          -FOUR*x4**3*y3*y4+x3*x4**4)
+    wee(16) = (TWO*x3*y3*y4**3+THREE*x4*y3**2*y4**2                             &
+   & -THREE*x3**2*x4*y4**2-SIX*x3*x4**2*y3*y4-x4**3*y3**2+x3**2*x4**3)
+    wee(17) = (THREE*x3*y3**2*y4**2-x3**3*y4**2+TWO*x4*y3**3*y4                 &
+   &          -SIX*x3**2*x4*y3*y4-THREE*x3*x4**2*y3**2+x3**3*x4**2)
+    wee(18) = (FOUR*x3*y3**3*y4-FOUR*x3**3*y3*y4+x4*y3**4                       &
+   &          -SIX*x3**2*x4*y3**2+x3**4*x4)
+
+    wee(19) = -(y4**2+x4**2)*(x3*y4**2-TWO*x4*y3*y4-x3*x4**2)
+    wee(20) = x3*(y4**2+x4**2)**2
+    wee(21) = -(TWO*x3*y3*y4**3-THREE*x4*y3**2*y4**2+THREE*x3**2                 &
+   &          *x4*y4**2-SIX*x3*x4**2*y3*y4+x4**3*y3**2-x3**2*x4**3)
+    wee(22) = x4*(y3**2+x3**2)*(y4**2+x4**2)
+    wee(23) = -(y3**2+x3**2)*(x3*y4**2-TWO*x4*y3*y4-x3*x4**2)
+    wee(24) = x3*(y3**2+x3**2)*(y4**2+x4**2)
+    wee(25) = x4*(y3**2+x3**2)**2
+    wee(26) = (y3**2+x3**2)*(TWO*x3*y3*y4-x4*y3**2+x3**2*x4)
+
+    wee(27) = (y3*y4**5+FIVE*x3*x4*y4**4-TEN*x4**2*y3*y4**3               &
+   &    -TEN*x3*x4**3*y4**2+FIVE*x4**4*y3*y4+x3*x4**5)
+    wee(28) = (y4**2+x4**2)*(y3*y4**3-THREE*x3*x4*y4**2                      &
+   &    -THREE*x4**2*y3*y4+x3*x4**3)
+    wee(29) = (y3**2+x3**2)*(y4**2-TWO*x4*y4-x4**2)                        &
+   &    *(y4**2+TWO*x4*y4-x4**2)
+    wee(30) = (y3*y4-x3*y4-x4*y3-x3*x4)*(y3*y4+x3*y4                        &
+   &    +x4*y3-x3*x4)*(y4**2+x4**2)
+    wee(31) = (y3**2+x3**2)*(y3*y4**3-THREE*x3*x4*y4**2                      &
+   &    -THREE*x4**2*y3*y4+x3*x4**3)
+    wee(32) = (y3**3*y4-THREE*x3**2*y3*y4-THREE*x3*x4*y3**2+x3**3*x4)         &
+   &    *(y4**2+x4**2)
+    wee(33) = (y3**2+x3**2)*(y3*y4-x3*y4-x4*y3-x3*x4)                       &
+   &    *(y3*y4+x3*y4+x4*y3-x3*x4)
+    wee(34) = (y3**2-TWO*x3*y3-x3**2)*(y3**2+TWO*x3*y3-x3**2)             &
+   &    *(y4**2+x4**2)
+    wee(35) = (y3**2+x3**2)*(y3**3*y4-THREE*x3**2*y3*y4                      &
+   &    -THREE*x3*x4*y3**2+x3**3*x4)
+    wee(36)= (y3**5*y4-TEN*x3**2*y3**3*y4+FIVE*x3**4*y3*y4                &
+   &    +FIVE*x3*x4*y3**4-TEN*x3**3*x4*y3**2+x3**5*x4)
+
+    wee(37) = (y3*y4-x3*x4)*(y4**2+x4**2)**2
+    wee(38) = (y4**2+x4**2)*(y3*y4**3+THREE*x3*x4*y4**2                      &
+   &    -THREE*x4**2*y3*y4-x3*x4**3)
+    wee(39) = (y3**2+x3**2)*(y4-x4)*(y4+x4)*(y4**2+x4**2)
+    wee(40) = (y3-x3)*(y3+x3)*(y4**2+x4**2)**2
+    wee(41) = (y3*y4**2-x3*y4**2+TWO*x4*y3*y4+TWO*x3*x4*y4                &
+   &    -x4**2*y3+x3*x4**2)*(y3*y4**2+x3*y4**2-TWO*x4*y3*y4                  &
+   &    +TWO*x3*x4*y4-x4**2*y3-x3*x4**2)
+    wee(42) = (y3**3*y4-THREE*x3**2*y3*y4+THREE*x3*x4*y3**2-x3**3*x4)         &
+   &    *(y4**2+x4**2)
+    wee(43) = (y3**2+x3**2)*(y3*y4-x3*x4)*(y4**2+x4**2)
+    wee(44) = (y3**2+x3**2)*(y3*y4**3+THREE*x3*x4*y4**2                      &
+   &    -THREE*x4**2*y3*y4-x3*x4**3)
+    wee(45) = (y3**2*y4-TWO*x3*y3*y4-x3**2*y4+x4*y3**2                     &
+   &    +TWO*x3*x4*y3-x3**2*x4)*(y3**2*y4+TWO*x3*y3*y4-x3**2*y4             &
+   &    -x4*y3**2+TWO*x3*x4*y3+x3**2*x4)
+    wee(46) = (y3-x3)*(y3+x3)*(y3**2+x3**2)*(y4**2+x4**2)
+    wee(47) = (y3**2+x3**2)**2*(y4-x4)*(y4+x4)
+    wee(48) = (y3**2+x3**2)*(y3**3*y4-THREE*x3**2*y3*y4                      &
+   &    +THREE*x3*x4*y3**2-x3**3*x4)
+    wee(49) = (y3**2+x3**2)**2*(y3*y4-x3*x4)
+
+!..   compute Zcoup_ee terms:
+    zee(1) = -x3*y4 - x4*y3
+
+    zee(2) = y3**2*y4 + x3**2*y4
+    zee(3) = y3*y4**2 + x4**2*y3
+    zee(4) = y3**2*y4 + TWO*x3*x4*y3 - x3**2*y4
+    zee(5) = y4**2*y3 + TWO*x3*x4*y4 - x4**2*y3
+
+    zee(6) = x3**3*y4 + THREE*x3**2*x4*y3                                        &
+   &          - THREE*x3*y3**2*y4 - x4*y3**3
+    zee(7) = TWO*x3**2*x4*y4 + TWO*x3*x4**2*y3 - TWO*x3*y3*y4**2             &
+   & - TWO*x4*y3**2*y4
+    zee(8) =x4**3*y3 +THREE*x3*x4**2*y4 - THREE*x4*y3*y4**2 - x3*y4**3
+    zee(9) =x3**3*y4 -THREE*x3**2*x4*y3 - THREE*x3*y3**2*y4 + x4*y3**3
+    zee(10)=x4**3*y3 -THREE*x3*x4**2*y4 - THREE*x4*y3*y4**2 + x3*y4**3
+    zee(11) = - x3**3*y4 - x3**2*x4*y3 - x3*y3**2*y4 - x4*y3**3
+    zee(12) = - TWO*x3*x4**2*y3 - TWO*x3*y3*y4**2
+    zee(13) = - TWO*x3**2*x4*y4 - TWO*x4*y3**2*y4
+    zee(14) = - y4**3*x3 - x3*x4**2*y4 - x4*y3*y4**2 - y3*x4**3
+
+    zee(15) = -(y3*y4**4-FOUR*x3*x4*y4**3-SIX*x4**2*y3*y4**2                                   &
+   &           +FOUR*x3*x4**3*y4+x4**4*y3)
+    zee(16) = -(y3**2*y4**3-x3**2*y4**3-SIX*x3*x4*y3*y4**2                                     &
+   &     -THREE*x4**2*y3**2*y4+THREE*x3**2*x4**2*y4+TWO*x3*x4**3*y3)
+    zee(17) = -(y3**3*y4**2-THREE*x3**2*y3*y4**2-SIX*x3*x4*y3**2*y4                             &
+   &           +TWO*x3**3*x4*y4-x4**2*y3**3+THREE*x3**2*x4**2*y3)
+    zee(18)=-(y3**4*y4-SIX*x3**2*y3**2*y4+x3**4*y4-FOUR*x3*x4*y3**3                          &
+   &           +FOUR*x3**3*x4*y3)
+
+    zee(19) = (y4**2+x4**2)*(y3*y4**2+TWO*x3*x4*y4-x4**2*y3)
+    zee(20) = y3*(y4**2+x4**2)**2
+    zee(21) = (y3**2*y4**3-x3**2*y4**3+SIX*x3*x4*y3*y4**2                                      &
+   &     -THREE*x4**2*y3**2*y4+THREE*x3**2*x4**2*y4-TWO*x3*x4**3*y3)
+    zee(22) = (y3**2+x3**2)*y4*(y4**2+x4**2)
+    zee(23) = (y3**2+x3**2)*(y3*y4**2+TWO*x3*x4*y4-x4**2*y3)
+    zee(24) = y3*(y3**2+x3**2)*(y4**2+x4**2)
+    zee(25) = (y3**2+x3**2)**2*y4
+    zee(26) = (y3**2+x3**2)*(y3**2*y4-x3**2*y4+TWO*x3*x4*y3)
+
+    zee(27) = (x3*y4**5-FIVE*x4*y3*y4**4-TEN*x3*x4**2*y4**3               &
+   &   +TEN*x4**3*y3*y4**2+FIVE*x3*x4**4*y4-x4**5*y3)
+    zee(28) = -(y4**2+x4**2)*(x3*y4**3+THREE*x4*y3*y4**2                     &
+   &   -THREE*x3*x4**2*y4-x4**3*y3)
+    zee(29) = -FOUR*x4*(y3**2+x3**2)*y4*(y4-x4)*(y4+x4)
+    zee(30) = -TWO*(x3*y4+x4*y3)*(y3*y4-x3*x4)*(y4**2+x4**2)
+    zee(31) = -(y3**2+x3**2)*(x3*y4**3+THREE*x4*y3*y4**2                     &
+   &   -THREE*x3*x4**2*y4-x4**3*y3)
+    zee(32) = -(THREE*x3*y3**2*y4-x3**3*y4+x4*y3**3                          &
+   &   -THREE*x3**2*x4*y3)*(y4**2+x4**2)
+    zee(33) = -TWO*(y3**2+x3**2)*(x3*y4+x4*y3)*(y3*y4-x3*x4)
+    zee(34) = -FOUR*x3*y3*(y3-x3)*(y3+x3)*(y4**2+x4**2)
+    zee(35) = -(y3**2+x3**2)*(THREE*x3*y3**2*y4-x3**3*y4+x4*y3**3            &
+   &   -THREE*x3**2*x4*y3)
+    zee(36)= -(FIVE*x3*y3**4*y4-TEN*x3**3*y3**2*y4+x3**5*y4              &
+   &   -x4*y3**5+TEN*x3**2*x4*y3**3-FIVE*x3**4*x4*y3)
+
+
+    zee(37) = (x3*y4+x4*y3)*(y4**2+x4**2)**2
+    zee(38) = -(y4**2+x4**2)*(x3*y4**3-THREE*x4*y3*y4**2                    &
+   &   -THREE*x3*x4**2*y4+x4**3*y3)
+    zee(40) = TWO*x3*y3*(y4**2+x4**2)**2                 !permutation 39/40 DML 5/10/2021
+    zee(39) = TWO*x4*(y3**2+x3**2)*y4*(y4**2+x4**2)      !permutation 39/40 DML 5/10/2021
+    zee(41) = -TWO*(x3*y4**2-TWO*x4*y3*y4-x3*x4**2)                      &
+   &   *(y3*y4**2+TWO*x3*x4*y4-x4**2*y3)
+    zee(42) = (THREE*x3*y3**2*y4-x3**3*y4-x4*y3**3+THREE*x3**2*x4*y3)        &
+   &   *(y4**2+x4**2)
+    zee(43) = (y3**2+x3**2)*(x3*y4+x4*y3)*(y4**2+x4**2)
+    zee(44) = -(y3**2+x3**2)*(x3*y4**3-THREE*x4*y3*y4**2                    &
+   &   -THREE*x3*x4**2*y4+x4**3*y3)
+    zee(45) = TWO*(TWO*x3*y3*y4-x4*y3**2+x3**2*x4)                       &
+   &   *(y3**2*y4-x3**2*y4+TWO*x3*x4*y3)
+    zee(46) = TWO*x3*y3*(y3**2+x3**2)*(y4**2+x4**2)
+    zee(47) = TWO*x4*(y3**2+x3**2)**2*y4
+    zee(48) = (y3**2+x3**2)*(THREE*x3*y3**2*y4-x3**3*y4-x4*y3**3            &
+   &   +THREE*x3**2*x4*y3)
+    zee(49) = (y3**2+x3**2)**2*(x3*y4+x4*y3)
     
   end subroutine QML_NO3_vwzprec
-    !------------------------------------------------------------------------------
-          subroutine tql2_NO3(nm,n,d,e,z,ierr)
-            implicit none
+  !-----------------------------------------------------------------------------
+  !     finds sqrt(a**2+b**2) without overflow or destructive underflow
+  real (kind=Rkind) function pythag(a,b)
+    implicit none
 
-          integer i,j,k,l,m,n,ii,l1,l2,nm,mml,ierr
-          double precision d(n),e(n),z(nm,n)
-          double precision c,c2,c3,dl1,el1,f,g,h,p,r,s,s2,tst1,tst2
-    !
-    !     this subroutine is a translation of the algol procedure tql2_NO3,
-    !     num. math. 11, 293-306(1968) by bowdler, martin, reinsch, and
-    !     wilkinson.
-    !     handbook for auto. comp., vol.ii-linear algebra, 227-240(1971).
-    !
-    !     this subroutine finds the eigenvalues and eigenvectors
-    !     of a symmetric tridiagonal matrix by the ql method.
-    !     the eigenvectors of a full symmetric matrix can also
-    !     be found if  tred2_NO3  has been used to reduce this
-    !     full matrix to tridiagonal form.
-    !
-    !     on input
-    !
-    !        nm must be set to the row dimension of two-dimensional
-    !          array parameters as declared in the calling program
-    !          dimension statement.
-    !
-    !        n is the order of the matrix.
-    !
-    !        d contains the diagonal elements of the input matrix.
-    !
-    !        e contains the subdiagonal elements of the input matrix
-    !          in its last n-1 positions.  e(1) is arbitrary.
-    !
-    !        z contains the transformation matrix produced in the
-    !          reduction by  tred2_NO3, if performed.  if the eigenvectors
-    !          of the tridiagonal matrix are desired, z must contain
-    !          the identity matrix.
-    !
-    !      on output
-    !
-    !        d contains the eigenvalues in ascending order.  if an
-    !          error exit is made, the eigenvalues are correct but
-    !          unordered for indices 1,2,...,ierr-1.
-    !
-    !        e has been destroyed.
-    !
-    !        z contains orthonormal eigenvectors of the symmetric
-    !          tridiagonal (or full) matrix.  if an error exit is made,
-    !          z contains the eigenvectors associated with the stored
-    !          eigenvalues.
-    !
-    !        ierr is set to
-    !          zero       for normal return,
-    !          j          if the j-th eigenvalue has not been
-    !                     determined after 30 iterations.
-    !
-    !     calls pythag for  sqrt(a*a + b*b) .
-    !
-    !     questions and comments should be directed to burton s. garbow,
-    !     mathematics and computer science div, argonne national laboratory
-    !
-    !     this version dated august 1983.
-    !
-    !     ------------------------------------------------------------------
-    !
-          ierr = 0
-          if (n .eq. 1) go to 1001
-    !
-          do 100 i = 2, n
-      100 e(i-1) = e(i)
-    !
-          f = 0.0d0
-          tst1 = 0.0d0
-          e(n) = 0.0d0
-    !
-          do 240 l = 1, n
-             j = 0
-             h = abs(d(l)) + abs(e(l))
-             if (tst1 .lt. h) tst1 = h
-    !     .......... look for small sub-diagonal element ..........
-             do 110 m = l, n
-                tst2 = tst1 + abs(e(m))
-                if (tst2 .eq. tst1) go to 120
-    !     .......... e(n) is always zero, so there is no exit
-    !                through the bottom of the loop ..........
-      110    continue
-    !
-      120    if (m .eq. l) go to 220
-      130    if (j .eq. 30) go to 1000
-             j = j + 1
-    !     .......... form shift ..........
-             l1 = l + 1
-             l2 = l1 + 1
-             g = d(l)
-             p = (d(l1) - g) / (2.0d0 * e(l))
-             r = pythag(p,1.0d0)
-             d(l) = e(l) / (p + dsign(r,p))
-             d(l1) = e(l) * (p + dsign(r,p))
-             dl1 = d(l1)
-             h = g - d(l)
-             if (l2 .gt. n) go to 145
-    !
-             do 140 i = l2, n
-      140    d(i) = d(i) - h
-    !
-      145    f = f + h
-    !     .......... ql transformation ..........
-             p = d(m)
-             c = 1.0d0
-             c2 = c
-             el1 = e(l1)
-             s = 0.0d0
-             mml = m - l
-    !     .......... for i=m-1 step -1 until l do -- ..........
-             do 200 ii = 1, mml
-                c3 = c2
-                c2 = c
-                s2 = s
-                i = m - ii
-                g = c * e(i)
-                h = c * p
-                r = pythag(p,e(i))
-                e(i+1) = s * r
-                s = e(i) / r
-                c = p / r
-                p = c * d(i) - s * g
-                d(i+1) = h + s * (c * g + s * d(i))
-    !     .......... form vector ..........
-                do 180 k = 1, n
-                   h = z(k,i+1)
-                   z(k,i+1) = s * z(k,i) + c * h
-                   z(k,i) = c * z(k,i) - s * h
-      180       continue
-    !
-      200    continue
-    !
-             p = -s * s2 * c3 * el1 * e(l) / dl1
-             e(l) = s * p
-             d(l) = c * p
-             tst2 = tst1 + abs(e(l))
-             if (tst2 .gt. tst1) go to 130
-      220    d(l) = d(l) + f
-      240 continue
-    !     .......... order eigenvalues and eigenvectors ..........
-          do 300 ii = 2, n
-             i = ii - 1
-             k = i
-             p = d(i)
-    !
-             do 260 j = ii, n
-                if (d(j) .ge. p) go to 260
-                k = j
-                p = d(j)
-      260    continue
-    !
-             if (k .eq. i) go to 300
-             d(k) = d(i)
-             d(i) = p
-    !
-             do 280 j = 1, n
-                p = z(j,i)
-                z(j,i) = z(j,k)
-                z(j,k) = p
-      280    continue
-    !
-      300 continue
-    !
-          go to 1001
-    !     .......... set error -- no convergence to an
-    !                eigenvalue after 30 iterations ..........
-     1000 ierr = l
-     1001 return
-          end
-    !------------------------------------------------------------------------------
-          subroutine tred2_NO3(nm,n,a,d,e,z)
-            implicit none
+    real (kind=Rkind), intent(in) :: a,b
 
-          integer i,j,k,l,n,ii,nm,jp1
-          double precision a(nm,n),d(n),e(n),z(nm,n)
-          double precision f,g,h,hh,scale
-    !
-    !     this subroutine is a translation of the algol procedure tred2_NO3,
-    !     num. math. 11, 181-195(1968) by martin, reinsch, and wilkinson.
-    !     handbook for auto. comp., vol.ii-linear algebra, 212-226(1971).
-    !
-    !     this subroutine reduces a real symmetric matrix to a
-    !     symmetric tridiagonal matrix using and accumulating
-    !     orthogonal similarity transformations.
-    !
-    !     on input
-    !
-    !        nm must be set to the row dimension of two-dimensional
-    !          array parameters as declared in the calling program
-    !          dimension statement.
-    !
-    !        n is the order of the matrix.
-    !
-    !        a contains the real symmetric input matrix.  only the
-    !          lower triangle of the matrix need be supplied.
-    !
-    !     on output
-    !
-    !        d contains the diagonal elements of the tridiagonal matrix.
-    !
-    !        e contains the subdiagonal elements of the tridiagonal
-    !          matrix in its last n-1 positions.  e(1) is set to zero.
-    !
-    !        z contains the orthogonal transformation matrix
-    !          produced in the reduction.
-    !
-    !        a and z may coincide.  if distinct, a is unaltered.
-    !
-    !     questions and comments should be directed to burton s. garbow,
-    !     mathematics and computer science div, argonne national laboratory
-    !
-    !     this version dated august 1983.
-    !
-    !     ------------------------------------------------------------------
-    !
-          do 100 i = 1, n
-    !
-             do 80 j = i, n
-       80    z(j,i) = a(j,i)
-    !
-             d(i) = a(n,i)
-      100 continue
-    !
-          if (n .eq. 1) go to 510
-    !     .......... for i=n step -1 until 2 do -- ..........
-          do 300 ii = 2, n
-             i = n + 2 - ii
-             l = i - 1
-             h = 0.0d0
-             scale = 0.0d0
-             if (l .lt. 2) go to 130
-    !     .......... scale row (algol tol then not needed) ..........
-             do 120 k = 1, l
-      120    scale = scale + abs(d(k))
-    !
-             if (scale .ne. 0.0d0) go to 140
-      130    e(i) = d(l)
-    !
-             do 135 j = 1, l
-                d(j) = z(l,j)
-                z(i,j) = 0.0d0
-                z(j,i) = 0.0d0
-      135    continue
-    !
-             go to 290
-    !
-      140    do 150 k = 1, l
-                d(k) = d(k) / scale
-                h = h + d(k) * d(k)
-      150    continue
-    !
-             f = d(l)
-             g = -dsign(sqrt(h),f)
-             e(i) = scale * g
-             h = h - f * g
-             d(l) = f - g
-    !     .......... form a*u ..........
-             do 170 j = 1, l
-      170    e(j) = 0.0d0
-    !
-             do 240 j = 1, l
-                f = d(j)
-                z(j,i) = f
-                g = e(j) + z(j,j) * f
-                jp1 = j + 1
-                if (l .lt. jp1) go to 220
-    !
-                do 200 k = jp1, l
-                   g = g + z(k,j) * d(k)
-                   e(k) = e(k) + z(k,j) * f
-      200       continue
-    !
-      220       e(j) = g
-      240    continue
-    !     .......... form p ..........
-             f = 0.0d0
-    !
-             do 245 j = 1, l
-                e(j) = e(j) / h
-                f = f + e(j) * d(j)
-      245    continue
-    !
-             hh = f / (h + h)
-    !     .......... form q ..........
-             do 250 j = 1, l
-      250    e(j) = e(j) - hh * d(j)
-    !     .......... form reduced a ..........
-             do 280 j = 1, l
-                f = d(j)
-                g = e(j)
-    !
-                do 260 k = j, l
-      260       z(k,j) = z(k,j) - f * e(k) - g * d(k)
-    !
-                d(j) = z(l,j)
-                z(i,j) = 0.0d0
-      280    continue
-    !
-      290    d(i) = h
-      300 continue
-    !     .......... accumulation of transformation matrices ..........
-          do 500 i = 2, n
-             l = i - 1
-             z(n,l) = z(l,l)
-             z(l,l) = 1.0d0
-             h = d(i)
-             if (h .eq. 0.0d0) go to 380
-    !
-             do 330 k = 1, l
-      330    d(k) = z(k,i) / h
-    !
-             do 360 j = 1, l
-                g = 0.0d0
-    !
-                do 340 k = 1, l
-      340       g = g + z(k,i) * z(k,j)
-    !
-                do 360 k = 1, l
-                   z(k,j) = z(k,j) - g * d(k)
-      360    continue
-    !
-      380    do 400 k = 1, l
-      400    z(k,i) = 0.0d0
-    !
-      500 continue
-    !
-      510 do 520 i = 1, n
-             d(i) = z(n,i)
-             z(n,i) = 0.0d0
-      520 continue
-    !
-          z(n,n) = 1.0d0
-          e(1) = 0.0d0
-          return
-          end
-    
-    !-----------------------------------------------------------------------------
-    double precision function pythag(a,b)
-      implicit none
+    real (kind=Rkind) :: p,r,s,t,u
 
-          double precision a,b
-    !
-    !     finds sqrt(a**2+b**2) without overflow or destructive underflow
-    !
-          double precision p,r,s,t,u
           p = dmax1(abs(a),abs(b))
-          if (p .eq. 0.0d0) go to 20
+          if (p .eq. ZERO) go to 20
           r = (dmin1(abs(a),abs(b))/p)**2
        10 continue
-             t = 4.0d0 + r
-             if (t .eq. 4.0d0) go to 20
+             t = FOUR + r
+             if (t .eq. FOUR) go to 20
              s = r/t
-             u = 1.0d0 + 2.0d0*s
+             u = ONE + TWO*s
              p = u*p
              r = (s/u)**2 * r
           go to 10
        20 pythag = p
           return
-          end
+  end
     
     !---------------------------------------------------
     ! A Viel 30.09.2021
     ! from cartesian coordinates to internal of NO3E" JCP20217 potential
     ! N (0,1-3) O (2-4,1-3)   1-3 : x, y, z
-    subroutine trans_coord(x,qinter,transformcoordblock,tmc)
-      USE QDUtil_m
-      implicit none
-
-      TYPE (transformcoordblock_t), intent(in)         :: transformcoordblock
-          TYPE (tmc_t),                 intent(in)         :: tmc
-          real (kind=Rkind),            intent(inout)      :: qinter(:)
-          real (kind=Rkind),            intent(in)         :: x(0:3,3)
-
-          integer N
-          parameter (N=4)
-    
-          integer i, j, k
-
-    
-          real (kind=Rkind) ::   xvec(9),xvecinvers(9)
-          real (kind=Rkind) ::   xintern(0:6) !beta, 3 distances, 3 angles
-          real (kind=Rkind) ::   tnorm,det,t(3)
-          real (kind=Rkind) :: f  ! function for morse evaluation
-          real (kind=Rkind) :: rnodist,rnoprod
-    
-          real (kind=Rkind) ::   phi_ref,le_ref,beta_ref
-
-          real (kind=Rkind), parameter :: sq2 = ONE/sqrt(TWO)
-          real (kind=Rkind), parameter :: sq3 = ONE/sqrt(THREE)
-          real (kind=Rkind), parameter :: sq6 = ONE/sqrt(SIX)
-
-          phi_ref  = transformcoordblock%phi_ref
-          le_ref   = transformcoordblock%le_ref
-          beta_ref = transformcoordblock%beta_ref
-
-    !
-    ! write cartesian
-          !do i=0,3
-          ! write(6,*)'cart',i,(x(i,j),j=1,3)
-          !enddo
-    
-    ! copy of internal.f subroutine
-    ! NH vectors matrix (3x3)
-          do i=0,2
-             xvec(3*i+1)=x(i+1,1)-x(0,1)
-             xvec(3*i+2)=x(i+1,2)-x(0,2)
-             xvec(3*i+3)=x(i+1,3)-x(0,3)
-             write(6,*) 'xvec',i,xvec(3*i+1:3*i+3)
-          enddo
-    ! no distances
-          rnodist=                                         &
-         &   sqrt(xvec(1)**2+xvec(2)**2+xvec(3)**2)       &
-         & + sqrt(xvec(4)**2+xvec(5)**2+xvec(6)**2)       &
-         & + sqrt(xvec(7)**2+xvec(8)**2+xvec(9)**2)
-          rnoprod=sqrt(xvec(1)**2+xvec(2)**2+xvec(3)**2)  &
-         & * sqrt(xvec(4)**2+xvec(5)**2+xvec(6)**2)       &
-         & * sqrt(xvec(7)**2+xvec(8)**2+xvec(9)**2)
-         write(6,*) 'rnodist,rnoprod',rnodist,rnoprod
-
-    
-    ! normalization
-          do i=0,2
-          xintern(i+1)=sqrt(xvec(3*i+1)**2+xvec(3*i+2)**2+xvec(3*i+3)**2)
-          enddo
-          write(6,*) 'xintern',xintern
-
-          k=1
-          do j=1,3
-          do i=1,3
-             xvec(k)=xvec(k)/xintern(j)
-             k=k+1
-          enddo
-          enddo
-          do i=0,2
-            write(6,*) 'xvec',i,xvec(3*i+1:3*i+3)
-         enddo
-          ! determinant
-          !det=det3t3(xvec)
-          det = Det_OF(reshape(xvec,shape=[3,3]))
-    !
-    ! planar case
-          if (abs(det).lt.1.d-13) then
-            call planarnew(xvec,xintern(4),xintern(0))
-          else
-    ! Pyramdal case
-    ! trisector
-            xvecinvers = reshape(inv_OF_Mat_TO(reshape(xvec,shape=[3,3])),shape=[9])
-             !call mat_invers(xvec,xvecinvers,det)
-             t(1)=xvecinvers(1)+xvecinvers(2)+xvecinvers(3)
-             t(2)=xvecinvers(4)+xvecinvers(5)+xvecinvers(6)
-             t(3)=xvecinvers(7)+xvecinvers(8)+xvecinvers(9)
-             tnorm=sqrt(t(1)**2+t(2)**2+t(3)**2)
-             xintern(0)=acos(1.d0/tnorm)
-    ! projected angles
-             call proangnew(xvec,t,tnorm,xintern(0),xintern(4))
-          endif
-    !
-    ! xintern(0)=trisector
-    ! xintern(1)=ditance no1
-    ! xintern(2)=ditance no2
-    ! xintern(3)=ditance no3
-    ! xintern(4)=angle o2no3
-    ! xintern(5)=angle o3no1
-    ! xintern(6)=angle o1no2
-    ! 13.06.2012 order coherent with surface definition
-    !        write(6,*)xintern(0),'trisec'   !printPES
-    !        write(6,*)xintern(1),'no1   '
-    !        write(6,*)xintern(2),'no2   '
-    !        write(6,*)xintern(3),'no3   '
-    !        write(6,*)xintern(4),'o2no3 '
-    !        write(6,*)xintern(5),'o3no1 '
-    !        write(6,*)xintern(6),'o1no2 '
-    !
-    !...    now transform angles so they properly dissociate:
-    !        a1=(a1)/((no2+reno)*(no3+reno))
-    !        a2=(a2)/((no1+reno)*(no3+reno))
-    !        a3=(a3)/((no1+reno)*(no2+reno))
-             xintern(4)=xintern(4)/(xintern(2)*xintern(3))
-             xintern(5)=xintern(5)/(xintern(1)*xintern(3))
-             xintern(6)=xintern(6)/(xintern(1)*xintern(2))
-    !
-    ! Displace NO distances
-          do i=1,3
-          xintern(i)=xintern(i)-le_ref
-    !      xintern(i+3)=xintern(i+3)-phi_ref angle not displaced
-          enddo
-          xintern(0)=xintern(0)-beta_ref ! planar = 0 for Eisfeld PES
-    !      Write(6,*)xintern(0),"umbrella"  ! printPES
-    !
-    ! compute morse or tmc morse
-          do i=1,3
-             call ff(xintern(i),1,f,tmc)
-             xintern(i)= 1.d0 - exp(-f*xintern(i))
-          enddo
-    
-    
-    
-    ! symmetrization
-    !
-          qinter(1)=(xintern(1)+xintern(2)+xintern(3))*sq3
-          qinter(2)=xintern(0)/rnoprod*le_ref**3
-          qinter(3)=(2.d0*xintern(1)-xintern(2)-xintern(3))*sq6
-          qinter(4)=(xintern(2)-xintern(3))*sq2
-          qinter(5)=(2.d0*xintern(4)-xintern(5)-xintern(6))*sq6
-          qinter(6)=(xintern(5)-xintern(6))*sq2
-    ! radial variable for damping in the trisector variable
-          qinter(7)=rnodist/3.d0
-    
-  End subroutine trans_coord
   subroutine QML_NO3_trans_coord(x,qinter,transformcoordblock,tmc)
     USE QDUtil_m
     implicit none
@@ -3375,7 +2881,7 @@ MODULE QML_NO3_m
     !
     ! write cartesian
           !do i=0,3
-          ! write(6,*)'cart',i,(x(i,j),j=1,3)
+          !  write(out_unit,*)'cart',i,(x(i,j),j=1,3)
           !enddo
     
     ! copy of internal.f subroutine
@@ -3402,20 +2908,22 @@ MODULE QML_NO3_m
     enddo
 
     ! determinant
+    !det=det3t3(xvec)
     det = Det_OF(xvec)
 
-    if (abs(det).lt.1.d-13) then
+    if (abs(det).lt.ONETENTH**13) then
       ! planar case
       call planarnew(xvec,xintern(4),xintern(0))
     else
       ! Pyramdal case
       ! trisector
+      !call mat_invers(xvec,xvecinvers,det)
       xvecinvers = inv_OF_Mat_TO(xvec)
       t(1)=sum(xvecinvers(:,1))
       t(2)=sum(xvecinvers(:,2))
       t(3)=sum(xvecinvers(:,3))
       tnorm=sqrt(t(1)**2+t(2)**2+t(3)**2)
-      xintern(0)=acos(1.d0/tnorm)
+      xintern(0)=acos(ONE/tnorm)
       ! projected angles
       call proangnew(xvec,t,tnorm,xintern(0),xintern(4))
     endif
@@ -3428,13 +2936,13 @@ MODULE QML_NO3_m
     ! xintern(5)=angle o3no1
     ! xintern(6)=angle o1no2
     ! 13.06.2012 order coherent with surface definition
-    !        write(6,*)xintern(0),'trisec'   !printPES
-    !        write(6,*)xintern(1),'no1   '
-    !        write(6,*)xintern(2),'no2   '
-    !        write(6,*)xintern(3),'no3   '
-    !        write(6,*)xintern(4),'o2no3 '
-    !        write(6,*)xintern(5),'o3no1 '
-    !        write(6,*)xintern(6),'o1no2 '
+    !         write(out_unit,*)xintern(0),'trisec'   !printPES
+    !         write(out_unit,*)xintern(1),'no1   '
+    !         write(out_unit,*)xintern(2),'no2   '
+    !         write(out_unit,*)xintern(3),'no3   '
+    !         write(out_unit,*)xintern(4),'o2no3 '
+    !         write(out_unit,*)xintern(5),'o3no1 '
+    !         write(out_unit,*)xintern(6),'o1no2 '
     !
     !...    now transform angles so they properly dissociate:
     !        a1=(a1)/((no2+reno)*(no3+reno))
@@ -3447,23 +2955,23 @@ MODULE QML_NO3_m
     ! Displace NO distances
     xintern(1:3) = xintern(1:3) -le_ref
     xintern(0)   = xintern(0)   -beta_ref ! planar = 0 for Eisfeld PES
-    !      Write(6,*)xintern(0),"umbrella"  ! printPES
+    !       write(out_unit,*)xintern(0),"umbrella"  ! printPES
     !
     ! compute morse or tmc morse
     do i=1,3
       call ff(xintern(i),1,f,tmc)
-      xintern(i)= 1.d0 - exp(-f*xintern(i))
+      xintern(i)= ONE - exp(-f*xintern(i))
     enddo
 
     ! symmetrization
     qinter(1)=(xintern(1)+xintern(2)+xintern(3))*sq3
     qinter(2)=xintern(0)/rnoprod*le_ref**3
-    qinter(3)=(2.d0*xintern(1)-xintern(2)-xintern(3))*sq6
+    qinter(3)=(TWO*xintern(1)-xintern(2)-xintern(3))*sq6
     qinter(4)=(xintern(2)-xintern(3))*sq2
-    qinter(5)=(2.d0*xintern(4)-xintern(5)-xintern(6))*sq6
+    qinter(5)=(TWO*xintern(4)-xintern(5)-xintern(6))*sq6
     qinter(6)=(xintern(5)-xintern(6))*sq2
     ! radial variable for damping in the trisector variable
-    qinter(7)=rnodist/3.d0
+    qinter(7)=rnodist/THREE
 
     if (debug) then
       write(out_unit,'(7g20.10)') qinter
@@ -3471,7 +2979,7 @@ MODULE QML_NO3_m
       flush(out_unit)
     END IF
 
-    End subroutine QML_NO3_trans_coord
+  End subroutine QML_NO3_trans_coord
     !***********************************************************
     !
     !   calculation of a 3*3 determinant
@@ -3482,7 +2990,7 @@ MODULE QML_NO3_m
           implicit none
           integer n
           parameter (n=3)
-          double precision det3t3, M(n,n)
+          real (kind=Rkind) :: det3t3, M(n,n)
     
            det3t3 = M(1,1)*M(2,2)*M(3,3)       &
          &         +M(1,2)*M(2,3)*M(3,1)       &
@@ -3503,14 +3011,14 @@ MODULE QML_NO3_m
           implicit none
           integer i,j,ma
           parameter (ma=3)
-          double precision M(ma,ma), A(ma,ma), Im(ma,ma)
-          double precision det
+          real (kind=Rkind) :: M(ma,ma), A(ma,ma), Im(ma,ma)
+          real (kind=Rkind) :: det
     
     !.....makes the inverse of a 3*3 matrix
     !     ---------------------------------
     !      det=det3t3(M)
-    !      if (abs(det).lt.1.d-10) then
-    !        write(6,*) 'determinant zero! matrix cannot be inverted!'
+    !      if (abs(det).lt.ONETENTH**10) then
+    !         write(out_unit,*) 'determinant zero! matrix cannot be inverted!'
     !        stop
     !      endif
     
@@ -3532,7 +3040,7 @@ MODULE QML_NO3_m
     
           do i=1,ma
            do j=1,ma
-             Im(j,i)=(1.d0/det)*A(i,j)
+             Im(j,i)=(ONE/det)*A(i,j)
            enddo
           enddo
     
@@ -3549,46 +3057,46 @@ MODULE QML_NO3_m
     ! vectors of rotated system)
     !
     !********************************************************************
-          subroutine proangnew(M,t,tnorm,beta,phi)
+  subroutine proangnew(M,t,tnorm,beta,phi)
           implicit none
           integer i,j, n, d
           parameter (n=3, d=2)
-          double precision M(n,*), Q(n,n), S(n,n)
-          double precision t(n), t_z(n), phi(n)
-          double precision v2(3), v3(3), v4(3), z(3)
-          double precision tnorm
-          double precision epsi, alpha, delta, beta, beta2
-          double precision sia, l, u, ws, betr, rad
+          real (kind=Rkind) :: M(n,*), Q(n,n), S(n,n)
+          real (kind=Rkind) :: t(n), t_z(n), phi(n)
+          real (kind=Rkind) :: v2(3), v3(3), v4(3), z(3)
+          real (kind=Rkind) :: tnorm
+          real (kind=Rkind) :: epsi, alpha, delta, beta, beta2
+          real (kind=Rkind) :: sia, l, u, ws, betr, rad
           real (kind=Rkind) :: dum
     
           do i=1,3
           do j=1,3
-               Q(j,i)=0.d0
-               S(j,i)=0.d0
+               Q(j,i)=ZERO
+               S(j,i)=ZERO
           enddo
-             phi(i)=0.d0
-             v2(i)=0.d0
-             v3(i)=0.d0
-             v4(i)=0.d0
+             phi(i)=ZERO
+             v2(i)=ZERO
+             v3(i)=ZERO
+             v4(i)=ZERO
           enddo
     
     !..   unit vector along z axis
           do i=1,3
-              z(i)=0.d0
+              z(i)=ZERO
           enddo
-          z(3)=1.d0
+          z(3)=ONE
     
     !..   calculate angle of trisector with z axis
           alpha=t(3)/tnorm
-          sia=sqrt(1.d0-alpha**2)
+          sia=sqrt(ONE-alpha**2)
           alpha=acos(alpha)
-          if (alpha.lt.0.d0) sia=-sia
+          if (alpha.lt.ZERO) sia=-sia
     
     
     !      alpha=angle(z,t,n)
     !      sia=sin(alpha)
     
-          if (abs(sia).lt.1.d-10) then
+          if (abs(sia).lt.ONETENTH**10) then
             do i=1,3
               do j=1,3
                 S(i,j)=M(i,j)
@@ -3602,29 +3110,29 @@ MODULE QML_NO3_m
             l=tnorm*sia
     !        delta=acos(t(1)/l)
             l=t(1)/l
-            l=dmax1(-1.d0,l)
-            l=dmin1(1.d0,l)
+            l=dmax1(-ONE,l)
+            l=dmin1(ONE,l)
             delta=acos(l)
     
-            if (delta.gt.(pi*0.5d0)) then
+            if (delta.gt.(pi*HALF)) then
               delta=pi-delta
             endif
     
-            delta=delta*sign(1.d0,t(1))*sign(1.d0,t(2))
+            delta=delta*sign(ONE,t(1))*sign(ONE,t(2))
             epsi=-delta
     !
     !..     rotate trisector in xz plane (rot. around z axis)
     
             call rotate(M,n,Q,n,epsi)
     
-            if (alpha.gt.(pi*0.5d0)) then
+            if (alpha.gt.(pi*HALF)) then
               alpha=pi-alpha
             endif
     
             call trise(Q,beta2,t_z)
     
     
-            alpha=alpha*sign(1.d0,t_z(1))*sign(1.d0,t_z(3))
+            alpha=alpha*sign(ONE,t_z(1))*sign(ONE,t_z(3))
     
     !..     rotate trisector on z axis (rot. around y axis)
     
@@ -3636,9 +3144,9 @@ MODULE QML_NO3_m
     
           do i=1,3
             if (i.eq.3) then
-              v2(i)=0.d0
-              v3(i)=0.d0
-              v4(i)=0.d0
+              v2(i)=ZERO
+              v3(i)=ZERO
+              v4(i)=ZERO
             else
               v2(i)=S(i,1)
               v3(i)=S(i,2)
@@ -3651,22 +3159,22 @@ MODULE QML_NO3_m
     !      phi(1)=angle(v3,v4,n)
     !      phi(2)=angle(v2,v4,n)
     !      phi(3)=angle(v2,v3,n)
-           dum=1.d0/sqrt(v2(1)**2+v2(2)**2)
+           dum=ONE/sqrt(v2(1)**2+v2(2)**2)
            v2(1)=v2(1)*dum
            v2(2)=v2(2)*dum
-           dum=1.d0/sqrt(v3(1)**2+v3(2)**2)
+           dum=ONE/sqrt(v3(1)**2+v3(2)**2)
            v3(1)=v3(1)*dum
            v3(2)=v3(2)*dum
-           dum=1.d0/sqrt(v4(1)**2+v4(2)**2)
+           dum=ONE/sqrt(v4(1)**2+v4(2)**2)
            v4(1)=v4(1)*dum
            v4(2)=v4(2)*dum
            phi(1)=v3(1)*v4(1)+v3(2)*v4(2)
            phi(2)=v2(1)*v4(1)+v2(2)*v4(2)
            phi(3)=v2(1)*v3(1)+v2(2)*v3(2)
           do i=1,3
-          if (abs(phi(i)-1.d0).lt.1.d-10) then
-            phi(i)=0.d0
-          elseif (abs(phi(i)+1.d0).lt.1.d-10) then
+          if (abs(phi(i)-ONE).lt.ONETENTH**10) then
+            phi(i)=ZERO
+          elseif (abs(phi(i)+ONE).lt.ONETENTH**10) then
             phi(i)=pi
           else
             phi(i)=acos(phi(i))
@@ -3679,27 +3187,24 @@ MODULE QML_NO3_m
     
           ws=(phi(1)+phi(2)+phi(3))-(2*pi)
     
-          if (abs(ws).gt.1.d-10) then
-            if (abs(phi(1)+phi(2)-phi(3)).lt.1.d-10) then
-               phi(3)=(2.d0*pi)-phi(3)
-            else if (abs(phi(2)+phi(3)-phi(1)).lt.1.d-10) then
-               phi(1)=(2.d0*pi)-phi(1)
-            else if (abs(phi(1)+phi(3)-phi(2)).lt.1.d-10) then
-               phi(2)=(2.d0*pi)-phi(2)
+          if (abs(ws).gt.ONETENTH**10) then
+            if (abs(phi(1)+phi(2)-phi(3)).lt.ONETENTH**10) then
+               phi(3)=(TWO*pi)-phi(3)
+            else if (abs(phi(2)+phi(3)-phi(1)).lt.ONETENTH**10) then
+               phi(1)=(TWO*pi)-phi(1)
+            else if (abs(phi(1)+phi(3)-phi(2)).lt.ONETENTH**10) then
+               phi(2)=(TWO*pi)-phi(2)
             endif
           endif
     
-    !      write(6,*)
-    !      write(6,*) 'matrix S:'
+    !       write(out_unit,*)
+    !       write(out_unit,*) 'matrix S:'
     !      do i=1,3
-    !         write(6,*) (S(i,j), j=1,3)
+    !          write(out_unit,*) (S(i,j), j=1,3)
     !      enddo
-    !      write(6,*)
+    !       write(out_unit,*)
     
-          end
-    
-    
-    
+  end subroutine proangnew
     !----------------------------------------------------------------
     !***********************************************************
     !
@@ -3709,22 +3214,22 @@ MODULE QML_NO3_m
     !
     !***********************************************************
     
-          subroutine rotate(m1,u,m2,n,theta)
+  subroutine rotate(m1,u,m2,n,theta)
           implicit none
           integer i,j,n,max,p,u
           parameter (max=3)
-          double precision m1(max,*), m2(max,*), rotmat(max,max)
-          double precision theta, s, c
+          real (kind=Rkind) :: m1(max,*), m2(max,*), rotmat(max,max)
+          real (kind=Rkind) :: theta, s, c
     
     !      call init_m(rotmat,max,max)
            do i=1,3
            do j=1,3
-           rotmat(j,i)=0.d0
+           rotmat(j,i)=ZERO
            enddo
            enddo
     
           if ((n.lt.1).or.(n.gt.3)) then
-            write(6,*) 'rotational axis not specified! n is not 1,2 or 3'
+             write(out_unit,*) 'rotational axis not specified! n is not 1,2 or 3'
             stop
           endif
     
@@ -3743,23 +3248,23 @@ MODULE QML_NO3_m
             rotmat(i,i)=c
           enddo
     
-          rotmat(n,n)=1.d0
+          rotmat(n,n)=ONE
     
           call matmult_NO3(rotmat,max,max,m1,u,m2)
     
     !      do i=1,max
-    !          write(6,100) (rotmat(i,j),j=1,3)
+    !           write(out_unit,100) (rotmat(i,j),j=1,3)
     !      enddo
-    !      write(6,*)
+    !       write(out_unit,*)
     !
-    !      write(6,*) 'matrix rotated:'
+    !       write(out_unit,*) 'matrix rotated:'
     !      do i=1,max
-    !          write(6,100) (m2(i,j),j=1,3)
+    !           write(out_unit,100) (m2(i,j),j=1,3)
     !      enddo
-    !      write(6,*)
+    !       write(out_unit,*)
     100   format(3e15.6)
     
-          end
+  end subroutine rotate
     
     !----------------------------------------------------------------
     !***********************************************************
@@ -3768,42 +3273,40 @@ MODULE QML_NO3_m
     ! sizes: M1 -> n1*n2; M2 -> n2*n3; EM -> n1*n3
     !
     !***********************************************************
-          subroutine matmult_NO3(M1,n1,n2,M2,n3,EM)
+  subroutine matmult_NO3(M1,n1,n2,M2,n3,EM)
           implicit none
           integer i,j,k,n1,n2,n3
-          double precision M1(n1,*), M2(n2,*), EM(n1,*)
+          real (kind=Rkind) :: M1(n1,*), M2(n2,*), EM(n1,*)
     
     
           do i=1,n1
              do j=1,n3
-               EM(i,j)=0.d0
+               EM(i,j)=ZERO
                 do k=1,n2
                   EM(i,j)=EM(i,j)+(M1(i,k)*M2(k,j))
                 enddo
              enddo
           enddo
     
-          end
-    
-    
-    !****************************************************************
-    !
-    ! calculation of trisector and pyramidalization angle beta
-    ! for non planar systems
-    !
-    !****************************************************************
-    
-          subroutine trise(M,beta,t)
+  end subroutine matmult_NO3
+
+  !****************************************************************
+  !
+  ! calculation of trisector and pyramidalization angle beta
+  ! for non planar systems
+  !
+  !****************************************************************
+  subroutine trise(M,beta,t)
           implicit none
           Integer i,k,j,n
           parameter (n=3)
-          double precision M(n,n), Im(n,n)
-          double precision t(3)
-          double precision beta, betrag
-          double precision norm,det
+          real (kind=Rkind) :: M(n,n), Im(n,n)
+          real (kind=Rkind) :: t(3)
+          real (kind=Rkind) :: beta, betrag
+          real (kind=Rkind) :: norm,det
     
           do i=1,3
-             t(i)=0.d0
+             t(i)=ZERO
           enddo
     
     !.....calculate trisector angle beta
@@ -3825,9 +3328,9 @@ MODULE QML_NO3_m
     
     !..   calculate angle beta
     
-          beta=acos(1.d0/betrag)
+          beta=acos(ONE/betrag)
     
-          end
+  end subroutine trise
     
     !----------------------------------------------------------------
     !********************************************************
@@ -3836,15 +3339,14 @@ MODULE QML_NO3_m
     ! NH bonds is zero)
     !
     !********************************************************
-    
-          subroutine planarnew(M,phi,beta)
-          implicit none
+  subroutine planarnew(M,phi,beta)
+    implicit none
           integer i,j,k,n
           parameter (n=3)
-          double precision M(n,*), phi(n)
-          double precision v2(n), v3(n), v4(n)
-          double precision scalp, angle, ws, beta
-          double precision s1, s2, s3,dum
+          real (kind=Rkind) :: M(n,*), phi(n)
+          real (kind=Rkind) :: v2(n), v3(n), v4(n)
+          real (kind=Rkind) :: scalp, angle, ws, beta
+          real (kind=Rkind) :: s1, s2, s3,dum
     
     !.....columns of matrix M as vectors
     
@@ -3863,14 +3365,14 @@ MODULE QML_NO3_m
     
     !.....check if atoms collinear (on one line)
     
-          if ((abs(s1-1.d0).lt.1.d-07).and.(abs(s2-1.d0)       &
-         &      .lt.1.d-07).and.(abs(s3-1.d0).lt.1.d-07)) then
-            beta=0.d0
+          if ((abs(s1-ONE).lt.ONETENTH**07).and.(abs(s2-ONE)       &
+         &      .lt.ONETENTH**07).and.(abs(s3-ONE).lt.ONETENTH**07)) then
+            beta=ZERO
     
-            write(6,*)
-            write(6,*) 'all atoms collinear in same direction!!'
-            write(6,*) 'coordinates not defined!!'
-            write(6,*)
+             write(out_unit,*)
+             write(out_unit,*) 'all atoms collinear in same direction!!'
+             write(out_unit,*) 'coordinates not defined!!'
+             write(out_unit,*)
     
             stop
           else
@@ -3878,20 +3380,20 @@ MODULE QML_NO3_m
     !.....planar case and atoms not collinear => pyramidalization angle
     !..   is 90°, projected angles = bonding angles
     
-            beta=pi*0.5d0
+            beta=pi*HALF
     
     !        phi(1)=angle(v3,v4,3)
     !        phi(2)=angle(v2,v4,3)
     !        phi(3)=angle(v2,v3,3)
-           dum=1.d0/sqrt(v2(1)**2+v2(2)**2+v2(3)**2)
+           dum=ONE/sqrt(v2(1)**2+v2(2)**2+v2(3)**2)
            v2(1)=v2(1)*dum
            v2(2)=v2(2)*dum
            v2(3)=v2(3)*dum
-           dum=1.d0/sqrt(v3(1)**2+v3(2)**2+v3(3)**2)
+           dum=ONE/sqrt(v3(1)**2+v3(2)**2+v3(3)**2)
            v3(1)=v3(1)*dum
            v3(2)=v3(2)*dum
            v3(3)=v3(3)*dum
-           dum=1.d0/sqrt(v4(1)**2+v4(2)**2+v4(3)**2)
+           dum=ONE/sqrt(v4(1)**2+v4(2)**2+v4(3)**2)
            v4(1)=v4(1)*dum
            v4(2)=v4(2)*dum
            v4(3)=v4(3)*dum
@@ -3899,8 +3401,8 @@ MODULE QML_NO3_m
            phi(2)=v2(1)*v4(1)+v2(2)*v4(2)+v2(3)*v4(3)
            phi(3)=v2(1)*v3(1)+v2(2)*v3(2)+v2(3)*v3(3)
           do i=1,3
-          if (abs(phi(i)-1.d0).lt.1.d-10) then
-            phi(i)=0.d0
+          if (abs(phi(i)-ONE).lt.ONETENTH**10) then
+            phi(i)=ZERO
           else
             phi(i)=acos(phi(i))
           endif
@@ -3911,18 +3413,18 @@ MODULE QML_NO3_m
     !..   sum of angles is not 360°
     !..   to prevent this:
     
-          ws=(phi(1)+phi(2)+phi(3))-(2.d0*pi)
+          ws=(phi(1)+phi(2)+phi(3))-(TWO*pi)
     
-          if (abs(ws).gt.1.d-6) then
-            if (abs(phi(1)+phi(2)-phi(3)).lt.1.d-10) then
-               phi(3)=(2.d0*pi)-phi(3)
-            else if (abs(phi(2)+phi(3)-phi(1)).lt.1.d-10) then
-               phi(1)=(2.d0*pi)-phi(1)
-            else if (abs(phi(1)+phi(3)-phi(2)).lt.1.d-10) then
-               phi(2)=(2.d0*pi)-phi(2)
+          if (abs(ws).gt.ONETENTH**6) then
+            if (abs(phi(1)+phi(2)-phi(3)).lt.ONETENTH**10) then
+               phi(3)=(TWO*pi)-phi(3)
+            else if (abs(phi(2)+phi(3)-phi(1)).lt.ONETENTH**10) then
+               phi(1)=(TWO*pi)-phi(1)
+            else if (abs(phi(1)+phi(3)-phi(2)).lt.ONETENTH**10) then
+               phi(2)=(TWO*pi)-phi(2)
             endif
           endif
     
-          end
+  end subroutine planarnew
     
 END MODULE QML_NO3_m
