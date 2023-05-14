@@ -622,9 +622,9 @@ MODULE QML_NO3_m
         !Write(out_unit,*)'ici',i,QModel%p(i)
         j=j+1
       enddo
-      QModel%tmc%a(2)=abs(QModel%tmc%a(2))  ! DML: it was in ff subroutine
-      QModel%tmc%a(5)=abs(QModel%tmc%a(5))  ! DML: it was in ff subroutine
-      QModel%tmc%a(4)=abs(QModel%tmc%a(4))  ! DML: it was in ff subroutine
+      QModel%tmc%a(2)=abs(QModel%tmc%a(2))  ! DML: it was in QML_NO3_ff subroutine
+      QModel%tmc%a(5)=abs(QModel%tmc%a(5))  ! DML: it was in QML_NO3_ff subroutine
+      QModel%tmc%a(4)=abs(QModel%tmc%a(4))  ! DML: it was in QML_NO3_ff subroutine
 
       QModel%tmc%npoly(:)=[5,5]
       Write(out_unit,*)'# TMC     npoly(1) : ',QModel%tmc%npoly(1)
@@ -893,21 +893,21 @@ MODULE QML_NO3_m
     !
     ! symmetric stretching
     !..   a1 symmetric stretch:
-    !      call Epolynom(dum,itd, p(pst(1,1)), pst(2,1), itemp)
+    !      call QML_NO3_Epolynom(dum,itd, p(pst(1,1)), pst(2,1), itemp)
           dum=pa(1) * p(pst(1,1))+pa(2) * p(pst(1,1)+1)
     !       write(out_unit,*)'dum low',dum
           eref=eref+dum
     
     ! umbrella mode
     !..   a2 umbrella:
-    !      call Epolynom2(dum,itd, p(pst(1,2)), pst(2,2), itemp)
+    !      call QML_NO3_Epolynom2(dum,itd, p(pst(1,2)), pst(2,2), itemp)
           dum=pb(1) * p(pst(1,2))
     !       write(out_unit,*)'dum low',dum
           eref=eref+dum*damp
     
     ! e stretching mode:
     ! e bending mode:
-    !      call Evjt6a(dum,itd, p(pst(1,3)), pst(2,3), itemp)
+    !      CALL QML_NO3_Evjt6a(dum,itd, p(pst(1,3)), pst(2,3), itemp)
           dum= p(pst(1,3)) * va(1)
     !       write(out_unit,*)'dum low',dum
           eref = eref + dum
@@ -1085,9 +1085,9 @@ MODULE QML_NO3_m
     !.. damping high order
     ! from Eisfeld 09.03.2015
            dum=(vloworder(1)-e0ref)/e0rho        !shift energy to onset
-           if (dum.lt.ZERO) then
+           if (dum < ZERO) then
              damplow=ONE
-           elseif (dum.gt.ONE) then
+           elseif (dum > ONE) then
              damplow=ZERO
            else
             damplow=ONE - dum**2 * (TWO - dum**2)
@@ -1102,136 +1102,136 @@ MODULE QML_NO3_m
     
     ! symmetric stretching
     !..   a1 symmetric stretch:
-          call Epolynom(dum,itd, QModel%no3minus_pot%p(pst(1,1):), pst(2,1), iref,avv)
+          call QML_NO3_Epolynom(dum,itd, QModel%no3minus_pot%p(pst(1,1):), pst(2,1), iref,avv)
           e=dum
     
     ! umbrella mode
     !..   a2 umbrella:
-          call Epolynom2(dum,itd, QModel%no3minus_pot%p(pst(1,2):), pst(2,2), iref,avv)
+          call QML_NO3_Epolynom2(dum,itd, QModel%no3minus_pot%p(pst(1,2):), pst(2,2), iref,avv)
           e=e+dum*damp
     
     ! e stretching mode:
     !..   e stretching/bending
-          call Evjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,3):), pst(2,3), iref,avv)
+          CALL QML_NO3_Evjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,3):), pst(2,3), iref,avv)
           e = e + dum
-          call Evjt6b(dum,itd, QModel%no3minus_pot%p(pst(1,4):), pst(2,4), iref,avv)
+          call QML_NO3_Evjt6b(dum,itd, QModel%no3minus_pot%p(pst(1,4):), pst(2,4), iref,avv)
           e = e + dum
     
     !..   mode-mode coupling of a1-e
-          call Evcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,6):), pst(2,6), iref,avv)  ! e-a coupling 1. e mode
+          call QML_NO3_Evcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,6):), pst(2,6), iref,avv)  ! e-a coupling 1. e mode
           e = e + dum
-          call Evcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,7):), pst(2,7), iref,avv)  ! e-a coupling 2. e mode
+          call QML_NO3_Evcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,7):), pst(2,7), iref,avv)  ! e-a coupling 2. e mode
           e = e + dum
     
     !..   mode-mode coupling of a2-e
-          call Evcoup_e1a2(dum,itd, QModel%no3minus_pot%p(pst(1,13):), pst(2,13), iref,avv) !  coupling with asym. str.
+          call QML_NO3_Evcoup_e1a2(dum,itd, QModel%no3minus_pot%p(pst(1,13):), pst(2,13), iref,avv) !  coupling with asym. str.
           e = e + dum*damp
-          call Evcoup_e2a2(dum,itd, QModel%no3minus_pot%p(pst(1,14):), pst(2,14), iref,avv) !  coupling with asym. bend
+          call QML_NO3_Evcoup_e2a2(dum,itd, QModel%no3minus_pot%p(pst(1,14):), pst(2,14), iref,avv) !  coupling with asym. bend
           e = e + dum*damp
     
     !..   mode-mode coupling of a1-a2
-          call Evcoup_aa(dum,itd,QModel%no3minus_pot%p(pst(1,17):),pst(2,17), iref,avv)    !  coupling of a1 and a2
+          call QML_NO3_Evcoup_aa(dum,itd,QModel%no3minus_pot%p(pst(1,17):),pst(2,17), iref,avv)    !  coupling of a1 and a2
           e = e + dum*damp
     
     !..   mode-mode coupling e-e
-          call Evcoup_ee(dum,itd, QModel%no3minus_pot%p(pst(1,5):), pst(2,5), iref,avv)        ! e-e coupling
+          call QML_NO3_Evcoup_ee(dum,itd, QModel%no3minus_pot%p(pst(1,5):), pst(2,5), iref,avv)        ! e-e coupling
           e = e + dum
     
     !..   3-mode coupling e-e-a2
-          call Evcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,18):),pst(2,18),iref,avv)        !  e-e-a2 coupling
+          call QML_NO3_Evcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,18):),pst(2,18),iref,avv)        !  e-e-a2 coupling
           e = e + dum*damp
     
     
     !..   3-mode coupling e-a1-a2
-          call Evcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,20):),pst(2,20),iref,avv)  !  e-a1-a2 coupling (asym. stretch)
+          call QML_NO3_Evcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,20):),pst(2,20),iref,avv)  !  e-a1-a2 coupling (asym. stretch)
           e = e + dum*damp
     !      e = e + dum bug detected on 30.09.2015
-          call Evcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,21):),pst(2,21),iref,avv)  !  e-a1-a2 coupling (asym. bend)
+          call QML_NO3_Evcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,21):),pst(2,21),iref,avv)  !  e-a1-a2 coupling (asym. bend)
           e = e + dum*damp
     
     
     !..   3-mode coupling e-e-a1
-          call Evcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,24):),pst(2,24),iref,avv)        !  e-e-a1 coupling
+          call QML_NO3_Evcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,24):),pst(2,24),iref,avv)        !  e-e-a1 coupling
           e = e + dum
     
           w=ZERO
     !..   add JT coupling for 1. e mode
-          call Ewjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,8):), pst(2,8), iref,avv)
+          call QML_NO3_Ewjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,8):), pst(2,8), iref,avv)
           w = dum
     
     !..   add JT coupling for 2. e mode
-          call Ewjt6b(dum, itd, QModel%no3minus_pot%p(pst(1, 9):), pst(2, 9), iref,avv)
+          call QML_NO3_Ewjt6b(dum, itd, QModel%no3minus_pot%p(pst(1, 9):), pst(2, 9), iref,avv)
           w=w+dum
     
     !..   add JT mode-mode coupling between two e modes:
-          call Ewcoup_ee(dum,itd,QModel%no3minus_pot%p(pst(1,10):), pst(2,10), iref,avv)
+          call QML_NO3_Ewcoup_ee(dum,itd,QModel%no3minus_pot%p(pst(1,10):), pst(2,10), iref,avv)
           w=w+dum
     
     !..   add JT mode-mode coupling between a1 and e modes:
-          call Ewcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,11):), pst(2,11), iref,avv)
+          call QML_NO3_Ewcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,11):), pst(2,11), iref,avv)
           w=w+dum
-          call Ewcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,12):), pst(2,12), iref,avv)
+          call QML_NO3_Ewcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,12):), pst(2,12), iref,avv)
           w=w+dum
     
     !..   add JT mode-mode coupling between a2 and e modes:
-          call Ewcoup_e1a2(dum,itd,QModel%no3minus_pot%p(pst(1,15):),pst(2,15), iref,avv)
+          call QML_NO3_Ewcoup_e1a2(dum,itd,QModel%no3minus_pot%p(pst(1,15):),pst(2,15), iref,avv)
           w=w+dum*damp
-          call Ewcoup_e2a2(dum,itd,QModel%no3minus_pot%p(pst(1,16):),pst(2,16), iref,avv)
+          call QML_NO3_Ewcoup_e2a2(dum,itd,QModel%no3minus_pot%p(pst(1,16):),pst(2,16), iref,avv)
           w=w+dum*damp
     
     !..   add 3-mode coupling between e-e-a2 modes:
-          call Ewcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,19):),pst(2,19), iref,avv)
+          call QML_NO3_Ewcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,19):),pst(2,19), iref,avv)
           w=w+dum*damp
     
     !..   add 3-mode coupling between e-a1-a2 modes:
-          call Ewcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,22):),pst(2,22), iref,avv)
+          call QML_NO3_Ewcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,22):),pst(2,22), iref,avv)
           w=w+dum*damp
-          call Ewcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,23):),pst(2,23), iref,avv)
+          call QML_NO3_Ewcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,23):),pst(2,23), iref,avv)
           w=w+dum*damp
     
     !..   add 3-mode coupling between e-e-a1 modes:
-          call Ewcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,25):),pst(2,25), iref,avv)
+          call QML_NO3_Ewcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,25):),pst(2,25), iref,avv)
           w=w+dum     !*damp
     !
     !--------------------------------------------------
     ! off diagonal term  e(1,2) : z
           z=ZERO
     !..   add JT coupling for 1. e mode
-          call Ezjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,8):), pst(2,8), iref,avv)
+          call QML_NO3_Ezjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,8):), pst(2,8), iref,avv)
           z = dum
     
     !..   add JT coupling for 2. e mode
-          call Ezjt6b(dum, itd, QModel%no3minus_pot%p(pst(1, 9):), pst(2, 9), iref,avv)
+          call QML_NO3_Ezjt6b(dum, itd, QModel%no3minus_pot%p(pst(1, 9):), pst(2, 9), iref,avv)
           z=z+dum
     
     !..   add JT mode-mode coupling between two e modes:
-          call Ezcoup_ee(dum,itd,QModel%no3minus_pot%p(pst(1,10):), pst(2,10), iref,avv)
+          call QML_NO3_Ezcoup_ee(dum,itd,QModel%no3minus_pot%p(pst(1,10):), pst(2,10), iref,avv)
           z=z+dum
     
     !..   add JT mode-mode coupling between a1 and e modes:
-          call Ezcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,11):), pst(2,11), iref,avv)
+          call QML_NO3_Ezcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,11):), pst(2,11), iref,avv)
           z=z+dum
-          call Ezcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,12):), pst(2,12), iref,avv)
+          call QML_NO3_Ezcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,12):), pst(2,12), iref,avv)
           z=z+dum
     
     !..   add JT mode-mode coupling between a2 and e modes:
-          call Ezcoup_e1a2(dum,itd,QModel%no3minus_pot%p(pst(1,15):),pst(2,15), iref,avv)
+          call QML_NO3_Ezcoup_e1a2(dum,itd,QModel%no3minus_pot%p(pst(1,15):),pst(2,15), iref,avv)
           z=z+dum*damp
-          call Ezcoup_e2a2(dum,itd,QModel%no3minus_pot%p(pst(1,16):),pst(2,16), iref,avv)
+          call QML_NO3_Ezcoup_e2a2(dum,itd,QModel%no3minus_pot%p(pst(1,16):),pst(2,16), iref,avv)
           z=z+dum*damp
     
     !..   add 3-mode coupling between e-e-a2 modes:
-          call Ezcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,19):),pst(2,19), iref,avv)
+          call QML_NO3_Ezcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,19):),pst(2,19), iref,avv)
           z=z+dum*damp
     
     !..   add 3-mode coupling between e-a1-a2 modes:
-          call Ezcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,22):),pst(2,22), iref,avv)
+          call QML_NO3_Ezcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,22):),pst(2,22), iref,avv)
           z=z+dum*damp
-          call Ezcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,23):),pst(2,23), iref,avv)
+          call QML_NO3_Ezcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,23):),pst(2,23), iref,avv)
           z=z+dum*damp
     
     !..   add 3-mode coupling between e-e-a1 modes:
-          call Ezcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,25):),pst(2,25), iref,avv)
+          call QML_NO3_Ezcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,25):),pst(2,25), iref,avv)
           z=z+dum     !*damp
     
     !
@@ -1248,7 +1248,7 @@ MODULE QML_NO3_m
     ! ilabel = 1 or 2 selects the parameters a and sfac to be used
     !      function f(x,ilabel)
     !      function f(x,ii)
-  subroutine ff(x,ii,f,tmc)
+  subroutine QML_NO3_ff(x,ii,f,tmc)
     implicit none
     TYPE (tmc_t),                 intent(in)         :: tmc
     real (kind=Rkind),            intent(in)         :: x
@@ -1302,13 +1302,13 @@ MODULE QML_NO3_m
           f=tmc%a(2)  + skew + gaus*poly
     !       write(out_unit,*) ii, a(ii,2)
     
-    end subroutine ff
+    end subroutine QML_NO3_ff
     
     !---------------------------------------------------------------------------------
     !     function to generate polynomial of any order
     
     !      function polynom(n, p, j, iref,avv)
-  subroutine Epolynom(polynom,n, p, j, iref,avv)
+  subroutine QML_NO3_Epolynom(polynom,n, p, j, iref,avv)
     implicit none
     real (kind=Rkind),            intent(inout) :: polynom
     real (kind=Rkind),            intent(in)    :: p(:)
@@ -1317,13 +1317,13 @@ MODULE QML_NO3_m
 
     polynom = sum( avv%pa(3:j) * p(3:j) )
     
-  end subroutine Epolynom
+  end subroutine QML_NO3_Epolynom
     
     !---------------------------------------------------------------------------------
     !     function to generate polynomial of even power
     
     !      function polynom2(n, p, j, iref,avv)
-  subroutine Epolynom2(polynom2,n, p, j, iref,avv)
+  subroutine QML_NO3_Epolynom2(polynom2,n, p, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout) :: polynom2
@@ -1334,11 +1334,11 @@ MODULE QML_NO3_m
 
     polynom2 = sum( avv%pb(2:j) * p(2:j) )
     
-  end subroutine Epolynom2
+  end subroutine QML_NO3_Epolynom2
     
   !---------------------------------------------------------------------------------
   !     function to generate V Jahn-Teller matrix elements up to 6th order
-  subroutine Evjt6a(vjt6a,n, p, j, iref,avv)
+  subroutine QML_NO3_Evjt6a(vjt6a,n, p, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout) :: vjt6a
@@ -1348,10 +1348,10 @@ MODULE QML_NO3_m
  
     vjt6a = sum(p(2:j)*avv%va(2:j))
 
-  end subroutine Evjt6a
+  end subroutine QML_NO3_Evjt6a
   !---------------------------------------------------------------------------------
   !     function to generate V Jahn-Teller matrix elements up to 6th order
-  subroutine Evjt6b(vjt6b, n, p, j, iref,avv)
+  subroutine QML_NO3_Evjt6b(vjt6b, n, p, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout) :: vjt6b
@@ -1361,11 +1361,11 @@ MODULE QML_NO3_m
 
     vjt6b = sum(p(2:j)*avv%vb(2:j))
 
-  end subroutine Evjt6b
+  end subroutine QML_NO3_Evjt6b
     
   !---------------------------------------------------------------------------
   !     function to generate W Jahn-Teller matrix elements up to 6th order
-  subroutine Ewjt6a(wjt6a, n, p, j, iref,avv)
+  subroutine QML_NO3_Ewjt6a(wjt6a, n, p, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout) :: wjt6a
@@ -1375,11 +1375,11 @@ MODULE QML_NO3_m
 
     wjt6a = sum(p(2:j)*avv%wa(2:j))
 
-  end subroutine Ewjt6a
+  end subroutine QML_NO3_Ewjt6a
     
   !---------------------------------------------------------------------------
   !     function to generate W Jahn-Teller matrix elements up to 6th order
-  subroutine Ewjt6b(wjt6b, n, p, j, iref,avv)
+  subroutine QML_NO3_Ewjt6b(wjt6b, n, p, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout) :: wjt6b
@@ -1389,11 +1389,11 @@ MODULE QML_NO3_m
 
     wjt6b = sum(p(2:j)*avv%wb(2:j))
 
-  end subroutine Ewjt6b
+  end subroutine QML_NO3_Ewjt6b
 
   !---------------------------------------------------------------------------
   !     function to generate Z Jahn-Teller matrix elements up to 6th order
-  subroutine Ezjt6a(zjt6a, n, p, j, iref,avv)
+  subroutine QML_NO3_Ezjt6a(zjt6a, n, p, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout) :: zjt6a
@@ -1403,11 +1403,11 @@ MODULE QML_NO3_m
 
     zjt6a = sum(p(2:j)*avv%za(2:j))
 
-  end subroutine Ezjt6a
+  end subroutine QML_NO3_Ezjt6a
     
   !---------------------------------------------------------------------------
   !     function to generate Z Jahn-Teller matrix elements up to 6th order
-  subroutine Ezjt6b(zjt6b, n, p, j, iref,avv)
+  subroutine QML_NO3_Ezjt6b(zjt6b, n, p, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout) :: zjt6b
@@ -1417,11 +1417,11 @@ MODULE QML_NO3_m
 
     zjt6b = sum(p(2:j)*avv%zb(2:j))
 
-  end subroutine Ezjt6b
+  end subroutine QML_NO3_Ezjt6b
 
   !------------------------------------------------------------------------------
   !      function vcoup_ee(n, par, j, iref,avv)
-  subroutine Evcoup_ee(vcoup_ee, n, p, j, iref,avv)
+  subroutine QML_NO3_Evcoup_ee(vcoup_ee, n, p, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout) :: vcoup_ee
@@ -1431,11 +1431,11 @@ MODULE QML_NO3_m
 
     vcoup_ee = sum(p(2:j)*avv%vee(2:j))
 
-  end subroutine Evcoup_ee
+  end subroutine QML_NO3_Evcoup_ee
     
   !------------------------------------------------------------------------------
   !      function wcoup_ee(n,par, j, iref,avv)
-  subroutine Ewcoup_ee(wcoup_ee, n,p, j, iref,avv)
+  subroutine QML_NO3_Ewcoup_ee(wcoup_ee, n,p, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout) :: wcoup_ee
@@ -1445,11 +1445,11 @@ MODULE QML_NO3_m
 
     wcoup_ee = sum(p(2:j)*avv%wee(2:j))
 
-  end subroutine Ewcoup_ee
+  end subroutine QML_NO3_Ewcoup_ee
     
   !------------------------------------------------------------------------------
   !      function zcoup_ee(n,par, j, iref,avv)
-  subroutine Ezcoup_ee(zcoup_ee, n,p, j, iref,avv)
+  subroutine QML_NO3_Ezcoup_ee(zcoup_ee, n,p, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout) :: zcoup_ee
@@ -1459,11 +1459,11 @@ MODULE QML_NO3_m
 
     zcoup_ee = sum(p(2:j)*avv%zee(2:j))
 
-  end subroutine Ezcoup_ee
+  end subroutine QML_NO3_Ezcoup_ee
     
   !------------------------------------------------------------------------------
   !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
-  subroutine Evcoup_e1a(vcoup_e1a, n, par, j, iref,avv)
+  subroutine QML_NO3_Evcoup_e1a(vcoup_e1a, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: vcoup_e1a
@@ -1493,11 +1493,11 @@ MODULE QML_NO3_m
     !     6th order
     vcoup_e1a= vcoup_e1a + p(7)*pa(1)*va(4) + p(8)*pa(2)*va(3) + p(9)*pa(3)*va(2) + p(10)*pa(4)*va(1)
     
-  end subroutine Evcoup_e1a
+  end subroutine QML_NO3_Evcoup_e1a
     
   !------------------------------------------------------------------------------
   !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
-  subroutine Evcoup_e2a(vcoup_e2a, n, par, j, iref,avv)
+  subroutine QML_NO3_Evcoup_e2a(vcoup_e2a, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: vcoup_e2a
@@ -1527,11 +1527,11 @@ MODULE QML_NO3_m
     !     6th order
     vcoup_e2a= vcoup_e2a + p(7)*pa(1)*vb(4) + p(8)*pa(2)*vb(3) + p(9)*pa(3)*vb(2) + p(10)*pa(4)*vb(1)
     
-  end subroutine Evcoup_e2a
+  end subroutine QML_NO3_Evcoup_e2a
     
   !-------------------------------------------------------------------------------------
   !     function to generate W matrix elements for the coupling between e and a modes up to sixth order    
-  subroutine Ewcoup_e1a(wcoup_e1a, n, par, j, iref,avv)
+  subroutine QML_NO3_Ewcoup_e1a(wcoup_e1a, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: wcoup_e1a
@@ -1569,11 +1569,11 @@ MODULE QML_NO3_m
          &    + p(15)*pa(2)*wa(4)+p(16)*pa(2)*wa(5)                             &
          &    + pa(1)*(p(17)*wa(6)+p(18)*wa(7))
     
-  end subroutine Ewcoup_e1a
+  end subroutine QML_NO3_Ewcoup_e1a
     
   !-------------------------------------------------------------------------------------
   !     function to generate W matrix elements for the coupling between e and a modes up to sixth order    
-  subroutine Ewcoup_e2a(wcoup_e2a, n, par, j, iref,avv)
+  subroutine QML_NO3_Ewcoup_e2a(wcoup_e2a, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: wcoup_e2a
@@ -1614,11 +1614,11 @@ MODULE QML_NO3_m
          &    + p(15)*pa(2)*wb(4)+p(16)*pa(2)*wb(5)                             &
          &    + pa(1)*(p(17)*wb(6)+p(18)*wb(7))
     
-  end subroutine Ewcoup_e2a
+  end subroutine QML_NO3_Ewcoup_e2a
     
   !-------------------------------------------------------------------------------------
   !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
-  subroutine Ezcoup_e1a(zcoup_e1a, n, par, j, iref,avv)
+  subroutine QML_NO3_Ezcoup_e1a(zcoup_e1a, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: zcoup_e1a
@@ -1658,11 +1658,11 @@ MODULE QML_NO3_m
          &    + p(15)*pa(2)*za(4)+p(16)*pa(2)*za(5)                             &
          &    + pa(1)*(p(17)*za(6)+p(18)*za(7))
     
-  end subroutine Ezcoup_e1a
+  end subroutine QML_NO3_Ezcoup_e1a
 
   !-------------------------------------------------------------------------------------
   !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
-  subroutine Ezcoup_e2a(zcoup_e2a, n, par, j, iref,avv)
+  subroutine QML_NO3_Ezcoup_e2a(zcoup_e2a, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: zcoup_e2a
@@ -1700,12 +1700,12 @@ MODULE QML_NO3_m
          &    + p(15)*pa(2)*zb(4)+p(16)*pa(2)*zb(5)                             &
          &    + pa(1)*(p(17)*zb(6)+p(18)*zb(7))
     
-  end subroutine Ezcoup_e2a
+  end subroutine QML_NO3_Ezcoup_e2a
 
   !------------------------------------------------------------------------------
   !     function to generate V matrix elements for the coupling between a1 and a2 modes up to sixth order
   !     only even orders in a2
-  subroutine Evcoup_aa(vcoup_aa, n, par, j, iref,avv)
+  subroutine QML_NO3_Evcoup_aa(vcoup_aa, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: vcoup_aa
@@ -1735,12 +1735,12 @@ MODULE QML_NO3_m
     !..   sixths order
     vcoup_aa = vcoup_aa + p(5) * pa(2) * pb(2) + p(6) * pa(4) * pb(1)
     
-  end subroutine Evcoup_aa
+  end subroutine QML_NO3_Evcoup_aa
 
   !------------------------------------------------------------------------------
   !     function to generate V matrix elements for the coupling between e and a modes up to sixth order
   !     only even orders in a
-  subroutine Evcoup_e1a2(vcoup_e1a2, n, par, j, iref,avv)
+  subroutine QML_NO3_Evcoup_e1a2(vcoup_e1a2, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: vcoup_e1a2
@@ -1774,12 +1774,12 @@ MODULE QML_NO3_m
     !     8th order
     vcoup_e1a2 = vcoup_e1a2 + p(7)*pb(1)*va(5) + p(8)*pb(1)*va(6) + p(9)*pb(2)*va(3)
     
-  end subroutine Evcoup_e1a2
+  end subroutine QML_NO3_Evcoup_e1a2
     
   !------------------------------------------------------------------------------
   !     function to generate V matrix elements for the coupling between e and a modes up to sixth order
   !     only even orders in a
-  subroutine Evcoup_e2a2(vcoup_e2a2, n, par, j, iref,avv)
+  subroutine QML_NO3_Evcoup_e2a2(vcoup_e2a2, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: vcoup_e2a2
@@ -1817,12 +1817,12 @@ MODULE QML_NO3_m
          &                      + p(8)*pb(1)*vb(6)                                  &
          &                      + p(9)*pb(2)*vb(3)
     
-  end subroutine Evcoup_e2a2
+  end subroutine QML_NO3_Evcoup_e2a2
     
   !-------------------------------------------------------------------------------------
   !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
   !     only even orders in a
-  subroutine Ewcoup_e1a2(wcoup_e1a2, n, par, j, iref,avv)
+  subroutine QML_NO3_Ewcoup_e1a2(wcoup_e1a2, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: wcoup_e1a2
@@ -1866,12 +1866,12 @@ MODULE QML_NO3_m
          &                      + p(13) * pb(2) * wa(4)                             &
          &                      + p(14) * pb(2) * wa(5)
     
-  end subroutine Ewcoup_e1a2
+  end subroutine QML_NO3_Ewcoup_e1a2
     
   !-------------------------------------------------------------------------------------
   !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
   !     only even orders in a
-  subroutine Ewcoup_e2a2(wcoup_e2a2, n, par, j, iref,avv)
+  subroutine QML_NO3_Ewcoup_e2a2(wcoup_e2a2, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: wcoup_e2a2
@@ -1916,12 +1916,12 @@ MODULE QML_NO3_m
          &                      + p(13) * pb(2) * wb(4)                             &
          &                      + p(14) * pb(2) * wb(5)
     
-  end subroutine Ewcoup_e2a2
+  end subroutine QML_NO3_Ewcoup_e2a2
     
   !-------------------------------------------------------------------------------------
   !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
   !     only even orders in a
-  subroutine Ezcoup_e1a2(zcoup_e1a2, n, par, j, iref,avv)
+  subroutine QML_NO3_Ezcoup_e1a2(zcoup_e1a2, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: zcoup_e1a2
@@ -1965,12 +1965,12 @@ MODULE QML_NO3_m
          &                      + p(13) * pb(2) * za(4)                             &
          &                      + p(14) * pb(2) * za(5)
     
-  end subroutine Ezcoup_e1a2
+  end subroutine QML_NO3_Ezcoup_e1a2
     
   !-------------------------------------------------------------------------------------
   !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
   !     only even orders in a
-  subroutine Ezcoup_e2a2(zcoup_e2a2, n, par, j, iref,avv)
+  subroutine QML_NO3_Ezcoup_e2a2(zcoup_e2a2, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: zcoup_e2a2
@@ -2014,12 +2014,12 @@ MODULE QML_NO3_m
          &                      + p(13) * pb(2) * zb(4)                             &
          &                      + p(14) * pb(2) * zb(5)
     
-  end subroutine Ezcoup_e2a2
+  end subroutine QML_NO3_Ezcoup_e2a2
 
   !------------------------------------------------------------------------------
   !  3-mode coupling of a1 + e + e
   !      function vcoup_eea1(n, par, j, iref,avv)
-  subroutine Evcoup_eea1(vcoup_eea1, n, par, j, iref,avv)
+  subroutine QML_NO3_Evcoup_eea1(vcoup_eea1, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: vcoup_eea1
@@ -2060,12 +2060,12 @@ MODULE QML_NO3_m
          & +p(21)*vee(10) +p(22)*vee(11)+p(23)*vee(12)+p(24)*vee(13)            &
          & +p(25)*vee(14) +p(26)*vee(15) )
     
-  end subroutine Evcoup_eea1
+  end subroutine QML_NO3_Evcoup_eea1
     
   !------------------------------------------------------------------------------
   !  3-mode coupling
   !      function wcoup_eea1(n,par, j, iref,avv)
-  subroutine Ewcoup_eea1(wcoup_eea1, n,par, j, iref,avv)
+  subroutine QML_NO3_Ewcoup_eea1(wcoup_eea1, n,par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: wcoup_eea1
@@ -2117,12 +2117,12 @@ MODULE QML_NO3_m
          &             + p(43)*wee(23) + p(44)*wee(24)+ p(45)*wee(25)             &
          &             + p(46)*wee(26) )
     
-  end subroutine Ewcoup_eea1
+  end subroutine QML_NO3_Ewcoup_eea1
     
     !------------------------------------------------------------------------------
     !  3-mode coupling
     !      function zcoup_eea1(n,par, j, iref,avv)
-  subroutine Ezcoup_eea1(zcoup_eea1, n,par, j, iref,avv)
+  subroutine QML_NO3_Ezcoup_eea1(zcoup_eea1, n,par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: zcoup_eea1
@@ -2174,13 +2174,13 @@ MODULE QML_NO3_m
          &             + p(43)*zee(23) + p(44)*zee(24)+ p(45)*zee(25)             &
          &             + p(46)*zee(26) )
     
-  end subroutine Ezcoup_eea1
+  end subroutine QML_NO3_Ezcoup_eea1
     
     
     !------------------------------------------------------------------------------
     !  3-mode coupling
     !      function vcoup_eea2(n, par, j, iref,avv)
-  subroutine Evcoup_eea2(vcoup_eea2, n, par, j, iref,avv)
+  subroutine QML_NO3_Evcoup_eea2(vcoup_eea2, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: vcoup_eea2
@@ -2209,12 +2209,12 @@ MODULE QML_NO3_m
          & + pb(1) * (vee(4) * p(5) + vee(5) * p(6)                               &
          & + vee(6) * p(7) +  vee(7) * p(8))
     
-  end subroutine Evcoup_eea2
+  end subroutine QML_NO3_Evcoup_eea2
     
     !------------------------------------------------------------------------------
     !  3-mode coupling
     !      function wcoup_eea2(n,par, j, iref,avv)
-  subroutine Ewcoup_eea2(wcoup_eea2, n,par, j, iref,avv)
+  subroutine QML_NO3_Ewcoup_eea2(wcoup_eea2, n,par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: wcoup_eea2
@@ -2245,12 +2245,12 @@ MODULE QML_NO3_m
          & + wee(9) * p(10) + wee(10) * p(11) + wee(11) * p(12)                   &
          & + wee(12) * p(13) + wee(13) * p(14) + wee(14) * p(15)  )
     
-  end subroutine Ewcoup_eea2
+  end subroutine QML_NO3_Ewcoup_eea2
     
     !------------------------------------------------------------------------------
     !  3-mode coupling
     !      function zcoup_eea2(n,par, j, iref,avv)
-  subroutine Ezcoup_eea2(zcoup_eea2, n,par, j, iref,avv)
+  subroutine QML_NO3_Ezcoup_eea2(zcoup_eea2, n,par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: zcoup_eea2
@@ -2281,11 +2281,11 @@ MODULE QML_NO3_m
          & + zee(9) * p(10) + zee(10) * p(11) + zee(11) * p(12)                   &
          & + zee(12) * p(13) + zee(13) * p(14) + zee(14) * p(15)  )
     
-  end subroutine Ezcoup_eea2
+  end subroutine QML_NO3_Ezcoup_eea2
     
   !------------------------------------------------------------------------------
   !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
-  subroutine Evcoup_e1aa2(vcoup_e1aa2, n, par, j, iref,avv)
+  subroutine QML_NO3_Evcoup_e1aa2(vcoup_e1aa2, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: vcoup_e1aa2
@@ -2310,13 +2310,13 @@ MODULE QML_NO3_m
     !     6th order
     vcoup_e1aa2 = vcoup_e1aa2 + (p(2)*pa(1)*pb(1)*va(2) + p(3)*pa(2)*pb(1)*va(1))
     
-  end subroutine Evcoup_e1aa2
+  end subroutine QML_NO3_Evcoup_e1aa2
     
     !------------------------------------------------------------------------------
     !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
     
     !      function vcoup_e2aa2(n, par, j, iref,avv)
-  subroutine Evcoup_e2aa2(vcoup_e2aa2, n, par, j, iref,avv)
+  subroutine QML_NO3_Evcoup_e2aa2(vcoup_e2aa2, n, par, j, iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: vcoup_e2aa2
@@ -2341,14 +2341,14 @@ MODULE QML_NO3_m
     !     6th order
     vcoup_e2aa2 = vcoup_e2aa2 + (p(2)*pa(1)*pb(1)*vb(2) + p(3)*pa(2)*pb(1)*vb(1))
     
-  end subroutine Evcoup_e2aa2
+  end subroutine QML_NO3_Evcoup_e2aa2
     
     !-------------------------------------------------------------------------------------
     !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
     !     6 parameters
     
     !      function wcoup_e1aa2(n, par, j,iref,avv)
-  subroutine Ewcoup_e1aa2(wcoup_e1aa2, n, par, j,iref,avv)
+  subroutine QML_NO3_Ewcoup_e1aa2(wcoup_e1aa2, n, par, j,iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: wcoup_e1aa2
@@ -2380,14 +2380,14 @@ MODULE QML_NO3_m
          &  + p(6)*pa(3)*pb(1)*wa(1) + p(7)*pa(1)*pb(2)*wa(1)
     
     
-  end subroutine Ewcoup_e1aa2
+  end subroutine QML_NO3_Ewcoup_e1aa2
     
     !-------------------------------------------------------------------------------------
     !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
     !     6 parameters
     
     !      function wcoup_e2aa2(n, par, j,iref,avv)
-  subroutine Ewcoup_e2aa2(wcoup_e2aa2, n, par, j,iref,avv)
+  subroutine QML_NO3_Ewcoup_e2aa2(wcoup_e2aa2, n, par, j,iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: wcoup_e2aa2
@@ -2419,14 +2419,14 @@ MODULE QML_NO3_m
          &  + p(6)*pa(3)*pb(1)*wb(1) + p(7)*pa(1)*pb(2)*wb(1)
     
     
-  end subroutine Ewcoup_e2aa2
+  end subroutine QML_NO3_Ewcoup_e2aa2
     
     !-------------------------------------------------------------------------------------
     !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
     !     6 parameters
     
     !      function zcoup_e1aa2(n, par, j,iref,avv)
-  subroutine Ezcoup_e1aa2(zcoup_e1aa2, n, par, j,iref,avv)
+  subroutine QML_NO3_Ezcoup_e1aa2(zcoup_e1aa2, n, par, j,iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: zcoup_e1aa2
@@ -2458,14 +2458,14 @@ MODULE QML_NO3_m
          &  + p(6)*pa(3)*pb(1)*za(1) + p(7)*pa(1)*pb(2)*za(1)
     
     
-  end subroutine Ezcoup_e1aa2
+  end subroutine QML_NO3_Ezcoup_e1aa2
     
     !-------------------------------------------------------------------------------------
     !     function to generate W matrix elements for the coupling betzeen e and a modes up to sixth order
     !     6 parameters
     
     !      function zcoup_e2aa2(n, par, j,iref,avv)
-  subroutine Ezcoup_e2aa2(zcoup_e2aa2, n, par, j,iref,avv)
+  subroutine QML_NO3_Ezcoup_e2aa2(zcoup_e2aa2, n, par, j,iref,avv)
     implicit none
 
     real (kind=Rkind),            intent(inout)      :: zcoup_e2aa2
@@ -2496,7 +2496,7 @@ MODULE QML_NO3_m
          &  + p(5)*pa(2)*pb(1)*zb(2)                                              &
          &  + p(6)*pa(3)*pb(1)*zb(1) + p(7)*pa(1)*pb(2)*zb(1)
     
-  end subroutine Ezcoup_e2aa2
+  end subroutine QML_NO3_Ezcoup_e2aa2
   subroutine QML_NO3_vwzprec(q,avv)
     implicit none
 
@@ -2819,29 +2819,6 @@ MODULE QML_NO3_m
     zee(49) = (y3**2+x3**2)**2*(x3*y4+x4*y3)
     
   end subroutine QML_NO3_vwzprec
-  !-----------------------------------------------------------------------------
-  !     finds sqrt(a**2+b**2) without overflow or destructive underflow
-  real (kind=Rkind) function pythag(a,b)
-    implicit none
-
-    real (kind=Rkind), intent(in) :: a,b
-
-    real (kind=Rkind) :: p,r,s,t,u
-
-          p = dmax1(abs(a),abs(b))
-          if (p .eq. ZERO) go to 20
-          r = (dmin1(abs(a),abs(b))/p)**2
-       10 continue
-             t = FOUR + r
-             if (t .eq. FOUR) go to 20
-             s = r/t
-             u = ONE + TWO*s
-             p = u*p
-             r = (s/u)**2 * r
-          go to 10
-       20 pythag = p
-          return
-  end
     
     !---------------------------------------------------
     ! A Viel 30.09.2021
@@ -2908,16 +2885,16 @@ MODULE QML_NO3_m
     enddo
 
     ! determinant
-    !det=det3t3(xvec)
+    !det=QML_NO3_det3t3(xvec)
     det = Det_OF(xvec)
 
-    if (abs(det).lt.ONETENTH**13) then
+    if (abs(det) < ONETENTH**13) then
       ! planar case
-      call planarnew(xvec,xintern(4),xintern(0))
+      call QML_NO3_planarnew(xvec,xintern(4),xintern(0))
     else
       ! Pyramdal case
       ! trisector
-      !call mat_invers(xvec,xvecinvers,det)
+      !call QML_NO3_mat_invers(xvec,xvecinvers,det)
       xvecinvers = inv_OF_Mat_TO(xvec)
       t(1)=sum(xvecinvers(:,1))
       t(2)=sum(xvecinvers(:,2))
@@ -2925,7 +2902,7 @@ MODULE QML_NO3_m
       tnorm=sqrt(t(1)**2+t(2)**2+t(3)**2)
       xintern(0)=acos(ONE/tnorm)
       ! projected angles
-      call proangnew(xvec,t,tnorm,xintern(0),xintern(4))
+      call QML_NO3_proangnew(xvec,t,tnorm,xintern(0),xintern(4))
     endif
     !
     ! xintern(0)=trisector
@@ -2959,7 +2936,7 @@ MODULE QML_NO3_m
     !
     ! compute morse or tmc morse
     do i=1,3
-      call ff(xintern(i),1,f,tmc)
+      call QML_NO3_ff(xintern(i),1,f,tmc)
       xintern(i)= ONE - exp(-f*xintern(i))
     enddo
 
@@ -2986,28 +2963,27 @@ MODULE QML_NO3_m
     !
     !***********************************************************
     
-          function det3t3(M)
+          function QML_NO3_det3t3(M)
           implicit none
           integer n
           parameter (n=3)
-          real (kind=Rkind) :: det3t3, M(n,n)
+          real (kind=Rkind) :: QML_NO3_det3t3, M(n,n)
     
-           det3t3 = M(1,1)*M(2,2)*M(3,3)       &
+           QML_NO3_det3t3 = M(1,1)*M(2,2)*M(3,3)       &
          &         +M(1,2)*M(2,3)*M(3,1)       &
          &         +M(1,3)*M(2,1)*M(3,2)       &
          &         -M(1,3)*M(2,2)*M(3,1)       &
          &         -M(1,1)*M(2,3)*M(3,2)       &
          &         -M(1,2)*M(2,1)*M(3,3)
     
-          end
+          end function QML_NO3_det3t3
     
     !***********************************************************
     !
     !   makes the inverse of a 3*3 matrix
     !
     !***********************************************************
-    
-          subroutine mat_invers(M,Im,det)
+  subroutine QML_NO3_mat_invers(M,Im,det)
           implicit none
           integer i,j,ma
           parameter (ma=3)
@@ -3016,8 +2992,8 @@ MODULE QML_NO3_m
     
     !.....makes the inverse of a 3*3 matrix
     !     ---------------------------------
-    !      det=det3t3(M)
-    !      if (abs(det).lt.ONETENTH**10) then
+    !      det=QML_NO3_det3t3(M)
+    !      if (abs(det) < ONETENTH**10) then
     !         write(out_unit,*) 'determinant zero! matrix cannot be inverted!'
     !        stop
     !      endif
@@ -3044,7 +3020,7 @@ MODULE QML_NO3_m
            enddo
           enddo
     
-          end
+  end subroutine QML_NO3_mat_invers
     
     
     !********************************************************************
@@ -3057,7 +3033,7 @@ MODULE QML_NO3_m
     ! vectors of rotated system)
     !
     !********************************************************************
-  subroutine proangnew(M,t,tnorm,beta,phi)
+  subroutine QML_NO3_proangnew(M,t,tnorm,beta,phi)
           implicit none
           integer i,j, n, d
           parameter (n=3, d=2)
@@ -3090,13 +3066,13 @@ MODULE QML_NO3_m
           alpha=t(3)/tnorm
           sia=sqrt(ONE-alpha**2)
           alpha=acos(alpha)
-          if (alpha.lt.ZERO) sia=-sia
+          if (alpha < ZERO) sia=-sia
     
     
     !      alpha=angle(z,t,n)
     !      sia=sin(alpha)
     
-          if (abs(sia).lt.ONETENTH**10) then
+          if (abs(sia) < ONETENTH**10) then
             do i=1,3
               do j=1,3
                 S(i,j)=M(i,j)
@@ -3114,7 +3090,7 @@ MODULE QML_NO3_m
             l=dmin1(ONE,l)
             delta=acos(l)
     
-            if (delta.gt.(pi*HALF)) then
+            if (delta > (pi*HALF)) then
               delta=pi-delta
             endif
     
@@ -3123,27 +3099,27 @@ MODULE QML_NO3_m
     !
     !..     rotate trisector in xz plane (rot. around z axis)
     
-            call rotate(M,n,Q,n,epsi)
+            call QML_NO3_rotate(M,n,Q,n,epsi)
     
-            if (alpha.gt.(pi*HALF)) then
+            if (alpha > (pi*HALF)) then
               alpha=pi-alpha
             endif
     
-            call trise(Q,beta2,t_z)
+            call QML_NO3_trise(Q,beta2,t_z)
     
     
             alpha=alpha*sign(ONE,t_z(1))*sign(ONE,t_z(3))
     
     !..     rotate trisector on z axis (rot. around y axis)
     
-            call rotate(Q,n,S,d,alpha)
+            call QML_NO3_rotate(Q,n,S,d,alpha)
     
           endif
     
     !..   calculate projected angles phi(1-3)
     
           do i=1,3
-            if (i.eq.3) then
+            if (i == 3) then
               v2(i)=ZERO
               v3(i)=ZERO
               v4(i)=ZERO
@@ -3172,9 +3148,9 @@ MODULE QML_NO3_m
            phi(2)=v2(1)*v4(1)+v2(2)*v4(2)
            phi(3)=v2(1)*v3(1)+v2(2)*v3(2)
           do i=1,3
-          if (abs(phi(i)-ONE).lt.ONETENTH**10) then
+          if (abs(phi(i)-ONE) < ONETENTH**10) then
             phi(i)=ZERO
-          elseif (abs(phi(i)+ONE).lt.ONETENTH**10) then
+          elseif (abs(phi(i)+ONE) < ONETENTH**10) then
             phi(i)=pi
           else
             phi(i)=acos(phi(i))
@@ -3187,12 +3163,12 @@ MODULE QML_NO3_m
     
           ws=(phi(1)+phi(2)+phi(3))-(2*pi)
     
-          if (abs(ws).gt.ONETENTH**10) then
-            if (abs(phi(1)+phi(2)-phi(3)).lt.ONETENTH**10) then
+          if (abs(ws) > ONETENTH**10) then
+            if (abs(phi(1)+phi(2)-phi(3)) < ONETENTH**10) then
                phi(3)=(TWO*pi)-phi(3)
-            else if (abs(phi(2)+phi(3)-phi(1)).lt.ONETENTH**10) then
+            else if (abs(phi(2)+phi(3)-phi(1)) < ONETENTH**10) then
                phi(1)=(TWO*pi)-phi(1)
-            else if (abs(phi(1)+phi(3)-phi(2)).lt.ONETENTH**10) then
+            else if (abs(phi(1)+phi(3)-phi(2)) < ONETENTH**10) then
                phi(2)=(TWO*pi)-phi(2)
             endif
           endif
@@ -3204,7 +3180,7 @@ MODULE QML_NO3_m
     !      enddo
     !       write(out_unit,*)
     
-  end subroutine proangnew
+  end subroutine QML_NO3_proangnew
     !----------------------------------------------------------------
     !***********************************************************
     !
@@ -3214,7 +3190,7 @@ MODULE QML_NO3_m
     !
     !***********************************************************
     
-  subroutine rotate(m1,u,m2,n,theta)
+  subroutine QML_NO3_rotate(m1,u,m2,n,theta)
           implicit none
           integer i,j,n,max,p,u
           parameter (max=3)
@@ -3228,7 +3204,7 @@ MODULE QML_NO3_m
            enddo
            enddo
     
-          if ((n.lt.1).or.(n.gt.3)) then
+          if ((n < 1).or.(n > 3)) then
              write(out_unit,*) 'rotational axis not specified! n is not 1,2 or 3'
             stop
           endif
@@ -3250,7 +3226,7 @@ MODULE QML_NO3_m
     
           rotmat(n,n)=ONE
     
-          call matmult_NO3(rotmat,max,max,m1,u,m2)
+          call QML_NO3_matmult(rotmat,max,max,m1,u,m2)
     
     !      do i=1,max
     !           write(out_unit,100) (rotmat(i,j),j=1,3)
@@ -3264,7 +3240,7 @@ MODULE QML_NO3_m
     !       write(out_unit,*)
     100   format(3e15.6)
     
-  end subroutine rotate
+  end subroutine QML_NO3_rotate
     
     !----------------------------------------------------------------
     !***********************************************************
@@ -3273,7 +3249,7 @@ MODULE QML_NO3_m
     ! sizes: M1 -> n1*n2; M2 -> n2*n3; EM -> n1*n3
     !
     !***********************************************************
-  subroutine matmult_NO3(M1,n1,n2,M2,n3,EM)
+  subroutine QML_NO3_matmult(M1,n1,n2,M2,n3,EM)
           implicit none
           integer i,j,k,n1,n2,n3
           real (kind=Rkind) :: M1(n1,*), M2(n2,*), EM(n1,*)
@@ -3288,7 +3264,7 @@ MODULE QML_NO3_m
              enddo
           enddo
     
-  end subroutine matmult_NO3
+  end subroutine QML_NO3_matmult
 
   !****************************************************************
   !
@@ -3296,7 +3272,7 @@ MODULE QML_NO3_m
   ! for non planar systems
   !
   !****************************************************************
-  subroutine trise(M,beta,t)
+  subroutine QML_NO3_trise(M,beta,t)
           implicit none
           Integer i,k,j,n
           parameter (n=3)
@@ -3311,8 +3287,8 @@ MODULE QML_NO3_m
     
     !.....calculate trisector angle beta
     
-          det=det3t3(M)
-          call mat_invers(M,Im,det)
+          det=QML_NO3_det3t3(M)
+          call QML_NO3_mat_invers(M,Im,det)
     
     !.....calculate trisector t
     !..   transpose of Im because x,y,z values on columns!
@@ -3330,7 +3306,7 @@ MODULE QML_NO3_m
     
           beta=acos(ONE/betrag)
     
-  end subroutine trise
+  end subroutine QML_NO3_trise
     
     !----------------------------------------------------------------
     !********************************************************
@@ -3339,7 +3315,7 @@ MODULE QML_NO3_m
     ! NH bonds is zero)
     !
     !********************************************************
-  subroutine planarnew(M,phi,beta)
+  subroutine QML_NO3_planarnew(M,phi,beta)
     implicit none
           integer i,j,k,n
           parameter (n=3)
@@ -3365,8 +3341,8 @@ MODULE QML_NO3_m
     
     !.....check if atoms collinear (on one line)
     
-          if ((abs(s1-ONE).lt.ONETENTH**07).and.(abs(s2-ONE)       &
-         &      .lt.ONETENTH**07).and.(abs(s3-ONE).lt.ONETENTH**07)) then
+          if ((abs(s1-ONE) < ONETENTH**07).and.(abs(s2-ONE)       &
+         &       < ONETENTH**07).and.(abs(s3-ONE) < ONETENTH**07)) then
             beta=ZERO
     
              write(out_unit,*)
@@ -3401,7 +3377,7 @@ MODULE QML_NO3_m
            phi(2)=v2(1)*v4(1)+v2(2)*v4(2)+v2(3)*v4(3)
            phi(3)=v2(1)*v3(1)+v2(2)*v3(2)+v2(3)*v3(3)
           do i=1,3
-          if (abs(phi(i)-ONE).lt.ONETENTH**10) then
+          if (abs(phi(i)-ONE) < ONETENTH**10) then
             phi(i)=ZERO
           else
             phi(i)=acos(phi(i))
@@ -3415,16 +3391,16 @@ MODULE QML_NO3_m
     
           ws=(phi(1)+phi(2)+phi(3))-(TWO*pi)
     
-          if (abs(ws).gt.ONETENTH**6) then
-            if (abs(phi(1)+phi(2)-phi(3)).lt.ONETENTH**10) then
+          if (abs(ws) > ONETENTH**6) then
+            if (abs(phi(1)+phi(2)-phi(3)) < ONETENTH**10) then
                phi(3)=(TWO*pi)-phi(3)
-            else if (abs(phi(2)+phi(3)-phi(1)).lt.ONETENTH**10) then
+            else if (abs(phi(2)+phi(3)-phi(1)) < ONETENTH**10) then
                phi(1)=(TWO*pi)-phi(1)
-            else if (abs(phi(1)+phi(3)-phi(2)).lt.ONETENTH**10) then
+            else if (abs(phi(1)+phi(3)-phi(2)) < ONETENTH**10) then
                phi(2)=(TWO*pi)-phi(2)
             endif
           endif
     
-  end subroutine planarnew
+  end subroutine QML_NO3_planarnew
     
 END MODULE QML_NO3_m
