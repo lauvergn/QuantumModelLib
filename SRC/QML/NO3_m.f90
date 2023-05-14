@@ -1329,6 +1329,7 @@ MODULE QML_NO3_m
     !      function polynom2(n, p, j, iref,avv)
   subroutine Epolynom2(polynom2,n, p, j, iref,avv)
     implicit none
+
     real (kind=Rkind),            intent(inout) :: polynom2
     real (kind=Rkind),            intent(in)    :: p(:)
     integer,                      intent(in)    :: n,j,iref
@@ -1343,6 +1344,7 @@ MODULE QML_NO3_m
   !     function to generate V Jahn-Teller matrix elements up to 6th order
   subroutine Evjt6a(vjt6a,n, p, j, iref,avv)
     implicit none
+
     real (kind=Rkind),            intent(inout) :: vjt6a
     real (kind=Rkind),            intent(in)    :: p(:)
     integer,                      intent(in)    :: n,j,iref
@@ -1351,641 +1353,151 @@ MODULE QML_NO3_m
     vjt6a = sum(p(2:j)*avv%va(2:j))
 
   end subroutine Evjt6a
-    
-    !---------------------------------------------------------------------------------
-    !     function to generate V Jahn-Teller matrix elements up to 6th order
-    
-    !      function vjt6b(n, par, j, iref,avv)
-          subroutine Evjt6b(vjt6b, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, ii, jj, iref
-          parameter (lnx=6)
-          double precision vjt6b, par(*), p(lnx)
-          logical dbg
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  !---------------------------------------------------------------------------------
+  !     function to generate V Jahn-Teller matrix elements up to 6th order
+  subroutine Evjt6b(vjt6b, n, p, j, iref,avv)
+    implicit none
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
+    real (kind=Rkind),            intent(inout) :: vjt6b
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
+    vjt6b = sum(p(2:j)*avv%vb(2:j))
+
+  end subroutine Evjt6b
     
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
+  !---------------------------------------------------------------------------
+  !     function to generate W Jahn-Teller matrix elements up to 6th order
+  subroutine Ewjt6a(wjt6a, n, p, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout) :: wjt6a
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
+    wjt6a = sum(p(2:j)*avv%wa(2:j))
+
+  end subroutine Ewjt6a
     
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
+  !---------------------------------------------------------------------------
+  !     function to generate W Jahn-Teller matrix elements up to 6th order
+  subroutine Ewjt6b(wjt6b, n, p, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout) :: wjt6b
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
+    wjt6b = sum(p(2:j)*avv%wb(2:j))
+
+  end subroutine Ewjt6b
+
+  !---------------------------------------------------------------------------
+  !     function to generate Z Jahn-Teller matrix elements up to 6th order
+  subroutine Ezjt6a(zjt6a, n, p, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout) :: zjt6a
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
+    zjt6a = sum(p(2:j)*avv%za(2:j))
+
+  end subroutine Ezjt6a
     
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
+  !---------------------------------------------------------------------------
+  !     function to generate Z Jahn-Teller matrix elements up to 6th order
+  subroutine Ezjt6b(zjt6b, n, p, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout) :: zjt6b
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
+    zjt6b = sum(p(2:j)*avv%zb(2:j))
+
+  end subroutine Ezjt6b
+
+  !------------------------------------------------------------------------------
+  !      function vcoup_ee(n, par, j, iref,avv)
+  subroutine Evcoup_ee(vcoup_ee, n, p, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout) :: vcoup_ee
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
+    vcoup_ee = sum(p(2:j)*avv%vee(2:j))
+
+  end subroutine Evcoup_ee
     
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
+  !------------------------------------------------------------------------------
+  !      function wcoup_ee(n,par, j, iref,avv)
+  subroutine Ewcoup_ee(wcoup_ee, n,p, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout) :: wcoup_ee
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
+    wcoup_ee = sum(p(2:j)*avv%wee(2:j))
+
+  end subroutine Ewcoup_ee
     
-    !.....
-    !     2nd order
-          vjt6b = p(1) * vb(1,n)   !/ fact(2)
+  !------------------------------------------------------------------------------
+  !      function zcoup_ee(n,par, j, iref,avv)
+  subroutine Ezcoup_ee(zcoup_ee, n,p, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout) :: zcoup_ee
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
+    zcoup_ee = sum(p(2:j)*avv%zee(2:j))
+
+  end subroutine Ezcoup_ee
     
+  !------------------------------------------------------------------------------
+  !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
+  subroutine Evcoup_e1a(vcoup_e1a, n, par, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout)      :: vcoup_e1a
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=10
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: pa(:),va(:)
+
+    pa => avv%pa
+    va => avv%va
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j) 
+
     !     3rd order
-          vjt6b = vjt6b + (p(2) * vb(2,n))   !/ fact(3)
+    vcoup_e1a =  p(1)*pa(1)*va(1)
     
     !     4th order
-          vjt6b = vjt6b + (p(3) * vb(3,n))   !/ fact(4)
+    vcoup_e1a = vcoup_e1a + p(2)*pa(1)*va(2)+p(3)*pa(2)*va(1)
     
     !     5th order
-          vjt6b = vjt6b + (p(4) * vb(4,n))   !/ fact(5)
+    vcoup_e1a = vcoup_e1a + p(4)*pa(1)*va(3)+p(5)*pa(2)*va(2) + p(6)*pa(3)*va(1)
     
     !     6th order
-          vjt6b = vjt6b + (p(5) * vb(5,n) + p(6) * vb(6,n))   !/ fact(6)
+    vcoup_e1a= vcoup_e1a + p(7)*pa(1)*va(4) + p(8)*pa(2)*va(3) + p(9)*pa(3)*va(2) + p(10)*pa(4)*va(1)
     
-          end
-    
-    !---------------------------------------------------------------------------
-    !     function to generate W Jahn-Teller matrix elements up to 6th order
-    
-    !      function wjt6a(n, par, j, iref,avv)
-          subroutine Ewjt6a(wjt6a, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=9)
-          double precision wjt6a, p(lnx), par(*)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
-
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
-    !     1st order
-          wjt6a = p(1) * wa(1,n)
-    
-    !     2nd order
-          wjt6a = wjt6a + (p(2) * wa(2,n))   !/ fact(2)
-    
-    !     3rd order
-          wjt6a = wjt6a + (p(3) * wa(3,n))   !/ fact(3)
-    
-    !     4th order
-          wjt6a = wjt6a + (p(4) * wa(4,n) + p(5) * wa(5,n))   !/ fact(4)
-    
-    !     5th order
-          wjt6a = wjt6a + (p(6) * wa(6,n) + p(7) * wa(7,n))   !/ fact(5)
-    
-    !     6th order
-          wjt6a = wjt6a + (p(8) * wa(8,n) + p(9)* wa(9,n))   !/ fact(6)
-    
-          end
-    
-    !---------------------------------------------------------------------------
-    !     function to generate W Jahn-Teller matrix elements up to 6th order
-    
-    !      function wjt6b(n, par, j, iref,avv)
-          subroutine Ewjt6b(wjt6b, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=9)
-          double precision wjt6b, p(lnx), par(*)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
-
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
-    !     1st order
-          wjt6b = p(1) * wb(1,n)
-    
-    !     2nd order
-          wjt6b = wjt6b + (p(2) * wb(2,n))   !/ fact(2)
-    
-    !     3rd order
-          wjt6b = wjt6b + (p(3) * wb(3,n))   !/ fact(3)
-    
-    !     4th order
-          wjt6b = wjt6b + (p(4) * wb(4,n) + p(5) * wb(5,n))   !/ fact(4)
-    
-    !     5th order
-          wjt6b = wjt6b + (p(6) * wb(6,n) + p(7) * wb(7,n))   !/ fact(5)
-    
-    !     6th order
-          wjt6b = wjt6b + (p(8) * wb(8,n) + p(9)* wb(9,n))   !/ fact(6)
-    
-          end
-    
-    !---------------------------------------------------------------------------
-    !     function to generate Z Jahn-Teller matrix elements up to 6th order
-    
-    !      function zjt6a(n, par, j, iref,avv)
-          subroutine Ezjt6a(zjt6a, n, par, j, iref,avv)
-    
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=9)
-          double precision zjt6a, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
-
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
-    !     1st order
-          zjt6a = p(1) * za(1,n)
-    
-    !     2nd order
-          zjt6a = zjt6a + (p(2) * za(2,n))   !/ fact (2)
-    
-    !     3rd order
-          zjt6a = zjt6a + (p(3) * za(3,n))   !/ fact(3)
-    
-    !     4th order
-          zjt6a = zjt6a + (p(4) * za(4,n) + p(5) * za(5,n))   !/ fact(4)
-    
-    !     5th order
-          zjt6a = zjt6a + (p(6) * za(6,n) + p(7) * za(7,n))   !/ fact(5)
-    
-    !     6th order
-          zjt6a = zjt6a + (p(8) * za(8,n) + p(9) * za(9,n))   !/ fact(6)
-    
-          end
-    
-    !---------------------------------------------------------------------------
-    !     function to generate Z Jahn-Teller matrix elements up to 6th order
-    
-    !      function zjt6b(n, par, j, iref,avv)
-          subroutine Ezjt6b(zjt6b, n, par, j, iref,avv)
-    
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=9)
-          double precision zjt6b, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
-
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
-    !     1st order
-          zjt6b = p(1) * zb(1,n)
-    
-    !     2nd order
-          zjt6b = zjt6b + (p(2) * zb(2,n))   !/ fact (2)
-    
-    !     3rd order
-          zjt6b = zjt6b + (p(3) * zb(3,n))   !/ fact(3)
-    
-    !     4th order
-          zjt6b = zjt6b + (p(4) * zb(4,n) + p(5) * zb(5,n))   !/ fact(4)
-    
-    !     5th order
-          zjt6b = zjt6b + (p(6) * zb(6,n) + p(7) * zb(7,n))   !/ fact(5)
-    
-    !     6th order
-          zjt6b = zjt6b + (p(8) * zb(8,n) + p(9) * zb(9,n))   !/ fact(6)
-    
-          end
-    
-    !------------------------------------------------------------------------------
-    !      function vcoup_ee(n, par, j, iref,avv)
-          subroutine Evcoup_ee(vcoup_ee, n, par, j, iref,avv)
-    !     28 parameters
-    
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=28)
-          double precision vcoup_ee, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
-
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
-    !     2nd order
-          vcoup_ee = vee(1,n) * p(1)  !/ fact(2)
-    
-    !     3rd order
-          vcoup_ee = vcoup_ee + (vee(2,n) * p(2) + vee(3,n) * p(3))  !/ fact(3)
-    
-    !     4th order
-          vcoup_ee = vcoup_ee + (vee(4,n) * p(4) + vee(5,n) * p(5) &
-         & + vee(6,n) * p(6) +  vee(7,n) * p(7))  !/ fact(4)
-    
-    !     5th order
-          vcoup_ee = vcoup_ee + p(8)*vee(8,n)+p(9)*vee(9,n)+p(10)*vee(10,n)         &
-         &          + p(11)*vee(11,n) + p(12)*vee(12,n) + p(13)*vee(13,n)           &
-         &          + p(14)*vee(14,n) + p(15)*vee(15,n)
-    
-    !     6th order
-          vcoup_ee = vcoup_ee + p(16)*vee(16,n) + p(17)*vee(17,n)                     &
-         & + p(18)*vee(18,n)+p(19)*vee(19,n)+p(20)*vee(20,n)+p(21)*vee(21,n)          &
-         & + p(22)*vee(22,n) + p(23)*vee(23,n) + p(24)*vee(24,n)                      &
-         & + p(25)*vee(25,n) + p(26)*vee(26,n) + p(27)*vee(27,n)                      &
-         & + p(28)*vee(28,n)
-    
-          end
-    
-    !------------------------------------------------------------------------------
-    !      function wcoup_ee(n,par, j, iref,avv)
-          subroutine Ewcoup_ee(wcoup_ee, n,par, j, iref,avv)
-    !     14 parameters
-    
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=49)
-          double precision wcoup_ee, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
-
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
-    !     2nd order
-          wcoup_ee = wee(1,n) * p(1)
-    
-    !     3rd order
-          wcoup_ee = wcoup_ee + (wee(2,n) * p(2) + wee(3,n) * p(3)                      &
-         & + wee(4,n) * p(4) + wee(5,n) * p(5)) !/ fact(3)
-    
-    !     4th order
-          wcoup_ee = wcoup_ee                                                           &
-         & +(wee(6,n) * p( 6) + wee(7,n) * p( 7) + wee(8,n) * p( 8)                     &
-         & + wee(9,n) * p( 9) + wee(10,n) * p(10) + wee(11,n) * p(11)                   &
-         & + wee(12,n) * p(12) + wee(13,n) * p(13) + wee(14,n) * p(14)                  &
-         & ) !/ fact(4)
-    
-    !     5th order
-          wcoup_ee = wcoup_ee                                                           &
-         & +(wee(15,n) * p(15) + wee(16,n) * p(16) + wee(17,n) * p(17)                  &
-         & + wee(18,n) * p(18) + wee(19,n) * p(19) + wee(20,n) * p(20)                  &
-         & + wee(21,n) * p(21) + wee(22,n) * p(22) + wee(23,n) * p(23)                  &
-         & + wee(24,n)* p(24) + wee(25,n)* p(25) + wee(26,n)* p(26)                     &
-         & ) !/ fact(5)
-    
-    !     6th order
-          wcoup_ee = wcoup_ee                                                           &
-         & +(wee(27,n) * p(27) + wee(28,n) * p(28) + wee(29,n) * p(29)                  &
-         & + wee(30,n) * p(30) + wee(31,n) * p(31) + wee(32,n) * p(32)                  &
-         & + wee(33,n) * p(33) + wee(34,n) * p(34) + wee(35,n) * p(35)                  &
-         & + wee(36,n)* p(36) + wee(37,n)* p(37) + wee(38,n)* p(38)                     &
-         & + wee(39,n)* p(39) + wee(40,n)* p(40) + wee(41,n)* p(41)                     &
-         & + wee(42,n)* p(42) + wee(43,n)* p(43) + wee(44,n)* p(44)                     &
-         & + wee(45,n)* p(45) + wee(46,n)* p(46) + wee(47,n)* p(47)                     &
-         & + wee(48,n)* p(48) + wee(49,n)* p(49)                                        &
-         & ) !/ fact(6)
-    
-          end
-    
-    !------------------------------------------------------------------------------
-    !      function zcoup_ee(n,par, j, iref,avv)
-          subroutine Ezcoup_ee(zcoup_ee, n,par, j, iref,avv)
-    !     49 parameters
-    
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=49)
-          double precision zcoup_ee, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
-
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
-    !     2nd order
-          zcoup_ee = zee(1,n) * p(1)
-    
-    !     3rd order
-          zcoup_ee = zcoup_ee + (zee(2,n) * p(2) + zee(3,n) * p(3)                      &
-         & + zee(4,n) * p(4) + zee(5,n) * p(5)) !/ fact(3)
-    
-    !     4th order
-          zcoup_ee = zcoup_ee                                                           &
-         & +(zee(6,n) * p( 6) + zee(7,n) * p( 7) + zee(8,n) * p( 8)                     &
-         & + zee(9,n) * p( 9) + zee(10,n) * p(10) + zee(11,n) * p(11)                   &
-         & + zee(12,n) * p(12) + zee(13,n) * p(13) + zee(14,n) * p(14)                  &
-         & ) !/ fact(4)
-    
-    !     5th order
-          zcoup_ee = zcoup_ee                                                           &
-         & +(zee(15,n) * p(15) + zee(16,n) * p(16) + zee(17,n) * p(17)                  &
-         & + zee(18,n) * p(18) + zee(19,n) * p(19) + zee(20,n) * p(20)                  &
-         & + zee(21,n) * p(21) + zee(22,n) * p(22) + zee(23,n) * p(23)                  &
-         & + zee(24,n)* p(24) + zee(25,n)* p(25) + zee(26,n)* p(26)                     &
-         & ) !/ fact(5)
-    
-    !     6th order
-          zcoup_ee = zcoup_ee                                                           &
-         & +(zee(27,n) * p(27) + zee(28,n) * p(28) + zee(29,n) * p(29)                  &
-         & + zee(30,n) * p(30) + zee(31,n) * p(31) + zee(32,n) * p(32)                  &
-         & + zee(33,n) * p(33) + zee(34,n) * p(34) + zee(35,n) * p(35)                  &
-         & + zee(36,n)* p(36) + zee(37,n)* p(37) + zee(38,n)* p(38)                     &
-         & + zee(39,n)* p(39) + zee(40,n)* p(40) + zee(41,n)* p(41)                     &
-         & + zee(42,n)* p(42) + zee(43,n)* p(43) + zee(44,n)* p(44)                     &
-         & + zee(45,n)* p(45) + zee(46,n)* p(46) + zee(47,n)* p(47)                     &
-         & + zee(48,n)* p(48) + zee(49,n)* p(49)                                        &
-         & ) !/ fact(6)
-    
-          end
-    
-    !------------------------------------------------------------------------------
-    !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
-    
-    !      function vcoup_e1a(n, par, j, iref,avv)
-          subroutine Evcoup_e1a(vcoup_e1a, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=10)
-          double precision vcoup_e1a, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
-
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    !.....
-    !     3rd order
-          vcoup_e1a =  (p(1)*pa(1,n)*va(1,n)) ! / fact(3)
-    
-    !     4th order
-          vcoup_e1a = vcoup_e1a+(p(2)*pa(1,n)*va(2,n)+p(3)*pa(2,n)*va(1,n)) ! / fact(4)
-    
-    !     5th order
-          vcoup_e1a = vcoup_e1a + (p(4)*pa(1,n)*va(3,n)+p(5)*pa(2,n)*va(2,n)            &
-         &        + p(6)*pa(3,n)*va(1,n)) ! /fact(5)
-    
-    !     6th order
-          vcoup_e1a= vcoup_e1a + p(7)*pa(1,n)*va(4,n) + p(8)*pa(2,n)*va(3,n)            &
-         &        + p(9)*pa(3,n)*va(2,n) + p(10)*pa(4,n)*va(1,n)
-    
-          end
+  end subroutine Evcoup_e1a
     
     !------------------------------------------------------------------------------
     !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
