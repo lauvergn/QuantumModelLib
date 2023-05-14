@@ -69,7 +69,6 @@ MODULE QML_HNO3_m
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_HNO3
     PROCEDURE :: EvalFunc_QModel => EvalFunc_QML_HNO3
     PROCEDURE :: Write_QModel     => Write_QML_HNO3
-    PROCEDURE :: Write0_QModel    => Write0_QML_HNO3
   END TYPE QML_HNO3_t
 
   PUBLIC :: QML_HNO3_t,Init_QML_HNO3
@@ -179,23 +178,6 @@ MODULE QML_HNO3_m
     integer,              intent(in) :: nio
 
   END SUBROUTINE Write_QML_HNO3
-!> @brief Subroutine wich prints the default QML_HNO3 parameters.
-!!
-!! @param QModel            CLASS(QML_HNO3_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_HNO3(QModel,nio)
-  IMPLICIT NONE
-
-    CLASS(QML_HNO3_t),  intent(in) :: QModel
-    integer,              intent(in) :: nio
-
-    write(nio,*) 'HNO3 default parameters'
-    write(nio,*)
-    write(nio,*)
-    write(nio,*) 'end HNO3 default parameters'
-
-
-  END SUBROUTINE Write0_QML_HNO3
 
 !> @brief Subroutine wich calculates the HNO3 potential with derivatives up to the 2d order.
 !!
@@ -238,7 +220,7 @@ MODULE QML_HNO3_m
     USE ADdnSVM_m
     IMPLICIT NONE
 
-    CLASS(QML_HNO3_t),  intent(in)    :: QModel
+    CLASS(QML_HNO3_t),    intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv

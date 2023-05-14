@@ -501,12 +501,20 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
   END DO
 
 
-  Q = (/1.0_Rkind,-0.5_Rkind /)
+  Q = [1.0_Rkind,-0.5_Rkind]
   CALL sub_Qmodel_V(V,Q)
   write(out_unit,*) ' Diabatic potential as a 3x3 matrix:'
   write(out_unit,'(3f12.8)') V
 
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
+
+
+  write(out_unit,*) '============================================================'
+  write(out_unit,*) '== Optimisation ==='
+  write(out_unit,*) '============================================================'
+
+       !sub_Qmodel_Opt(Q,i_surf,nb_deg,icv,Max_it)
+  CALL sub_Qmodel_Opt(Q,1,-1,2,-1)
 
   deallocate(V)
   deallocate(GGdef)

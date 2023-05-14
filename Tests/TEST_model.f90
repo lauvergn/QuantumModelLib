@@ -45,6 +45,7 @@ PROGRAM TEST_model
 
   CALL Initialize_Test(test_var,test_name='QModel')
 
+  CALL test_NO3()  ; CALL Finalize_Test(test_var) ; stop
   !CALL test_H2()  ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_TwoD_RJDI2014()
@@ -1833,7 +1834,61 @@ SUBROUTINE test_H2O
   write(out_unit,*) '---------------------------------------------'
 
 END SUBROUTINE test_H2O
+SUBROUTINE test_NO3
+  USE QDUtil_NumParameters_m
+  USE QDUtil_m,         ONLY : Write_Vec
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
 
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: PotVal_gaussian
+  real (kind=Rkind), allocatable :: qtest(:,:),EAbInitio(:)
+
+
+  nderiv = 1
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '------------ 6D-NO3 -------------------------'
+  CALL Init_Model(QModel,pot_name='NO3',Print_init=.TRUE.,adiabatic=.FALSE.)
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+
+  allocate(Q(QModel%QM%ndim))
+  Q( 1: 3) = [-0.28276917777022903_Rkind,    -0.41734715646392218_Rkind,-1.0997467054058241e-002_Rkind]
+  Q( 4: 6) = [-9.1098922338089527e-002_Rkind,-0.13445551772839726_Rkind, 2.2271508290107942_Rkind]
+  Q( 7: 9) = [ 2.2747337906099050_Rkind,     -0.13445551772839726_Rkind,-0.81179512186018443_Rkind]
+  Q(10:12) = [-1.9360788283195443_Rkind,      0.63428610976387545_Rkind,-1.4057277504727415_Rkind]
+  !CALL get_Q0_Model(Q,QModel,option=0)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '----- CHECK POT -----------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Potential and derivatives at the minimum'
+  write(out_unit,*) 'Q:'
+  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  ! For testing the model
+  !CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='H2O_op1', &
+  !    test_var=test_var,last_test=.TRUE.)
+
+  deallocate(Q)
+  CALL dealloc_Model(QModel)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '- END CHECK POT -----------------------------'
+  write(out_unit,*) '---------------------------------------------'
+
+END SUBROUTINE test_NO3
 SUBROUTINE test_ClH2p_Botschwina
   USE QDUtil_NumParameters_m
   USE QDUtil_m,         ONLY : Write_Vec
