@@ -69,7 +69,16 @@ MODULE QML_NO3_m
     real (kind=Rkind) :: phi_ref,le_ref,beta_ref
   END TYPE transformcoordblock_t
 
-  !> @brief Derived type in which the NO3 parameters are set-up.
+  TYPE acoord_vjt_vee_t
+    real (kind=Rkind) :: pa(8), pb(4)
+
+    real (kind=Rkind) :: va(6), vb(6)
+    real (kind=Rkind) :: wa(9), wb(9)
+    real (kind=Rkind) :: za(9), zb(9)
+
+    real (kind=Rkind) :: vee(28),  wee(49), zee(49)
+  END TYPE acoord_vjt_vee_t
+    !> @brief Derived type in which the NO3 parameters are set-up.
   TYPE, EXTENDS (QML_Empty_t) ::  QML_NO3_t
     PRIVATE
 
@@ -650,7 +659,19 @@ MODULE QML_NO3_m
 
     CLASS(QML_NO3_t),   intent(in) :: QModel
     integer,               intent(in) :: nio
-
+ ! A Viel 2013.09.05
+    ! rs.f put at the end
+    !
+    ! A Viel 2012.07.13
+    ! Version with iref=1 hard coded
+    !
+    ! ATTENTION limited to 32 threads (mx=32)
+    !
+    ! A Viel 2012 06.13
+    ! generic functions needed for jt problems
+    ! NO3 case
+    ! TAKEN from genetic suite (W. Eisfeld)
+    ! version -prec-
     write(nio,*) 'NO3 current parameters'
     write(nio,*)
     write(nio,*) '  PubliUnit:      ',QModel%PubliUnit
@@ -827,7 +848,8 @@ MODULE QML_NO3_m
           double precision va(6,mx), vb(6,mx)
           double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
           double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
+          TYPE(acoord_vjt_vee_t)  :: avv
+
           common /acoord/ pa,pb
           common /vjt/ va, vb, wa, wb, za, zb
           common /vee/ vee,  wee, zee
@@ -862,7 +884,7 @@ MODULE QML_NO3_m
     !$    itd=omp_get_thread_num()
           itd=itd+1
           call vwzprec(itd,qinter)
-    
+          CALL QML_NO3_vwzprec(qinter,avv)
     ! reference low order surface -> in eloworder
     
     ! computing first order matrix (iref=0 in Wofgang Eisfeld code)
@@ -1084,136 +1106,136 @@ MODULE QML_NO3_m
     
     ! symmetric stretching
     !..   a1 symmetric stretch:
-          call Epolynom(dum,itd, QModel%no3minus_pot%p(pst(1,1)), pst(2,1), iref)
+          call Epolynom(dum,itd, QModel%no3minus_pot%p(pst(1,1):), pst(2,1), iref,avv)
           e=dum
     
     ! umbrella mode
     !..   a2 umbrella:
-          call Epolynom2(dum,itd, QModel%no3minus_pot%p(pst(1,2)), pst(2,2), iref)
+          call Epolynom2(dum,itd, QModel%no3minus_pot%p(pst(1,2):), pst(2,2), iref,avv)
           e=e+dum*damp
     
     ! e stretching mode:
     !..   e stretching/bending
-          call Evjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,3)), pst(2,3), iref)
+          call Evjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,3):), pst(2,3), iref,avv)
           e = e + dum
-          call Evjt6b(dum,itd, QModel%no3minus_pot%p(pst(1,4)), pst(2,4), iref)
+          call Evjt6b(dum,itd, QModel%no3minus_pot%p(pst(1,4):), pst(2,4), iref,avv)
           e = e + dum
     
     !..   mode-mode coupling of a1-e
-          call Evcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,6)), pst(2,6), iref)  ! e-a coupling 1. e mode
+          call Evcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,6):), pst(2,6), iref,avv)  ! e-a coupling 1. e mode
           e = e + dum
-          call Evcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,7)), pst(2,7), iref)  ! e-a coupling 2. e mode
+          call Evcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,7):), pst(2,7), iref,avv)  ! e-a coupling 2. e mode
           e = e + dum
     
     !..   mode-mode coupling of a2-e
-          call Evcoup_e1a2(dum,itd, QModel%no3minus_pot%p(pst(1,13)), pst(2,13), iref) !  coupling with asym. str.
+          call Evcoup_e1a2(dum,itd, QModel%no3minus_pot%p(pst(1,13):), pst(2,13), iref,avv) !  coupling with asym. str.
           e = e + dum*damp
-          call Evcoup_e2a2(dum,itd, QModel%no3minus_pot%p(pst(1,14)), pst(2,14), iref) !  coupling with asym. bend
+          call Evcoup_e2a2(dum,itd, QModel%no3minus_pot%p(pst(1,14):), pst(2,14), iref,avv) !  coupling with asym. bend
           e = e + dum*damp
     
     !..   mode-mode coupling of a1-a2
-          call Evcoup_aa(dum,itd,QModel%no3minus_pot%p(pst(1,17)),pst(2,17), iref)    !  coupling of a1 and a2
+          call Evcoup_aa(dum,itd,QModel%no3minus_pot%p(pst(1,17):),pst(2,17), iref,avv)    !  coupling of a1 and a2
           e = e + dum*damp
     
     !..   mode-mode coupling e-e
-          call Evcoup_ee(dum,itd, QModel%no3minus_pot%p(pst(1,5)), pst(2,5), iref)        ! e-e coupling
+          call Evcoup_ee(dum,itd, QModel%no3minus_pot%p(pst(1,5):), pst(2,5), iref,avv)        ! e-e coupling
           e = e + dum
     
     !..   3-mode coupling e-e-a2
-          call Evcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,18)),pst(2,18),iref)        !  e-e-a2 coupling
+          call Evcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,18):),pst(2,18),iref,avv)        !  e-e-a2 coupling
           e = e + dum*damp
     
     
     !..   3-mode coupling e-a1-a2
-          call Evcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,20)),pst(2,20),iref)  !  e-a1-a2 coupling (asym. stretch)
+          call Evcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,20):),pst(2,20),iref,avv)  !  e-a1-a2 coupling (asym. stretch)
           e = e + dum*damp
     !      e = e + dum bug detected on 30.09.2015
-          call Evcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,21)),pst(2,21),iref)  !  e-a1-a2 coupling (asym. bend)
+          call Evcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,21):),pst(2,21),iref,avv)  !  e-a1-a2 coupling (asym. bend)
           e = e + dum*damp
     
     
     !..   3-mode coupling e-e-a1
-          call Evcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,24)),pst(2,24),iref)        !  e-e-a1 coupling
+          call Evcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,24):),pst(2,24),iref,avv)        !  e-e-a1 coupling
           e = e + dum
     
           w=0.d0
     !..   add JT coupling for 1. e mode
-          call Ewjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,8)), pst(2,8), iref)
+          call Ewjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,8):), pst(2,8), iref,avv)
           w = dum
     
     !..   add JT coupling for 2. e mode
-          call Ewjt6b(dum, itd, QModel%no3minus_pot%p(pst(1, 9)), pst(2, 9), iref)
+          call Ewjt6b(dum, itd, QModel%no3minus_pot%p(pst(1, 9):), pst(2, 9), iref,avv)
           w=w+dum
     
     !..   add JT mode-mode coupling between two e modes:
-          call Ewcoup_ee(dum,itd,QModel%no3minus_pot%p(pst(1,10)), pst(2,10), iref)
+          call Ewcoup_ee(dum,itd,QModel%no3minus_pot%p(pst(1,10):), pst(2,10), iref,avv)
           w=w+dum
     
     !..   add JT mode-mode coupling between a1 and e modes:
-          call Ewcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,11)), pst(2,11), iref)
+          call Ewcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,11):), pst(2,11), iref,avv)
           w=w+dum
-          call Ewcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,12)), pst(2,12), iref)
+          call Ewcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,12):), pst(2,12), iref,avv)
           w=w+dum
     
     !..   add JT mode-mode coupling between a2 and e modes:
-          call Ewcoup_e1a2(dum,itd,QModel%no3minus_pot%p(pst(1,15)),pst(2,15), iref)
+          call Ewcoup_e1a2(dum,itd,QModel%no3minus_pot%p(pst(1,15):),pst(2,15), iref,avv)
           w=w+dum*damp
-          call Ewcoup_e2a2(dum,itd,QModel%no3minus_pot%p(pst(1,16)),pst(2,16), iref)
+          call Ewcoup_e2a2(dum,itd,QModel%no3minus_pot%p(pst(1,16):),pst(2,16), iref,avv)
           w=w+dum*damp
     
     !..   add 3-mode coupling between e-e-a2 modes:
-          call Ewcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,19)),pst(2,19), iref)
+          call Ewcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,19):),pst(2,19), iref,avv)
           w=w+dum*damp
     
     !..   add 3-mode coupling between e-a1-a2 modes:
-          call Ewcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,22)),pst(2,22), iref)
+          call Ewcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,22):),pst(2,22), iref,avv)
           w=w+dum*damp
-          call Ewcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,23)),pst(2,23), iref)
+          call Ewcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,23):),pst(2,23), iref,avv)
           w=w+dum*damp
     
     !..   add 3-mode coupling between e-e-a1 modes:
-          call Ewcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,25)),pst(2,25), iref)
+          call Ewcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,25):),pst(2,25), iref,avv)
           w=w+dum     !*damp
     !
     !--------------------------------------------------
     ! off diagonal term  e(1,2) : z
           z=0.d0
     !..   add JT coupling for 1. e mode
-          call Ezjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,8)), pst(2,8), iref)
+          call Ezjt6a(dum,itd, QModel%no3minus_pot%p(pst(1,8):), pst(2,8), iref,avv)
           z = dum
     
     !..   add JT coupling for 2. e mode
-          call Ezjt6b(dum, itd, QModel%no3minus_pot%p(pst(1, 9)), pst(2, 9), iref)
+          call Ezjt6b(dum, itd, QModel%no3minus_pot%p(pst(1, 9):), pst(2, 9), iref,avv)
           z=z+dum
     
     !..   add JT mode-mode coupling between two e modes:
-          call Ezcoup_ee(dum,itd,QModel%no3minus_pot%p(pst(1,10)), pst(2,10), iref)
+          call Ezcoup_ee(dum,itd,QModel%no3minus_pot%p(pst(1,10):), pst(2,10), iref,avv)
           z=z+dum
     
     !..   add JT mode-mode coupling between a1 and e modes:
-          call Ezcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,11)), pst(2,11), iref)
+          call Ezcoup_e1a(dum,itd, QModel%no3minus_pot%p(pst(1,11):), pst(2,11), iref,avv)
           z=z+dum
-          call Ezcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,12)), pst(2,12), iref)
+          call Ezcoup_e2a(dum,itd, QModel%no3minus_pot%p(pst(1,12):), pst(2,12), iref,avv)
           z=z+dum
     
     !..   add JT mode-mode coupling between a2 and e modes:
-          call Ezcoup_e1a2(dum,itd,QModel%no3minus_pot%p(pst(1,15)),pst(2,15), iref)
+          call Ezcoup_e1a2(dum,itd,QModel%no3minus_pot%p(pst(1,15):),pst(2,15), iref,avv)
           z=z+dum*damp
-          call Ezcoup_e2a2(dum,itd,QModel%no3minus_pot%p(pst(1,16)),pst(2,16), iref)
+          call Ezcoup_e2a2(dum,itd,QModel%no3minus_pot%p(pst(1,16):),pst(2,16), iref,avv)
           z=z+dum*damp
     
     !..   add 3-mode coupling between e-e-a2 modes:
-          call Ezcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,19)),pst(2,19), iref)
+          call Ezcoup_eea2(dum,itd,QModel%no3minus_pot%p(pst(1,19):),pst(2,19), iref,avv)
           z=z+dum*damp
     
     !..   add 3-mode coupling between e-a1-a2 modes:
-          call Ezcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,22)),pst(2,22), iref)
+          call Ezcoup_e1aa2(dum,itd,QModel%no3minus_pot%p(pst(1,22):),pst(2,22), iref,avv)
           z=z+dum*damp
-          call Ezcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,23)),pst(2,23), iref)
+          call Ezcoup_e2aa2(dum,itd,QModel%no3minus_pot%p(pst(1,23):),pst(2,23), iref,avv)
           z=z+dum*damp
     
     !..   add 3-mode coupling between e-e-a1 modes:
-          call Ezcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,25)),pst(2,25), iref)
+          call Ezcoup_eea1(dum,itd,QModel%no3minus_pot%p(pst(1,25):),pst(2,25), iref,avv)
           z=z+dum     !*damp
     
     !
@@ -1223,536 +1245,6 @@ MODULE QML_NO3_m
           vdia(1,2)=eloworder(1,2)+damplow*z
           vdia(2,1)=eloworder(1,2)+damplow*z
   End Subroutine QML_NO3_potential
-    
-    ! A Viel 2015 03 16
-    ! update reference geometry for coordinates transformation
-    ! update parameter set 337 parameters
-    ! for NO3 E" surface
-    ! two coupled surface case
-    ! from file tmc-ang-prec-37um2b_extra_b5_20150316.par
-    !
-  Subroutine init_pot_para()
-    Implicit none
-
-          real (kind=Rkind) :: p(337),e0ref,e0rho
-          integer iref,pst(2,100)
-    
-          integer npoly(2)
-          double precision a(21)  !copy of the first elements of p array
-    
-          integer n,i,npst,j
-    
-          real (kind=Rkind) ::   phi_ref,le_ref,beta_ref    
-
-          common /no3minus_pot/e0ref,e0rho,p,pst,iref
-    
-          common /tmc/a,npoly
-    
-          common /transformcoordblock/ phi_ref,le_ref,beta_ref
-    
-          Write(6,*)'# dated:30/09/2021'
-          Write(6,*)'# From cartesian to symmetrized internar coord'
-          Write(6,*)'# Scaled umbrella     '
-          Write(6,*)'# NO3 E'' JCP2017 case '
-
-    ! reference geometry
-          phi_ref=120.d0/180.d0*pi
-          le_ref=2.344419d0
-    ! for completness reno=2.344419d0,reoo=4.0606528d0,rad=0.017453293d0)
-          beta_ref=pi*0.5d0
-          Write(6,*)'# ref geometry:'
-          Write(6,*)'# phi_ref: ',phi_ref
-          Write(6,*)'# le_ref:  ',le_ref
-          Write(6,*)'# beta_ref:',beta_ref
-    
-    ! second order
-    !      iref=0
-    ! correction to second order
-    !      iref=1
-    ! all parameters
-          iref=2
-    
-          n=337
-          npst=30
-    
-    ! tmc-ang-prec-37um2b_extra_b5_20150316.par
-    ! including more extra points, 16.03.2015
-    !                               Fitting RMS:      0.85624381E-03   (   187.9 cm-1)
-    !                               Merit function:   0.85624381E-03
-    !                               Reduced RMS:      0.30159465E-03   (    66.2 cm-1) for data below  -279.500000
-    !                               Sum of point weights:  0.9458
-    !                               Number of weighted points:    2404
-    
-           p(  1)=  -0.123440260D+00
-           p(  2)=   0.231012750D+01
-           p(  3)=  -0.131815690D+01
-           p(  4)=   0.505372680D+01
-           p(  5)=  -0.202745100D+02
-           p(  6)=   0.123400003D+00
-           p(  7)=   0.556995241D+00
-           p(  8)=   0.505947070D+01
-           p(  9)=  -0.840552473D+02
-           p( 10)=   0.303348770D+01
-           p( 11)=   0.915482720D+00
-           p( 12)=   0.597447070D+01
-           p( 13)=   0.129964090D+01
-           p( 14)=   0.923982010D+01
-           p( 15)=   0.123400003D+00
-           p( 16)=   0.537126740D+01
-           p( 17)=  -0.528341500D+01
-           p( 18)=   0.662076740D+02
-           p( 19)=   0.833679770D+01
-           p( 20)=   0.286309010D+02
-           p( 21)=   0.123400003D+00
-           p( 22)=  -0.304431280D+01
-           p( 23)=   0.748191810D+01
-           p( 24)=  -0.448249980D+01
-           p( 25)=   0.206854010D+02
-           p( 26)=  -0.172197980D+02
-           p( 27)=  -0.642527480D+02
-           p( 28)=   0.565738800D+02
-           p( 29)=   0.303284550D+02
-           p( 30)=   0.302292120D+02
-           p( 31)=   0.792999760D+02
-           p( 32)=  -0.711077690D+02
-           p( 33)=   0.575018080D+02
-           p( 34)=  -0.347775870D+02
-           p( 35)=   0.930777310D+01
-           p( 36)=  -0.145823480D+02
-           p( 37)=   0.520607240D+03
-           p( 38)=  -0.123662040D+04
-           p( 39)=   0.125896900D+04
-           p( 40)=  -0.681959190D+03
-           p( 41)=   0.181199110D+03
-           p( 42)=  -0.419560080D+03
-           p( 43)=   0.105702100D+04
-           p( 44)=  -0.607165880D+03
-           p( 45)=  -0.640175490D+03
-           p( 46)=   0.701414450D+03
-           p( 47)=   0.237988350D+03
-           p( 48)=  -0.595329960D+03
-           p( 49)=   0.202039810D+03
-           p( 50)=  -0.872841948D+01
-           p( 51)=  -0.409836740D+00
-           p( 52)=   0.801472910D+01
-           p( 53)=   0.526269750D+02
-           p( 54)=   0.227930150D+02
-           p( 55)=  -0.349545650D+02
-           p( 56)=   0.380465090D+02
-           p( 57)=  -0.744954770D+02
-           p( 58)=   0.959469230D+01
-           p( 59)=   0.123400003D+00
-           p( 60)=  -0.531160440D+01
-           p( 61)=  -0.872510030D+01
-           p( 62)=   0.254766890D+02
-           p( 63)=   0.545690110D+03
-           p( 64)=  -0.234308810D+03
-           p( 65)=  -0.676611530D+01
-           p( 66)=  -0.131862020D+04
-           p( 67)=   0.385114210D+00
-           p( 68)=  -0.162871150D+03
-           p( 69)=   0.123400003D+00
-           p( 70)=  -0.487582430D-01
-           p( 71)=  -0.493363570D-01
-           p( 72)=   0.493413080D+00
-           p( 73)=  -0.786792930D+00
-           p( 74)=   0.148580440D+01
-           p( 75)=   0.275701800D+01
-           p( 76)=  -0.235189530D+01
-           p( 77)=   0.147278820D+02
-           p( 78)=   0.123400003D+00
-           p( 79)=  -0.238514350D+00
-           p( 80)=   0.297004000D+00
-           p( 81)=  -0.120273480D+00
-           p( 82)=   0.191271270D+01
-           p( 83)=  -0.226871020D+01
-           p( 84)=  -0.114691680D+02
-           p( 85)=  -0.897240320D+02
-           p( 86)=   0.147408570D+02
-           p( 87)=   0.123400003D+00
-           p( 88)=  -0.624627310D+00
-           p( 89)=   0.984178850D-02
-           p( 90)=  -0.212520820D+01
-           p( 91)=  -0.127773090D+01
-           p( 92)=   0.408838780D+01
-           p( 93)=   0.310835790D+01
-           p( 94)=  -0.787746700D+01
-           p( 95)=   0.572379100D+01
-           p( 96)=  -0.883120710D-01
-           p( 97)=  -0.845179740D+01
-           p( 98)=  -0.923696170D+01
-           p( 99)=   0.150396360D+02
-           p(100)=   0.129763030D+02
-           p(101)=  -0.127820180D+02
-           p(102)=   0.724479130D+01
-           p(103)=  -0.226340140D+02
-           p(104)=   0.193995670D+02
-           p(105)=  -0.101918030D+02
-           p(106)=   0.120124630D+03
-           p(107)=  -0.195995920D+02
-           p(108)=  -0.821429710D+01
-           p(109)=  -0.146887710D+02
-           p(110)=  -0.731600850D+02
-           p(111)=   0.673921420D+02
-           p(112)=   0.150943880D+02
-           p(113)=  -0.867078970D+01
-           p(114)=   0.147406530D+03
-           p(115)=  -0.260872930D+02
-           p(116)=  -0.840659750D+03
-           p(117)=   0.504515730D+03
-           p(118)=   0.621689150D+03
-           p(119)=  -0.524583500D+03
-           p(120)=  -0.382318100D+02
-           p(121)=   0.201076520D+03
-           p(122)=  -0.733776780D+02
-           p(123)=  -0.296733560D+02
-           p(124)=  -0.211305860D+03
-           p(125)=  -0.382490340D+03
-           !p(126)=   0.626682910D+03 ! to fix a symmetry pbs.
-           !p(127)=   0.648222640D+03 ! we take the average. DML 05/10/2021
-           p(126)=   (0.626682910D+03+0.648222640D+03)/2.d0
-           p(127)=   (0.626682910D+03+0.648222640D+03)/2.d0
-           p(128)=   0.510189060D+02
-           p(129)=  -0.300347270D+03
-           p(130)=  -0.131928350D+04
-           p(131)=  -0.902324530D+01
-           p(132)=  -0.121951920D+01
-           p(133)=   0.617623300D+03
-           p(134)=   0.307972350D+03
-           p(135)=  -0.228997370D+02
-           p(136)=  -0.163914390D+03
-           p(137)=  -0.169780300D+00
-           p(138)=   0.125500700D+01
-           p(139)=   0.482992570D+00
-           p(140)=   0.317988550D+01
-           p(141)=  -0.436770420D+01
-           p(142)=   0.356941810D+00
-           p(143)=   0.900703840D+01
-           p(144)=  -0.282621440D+02
-           p(145)=  -0.137130480D+02
-           p(146)=   0.604692600D+01
-           p(147)=  -0.276681540D+02
-           p(148)=  -0.564288980D+02
-           p(149)=   0.279994500D+02
-           p(150)=  -0.750562690D+02
-           p(151)=  -0.802644670D+02
-           p(152)=   0.511596150D+02
-           p(153)=  -0.274657630D+02
-           p(154)=   0.885353980D+02
-           p(155)=   0.203854730D+00
-           p(156)=   0.343485190D+01
-           p(157)=   0.115761950D+01
-           p(158)=  -0.108960670D+02
-           p(159)=   0.810512110D+01
-           p(160)=  -0.149700950D+01
-           p(161)=  -0.632516450D+02
-           p(162)=  -0.182788980D+03
-           p(163)=  -0.607637350D+02
-           p(164)=   0.796587110D+02
-           p(165)=  -0.325214470D+02
-           p(166)=   0.246171810D+03
-           p(167)=  -0.139468350D+02
-           p(168)=   0.659294940D+03
-           p(169)=  -0.142032340D+01
-           p(170)=   0.418184160D+03
-           p(171)=   0.151015790D+00
-           p(172)=  -0.796880880D+01
-           p(173)=   0.217108089D+00
-           p(174)=  -0.232760231D+02
-           p(175)=   0.269121775D+03
-           p(176)=  -0.365601790D+03
-           p(177)=   0.245177337D+02
-           p(178)=   0.737181669D+02
-           p(179)=   0.230068180D+04
-           p(180)=  -0.919786868D+03
-           p(181)=   0.203758567D+01
-           p(182)=   0.125347943D+02
-           p(183)=  -0.240018368D+02
-           p(184)=   0.315636912D+02
-           p(185)=  -0.586391234D+03
-           p(186)=  -0.541519483D+02
-           p(187)=   0.541543516D+02
-           p(188)=  -0.110047897D+01
-           p(189)=  -0.984270831D+01
-           p(190)=   0.176431382D+02
-           p(191)=   0.619129772D+03
-           p(192)=  -0.309888310D+02
-           p(193)=   0.516577868D+03
-           p(194)=   0.763453420D+03
-           p(195)=   0.476767245D+00
-           p(196)=   0.396602201D+00
-           p(197)=  -0.157742464D+02
-           p(198)=  -0.345412065D+02
-           p(199)=   0.106966811D+02
-           p(200)=   0.685088030D+03
-           p(201)=   0.673178507D+03
-           p(202)=  -0.106366340D+04
-           p(203)=  -0.332883674D+04
-           p(204)=   0.481034455D+04
-           p(205)=  -0.189700034D+02
-           p(206)=   0.152614812D+03
-           p(207)=  -0.709471913D+03
-           p(208)=   0.126748116D+03
-           p(209)=  -0.240266010D+03
-           p(210)=   0.148598985D+04
-           p(211)=   0.115713133D+04
-           p(212)=  -0.897094470D+03
-           p(213)=  -0.834863905D+03
-           p(214)=   0.545372351D+02
-           p(215)=   0.317678018D+03
-           p(216)=   0.899708039D+02
-           p(217)=   0.461995866D+03
-           p(218)=  -0.657237461D+03
-           p(219)=  -0.129355471D+04
-           p(220)=  -0.139661058D+03
-           p(221)=  -0.189084040D+03
-           p(222)=  -0.209609912D+02
-           p(223)=   0.312119590D+02
-           p(224)=  -0.875470382D+02
-           p(225)=  -0.578320555D+02
-           p(226)=   0.819108852D+01
-           p(227)=   0.120109292D+03
-           p(228)=   0.207725902D+03
-           p(229)=  -0.220092259D+03
-           p(230)=  -0.219373924D+03
-           p(231)=  -0.104377843D+04
-           p(232)=   0.188456908D+03
-           p(233)=  -0.187745233D+02
-           p(234)=   0.115501296D+03
-           p(235)=  -0.680341930D+02
-           p(236)=   0.135039895D+03
-           p(237)=  -0.286175591D+03
-           p(238)=  -0.150033749D+02
-           p(239)=   0.642889917D+03
-           p(240)=   0.496437690D+01
-           p(241)=   0.579415330D+01
-           p(242)=   0.819178020D+00
-           p(243)=  -0.641777110D+01
-           p(244)=   0.162797280D+03
-           p(245)=  -0.180520690D+03
-           p(246)=  -0.536904030D+03
-           p(247)=   0.604811650D+03
-           p(248)=   0.284787840D+03
-           p(249)=  -0.135967270D+03
-           p(250)=   0.153868400D+02
-           p(251)=  -0.240188550D+03
-           p(252)=   0.314345890D+03
-           p(253)=   0.664042750D+03
-           p(254)=  -0.120296430D+04
-           p(255)=   0.296121720D+03
-           p(256)=  -0.123934530D+03
-           p(257)=  -0.652689590D+02
-           p(258)=   0.147837820D+04
-           p(259)=  -0.532670070D+04
-           p(260)=  -0.202987460D+04
-           p(261)=   0.272007950D+04
-           p(262)=   0.454035570D+04
-           p(263)=  -0.174507240D+04
-           p(264)=   0.259475430D+03
-           p(265)=   0.640285120D+03
-           p(266)=  -0.489340180D+01
-           p(267)=  -0.180109170D+01
-           p(268)=   0.214753300D+02
-           p(269)=  -0.103364920D+02
-           p(270)=   0.336812050D+01
-           p(271)=   0.331311770D+01
-           p(272)=  -0.184333060D+02
-           p(273)=   0.363236360D+02
-           p(274)=  -0.733841910D+02
-           p(275)=   0.733114270D+02
-           p(276)=  -0.103140980D+03
-           p(277)=   0.643779480D+02
-           p(278)=  -0.300323700D+03
-           p(279)=   0.116331260D+02
-           p(280)=   0.333795200D+03
-           p(281)=   0.151003270D+02
-           p(282)=  -0.294676480D+02
-           p(283)=   0.137832210D+02
-           p(284)=  -0.150401300D+02
-           p(285)=   0.128243380D+03
-           p(286)=   0.515344760D+03
-           p(287)=  -0.104975170D+04
-           p(288)=   0.696065160D+03
-           p(289)=  -0.850704770D+02
-           p(290)=   0.552233050D+03
-           p(291)=  -0.126727650D+03
-           p(292)=   0.553415220D+03
-           p(293)=  -0.532309150D+02
-           p(294)=  -0.112746260D+04
-           p(295)=   0.186326010D+03
-           p(296)=  -0.364935110D+03
-           p(297)=   0.207343810D+03
-           p(298)=  -0.293492870D+03
-           p(299)=  -0.922632000D+01
-           p(300)=  -0.199198270D+03
-           p(301)=   0.302964050D+03
-           p(302)=  -0.278387770D+03
-           p(303)=   0.140546710D+03
-           p(304)=   0.529782740D+03
-           p(305)=  -0.273028890D+03
-           p(306)=  -0.149698510D+03
-           p(307)=  -0.142095790D+04
-           p(308)=   0.748850490D+03
-           p(309)=   0.925607750D+03
-           p(310)=  -0.460069010D+03
-           p(311)=  -0.206325460D+03
-           p(312)=   0.857738680D-02
-    ! Vertical Energy
-           p(313)=  -0.279544420D+03
-           p(313)=  0.d0               !-0.279544420D+03
-           p(314)=   0.000000000D+00
-           p(315)=   0.109055120D+00
-           p(316)=   0.000000000D+00
-           p(317)=   0.000000000D+00
-           p(318)=   0.696349180D-01
-           p(319)=   0.000000000D+00
-           p(320)=   0.281557390D+00
-           p(321)=  -0.827685040D-01
-           p(322)=   0.156327730D-01
-           p(323)=  -0.416376780D-03
-           p(324)=   0.630990090D-04
-           p(325)=   0.000000000D+00
-           p(326)=   0.750000000D+00
-           p(327)=   0.000000000D+00
-           p(328)=   0.000000000D+00
-           p(329)=   0.000000000D+00
-           p(330)=   0.000000000D+00
-           p(331)=   0.000000000D+00
-           p(332)=   0.000000000D+00
-           p(333)=   0.000000000D+00
-           p(334)=   0.000000000D+00
-           p(335)=   0.000000000D+00
-           p(336)=   0.953536010D+01
-           p(337)=   0.103373110D+01
-    ! Vertical energy
-    !       e0ref=  -0.279402540D+03
-           e0ref=  -0.279402540D+03 +0.279544420D+03
-           e0rho=   0.800000000D-01
-          pst(1,  1)=  1
-          pst(2,  1)=  6
-          pst(1,  2)=  7
-          pst(2,  2)=  3
-          pst(1,  3)= 10
-          pst(2,  3)=  6
-          pst(1,  4)= 16
-          pst(2,  4)=  6
-          pst(1,  5)= 22
-          pst(2,  5)= 28
-          pst(1,  6)= 50
-          pst(2,  6)= 10
-          pst(1,  7)= 60
-          pst(2,  7)= 10
-          pst(1,  8)= 70
-          pst(2,  8)=  9
-          pst(1,  9)= 79
-          pst(2,  9)=  9
-          pst(1, 10)= 88
-          pst(2, 10)= 49
-          pst(1, 11)=137
-          pst(2, 11)= 18
-          pst(1, 12)=155
-          pst(2, 12)= 18
-          pst(1, 13)=173
-          pst(2, 13)=  4
-          pst(1, 14)=177
-          pst(2, 14)=  4
-          pst(1, 15)=181
-          pst(2, 15)=  7
-          pst(1, 16)=188
-          pst(2, 16)=  7
-          pst(1, 17)=195
-          pst(2, 17)=  2
-          pst(1, 18)=197
-          pst(2, 18)=  8
-          pst(1, 19)=205
-          pst(2, 19)= 15
-          pst(1, 20)=220
-          pst(2, 20)=  3
-          pst(1, 21)=223
-          pst(2, 21)=  3
-          pst(1, 22)=226
-          pst(2, 22)=  7
-          pst(1, 23)=233
-          pst(2, 23)=  7
-          pst(1, 24)=240
-          pst(2, 24)= 26
-          pst(1, 25)=266
-          pst(2, 25)= 46
-          pst(1, 26)=312
-          pst(2, 26)=  1
-          pst(1, 27)=313
-          pst(2, 27)=  1
-          pst(1, 28)=314
-          pst(2, 28)= 11
-          pst(1, 29)=325
-          pst(2, 29)= 11
-          pst(1, 30)=336
-          pst(2, 30)=  2
-    
-          Write(6,*)'# NO3 E" 2 states 16/03/2015'
-          Write(6,*)'# tmc-ang-prec-37um2b_extra_b5_20150316.par  '
-          Write(6,*)'# switching method with total energy and polynomial'
-          Write(6,*)'# iref ',iref
-          Write(6,*)'# iref is not used'
-          Write(6,*)'# npar ',n
-          do i=1,npst
-            Write(6,2)i,pst(1,i),i,pst(2,i)
-          enddo
-          do i=1,n
-            Write(6,1)i,p(i)
-          enddo
-    
-          Write(6,*)'# e0ref au and ev', e0ref,e0ref*27.21d0
-          Write(6,*)'# e0rho ', e0rho
-    
-    
-     1    format('# p(',i3,')=',f16.10)
-     2    format('# pst(1,',i3,')=',i5,' pst(2,',i3,')=',i5)
-    !
-    ! tmc parameter
-    ! now in p array directly
-    !      do i=1,11
-    !        a(1,i)=0.d0
-    !        a(2,i)=0.d0
-    !      enddo
-    !      do i=1,11
-    !        a(1,i) = p(pst(1,28)+i-1)    ! NO
-    !        a(2,i) = p(pst(1,29)+i-1)    ! OO
-    !      enddo
-    ! copy of first p array into a -> tmc common
-    ! only reason (not a good one): not to put the
-    ! no3minus_pot/ common (parameter) into the
-    ! coordinate transformation code.
-    ! 20 is arbitrary number
-    !ICI
-          j=1
-          do i=pst(1,28),pst(1,28)+20
-            a(j)=p(i)
-            !Write(6,*)'ici',i,p(i)
-            j=j+1
-          enddo
-
-          npoly(1)=5
-          npoly(2)=5
-    
-          Write(6,*)'# TMC     npoly(1) : ',npoly(1)
-          Write(6,*)'# TMC     npoly(2) : ',npoly(2)
-    
-  End 
-    
-    ! A Viel 2013.09.05
-    ! rs.f put at the end
-    !
-    ! A Viel 2012.07.13
-    ! Version with iref=1 hard coded
-    !
-    ! ATTENTION limited to 32 threads (mx=32)
-    !
-    ! A Viel 2012 06.13
-    ! generic functions needed for jt problems
-    ! NO3 case
-    ! TAKEN from genetic suite (W. Eisfeld)
-    ! version -prec-
     !
     !------------------------------------------------------------------------------
     ! returns exponent of tunable Morse coordinate
@@ -1819,173 +1311,52 @@ MODULE QML_NO3_m
     !---------------------------------------------------------------------------------
     !     function to generate polynomial of any order
     
-    !      function polynom(n, p, j, iref)
-          subroutine Epolynom(polynom,n, p, j, iref)
-          implicit none
-          double precision polynom, p(*)
-          integer n, i, j, fact, ii, jj, iref
-          logical dbg
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
+    !      function polynom(n, p, j, iref,avv)
+  subroutine Epolynom(polynom,n, p, j, iref,avv)
+    implicit none
+    real (kind=Rkind),            intent(inout) :: polynom
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
+    polynom = sum( avv%pa(3:j) * p(3:j) )
     
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !      if (j.gt.8) then
-    !        write(6,*) 'Error: polynom higher than 8th order not implemente
-    !     &d!'
-    !        stop
-    !      endif
-    
-          polynom = 0.d0
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=2
-    !      elseif(iref.eq.1) then
-             ii=3
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-    
-          do i = ii, jj
-             polynom = polynom + pa(i,n) * p(i) ! / dble(fact(i))
-          enddo
-    
-          end
+  end subroutine Epolynom
     
     !---------------------------------------------------------------------------------
     !     function to generate polynomial of even power
     
-    !      function polynom2(n, p, j, iref)
-          subroutine Epolynom2(polynom2,n, p, j, iref)
-          implicit none
-          double precision polynom2, p(*)
-          integer n, i, j, fact, ii, jj, iref
-          logical dbg
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
+    !      function polynom2(n, p, j, iref,avv)
+  subroutine Epolynom2(polynom2,n, p, j, iref,avv)
+    implicit none
+    real (kind=Rkind),            intent(inout) :: polynom2
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
+    polynom2 = sum( avv%pb(2:j) * p(2:j) )
     
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
+  end subroutine Epolynom2
     
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !      if (j.gt.4) then
-    !        write(6,*) 'Error: even polynom higher than 8th order not implei
-    !     &mented!'
-    !        stop
-    !      endif
-    
-          polynom2 = 0.d0
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             polynom2 = polynom2 + pb(i,n) * p(i) !/ fact(2*i)
-          enddo
-    
-          end
+  !---------------------------------------------------------------------------------
+  !     function to generate V Jahn-Teller matrix elements up to 6th order
+  subroutine Evjt6a(vjt6a,n, p, j, iref,avv)
+    implicit none
+    real (kind=Rkind),            intent(inout) :: vjt6a
+    real (kind=Rkind),            intent(in)    :: p(:)
+    integer,                      intent(in)    :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+ 
+    vjt6a = sum(p(2:j)*avv%va(2:j))
+
+  end subroutine Evjt6a
     
     !---------------------------------------------------------------------------------
     !     function to generate V Jahn-Teller matrix elements up to 6th order
     
-    !      function vjt6a(n, par, j, iref)
-          subroutine Evjt6a(vjt6a,n, par, j, iref)
-          implicit none
-          integer n, i, lnx, j, fact, ii, jj, iref
-          parameter (lnx=6)
-          double precision vjt6a, par(*), p(lnx), x, y
-          logical dbg
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-    
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
-    !     2nd order
-          vjt6a = p(1) * va(1,n)   !/ fact(2)
-    
-    !     3rd order
-          vjt6a = vjt6a + (p(2) * va(2,n))   !/ fact(3)
-    
-    !     4th order
-          vjt6a = vjt6a + (p(3) * va(3,n))   !/ fact(4)
-    
-    !     5th order
-          vjt6a = vjt6a + (p(4) * va(4,n))   !/ fact(5)
-    
-    !     6th order
-          vjt6a = vjt6a + (p(5) * va(5,n) + p(6) * va(6,n))   !/ fact(6)
-    
-          end
-    
-    !---------------------------------------------------------------------------------
-    !     function to generate V Jahn-Teller matrix elements up to 6th order
-    
-    !      function vjt6b(n, par, j, iref)
-          subroutine Evjt6b(vjt6b, n, par, j, iref)
+    !      function vjt6b(n, par, j, iref,avv)
+          subroutine Evjt6b(vjt6b, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, ii, jj, iref
           parameter (lnx=6)
@@ -1993,7 +1364,8 @@ MODULE QML_NO3_m
           logical dbg
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2048,15 +1420,16 @@ MODULE QML_NO3_m
     !---------------------------------------------------------------------------
     !     function to generate W Jahn-Teller matrix elements up to 6th order
     
-    !      function wjt6a(n, par, j, iref)
-          subroutine Ewjt6a(wjt6a, n, par, j, iref)
+    !      function wjt6a(n, par, j, iref,avv)
+          subroutine Ewjt6a(wjt6a, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=9)
           double precision wjt6a, p(lnx), par(*)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2114,15 +1487,16 @@ MODULE QML_NO3_m
     !---------------------------------------------------------------------------
     !     function to generate W Jahn-Teller matrix elements up to 6th order
     
-    !      function wjt6b(n, par, j, iref)
-          subroutine Ewjt6b(wjt6b, n, par, j, iref)
+    !      function wjt6b(n, par, j, iref,avv)
+          subroutine Ewjt6b(wjt6b, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=9)
           double precision wjt6b, p(lnx), par(*)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2180,8 +1554,8 @@ MODULE QML_NO3_m
     !---------------------------------------------------------------------------
     !     function to generate Z Jahn-Teller matrix elements up to 6th order
     
-    !      function zjt6a(n, par, j, iref)
-          subroutine Ezjt6a(zjt6a, n, par, j, iref)
+    !      function zjt6a(n, par, j, iref,avv)
+          subroutine Ezjt6a(zjt6a, n, par, j, iref,avv)
     
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
@@ -2189,7 +1563,8 @@ MODULE QML_NO3_m
           double precision zjt6a, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2247,8 +1622,8 @@ MODULE QML_NO3_m
     !---------------------------------------------------------------------------
     !     function to generate Z Jahn-Teller matrix elements up to 6th order
     
-    !      function zjt6b(n, par, j, iref)
-          subroutine Ezjt6b(zjt6b, n, par, j, iref)
+    !      function zjt6b(n, par, j, iref,avv)
+          subroutine Ezjt6b(zjt6b, n, par, j, iref,avv)
     
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
@@ -2256,7 +1631,8 @@ MODULE QML_NO3_m
           double precision zjt6b, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2312,8 +1688,8 @@ MODULE QML_NO3_m
           end
     
     !------------------------------------------------------------------------------
-    !      function vcoup_ee(n, par, j, iref)
-          subroutine Evcoup_ee(vcoup_ee, n, par, j, iref)
+    !      function vcoup_ee(n, par, j, iref,avv)
+          subroutine Evcoup_ee(vcoup_ee, n, par, j, iref,avv)
     !     28 parameters
     
           implicit none
@@ -2322,7 +1698,8 @@ MODULE QML_NO3_m
           double precision vcoup_ee, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2382,8 +1759,8 @@ MODULE QML_NO3_m
           end
     
     !------------------------------------------------------------------------------
-    !      function wcoup_ee(n,par, j, iref)
-          subroutine Ewcoup_ee(wcoup_ee, n,par, j, iref)
+    !      function wcoup_ee(n,par, j, iref,avv)
+          subroutine Ewcoup_ee(wcoup_ee, n,par, j, iref,avv)
     !     14 parameters
     
           implicit none
@@ -2392,7 +1769,8 @@ MODULE QML_NO3_m
           double precision wcoup_ee, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2464,8 +1842,8 @@ MODULE QML_NO3_m
           end
     
     !------------------------------------------------------------------------------
-    !      function zcoup_ee(n,par, j, iref)
-          subroutine Ezcoup_ee(zcoup_ee, n,par, j, iref)
+    !      function zcoup_ee(n,par, j, iref,avv)
+          subroutine Ezcoup_ee(zcoup_ee, n,par, j, iref,avv)
     !     49 parameters
     
           implicit none
@@ -2474,7 +1852,8 @@ MODULE QML_NO3_m
           double precision zcoup_ee, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2548,15 +1927,16 @@ MODULE QML_NO3_m
     !------------------------------------------------------------------------------
     !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
     
-    !      function vcoup_e1a(n, par, j, iref)
-          subroutine Evcoup_e1a(vcoup_e1a, n, par, j, iref)
+    !      function vcoup_e1a(n, par, j, iref,avv)
+          subroutine Evcoup_e1a(vcoup_e1a, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=10)
           double precision vcoup_e1a, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2610,15 +1990,16 @@ MODULE QML_NO3_m
     !------------------------------------------------------------------------------
     !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
     
-    !      function vcoup_e2a(n, par, j, iref)
-          subroutine Evcoup_e2a(vcoup_e2a, n, par, j, iref)
+    !      function vcoup_e2a(n, par, j, iref,avv)
+          subroutine Evcoup_e2a(vcoup_e2a, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=10)
           double precision vcoup_e2a, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2672,15 +2053,16 @@ MODULE QML_NO3_m
     !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
     !     6 parameters
     
-    !      function wcoup_e1a(n, par, j, iref)
-          subroutine Ewcoup_e1a(wcoup_e1a, n, par, j, iref)
+    !      function wcoup_e1a(n, par, j, iref,avv)
+          subroutine Ewcoup_e1a(wcoup_e1a, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=18)
           double precision wcoup_e1a, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2743,15 +2125,16 @@ MODULE QML_NO3_m
     !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
     !     6 parameters
     
-    !      function wcoup_e2a(n, par, j, iref)
-          subroutine Ewcoup_e2a(wcoup_e2a, n, par, j, iref)
+    !      function wcoup_e2a(n, par, j, iref,avv)
+          subroutine Ewcoup_e2a(wcoup_e2a, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=18)
           double precision wcoup_e2a, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2816,15 +2199,16 @@ MODULE QML_NO3_m
     !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
     !     6 parameters
     
-    !      function zcoup_e1a(n, par, j, iref)
-          subroutine Ezcoup_e1a(zcoup_e1a, n, par, j, iref)
+    !      function zcoup_e1a(n, par, j, iref,avv)
+          subroutine Ezcoup_e1a(zcoup_e1a, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=18)
           double precision zcoup_e1a, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2887,15 +2271,16 @@ MODULE QML_NO3_m
     !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
     !     6 parameters
     
-    !      function zcoup_e2a(n, par, j, iref)
-          subroutine Ezcoup_e2a(zcoup_e2a, n, par, j, iref)
+    !      function zcoup_e2a(n, par, j, iref,avv)
+          subroutine Ezcoup_e2a(zcoup_e2a, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=18)
           double precision zcoup_e2a, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -2959,15 +2344,16 @@ MODULE QML_NO3_m
     !     function to generate V matrix elements for the coupling between a1 and a2 modes up to sixth order
     !     only even orders in a2
     
-    !      function vcoup_aa(n, par, j, iref)
-          subroutine Evcoup_aa(vcoup_aa, n, par, j, iref)
+    !      function vcoup_aa(n, par, j, iref,avv)
+          subroutine Evcoup_aa(vcoup_aa, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=6)
           double precision vcoup_aa, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3022,15 +2408,16 @@ MODULE QML_NO3_m
     !     function to generate V matrix elements for the coupling between e and a modes up to sixth order
     !     only even orders in a
     
-    !      function vcoup_e1a2(n, par, j, iref)
-          subroutine Evcoup_e1a2(vcoup_e1a2, n, par, j, iref)
+    !      function vcoup_e1a2(n, par, j, iref,avv)
+          subroutine Evcoup_e1a2(vcoup_e1a2, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=9)
           double precision vcoup_e1a2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3091,15 +2478,16 @@ MODULE QML_NO3_m
     !     function to generate V matrix elements for the coupling between e and a modes up to sixth order
     !     only even orders in a
     
-    !      function vcoup_e2a2(n, par, j, iref)
-          subroutine Evcoup_e2a2(vcoup_e2a2, n, par, j, iref)
+    !      function vcoup_e2a2(n, par, j, iref,avv)
+          subroutine Evcoup_e2a2(vcoup_e2a2, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=9)
           double precision vcoup_e2a2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3160,15 +2548,16 @@ MODULE QML_NO3_m
     !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
     !     only even orders in a
     
-    !      function wcoup_e1a2(n, par, j, iref)
-          subroutine Ewcoup_e1a2(wcoup_e1a2, n, par, j, iref)
+    !      function wcoup_e1a2(n, par, j, iref,avv)
+          subroutine Ewcoup_e1a2(wcoup_e1a2, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact,iref, ii, jj
           parameter (lnx=14)
           double precision wcoup_e1a2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3236,15 +2625,16 @@ MODULE QML_NO3_m
     !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
     !     only even orders in a
     
-    !      function wcoup_e2a2(n, par, j, iref)
-          subroutine Ewcoup_e2a2(wcoup_e2a2, n, par, j, iref)
+    !      function wcoup_e2a2(n, par, j, iref,avv)
+          subroutine Ewcoup_e2a2(wcoup_e2a2, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact,iref, ii, jj
           parameter (lnx=14)
           double precision wcoup_e2a2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3312,15 +2702,16 @@ MODULE QML_NO3_m
     !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
     !     only even orders in a
     
-    !      function zcoup_e1a2(n, par, j, iref)
-          subroutine Ezcoup_e1a2(zcoup_e1a2, n, par, j, iref)
+    !      function zcoup_e1a2(n, par, j, iref,avv)
+          subroutine Ezcoup_e1a2(zcoup_e1a2, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact,iref, ii, jj
           parameter (lnx=14)
           double precision zcoup_e1a2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3388,15 +2779,16 @@ MODULE QML_NO3_m
     !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
     !     only even orders in a
     
-    !      function zcoup_e2a2(n, par, j, iref)
-          subroutine Ezcoup_e2a2(zcoup_e2a2, n, par, j, iref)
+    !      function zcoup_e2a2(n, par, j, iref,avv)
+          subroutine Ezcoup_e2a2(zcoup_e2a2, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact,iref, ii, jj
           parameter (lnx=14)
           double precision zcoup_e2a2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3463,8 +2855,8 @@ MODULE QML_NO3_m
     
     !------------------------------------------------------------------------------
     !  3-mode coupling of a1 + e + e
-    !      function vcoup_eea1(n, par, j, iref)
-          subroutine Evcoup_eea1(vcoup_eea1, n, par, j, iref)
+    !      function vcoup_eea1(n, par, j, iref,avv)
+          subroutine Evcoup_eea1(vcoup_eea1, n, par, j, iref,avv)
     !     26 parameters
     
           implicit none
@@ -3473,7 +2865,8 @@ MODULE QML_NO3_m
           double precision vcoup_eea1, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3536,8 +2929,8 @@ MODULE QML_NO3_m
     
     !------------------------------------------------------------------------------
     !  3-mode coupling
-    !      function wcoup_eea1(n,par, j, iref)
-          subroutine Ewcoup_eea1(wcoup_eea1, n,par, j, iref)
+    !      function wcoup_eea1(n,par, j, iref,avv)
+          subroutine Ewcoup_eea1(wcoup_eea1, n,par, j, iref,avv)
     !     34 parameters
     
           implicit none
@@ -3546,7 +2939,8 @@ MODULE QML_NO3_m
           double precision wcoup_eea1, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3620,8 +3014,8 @@ MODULE QML_NO3_m
     
     !------------------------------------------------------------------------------
     !  3-mode coupling
-    !      function zcoup_eea1(n,par, j, iref)
-          subroutine Ezcoup_eea1(zcoup_eea1, n,par, j, iref)
+    !      function zcoup_eea1(n,par, j, iref,avv)
+          subroutine Ezcoup_eea1(zcoup_eea1, n,par, j, iref,avv)
     !     34 parameters
     
           implicit none
@@ -3630,7 +3024,8 @@ MODULE QML_NO3_m
           double precision zcoup_eea1, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3705,8 +3100,8 @@ MODULE QML_NO3_m
     
     !------------------------------------------------------------------------------
     !  3-mode coupling
-    !      function vcoup_eea2(n, par, j, iref)
-          subroutine Evcoup_eea2(vcoup_eea2, n, par, j, iref)
+    !      function vcoup_eea2(n, par, j, iref,avv)
+          subroutine Evcoup_eea2(vcoup_eea2, n, par, j, iref,avv)
     !     7 parameters
     
           implicit none
@@ -3715,7 +3110,8 @@ MODULE QML_NO3_m
           double precision vcoup_eea2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3766,8 +3162,8 @@ MODULE QML_NO3_m
     
     !------------------------------------------------------------------------------
     !  3-mode coupling
-    !      function wcoup_eea2(n,par, j, iref)
-          subroutine Ewcoup_eea2(wcoup_eea2, n,par, j, iref)
+    !      function wcoup_eea2(n,par, j, iref,avv)
+          subroutine Ewcoup_eea2(wcoup_eea2, n,par, j, iref,avv)
     !     15 parameters
     
           implicit none
@@ -3776,7 +3172,8 @@ MODULE QML_NO3_m
           double precision wcoup_eea2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3829,8 +3226,8 @@ MODULE QML_NO3_m
     
     !------------------------------------------------------------------------------
     !  3-mode coupling
-    !      function zcoup_eea2(n,par, j, iref)
-          subroutine Ezcoup_eea2(zcoup_eea2, n,par, j, iref)
+    !      function zcoup_eea2(n,par, j, iref,avv)
+          subroutine Ezcoup_eea2(zcoup_eea2, n,par, j, iref,avv)
     !     15 parameters
     
           implicit none
@@ -3839,7 +3236,8 @@ MODULE QML_NO3_m
           double precision zcoup_eea2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3893,15 +3291,16 @@ MODULE QML_NO3_m
     !------------------------------------------------------------------------------
     !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
     
-    !      function vcoup_e1aa2(n, par, j, iref)
-          subroutine Evcoup_e1aa2(vcoup_e1aa2, n, par, j, iref)
+    !      function vcoup_e1aa2(n, par, j, iref,avv)
+          subroutine Evcoup_e1aa2(vcoup_e1aa2, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=3)
           double precision vcoup_e1aa2, par(*), y, p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -3949,15 +3348,16 @@ MODULE QML_NO3_m
     !------------------------------------------------------------------------------
     !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
     
-    !      function vcoup_e2aa2(n, par, j, iref)
-          subroutine Evcoup_e2aa2(vcoup_e2aa2, n, par, j, iref)
+    !      function vcoup_e2aa2(n, par, j, iref,avv)
+          subroutine Evcoup_e2aa2(vcoup_e2aa2, n, par, j, iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=3)
           double precision vcoup_e2aa2, par(*), y, p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -4006,15 +3406,16 @@ MODULE QML_NO3_m
     !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
     !     6 parameters
     
-    !      function wcoup_e1aa2(n, par, j,iref)
-          subroutine Ewcoup_e1aa2(wcoup_e1aa2, n, par, j,iref)
+    !      function wcoup_e1aa2(n, par, j,iref,avv)
+          subroutine Ewcoup_e1aa2(wcoup_e1aa2, n, par, j,iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=7)
           double precision wcoup_e1aa2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -4069,15 +3470,16 @@ MODULE QML_NO3_m
     !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
     !     6 parameters
     
-    !      function wcoup_e2aa2(n, par, j,iref)
-          subroutine Ewcoup_e2aa2(wcoup_e2aa2, n, par, j,iref)
+    !      function wcoup_e2aa2(n, par, j,iref,avv)
+          subroutine Ewcoup_e2aa2(wcoup_e2aa2, n, par, j,iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=7)
           double precision wcoup_e2aa2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -4132,15 +3534,16 @@ MODULE QML_NO3_m
     !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
     !     6 parameters
     
-    !      function zcoup_e1aa2(n, par, j,iref)
-          subroutine Ezcoup_e1aa2(zcoup_e1aa2, n, par, j,iref)
+    !      function zcoup_e1aa2(n, par, j,iref,avv)
+          subroutine Ezcoup_e1aa2(zcoup_e1aa2, n, par, j,iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=7)
           double precision zcoup_e1aa2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
     
           integer mx
           parameter (mx=32)
@@ -4196,15 +3599,16 @@ MODULE QML_NO3_m
     !     function to generate W matrix elements for the coupling betzeen e and a modes up to sixth order
     !     6 parameters
     
-    !      function zcoup_e2aa2(n, par, j,iref)
-          subroutine Ezcoup_e2aa2(zcoup_e2aa2, n, par, j,iref)
+    !      function zcoup_e2aa2(n, par, j,iref,avv)
+          subroutine Ezcoup_e2aa2(zcoup_e2aa2, n, par, j,iref,avv)
           implicit none
           integer n, i, lnx, j, fact, iref, ii, jj
           parameter (lnx=7)
           double precision zcoup_e2aa2, par(*), p(lnx)
     !      include 'params.incl'
     !      include 'vwzprec.incl'
-    
+          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+
           integer mx
           parameter (mx=32)
           double precision pa(8,mx), pb(4,mx)
@@ -4252,8 +3656,333 @@ MODULE QML_NO3_m
          &  + p(5)*pa(2,n)*pb(1,n)*zb(2,n)                                              &
          &  + p(6)*pa(3,n)*pb(1,n)*zb(1,n) + p(7)*pa(1,n)*pb(2,n)*zb(1,n)
     
-          end
+  end
+  subroutine QML_NO3_vwzprec(q,avv)
+    implicit none
+
+    real(kind=Rkind),       intent(in)             :: q(6)
+    TYPE(acoord_vjt_vee_t), intent(inout), target  :: avv
+
+          !common /acoord/ pa,pb
+          !ommon /vjt/ va, vb, wa, wb, za, zb
+          !common /vee/ vee,  wee, zee
     
+          integer :: j
+          real(kind=Rkind) :: a, b, x3, x4, y3, y4
+
+          real(kind=Rkind), pointer :: pa(:), pb(:)
+          real(kind=Rkind), pointer :: va(:), vb(:)
+          real(kind=Rkind), pointer :: wa(:), wb(:)
+          real(kind=Rkind), pointer :: za(:), zb(:)
+          real(kind=Rkind), pointer :: vee(:),  wee(:), zee(:)
+
+          pa => avv%pa
+          pb => avv%pb
+          va => avv%va
+          vb => avv%vb
+          wa => avv%wa
+          wb => avv%wb
+          za => avv%za
+          zb => avv%zb
+
+          vee => avv%vee
+          wee => avv%wee
+          zee => avv%zee
+
+          a=q(1)
+          b=q(2)
+          x3=q(3)
+          y3=q(4)
+          x4=q(5)
+          y4=q(6)
+    
+    !     compute powers of a1 mode:
+          pa(1) = a
+          pa(2) = a**2
+          pa(3) = a**3
+          pa(4) = a**4
+          pa(5) = a**5
+          pa(6) = a**6
+          pa(7) = a**7
+          pa(8) = a**8
+    
+    !     compute powers of a2 mode:
+          pb(1) = b**2
+          pb(2) = b**4
+          pb(3) = b**6
+          pb(4) = b**8
+    
+    !..   compute vjt terms for first e set:
+          va(1) = x3**2 + y3**2
+          va(2) = 2.d0 * x3**3 - 6.d0 * x3 * y3**2
+          va(3) = x3**4 + 2.d0 * x3**2 * y3**2 + y3**4
+          va(4) = 2.d0 * x3**5 - 4.d0 * x3**3 * y3**2 - 6.d0 * x3 * y3**4
+          va(5) = 2.d0 * x3**6 - 30.d0*x3**4*y3**2 + 30.d0*x3**2*y3**4 -2.d0 * y3**6
+          va(6) = x3**6 + 3.d0 * x3**4 * y3**2 + 3.d0 * x3**2 * y3**4 + y3**6
+    
+    !..   compute vjt terms for second e set:
+          vb(1) = x4**2 + y4**2
+          vb(2) = 2.d0 * x4**3 - 6.d0 * x4 * y4**2
+          vb(3) = x4**4 + 2.d0 * x4**2 * y4**2 + y4**4
+          vb(4) = 2.d0 * x4**5 - 4.d0 * x4**3 * y4**2 - 6.d0 * x4 * y4**4
+          vb(5) = 2.d0 * x4**6 - 30.d0*x4**4*y4**2 + 30.d0*x4**2*y4**4 -2.d0 * y4**6
+          vb(6) = x4**6 + 3.d0 * x4**4 * y4**2 + 3.d0 * x4**2 * y4**4 + y4**6
+    
+    !..   compute wjt terms for first e set:
+          wa(1) = x3
+          wa(2) = x3**2 - y3**2
+          wa(3) = x3**3 + x3*y3**2
+          wa(4) = x3**4 - 6.d0 * x3**2 * y3**2 + y3**4
+          wa(5) = x3**4 - y3**4
+          wa(6) = x3**5 - 10.d0 * x3**3 * y3**2 + 5.d0 * x3 * y3**4
+          wa(7) = x3**5 + 2.d0 * x3**3 * y3**2 + x3 * y3**4
+          wa(8) = x3**6 - 5.d0 * x3**4 * y3**2 - 5.d0 * x3**2*y3**4+y3**6
+          wa(9) = x3**6 + x3**4 * y3**2 - x3**2 * y3**4 - y3**6
+    
+    !..   compute wjt terms for second e set:
+          wb(1) = x4
+          wb(2) = x4**2 - y4**2
+          wb(3) = x4**3 + x4*y4**2
+          wb(4) = x4**4 - 6.d0 * x4**2 * y4**2 + y4**4
+          wb(5) = x4**4 - y4**4
+          wb(6) = x4**5 - 10.d0 * x4**3 * y4**2 + 5.d0 * x4 * y4**4
+          wb(7) = x4**5 + 2.d0 * x4**3 * y4**2 + x4 * y4**4
+          wb(8) = x4**6 - 5.d0 * x4**4 * y4**2 - 5.d0 * x4**2*y4**4+y4**6
+          wb(9) = x4**6 + x4**4 * y4**2 - x4**2 * y4**4 - y4**6
+    
+    !..   compute zjt terms for first e set:
+          za(1) = y3
+          za(2) = -2.d0*x3*y3
+          za(3) = y3**3 + y3*x3**2
+          za(4) = 4.d0*x3**3*y3 - 4.d0*x3*y3**3
+          za(5) = -2.d0*x3**3*y3 - 2.d0*x3*y3**3
+          za(6) = -5.d0*x3**4*y3 + 10.d0*x3**2*y3**3 - y3**5
+          za(7) =  x3**4*y3 + 2.d0*x3**2*y3**3 + y3**5
+          za(8) = 4.d0*x3**5*y3 - 4.d0*x3*y3**5
+          za(9) = -2.d0*x3**5*y3 - 4.d0*x3**3*y3**3 - 2.d0*x3*y3**5
+    
+    !..   compute zjt terms for second e set:
+          zb(1) = y4
+          zb(2) = -2.d0*x4*y4
+          zb(3) = y4**3 + y4*x4**2
+          zb(4) = 4.d0*x4**3*y4 - 4.d0*x4*y4**3
+          zb(5) = -2.d0*x4**3*y4 - 2.d0*x4*y4**3
+          zb(6) = -5.d0*x4**4*y4 + 10.d0*x4**2*y4**3 - y4**5
+          zb(7) =  x4**4*y4 + 2.d0*x4**2*y4**3 + y4**5
+          zb(8) = 4.d0*x4**5*y4 - 4.d0*x4*y4**5
+          zb(9) = -2.d0*x4**5*y4 - 4.d0*x4**3*y4**3 - 2.d0*x4*y4**5
+    
+    !..   compute Vcoup_ee terms:
+          vee(1) =  2.d0*x3*x4 + 2.d0*y3*y4
+          vee(2) = 2.d0*x3*x4**2 - 2.d0*x3*y4**2 - 4.d0*x4*y3*y4
+          vee(3) = 2.d0*x3**2*x4 - 2.d0*x4*y3**2 - 4.d0*x3*y3*y4
+          vee(4) = 2.d0*x3**2*x4**2 - 2.d0*x3**2*y4**2                                &
+         &          - 2.d0*x4**2*y3**2 + 2.d0*y3**2*y4**2                               &
+         &          + 8.d0*x3*x4*y3*y4
+          vee(5) = 2.d0*x3**3*x4 + 2.d0*x3**2*y3*y4                                   &
+         &          + 2.d0*x3*x4*y3**2 + 2.d0*y3**3*y4
+          vee(6) = 2.d0*x4**3*x3 + 2.d0*x3*x4*y4**2                                   &
+         &         + 2.d0*x4**2*y3*y4 + 2.d0*y4**3*y3
+          vee(7) = x3**2*x4**2 + x3**2*y4**2                                          &
+         &          + x4**2*y3**2 + y3**2*y4**2
+    
+          vee(8) = x3*y4**4-4*x4*y3*y4**3-6*x3*x4**2*y4**2+4*x4**3*y3*y4              &
+         &          +x3*x4**4
+          vee(9) = (y4**2+x4**2)*(x3*y4**2+2*x4*y3*y4-x3*x4**2)
+          vee(10) = (y3**2+x3**2)*(x3*y4**2+2*x4*y3*y4-x3*x4**2)
+          vee(11) = x4*(y3**2+x3**2)*(3.d0*y4**2-x4**2)
+          vee(12) = (2.d0*x3*y3*y4+x4*y3**2-x3**2*x4)*(y4**2+x4**2)
+          vee(13) = x3*(3.d0*y3**2-x3**2)*(y4**2+x4**2)
+          vee(14) = 4.d0*x3*y3**3*y4-4.d0*x3**3*y3*y4-x4*y3**4                        &
+         &          +6.d0*x3**2*x4*y3**2-x3**4*x4
+          vee(15) = (y3**2+x3**2)*(2.d0*x3*y3*y4+x4*y3**2-x3**2*x4)
+    
+    
+          vee(16) = (y3*y4**5-5.d0*x3*x4*y4**4-10.d0*x4**2*y3*y4**3                   &
+         &          +10.d0*x3*x4**3*y4**2+5.d0*x4**4*y3*y4-x3*x4**5)
+          vee(17) = (y3*y4**2-x3*y4**2-2.d0*x4*y3*y4-2.d0*x3*x4*y4                    &
+         &          -x4**2*y3+x3*x4**2)*(y3*y4**2+x3*y4**2+2.d0*x4*y3*y4                &
+         &          -2.d0*x3*x4*y4-x4**2*y3-x3*x4**2)
+          vee(18) = (y3*y4-x3*x4)*(y3**2*y4**2-3.d0*x3**2*y4**2                       &
+         &          -8.d0*x3*x4*y3*y4-3.d0*x4**2*y3**2+x3**2*x4**2)
+          vee(19) = (y3**2*y4-2.d0*x3*y3*y4-x3**2*y4-x4*y3**2                         &
+         &          -2.d0*x3*x4*y3+x3**2*x4)*(y3**2*y4+2.d0*x3*y3*y4                    &
+         &          -x3**2*y4+x4*y3**2-2.d0*x3*x4*y3-x3**2*x4)
+          vee(20) = (y3**5*y4-10.d0*x3**2*y3**3*y4+5.d0*x3**4*y3*y4                   &
+         &          -5.d0*x3*x4*y3**4+10.d0*x3**3*x4*y3**2-x3**5*x4)
+    
+          vee(21) = (y3*y4+x3*x4)*(y4**2+x4**2)**2
+          vee(22) = (y3*y4-x3*y4+x4*y3+x3*x4)*(y3*y4+x3*y4                            &
+         &          -x4*y3+x3*x4)*(y4**2+x4**2)
+          vee(23) = (y3**2+x3**2)*(y4**2+x4**2)**2
+          vee(24) = (y3*y4+x3*x4)*(y3**2*y4**2-3.d0*x3**2*y4**2                       &
+         &          +8.d0*x3*x4*y3*y4-3.d0*x4**2*y3**2+x3**2*x4**2)
+          vee(25) = (y3**2+x3**2)*(y3*y4+x3*x4)*(y4**2+x4**2)
+          vee(26) = (y3**2+x3**2)*(y3*y4-x3*y4+x4*y3+x3*x4)                           &
+         &          *(y3*y4+x3*y4-x4*y3+x3*x4)
+          vee(27) = (y3**2+x3**2)**2*(y4**2+x4**2)
+          vee(28) = (y3**2+x3**2)**2*(y3*y4+x3*x4)
+    
+    !..   compute Wcoup_ee terms:
+          wee(1) = x3 * x4 - y3 * y4
+          wee(2) = x3**2 * x4 + x4 * y3**2
+          wee(3) = x3 * y4**2 + x3 * x4**2
+          wee(4) = 2.d0 * x3 * y3 * y4 + x3**2 * x4 - x4 * y3**2
+          wee(5) = x3 * x4**2 + 2.d0 * x4 * y3*y4 - x3 * y4**2
+          wee(6) = x3**3 * x4 - 3.d0 * x3**2 *y3*y4                                   &
+         &            - 3.d0*x3*x4*y3**2 + y3**3*y4
+          wee(7) = x3**2*x4**2 - x3**2*y4**2 - x4**2*y3**2 + y3**2*y4**2              &
+         & - 4.d0*x3*x4*y3*y4
+          wee(8) =x4**3*x3 - 3.d0*x3*x4*y4**2 - 3.d0*x4**2*y3*y4+y4**3*y3
+    !               wee44(9) =x3**3*x4 - 3.d0*x3**2*y3*y4 -3.d0*x3*x4*y3**2-y3**3*y4
+          wee(9) =x3**3*x4 + 3.d0*x3**2*y3*y4 - 3.d0*x3*x4*y3**2-y3**3*y4
+    !               wee45(10) =x4**3*x3 - 3.d0*x3*x4*y4**2 - 3.d0*x4**2*y3*y4-y4**3*y3
+          wee(10) =x4**3*x3 - 3.d0*x3*x4*y4**2 + 3.d0*x4**2*y3*y4-y4**3*y3
+          wee(11) = x3**3*x4 - x3**2*y3*y4 + x3*x4*y3**2 - y3**3*y4
+          wee(12) = x3**2*x4**2 + x3**2*y4**2 - x4**2*y3**2 - y3**2*y4**2
+          wee(13) = x3**2*x4**2 - x3**2*y4**2 + x4**2*y3**2 - y3**2*y4**2
+          wee(14) = x3*x4**3 + x3*x4*y4**2 - x4**2*y3*y4 - y4**3*y3
+    
+          wee(15) = (x3*y4**4+4.d0*x4*y3*y4**3-6.d0*x3*x4**2*y4**2                    &
+         &          -4.d0*x4**3*y3*y4+x3*x4**4)
+          wee(16) = (2.d0*x3*y3*y4**3+3.d0*x4*y3**2*y4**2                             &
+         & -3.d0*x3**2*x4*y4**2-6.d0*x3*x4**2*y3*y4-x4**3*y3**2+x3**2*x4**3)
+          wee(17) = (3.d0*x3*y3**2*y4**2-x3**3*y4**2+2.d0*x4*y3**3*y4                 &
+         &          -6.d0*x3**2*x4*y3*y4-3.d0*x3*x4**2*y3**2+x3**3*x4**2)
+          wee(18) = (4.d0*x3*y3**3*y4-4.d0*x3**3*y3*y4+x4*y3**4                       &
+         &          -6.d0*x3**2*x4*y3**2+x3**4*x4)
+    
+          wee(19) = -(y4**2+x4**2)*(x3*y4**2-2.d0*x4*y3*y4-x3*x4**2)
+          wee(20) = x3*(y4**2+x4**2)**2
+          wee(21) = -(2.d0*x3*y3*y4**3-3.d0*x4*y3**2*y4**2+3.d0*x3**2                 &
+         &          *x4*y4**2-6.d0*x3*x4**2*y3*y4+x4**3*y3**2-x3**2*x4**3)
+          wee(22) = x4*(y3**2+x3**2)*(y4**2+x4**2)
+          wee(23) = -(y3**2+x3**2)*(x3*y4**2-2.d0*x4*y3*y4-x3*x4**2)
+          wee(24) = x3*(y3**2+x3**2)*(y4**2+x4**2)
+          wee(25) = x4*(y3**2+x3**2)**2
+          wee(26) = (y3**2+x3**2)*(2.d0*x3*y3*y4-x4*y3**2+x3**2*x4)
+    
+          wee(27) = (y3*y4**5+5.d0*x3*x4*y4**4-10.d0*x4**2*y3*y4**3               &
+         &    -10.d0*x3*x4**3*y4**2+5.d0*x4**4*y3*y4+x3*x4**5)
+          wee(28) = (y4**2+x4**2)*(y3*y4**3-3.d0*x3*x4*y4**2                      &
+         &    -3.d0*x4**2*y3*y4+x3*x4**3)
+          wee(29) = (y3**2+x3**2)*(y4**2-2.d0*x4*y4-x4**2)                        &
+         &    *(y4**2+2.d0*x4*y4-x4**2)
+          wee(30) = (y3*y4-x3*y4-x4*y3-x3*x4)*(y3*y4+x3*y4                        &
+         &    +x4*y3-x3*x4)*(y4**2+x4**2)
+          wee(31) = (y3**2+x3**2)*(y3*y4**3-3.d0*x3*x4*y4**2                      &
+         &    -3.d0*x4**2*y3*y4+x3*x4**3)
+          wee(32) = (y3**3*y4-3.d0*x3**2*y3*y4-3.d0*x3*x4*y3**2+x3**3*x4)         &
+         &    *(y4**2+x4**2)
+          wee(33) = (y3**2+x3**2)*(y3*y4-x3*y4-x4*y3-x3*x4)                       &
+         &    *(y3*y4+x3*y4+x4*y3-x3*x4)
+          wee(34) = (y3**2-2.d0*x3*y3-x3**2)*(y3**2+2.d0*x3*y3-x3**2)             &
+         &    *(y4**2+x4**2)
+          wee(35) = (y3**2+x3**2)*(y3**3*y4-3.d0*x3**2*y3*y4                      &
+         &    -3.d0*x3*x4*y3**2+x3**3*x4)
+          wee(36)= (y3**5*y4-10.d0*x3**2*y3**3*y4+5.d0*x3**4*y3*y4                &
+         &    +5.d0*x3*x4*y3**4-10.d0*x3**3*x4*y3**2+x3**5*x4)
+    
+          wee(37) = (y3*y4-x3*x4)*(y4**2+x4**2)**2
+          wee(38) = (y4**2+x4**2)*(y3*y4**3+3.d0*x3*x4*y4**2                      &
+         &    -3.d0*x4**2*y3*y4-x3*x4**3)
+          wee(39) = (y3**2+x3**2)*(y4-x4)*(y4+x4)*(y4**2+x4**2)
+          wee(40) = (y3-x3)*(y3+x3)*(y4**2+x4**2)**2
+          wee(41) = (y3*y4**2-x3*y4**2+2.d0*x4*y3*y4+2.d0*x3*x4*y4                &
+         &    -x4**2*y3+x3*x4**2)*(y3*y4**2+x3*y4**2-2.d0*x4*y3*y4                  &
+         &    +2.d0*x3*x4*y4-x4**2*y3-x3*x4**2)
+          wee(42) = (y3**3*y4-3.d0*x3**2*y3*y4+3.d0*x3*x4*y3**2-x3**3*x4)         &
+         &    *(y4**2+x4**2)
+          wee(43) = (y3**2+x3**2)*(y3*y4-x3*x4)*(y4**2+x4**2)
+          wee(44) = (y3**2+x3**2)*(y3*y4**3+3.d0*x3*x4*y4**2                      &
+         &    -3.d0*x4**2*y3*y4-x3*x4**3)
+          wee(45) = (y3**2*y4-2.d0*x3*y3*y4-x3**2*y4+x4*y3**2                     &
+         &    +2.d0*x3*x4*y3-x3**2*x4)*(y3**2*y4+2.d0*x3*y3*y4-x3**2*y4             &
+         &    -x4*y3**2+2.d0*x3*x4*y3+x3**2*x4)
+          wee(46) = (y3-x3)*(y3+x3)*(y3**2+x3**2)*(y4**2+x4**2)
+          wee(47) = (y3**2+x3**2)**2*(y4-x4)*(y4+x4)
+          wee(48) = (y3**2+x3**2)*(y3**3*y4-3.d0*x3**2*y3*y4                      &
+         &    +3.d0*x3*x4*y3**2-x3**3*x4)
+          wee(49) = (y3**2+x3**2)**2*(y3*y4-x3*x4)
+    
+    !..   compute Zcoup_ee terms:
+          zee(1) = -x3*y4 - x4*y3
+    
+          zee(2) = y3**2*y4 + x3**2*y4
+          zee(3) = y3*y4**2 + x4**2*y3
+          zee(4) = y3**2*y4 + 2.d0*x3*x4*y3 - x3**2*y4
+          zee(5) = y4**2*y3 + 2.d0*x3*x4*y4 - x4**2*y3
+    
+          zee(6) = x3**3*y4 + 3.d0*x3**2*x4*y3                                        &
+         &          - 3.d0*x3*y3**2*y4 - x4*y3**3
+          zee(7) = 2.d0*x3**2*x4*y4 + 2.d0*x3*x4**2*y3 - 2.d0*x3*y3*y4**2             &
+         & - 2.d0*x4*y3**2*y4
+          zee(8) =x4**3*y3 +3.d0*x3*x4**2*y4 - 3.d0*x4*y3*y4**2 - x3*y4**3
+          zee(9) =x3**3*y4 -3.d0*x3**2*x4*y3 - 3.d0*x3*y3**2*y4 + x4*y3**3
+          zee(10)=x4**3*y3 -3.d0*x3*x4**2*y4 - 3.d0*x4*y3*y4**2 + x3*y4**3
+          zee(11) = - x3**3*y4 - x3**2*x4*y3 - x3*y3**2*y4 - x4*y3**3
+          zee(12) = - 2.d0*x3*x4**2*y3 - 2.d0*x3*y3*y4**2
+          zee(13) = - 2.d0*x3**2*x4*y4 - 2.d0*x4*y3**2*y4
+          zee(14) = - y4**3*x3 - x3*x4**2*y4 - x4*y3*y4**2 - y3*x4**3
+    
+          zee(15) = -(y3*y4**4-4.d0*x3*x4*y4**3-6.d0*x4**2*y3*y4**2                                   &
+         &           +4.d0*x3*x4**3*y4+x4**4*y3)
+          zee(16) = -(y3**2*y4**3-x3**2*y4**3-6.d0*x3*x4*y3*y4**2                                     &
+         &     -3.d0*x4**2*y3**2*y4+3.d0*x3**2*x4**2*y4+2.d0*x3*x4**3*y3)
+          zee(17) = -(y3**3*y4**2-3.d0*x3**2*y3*y4**2-6.d0*x3*x4*y3**2*y4                             &
+         &           +2.d0*x3**3*x4*y4-x4**2*y3**3+3.d0*x3**2*x4**2*y3)
+          zee(18)=-(y3**4*y4-6.d0*x3**2*y3**2*y4+x3**4*y4-4.d0*x3*x4*y3**3                          &
+         &           +4.d0*x3**3*x4*y3)
+    
+          zee(19) = (y4**2+x4**2)*(y3*y4**2+2.d0*x3*x4*y4-x4**2*y3)
+          zee(20) = y3*(y4**2+x4**2)**2
+          zee(21) = (y3**2*y4**3-x3**2*y4**3+6.d0*x3*x4*y3*y4**2                                      &
+         &     -3.d0*x4**2*y3**2*y4+3.d0*x3**2*x4**2*y4-2.d0*x3*x4**3*y3)
+          zee(22) = (y3**2+x3**2)*y4*(y4**2+x4**2)
+          zee(23) = (y3**2+x3**2)*(y3*y4**2+2.d0*x3*x4*y4-x4**2*y3)
+          zee(24) = y3*(y3**2+x3**2)*(y4**2+x4**2)
+          zee(25) = (y3**2+x3**2)**2*y4
+          zee(26) = (y3**2+x3**2)*(y3**2*y4-x3**2*y4+2.d0*x3*x4*y3)
+    
+          zee(27) = (x3*y4**5-5.d0*x4*y3*y4**4-10.d0*x3*x4**2*y4**3               &
+         &   +10.d0*x4**3*y3*y4**2+5.d0*x3*x4**4*y4-x4**5*y3)
+          zee(28) = -(y4**2+x4**2)*(x3*y4**3+3.d0*x4*y3*y4**2                     &
+         &   -3.d0*x3*x4**2*y4-x4**3*y3)
+          zee(29) = -4.d0*x4*(y3**2+x3**2)*y4*(y4-x4)*(y4+x4)
+          zee(30) = -2.d0*(x3*y4+x4*y3)*(y3*y4-x3*x4)*(y4**2+x4**2)
+          zee(31) = -(y3**2+x3**2)*(x3*y4**3+3.d0*x4*y3*y4**2                     &
+         &   -3.d0*x3*x4**2*y4-x4**3*y3)
+          zee(32) = -(3.d0*x3*y3**2*y4-x3**3*y4+x4*y3**3                          &
+         &   -3.d0*x3**2*x4*y3)*(y4**2+x4**2)
+          zee(33) = -2.d0*(y3**2+x3**2)*(x3*y4+x4*y3)*(y3*y4-x3*x4)
+          zee(34) = -4.d0*x3*y3*(y3-x3)*(y3+x3)*(y4**2+x4**2)
+          zee(35) = -(y3**2+x3**2)*(3.d0*x3*y3**2*y4-x3**3*y4+x4*y3**3            &
+         &   -3.d0*x3**2*x4*y3)
+          zee(36)= -(5.d0*x3*y3**4*y4-10.d0*x3**3*y3**2*y4+x3**5*y4              &
+         &   -x4*y3**5+10.d0*x3**2*x4*y3**3-5.d0*x3**4*x4*y3)
+    
+    
+          zee(37) = (x3*y4+x4*y3)*(y4**2+x4**2)**2
+          zee(38) = -(y4**2+x4**2)*(x3*y4**3-3.d0*x4*y3*y4**2                    &
+         &   -3.d0*x3*x4**2*y4+x4**3*y3)
+          zee(40) = 2.d0*x3*y3*(y4**2+x4**2)**2                 !permutation 39/40 DML 5/10/2021
+          zee(39) = 2.d0*x4*(y3**2+x3**2)*y4*(y4**2+x4**2)      !permutation 39/40 DML 5/10/2021
+          zee(41) = -2.d0*(x3*y4**2-2.d0*x4*y3*y4-x3*x4**2)                      &
+         &   *(y3*y4**2+2.d0*x3*x4*y4-x4**2*y3)
+          zee(42) = (3.d0*x3*y3**2*y4-x3**3*y4-x4*y3**3+3.d0*x3**2*x4*y3)        &
+         &   *(y4**2+x4**2)
+          zee(43) = (y3**2+x3**2)*(x3*y4+x4*y3)*(y4**2+x4**2)
+          zee(44) = -(y3**2+x3**2)*(x3*y4**3-3.d0*x4*y3*y4**2                    &
+         &   -3.d0*x3*x4**2*y4+x4**3*y3)
+          zee(45) = 2.d0*(2.d0*x3*y3*y4-x4*y3**2+x3**2*x4)                       &
+         &   *(y3**2*y4-x3**2*y4+2.d0*x3*x4*y3)
+          zee(46) = 2.d0*x3*y3*(y3**2+x3**2)*(y4**2+x4**2)
+          zee(47) = 2.d0*x4*(y3**2+x3**2)**2*y4
+          zee(48) = (y3**2+x3**2)*(3.d0*x3*y3**2*y4-x3**3*y4-x4*y3**3            &
+         &   +3.d0*x3**2*x4*y3)
+          zee(49) = (y3**2+x3**2)**2*(x3*y4+x4*y3)
+    
+  end subroutine QML_NO3_vwzprec
   subroutine vwzprec(n,q)
     implicit none
     !      include 'params.incl'
