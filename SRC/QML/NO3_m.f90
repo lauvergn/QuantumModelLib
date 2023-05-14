@@ -840,19 +840,28 @@ MODULE QML_NO3_m
           integer,           pointer :: iref,pst(:,:)
           real (kind=Rkind), pointer :: p(:),e0ref,e0rho
 
-          !common /no3minus_pot/e0ref,e0rho,p,pst,iref
     
           integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-          TYPE(acoord_vjt_vee_t)  :: avv
+          TYPE(acoord_vjt_vee_t), target  :: avv
 
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vvee/ vee,  wee, zee
+          real(kind=Rkind), pointer :: pa(:), pb(:)
+          real(kind=Rkind), pointer :: va(:), vb(:)
+          real(kind=Rkind), pointer :: wa(:), wb(:)
+          real(kind=Rkind), pointer :: za(:), zb(:)
+          real(kind=Rkind), pointer :: vee(:),  wee(:), zee(:)
+
+          pa => avv%pa
+          pb => avv%pb
+          va => avv%va
+          vb => avv%vb
+          wa => avv%wa
+          wb => avv%wb
+          za => avv%za
+          zb => avv%zb
+
+          vee => avv%vee
+          wee => avv%wee
+          zee => avv%zee
 
           iref  => QModel%no3minus_pot%iref
           pst   => QModel%no3minus_pot%pst
@@ -860,13 +869,8 @@ MODULE QML_NO3_m
           e0ref => QModel%no3minus_pot%e0ref
           e0rho => QModel%no3minus_pot%e0rho
 
-          ! compute symmetrized internal coordinate for PES
-          !call trans_coord(x,qinter,QModel%transformcoordblock,QModel%tmc)
-          !write(6,99)(qinter(i),i=1,7)
-
           call QML_NO3_trans_coord(x,qinter,QModel%transformcoordblock,QModel%tmc)
-          !write(6,99)(qinter(i),i=1,7)
-      99   format(7g20.10)
+          !write(6,'(7g20.10)')(qinter(i),i=1,7)
 
       ! PES computation
     ! PES diabatic matrix computation
@@ -880,12 +884,9 @@ MODULE QML_NO3_m
           damp=exp(-abs(p(pst(1,26))*qinter(7)))       !damping of pure umbrella mode
     
     ! precompute terms
-          itd=0
-    !$    itd=omp_get_thread_num()
-          itd=itd+1
-          call vwzprec(itd,qinter)
           CALL QML_NO3_vwzprec(qinter,avv)
-    ! reference low order surface -> in eloworder
+
+          ! reference low order surface -> in eloworder
     
     ! computing first order matrix (iref=0 in Wofgang Eisfeld code)
           itemp=0
@@ -895,85 +896,85 @@ MODULE QML_NO3_m
     ! symmetric stretching
     !..   a1 symmetric stretch:
     !      call Epolynom(dum,itd, p(pst(1,1)), pst(2,1), itemp)
-          dum=pa(1,itd) * p(pst(1,1))+pa(2,itd) * p(pst(1,1)+1)
+          dum=pa(1) * p(pst(1,1))+pa(2) * p(pst(1,1)+1)
     !      write(6,*)'dum low',dum
           eref=eref+dum
     
     ! umbrella mode
     !..   a2 umbrella:
     !      call Epolynom2(dum,itd, p(pst(1,2)), pst(2,2), itemp)
-          dum=pb(1,itd) * p(pst(1,2))
+          dum=pb(1) * p(pst(1,2))
     !      write(6,*)'dum low',dum
           eref=eref+dum*damp
     
     ! e stretching mode:
     ! e bending mode:
     !      call Evjt6a(dum,itd, p(pst(1,3)), pst(2,3), itemp)
-          dum= p(pst(1,3)) * va(1,itd)
+          dum= p(pst(1,3)) * va(1)
     !      write(6,*)'dum low',dum
           eref = eref + dum
     !      call Evjt6b(dum,itd, p(pst(1,4)), pst(2,4), itemp)
-          dum= p(pst(1,4)) * vb(1,itd)
+          dum= p(pst(1,4)) * vb(1)
     !      write(6,*)'dum low',dum
           eref = eref + dum
     
     !..   mode-mode coupling of a1-e
     !      call Evcoup_e1a(dum,itd, p(pst(1,6)), pst(2,6), itemp)  ! e-a coupling 1. e mode
-          dum= (p(pst(1,6))*pa(1,itd)*va(1,itd))
+          dum= (p(pst(1,6))*pa(1)*va(1))
     !      write(6,*)'dum low',dum
           eref = eref + dum
     !      call Evcoup_e2a(dum,itd, p(pst(1,7)), pst(2,7), itemp)  ! e-a coupling 2. e mode
-          dum=(p(pst(1,7))*pa(1,itd)*vb(1,itd))
+          dum=(p(pst(1,7))*pa(1)*vb(1))
     !      write(6,*)'dum low',dum
           eref = eref + dum
     
     !..   mode-mode coupling of a2-e
     !      call Evcoup_e1a2(dum,itd, p(pst(1,13)), pst(2,13), itemp)     !  coupling with asym. str.
-          dum=p(pst(1,13))*pb(1,itd)*va(1,itd)
+          dum=p(pst(1,13))*pb(1)*va(1)
     !      write(6,*)'dum low',dum
           eref = eref + dum*damp
     !      call Evcoup_e2a2(dum,itd, p(pst(1,14)), pst(2,14), itemp)     !  coupling with asym. bend
-          dum=p(pst(1,14))*pb(1,itd)*vb(1,itd)
+          dum=p(pst(1,14))*pb(1)*vb(1)
     !      write(6,*)'dum low',dum
           eref = eref + dum*damp
     
     
     !..   mode-mode coupling of a1-a2
     !      call Evcoup_aa(dum,itd,p(pst(1,17)),pst(2,17), itemp)         !  coupling of a1 and a2
-          dum=p(pst(1,17)) * pa(1,itd) * pb(1,itd)
+          dum=p(pst(1,17)) * pa(1) * pb(1)
     !      write(6,*)'dum low',dum
           eref = eref + dum*damp
     
     
     !..   mode-mode coupling e-e
     !      call Evcoup_ee(dum,itd, p(pst(1,5)), pst(2,5), itemp)        ! e-e coupling
-          dum=p(pst(1,5)) * vee(1,itd)
+          dum=p(pst(1,5)) * vee(1)
     !      write(6,*)'dum low',dum
           eref = eref + dum
     
     
     !..   3-mode coupling e-e-a2
     !      call Evcoup_eea2(dum,itd,p(pst(1,18)),pst(2,18),itemp)        !  e-e-a2 coupling
-          dum=p(pst(1,18)) * pb(1,itd) * vee(1,itd)
+          dum=p(pst(1,18)) * pb(1) * vee(1)
     !      write(6,*)'dum low',dum
           eref = eref + dum*damp
     
     
     !..   3-mode coupling e-a1-a2
     !      call Evcoup_e1aa2(dum,itd,p(pst(1,20)),pst(2,20),itemp)        !  e-a1-a2 coupling (asym. stretch)
-          dum=(p(pst(1,20)) * pa(1,itd) * pb(1,itd) * va(1,itd))
+          dum=(p(pst(1,20)) * pa(1) * pb(1) * va(1))
     !      write(6,*)'dum low',dum
     !      eref = eref + dum BUG detected 30.09.2015
           eref = eref + dum*damp
     !      call Evcoup_e2aa2(dum,itd,p(pst(1,21)),pst(2,21),itemp)        !  e-a1-a2 coupling (asym. bend)
-          dum=(p(pst(1,21)) * pa(1,itd) * pb(1,itd) * vb(1,itd))
+          dum=(p(pst(1,21)) * pa(1) * pb(1) * vb(1))
     !      write(6,*)'dum low',dum
           eref = eref + dum*damp
     
     
     !..   3-mode coupling e-e-a1
     !      call Evcoup_eea1(dum,itd,p(pst(1,24)),pst(2,24),itemp)        !  e-e-a1 coupling
-          dum=p(pst(1,24)) * pa(1,itd) * vee(1,itd)
+          dum=p(pst(1,24)) * pa(1) * vee(1)
     !      write(6,*)'dum low',dum
           eref = eref + dum
     !
@@ -987,42 +988,42 @@ MODULE QML_NO3_m
     
     !..   add JT coupling for 1. e mode
     !      call Ewjt6a(dum,itd, p(pst(1,8)), pst(2,8), itemp)
-          dum=p(pst(1,8)) * wa(1,itd)
+          dum=p(pst(1,8)) * wa(1)
           w = dum
     
     !      call Ezjt6a(dum,itd, p(pst(1,8)), pst(2,8), itemp)
-          dum=p(pst(1,8)) * za(1,itd)
+          dum=p(pst(1,8)) * za(1)
           z = dum
     
     !..   add JT coupling for 2. e mode
     !      call Ewjt6b(dum, itd, p(pst(1, 9)), pst(2, 9), itemp)
-          dum=p(pst(1,9)) * wb(1,itd)
+          dum=p(pst(1,9)) * wb(1)
           w=w+dum
     !      call Ezjt6b(dum, itd, p(pst(1, 9)), pst(2, 9), itemp)
-          dum=p(pst(1,9)) * zb(1,itd)
+          dum=p(pst(1,9)) * zb(1)
           z=z+dum
     
     !..   add JT mode-mode coupling between two e modes:
     !      call Ewcoup_ee(dum,itd,p(pst(1,10)), pst(2,10), itemp)
-          dum=p(pst(1,10)) * wee(1,itd)
+          dum=p(pst(1,10)) * wee(1)
           w=w+dum
     !      call Ezcoup_ee(dum,itd,p(pst(1,10)), pst(2,10), itemp)
-          dum=p(pst(1,10)) * zee(1,itd)
+          dum=p(pst(1,10)) * zee(1)
           z=z+dum
     !..   add JT mode-mode coupling between a1 and e modes:
     !      call Ewcoup_e1a(dum,itd, p(pst(1,11)), pst(2,11), itemp)
-          dum=p(pst(1,11))*pa(1,itd)*wa(1,itd)
+          dum=p(pst(1,11))*pa(1)*wa(1)
           w=w+dum
     !      call Ezcoup_e1a(dum,itd, p(pst(1,11)), pst(2,11), itemp)
-          dum=p(pst(1,11))*pa(1,itd)*za(1,itd)
+          dum=p(pst(1,11))*pa(1)*za(1)
           z=z+dum
     
     
     !      call Ewcoup_e2a(dum,itd, p(pst(1,12)), pst(2,12), itemp)
-          dum=p(pst(1,12))*pa(1,itd)*wb(1,itd)
+          dum=p(pst(1,12))*pa(1)*wb(1)
           w=w+dum
     !      call Ezcoup_e2a(dum,itd, p(pst(1,12)), pst(2,12), itemp)
-          dum=p(pst(1,12))*pa(1,itd)*zb(1,itd)
+          dum=p(pst(1,12))*pa(1)*zb(1)
           z=z+dum
     
     !--------------------------------------------------------------------------------
@@ -1030,49 +1031,49 @@ MODULE QML_NO3_m
     !..   add JT mode-mode coupling between a2 and e modes:
     !      damp=exp(-abs(p(pst(1,26))*r(1))) !already computed
     !      call Ewcoup_e1a2(dum,itd,p(pst(1,15)),pst(2,15), itemp)
-          dum=p(pst(1,15)) * pb(1,itd) * wa(1,itd)
+          dum=p(pst(1,15)) * pb(1) * wa(1)
           w=w+dum*damp
     !      call Ezcoup_e1a2(dum,itd,p(pst(1,15)),pst(2,15), itemp)
-          dum=p(pst(1,15)) * pb(1,itd) * za(1,itd)
+          dum=p(pst(1,15)) * pb(1) * za(1)
           z=z+dum*damp
     
     !      call Ewcoup_e2a2(dum,itd,p(pst(1,16)),pst(2,16), itemp)
-          dum=p(pst(1,16)) * pb(1,itd) * wb(1,itd)
+          dum=p(pst(1,16)) * pb(1) * wb(1)
           w=w+dum*damp
     !      call Ezcoup_e2a2(dum,itd,p(pst(1,16)),pst(2,16), itemp)
-          dum=p(pst(1,16)) * pb(1,itd) * zb(1,itd)
+          dum=p(pst(1,16)) * pb(1) * zb(1)
           z=z+dum*damp
     
     
     !..   add 3-mode coupling between e-e-a2 modes:
     !      call Ewcoup_eea2(dum,itd,p(pst(1,19)),pst(2,19), itemp)
-          dum=p(pst(1,19)) * pb(1,itd) * wee(1,itd)
+          dum=p(pst(1,19)) * pb(1) * wee(1)
           w=w+dum*damp
     !      call Ezcoup_eea2(dum,itd,p(pst(1,19)),pst(2,19), itemp)
-          dum=p(pst(1,19)) * pb(1,itd) * zee(1,itd)
+          dum=p(pst(1,19)) * pb(1) * zee(1)
           z=z+dum*damp
     
     !..   add 3-mode coupling between e-a1-a2 modes:
     !      call Ewcoup_e1aa2(dum,itd,p(pst(1,22)),pst(2,22), itemp)
-          dum=p(pst(1,22)) * pa(1,itd) * pb(1,itd) *wa(1,itd)
+          dum=p(pst(1,22)) * pa(1) * pb(1) *wa(1)
           w=w+dum*damp
     !      call Ezcoup_e1aa2(dum,itd,p(pst(1,22)),pst(2,22), itemp)
-          dum=p(pst(1,22)) * pa(1,itd) * pb(1,itd) *za(1,itd)
+          dum=p(pst(1,22)) * pa(1) * pb(1) *za(1)
           z=z+dum*damp
     !      call Ewcoup_e2aa2(dum,itd,p(pst(1,23)),pst(2,23), itemp)
-          dum=p(pst(1,23)) * pa(1,itd) * pb(1,itd) *wb(1,itd)
+          dum=p(pst(1,23)) * pa(1) * pb(1) *wb(1)
           w=w+dum*damp
     !      call Ezcoup_e2aa2(dum,itd,p(pst(1,23)),pst(2,23), itemp)
-          dum=p(pst(1,23)) * pa(1,itd) * pb(1,itd) *zb(1,itd)
+          dum=p(pst(1,23)) * pa(1) * pb(1) *zb(1)
           z=z+dum*damp
     
     !ICI      endif PLANAR logical
     !..   add 3-mode coupling between e-e-a1 modes:
     !      call Ewcoup_eea1(dum,itd,p(pst(1,25)),pst(2,25), itemp)
-          dum=p(pst(1,25)) * pa(1,itd) * wee(1,itd)
+          dum=p(pst(1,25)) * pa(1) * wee(1)
           w=w+dum     !*damp
     !      call Ezcoup_eea1(dum,itd,p(pst(1,25)),pst(2,25), itemp)
-          dum=p(pst(1,25)) * pa(1,itd) * zee(1,itd)
+          dum=p(pst(1,25)) * pa(1) * zee(1)
           z=z+dum     !*damp
     
           eloworder(1,1)=eloworder(1,1) + w
@@ -2828,321 +2829,6 @@ MODULE QML_NO3_m
           zee(49) = (y3**2+x3**2)**2*(x3*y4+x4*y3)
     
   end subroutine QML_NO3_vwzprec
-  subroutine vwzprec(n,q)
-    implicit none
-    !      include 'params.incl'
-    !      include 'states.f'
-    !      include 'vwzprec.incl'
-    
-    
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vvee/ vee,  wee, zee
-    
-          integer n,j
-          double precision q(6), a, b, x3, x4, y3, y4
-    
-          a=q(1)
-          b=q(2)
-          x3=q(3)
-          y3=q(4)
-          x4=q(5)
-          y4=q(6)
-    
-    !     compute powers of a1 mode:
-          pa(1,n) = a
-          pa(2,n) = a**2
-          pa(3,n) = a**3
-          pa(4,n) = a**4
-          pa(5,n) = a**5
-          pa(6,n) = a**6
-          pa(7,n) = a**7
-          pa(8,n) = a**8
-    
-    !     compute powers of a2 mode:
-          pb(1,n) = b**2
-          pb(2,n) = b**4
-          pb(3,n) = b**6
-          pb(4,n) = b**8
-    
-    !..   compute vjt terms for first e set:
-          va(1,n) = x3**2 + y3**2
-          va(2,n) = 2.d0 * x3**3 - 6.d0 * x3 * y3**2
-          va(3,n) = x3**4 + 2.d0 * x3**2 * y3**2 + y3**4
-          va(4,n) = 2.d0 * x3**5 - 4.d0 * x3**3 * y3**2 - 6.d0 * x3 * y3**4
-          va(5,n) = 2.d0 * x3**6 - 30.d0*x3**4*y3**2 + 30.d0*x3**2*y3**4 -2.d0 * y3**6
-          va(6,n) = x3**6 + 3.d0 * x3**4 * y3**2 + 3.d0 * x3**2 * y3**4 + y3**6
-    
-    !..   compute vjt terms for second e set:
-          vb(1,n) = x4**2 + y4**2
-          vb(2,n) = 2.d0 * x4**3 - 6.d0 * x4 * y4**2
-          vb(3,n) = x4**4 + 2.d0 * x4**2 * y4**2 + y4**4
-          vb(4,n) = 2.d0 * x4**5 - 4.d0 * x4**3 * y4**2 - 6.d0 * x4 * y4**4
-          vb(5,n) = 2.d0 * x4**6 - 30.d0*x4**4*y4**2 + 30.d0*x4**2*y4**4 -2.d0 * y4**6
-          vb(6,n) = x4**6 + 3.d0 * x4**4 * y4**2 + 3.d0 * x4**2 * y4**4 + y4**6
-    
-    !..   compute wjt terms for first e set:
-          wa(1,n) = x3
-          wa(2,n) = x3**2 - y3**2
-          wa(3,n) = x3**3 + x3*y3**2
-          wa(4,n) = x3**4 - 6.d0 * x3**2 * y3**2 + y3**4
-          wa(5,n) = x3**4 - y3**4
-          wa(6,n) = x3**5 - 10.d0 * x3**3 * y3**2 + 5.d0 * x3 * y3**4
-          wa(7,n) = x3**5 + 2.d0 * x3**3 * y3**2 + x3 * y3**4
-          wa(8,n) = x3**6 - 5.d0 * x3**4 * y3**2 - 5.d0 * x3**2*y3**4+y3**6
-          wa(9,n) = x3**6 + x3**4 * y3**2 - x3**2 * y3**4 - y3**6
-    
-    !..   compute wjt terms for second e set:
-          wb(1,n) = x4
-          wb(2,n) = x4**2 - y4**2
-          wb(3,n) = x4**3 + x4*y4**2
-          wb(4,n) = x4**4 - 6.d0 * x4**2 * y4**2 + y4**4
-          wb(5,n) = x4**4 - y4**4
-          wb(6,n) = x4**5 - 10.d0 * x4**3 * y4**2 + 5.d0 * x4 * y4**4
-          wb(7,n) = x4**5 + 2.d0 * x4**3 * y4**2 + x4 * y4**4
-          wb(8,n) = x4**6 - 5.d0 * x4**4 * y4**2 - 5.d0 * x4**2*y4**4+y4**6
-          wb(9,n) = x4**6 + x4**4 * y4**2 - x4**2 * y4**4 - y4**6
-    
-    !..   compute zjt terms for first e set:
-          za(1,n) = y3
-          za(2,n) = -2.d0*x3*y3
-          za(3,n) = y3**3 + y3*x3**2
-          za(4,n) = 4.d0*x3**3*y3 - 4.d0*x3*y3**3
-          za(5,n) = -2.d0*x3**3*y3 - 2.d0*x3*y3**3
-          za(6,n) = -5.d0*x3**4*y3 + 10.d0*x3**2*y3**3 - y3**5
-          za(7,n) =  x3**4*y3 + 2.d0*x3**2*y3**3 + y3**5
-          za(8,n) = 4.d0*x3**5*y3 - 4.d0*x3*y3**5
-          za(9,n) = -2.d0*x3**5*y3 - 4.d0*x3**3*y3**3 - 2.d0*x3*y3**5
-    
-    !..   compute zjt terms for second e set:
-          zb(1,n) = y4
-          zb(2,n) = -2.d0*x4*y4
-          zb(3,n) = y4**3 + y4*x4**2
-          zb(4,n) = 4.d0*x4**3*y4 - 4.d0*x4*y4**3
-          zb(5,n) = -2.d0*x4**3*y4 - 2.d0*x4*y4**3
-          zb(6,n) = -5.d0*x4**4*y4 + 10.d0*x4**2*y4**3 - y4**5
-          zb(7,n) =  x4**4*y4 + 2.d0*x4**2*y4**3 + y4**5
-          zb(8,n) = 4.d0*x4**5*y4 - 4.d0*x4*y4**5
-          zb(9,n) = -2.d0*x4**5*y4 - 4.d0*x4**3*y4**3 - 2.d0*x4*y4**5
-    
-    !..   compute Vcoup_ee terms:
-          vee(1,n) =  2.d0*x3*x4 + 2.d0*y3*y4
-          vee(2,n) = 2.d0*x3*x4**2 - 2.d0*x3*y4**2 - 4.d0*x4*y3*y4
-          vee(3,n) = 2.d0*x3**2*x4 - 2.d0*x4*y3**2 - 4.d0*x3*y3*y4
-          vee(4,n) = 2.d0*x3**2*x4**2 - 2.d0*x3**2*y4**2                                &
-         &          - 2.d0*x4**2*y3**2 + 2.d0*y3**2*y4**2                               &
-         &          + 8.d0*x3*x4*y3*y4
-          vee(5,n) = 2.d0*x3**3*x4 + 2.d0*x3**2*y3*y4                                   &
-         &          + 2.d0*x3*x4*y3**2 + 2.d0*y3**3*y4
-          vee(6,n) = 2.d0*x4**3*x3 + 2.d0*x3*x4*y4**2                                   &
-         &         + 2.d0*x4**2*y3*y4 + 2.d0*y4**3*y3
-          vee(7,n) = x3**2*x4**2 + x3**2*y4**2                                          &
-         &          + x4**2*y3**2 + y3**2*y4**2
-    
-          vee(8,n) = x3*y4**4-4*x4*y3*y4**3-6*x3*x4**2*y4**2+4*x4**3*y3*y4              &
-         &          +x3*x4**4
-          vee(9,n) = (y4**2+x4**2)*(x3*y4**2+2*x4*y3*y4-x3*x4**2)
-          vee(10,n) = (y3**2+x3**2)*(x3*y4**2+2*x4*y3*y4-x3*x4**2)
-          vee(11,n) = x4*(y3**2+x3**2)*(3.d0*y4**2-x4**2)
-          vee(12,n) = (2.d0*x3*y3*y4+x4*y3**2-x3**2*x4)*(y4**2+x4**2)
-          vee(13,n) = x3*(3.d0*y3**2-x3**2)*(y4**2+x4**2)
-          vee(14,n) = 4.d0*x3*y3**3*y4-4.d0*x3**3*y3*y4-x4*y3**4                        &
-         &          +6.d0*x3**2*x4*y3**2-x3**4*x4
-          vee(15,n) = (y3**2+x3**2)*(2.d0*x3*y3*y4+x4*y3**2-x3**2*x4)
-    
-    
-          vee(16,n) = (y3*y4**5-5.d0*x3*x4*y4**4-10.d0*x4**2*y3*y4**3                   &
-         &          +10.d0*x3*x4**3*y4**2+5.d0*x4**4*y3*y4-x3*x4**5)
-          vee(17,n) = (y3*y4**2-x3*y4**2-2.d0*x4*y3*y4-2.d0*x3*x4*y4                    &
-         &          -x4**2*y3+x3*x4**2)*(y3*y4**2+x3*y4**2+2.d0*x4*y3*y4                &
-         &          -2.d0*x3*x4*y4-x4**2*y3-x3*x4**2)
-          vee(18,n) = (y3*y4-x3*x4)*(y3**2*y4**2-3.d0*x3**2*y4**2                       &
-         &          -8.d0*x3*x4*y3*y4-3.d0*x4**2*y3**2+x3**2*x4**2)
-          vee(19,n) = (y3**2*y4-2.d0*x3*y3*y4-x3**2*y4-x4*y3**2                         &
-         &          -2.d0*x3*x4*y3+x3**2*x4)*(y3**2*y4+2.d0*x3*y3*y4                    &
-         &          -x3**2*y4+x4*y3**2-2.d0*x3*x4*y3-x3**2*x4)
-          vee(20,n) = (y3**5*y4-10.d0*x3**2*y3**3*y4+5.d0*x3**4*y3*y4                   &
-         &          -5.d0*x3*x4*y3**4+10.d0*x3**3*x4*y3**2-x3**5*x4)
-    
-          vee(21,n) = (y3*y4+x3*x4)*(y4**2+x4**2)**2
-          vee(22,n) = (y3*y4-x3*y4+x4*y3+x3*x4)*(y3*y4+x3*y4                            &
-         &          -x4*y3+x3*x4)*(y4**2+x4**2)
-          vee(23,n) = (y3**2+x3**2)*(y4**2+x4**2)**2
-          vee(24,n) = (y3*y4+x3*x4)*(y3**2*y4**2-3.d0*x3**2*y4**2                       &
-         &          +8.d0*x3*x4*y3*y4-3.d0*x4**2*y3**2+x3**2*x4**2)
-          vee(25,n) = (y3**2+x3**2)*(y3*y4+x3*x4)*(y4**2+x4**2)
-          vee(26,n) = (y3**2+x3**2)*(y3*y4-x3*y4+x4*y3+x3*x4)                           &
-         &          *(y3*y4+x3*y4-x4*y3+x3*x4)
-          vee(27,n) = (y3**2+x3**2)**2*(y4**2+x4**2)
-          vee(28,n) = (y3**2+x3**2)**2*(y3*y4+x3*x4)
-    
-    !..   compute Wcoup_ee terms:
-          wee(1,n) = x3 * x4 - y3 * y4
-          wee(2,n) = x3**2 * x4 + x4 * y3**2
-          wee(3,n) = x3 * y4**2 + x3 * x4**2
-          wee(4,n) = 2.d0 * x3 * y3 * y4 + x3**2 * x4 - x4 * y3**2
-          wee(5,n) = x3 * x4**2 + 2.d0 * x4 * y3*y4 - x3 * y4**2
-          wee(6,n) = x3**3 * x4 - 3.d0 * x3**2 *y3*y4                                   &
-         &            - 3.d0*x3*x4*y3**2 + y3**3*y4
-          wee(7,n) = x3**2*x4**2 - x3**2*y4**2 - x4**2*y3**2 + y3**2*y4**2              &
-         & - 4.d0*x3*x4*y3*y4
-          wee(8,n) =x4**3*x3 - 3.d0*x3*x4*y4**2 - 3.d0*x4**2*y3*y4+y4**3*y3
-    !               wee44(9,n) =x3**3*x4 - 3.d0*x3**2*y3*y4 -3.d0*x3*x4*y3**2-y3**3*y4
-          wee(9,n) =x3**3*x4 + 3.d0*x3**2*y3*y4 - 3.d0*x3*x4*y3**2-y3**3*y4
-    !               wee45(10,n) =x4**3*x3 - 3.d0*x3*x4*y4**2 - 3.d0*x4**2*y3*y4-y4**3*y3
-          wee(10,n) =x4**3*x3 - 3.d0*x3*x4*y4**2 + 3.d0*x4**2*y3*y4-y4**3*y3
-          wee(11,n) = x3**3*x4 - x3**2*y3*y4 + x3*x4*y3**2 - y3**3*y4
-          wee(12,n) = x3**2*x4**2 + x3**2*y4**2 - x4**2*y3**2 - y3**2*y4**2
-          wee(13,n) = x3**2*x4**2 - x3**2*y4**2 + x4**2*y3**2 - y3**2*y4**2
-          wee(14,n) = x3*x4**3 + x3*x4*y4**2 - x4**2*y3*y4 - y4**3*y3
-    
-          wee(15,n) = (x3*y4**4+4.d0*x4*y3*y4**3-6.d0*x3*x4**2*y4**2                    &
-         &          -4.d0*x4**3*y3*y4+x3*x4**4)
-          wee(16,n) = (2.d0*x3*y3*y4**3+3.d0*x4*y3**2*y4**2                             &
-         & -3.d0*x3**2*x4*y4**2-6.d0*x3*x4**2*y3*y4-x4**3*y3**2+x3**2*x4**3)
-          wee(17,n) = (3.d0*x3*y3**2*y4**2-x3**3*y4**2+2.d0*x4*y3**3*y4                 &
-         &          -6.d0*x3**2*x4*y3*y4-3.d0*x3*x4**2*y3**2+x3**3*x4**2)
-          wee(18,n) = (4.d0*x3*y3**3*y4-4.d0*x3**3*y3*y4+x4*y3**4                       &
-         &          -6.d0*x3**2*x4*y3**2+x3**4*x4)
-    
-          wee(19,n) = -(y4**2+x4**2)*(x3*y4**2-2.d0*x4*y3*y4-x3*x4**2)
-          wee(20,n) = x3*(y4**2+x4**2)**2
-          wee(21,n) = -(2.d0*x3*y3*y4**3-3.d0*x4*y3**2*y4**2+3.d0*x3**2                 &
-         &          *x4*y4**2-6.d0*x3*x4**2*y3*y4+x4**3*y3**2-x3**2*x4**3)
-          wee(22,n) = x4*(y3**2+x3**2)*(y4**2+x4**2)
-          wee(23,n) = -(y3**2+x3**2)*(x3*y4**2-2.d0*x4*y3*y4-x3*x4**2)
-          wee(24,n) = x3*(y3**2+x3**2)*(y4**2+x4**2)
-          wee(25,n) = x4*(y3**2+x3**2)**2
-          wee(26,n) = (y3**2+x3**2)*(2.d0*x3*y3*y4-x4*y3**2+x3**2*x4)
-    
-          wee(27,n) = (y3*y4**5+5.d0*x3*x4*y4**4-10.d0*x4**2*y3*y4**3               &
-         &    -10.d0*x3*x4**3*y4**2+5.d0*x4**4*y3*y4+x3*x4**5)
-          wee(28,n) = (y4**2+x4**2)*(y3*y4**3-3.d0*x3*x4*y4**2                      &
-         &    -3.d0*x4**2*y3*y4+x3*x4**3)
-          wee(29,n) = (y3**2+x3**2)*(y4**2-2.d0*x4*y4-x4**2)                        &
-         &    *(y4**2+2.d0*x4*y4-x4**2)
-          wee(30,n) = (y3*y4-x3*y4-x4*y3-x3*x4)*(y3*y4+x3*y4                        &
-         &    +x4*y3-x3*x4)*(y4**2+x4**2)
-          wee(31,n) = (y3**2+x3**2)*(y3*y4**3-3.d0*x3*x4*y4**2                      &
-         &    -3.d0*x4**2*y3*y4+x3*x4**3)
-          wee(32,n) = (y3**3*y4-3.d0*x3**2*y3*y4-3.d0*x3*x4*y3**2+x3**3*x4)         &
-         &    *(y4**2+x4**2)
-          wee(33,n) = (y3**2+x3**2)*(y3*y4-x3*y4-x4*y3-x3*x4)                       &
-         &    *(y3*y4+x3*y4+x4*y3-x3*x4)
-          wee(34,n) = (y3**2-2.d0*x3*y3-x3**2)*(y3**2+2.d0*x3*y3-x3**2)             &
-         &    *(y4**2+x4**2)
-          wee(35,n) = (y3**2+x3**2)*(y3**3*y4-3.d0*x3**2*y3*y4                      &
-         &    -3.d0*x3*x4*y3**2+x3**3*x4)
-          wee(36,n)= (y3**5*y4-10.d0*x3**2*y3**3*y4+5.d0*x3**4*y3*y4                &
-         &    +5.d0*x3*x4*y3**4-10.d0*x3**3*x4*y3**2+x3**5*x4)
-    
-          wee(37,n) = (y3*y4-x3*x4)*(y4**2+x4**2)**2
-          wee(38,n) = (y4**2+x4**2)*(y3*y4**3+3.d0*x3*x4*y4**2                      &
-         &    -3.d0*x4**2*y3*y4-x3*x4**3)
-          wee(39,n) = (y3**2+x3**2)*(y4-x4)*(y4+x4)*(y4**2+x4**2)
-          wee(40,n) = (y3-x3)*(y3+x3)*(y4**2+x4**2)**2
-          wee(41,n) = (y3*y4**2-x3*y4**2+2.d0*x4*y3*y4+2.d0*x3*x4*y4                &
-         &    -x4**2*y3+x3*x4**2)*(y3*y4**2+x3*y4**2-2.d0*x4*y3*y4                  &
-         &    +2.d0*x3*x4*y4-x4**2*y3-x3*x4**2)
-          wee(42,n) = (y3**3*y4-3.d0*x3**2*y3*y4+3.d0*x3*x4*y3**2-x3**3*x4)         &
-         &    *(y4**2+x4**2)
-          wee(43,n) = (y3**2+x3**2)*(y3*y4-x3*x4)*(y4**2+x4**2)
-          wee(44,n) = (y3**2+x3**2)*(y3*y4**3+3.d0*x3*x4*y4**2                      &
-         &    -3.d0*x4**2*y3*y4-x3*x4**3)
-          wee(45,n) = (y3**2*y4-2.d0*x3*y3*y4-x3**2*y4+x4*y3**2                     &
-         &    +2.d0*x3*x4*y3-x3**2*x4)*(y3**2*y4+2.d0*x3*y3*y4-x3**2*y4             &
-         &    -x4*y3**2+2.d0*x3*x4*y3+x3**2*x4)
-          wee(46,n) = (y3-x3)*(y3+x3)*(y3**2+x3**2)*(y4**2+x4**2)
-          wee(47,n) = (y3**2+x3**2)**2*(y4-x4)*(y4+x4)
-          wee(48,n) = (y3**2+x3**2)*(y3**3*y4-3.d0*x3**2*y3*y4                      &
-         &    +3.d0*x3*x4*y3**2-x3**3*x4)
-          wee(49,n) = (y3**2+x3**2)**2*(y3*y4-x3*x4)
-    
-    !..   compute Zcoup_ee terms:
-          zee(1,n) = -x3*y4 - x4*y3
-    
-          zee(2,n) = y3**2*y4 + x3**2*y4
-          zee(3,n) = y3*y4**2 + x4**2*y3
-          zee(4,n) = y3**2*y4 + 2.d0*x3*x4*y3 - x3**2*y4
-          zee(5,n) = y4**2*y3 + 2.d0*x3*x4*y4 - x4**2*y3
-    
-          zee(6,n) = x3**3*y4 + 3.d0*x3**2*x4*y3                                        &
-         &          - 3.d0*x3*y3**2*y4 - x4*y3**3
-          zee(7,n) = 2.d0*x3**2*x4*y4 + 2.d0*x3*x4**2*y3 - 2.d0*x3*y3*y4**2             &
-         & - 2.d0*x4*y3**2*y4
-          zee(8,n) =x4**3*y3 +3.d0*x3*x4**2*y4 - 3.d0*x4*y3*y4**2 - x3*y4**3
-          zee(9,n) =x3**3*y4 -3.d0*x3**2*x4*y3 - 3.d0*x3*y3**2*y4 + x4*y3**3
-          zee(10,n)=x4**3*y3 -3.d0*x3*x4**2*y4 - 3.d0*x4*y3*y4**2 + x3*y4**3
-          zee(11,n) = - x3**3*y4 - x3**2*x4*y3 - x3*y3**2*y4 - x4*y3**3
-          zee(12,n) = - 2.d0*x3*x4**2*y3 - 2.d0*x3*y3*y4**2
-          zee(13,n) = - 2.d0*x3**2*x4*y4 - 2.d0*x4*y3**2*y4
-          zee(14,n) = - y4**3*x3 - x3*x4**2*y4 - x4*y3*y4**2 - y3*x4**3
-    
-          zee(15,n) = -(y3*y4**4-4.d0*x3*x4*y4**3-6.d0*x4**2*y3*y4**2                                   &
-         &           +4.d0*x3*x4**3*y4+x4**4*y3)
-          zee(16,n) = -(y3**2*y4**3-x3**2*y4**3-6.d0*x3*x4*y3*y4**2                                     &
-         &     -3.d0*x4**2*y3**2*y4+3.d0*x3**2*x4**2*y4+2.d0*x3*x4**3*y3)
-          zee(17,n) = -(y3**3*y4**2-3.d0*x3**2*y3*y4**2-6.d0*x3*x4*y3**2*y4                             &
-         &           +2.d0*x3**3*x4*y4-x4**2*y3**3+3.d0*x3**2*x4**2*y3)
-          zee(18,n)=-(y3**4*y4-6.d0*x3**2*y3**2*y4+x3**4*y4-4.d0*x3*x4*y3**3                          &
-         &           +4.d0*x3**3*x4*y3)
-    
-          zee(19,n) = (y4**2+x4**2)*(y3*y4**2+2.d0*x3*x4*y4-x4**2*y3)
-          zee(20,n) = y3*(y4**2+x4**2)**2
-          zee(21,n) = (y3**2*y4**3-x3**2*y4**3+6.d0*x3*x4*y3*y4**2                                      &
-         &     -3.d0*x4**2*y3**2*y4+3.d0*x3**2*x4**2*y4-2.d0*x3*x4**3*y3)
-          zee(22,n) = (y3**2+x3**2)*y4*(y4**2+x4**2)
-          zee(23,n) = (y3**2+x3**2)*(y3*y4**2+2.d0*x3*x4*y4-x4**2*y3)
-          zee(24,n) = y3*(y3**2+x3**2)*(y4**2+x4**2)
-          zee(25,n) = (y3**2+x3**2)**2*y4
-          zee(26,n) = (y3**2+x3**2)*(y3**2*y4-x3**2*y4+2.d0*x3*x4*y3)
-    
-          zee(27,n) = (x3*y4**5-5.d0*x4*y3*y4**4-10.d0*x3*x4**2*y4**3               &
-         &   +10.d0*x4**3*y3*y4**2+5.d0*x3*x4**4*y4-x4**5*y3)
-          zee(28,n) = -(y4**2+x4**2)*(x3*y4**3+3.d0*x4*y3*y4**2                     &
-         &   -3.d0*x3*x4**2*y4-x4**3*y3)
-          zee(29,n) = -4.d0*x4*(y3**2+x3**2)*y4*(y4-x4)*(y4+x4)
-          zee(30,n) = -2.d0*(x3*y4+x4*y3)*(y3*y4-x3*x4)*(y4**2+x4**2)
-          zee(31,n) = -(y3**2+x3**2)*(x3*y4**3+3.d0*x4*y3*y4**2                     &
-         &   -3.d0*x3*x4**2*y4-x4**3*y3)
-          zee(32,n) = -(3.d0*x3*y3**2*y4-x3**3*y4+x4*y3**3                          &
-         &   -3.d0*x3**2*x4*y3)*(y4**2+x4**2)
-          zee(33,n) = -2.d0*(y3**2+x3**2)*(x3*y4+x4*y3)*(y3*y4-x3*x4)
-          zee(34,n) = -4.d0*x3*y3*(y3-x3)*(y3+x3)*(y4**2+x4**2)
-          zee(35,n) = -(y3**2+x3**2)*(3.d0*x3*y3**2*y4-x3**3*y4+x4*y3**3            &
-         &   -3.d0*x3**2*x4*y3)
-          zee(36,n)= -(5.d0*x3*y3**4*y4-10.d0*x3**3*y3**2*y4+x3**5*y4              &
-         &   -x4*y3**5+10.d0*x3**2*x4*y3**3-5.d0*x3**4*x4*y3)
-    
-    
-          zee(37,n) = (x3*y4+x4*y3)*(y4**2+x4**2)**2
-          zee(38,n) = -(y4**2+x4**2)*(x3*y4**3-3.d0*x4*y3*y4**2                    &
-         &   -3.d0*x3*x4**2*y4+x4**3*y3)
-          zee(40,n) = 2.d0*x3*y3*(y4**2+x4**2)**2                 !permutation 39/40 DML 5/10/2021
-          zee(39,n) = 2.d0*x4*(y3**2+x3**2)*y4*(y4**2+x4**2)      !permutation 39/40 DML 5/10/2021
-          zee(41,n) = -2.d0*(x3*y4**2-2.d0*x4*y3*y4-x3*x4**2)                      &
-         &   *(y3*y4**2+2.d0*x3*x4*y4-x4**2*y3)
-          zee(42,n) = (3.d0*x3*y3**2*y4-x3**3*y4-x4*y3**3+3.d0*x3**2*x4*y3)        &
-         &   *(y4**2+x4**2)
-          zee(43,n) = (y3**2+x3**2)*(x3*y4+x4*y3)*(y4**2+x4**2)
-          zee(44,n) = -(y3**2+x3**2)*(x3*y4**3-3.d0*x4*y3*y4**2                    &
-         &   -3.d0*x3*x4**2*y4+x4**3*y3)
-          zee(45,n) = 2.d0*(2.d0*x3*y3*y4-x4*y3**2+x3**2*x4)                       &
-         &   *(y3**2*y4-x3**2*y4+2.d0*x3*x4*y3)
-          zee(46,n) = 2.d0*x3*y3*(y3**2+x3**2)*(y4**2+x4**2)
-          zee(47,n) = 2.d0*x4*(y3**2+x3**2)**2*y4
-          zee(48,n) = (y3**2+x3**2)*(3.d0*x3*y3**2*y4-x3**3*y4-x4*y3**3            &
-         &   +3.d0*x3**2*x4*y3)
-          zee(49,n) = (y3**2+x3**2)**2*(x3*y4+x4*y3)
-    
-  end subroutine vwzprec
     !------------------------------------------------------------------------------
           subroutine tql2_NO3(nm,n,d,e,z,ierr)
             implicit none
