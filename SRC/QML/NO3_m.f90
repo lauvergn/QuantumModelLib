@@ -141,6 +141,9 @@ MODULE QML_NO3_m
       QModel%n    = 337
       QModel%npst = 30
 
+      call init_pot_para()
+
+
       !pi = FOUR*atan(ONE)
       QModel%sq2 = ONE/sqrt(TWO)
       QModel%sq3 = ONE/sqrt(THREE)
@@ -783,7 +786,7 @@ MODULE QML_NO3_m
     !XNO3(3,2)=ZERO
     !XNO3(3,3)=-1.1844937951551615_Rkind
 
-    CALL QML_NO3_potential(XNO3,vdia)
+    CALL QML_NO3_potential(XNO3,vdia,NO3Pot)
     Mat_OF_PotDia(1,1) = vdia(1,1)
     Mat_OF_PotDia(1,2) = vdia(1,2)
     Mat_OF_PotDia(2,1) = vdia(2,1)
@@ -820,23 +823,27 @@ MODULE QML_NO3_m
 ! vdia 1   5.3234458438400425E-002  -5.0114745937633876E-003
 ! vdia 2  -5.0114745937633876E-003   4.8620099394501577E-002
 !-----------------------------------------------------------
-  subroutine QML_NO3_potential(x,vdia)
+  subroutine QML_NO3_potential(x,vdia,NO3Pot)
     !$      use omp_lib
           implicit none
+          real (kind=Rkind),   intent(in)    :: x(0:3,3)  ! DML erreur x(0-3,3)
+          real (kind=Rkind),   intent(inout) :: vdia(2,2)
+          TYPE(QML_NO3_t),     intent(in)    :: NO3Pot
+
           integer itd ,i,itemp
-          real*8 x(0:3,3),vdia(2,2),v  ! DML erreur x(0-3,3)
-          real*8       qinter(7),e,damp
-          real*8 eref,w,z,damplow
-          real*8 polynom,polynom2,vjt6
-          real*8 vcoup_ea,vcoup_ea2,vcoup_aa,vcoup_ee
-          real*8 vcoup_eea2,vcoup_eaa2,vcoup_eea1
-          real*8 dum
-          real*8 eloworder(2,2),vloworder(2),uloworder(2,2)
-          real*8 fv1(2),fv2(2)
+          real (kind=Rkind) :: v
+          real (kind=Rkind) :: qinter(7),e,damp
+          real (kind=Rkind) :: eref,w,z,damplow
+          real (kind=Rkind) :: polynom,polynom2,vjt6
+          real (kind=Rkind) :: vcoup_ea,vcoup_ea2,vcoup_aa,vcoup_ee
+          real (kind=Rkind) :: vcoup_eea2,vcoup_eaa2,vcoup_eea1
+          real (kind=Rkind) :: dum
+          real (kind=Rkind) :: eloworder(2,2),vloworder(2),uloworder(2,2)
+          real (kind=Rkind) :: fv1(2),fv2(2)
           integer ierr,nmat
           integer iref,pst(2,100)
-          real*8 p(337),e0ref,e0rho
-          real*8 etest(2,2),vtest(2),utest(2,2)
+          real (kind=Rkind) :: p(337),e0ref,e0rho
+          real (kind=Rkind) :: etest(2,2),vtest(2),utest(2,2)
     
           common /no3minus_pot/e0ref,e0rho,p,pst,iref
     
@@ -850,17 +857,7 @@ MODULE QML_NO3_m
           common /acoord/ pa,pb
           common /vjt/ va, vb, wa, wb, za, zb
           common /vee/ vee,  wee, zee
-    
-          logical, save :: begin = .TRUE.
-    
-    ! initializations -> in main program
-    !$OMP  CRITICAL (potential_CRIT)
-           IF (begin) THEN
-             begin=.FALSE.
-             call init_pot_para
-           END IF
-    !$OMP  END CRITICAL (potential_CRIT)
-    
+
     ! compute symmetrized internal coordinate for PES
            call trans_coord(x,qinter)
            !write(6,99)(qinter(i),i=1,7)
@@ -1252,9 +1249,9 @@ MODULE QML_NO3_m
     ! two coupled surface case
     ! from file tmc-ang-prec-37um2b_extra_b5_20150316.par
     !
-          Subroutine init_pot_para
+  Subroutine init_pot_para
           Implicit none
-          real*8 p(337),e0ref,e0rho
+          real (kind=Rkind) :: p(337),e0ref,e0rho
           integer iref,pst(2,100)
     
           integer npoly(2)
@@ -1262,30 +1259,19 @@ MODULE QML_NO3_m
     
           integer n,i,npst,j
     
-          real*8   phi_ref,le_ref,beta_ref
-          real*8 pi,sq2,sq3,sq6
-    
-    !
+          real (kind=Rkind) ::   phi_ref,le_ref,beta_ref    
+
           common /no3minus_pot/e0ref,e0rho,p,pst,iref
     
           common /tmc/a,npoly
     
-          common /transformcoordblock/ &
-         &    phi_ref,le_ref,beta_ref  &
-         &    ,pi,sq2,sq3,sq6
+          common /transformcoordblock/ phi_ref,le_ref,beta_ref
     
           Write(6,*)'# dated:30/09/2021'
           Write(6,*)'# From cartesian to symmetrized internar coord'
           Write(6,*)'# Scaled umbrella     '
           Write(6,*)'# NO3 E'' JCP2017 case '
-    
-    
-    ! coefficents
-          pi=4.d0*datan(1.d0)
-          sq2=1.d0/sqrt(2.d0)
-          sq3=1.d0/sqrt(3.d0)
-          sq6=1.d0/sqrt(6.d0)
-    
+
     ! reference geometry
           phi_ref=120.d0/180.d0*pi
           le_ref=2.344419d0
@@ -1730,7 +1716,7 @@ MODULE QML_NO3_m
             Write(6,2)i,pst(1,i),i,pst(2,i)
           enddo
           do i=1,n
-          Write(6,1)i,p(i)
+            Write(6,1)i,p(i)
           enddo
     
           Write(6,*)'# e0ref au and ev', e0ref,e0ref*27.21d0
@@ -1759,18 +1745,17 @@ MODULE QML_NO3_m
           j=1
           do i=pst(1,28),pst(1,28)+20
             a(j)=p(i)
-    !        Write(6,*)'ici',i,p(i)
+            !Write(6,*)'ici',i,p(i)
             j=j+1
           enddo
-    !
+
           npoly(1)=5
           npoly(2)=5
     
           Write(6,*)'# TMC     npoly(1) : ',npoly(1)
           Write(6,*)'# TMC     npoly(2) : ',npoly(2)
     
-          Return
-          End
+  End 
     
     ! A Viel 2013.09.05
     ! rs.f put at the end
@@ -1830,7 +1815,7 @@ MODULE QML_NO3_m
     
     !..   set up skewing function:
     !      skew=0.5d0 * a(ii,3) *(tanh(a(ii,4)*r) + 1.d0)
-          skew=0.5d0 * a(3) *(dtanh(abs(a(4))*(r-a(6))) + 1.d0)
+          skew=0.5d0 * a(3) *(tanh(abs(a(4))*(r-a(6))) + 1.d0)
     
     !..   set up gaussian function:
     !      gaus=exp(-abs(a(ii,5))*(r+a(ii,6))**2)
@@ -4609,8 +4594,8 @@ MODULE QML_NO3_m
     !------------------------------------------------------------------------------
     ! AViel 2013.09.06 putting back the working arrays
           subroutine rs(nm,n,a,w,matz,z,fv1,fv2,ierr)
-    !      subroutine rs(nm,n,a,w,matz,z)
-    !
+          implicit none
+
           integer n,nm,ierr,matz
           double precision a(nm,n),w(n),z(nm,n),fv1(n),fv2(n)
     !
@@ -4671,7 +4656,8 @@ MODULE QML_NO3_m
     
     !------------------------------------------------------------------------------
           subroutine tql1(n,d,e,ierr)
-    !
+            implicit none
+
           integer i,j,l,m,n,ii,l1,l2,mml,ierr
           double precision d(n),e(n)
           double precision c,c2,c3,dl1,el1,f,g,h,p,r,s,s2,tst1,tst2
@@ -5315,21 +5301,22 @@ MODULE QML_NO3_m
           parameter (N=4)
     
           integer i, j, k
-          real*8    qinter(*)
-          real*8 x(0:3,3)
+          real (kind=Rkind) :: qinter(*)
+          real (kind=Rkind) :: x(0:3,3)
     
-          real*8   xvec(9),xvecinvers(9)
-          real*8   xintern(0:6) !beta, 3 distances, 3 angles
-          real*8   tnorm,det,t(3)
-          real*8 f  ! function for morse evaluation
-          real*8 rnodist,rnoprod
+          real (kind=Rkind) ::   xvec(9),xvecinvers(9)
+          real (kind=Rkind) ::   xintern(0:6) !beta, 3 distances, 3 angles
+          real (kind=Rkind) ::   tnorm,det,t(3)
+          real (kind=Rkind) :: f  ! function for morse evaluation
+          real (kind=Rkind) :: rnodist,rnoprod
     
-          real*8   phi_ref,le_ref,beta_ref
-          real*8 pi,sq2,sq3,sq6
-    
-          common /transformcoordblock/                       &
-         &    phi_ref,le_ref,beta_ref                        &
-         &    ,pi,sq2,sq3,sq6
+          real (kind=Rkind) ::   phi_ref,le_ref,beta_ref
+          !real (kind=Rkind) :: pi
+          real (kind=Rkind), parameter :: sq2 = ONE/sqrt(TWO)
+          real (kind=Rkind), parameter :: sq3 = ONE/sqrt(THREE)
+          real (kind=Rkind), parameter :: sq6 = ONE/sqrt(SIX)
+
+          common /transformcoordblock/ phi_ref,le_ref,beta_ref
     
     !
     ! write cartesian
@@ -5525,7 +5512,7 @@ MODULE QML_NO3_m
           double precision tnorm
           double precision epsi, alpha, delta, beta, beta2
           double precision sia, l, u, ws, pi, betr, rad
-          real*8 dum
+          real (kind=Rkind) :: dum
     
           do i=1,3
           do j=1,3

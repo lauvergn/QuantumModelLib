@@ -1878,8 +1878,8 @@ SUBROUTINE test_NO3
   CALL Write_dnMat(PotVal,nio=out_unit)
 
   ! For testing the model
-  !CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='H2O_op1', &
-  !    test_var=test_var,last_test=.TRUE.)
+  CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='NO3', &
+      test_var=test_var,last_test=.TRUE.)
 
   deallocate(Q)
   CALL dealloc_Model(QModel)
