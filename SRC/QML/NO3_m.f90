@@ -1499,872 +1499,532 @@ MODULE QML_NO3_m
     
   end subroutine Evcoup_e1a
     
-    !------------------------------------------------------------------------------
-    !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
-    
-    !      function vcoup_e2a(n, par, j, iref,avv)
-          subroutine Evcoup_e2a(vcoup_e2a, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=10)
-          double precision vcoup_e2a, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  !------------------------------------------------------------------------------
+  !     function to generate V matrix elements for the coupling between e and a modes up to fourth order
+  subroutine Evcoup_e2a(vcoup_e2a, n, par, j, iref,avv)
+    implicit none
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    !.....
+    real (kind=Rkind),            intent(inout)      :: vcoup_e2a
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=10
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: pa(:),vb(:)
+
+    pa => avv%pa
+    vb => avv%vb
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
     !     3rd order
-          vcoup_e2a =  (p(1)*pa(1,n)*vb(1,n)) ! / fact(3)
+    vcoup_e2a =  p(1)*pa(1)*vb(1)
     
     !     4th order
-          vcoup_e2a = vcoup_e2a+(p(2)*pa(1,n)*vb(2,n)+p(3)*pa(2,n)*vb(1,n)) ! / fact(4)
+    vcoup_e2a = vcoup_e2a + p(2)*pa(1)*vb(2)+p(3)*pa(2)*vb(1)
     
     !     5th order
-          vcoup_e2a=vcoup_e2a + (p(4)*pa(1,n)*vb(3,n) + p(5)*pa(2,n)*vb(2,n)            &
-         &        + p(6)*pa(3,n)*vb(1,n)) ! /fact(5)
+    vcoup_e2a=vcoup_e2a + p(4)*pa(1)*vb(3) + p(5)*pa(2)*vb(2) + p(6)*pa(3)*vb(1)
     
     !     6th order
-          vcoup_e2a= vcoup_e2a + p(7)*pa(1,n)*vb(4,n) + p(8)*pa(2,n)*vb(3,n)            &
-         &        + p(9)*pa(3,n)*vb(2,n) + p(10)*pa(4,n)*vb(1,n)
+    vcoup_e2a= vcoup_e2a + p(7)*pa(1)*vb(4) + p(8)*pa(2)*vb(3) + p(9)*pa(3)*vb(2) + p(10)*pa(4)*vb(1)
     
-          end
+  end subroutine Evcoup_e2a
     
-    !-------------------------------------------------------------------------------------
-    !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
-    !     6 parameters
-    
-    !      function wcoup_e1a(n, par, j, iref,avv)
-          subroutine Ewcoup_e1a(wcoup_e1a, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=18)
-          double precision wcoup_e1a, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  !-------------------------------------------------------------------------------------
+  !     function to generate W matrix elements for the coupling between e and a modes up to sixth order    
+  subroutine Ewcoup_e1a(wcoup_e1a, n, par, j, iref,avv)
+    implicit none
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
+    real (kind=Rkind),            intent(inout)      :: wcoup_e1a
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=18
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: pa(:),wa(:)
+
+    pa => avv%pa
+    wa => avv%wa
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
     !     2nd order
-          wcoup_e1a = p(1)*pa(1,n)*wa(1,n)
+    wcoup_e1a = p(1)*pa(1)*wa(1)
     
     !     3rd order
-          wcoup_e1a = wcoup_e1a+(p(2)*pa(1,n)*wa(2,n)+p(3)*pa(2,n)*wa(1,n))   !/ fact(3)
+    wcoup_e1a = wcoup_e1a + p(2)*pa(1)*wa(2) + p(3)*pa(2)*wa(1)
     
     !     4th order
-          wcoup_e1a = wcoup_e1a+(p(4)*pa(1,n)*wa(3,n)+p(5)*pa(2,n)*wa(2,n)              &
-         & + p(6)*pa(3,n)*wa(1,n))   !/ fact(4)
+    wcoup_e1a = wcoup_e1a + p(4)*pa(1)*wa(3) + p(5)*pa(2)*wa(2) + p(6)*pa(3)*wa(1)
     
     !     5th order
-          wcoup_e1a = wcoup_e1a + (p(7)*pa(4,n)*wa(1,n)+p(8)*pa(3,n)*wa(2,n)            &
-         & +p(9)*pa(2,n)*wa(3,n)+p(10)*pa(1,n)*wa(4,n)                                  &
-         & +p(11)*pa(1,n)*wa(5,n))  !/ fact(5)
+    wcoup_e1a = wcoup_e1a + p(7)*pa(4)*wa(1) + p(8)*pa(3)*wa(2) +           &
+          p(9)*pa(2)*wa(3) + p(10)*pa(1)*wa(4) + p(11)*pa(1)*wa(5)
     
     !     6th order
-          wcoup_e1a = wcoup_e1a +                                                       &
-         &    p(12)*pa(5,n)*wa(1,n)+p(13)*pa(4,n)*wa(2,n)                               &
-         &    + p(14)*pa(3,n)*wa(3,n)                                                   &
-         &    + p(15)*pa(2,n)*wa(4,n)+p(16)*pa(2,n)*wa(5,n)                             &
-         &    + pa(1,n)*(p(17)*wa(6,n)+p(18)*wa(7,n))
+    wcoup_e1a = wcoup_e1a +                                                       &
+         &    p(12)*pa(5)*wa(1)+p(13)*pa(4)*wa(2)                               &
+         &    + p(14)*pa(3)*wa(3)                                                   &
+         &    + p(15)*pa(2)*wa(4)+p(16)*pa(2)*wa(5)                             &
+         &    + pa(1)*(p(17)*wa(6)+p(18)*wa(7))
     
-          end
+  end subroutine Ewcoup_e1a
     
-    !-------------------------------------------------------------------------------------
-    !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
-    !     6 parameters
-    
-    !      function wcoup_e2a(n, par, j, iref,avv)
-          subroutine Ewcoup_e2a(wcoup_e2a, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=18)
-          double precision wcoup_e2a, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  !-------------------------------------------------------------------------------------
+  !     function to generate W matrix elements for the coupling between e and a modes up to sixth order    
+  subroutine Ewcoup_e2a(wcoup_e2a, n, par, j, iref,avv)
+    implicit none
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
+    real (kind=Rkind),            intent(inout)      :: wcoup_e2a
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=18
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: pa(:),wb(:)
+
+    pa => avv%pa
+    wb => avv%wb
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
     !     2nd order
-          wcoup_e2a = p(1)*pa(1,n)*wb(1,n)
+    wcoup_e2a = p(1)*pa(1)*wb(1)
     
     !     3rd order
-          wcoup_e2a=wcoup_e2a +(p(2)*pa(1,n)*wb(2,n)+p(3)*pa(2,n)*wb(1,n))   !/ fact(3)
+    wcoup_e2a=wcoup_e2a +(p(2)*pa(1)*wb(2)+p(3)*pa(2)*wb(1))   !/ fact(3)
     
     !     4th order
-          wcoup_e2a=wcoup_e2a +(p(4)*pa(1,n)*wb(3,n)+p(5)*pa(2,n)*wb(2,n)               &
-         & + p(6)*pa(3,n)*wb(1,n))   !/ fact(4)
+    wcoup_e2a=wcoup_e2a +(p(4)*pa(1)*wb(3)+p(5)*pa(2)*wb(2)               &
+         & + p(6)*pa(3)*wb(1))   !/ fact(4)
     
     !     5th order
-          wcoup_e2a = wcoup_e2a                                                         &
-         & + (p(7)*pa(4,n)*wb(1,n) + p(8)*pa(3,n)*wb(2,n)                               &
-         & + p(9)*pa(2,n)*wb(3,n)+p(10)*pa(1,n)*wb(4,n)                                 &
-         & + p(11)*pa(1,n)*wb(5,n))  !/ fact(5)
+    wcoup_e2a = wcoup_e2a                                                         &
+         & + (p(7)*pa(4)*wb(1) + p(8)*pa(3)*wb(2)                               &
+         & + p(9)*pa(2)*wb(3)+p(10)*pa(1)*wb(4)                                 &
+         & + p(11)*pa(1)*wb(5))  !/ fact(5)
     
     !     6th order
-          wcoup_e2a = wcoup_e2a +                                                       &
-         &    p(12)*pa(5,n)*wb(1,n)+p(13)*pa(4,n)*wb(2,n)                               &
-         &   +p(14)*pa(3,n)*wb(3,n)                                                     &
-         &    + p(15)*pa(2,n)*wb(4,n)+p(16)*pa(2,n)*wb(5,n)                             &
-         &    + pa(1,n)*(p(17)*wb(6,n)+p(18)*wb(7,n))
+    wcoup_e2a = wcoup_e2a +                                                       &
+         &    p(12)*pa(5)*wb(1)+p(13)*pa(4)*wb(2)                               &
+         &   +p(14)*pa(3)*wb(3)                                                     &
+         &    + p(15)*pa(2)*wb(4)+p(16)*pa(2)*wb(5)                             &
+         &    + pa(1)*(p(17)*wb(6)+p(18)*wb(7))
     
-          end
+  end subroutine Ewcoup_e2a
     
-    
-    !-------------------------------------------------------------------------------------
-    !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
-    !     6 parameters
-    
-    !      function zcoup_e1a(n, par, j, iref,avv)
-          subroutine Ezcoup_e1a(zcoup_e1a, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=18)
-          double precision zcoup_e1a, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  !-------------------------------------------------------------------------------------
+  !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
+  subroutine Ezcoup_e1a(zcoup_e1a, n, par, j, iref,avv)
+    implicit none
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
+    real (kind=Rkind),            intent(inout)      :: zcoup_e1a
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=18
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: pa(:),za(:)
+
+    pa => avv%pa
+    za => avv%za
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
     !     2nd order
-          zcoup_e1a = p(1)*pa(1,n)*za(1,n)
+    zcoup_e1a = p(1)*pa(1)*za(1)
     
     !     3rd order
-          zcoup_e1a=zcoup_e1a+ (p(2)*pa(1,n)*za(2,n) + p(3)*pa(2,n)*za(1,n))   !/ fact(3)
+    zcoup_e1a=zcoup_e1a+ (p(2)*pa(1)*za(2) + p(3)*pa(2)*za(1))   !/ fact(3)
     
     !     4th order
-          zcoup_e1a=zcoup_e1a + (p(4)*pa(1,n)*za(3,n) + p(5)*pa(2,n)*za(2,n)            &
-         & + p(6)*pa(3,n)*za(1,n))   !/ fact(4)
+    zcoup_e1a=zcoup_e1a + (p(4)*pa(1)*za(3) + p(5)*pa(2)*za(2)            &
+         & + p(6)*pa(3)*za(1))   !/ fact(4)
     
     !     5th order
-          zcoup_e1a=zcoup_e1a + (p(7)*pa(4,n)*za(1,n) + p(8)*pa(3,n)*za(2,n)            &
-         & +p(9)*pa(2,n)*za(3,n)+p(10)*pa(1,n)*za(4,n)                                  &
-         & +p(11)*pa(1,n)*za(5,n))  !/ fact(5)
+    zcoup_e1a=zcoup_e1a + (p(7)*pa(4)*za(1) + p(8)*pa(3)*za(2)            &
+         & +p(9)*pa(2)*za(3)+p(10)*pa(1)*za(4)                                  &
+         & +p(11)*pa(1)*za(5))  !/ fact(5)
     
     !     6th order
-          zcoup_e1a = zcoup_e1a +                                                       &
-         &    p(12)*pa(5,n)*za(1,n)+p(13)*pa(4,n)*za(2,n)                               &
-         &   +p(14)*pa(3,n)*za(3,n)                                                     &
-         &    + p(15)*pa(2,n)*za(4,n)+p(16)*pa(2,n)*za(5,n)                             &
-         &    + pa(1,n)*(p(17)*za(6,n)+p(18)*za(7,n))
+    zcoup_e1a = zcoup_e1a +                                                       &
+         &    p(12)*pa(5)*za(1)+p(13)*pa(4)*za(2)                               &
+         &   +p(14)*pa(3)*za(3)                                                     &
+         &    + p(15)*pa(2)*za(4)+p(16)*pa(2)*za(5)                             &
+         &    + pa(1)*(p(17)*za(6)+p(18)*za(7))
     
-          end
-    
-    !-------------------------------------------------------------------------------------
-    !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
-    !     6 parameters
-    
-    !      function zcoup_e2a(n, par, j, iref,avv)
-          subroutine Ezcoup_e2a(zcoup_e2a, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=18)
-          double precision zcoup_e2a, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  end subroutine Ezcoup_e1a
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
+  !-------------------------------------------------------------------------------------
+  !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
+  subroutine Ezcoup_e2a(zcoup_e2a, n, par, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout)      :: zcoup_e2a
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=18
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: pa(:),zb(:)
+
+    pa => avv%pa
+    zb => avv%zb
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
     !     2nd order
-          zcoup_e2a = p(1)*pa(1,n)*zb(1,n)
+    zcoup_e2a = p(1)*pa(1)*zb(1)
     
     !     3rd order
-          zcoup_e2a=zcoup_e2a +(p(2)*pa(1,n)*zb(2,n) + p(3)*pa(2,n)*zb(1,n))   !/ fact(3)
+    zcoup_e2a=zcoup_e2a +(p(2)*pa(1)*zb(2) + p(3)*pa(2)*zb(1))   !/ fact(3)
     
     !     4th order
-          zcoup_e2a=zcoup_e2a + (p(4)*pa(1,n)*zb(3,n) + p(5)*pa(2,n)*zb(2,n)            &
-         & + p(6)*pa(3,n)*zb(1,n))   !/ fact(4)
+    zcoup_e2a=zcoup_e2a + (p(4)*pa(1)*zb(3) + p(5)*pa(2)*zb(2) + p(6)*pa(3)*zb(1))   !/ fact(4)
     
     !     5th order
-          zcoup_e2a=zcoup_e2a + (p(7)*pa(4,n)*zb(1,n) + p(8)*pa(3,n)*zb(2,n)            &
-         & +p(9)*pa(2,n)*zb(3,n)+p(10)*pa(1,n)*zb(4,n)                                  &
-         & +p(11)*pa(1,n)*zb(5,n))  !/ fact(5)
+    zcoup_e2a=zcoup_e2a + (p(7)*pa(4)*zb(1) + p(8)*pa(3)*zb(2)            &
+         & +p(9)*pa(2)*zb(3)+p(10)*pa(1)*zb(4) +p(11)*pa(1)*zb(5))  !/ fact(5)
     
     !     6th order
-          zcoup_e2a = zcoup_e2a +                                                       &
-         &    p(12)*pa(5,n)*zb(1,n)+p(13)*pa(4,n)*zb(2,n)                               &
-         &   +p(14)*pa(3,n)*zb(3,n)                                                     &
-         &    + p(15)*pa(2,n)*zb(4,n)+p(16)*pa(2,n)*zb(5,n)                             &
-         &    + pa(1,n)*(p(17)*zb(6,n)+p(18)*zb(7,n))
+    zcoup_e2a = zcoup_e2a +                                                       &
+         &    p(12)*pa(5)*zb(1)+p(13)*pa(4)*zb(2)                               &
+         &   +p(14)*pa(3)*zb(3)                                                     &
+         &    + p(15)*pa(2)*zb(4)+p(16)*pa(2)*zb(5)                             &
+         &    + pa(1)*(p(17)*zb(6)+p(18)*zb(7))
     
-          end
-    
-    
-    !------------------------------------------------------------------------------
-    !     function to generate V matrix elements for the coupling between a1 and a2 modes up to sixth order
-    !     only even orders in a2
-    
-    !      function vcoup_aa(n, par, j, iref,avv)
-          subroutine Evcoup_aa(vcoup_aa, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=6)
-          double precision vcoup_aa, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  end subroutine Ezcoup_e2a
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    !.....
-    
+  !------------------------------------------------------------------------------
+  !     function to generate V matrix elements for the coupling between a1 and a2 modes up to sixth order
+  !     only even orders in a2
+  subroutine Evcoup_aa(vcoup_aa, n, par, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout)      :: vcoup_aa
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=6
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: pa(:),pb(:)
+
+    pa => avv%pa
+    pb => avv%pb
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
     !..   third order
-          vcoup_aa = p(1) * pa(1,n) * pb(1,n)
+    vcoup_aa = p(1) * pa(1) * pb(1)
     
     !..   fourth order
-          vcoup_aa = vcoup_aa + p(2) * pa(2,n) * pb(1,n)
+    vcoup_aa = vcoup_aa + p(2) * pa(2) * pb(1)
     
     !..   fifth order
-          vcoup_aa = vcoup_aa + p(3) * pa(1,n) * pb(2,n)                                &
-         &                    + p(4) * pa(3,n) * pb(1,n)
+    vcoup_aa = vcoup_aa + p(3) * pa(1) * pb(2) + p(4) * pa(3) * pb(1)
     
     !..   sixths order
-          vcoup_aa = vcoup_aa + p(5) * pa(2,n) * pb(2,n)                                &
-         &                    + p(6) * pa(4,n) * pb(1,n)
+    vcoup_aa = vcoup_aa + p(5) * pa(2) * pb(2) + p(6) * pa(4) * pb(1)
     
-          end
-    
-    !------------------------------------------------------------------------------
-    !     function to generate V matrix elements for the coupling between e and a modes up to sixth order
-    !     only even orders in a
-    
-    !      function vcoup_e1a2(n, par, j, iref,avv)
-          subroutine Evcoup_e1a2(vcoup_e1a2, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=9)
-          double precision vcoup_e1a2, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  end subroutine Evcoup_aa
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    !
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
+  !------------------------------------------------------------------------------
+  !     function to generate V matrix elements for the coupling between e and a modes up to sixth order
+  !     only even orders in a
+  subroutine Evcoup_e1a2(vcoup_e1a2, n, par, j, iref,avv)
+    implicit none
+
+    real (kind=Rkind),            intent(inout)      :: vcoup_e1a2
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=9
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: va(:),pb(:)
+
+    va => avv%va
+    pb => avv%pb
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
+ 
     !     4th order
-          vcoup_e1a2 = p(1)*pb(1,n)*va(1,n)
+          vcoup_e1a2 = p(1)*pb(1)*va(1)
     
     !     5th order
-          vcoup_e1a2 = vcoup_e1a2 + p(2)*pb(1,n)*va(2,n)                                &
+          vcoup_e1a2 = vcoup_e1a2 + p(2)*pb(1)*va(2)                                &
          & ! /fact(5)
     
     !     6th order
-          vcoup_e1a2 = vcoup_e1a2 + p(3)*pb(1,n)*va(3,n)                                &
-         &                    + p(4)*pb(2,n)*va(1,n)
+          vcoup_e1a2 = vcoup_e1a2 + p(3)*pb(1)*va(3)                                &
+         &                    + p(4)*pb(2)*va(1)
     
     !     7th order
-          vcoup_e1a2 = vcoup_e1a2 + p(5)*pb(1,n)*va(4,n)                                &
-         &                      + p(6)*pb(2,n)*va(2,n)
+          vcoup_e1a2 = vcoup_e1a2 + p(5)*pb(1)*va(4)                                &
+         &                      + p(6)*pb(2)*va(2)
     
     !     8th order
-          vcoup_e1a2 = vcoup_e1a2 + p(7)*pb(1,n)*va(5,n)                                &
-         &                      + p(8)*pb(1,n)*va(6,n)                                  &
-         &                      + p(9)*pb(2,n)*va(3,n)
+          vcoup_e1a2 = vcoup_e1a2 + p(7)*pb(1)*va(5)                                &
+         &                      + p(8)*pb(1)*va(6)                                  &
+         &                      + p(9)*pb(2)*va(3)
     
-          end
+  end subroutine Evcoup_e1a2
     
-    !------------------------------------------------------------------------------
-    !     function to generate V matrix elements for the coupling between e and a modes up to sixth order
-    !     only even orders in a
-    
-    !      function vcoup_e2a2(n, par, j, iref,avv)
-          subroutine Evcoup_e2a2(vcoup_e2a2, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact, iref, ii, jj
-          parameter (lnx=9)
-          double precision vcoup_e2a2, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  !------------------------------------------------------------------------------
+  !     function to generate V matrix elements for the coupling between e and a modes up to sixth order
+  !     only even orders in a
+  subroutine Evcoup_e2a2(vcoup_e2a2, n, par, j, iref,avv)
+    implicit none
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
+    real (kind=Rkind),            intent(inout)      :: vcoup_e2a2
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=9
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: vb(:),pb(:)
+
+    vb => avv%vb
+    pb => avv%pb
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
     !     4th order
-          vcoup_e2a2 = p(1)*pb(1,n)*vb(1,n)
+          vcoup_e2a2 = p(1)*pb(1)*vb(1)
     
     !     5th order
-          vcoup_e2a2 = vcoup_e2a2 + p(2)*pb(1,n)*vb(2,n)                                &
+          vcoup_e2a2 = vcoup_e2a2 + p(2)*pb(1)*vb(2)                                &
          & ! /fact(5)
     
     !     6th order
-          vcoup_e2a2 = vcoup_e2a2 + p(3)*pb(1,n)*vb(3,n)                                &
-         &                    + p(4)*pb(2,n)*vb(1,n)
+          vcoup_e2a2 = vcoup_e2a2 + p(3)*pb(1)*vb(3)                                &
+         &                    + p(4)*pb(2)*vb(1)
     
     !     7th order
-          vcoup_e2a2 = vcoup_e2a2 + p(5)*pb(1,n)*vb(4,n)                                &
-         &                      + p(6)*pb(2,n)*vb(2,n)
+          vcoup_e2a2 = vcoup_e2a2 + p(5)*pb(1)*vb(4)                                &
+         &                      + p(6)*pb(2)*vb(2)
     
     !     8th order
-          vcoup_e2a2 = vcoup_e2a2 + p(7)*pb(1,n)*vb(5,n)                                &
-         &                      + p(8)*pb(1,n)*vb(6,n)                                  &
-         &                      + p(9)*pb(2,n)*vb(3,n)
+          vcoup_e2a2 = vcoup_e2a2 + p(7)*pb(1)*vb(5)                                &
+         &                      + p(8)*pb(1)*vb(6)                                  &
+         &                      + p(9)*pb(2)*vb(3)
     
-          end
+  end subroutine Evcoup_e2a2
     
-    !-------------------------------------------------------------------------------------
-    !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
-    !     only even orders in a
-    
-    !      function wcoup_e1a2(n, par, j, iref,avv)
-          subroutine Ewcoup_e1a2(wcoup_e1a2, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact,iref, ii, jj
-          parameter (lnx=14)
-          double precision wcoup_e1a2, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  !-------------------------------------------------------------------------------------
+  !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
+  !     only even orders in a
+  subroutine Ewcoup_e1a2(wcoup_e1a2, n, par, j, iref,avv)
+    implicit none
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
+    real (kind=Rkind),            intent(inout)      :: wcoup_e1a2
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=14
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: wa(:),pb(:)
+
+    wa => avv%wa
+    pb => avv%pb
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
     !     3rd order
-          wcoup_e1a2 = p(1) * pb(1,n) * wa(1,n)
+          wcoup_e1a2 = p(1) * pb(1) * wa(1)
     
     !     4th order
-          wcoup_e1a2 = wcoup_e1a2 + p(2) * pb(1,n) * wa(2,n)
+          wcoup_e1a2 = wcoup_e1a2 + p(2) * pb(1) * wa(2)
     
     !     5th order
-          wcoup_e1a2 = wcoup_e1a2 + p(3) * pb(2,n) * wa(1,n)                            &
-         &                    + p(4) * pb(1,n) * wa(3,n)
+          wcoup_e1a2 = wcoup_e1a2 + p(3) * pb(2) * wa(1)                            &
+         &                    + p(4) * pb(1) * wa(3)
     
     !     6th order
-          wcoup_e1a2 = wcoup_e1a2 + p(5) * pb(2,n) * wa(2,n)                            &
-         &                    + p(6) * pb(1,n) * wa(4,n)                                &
-         &                    + p(7) * pb(1,n) * wa(5,n)
+          wcoup_e1a2 = wcoup_e1a2 + p(5) * pb(2) * wa(2)                            &
+         &                    + p(6) * pb(1) * wa(4)                                &
+         &                    + p(7) * pb(1) * wa(5)
     
     !     7th order
-          wcoup_e1a2 = wcoup_e1a2 + p(8) * pb(1,n) * wa(6,n)                            &
-         &                      + p(9) * pb(1,n) * wa(7,n)                              &
-         &                      + p(10)* pb(2,n) * wa(3,n)
+          wcoup_e1a2 = wcoup_e1a2 + p(8) * pb(1) * wa(6)                            &
+         &                      + p(9) * pb(1) * wa(7)                              &
+         &                      + p(10)* pb(2) * wa(3)
     
     !     8th order
-          wcoup_e1a2 = wcoup_e1a2 + p(11) * pb(1,n) * wa(8,n)                           &
-         &                      + p(12) * pb(1,n) * wa(9,n)                             &
-         &                      + p(13) * pb(2,n) * wa(4,n)                             &
-         &                      + p(14) * pb(2,n) * wa(5,n)
+          wcoup_e1a2 = wcoup_e1a2 + p(11) * pb(1) * wa(8)                           &
+         &                      + p(12) * pb(1) * wa(9)                             &
+         &                      + p(13) * pb(2) * wa(4)                             &
+         &                      + p(14) * pb(2) * wa(5)
     
-          end
+  end subroutine Ewcoup_e1a2
     
-    !-------------------------------------------------------------------------------------
-    !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
-    !     only even orders in a
-    
-    !      function wcoup_e2a2(n, par, j, iref,avv)
-          subroutine Ewcoup_e2a2(wcoup_e2a2, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact,iref, ii, jj
-          parameter (lnx=14)
-          double precision wcoup_e2a2, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  !-------------------------------------------------------------------------------------
+  !     function to generate W matrix elements for the coupling between e and a modes up to sixth order
+  !     only even orders in a
+  subroutine Ewcoup_e2a2(wcoup_e2a2, n, par, j, iref,avv)
+    implicit none
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
+    real (kind=Rkind),            intent(inout)      :: wcoup_e2a2
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=14
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: wb(:),pb(:)
+
+    wb => avv%wb
+    pb => avv%pb
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
+ 
     !     3rd order
-          wcoup_e2a2 = p(1) * pb(1,n) * wb(1,n)
+          wcoup_e2a2 = p(1) * pb(1) * wb(1)
     
     !     4th order
-          wcoup_e2a2 = wcoup_e2a2 + p(2) * pb(1,n) * wb(2,n)
+          wcoup_e2a2 = wcoup_e2a2 + p(2) * pb(1) * wb(2)
     
     !     5th order
-          wcoup_e2a2 = wcoup_e2a2 + p(3) * pb(2,n) * wb(1,n)                            &
-         &                    + p(4) * pb(1,n) * wb(3,n)
+          wcoup_e2a2 = wcoup_e2a2 + p(3) * pb(2) * wb(1)                            &
+         &                    + p(4) * pb(1) * wb(3)
     
     !     6th order
-          wcoup_e2a2 = wcoup_e2a2 + p(5) * pb(2,n) * wb(2,n)                            &
-         &                    + p(6) * pb(1,n) * wb(4,n)                                &
-         &                    + p(7) * pb(1,n) * wb(5,n)
+          wcoup_e2a2 = wcoup_e2a2 + p(5) * pb(2) * wb(2)                            &
+         &                    + p(6) * pb(1) * wb(4)                                &
+         &                    + p(7) * pb(1) * wb(5)
     
     !     7th order
-          wcoup_e2a2 = wcoup_e2a2 + p(8) * pb(1,n) * wb(6,n)                            &
-         &                      + p(9) * pb(1,n) * wb(7,n)                              &
-         &                      + p(10)* pb(2,n) * wb(3,n)
+          wcoup_e2a2 = wcoup_e2a2 + p(8) * pb(1) * wb(6)                            &
+         &                      + p(9) * pb(1) * wb(7)                              &
+         &                      + p(10)* pb(2) * wb(3)
     
     !     8th order
-          wcoup_e2a2 = wcoup_e2a2 + p(11) * pb(1,n) * wb(8,n)                           &
-         &                      + p(12) * pb(1,n) * wb(9,n)                             &
-         &                      + p(13) * pb(2,n) * wb(4,n)                             &
-         &                      + p(14) * pb(2,n) * wb(5,n)
+          wcoup_e2a2 = wcoup_e2a2 + p(11) * pb(1) * wb(8)                           &
+         &                      + p(12) * pb(1) * wb(9)                             &
+         &                      + p(13) * pb(2) * wb(4)                             &
+         &                      + p(14) * pb(2) * wb(5)
     
-          end
+  end subroutine Ewcoup_e2a2
     
-    !-------------------------------------------------------------------------------------
-    !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
-    !     only even orders in a
-    
-    !      function zcoup_e1a2(n, par, j, iref,avv)
-          subroutine Ezcoup_e1a2(zcoup_e1a2, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact,iref, ii, jj
-          parameter (lnx=14)
-          double precision zcoup_e1a2, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  !-------------------------------------------------------------------------------------
+  !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
+  !     only even orders in a
+  subroutine Ezcoup_e1a2(zcoup_e1a2, n, par, j, iref,avv)
+    implicit none
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
+    real (kind=Rkind),            intent(inout)      :: zcoup_e1a2
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=14
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: pb(:),za(:)
+
+    pb => avv%pb
+    za => avv%za
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
     !     3rd order
-          zcoup_e1a2 = p(1) * pb(1,n) * za(1,n)
+          zcoup_e1a2 = p(1) * pb(1) * za(1)
     
     !     4th order
-          zcoup_e1a2 = zcoup_e1a2 + p(2) * pb(1,n) * za(2,n)
+          zcoup_e1a2 = zcoup_e1a2 + p(2) * pb(1) * za(2)
     
     !     5th order
-          zcoup_e1a2 = zcoup_e1a2 + p(3) * pb(2,n) * za(1,n)                            &
-         &                    + p(4) * pb(1,n) * za(3,n)
+          zcoup_e1a2 = zcoup_e1a2 + p(3) * pb(2) * za(1)                            &
+         &                    + p(4) * pb(1) * za(3)
     
     !     6th order
-          zcoup_e1a2 = zcoup_e1a2 + p(5) * pb(2,n) * za(2,n)                            &
-         &                    + p(6) * pb(1,n) * za(4,n)                                &
-         &                    + p(7) * pb(1,n) * za(5,n)
+          zcoup_e1a2 = zcoup_e1a2 + p(5) * pb(2) * za(2)                            &
+         &                    + p(6) * pb(1) * za(4)                                &
+         &                    + p(7) * pb(1) * za(5)
     
     !     7th order
-          zcoup_e1a2 = zcoup_e1a2 + p(8) * pb(1,n) * za(6,n)                            &
-         &                      + p(9) * pb(1,n) * za(7,n)                              &
-         &                      + p(10)* pb(2,n) * za(3,n)
+          zcoup_e1a2 = zcoup_e1a2 + p(8) * pb(1) * za(6)                            &
+         &                      + p(9) * pb(1) * za(7)                              &
+         &                      + p(10)* pb(2) * za(3)
     
     !     8th order
-          zcoup_e1a2 = zcoup_e1a2 + p(11) * pb(1,n) * za(8,n)                           &
-         &                      + p(12) * pb(1,n) * za(9,n)                             &
-         &                      + p(13) * pb(2,n) * za(4,n)                             &
-         &                      + p(14) * pb(2,n) * za(5,n)
+          zcoup_e1a2 = zcoup_e1a2 + p(11) * pb(1) * za(8)                           &
+         &                      + p(12) * pb(1) * za(9)                             &
+         &                      + p(13) * pb(2) * za(4)                             &
+         &                      + p(14) * pb(2) * za(5)
     
-          end
+  end subroutine Ezcoup_e1a2
     
-    !-------------------------------------------------------------------------------------
-    !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
-    !     only even orders in a
-    
-    !      function zcoup_e2a2(n, par, j, iref,avv)
-          subroutine Ezcoup_e2a2(zcoup_e2a2, n, par, j, iref,avv)
-          implicit none
-          integer n, i, lnx, j, fact,iref, ii, jj
-          parameter (lnx=14)
-          double precision zcoup_e2a2, par(*), p(lnx)
-    !      include 'params.incl'
-    !      include 'vwzprec.incl'
-          TYPE(acoord_vjt_vee_t),       intent(in)    :: avv
+  !-------------------------------------------------------------------------------------
+  !     function to generate Z matrix elements for the coupling betzeen e and a modes up to sixth order
+  !     only even orders in a
+  subroutine Ezcoup_e2a2(zcoup_e2a2, n, par, j, iref,avv)
+    implicit none
 
-          integer mx
-          parameter (mx=32)
-          double precision pa(8,mx), pb(4,mx)
-          double precision va(6,mx), vb(6,mx)
-          double precision wa(9,mx), wb(9,mx), za(9,mx), zb(9,mx)
-          double precision vee(28,mx),  wee(49,mx), zee(49,mx)
-    
-          common /acoord/ pa,pb
-          common /vjt/ va, vb, wa, wb, za, zb
-          common /vee/ vee,  wee, zee
-    
-    !.....copy parameters to local ones to account for shorter than max. expansions
-          do i = 1, lnx
-             p(i) = 0.d0
-          enddo
-    
-    !      if (iref.eq.0) then
-    !         ii=1
-    !         jj=1
-    !      elseif(iref.eq.1) then
-             ii=2
-             jj=j
-    !      elseif (iref.eq.2) then
-    !         ii=1
-    !         jj=j
-    !      else
-    !        Write(6,*)"Incorrect iref",iref
-    !      endif
-    
-    
-          do i = ii, jj
-             p(i) = par(i)
-          enddo
-    
-    !.....
+    real (kind=Rkind),            intent(inout)      :: zcoup_e2a2
+    real (kind=Rkind),            intent(in)         :: par(:)
+    integer,                      intent(in)         :: n,j,iref
+    TYPE(acoord_vjt_vee_t),       intent(in), target :: avv
+
+    integer, parameter  :: lnx=14
+    real (kind=Rkind)   :: p(lnx)
+    real (kind=Rkind), pointer :: pb(:),zb(:)
+
+    pb => avv%pb
+    zb => avv%zb
+
+    p(:)   = 0.d0
+    p(2:j) = par(2:j)
+
     !     3rd order
-          zcoup_e2a2 = p(1) * pb(1,n) * zb(1,n)
+          zcoup_e2a2 = p(1) * pb(1) * zb(1)
     
     !     4th order
-          zcoup_e2a2 = zcoup_e2a2 + p(2) * pb(1,n) * zb(2,n)
+          zcoup_e2a2 = zcoup_e2a2 + p(2) * pb(1) * zb(2)
     
     !     5th order
-          zcoup_e2a2 = zcoup_e2a2 + p(3) * pb(2,n) * zb(1,n)                            &
-         &                    + p(4) * pb(1,n) * zb(3,n)
+          zcoup_e2a2 = zcoup_e2a2 + p(3) * pb(2) * zb(1)                            &
+         &                    + p(4) * pb(1) * zb(3)
     
     !     6th order
-          zcoup_e2a2 = zcoup_e2a2 + p(5) * pb(2,n) * zb(2,n)                            &
-         &                    + p(6) * pb(1,n) * zb(4,n)                                &
-         &                    + p(7) * pb(1,n) * zb(5,n)
+          zcoup_e2a2 = zcoup_e2a2 + p(5) * pb(2) * zb(2)                            &
+         &                    + p(6) * pb(1) * zb(4)                                &
+         &                    + p(7) * pb(1) * zb(5)
     
     !     7th order
-          zcoup_e2a2 = zcoup_e2a2 + p(8) * pb(1,n) * zb(6,n)                            &
-         &                      + p(9) * pb(1,n) * zb(7,n)                              &
-         &                      + p(10)* pb(2,n) * zb(3,n)
+          zcoup_e2a2 = zcoup_e2a2 + p(8) * pb(1) * zb(6)                            &
+         &                      + p(9) * pb(1) * zb(7)                              &
+         &                      + p(10)* pb(2) * zb(3)
     
     !     8th order
-          zcoup_e2a2 = zcoup_e2a2 + p(11) * pb(1,n) * zb(8,n)                           &
-         &                      + p(12) * pb(1,n) * zb(9,n)                             &
-         &                      + p(13) * pb(2,n) * zb(4,n)                             &
-         &                      + p(14) * pb(2,n) * zb(5,n)
+          zcoup_e2a2 = zcoup_e2a2 + p(11) * pb(1) * zb(8)                           &
+         &                      + p(12) * pb(1) * zb(9)                             &
+         &                      + p(13) * pb(2) * zb(4)                             &
+         &                      + p(14) * pb(2) * zb(5)
     
-          end
-    
-    
+  end subroutine Ezcoup_e2a2
+
     !------------------------------------------------------------------------------
     !  3-mode coupling of a1 + e + e
     !      function vcoup_eea1(n, par, j, iref,avv)
