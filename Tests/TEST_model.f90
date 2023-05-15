@@ -45,7 +45,7 @@ PROGRAM TEST_model
 
   CALL Initialize_Test(test_var,test_name='QModel')
 
-  CALL test_NO3()  ; CALL Finalize_Test(test_var) ; stop
+  !CALL test_NO3()  ; CALL Finalize_Test(test_var) ; stop
   !CALL test_H2()  ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_TwoD_RJDI2014()
@@ -87,7 +87,7 @@ PROGRAM TEST_model
   CALL test_Vibronic()
   CALL test_TwoD_Valahu2022()
   CALL test_Retinal_JPCB2000()
-  
+  CALL test_NO3()
 
   ! 6D (full-D), One electronic surface (spectro)
   CALL test_HONO()

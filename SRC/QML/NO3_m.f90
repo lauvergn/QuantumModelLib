@@ -86,9 +86,10 @@ MODULE QML_NO3_m
     TYPE (tmc_t)                  :: tmc
     TYPE (transformcoordblock_t)  :: transformcoordblock
 
-   CONTAINS
-    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_NO3
-    PROCEDURE :: Write_QModel    => Write_QML_NO3
+  CONTAINS
+    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_NO3
+    PROCEDURE :: Write_QModel     => Write_QML_NO3
+    PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_NO3
   END TYPE QML_NO3_t
 
   PUBLIC :: QML_NO3_t,Init_QML_NO3
@@ -697,6 +698,56 @@ MODULE QML_NO3_m
 
   END SUBROUTINE Write_QML_NO3
 
+  SUBROUTINE Cart_TO_Q_QML_NO3(QModel,dnX,dnQ,nderiv)
+    USE QDUtil_m,         ONLY : TO_string
+    USE ADdnSVM_m
+    IMPLICIT NONE
+  
+      CLASS(QML_NO3_t),        intent(in)    :: QModel
+      TYPE (dnS_t),            intent(in)    :: dnX(:,:)
+      TYPE (dnS_t),            intent(inout) :: dnQ(:)
+      integer,                 intent(in)    :: nderiv
+  
+      integer                   :: i,j,ij
+  
+      !----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='Cart_TO_Q_QML_NO3'
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      !-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unit,*) 'BEGINNING ',name_sub
+        write(out_unit,*) 'size(dnQ)',size(dnQ)
+        write(out_unit,*) 'dnQ:'
+        DO j=1,size(dnQ,dim=1)
+          CALL Write_dnS(dnQ(j),out_unit,info='dnQ('// TO_string(j) // ')')
+        END DO
+        write(out_unit,*) 'shape dnX',shape(dnX)
+        write(out_unit,*) 'dnX'
+        DO i=1,size(dnX,dim=2)
+        DO j=1,size(dnX,dim=1)
+          CALL Write_dnS(dnX(j,i),out_unit)
+        END DO
+        END DO
+        flush(out_unit)
+      END IF
+
+      ij = 0
+      DO i=1,size(dnX,dim=2)
+      DO j=1,size(dnX,dim=1)
+        ij = ij + 1
+        dnQ(ij) = dnX(j,i)
+      END DO
+      END DO
+
+      IF (debug) THEN
+        DO j=1,size(dnQ,dim=1)
+          CALL Write_dnS(dnQ(j),out_unit,info='dnQ('// TO_string(j) // ')')
+        END DO
+        write(out_unit,*) 'END ',name_sub
+        flush(out_unit)
+      END IF
+  END SUBROUTINE Cart_TO_Q_QML_NO3
 !> @brief Subroutine wich calculates the NO3 potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_NO3_t):  derived type in which the parameters are set-up.
