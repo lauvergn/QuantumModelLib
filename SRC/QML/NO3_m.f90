@@ -139,17 +139,22 @@ MODULE QML_NO3_m
     QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf       = 2
-    QModel%ndim        = 12 ! in cartesian coordinates
     QModel%pot_name    = 'NO3'
     QModel%no_ana_der  = .TRUE.
+
+    QModel%ndimCart    = 12
+    QModel%ndimQ       = 12 ! always in CC
 
 
     IF (QModel%option /= 1) QModel%option = 1
 
     SELECT CASE (QModel%option)
     CASE (1) ! unpublished model
-      !call init_pot_para()
-
+      IF (QModel%Cart_TO_Q) THEN
+        QModel%ndim       = QModel%ndimCart
+      ELSE
+        QModel%ndim       = QModel%ndimQ
+      END IF
       !reference geometry
       QModel%transformcoordblock%phi_ref  = TWO/THREE*pi  ! 120°
       QModel%transformcoordblock%le_ref   = 2.344419_Rkind

@@ -48,7 +48,7 @@ PROGRAM main_pot
   CALL test_Phenol_Dia(10**7)
   CALL test_Phenol_ADia()
   CALL test_henonheiles(10**7)
-  CALL test_Vib_adia(1000)
+  !CALL test_Vib_adia(1000)
   CALL test_Test()
   !CALL test_Read_Model() ; stop
 
@@ -491,6 +491,9 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
+  allocate(g(nsurf,nsurf,ndim))
+  allocate(h(nsurf,nsurf,ndim,ndim))
+
   allocate(GGdef(ndim,ndim))
 
   ! write GGdef
@@ -515,6 +518,13 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 
        !sub_Qmodel_Opt(Q,i_surf,nb_deg,icv,Max_it)
   CALL sub_Qmodel_Opt(Q,1,-1,2,-1)
+  CALL sub_Qmodel_VGH(V,G,H,Q)
+  write(out_unit,*) 'Diabatic potential'
+  write(out_unit,'(3f12.8)') V
+  write(out_unit,*) 'Diabatic gradient of V(1,1)'
+  write(out_unit,'(2f12.8)') g(1,1,:)
+  write(out_unit,*) 'Diabatic hessian of V(1,1)'
+  write(out_unit,'(2f12.8)') h(1,1,:,:)
 
   deallocate(V)
   deallocate(GGdef)
