@@ -91,7 +91,7 @@ MODULE QML_Phenol_m
 
 
      ! V(1,3), and V(1,2) terms
-     TYPE (QML_Sigmoid_t) :: lambda12,lambda13
+     TYPE (QML_Sigmoid_t) :: lambda12,lambda23
 
 
       ! The metric tensor of Tnum with rigid_type=100 from B3LYP/6-31G** of the ground state (in au)
@@ -183,13 +183,13 @@ CONTAINS
     CALL Init0_QML_Sigmoid(QModel%v31,A=0.110336_Rkind,B=1.21724_Rkind, &
                             C=0.06778_Rkind,e=-ONE,model_name='sigmoid-v31')
 
-    ! V(1,3), and V(1,2) terms
+    ! V(2,3), and V(1,2) terms
     !l12,max=1.47613 eV d12=1.96984 Å l12=0.494373 Å
     CALL Init0_QML_Sigmoid(QModel%lambda12,A=1.47613_Rkind,B=1.96984_Rkind,&
                             C=0.494373_Rkind,e=-ONE,model_name='sigmoid-lambda12')
     !l23,max=0.327204 eV d23=1.22594 Å l23=0.0700604 Å
-    CALL Init0_QML_Sigmoid(QModel%lambda13,A=0.327204_Rkind,B=1.22594_Rkind,&
-                            C=0.0700604_Rkind,e=-ONE,model_name='sigmoid-lambda13')
+    CALL Init0_QML_Sigmoid(QModel%lambda23,A=0.327204_Rkind,B=1.22594_Rkind,&
+                            C=0.0700604_Rkind,e=-ONE,model_name='sigmoid-lambda23')
 
     IF (debug) THEN
       IF (QModel%PubliUnit) THEN
@@ -232,7 +232,7 @@ CONTAINS
     IMPLICIT NONE
 
     CLASS(QML_Phenol_t),    intent(in) :: QModel
-    integer,                 intent(in) :: nio
+    integer,                intent(in) :: nio
 
     write(nio,*) 'Phenol parameters'
     write(nio,*) '-----------------------------------------'
@@ -241,17 +241,17 @@ CONTAINS
     write(nio,*) '  Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, ...'
     write(nio,*) '  .... J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218'
     write(nio,*) 'with the OH distance R=Q(1)     in Angstrom ...'
-    write(nio,*) '     the OH angle    thet(=Q(2) in Radian   ...'
+    write(nio,*) '     the OH angle    theta=Q(2) in Radian   ...'
     write(nio,*) '     and the energy in eV.'
     write(nio,*)
     write(nio,*) 'Diabatic Potential Values (in eV) at: R=1.2 Angs and theta=0.2 Radian'
-    write(nio,*) '1        0.912491       0.280793       0.044016'
-    write(nio,*) '2        0.280793       5.437178       0.000000'
-    write(nio,*) '3        0.044016       0.000000       5.698608'
+    write(nio,*) '1        0.912491       0.280793       0.000000'
+    write(nio,*) '2        0.280793       5.437178       0.044016'
+    write(nio,*) '3        0.000000       0.044016       5.698608'
     write(nio,*) 'Adiabatic Potential Values (in eV) at: R=1.2 Angs and theta=0.2 Radian'
-    write(nio,*) '1        0.894730       0.000000       0.000000'
-    write(nio,*) '2        0.000000       5.454506       0.000000'
-    write(nio,*) '3        0.000000       0.000000       5.699040'
+    write(nio,*) '1        0.895130       0.000000       0.000000'
+    write(nio,*) '2        0.000000       5.446870       0.000000'
+    write(nio,*) '3        0.000000       0.000000       5.706276'
     write(nio,*)
     write(nio,*) 'end Phenol parameters'
     write(nio,*) 'Phenol current parameters'
@@ -290,8 +290,8 @@ CONTAINS
     write(nio,*) ' V(1,2):'
     CALL Write_QML_Sigmoid(QModel%lambda12,nio)
     write(nio,*) '-----------------------------------------'
-    write(nio,*) ' V(1,3):'
-    CALL Write_QML_Sigmoid(QModel%lambda13,nio)
+    write(nio,*) ' V(2,3):'
+    CALL Write_QML_Sigmoid(QModel%lambda23,nio)
 
     write(nio,*) 'end Phenol current parameters'
 
@@ -320,7 +320,7 @@ CONTAINS
     TYPE (dnS_t)  :: dnR,dnth
     TYPE (dnS_t)  :: v10R,v11R,v11th
     TYPE (dnS_t)  :: v30R,v31R,v31th
-    TYPE (dnS_t)  :: lambda12R,lambda13R
+    TYPE (dnS_t)  :: lambda12R,lambda23R
 
     TYPE (dnS_t)  :: v20pR,v20mR,v201R,v202R
     TYPE (dnS_t)  :: v21pR,v21mR,v211R,v212R
@@ -457,17 +457,17 @@ CONTAINS
 
 
 
-   lambda13R = QML_dnSigmoid(dnR,QModel%lambda13) * sin(dnth)
+   lambda23R = QML_dnSigmoid(dnR,QModel%lambda23) * sin(dnth)
 
-   Mat_OF_PotDia(1,3) = lambda13R
-   Mat_OF_PotDia(3,1) = Mat_OF_PotDia(1,3)
+   Mat_OF_PotDia(2,3) = lambda23R
+   Mat_OF_PotDia(3,2) = Mat_OF_PotDia(2,3)
 
-   Mat_OF_PotDia(2,3) = ZERO
-   Mat_OF_PotDia(3,2) = ZERO
+   Mat_OF_PotDia(1,3) = ZERO
+   Mat_OF_PotDia(3,1) = ZERO
 
 
    CALL dealloc_dnS(lambda12R)
-   CALL dealloc_dnS(lambda13R)
+   CALL dealloc_dnS(lambda23R)
    !--------------------------------------------------------------------
 
 
