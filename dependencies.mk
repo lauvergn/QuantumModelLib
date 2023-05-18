@@ -39,6 +39,7 @@ qml_twod_mullerbrown_m = $(OBJ_DIR)/TwoD_MullerBrown_m.o
 qml_twod_rjdi2014_m = $(OBJ_DIR)/TwoD_RJDI2014_m.o
 qml_twod_valahu2022_m = $(OBJ_DIR)/TwoD_Valahu2022_m.o
 qml_twod_m = $(OBJ_DIR)/TwoD_m.o
+qml_uracil_m = $(OBJ_DIR)/Uracil_m.o
 qml_vibronic_m = $(OBJ_DIR)/Vibronic_m.o
 qmllib_finitediff_m = $(OBJ_DIR)/FiniteDiff_m.o
 qmllib_utillib_m = $(OBJ_DIR)/UtilLib_m.o
@@ -100,6 +101,7 @@ $(OBJ_DIR)/Model_m.o : \
           $(qml_twod_rjdi2014_m) \
           $(qml_twod_valahu2022_m) \
           $(qml_vibronic_m) \
+          $(qml_uracil_m) \
           $(addnsvm_m) \
           $(qmllib_finitediff_m) \
           $(qdutil_test_m)
@@ -294,6 +296,10 @@ $(OBJ_DIR)/TwoD_m.o : \
           $(qdutil_numparameters_m) \
           $(qml_empty_m) \
           $(qdutil_m) \
+          $(addnsvm_m)
+$(OBJ_DIR)/Uracil_m.o : \
+          $(qmllib_numparameters_m) \
+          $(qml_empty_m) \
           $(addnsvm_m)
 $(OBJ_DIR)/Vibronic_m.o : \
           $(qdutil_numparameters_m) \

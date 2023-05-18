@@ -319,6 +319,7 @@ CONTAINS
   USE QML_TwoD_RJDI2014_m
   USE QML_TwoD_Valahu2022_m
   USE QML_Vibronic_m
+  USE QML_Uracil_m
 
   USE AdiaChannels_Basis_m
 
@@ -769,6 +770,23 @@ CONTAINS
       ELSE
         QModel%QM = Init_QML_Vibronic(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
       END IF
+
+    CASE ('uracyl','uracil')
+      !! === README ==
+      !! Model for the photo-dissociation of the uracil cation.
+      !! pot_name  = 'Uracil'
+      !! ndim      = 36
+      !! nsurf     = 4
+      !! ref1: Mariana Assmann, Horst Köppel, and Spiridoula Matsika,
+      !!       J. Phys. Chem. A 2015, 119, 866−875, 
+      !!       DOI: 10.1021/jp512221x
+      !! ref2: Patricia Vindel Zandbergen, Spiridoula Matsika, and Neepa T. Maitra
+      !!       J. Phys. Chem. Lett. 2022, 13, 7, 1785–1790
+      !!       https://doi.org/10.1021/acs.jpclett.1c04132
+      !! === END README ==
+
+      allocate(QML_Uracil_t :: QModel%QM)
+      QModel%QM = Init_QML_Uracil(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hono')
       allocate(QML_HONO_t :: QModel%QM)
