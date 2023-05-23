@@ -421,6 +421,113 @@ MODULE QML_H3_m
         QModel%pot_name   = 'H3_LSTH'
         QModel%no_ana_der = .TRUE.
 
+    CASE (51) !CASE 51 avec transfo 2D
+      QModel%ndimQ    = 1
+      QModel%ndim     = 1
+
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 3 ! V, Hessian, Rho 
+
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 3
+      QModel%IndexFunc_Grad = 0
+      QModel%IndexFunc_Hess = 2
+
+      QModel%pot_name   = 'h3_jo'
+      QModel%no_ana_der = .FALSE.
+
+    CASE (5) ! 2d avec le rho fitté de 51 (transfo2D)
+        IF (QModel%ndim == 2) THEN
+          QModel%ndimQ      = 2
+        ELSE
+          QModel%ndimQ      = 3
+        END IF
+        IF (QModel%Cart_TO_Q) THEN
+          QModel%ndim       = QModel%ndimCart
+        ELSE
+          QModel%ndim       = QModel%ndimQ
+        END IF
+  
+        QModel%ndimFunc = 1
+        QModel%nb_Func  = 3 ! V, Hessian, Rho 
+  
+        QModel%IndexFunc_Ene  = 1
+        QModel%IndexFunc_Qop  = 3
+        QModel%IndexFunc_Grad = 0
+        QModel%IndexFunc_Hess = 2
+  
+        QModel%pot_name   = 'H3_LSTH'
+        QModel%no_ana_der = .TRUE.
+
+    CASE (61) !CASE 61 VO + ZPE avec transfo 2D
+      QModel%ndimQ    = 1
+      QModel%ndim     = 1
+
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 4 ! V, Hessian, Rho, ZPE 
+
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 3
+      QModel%IndexFunc_Grad = 0
+      QModel%IndexFunc_Hess = 2
+
+      QModel%pot_name   = 'h3_jo'
+      QModel%no_ana_der = .FALSE.
+
+    CASE (72) !CASE 72 VO + 0.5*V''(fit le long de rho puis s)*drho^2
+      IF (QModel%ndim == 2) THEN
+         QModel%ndimQ      = 2
+      ELSE
+        QModel%ndimQ      = 3
+      END IF
+      IF (QModel%Cart_TO_Q) THEN
+        QModel%ndim       = QModel%ndimCart
+      ELSE
+        QModel%ndim       = QModel%ndimQ
+      END IF
+
+      QModel%ndimQ    = 2
+      QModel%ndim     = 2
+
+
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 4 ! V, 0.5*Hessian, rhoOpt, V'  
+
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 3
+      QModel%IndexFunc_Grad = 0
+      QModel%IndexFunc_Hess = 2
+
+      QModel%pot_name   = 'h3_LSTH' !LSTH ou jo ?
+      QModel%no_ana_der = .FALSE.
+
+    CASE (74) !CASE 74 VO + 0.5*V''*dro^2 + 1/6*V'''*dro^3+1/24*V''''*dro^4(fit le long de rho puis s)
+      IF (QModel%ndim == 2) THEN
+         QModel%ndimQ      = 2
+      ELSE
+        QModel%ndimQ      = 3
+      END IF
+      IF (QModel%Cart_TO_Q) THEN
+        QModel%ndim       = QModel%ndimCart
+      ELSE
+        QModel%ndim       = QModel%ndimQ
+      END IF
+
+      QModel%ndimQ    = 2
+      QModel%ndim     = 2
+
+
+      QModel%ndimFunc = 1
+      QModel%nb_Func  = 6 ! V, Hessian, rhoOpt, V', V''', V''''  
+
+      QModel%IndexFunc_Ene  = 1
+      QModel%IndexFunc_Qop  = 3
+      QModel%IndexFunc_Grad = 0
+      QModel%IndexFunc_Hess = 2
+
+      QModel%pot_name   = 'h3_LSTH' !LSTH ou jo ?
+      QModel%no_ana_der = .FALSE.
+
 
     CASE Default
        write(out_unit,*) 'Write_QModel'
@@ -497,23 +604,35 @@ MODULE QML_H3_m
       write(nio,*) 'Second 1D-IRC H3 LSTH model (from sum and difference)'
     CASE (21) ! IRC
       write(nio,*) 'Third (correct?) 1D-IRC H3 LSTH model'
+
     CASE (31) 
             write(nio,*) 'Case 31 for Jo'
-
-    CASE (41)
-            write(nio,*) 'Case 41 for Jo : 31 + transfo ts=sinh(s)'
-
     CASE (3) ! 2D 
         IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances, FOR Jo case 3'
         IF (QModel%ndim == 3) write(nio,*) '3D-H3 LSTH model, with 3 distances'
         IF (QModel%ndim == 9) write(nio,*) 'Cartessian H3 LSTH model'
-
+    CASE (41)
+            write(nio,*) 'Case 41 for Jo : 31 + transfo ts=sinh(s)'
     CASE (4) ! 2D 
           IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances, FOR Jo case 4 ts=sinh(s)'
           IF (QModel%ndim == 3) write(nio,*) '3D-H3 LSTH model, with 3 distances'
           IF (QModel%ndim == 9) write(nio,*) 'Cartessian H3 LSTH model'
 
+    CASE (51)
+            write(nio,*) 'Case 51 for Jo : 51 + transfo 2D rho.s'
+    CASE (5) ! 2D 
+          IF (QModel%ndim == 2) write(nio,*) 'Linear 2D-H3 LSTH model, with 2 distances, FOR Jo case 5 transfo 2D rho.s'
+          IF (QModel%ndim == 3) write(nio,*) '3D-H3 LSTH model, with 3 distances'
+          IF (QModel%ndim == 9) write(nio,*) 'Cartessian H3 LSTH model'
 
+    CASE (61)
+            write(nio,*) 'Case 61 for Jo : 61 V0+ZPE 1D'
+
+    CASE (72)
+            write(nio,*) 'Case 72 for Jo : 72 V0+harmonique(fit)'
+
+    CASE (74)
+            write(nio,*) 'Case 74 for Jo : 74 V0+ harmo+ anharmonique ordre 4(fit)'
     END SELECT
     write(nio,*)
 
@@ -546,10 +665,12 @@ MODULE QML_H3_m
 
     real(kind=Rkind) :: V,Q(3)
     TYPE (dnS_t)    :: Func(QModel%nb_Func)
+    TYPE (dnS_t)    :: deltaRho
 
-
+    !write(*,*) "In EvalPot", "with option", QModel%option
+    !write(*,*) "dnQ", get_d0(dnQ) 
     SELECT CASE(QModel%option)
-    CASE (0,10,20,3,4) ! 2D or 3D
+    CASE (0,10,20,3,4,5) ! 2D or 3D
       IF (size(dnQ) == 2) THEN
         Q(1:2) = get_d0(dnQ)
         Q(3)   = Q(1) + Q(2)
@@ -578,8 +699,35 @@ MODULE QML_H3_m
     CASE (41) 
       CALL EvalFunc_QML_H3_v41(QModel,Func,dnQ,nderiv)
       Mat_OF_PotDia(1,1) = Func(1)
-    END SELECT
 
+    CASE (51) 
+      CALL EvalFunc_QML_H3_v51(QModel,Func,dnQ,nderiv)
+      Mat_OF_PotDia(1,1) = Func(1)
+
+    CASE (61) 
+      CALL EvalFunc_QML_H3_v61(QModel,Func,dnQ,nderiv)
+      Mat_OF_PotDia(1,1) = Func(1) + Func(4)
+
+    CASE (72) 
+      CALL EvalFunc_QML_H3_v72(QModel,Func,[dnQ(1)],nderiv)
+      deltaRho=(dnQ(2)-Func(3))
+      !Mat_OF_PotDia(1,1) = Func(1) + Func(4)*(dnQ(2)-Func(3)) + HALF*Func(2)*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))
+      !Mat_OF_PotDia(1,1) = Func(1) + Func(4)*(dnQ(2)-Func(3)) + Func(2)*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))
+      Mat_OF_PotDia(1,1) = Func(1) + Func(4)*deltaRho + Func(2)*deltaRho*deltaRho
+
+    CASE (74) 
+      CALL EvalFunc_QML_H3_v74(QModel,Func,[dnQ(1)],nderiv)
+      deltaRho=(dnQ(2)-Func(3))
+      !Mat_OF_PotDia(1,1) = Func(1) + Func(4)*(dnQ(2)-Func(3)) + HALF*Func(2)*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))  &
+      !+ SIXTH*Func(5)*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3)) + QUARTER*THIRD*HALF*Func(6) &
+      !* (dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))
+      Mat_OF_PotDia(1,1) = Func(1) + Func(4)*deltaRho + Func(2)*deltaRho*deltaRho  &
+      + Func(5)*deltaRho*deltaRho*deltaRho + Func(6)*deltaRho*deltaRho*deltaRho*deltaRho
+      !Mat_OF_PotDia(1,1) = Func(1) + Func(4)*(dnQ(2)-Func(3)) + Func(2)*((dnQ(2)-Func(3))*(dnQ(2)-Func(3)))  &
+      !+ Func(5)*((dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))) + Func(6) &
+      !* ((dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3)))
+    END SELECT
+    !write(*,*) "Mat_pot", get_d0(Mat_OF_PotDia) 
   END SUBROUTINE EvalPot_QML_H3
 
   SUBROUTINE Cart_TO_Q_QML_H3(QModel,dnX,dnQ,nderiv)
@@ -957,6 +1105,14 @@ MODULE QML_H3_m
       CALL EvalFunc_QML_H3_v31(QModel,Func,dnQ,nderiv)
     CASE (41,4) 
       CALL EvalFunc_QML_H3_v41(QModel,Func,dnQ,nderiv)
+    CASE (51,5) 
+      CALL EvalFunc_QML_H3_v51(QModel,Func,dnQ,nderiv)
+    CASE (61) 
+      CALL EvalFunc_QML_H3_v61(QModel,Func,dnQ,nderiv)
+    CASE (72) 
+      CALL EvalFunc_QML_H3_v72(QModel,Func,dnQ,nderiv)
+    CASE (74) 
+      CALL EvalFunc_QML_H3_v74(QModel,Func,dnQ,nderiv)
     END SELECT
   END SUBROUTINE EvalFunc_QML_H3
 
@@ -1476,7 +1632,7 @@ MODULE QML_H3_m
       (0.0007092933469349128_Rkind) * tab_Pl(14) +  &
       (0.007085765600105608_Rkind) * tab_Pl(16)
                                      
-      write(out_unit,*) 'new s,s,V',get_d0(dnQ(1)),get_d0(s),get_d0(Func(1))
+!      write(out_unit,*) 'new s,s,V',get_d0(dnQ(1)),get_d0(s),get_d0(Func(1))
 
       DO i=0,max_deg
         CALL dealloc_dnS(tab_Pl(i))
@@ -1484,6 +1640,631 @@ MODULE QML_H3_m
       CALL dealloc_dnS(s)
       CALL dealloc_dnS(ts)
     END SUBROUTINE EvalFunc_QML_H3_v41
+
+
+     SUBROUTINE EvalFunc_QML_H3_v51(QModel,Func,dnQ,nderiv)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+      CLASS(QML_H3_t),      intent(in)    :: QModel
+      TYPE (dnS_t),         intent(inout) :: Func(:)
+      TYPE (dnS_t),         intent(in)    :: dnQ(:)
+      integer,              intent(in)    :: nderiv
+
+      TYPE (dnS_t)                  :: s,ts,am,ap
+      integer                       :: i
+      integer,           parameter  :: max_deg = 32
+      TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
+      real (kind=Rkind), parameter  :: betaQ = 1._Rkind
+
+
+      s  = dnQ(1)
+      ts  = sin(atan(s))
+      !ts = tanh(s*betaQ)
+      DO i=0,max_deg
+        tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
+      END DO
+     
+      !  V
+      Func(1)=  &
+      (-0.1620718837989824_Rkind) * tab_Pl(0) +  & 
+      (-0.008993773246295272_Rkind) * tab_Pl(2) +  &
+      (-0.004330516349166968_Rkind) * tab_Pl(4) +  &
+      (-0.0010620585935713837_Rkind) * tab_Pl(6) +  &
+      (0.0003858633034138086_Rkind) * tab_Pl(8) +  &
+      (0.0007669172511520921_Rkind) * tab_Pl(10) +  &
+      (0.0006466391218323583_Rkind) * tab_Pl(12) +  &
+      (0.0003753917050891673_Rkind) * tab_Pl(14) +  &
+      (0.0001217153671666159_Rkind) * tab_Pl(16) +  &
+      (-3.806281720474181e-05_Rkind) * tab_Pl(18) +  &
+      (-0.00010291012057228436_Rkind) * tab_Pl(20) +  &
+      (-0.00010013347559712096_Rkind) * tab_Pl(22) +  &
+      (-6.607022342401301e-05_Rkind) * tab_Pl(24) +  &
+      (-2.5997737071039032e-05_Rkind) * tab_Pl(26) +  &
+      (1.564175665510225e-06_Rkind) * tab_Pl(28) +  &
+      (1.5410394805893913e-05_Rkind) * tab_Pl(30) +  &
+      (3.4267515659467252e-06_Rkind) * tab_Pl(32)
+
+      
+      ! hessian
+      Func(2) =  &
+      (0.6075899355887548_Rkind) * tab_Pl(0) +  & 
+      (-0.10567883781305588_Rkind) * tab_Pl(2) +  &
+      (-0.05714381041852741_Rkind) * tab_Pl(4) +  &
+      (-0.02935995581332255_Rkind) * tab_Pl(6) +  &
+      (-0.016991066224729384_Rkind) * tab_Pl(8) +  &
+      (-0.014537719234377633_Rkind) * tab_Pl(10) +  &
+      (-0.013177254444038779_Rkind) * tab_Pl(12) +  &
+      (-0.0060939317509078016_Rkind) * tab_Pl(14) +  &
+      (-0.0003379189027574508_Rkind) * tab_Pl(16) +  &
+      (-0.003984506386244121_Rkind) * tab_Pl(18) +  &
+      (0.0025798395807923933_Rkind) * tab_Pl(20) +  &
+      (0.0015280532748144886_Rkind) * tab_Pl(22) +  &
+      (0.0025480533183245015_Rkind) * tab_Pl(24) +  &
+      (-0.0003994112348223169_Rkind) * tab_Pl(26) +  &
+      (0.0010596234077735716_Rkind) * tab_Pl(28) +  &
+      (-0.0007077615662376131_Rkind) * tab_Pl(30) +  &
+      (0.0025738127648113544_Rkind) * tab_Pl(32)
+
+ 
+
+      ! rho
+      Func(3) = &
+      (1.261243931645815_Rkind) * tab_Pl(0) +  &
+      (0.05498541052261184_Rkind) * tab_Pl(2) +  &
+      (0.03446819696272064_Rkind) * tab_Pl(4) +  &
+      (0.020291272930553106_Rkind) * tab_Pl(6) +  &
+      (0.011855010123711414_Rkind) * tab_Pl(8) +  &
+      (0.007536688407402705_Rkind) * tab_Pl(10) +  &
+      (0.004940560392031361_Rkind) * tab_Pl(12) +  &
+      (0.0034254508799222323_Rkind) * tab_Pl(14) +  &
+      (0.002319413680131285_Rkind) * tab_Pl(16) +  &
+      (0.0010470828509148065_Rkind) * tab_Pl(18) +  &
+      (4.281256394175054e-05_Rkind) * tab_Pl(20) +  &
+      (-0.00030975651066805104_Rkind) * tab_Pl(22) +  &
+      (-0.0005399637278206589_Rkind) * tab_Pl(24) +  &
+      (-0.00041279694640769006_Rkind) * tab_Pl(26) +  &
+      (-0.00017611772257669623_Rkind) * tab_Pl(28) +  &
+      (-2.5934623118451503e-05_Rkind) * tab_Pl(30) +  &
+      (0.00036253207816267066_Rkind) * tab_Pl(32)
+
+      DO i=0,max_deg
+        CALL dealloc_dnS(tab_Pl(i))
+      END DO
+      CALL dealloc_dnS(s)
+      CALL dealloc_dnS(ts)
+    END SUBROUTINE EvalFunc_QML_H3_v51
+
+
+     SUBROUTINE EvalFunc_QML_H3_v61(QModel,Func,dnQ,nderiv)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+      CLASS(QML_H3_t),      intent(in)    :: QModel
+      TYPE (dnS_t),         intent(inout) :: Func(:)
+      TYPE (dnS_t),         intent(in)    :: dnQ(:)
+      integer,              intent(in)    :: nderiv
+
+      TYPE (dnS_t)                  :: s,ts,am,ap
+      integer                       :: i
+      integer,           parameter  :: max_deg = 32
+      TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
+      real (kind=Rkind), parameter  :: betaQ = 1._Rkind
+
+
+      s  = dnQ(1)
+      ts  = sin(atan(s))
+      !ts = tanh(s*betaQ)
+      DO i=0,max_deg
+        tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
+      END DO
+     
+      !  V
+      Func(1)=  &
+      (-0.1620718837989824_Rkind) * tab_Pl(0) +  & 
+      (-0.008993773246295272_Rkind) * tab_Pl(2) +  &
+      (-0.004330516349166968_Rkind) * tab_Pl(4) +  &
+      (-0.0010620585935713837_Rkind) * tab_Pl(6) +  &
+      (0.0003858633034138086_Rkind) * tab_Pl(8) +  &
+      (0.0007669172511520921_Rkind) * tab_Pl(10) +  &
+      (0.0006466391218323583_Rkind) * tab_Pl(12) +  &
+      (0.0003753917050891673_Rkind) * tab_Pl(14) +  &
+      (0.0001217153671666159_Rkind) * tab_Pl(16) +  &
+      (-3.806281720474181e-05_Rkind) * tab_Pl(18) +  &
+      (-0.00010291012057228436_Rkind) * tab_Pl(20) +  &
+      (-0.00010013347559712096_Rkind) * tab_Pl(22) +  &
+      (-6.607022342401301e-05_Rkind) * tab_Pl(24) +  &
+      (-2.5997737071039032e-05_Rkind) * tab_Pl(26) +  &
+      (1.564175665510225e-06_Rkind) * tab_Pl(28) +  &
+      (1.5410394805893913e-05_Rkind) * tab_Pl(30) +  &
+      (3.4267515659467252e-06_Rkind) * tab_Pl(32)
+
+      
+      ! hessian
+      Func(2) =  &
+      (0.6075899355887548_Rkind) * tab_Pl(0) +  & 
+      (-0.10567883781305588_Rkind) * tab_Pl(2) +  &
+      (-0.05714381041852741_Rkind) * tab_Pl(4) +  &
+      (-0.02935995581332255_Rkind) * tab_Pl(6) +  &
+      (-0.016991066224729384_Rkind) * tab_Pl(8) +  &
+      (-0.014537719234377633_Rkind) * tab_Pl(10) +  &
+      (-0.013177254444038779_Rkind) * tab_Pl(12) +  &
+      (-0.0060939317509078016_Rkind) * tab_Pl(14) +  &
+      (-0.0003379189027574508_Rkind) * tab_Pl(16) +  &
+      (-0.003984506386244121_Rkind) * tab_Pl(18) +  &
+      (0.0025798395807923933_Rkind) * tab_Pl(20) +  &
+      (0.0015280532748144886_Rkind) * tab_Pl(22) +  &
+      (0.0025480533183245015_Rkind) * tab_Pl(24) +  &
+      (-0.0003994112348223169_Rkind) * tab_Pl(26) +  &
+      (0.0010596234077735716_Rkind) * tab_Pl(28) +  &
+      (-0.0007077615662376131_Rkind) * tab_Pl(30) +  &
+      (0.0025738127648113544_Rkind) * tab_Pl(32)
+
+ 
+
+      ! rho
+      Func(3) = &
+      (1.261243931645815_Rkind) * tab_Pl(0) +  &
+      (0.05498541052261184_Rkind) * tab_Pl(2) +  &
+      (0.03446819696272064_Rkind) * tab_Pl(4) +  &
+      (0.020291272930553106_Rkind) * tab_Pl(6) +  &
+      (0.011855010123711414_Rkind) * tab_Pl(8) +  &
+      (0.007536688407402705_Rkind) * tab_Pl(10) +  &
+      (0.004940560392031361_Rkind) * tab_Pl(12) +  &
+      (0.0034254508799222323_Rkind) * tab_Pl(14) +  &
+      (0.002319413680131285_Rkind) * tab_Pl(16) +  &
+      (0.0010470828509148065_Rkind) * tab_Pl(18) +  &
+      (4.281256394175054e-05_Rkind) * tab_Pl(20) +  &
+      (-0.00030975651066805104_Rkind) * tab_Pl(22) +  &
+      (-0.0005399637278206589_Rkind) * tab_Pl(24) +  &
+      (-0.00041279694640769006_Rkind) * tab_Pl(26) +  &
+      (-0.00017611772257669623_Rkind) * tab_Pl(28) +  &
+      (-2.5934623118451503e-05_Rkind) * tab_Pl(30) +  &
+      (0.00036253207816267066_Rkind) * tab_Pl(32)
+
+      !Fitted Frequency along Rho
+      Func(4) = &
+      (0.006005922154491725_Rkind) * tab_Pl(0) +  &
+      (0.0031574819729319747_Rkind) * tab_Pl(2) +  &
+      (0.0008492844551779132_Rkind) * tab_Pl(4) +  &
+      (0.0002242725684159113_Rkind) * tab_Pl(6) +  &
+      (1.4799836843707549e-05_Rkind) * tab_Pl(8) +  &
+      (-7.148382422659551e-05_Rkind) * tab_Pl(10) +  &
+      (-9.724998095625515e-05_Rkind) * tab_Pl(12) +  &
+      (-6.622114649532386e-05_Rkind) * tab_Pl(14) +  &
+      (-3.2641975806064845e-05_Rkind) * tab_Pl(16) +  &
+      (-3.581797770238322e-05_Rkind) * tab_Pl(18) +  &
+      (-2.6512344100050384e-06_Rkind) * tab_Pl(20) +  &
+      (4.311136006173978e-06_Rkind) * tab_Pl(22) +  &
+      (4.528040827611103e-06_Rkind) * tab_Pl(24) +  &
+      (4.431197572981137e-07_Rkind) * tab_Pl(26) +  &
+      (-8.354627843217928e-06_Rkind) * tab_Pl(28) +  &
+      (3.2796344679545e-06_Rkind) * tab_Pl(30) +  &
+      (7.753347481333872e-05_Rkind) * tab_Pl(32)
+
+                                     
+
+      DO i=0,max_deg
+        CALL dealloc_dnS(tab_Pl(i))
+      END DO
+      CALL dealloc_dnS(s)
+      CALL dealloc_dnS(ts)
+    END SUBROUTINE EvalFunc_QML_H3_v61
+
+     SUBROUTINE EvalFunc_QML_H3_v72(QModel,Func,dnQ,nderiv)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+      CLASS(QML_H3_t),      intent(in)    :: QModel
+      TYPE (dnS_t),         intent(inout) :: Func(:)
+      TYPE (dnS_t),         intent(in)    :: dnQ(:)
+      integer,              intent(in)    :: nderiv
+
+      TYPE (dnS_t)                  :: s,ts,am,ap
+      integer                       :: i
+      integer,           parameter  :: max_deg = 32
+      TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
+      real (kind=Rkind), parameter  :: betaQ = 1._Rkind
+
+
+      s  = dnQ(1)
+      ts  = sin(atan(s))
+      !ts = tanh(s*betaQ)
+      DO i=0,max_deg
+        tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
+      END DO
+
+      ! Fit polynomial en c4 + c3*drho + c2*drho^2
+      !  c4( =V0) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
+      ! maxdiff =3.47995241222e-05
+      Func(1)=  &
+      (-0.1620716487102793_Rkind) * tab_Pl(0) +  &
+      (-0.008992725629195533_Rkind) * tab_Pl(2) +  &
+      (-0.00432915791758284_Rkind) * tab_Pl(4) +  &
+      (-0.001061111040246674_Rkind) * tab_Pl(6) +  &
+      (0.0003857228005224359_Rkind) * tab_Pl(8) +  &
+      (0.0007652895174396595_Rkind) * tab_Pl(10) +  &
+      (0.0006436145988118415_Rkind) * tab_Pl(12) +  &
+      (0.00037157203206966737_Rkind) * tab_Pl(14) +  &
+      (0.00011819866129507563_Rkind) * tab_Pl(16) +  &
+      (-4.02663761147522e-05_Rkind) * tab_Pl(18) +  &
+      (-0.00010232354419382081_Rkind) * tab_Pl(20) +  &
+      (-9.760506805819436e-05_Rkind) * tab_Pl(22) +  &
+      (-5.885890983333011e-05_Rkind) * tab_Pl(24) +  &
+      (-2.1436826791342742e-05_Rkind) * tab_Pl(26) +  &
+      (1.4784209082551226e-05_Rkind) * tab_Pl(28) +  &
+      (2.4150163942799644e-05_Rkind) * tab_Pl(30) +  &
+      (-3.501962307059586e-05_Rkind) * tab_Pl(32)
+
+
+      
+      ! c2 (c2*drho^2) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
+      ! maxdiff = 2.75102563607e-05
+      Func(2) =  &
+      (0.30375204657676236_Rkind) * tab_Pl(0) +  &
+      (-0.05261249923316819_Rkind) * tab_Pl(2) +  &
+      (-0.028245088307616156_Rkind) * tab_Pl(4) +  &
+      (-0.01376309967876779_Rkind) * tab_Pl(6) +  &
+      (-0.008615637365472464_Rkind) * tab_Pl(8) +  &
+      (-0.007122038317701137_Rkind) * tab_Pl(10) +  &
+      (-0.005141765724950869_Rkind) * tab_Pl(12) +  &
+      (-0.003418104118376876_Rkind) * tab_Pl(14) +  &
+      (-0.0010447833949072116_Rkind) * tab_Pl(16) +  &
+      (0.00040790797785053524_Rkind) * tab_Pl(18) +  &
+      (0.0009037612950454548_Rkind) * tab_Pl(20) +  &
+      (0.0005452967481115013_Rkind) * tab_Pl(22) +  &
+      (0.000282087543543148_Rkind) * tab_Pl(24) +  &
+      (-0.0002715479728813458_Rkind) * tab_Pl(26) +  &
+      (-0.0007667274135405311_Rkind) * tab_Pl(28) +  &
+      (-0.0007199692637246045_Rkind) * tab_Pl(30) +  &
+      (0.0006760031365286_Rkind) * tab_Pl(32)
+
+ 
+
+      ! rho
+      Func(3) = &
+      (1.261243931645815_Rkind) * tab_Pl(0) +  &
+      (0.05498541052261184_Rkind) * tab_Pl(2) +  &
+      (0.03446819696272064_Rkind) * tab_Pl(4) +  &
+      (0.020291272930553106_Rkind) * tab_Pl(6) +  &
+      (0.011855010123711414_Rkind) * tab_Pl(8) +  &
+      (0.007536688407402705_Rkind) * tab_Pl(10) +  &
+      (0.004940560392031361_Rkind) * tab_Pl(12) +  &
+      (0.0034254508799222323_Rkind) * tab_Pl(14) +  &
+      (0.002319413680131285_Rkind) * tab_Pl(16) +  &
+      (0.0010470828509148065_Rkind) * tab_Pl(18) +  &
+      (4.281256394175054e-05_Rkind) * tab_Pl(20) +  &
+      (-0.00030975651066805104_Rkind) * tab_Pl(22) +  &
+      (-0.0005399637278206589_Rkind) * tab_Pl(24) +  &
+      (-0.00041279694640769006_Rkind) * tab_Pl(26) +  &
+      (-0.00017611772257669623_Rkind) * tab_Pl(28) +  &
+      (-2.5934623118451503e-05_Rkind) * tab_Pl(30) +  &
+      (0.00036253207816267066_Rkind) * tab_Pl(32)
+      
+      ! c3(c3*drho) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s 
+      ! maxdiff = 5.57117016741e-06
+      Func(4) = &   
+      (0.00012054894006886368_Rkind) * tab_Pl(0) +  &
+      (-4.159861752693137e-05_Rkind) * tab_Pl(2) +  &
+      (-3.088431820462534e-06_Rkind) * tab_Pl(4) +  &
+      (-1.5430069424391806e-05_Rkind) * tab_Pl(6) +  &
+      (-8.389126757210443e-05_Rkind) * tab_Pl(8) +  &
+      (9.425785955142528e-05_Rkind) * tab_Pl(10) +  &
+      (-3.255469762512486e-05_Rkind) * tab_Pl(12) +  &
+      (-3.114281736068148e-05_Rkind) * tab_Pl(14) +  &
+      (6.793677577444186e-05_Rkind) * tab_Pl(16) +  &
+      (-3.75084784501627e-06_Rkind) * tab_Pl(18) +  &
+      (-5.64014489843293e-05_Rkind) * tab_Pl(20) +  &
+      (4.147527388974017e-05_Rkind) * tab_Pl(22) +  &
+      (-1.5965985196154143e-05_Rkind) * tab_Pl(24) +  &
+      (-7.97292699073988e-06_Rkind) * tab_Pl(26) +  &
+      (1.0429200371081538e-05_Rkind) * tab_Pl(28) +  &
+      (-7.53503532862055e-06_Rkind) * tab_Pl(30) +  &
+      (6.714016001365854e-06_Rkind) * tab_Pl(32)
+
+      
+      DO i=0,max_deg
+        CALL dealloc_dnS(tab_Pl(i))
+      END DO
+      CALL dealloc_dnS(s)
+      CALL dealloc_dnS(ts)
+  END SUBROUTINE EvalFunc_QML_H3_v72
+
+  SUBROUTINE EvalFunc_QML_H3_v74(QModel,Func,dnQ,nderiv)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+      CLASS(QML_H3_t),      intent(in)    :: QModel
+      TYPE (dnS_t),         intent(inout) :: Func(:)
+      TYPE (dnS_t),         intent(in)    :: dnQ(:)
+      integer,              intent(in)    :: nderiv
+
+      TYPE (dnS_t)                  :: s,ts,am,ap
+      integer                       :: i
+      integer,           parameter  :: max_deg = 48
+      TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
+      real (kind=Rkind), parameter  :: betaQ = 1._Rkind
+
+
+      s  = dnQ(1)
+      ts  = sin(atan(s))
+      !ts = tanh(s*betaQ)
+      DO i=0,max_deg
+        tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
+      END DO
+     
+      !  c4(V0) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
+      ! maxdiff = 2.63656814312e-06
+      Func(1)=  &!ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8
+      (-0.16207139294104606_Rkind) * tab_Pl(0) +  &
+      (-0.008989917909474423_Rkind) * tab_Pl(2) +  &
+      (-0.004329368522365633_Rkind) * tab_Pl(4) +  &
+      (-0.0010482901505167747_Rkind) * tab_Pl(6) +  &
+      (0.000360202857892648_Rkind) * tab_Pl(8) +  &
+      (0.0008368367197993513_Rkind) * tab_Pl(10) +  &
+      (0.0004787805555940436_Rkind) * tab_Pl(12) +  &
+      (0.0007176755497951032_Rkind) * tab_Pl(14) +  &
+      (-0.0005593458069133195_Rkind) * tab_Pl(16) +  &
+      (0.0011473839801117314_Rkind) * tab_Pl(18) +  &
+      (-0.002011414626981134_Rkind) * tab_Pl(20) +  &
+      (0.0026394004582187968_Rkind) * tab_Pl(22) +  &
+      (-0.003547876846881965_Rkind) * tab_Pl(24) +  &
+      (0.0037935717520674265_Rkind) * tab_Pl(26) +  &
+      (-0.003370977874011358_Rkind) * tab_Pl(28) +  &
+      (0.0019903812545488146_Rkind) * tab_Pl(30) +  &
+      (0.0002660231202153635_Rkind) * tab_Pl(32) +  &
+      (-0.0027567787885957656_Rkind) * tab_Pl(34) +  &
+      (0.004760341218380286_Rkind) * tab_Pl(36) +  &
+      (-0.005627991509208083_Rkind) * tab_Pl(38) +  &
+      (0.005123336481187769_Rkind) * tab_Pl(40) +  &
+      (-0.0037251294865690305_Rkind) * tab_Pl(42) +  &
+      (0.002083326971132794_Rkind) * tab_Pl(44) +  &
+      (-0.0008403379506349807_Rkind) * tab_Pl(46) +  &
+      (0.00020809646457610622_Rkind) * tab_Pl(48)
+
+      !(-0.1620716487102793_Rkind) * tab_Pl(0) +  &
+      !(-0.008992725629195533_Rkind) * tab_Pl(2) +  &
+      !(-0.00432915791758284_Rkind) * tab_Pl(4) +  &
+      !(-0.001061111040246674_Rkind) * tab_Pl(6) +  &
+      !(0.0003857228005224359_Rkind) * tab_Pl(8) +  &
+      !(0.0007652895174396595_Rkind) * tab_Pl(10) +  &
+      !(0.0006436145988118415_Rkind) * tab_Pl(12) +  &
+      !(0.00037157203206966737_Rkind) * tab_Pl(14) +  &
+      !(0.00011819866129507563_Rkind) * tab_Pl(16) +  &
+      !(-4.02663761147522e-05_Rkind) * tab_Pl(18) +  &
+      !(-0.00010232354419382081_Rkind) * tab_Pl(20) +  &
+      !(-9.760506805819436e-05_Rkind) * tab_Pl(22) +  &
+      !(-5.885890983333011e-05_Rkind) * tab_Pl(24) +  &
+      !(-2.1436826791342742e-05_Rkind) * tab_Pl(26) +  &
+      !(1.4784209082551226e-05_Rkind) * tab_Pl(28) +  &
+      !(2.4150163942799644e-05_Rkind) * tab_Pl(30) +  &
+      !(-3.501962307059586e-05_Rkind) * tab_Pl(32)
+
+
+      
+      ! c2 (c2*drho^2) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
+      ! maxdiff = 3.29572217026e-05
+      Func(2) =  & !ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8
+      (0.30374950443390847_Rkind) * tab_Pl(0) +  &
+      (-0.05263777329872866_Rkind) * tab_Pl(2) +  &
+      (-0.02824499169155245_Rkind) * tab_Pl(4) +  &
+      (-0.013869244641591425_Rkind) * tab_Pl(6) +  &
+      (-0.008403214399978586_Rkind) * tab_Pl(8) +  &
+      (-0.007696945284070528_Rkind) * tab_Pl(10) +  &
+      (-0.003806082903400655_Rkind) * tab_Pl(12) +  &
+      (-0.006166450639817748_Rkind) * tab_Pl(14) +  &
+      (0.004309716438982306_Rkind) * tab_Pl(16) +  &
+      (-0.008859755489454838_Rkind) * tab_Pl(18) +  &
+      (0.015668516816827203_Rkind) * tab_Pl(20) +  &
+      (-0.020386609731335353_Rkind) * tab_Pl(22) +  &
+      (0.026726056241208166_Rkind) * tab_Pl(24) +  &
+      (-0.0288510778775844_Rkind) * tab_Pl(26) +  &
+      (0.024431057911522034_Rkind) * tab_Pl(28) +  &
+      (-0.014898755884266347_Rkind) * tab_Pl(30) +  &
+      (-0.0023882469597527427_Rkind) * tab_Pl(32) +  &
+      (0.020524707114045054_Rkind) * tab_Pl(34) +  &
+      (-0.035159777872531876_Rkind) * tab_Pl(36) +  &
+      (0.0419505860292803_Rkind) * tab_Pl(38) +  &
+      (-0.038291605815803_Rkind) * tab_Pl(40) +  &
+      (0.028667463162531014_Rkind) * tab_Pl(42) +  &
+      (-0.01659056531057078_Rkind) * tab_Pl(44) +  &
+      (0.007217862809646366_Rkind) * tab_Pl(46) +  &
+      (-0.00203367463365633_Rkind) * tab_Pl(48)
+
+      !Coeff associé au fichier 'recap_optRhoEqui' dans dossier Fitpy
+      !(0.30375204657676236_Rkind) * tab_Pl(0) +  &
+      !(-0.05261249923316819_Rkind) * tab_Pl(2) +  &
+      !(-0.028245088307616156_Rkind) * tab_Pl(4) +  &
+      !(-0.01376309967876779_Rkind) * tab_Pl(6) +  &
+      !(-0.008615637365472464_Rkind) * tab_Pl(8) +  &
+      !(-0.007122038317701137_Rkind) * tab_Pl(10) +  &
+      !(-0.005141765724950869_Rkind) * tab_Pl(12) +  &
+      !(-0.003418104118376876_Rkind) * tab_Pl(14) +  &
+      !(-0.0010447833949072116_Rkind) * tab_Pl(16) +  &
+      !(0.00040790797785053524_Rkind) * tab_Pl(18) +  &
+      !(0.0009037612950454548_Rkind) * tab_Pl(20) +  &
+      !(0.0005452967481115013_Rkind) * tab_Pl(22) +  &
+      !(0.000282087543543148_Rkind) * tab_Pl(24) +  &
+      !(-0.0002715479728813458_Rkind) * tab_Pl(26) +  &
+      !(-0.0007667274135405311_Rkind) * tab_Pl(28) +  &
+      !(-0.0007199692637246045_Rkind) * tab_Pl(30) +  &
+      !(0.0006760031365286_Rkind) * tab_Pl(32)
+
+
+ 
+
+      ! rho
+      Func(3) = &
+      (1.261243931645815_Rkind) * tab_Pl(0) +  &
+      (0.05498541052261184_Rkind) * tab_Pl(2) +  &
+      (0.03446819696272064_Rkind) * tab_Pl(4) +  &
+      (0.020291272930553106_Rkind) * tab_Pl(6) +  &
+      (0.011855010123711414_Rkind) * tab_Pl(8) +  &
+      (0.007536688407402705_Rkind) * tab_Pl(10) +  &
+      (0.004940560392031361_Rkind) * tab_Pl(12) +  &
+      (0.0034254508799222323_Rkind) * tab_Pl(14) +  &
+      (0.002319413680131285_Rkind) * tab_Pl(16) +  &
+      (0.0010470828509148065_Rkind) * tab_Pl(18) +  &
+      (4.281256394175054e-05_Rkind) * tab_Pl(20) +  &
+      (-0.00030975651066805104_Rkind) * tab_Pl(22) +  &
+      (-0.0005399637278206589_Rkind) * tab_Pl(24) +  &
+      (-0.00041279694640769006_Rkind) * tab_Pl(26) +  &
+      (-0.00017611772257669623_Rkind) * tab_Pl(28) +  &
+      (-2.5934623118451503e-05_Rkind) * tab_Pl(30) +  &
+      (0.00036253207816267066_Rkind) * tab_Pl(32)
+      
+      ! c3(c3*drho) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s 
+      ! maxdiff = 7.1548287231e-06 
+      Func(4) = &  !ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8 
+      (0.00012063674082565115_Rkind) * tab_Pl(0) +  &
+      (-4.1425739977470036e-05_Rkind) * tab_Pl(2) +  &
+      (-2.4239116984059995e-06_Rkind) * tab_Pl(4) +  &
+      (-1.6650686583068975e-05_Rkind) * tab_Pl(6) +  &
+      (-8.079451360298356e-05_Rkind) * tab_Pl(8) +  &
+      (8.429523860703813e-05_Rkind) * tab_Pl(10) +  &
+      (-1.2203672188874432e-05_Rkind) * tab_Pl(12) +  &
+      (-7.800676003009566e-05_Rkind) * tab_Pl(14) +  &
+      (0.00015804831530465938_Rkind) * tab_Pl(16) +  &
+      (-0.00016490891576258253_Rkind) * tab_Pl(18) +  &
+      (0.00020743883827847572_Rkind) * tab_Pl(20) +  &
+      (-0.0003393323849648792_Rkind) * tab_Pl(22) +  &
+      (0.0004795101489175562_Rkind) * tab_Pl(24) +  &
+      (-0.0005551463058609534_Rkind) * tab_Pl(26) +  &
+      (0.0005039296106884514_Rkind) * tab_Pl(28) +  &
+      (-0.00030089936753135966_Rkind) * tab_Pl(30) +  &
+      (-4.1211848421952196e-05_Rkind) * tab_Pl(32) +  &
+      (0.0004070924592144858_Rkind) * tab_Pl(34) +  &
+      (-0.0006790178634567731_Rkind) * tab_Pl(36) +  &
+      (0.0008075681707767094_Rkind) * tab_Pl(38) +  &
+      (-0.0007497832421263899_Rkind) * tab_Pl(40) +  &
+      (0.0005213860035859344_Rkind) * tab_Pl(42) +  &
+      (-0.0002640804121683683_Rkind) * tab_Pl(44) +  &
+      (9.866549309015685e-05_Rkind) * tab_Pl(46) +  &
+      (-2.131966131723614e-05_Rkind) * tab_Pl(48)
+
+      !Coeff associé au fichier 'recap_optRhoEqui' dans dossier Fitpy
+      !(0.00012054894006886368_Rkind) * tab_Pl(0) +  &
+      !(-4.159861752693137e-05_Rkind) * tab_Pl(2) +  &
+      !(-3.088431820462534e-06_Rkind) * tab_Pl(4) +  &
+      !(-1.5430069424391806e-05_Rkind) * tab_Pl(6) +  &
+      !(-8.389126757210443e-05_Rkind) * tab_Pl(8) +  &
+      !(9.425785955142528e-05_Rkind) * tab_Pl(10) +  &
+      !(-3.255469762512486e-05_Rkind) * tab_Pl(12) +  &
+      !(-3.114281736068148e-05_Rkind) * tab_Pl(14) +  &
+      !(6.793677577444186e-05_Rkind) * tab_Pl(16) +  &
+      !(-3.75084784501627e-06_Rkind) * tab_Pl(18) +  &
+      !(-5.64014489843293e-05_Rkind) * tab_Pl(20) +  &
+      !(4.147527388974017e-05_Rkind) * tab_Pl(22) +  &
+      !(-1.5965985196154143e-05_Rkind) * tab_Pl(24) +  &
+      !(-7.97292699073988e-06_Rkind) * tab_Pl(26) +  &
+      !(1.0429200371081538e-05_Rkind) * tab_Pl(28) +  &
+      !(-7.53503532862055e-06_Rkind) * tab_Pl(30) +  &
+      !(6.714016001365854e-06_Rkind) * tab_Pl(32)
+
+      
+      ! c1 (c1*drho^3) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
+      ! maxdiff = 5.49896226448e-05
+      Func(5) = & !ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8
+      (-0.42808970081556635_Rkind) * tab_Pl(0) +  &
+      (0.11247166878455189_Rkind) * tab_Pl(2) +  &
+      (0.059746640846453425_Rkind) * tab_Pl(4) +  &
+      (0.019129889700503465_Rkind) * tab_Pl(6) +  &
+      (0.0035237126723394446_Rkind) * tab_Pl(8) +  &
+      (0.0074005177924327675_Rkind) * tab_Pl(10) +  &
+      (-0.0033182465799101793_Rkind) * tab_Pl(12) +  &
+      (0.023520802321938636_Rkind) * tab_Pl(14) +  &
+      (-0.031316730641233526_Rkind) * tab_Pl(16) +  &
+      (0.06314698041546835_Rkind) * tab_Pl(18) +  &
+      (-0.10244257501198704_Rkind) * tab_Pl(20) +  &
+      (0.14247360279431864_Rkind) * tab_Pl(22) +  &
+      (-0.18657356209919096_Rkind) * tab_Pl(24) +  &
+      (0.20197102516549023_Rkind) * tab_Pl(26) +  &
+      (-0.18011147007817652_Rkind) * tab_Pl(28) +  &
+      (0.10668386666389848_Rkind) * tab_Pl(30) +  &
+      (0.014103648389836868_Rkind) * tab_Pl(32) +  &
+      (-0.14637879317205393_Rkind) * tab_Pl(34) +  &
+      (0.25445905188916274_Rkind) * tab_Pl(36) +  &
+      (-0.2996700529026105_Rkind) * tab_Pl(38) +  &
+      (0.272544782790872_Rkind) * tab_Pl(40) +  &
+      (-0.19654051234395137_Rkind) * tab_Pl(42) +  &
+      (0.10833980693031284_Rkind) * tab_Pl(44) +  &
+      (-0.04322740125039924_Rkind) * tab_Pl(46) +  &
+      (0.009767270370872093_Rkind) * tab_Pl(48)
+
+      !Coeff associé au fichier 'recap_optRhoEqui' dans dossier Fitpy
+      !(-0.4280712417313688_Rkind) * tab_Pl(0) +  &
+      !(0.11247534169282206_Rkind) * tab_Pl(2) +  &
+      !(0.05998037605796082_Rkind) * tab_Pl(4) +  &
+      !(0.01870873415739227_Rkind) * tab_Pl(6) +  &
+      !(0.005027009034584681_Rkind) * tab_Pl(8) +  &
+      !(0.003776335643769335_Rkind) * tab_Pl(10) +  &
+      !(0.005189361844932756_Rkind) * tab_Pl(12) +  &
+      !(0.005285749904536103_Rkind) * tab_Pl(14) +  &
+      !(0.0038340861120990787_Rkind) * tab_Pl(16) +  &
+      !(0.0004693807417369628_Rkind) * tab_Pl(18) +  &
+      !(-0.002231515868601842_Rkind) * tab_Pl(20) +  &
+      !(-0.002355656089486632_Rkind) * tab_Pl(22) +  &
+      !(-0.0018142662659441826_Rkind) * tab_Pl(24) +  &
+      !(-0.0007192492715343131_Rkind) * tab_Pl(26) +  &
+      !(0.0004425287789617937_Rkind) * tab_Pl(28) +  &
+      !(0.001596012400134642_Rkind) * tab_Pl(30) +  &
+      !(0.0007501493129836831_Rkind) * tab_Pl(32)
+
+
+      ! c0 (c0*drho^4) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
+      ! maxdiff = 0.000715618043238
+      Func(6) = & !ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8
+      (0.3878984339121209_Rkind) * tab_Pl(0) +  &
+      (-0.11984756856262713_Rkind) * tab_Pl(2) +  &
+      (-0.062360429222014756_Rkind) * tab_Pl(4) +  &
+      (-0.018791720873183277_Rkind) * tab_Pl(6) +  &
+      (0.006886309376733128_Rkind) * tab_Pl(8) +  &
+      (-0.011861079630599196_Rkind) * tab_Pl(10) +  &
+      (0.02838129356224232_Rkind) * tab_Pl(12) +  &
+      (-0.06706018831054988_Rkind) * tab_Pl(14) +  &
+      (0.12618831678511594_Rkind) * tab_Pl(16) +  &
+      (-0.2488281924518596_Rkind) * tab_Pl(18) +  &
+      (0.3956917615053644_Rkind) * tab_Pl(20) +  &
+      (-0.5703720557053324_Rkind) * tab_Pl(22) +  &
+      (0.7358984543634043_Rkind) * tab_Pl(24) +  &
+      (-0.8107843762174871_Rkind) * tab_Pl(26) +  &
+      (0.7313663688956455_Rkind) * tab_Pl(28) +  &
+      (-0.4306584398099331_Rkind) * tab_Pl(30) +  &
+      (-0.04926423367854221_Rkind) * tab_Pl(32) +  &
+      (0.5899530871873381_Rkind) * tab_Pl(34) +  &
+      (-1.0295825892712576_Rkind) * tab_Pl(36) +  &
+      (1.2079830149064956_Rkind) * tab_Pl(38) +  &
+      (-1.0932292143867703_Rkind) * tab_Pl(40) +  &
+      (0.7751899409504499_Rkind) * tab_Pl(42) +  &
+      (-0.41669810982940203_Rkind) * tab_Pl(44) +  &
+      (0.1559804684815059_Rkind) * tab_Pl(46) +  &
+      (-0.030382992175241014_Rkind) * tab_Pl(48)
+
+      !Coeff associé au fichier 'recap_optRhoEqui' dans dossier Fitpy
+      !(0.38784157838415956_Rkind) * tab_Pl(0) +  &
+      !(-0.11980773514140389_Rkind) * tab_Pl(2) +  &
+      !(-0.06312819738591222_Rkind) * tab_Pl(4) +  &
+      !(-0.017092165956158818_Rkind) * tab_Pl(6) +  &
+      !(0.0013762595357292883_Rkind) * tab_Pl(8) +  &
+      !(0.0019457694456141176_Rkind) * tab_Pl(10) +  &
+      !(-0.004058733658769555_Rkind) * tab_Pl(12) +  &
+      !(0.0028543497034913407_Rkind) * tab_Pl(14) +  &
+      !(-0.010147768764494407_Rkind) * tab_Pl(16) +  &
+      !(-0.004763434006431677_Rkind) * tab_Pl(18) +  &
+      !(0.0017120023223853517_Rkind) * tab_Pl(20) +  &
+      !(0.002508091645298231_Rkind) * tab_Pl(22) +  &
+      !(-2.904687912089893e-07_Rkind) * tab_Pl(24) +  &
+      !(0.002880671741730294_Rkind) * tab_Pl(26) +  &
+      !(0.003464168323350602_Rkind) * tab_Pl(28) +  &
+      !(0.0011655181631145695_Rkind) * tab_Pl(30) +  &
+      !(-0.005870081331958774_Rkind) * tab_Pl(32)
+
+      DO i=0,max_deg
+        CALL dealloc_dnS(tab_Pl(i))
+      END DO
+      CALL dealloc_dnS(s)
+      CALL dealloc_dnS(ts)
+  END SUBROUTINE EvalFunc_QML_H3_v74
 
   FUNCTION QML_dnSigmoid_H3(x,sc)
     USE ADdnSVM_m
