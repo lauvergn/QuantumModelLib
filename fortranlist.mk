@@ -41,6 +41,7 @@ TwoD_MullerBrown_m.f90  \
 TwoD_RJDI2014_m.f90  \
 TwoD_Valahu2022_m.f90  \
 TwoD_m.f90  \
+Uracil_m.f90  \
 Vibronic_m.f90  \
 FiniteDiff_m.f90  \
 UtilLib_m.f90  \

@@ -67,7 +67,6 @@ MODULE QML_H2NSi_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_H2NSi
     PROCEDURE :: Write_QModel    => Write_QML_H2NSi
-    PROCEDURE :: Write0_QModel   => Write_QML_H2NSi
   END TYPE QML_H2NSi_t
 
   PUBLIC :: QML_H2NSi_t,Init_QML_H2NSi

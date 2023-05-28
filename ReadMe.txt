@@ -8,11 +8,13 @@
         Félix MOUHAT [2]
         Liang LIANG [3]
         Emanuele MARSILI [1,4]
+        Evaristo Villaseco Arribas [5]
 
 [1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
 [2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France
 [3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France
 [4]: Durham University, Durham, UK
+[5]: Department of Physics, Rutgers University, Newark, New Jersey 07102, USA
 * Originally, it has been developed during the Quantum-Dynamics E-CAM project :
      https://www.e-cam2020.eu/quantum-dynamics
 =========================================
@@ -121,7 +123,7 @@ or with  lapack/blas (linux)
             non-adiabatic couplings (NAC).
             NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
 
- 3c) Potential energy surfaces with vibrational adiabatic separation
+ 3c) Potential energy surface with vibrational adiabatic separation
     This feature can be used only when the "model" is read.
     Therefore in the initialization with sub_Init_Qmodel "pot_name" must be "read_model".
     Then:
@@ -327,6 +329,22 @@ From the main QuantumModelLib directory:
 =========================================
 =========================================
 =========================================
+      !! pot_name  = 'Uracil'
+=========================================
+      !! Model for the photo-dissociation of the uracil cation.
+      !! pot_name  = 'Uracil'
+      !! ndim      = 36
+      !! nsurf     = 4
+      !! ref1: Mariana Assmann, Horst Köppel, and Spiridoula Matsika,
+      !!       J. Phys. Chem. A 2015, 119, 866−875, 
+      !!       DOI: 10.1021/jp512221x
+      !! ref2: Patricia Vindel Zandbergen, Spiridoula Matsika, and Neepa T. Maitra
+      !!       J. Phys. Chem. Lett. 2022, 13, 7, 1785–1790
+      !!       https://doi.org/10.1021/acs.jpclett.1c04132
+=========================================
+=========================================
+=========================================
+=========================================
       !! pot_name  = 'HONO'
 =========================================
       !! Model for the HONO.
@@ -376,6 +394,20 @@ From the main QuantumModelLib directory:
 =========================================
 =========================================
 =========================================
+      !! pot_name  = 'H2'
+=========================================
+      !! H2 potential: V(R) = Sum_i a_i * (R-Req)**(i-1)
+      !! pot_name  = 'H2'
+      !! ndim      = 1
+      !! nsurf     = 1
+      !! options: (1,2) Talyor expansion 
+      !!     Level: CCSD(T)-F12B/VTZ-F12 (with molpro 2010)
+      !! options:(3) extract for the H+H2 LSTH potential
+      !! reduced mass      = 1837.1526464003414/2 au
+=========================================
+=========================================
+=========================================
+=========================================
       !! pot_name  = 'HOO_DMBE'
 =========================================
       !! HOO potential: DMBE IV of Varandas group
@@ -388,18 +420,6 @@ From the main QuantumModelLib directory:
 =========================================
 =========================================
 =========================================
-      !! pot_name  = 'H2'
-=========================================
-      !! H2 potential: V(R) = Sum_i a_i * (R-Req)**(i-1)
-      !! pot_name  = 'H2'
-      !! ndim      = 1
-      !! nsurf     = 1
-      !! reduced mass      = 1837.1526464003414/2 au
-      !! Level: CCSD(T)-F12B/VTZ-F12 (with molpro 2010)
-=========================================
-=========================================
-=========================================
-=========================================
       !! pot_name  = 'H3'
 =========================================
       !! H3 potential:
@@ -407,6 +427,7 @@ From the main QuantumModelLib directory:
       !! option    = 0,1,10,11 (LSTH)
       !! ndim      = 3   (the 3 H-H distances)
       !! nsurf     = 1
+      !! Units: Energy in Hartree and distances in bohr.
       !! refs (option=0):
       !! P. Siegbahn, B. Liu,  J. Chem. Phys. 68, 2457(1978).
       !! D.G. Truhlar and C.J. Horowitz, J. Chem. Phys. 68, 2466 (1978); https://doi.org/10.1063/1.436019
@@ -417,14 +438,18 @@ From the main QuantumModelLib directory:
 =========================================
 =========================================
 =========================================
-      !! pot_name  = 'HCN_Murrell'
+      !! pot_name  = 'CNH_Murrell'
 =========================================
-      !! H3 potential:
-      !! pot_name  = 'HCN_Murrell'
-      !! option    = 0 (3D-3distances), 1 (3D-Jacobi), 3 IRC+RPH
+      !! CNH or HCN potential:
+      !! pot_name  = 'CNH_Murrell'
+      !! option    = 0 (3D-3distances, default), 1,11 (3D-Jacobi), 2,21 (1D-Jacobi MEP)
       !! ndim      = 3
       !! nsurf     = 1
-      !! J. N. Murrell, S. Carter and L. O. Halonene, J. Mol. Spectrosc. vo93 p307 1982
+      !! remarks: 
+      !!   - Atomic order: C, N, H
+      !!   - Cart_TO_Q is possible
+      !!   - The options 11 and 21, the third coordinate is cos(theta)
+      !! ref: J. N. Murrell, S. Carter and L. O. Halonene, J. Mol. Spectrosc. vo93 p307 1982
       !!  doi: https://doi.org/10.1016/0022-2852(82)90170-9
 =========================================
 =========================================
