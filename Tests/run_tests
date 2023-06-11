@@ -13,15 +13,18 @@ for OMP in 0 1
 do
 for LAPACK in 0 1
 do
+for INT in 4 8
+do
   echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-  echo $FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK
+  echo $FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK INT$INT
   echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   echo
 
-  ./run_test_QML $FC $OPT $OMP $LAPACK
+  ./run_test_QML $FC $OPT $OMP $LAPACK $INT
   
+done
 done
 done
 done

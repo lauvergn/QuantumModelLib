@@ -11,6 +11,9 @@ OPT = 1
 OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
+## force the default integer (without kind) during the compillation.
+## default 4: , INT=8 (for kind=8)
+INT = 4
 ## how to get external libraries;  "loc" (default): from local zip file, Empty or something else (v0.5): from github
 EXTLIB_TYPE = loc
 #=================================================================================
@@ -45,7 +48,7 @@ QML_ver  := $(shell awk '/QML/ {print $$3}' version-QML)
 QML_path := $(shell pwd)
 
 # Extension for the object directory and the library
-ext_obj=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)
+ext_obj=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
 
 # library name
 QMLIBA=libQMLib$(ext_obj).a
@@ -92,16 +95,24 @@ ifeq ($(FFC),gfortran)
 
   ifeq ($(OOPT),1)
     FFLAGS = -O5 -g -fbacktrace -funroll-loops -ftree-vectorize -falign-loops=16
+    FFLAGS0 = -O5 -g .... 
   else
     FFLAGS = -Og -g -fbacktrace -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -finit-real=nan -finit-integer=nan
+    FFLAGS0 = -Og -g
     #FFLAGS = -O0 -fbounds-check -Wuninitialized
   endif
 
   # omp management
   ifeq ($(OOMP),1)
     FFLAGS += -fopenmp
+    FFLAGS0 += -fopenmp
   endif
-  FFLAGS0 := $(FFLAGS)
+
+  # integer kind management
+  ifeq ($(INT),8)
+    FFLAGS += -fdefault-integer-8
+    FFLAGS0 += -fdefault-integer-8
+  endif
 
   # where to store the .mod files
   FFLAGS +=-J$(MOD_DIR)
@@ -150,6 +161,11 @@ ifeq ($(FFC),ifort)
       FFLAGS = -O0 -check all -g -traceback
   endif
 
+  # integer kind management
+  ifeq ($(INT),8)
+    FFLAGS += -i8
+  endif
+
   # where to store the modules
   FFLAGS +=-module $(MOD_DIR)
 
@@ -167,15 +183,73 @@ ifeq ($(FFC),ifort)
   FLIB    = $(EXTLib)
   ifeq ($(LLAPACK),1)
     #FLIB += -mkl -lpthread
-    #FLIB += -qmkl -lpthread
-    IntLIB =  ${MKLROOT}/lib/libmkl_blas95_ilp64.a ${MKLROOT}/lib/libmkl_lapack95_ilp64.a ${MKLROOT}/lib/libmkl_intel_ilp64.a \
-             ${MKLROOT}/lib/libmkl_intel_thread.a ${MKLROOT}/lib/libmkl_core.a -liomp5 -lpthread -lm -ldl
+    FLIB += -qmkl -lpthread
+    #IntLIB =  ${MKLROOT}/lib/libmkl_blas95_ilp64.a ${MKLROOT}/lib/libmkl_lapack95_ilp64.a ${MKLROOT}/lib/libmkl_intel_ilp64.a \
+    #         ${MKLROOT}/lib/libmkl_intel_thread.a ${MKLROOT}/lib/libmkl_core.a -liomp5 -lpthread -lm -ldl
   else
     IntLIB = -lpthread
   endif
   FLIB += $(IntLIB)
 
   FC_VER = $(shell $(FFC) --version | head -1 )
+
+endif
+#===============================================================================
+# nag compillation (nagfor)
+#===============================================================================
+ifeq ($(FFC),nagfor)
+
+  # opt management
+  ifeq ($(OOPT),1)
+      FFLAGS = -O4 -o -compatible -kind=byte -Ounroll=4 -s
+  else
+    ifeq ($(OOMP),0)
+      ifeq ($(LLAPACK),0)
+          FFLAGS = -O0 -g -gline -kind=byte -C -C=alias -C=intovf -C=undefined
+      else
+          FFLAGS = -O0 -g -gline -kind=byte -C -C=alias -C=intovf
+      endif
+    else
+          FFLAGS = -O0 -g        -kind=byte -C -C=alias -C=intovf
+    endif
+  endif
+
+  # integer kind management
+  ifeq ($(INT),8)
+    FFLAGS += -i8
+  endif
+
+ # where to store the .mod files
+  FFLAGS +=-mdir $(MOD_DIR)
+
+# where to look the .mod files
+  FFLAGS +=-I $(MOD_DIR)
+
+  # omp management
+  ifeq ($(OOMP),1)
+    FFLAGS += -openmp
+  endif
+
+  # lapack management with cpreprocessing
+  FFLAGS += -fpp -D__LAPACK="$(LLAPACK)"
+
+  # where to look .mod files
+  FFLAGS += -I$(QDMOD_DIR) -I$(ADMOD_DIR)
+
+  FLIB    = $(QDLIBA)
+
+  # lapact management (default with openmp), with cpreprocessing
+  ifeq ($(LLAPACK),1)
+    ifeq ($(OS),Darwin)    # OSX
+      # OSX libs (included lapack+blas)
+      FLIB += -framework Accelerate
+    else                   # Linux
+      # linux libs
+      FLIB += -llapack -lblas
+    endif
+  endif
+
+  FC_VER = $(shell $(FFC) -V 3>&1 1>&2 2>&3 | head -1 )
 
 endif
 #=================================================================================
@@ -186,6 +260,7 @@ $(info ***********COMPILER:     $(FFC))
 $(info ***********COMPILER_VER: $(FC_VER))
 $(info ***********OPTIMIZATION: $(OOPT))
 $(info ***********OpenMP:       $(OOMP))
+$(info ***********INT:          $(INT))
 $(info ***********LAPACK:       $(LLAPACK))
 $(info ***********FFLAGS:       $(FFLAGS))
 $(info ***********FLIB:         $(FLIB))
@@ -218,7 +293,7 @@ OBJ=$(addprefix $(OBJ_DIR)/, $(OBJ0))
 .PHONY: ut UT
 UT ut: $(TESTS).x
 	@echo "model (QML) compilation: OK"
-	cd Tests ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) 1
+	cd Tests ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(INT) 1
 #	cd Tests ; ../$(TESTS).x  < input.dat > res 2>error.log
 
 #	./$(TESTS).x |	grep "Number of error(s)"
@@ -302,14 +377,14 @@ $(QDLIBA):
 	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
 	@test -d $(QD_DIR) || (cd $(ExtLibDIR) ; ./get_QDUtilLib.sh $(EXTLIB_TYPE))
 	@test -d $(QD_DIR) || (echo $(QD_DIR) "does not exist" ; exit 1)
-	cd $(QD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR)
+	cd $(QD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(INT) ExtLibDIR=$(ExtLibDIR)
 	@echo "  done " $(QDLIBA) " in "$(BaseName)
 #
 $(ADLIBA):
 	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
 	@test -d $(AD_DIR) || (cd $(ExtLibDIR) ; ./get_AD_dnSVM.sh  $(EXTLIB_TYPE))
 	@test -d $(AD_DIR) || (echo $(AD_DIR) "does not exist" ; exit 1)
-	cd $(AD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR)
+	cd $(AD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(INT) ExtLibDIR=$(ExtLibDIR)
 	@echo "  done " $(AD_DIR) " in "$(BaseName)
 #
 #===============================================
