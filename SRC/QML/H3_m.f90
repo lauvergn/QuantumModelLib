@@ -346,6 +346,7 @@ MODULE QML_H3_m
       QModel%no_ana_der = .FALSE.
 
     CASE (31)
+        stop; write(*,*) "Bad option, modèle obsolète"
       QModel%ndimQ    = 1
       QModel%ndim     = 1
 
@@ -361,6 +362,7 @@ MODULE QML_H3_m
       QModel%no_ana_der = .FALSE.
 
     CASE (3) ! 2d avec le rho fitté de 31
+        stop; write(*,*) "Bad option, modèle obsolète"
       IF (QModel%ndim == 2) THEN
         QModel%ndimQ      = 2
       ELSE
@@ -384,6 +386,7 @@ MODULE QML_H3_m
       QModel%no_ana_der = .TRUE.
 
     CASE (41) !CASE 31 avec transfo de coordonnée sinh(s)
+        stop; write(*,*) "Bad option, modèle obsolète"
       QModel%ndimQ    = 1
       QModel%ndim     = 1
 
@@ -399,6 +402,8 @@ MODULE QML_H3_m
       QModel%no_ana_der = .FALSE.
 
     CASE (4) ! 2d avec le rho fitté de 41 (sinh(s))
+        stop; write(*,*) "Bad option, modèle obsolète"
+         
         IF (QModel%ndim == 2) THEN
           QModel%ndimQ      = 2
         ELSE
@@ -464,7 +469,7 @@ MODULE QML_H3_m
       QModel%ndim     = 1
 
       QModel%ndimFunc = 1
-      QModel%nb_Func  = 4 ! V, Hessian, Rho, ZPE 
+      QModel%nb_Func  = 5 ! V, Hessian, Rho, ZPE, G_ss 
 
       QModel%IndexFunc_Ene  = 1
       QModel%IndexFunc_Qop  = 3
@@ -711,21 +716,13 @@ MODULE QML_H3_m
     CASE (72) 
       CALL EvalFunc_QML_H3_v72(QModel,Func,[dnQ(1)],nderiv)
       deltaRho=(dnQ(2)-Func(3))
-      !Mat_OF_PotDia(1,1) = Func(1) + Func(4)*(dnQ(2)-Func(3)) + HALF*Func(2)*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))
-      !Mat_OF_PotDia(1,1) = Func(1) + Func(4)*(dnQ(2)-Func(3)) + Func(2)*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))
       Mat_OF_PotDia(1,1) = Func(1) + Func(4)*deltaRho + Func(2)*deltaRho*deltaRho
 
     CASE (74) 
       CALL EvalFunc_QML_H3_v74(QModel,Func,[dnQ(1)],nderiv)
       deltaRho=(dnQ(2)-Func(3))
-      !Mat_OF_PotDia(1,1) = Func(1) + Func(4)*(dnQ(2)-Func(3)) + HALF*Func(2)*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))  &
-      !+ SIXTH*Func(5)*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3)) + QUARTER*THIRD*HALF*Func(6) &
-      !* (dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))
       Mat_OF_PotDia(1,1) = Func(1) + Func(4)*deltaRho + Func(2)*deltaRho*deltaRho  &
       + Func(5)*deltaRho*deltaRho*deltaRho + Func(6)*deltaRho*deltaRho*deltaRho*deltaRho
-      !Mat_OF_PotDia(1,1) = Func(1) + Func(4)*(dnQ(2)-Func(3)) + Func(2)*((dnQ(2)-Func(3))*(dnQ(2)-Func(3)))  &
-      !+ Func(5)*((dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))) + Func(6) &
-      !* ((dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3))*(dnQ(2)-Func(3)))
     END SELECT
     !write(*,*) "Mat_pot", get_d0(Mat_OF_PotDia) 
   END SUBROUTINE EvalPot_QML_H3
@@ -1665,7 +1662,10 @@ MODULE QML_H3_m
         tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
       END DO
      
+      
       !  V
+      ! grid : s=-100 then s=-18.0, -17.9, ...,18.0 (step=0.1) then s=100  
+      ! maxdiff = 4.24149999533e-05
       Func(1)=  &
       (-0.1620718837989824_Rkind) * tab_Pl(0) +  & 
       (-0.008993773246295272_Rkind) * tab_Pl(2) +  &
@@ -1687,6 +1687,8 @@ MODULE QML_H3_m
 
       
       ! hessian
+      ! grid : s=-100 then s=-18.0, -17.9, ...,18.0 (step=0.1) then s=100  
+      ! maxdiff = 0.00693850012386
       Func(2) =  &
       (0.6075899355887548_Rkind) * tab_Pl(0) +  & 
       (-0.10567883781305588_Rkind) * tab_Pl(2) +  &
@@ -1709,6 +1711,8 @@ MODULE QML_H3_m
  
 
       ! rho
+      ! grid : s=-100 then s=-18.0, -17.9, ...,18.0 (step=0.1) then s=100  
+      ! maxdiff = 0.000365743966669 
       Func(3) = &
       (1.261243931645815_Rkind) * tab_Pl(0) +  &
       (0.05498541052261184_Rkind) * tab_Pl(2) +  &
@@ -1760,6 +1764,8 @@ MODULE QML_H3_m
       END DO
      
       !  V
+      ! grid : s=-100 then s=-18.0, -17.9, ...,18.0 (step=0.1) then s=100  
+      ! maxdiff = 4.24149999533e-05
       Func(1)=  &
       (-0.1620718837989824_Rkind) * tab_Pl(0) +  & 
       (-0.008993773246295272_Rkind) * tab_Pl(2) +  &
@@ -1781,6 +1787,8 @@ MODULE QML_H3_m
 
       
       ! hessian
+      ! grid : s=-100 then s=-18.0, -17.9, ...,18.0 (step=0.1) then s=100  
+      ! maxdiff = 0.00693850012386
       Func(2) =  &
       (0.6075899355887548_Rkind) * tab_Pl(0) +  & 
       (-0.10567883781305588_Rkind) * tab_Pl(2) +  &
@@ -1802,7 +1810,9 @@ MODULE QML_H3_m
 
  
 
-      ! rho
+      ! rho_opt
+      ! grid : s=-100 then s=-18.0, -17.9, ...,18.0 (step=0.1) then s=100  
+      ! maxdiff = 0.000365743966669 
       Func(3) = &
       (1.261243931645815_Rkind) * tab_Pl(0) +  &
       (0.05498541052261184_Rkind) * tab_Pl(2) +  &
@@ -1822,7 +1832,9 @@ MODULE QML_H3_m
       (-2.5934623118451503e-05_Rkind) * tab_Pl(30) +  &
       (0.00036253207816267066_Rkind) * tab_Pl(32)
 
-      !Fitted Frequency along Rho
+      !Fitted ZPE along Rho
+      !grid : s going from -20 to +25 with step of 0.1
+      ! maxdiff= 4.52790461166e-05
       Func(4) = &
       (0.006005922154491725_Rkind) * tab_Pl(0) +  &
       (0.0031574819729319747_Rkind) * tab_Pl(2) +  &
@@ -1841,6 +1853,28 @@ MODULE QML_H3_m
       (-8.354627843217928e-06_Rkind) * tab_Pl(28) +  &
       (3.2796344679545e-06_Rkind) * tab_Pl(30) +  &
       (7.753347481333872e-05_Rkind) * tab_Pl(32)
+
+      ! G_ss fitted
+      ! grid : s going from -20 to +25 with step of 0.1
+      ! maxdiff= 3.63671858079e-05
+      Func(5) = &
+      (0.005883594273210452_Rkind) * tab_Pl(0) +  & 
+      (-0.0018781600640315076_Rkind) * tab_Pl(2) +  &
+      (-0.0011342570475950072_Rkind) * tab_Pl(4) +  &
+      (-0.0006403449998454956_Rkind) * tab_Pl(6) +  &
+      (-0.000363586851837844_Rkind) * tab_Pl(8) +  &
+      (-0.0002124097329394429_Rkind) * tab_Pl(10) +  &
+      (-0.00012891807068960898_Rkind) * tab_Pl(12) +  &
+      (-8.185837493194691e-05_Rkind) * tab_Pl(14) +  &
+      (-5.4768194175047245e-05_Rkind) * tab_Pl(16) +  &
+      (-3.926910601731907e-05_Rkind) * tab_Pl(18) +  &
+      (-2.925082996293706e-05_Rkind) * tab_Pl(20) +  &
+      (-2.366201995502677e-05_Rkind) * tab_Pl(22) +  &
+      (-1.6241124995611744e-05_Rkind) * tab_Pl(24) +  &
+      (-1.64759960039515e-05_Rkind) * tab_Pl(26) +  &
+      (-3.160157563451839e-06_Rkind) * tab_Pl(28) +  &
+      (-1.0680969159654574e-06_Rkind) * tab_Pl(30) +  &
+      (-4.801315687222132e-05_Rkind) * tab_Pl(32)
 
                                      
 
@@ -1862,7 +1896,7 @@ MODULE QML_H3_m
 
       TYPE (dnS_t)                  :: s,ts,am,ap
       integer                       :: i
-      integer,           parameter  :: max_deg = 32
+      integer,           parameter  :: max_deg = 48
       TYPE (dnS_t)                  :: tab_Pl(0:max_deg)
       real (kind=Rkind), parameter  :: betaQ = 1._Rkind
 
@@ -1900,28 +1934,38 @@ MODULE QML_H3_m
       
       ! c2 (c2*drho^2) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
       ! maxdiff = 2.75102563607e-05
+      ! grid: s=-100 then s=-18.0,...-6.7 (step=0.1), then s=-6.6,-3.6,-2.8 then s=-2.7,...,0 (step=0.1). Same for s>0 (symmetric) 
       Func(2) =  &
-      (0.30375204657676236_Rkind) * tab_Pl(0) +  &
-      (-0.05261249923316819_Rkind) * tab_Pl(2) +  &
-      (-0.028245088307616156_Rkind) * tab_Pl(4) +  &
-      (-0.01376309967876779_Rkind) * tab_Pl(6) +  &
-      (-0.008615637365472464_Rkind) * tab_Pl(8) +  &
-      (-0.007122038317701137_Rkind) * tab_Pl(10) +  &
-      (-0.005141765724950869_Rkind) * tab_Pl(12) +  &
-      (-0.003418104118376876_Rkind) * tab_Pl(14) +  &
-      (-0.0010447833949072116_Rkind) * tab_Pl(16) +  &
-      (0.00040790797785053524_Rkind) * tab_Pl(18) +  &
-      (0.0009037612950454548_Rkind) * tab_Pl(20) +  &
-      (0.0005452967481115013_Rkind) * tab_Pl(22) +  &
-      (0.000282087543543148_Rkind) * tab_Pl(24) +  &
-      (-0.0002715479728813458_Rkind) * tab_Pl(26) +  &
-      (-0.0007667274135405311_Rkind) * tab_Pl(28) +  &
-      (-0.0007199692637246045_Rkind) * tab_Pl(30) +  &
-      (0.0006760031365286_Rkind) * tab_Pl(32)
+      (0.30374950443390847_Rkind) * tab_Pl(0) +  &
+      (-0.05263777329872866_Rkind) * tab_Pl(2) +  &
+      (-0.02824499169155245_Rkind) * tab_Pl(4) +  &
+      (-0.013869244641591425_Rkind) * tab_Pl(6) +  &
+      (-0.008403214399978586_Rkind) * tab_Pl(8) +  &
+      (-0.007696945284070528_Rkind) * tab_Pl(10) +  &
+      (-0.003806082903400655_Rkind) * tab_Pl(12) +  &
+      (-0.006166450639817748_Rkind) * tab_Pl(14) +  &
+      (0.004309716438982306_Rkind) * tab_Pl(16) +  &
+      (-0.008859755489454838_Rkind) * tab_Pl(18) +  &
+      (0.015668516816827203_Rkind) * tab_Pl(20) +  &
+      (-0.020386609731335353_Rkind) * tab_Pl(22) +  &
+      (0.026726056241208166_Rkind) * tab_Pl(24) +  &
+      (-0.0288510778775844_Rkind) * tab_Pl(26) +  &
+      (0.024431057911522034_Rkind) * tab_Pl(28) +  &
+      (-0.014898755884266347_Rkind) * tab_Pl(30) +  &
+      (-0.0023882469597527427_Rkind) * tab_Pl(32) +  &
+      (0.020524707114045054_Rkind) * tab_Pl(34) +  &
+      (-0.035159777872531876_Rkind) * tab_Pl(36) +  &
+      (0.0419505860292803_Rkind) * tab_Pl(38) +  &
+      (-0.038291605815803_Rkind) * tab_Pl(40) +  &
+      (0.028667463162531014_Rkind) * tab_Pl(42) +  &
+      (-0.01659056531057078_Rkind) * tab_Pl(44) +  &
+      (0.007217862809646366_Rkind) * tab_Pl(46) +  &
+      (-0.00203367463365633_Rkind) * tab_Pl(48)
 
- 
 
-      ! rho
+      ! rho_opt
+      ! grid : s=-100 then s=-18.0, -17.9, ...,18.0 (step=0.1) then s=100  
+      ! maxdiff = 0.000365743966669 
       Func(3) = &
       (1.261243931645815_Rkind) * tab_Pl(0) +  &
       (0.05498541052261184_Rkind) * tab_Pl(2) +  &
@@ -1943,25 +1987,34 @@ MODULE QML_H3_m
       
       ! c3(c3*drho) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s 
       ! maxdiff = 5.57117016741e-06
+      ! ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8
+      ! grid: s=-100 then s=-18.0,...-6.7 (step=0.1), then s=-6.6,-3.6,-2.8 then s=-2.7,...,0 (step=0.1). Same for s>0 (symmetric) 
       Func(4) = &   
-      (0.00012054894006886368_Rkind) * tab_Pl(0) +  &
-      (-4.159861752693137e-05_Rkind) * tab_Pl(2) +  &
-      (-3.088431820462534e-06_Rkind) * tab_Pl(4) +  &
-      (-1.5430069424391806e-05_Rkind) * tab_Pl(6) +  &
-      (-8.389126757210443e-05_Rkind) * tab_Pl(8) +  &
-      (9.425785955142528e-05_Rkind) * tab_Pl(10) +  &
-      (-3.255469762512486e-05_Rkind) * tab_Pl(12) +  &
-      (-3.114281736068148e-05_Rkind) * tab_Pl(14) +  &
-      (6.793677577444186e-05_Rkind) * tab_Pl(16) +  &
-      (-3.75084784501627e-06_Rkind) * tab_Pl(18) +  &
-      (-5.64014489843293e-05_Rkind) * tab_Pl(20) +  &
-      (4.147527388974017e-05_Rkind) * tab_Pl(22) +  &
-      (-1.5965985196154143e-05_Rkind) * tab_Pl(24) +  &
-      (-7.97292699073988e-06_Rkind) * tab_Pl(26) +  &
-      (1.0429200371081538e-05_Rkind) * tab_Pl(28) +  &
-      (-7.53503532862055e-06_Rkind) * tab_Pl(30) +  &
-      (6.714016001365854e-06_Rkind) * tab_Pl(32)
-
+      (0.00012063674082565115_Rkind) * tab_Pl(0) +  &
+      (-4.1425739977470036e-05_Rkind) * tab_Pl(2) +  &
+      (-2.4239116984059995e-06_Rkind) * tab_Pl(4) +  &
+      (-1.6650686583068975e-05_Rkind) * tab_Pl(6) +  &
+      (-8.079451360298356e-05_Rkind) * tab_Pl(8) +  &
+      (8.429523860703813e-05_Rkind) * tab_Pl(10) +  &
+      (-1.2203672188874432e-05_Rkind) * tab_Pl(12) +  &
+      (-7.800676003009566e-05_Rkind) * tab_Pl(14) +  &
+      (0.00015804831530465938_Rkind) * tab_Pl(16) +  &
+      (-0.00016490891576258253_Rkind) * tab_Pl(18) +  &
+      (0.00020743883827847572_Rkind) * tab_Pl(20) +  &
+      (-0.0003393323849648792_Rkind) * tab_Pl(22) +  &
+      (0.0004795101489175562_Rkind) * tab_Pl(24) +  &
+      (-0.0005551463058609534_Rkind) * tab_Pl(26) +  &
+      (0.0005039296106884514_Rkind) * tab_Pl(28) +  &
+      (-0.00030089936753135966_Rkind) * tab_Pl(30) +  &
+      (-4.1211848421952196e-05_Rkind) * tab_Pl(32) +  &
+      (0.0004070924592144858_Rkind) * tab_Pl(34) +  &
+      (-0.0006790178634567731_Rkind) * tab_Pl(36) +  &
+      (0.0008075681707767094_Rkind) * tab_Pl(38) +  &
+      (-0.0007497832421263899_Rkind) * tab_Pl(40) +  &
+      (0.0005213860035859344_Rkind) * tab_Pl(42) +  &
+      (-0.0002640804121683683_Rkind) * tab_Pl(44) +  &
+      (9.866549309015685e-05_Rkind) * tab_Pl(46) +  &
+      (-2.131966131723614e-05_Rkind) * tab_Pl(48)
       
       DO i=0,max_deg
         CALL dealloc_dnS(tab_Pl(i))
@@ -1993,8 +2046,10 @@ MODULE QML_H3_m
         tab_Pl(i) = dnLegendre0(ts,i,ReNorm=.FALSE.)
       END DO
      
+      !Coeff associé au fichier 'recap_Coefpotfitpts_enleveV4' dans dossier Fitpy
       !  c4(V0) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
       ! maxdiff = 2.63656814312e-06
+      ! grid: s=-100 then s=-18.0,...-6.7 (step=0.1), then s=-6.6,-3.6,-2.8 then s=-2.7,...,0 (step=0.1). Same for s>0 (symmetric) 
       Func(1)=  &!ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8
       (-0.16207139294104606_Rkind) * tab_Pl(0) +  &
       (-0.008989917909474423_Rkind) * tab_Pl(2) +  &
@@ -2022,28 +2077,10 @@ MODULE QML_H3_m
       (-0.0008403379506349807_Rkind) * tab_Pl(46) +  &
       (0.00020809646457610622_Rkind) * tab_Pl(48)
 
-      !(-0.1620716487102793_Rkind) * tab_Pl(0) +  &
-      !(-0.008992725629195533_Rkind) * tab_Pl(2) +  &
-      !(-0.00432915791758284_Rkind) * tab_Pl(4) +  &
-      !(-0.001061111040246674_Rkind) * tab_Pl(6) +  &
-      !(0.0003857228005224359_Rkind) * tab_Pl(8) +  &
-      !(0.0007652895174396595_Rkind) * tab_Pl(10) +  &
-      !(0.0006436145988118415_Rkind) * tab_Pl(12) +  &
-      !(0.00037157203206966737_Rkind) * tab_Pl(14) +  &
-      !(0.00011819866129507563_Rkind) * tab_Pl(16) +  &
-      !(-4.02663761147522e-05_Rkind) * tab_Pl(18) +  &
-      !(-0.00010232354419382081_Rkind) * tab_Pl(20) +  &
-      !(-9.760506805819436e-05_Rkind) * tab_Pl(22) +  &
-      !(-5.885890983333011e-05_Rkind) * tab_Pl(24) +  &
-      !(-2.1436826791342742e-05_Rkind) * tab_Pl(26) +  &
-      !(1.4784209082551226e-05_Rkind) * tab_Pl(28) +  &
-      !(2.4150163942799644e-05_Rkind) * tab_Pl(30) +  &
-      !(-3.501962307059586e-05_Rkind) * tab_Pl(32)
-
-
       
       ! c2 (c2*drho^2) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
       ! maxdiff = 3.29572217026e-05
+      ! grid: s=-100 then s=-18.0,...-6.7 (step=0.1), then s=-6.6,-3.6,-2.8 then s=-2.7,...,0 (step=0.1). Same for s>0 (symmetric) 
       Func(2) =  & !ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8
       (0.30374950443390847_Rkind) * tab_Pl(0) +  &
       (-0.05263777329872866_Rkind) * tab_Pl(2) +  &
@@ -2071,29 +2108,10 @@ MODULE QML_H3_m
       (0.007217862809646366_Rkind) * tab_Pl(46) +  &
       (-0.00203367463365633_Rkind) * tab_Pl(48)
 
-      !Coeff associé au fichier 'recap_optRhoEqui' dans dossier Fitpy
-      !(0.30375204657676236_Rkind) * tab_Pl(0) +  &
-      !(-0.05261249923316819_Rkind) * tab_Pl(2) +  &
-      !(-0.028245088307616156_Rkind) * tab_Pl(4) +  &
-      !(-0.01376309967876779_Rkind) * tab_Pl(6) +  &
-      !(-0.008615637365472464_Rkind) * tab_Pl(8) +  &
-      !(-0.007122038317701137_Rkind) * tab_Pl(10) +  &
-      !(-0.005141765724950869_Rkind) * tab_Pl(12) +  &
-      !(-0.003418104118376876_Rkind) * tab_Pl(14) +  &
-      !(-0.0010447833949072116_Rkind) * tab_Pl(16) +  &
-      !(0.00040790797785053524_Rkind) * tab_Pl(18) +  &
-      !(0.0009037612950454548_Rkind) * tab_Pl(20) +  &
-      !(0.0005452967481115013_Rkind) * tab_Pl(22) +  &
-      !(0.000282087543543148_Rkind) * tab_Pl(24) +  &
-      !(-0.0002715479728813458_Rkind) * tab_Pl(26) +  &
-      !(-0.0007667274135405311_Rkind) * tab_Pl(28) +  &
-      !(-0.0007199692637246045_Rkind) * tab_Pl(30) +  &
-      !(0.0006760031365286_Rkind) * tab_Pl(32)
 
-
- 
-
-      ! rho
+      ! rho_opt
+      ! grid : s=-100 then s=-18.0, -17.9, ...,18.0 (step=0.1) then s=100  
+      ! maxdiff = 0.000365743966669 
       Func(3) = &
       (1.261243931645815_Rkind) * tab_Pl(0) +  &
       (0.05498541052261184_Rkind) * tab_Pl(2) +  &
@@ -2115,6 +2133,7 @@ MODULE QML_H3_m
       
       ! c3(c3*drho) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s 
       ! maxdiff = 7.1548287231e-06 
+      ! grid: s=-100 then s=-18.0,...-6.7 (step=0.1), then s=-6.6,-3.6,-2.8 then s=-2.7,...,0 (step=0.1). Same for s>0 (symmetric) 
       Func(4) = &  !ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8 
       (0.00012063674082565115_Rkind) * tab_Pl(0) +  &
       (-4.1425739977470036e-05_Rkind) * tab_Pl(2) +  &
@@ -2142,28 +2161,9 @@ MODULE QML_H3_m
       (9.866549309015685e-05_Rkind) * tab_Pl(46) +  &
       (-2.131966131723614e-05_Rkind) * tab_Pl(48)
 
-      !Coeff associé au fichier 'recap_optRhoEqui' dans dossier Fitpy
-      !(0.00012054894006886368_Rkind) * tab_Pl(0) +  &
-      !(-4.159861752693137e-05_Rkind) * tab_Pl(2) +  &
-      !(-3.088431820462534e-06_Rkind) * tab_Pl(4) +  &
-      !(-1.5430069424391806e-05_Rkind) * tab_Pl(6) +  &
-      !(-8.389126757210443e-05_Rkind) * tab_Pl(8) +  &
-      !(9.425785955142528e-05_Rkind) * tab_Pl(10) +  &
-      !(-3.255469762512486e-05_Rkind) * tab_Pl(12) +  &
-      !(-3.114281736068148e-05_Rkind) * tab_Pl(14) +  &
-      !(6.793677577444186e-05_Rkind) * tab_Pl(16) +  &
-      !(-3.75084784501627e-06_Rkind) * tab_Pl(18) +  &
-      !(-5.64014489843293e-05_Rkind) * tab_Pl(20) +  &
-      !(4.147527388974017e-05_Rkind) * tab_Pl(22) +  &
-      !(-1.5965985196154143e-05_Rkind) * tab_Pl(24) +  &
-      !(-7.97292699073988e-06_Rkind) * tab_Pl(26) +  &
-      !(1.0429200371081538e-05_Rkind) * tab_Pl(28) +  &
-      !(-7.53503532862055e-06_Rkind) * tab_Pl(30) +  &
-      !(6.714016001365854e-06_Rkind) * tab_Pl(32)
-
-      
       ! c1 (c1*drho^3) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
       ! maxdiff = 5.49896226448e-05
+      ! grid: s=-100 then s=-18.0,...-6.7 (step=0.1), then s=-6.6,-3.6,-2.8 then s=-2.7,...,0 (step=0.1). Same for s>0 (symmetric) 
       Func(5) = & !ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8
       (-0.42808970081556635_Rkind) * tab_Pl(0) +  &
       (0.11247166878455189_Rkind) * tab_Pl(2) +  &
@@ -2191,28 +2191,10 @@ MODULE QML_H3_m
       (-0.04322740125039924_Rkind) * tab_Pl(46) +  &
       (0.009767270370872093_Rkind) * tab_Pl(48)
 
-      !Coeff associé au fichier 'recap_optRhoEqui' dans dossier Fitpy
-      !(-0.4280712417313688_Rkind) * tab_Pl(0) +  &
-      !(0.11247534169282206_Rkind) * tab_Pl(2) +  &
-      !(0.05998037605796082_Rkind) * tab_Pl(4) +  &
-      !(0.01870873415739227_Rkind) * tab_Pl(6) +  &
-      !(0.005027009034584681_Rkind) * tab_Pl(8) +  &
-      !(0.003776335643769335_Rkind) * tab_Pl(10) +  &
-      !(0.005189361844932756_Rkind) * tab_Pl(12) +  &
-      !(0.005285749904536103_Rkind) * tab_Pl(14) +  &
-      !(0.0038340861120990787_Rkind) * tab_Pl(16) +  &
-      !(0.0004693807417369628_Rkind) * tab_Pl(18) +  &
-      !(-0.002231515868601842_Rkind) * tab_Pl(20) +  &
-      !(-0.002355656089486632_Rkind) * tab_Pl(22) +  &
-      !(-0.0018142662659441826_Rkind) * tab_Pl(24) +  &
-      !(-0.0007192492715343131_Rkind) * tab_Pl(26) +  &
-      !(0.0004425287789617937_Rkind) * tab_Pl(28) +  &
-      !(0.001596012400134642_Rkind) * tab_Pl(30) +  &
-      !(0.0007501493129836831_Rkind) * tab_Pl(32)
-
 
       ! c0 (c0*drho^4) fitté atour de rhoOPt à différentes val de s, puis fitté le long de s
       ! maxdiff = 0.000715618043238
+      ! grid: s=-100 then s=-18.0,...-6.7 (step=0.1), then s=-6.6,-3.6,-2.8 then s=-2.7,...,0 (step=0.1). Same for s>0 (symmetric) 
       Func(6) = & !ces coeff correspondent aux pts enlevé entre 6.6 et 3.6 et 3.6 et 2.8
       (0.3878984339121209_Rkind) * tab_Pl(0) +  &
       (-0.11984756856262713_Rkind) * tab_Pl(2) +  &
@@ -2239,25 +2221,6 @@ MODULE QML_H3_m
       (-0.41669810982940203_Rkind) * tab_Pl(44) +  &
       (0.1559804684815059_Rkind) * tab_Pl(46) +  &
       (-0.030382992175241014_Rkind) * tab_Pl(48)
-
-      !Coeff associé au fichier 'recap_optRhoEqui' dans dossier Fitpy
-      !(0.38784157838415956_Rkind) * tab_Pl(0) +  &
-      !(-0.11980773514140389_Rkind) * tab_Pl(2) +  &
-      !(-0.06312819738591222_Rkind) * tab_Pl(4) +  &
-      !(-0.017092165956158818_Rkind) * tab_Pl(6) +  &
-      !(0.0013762595357292883_Rkind) * tab_Pl(8) +  &
-      !(0.0019457694456141176_Rkind) * tab_Pl(10) +  &
-      !(-0.004058733658769555_Rkind) * tab_Pl(12) +  &
-      !(0.0028543497034913407_Rkind) * tab_Pl(14) +  &
-      !(-0.010147768764494407_Rkind) * tab_Pl(16) +  &
-      !(-0.004763434006431677_Rkind) * tab_Pl(18) +  &
-      !(0.0017120023223853517_Rkind) * tab_Pl(20) +  &
-      !(0.002508091645298231_Rkind) * tab_Pl(22) +  &
-      !(-2.904687912089893e-07_Rkind) * tab_Pl(24) +  &
-      !(0.002880671741730294_Rkind) * tab_Pl(26) +  &
-      !(0.003464168323350602_Rkind) * tab_Pl(28) +  &
-      !(0.0011655181631145695_Rkind) * tab_Pl(30) +  &
-      !(-0.005870081331958774_Rkind) * tab_Pl(32)
 
       DO i=0,max_deg
         CALL dealloc_dnS(tab_Pl(i))

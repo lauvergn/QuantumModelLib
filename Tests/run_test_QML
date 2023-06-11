@@ -7,16 +7,17 @@ FC=$1
 OPT=$2
 OMP=$3
 LAPACK=$4
-FromMakefile=$5
+INT=$5
+FromMakefile=$6
 
 
 
-echo $FC OPT: $OPT OMP: $OMP LAPACK: $LAPACK FromMakefile: $FromMakefile
+echo $FC OPT: $OPT OMP: $OMP LAPACK: $LAPACK INT: $INT FromMakefile: $FromMakefile
 
 if [ "$FromMakefile" != 1 ]
 then
   cd ..
-    make FC=$FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK ut > $here/comp.log 2>&1
+    make FC=$FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK INT=$INT ut > $here/comp.log 2>&1
   cd  $here
   nbOK=`grep -c "model (QML) compilation: OK" comp.log`
   if [ "$nbOK" = 0 ]
@@ -35,6 +36,7 @@ echo "    FC: " $FC
 echo "   OPT: " $OPT
 echo "   OMP: " $OMP
 echo "LAPACK: " $LAPACK
+echo "   INT: " $INT
 echo "=========================================="
 
 ../TEST_model.x < input.dat > res 2>error.log
