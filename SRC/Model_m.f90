@@ -2915,13 +2915,14 @@ CONTAINS
       Qref = Read_alloc_Vect(read_file_unit,err_io)
       ! For testing the model, Q, PotVal, G
       res_test = (err_io == 0)
+      IF (res_test) res_test = ( size(Q) == size(Qref) )
       IF (res_test) res_test = all(abs(Q-Qref) < ZeroTresh)
       CALL Logical_Test(test_var,test1=res_test,info=info_loc // ': Q == Qref:   T ? ' // TO_string(res_test) )
       IF (.NOT. res_test) THEN
         IF (err_io /= 0) write(out_unit,*) 'Problem while reading the old file: ',read_file_name
         write(out_unit,*) info_loc // ', Q:   ',Q
         IF (err_io == 0) write(out_unit,*) info_loc // ', Qref:',Qref
-        IF (err_io == 0) write(out_unit,*) info_loc // ', Diff:',Q-Qref
+        IF (err_io == 0 .AND. size(Q) == size(Qref) ) write(out_unit,*) info_loc // ', Diff:',Q-Qref
       END IF
     END IF
 

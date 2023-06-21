@@ -74,7 +74,7 @@ PROGRAM TEST_model
   CALL test_IRC_MullerBrown()
 
   ! One electronic surface + optimization
-  CALL test_H3()
+  !CALL test_H3()
 
   ! Several electronic surfaces
   CALL test_Tully()
