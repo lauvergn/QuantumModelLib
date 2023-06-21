@@ -55,7 +55,7 @@ PROGRAM TEST_model
   !CALL test_Test() ; stop
 
 
-   !CALL test_IRC_H3() ; stop
+   !CALL test_H3() ; stop
    !CALL test_IRC_H3_AbInitio() ; stop
 
 
@@ -3136,7 +3136,7 @@ SUBROUTINE test_H3
   write(out_unit,*) ' Optimization (TS) H-H-H'
 
   CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,pot_name='H3_LSTH')
-  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=6,list_act=[3,9])
+  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=4,list_act=[3,9])
   CALL Write_QML_Opt(Opt_p)
   allocate(Qcart(QModel%ndim))
 
@@ -3177,8 +3177,31 @@ SUBROUTINE test_H3
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Optimization IRC'
-  CALL Init_Model(QModel,pot_name='H3_LSTH',option=1)
+  write(out_unit,*) ' Optimization H2-H (weak minimum in the asymtotic region)'
+
+  CALL Init_Model(QModel,Print_init=.TRUE.,Cart_TO_Q=.TRUE.,pot_name='H3_LSTH')
+  CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=6,list_act=[3,9])
+  CALL Write_QML_Opt(Opt_p)
+  allocate(Qcart(QModel%ndim))
+
+  CALL QML_Opt(Qcart,QModel,Opt_p,Q0=[ZERO,ZERO,-4._Rkind,ZERO,ZERO,ZERO,ZERO,ZERO,1.4_Rkind])
+
+  write(out_unit,*) 'Potential+derivatives:'
+  CALL Eval_Pot(QModel,Qcart,PotVal,nderiv=2)
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  CALL Test_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH', &
+      test_var=test_var,last_test=.FALSE.)
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Qcart)
+  CALL dealloc_Model(QModel)
+
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' MEP (op=61) : (1/R1, 1/R2) => (rho, s)'
+  CALL Init_Model(QModel,pot_name='H3_LSTH',option=61)
 
   Q1D = [ZERO]
   write(out_unit,*) 'Potential+derivatives at:',Q1D
@@ -3186,14 +3209,14 @@ SUBROUTINE test_H3
   CALL Write_dnMat(PotVal,nio=out_unit)
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[-FOUR],Qmax=[FOUR],nb_points=801,          &
-                        grid_file='grid_H3_IRC')
+                        grid_file='grid_H3_V61')
 
   allocate(Func(QModel%QM%nb_Func))
 
   DO i=-400,400
     Q1D = real(i,kind=Rkind)/100
     CALL Eval_Func(QModel,Q1D,Func,nderiv=0)
-    write(out_unit,*) 'grid_H3_IRC',Q1D,get_d0(Func)
+    write(out_unit,*) 'grid_H3_func61',Q1D,get_d0(Func)
     flush(6)
   END DO
 
