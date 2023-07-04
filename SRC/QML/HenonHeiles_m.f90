@@ -60,7 +60,6 @@ MODULE QML_HenonHeiles_m
     !PROCEDURE :: EvalPot_QModel => EvalPot_QML_HenonHeiles
     PROCEDURE :: EvalPot_QModel => EvalPotnew_QML_HenonHeiles
     PROCEDURE :: Write_QModel    => Write_QML_HenonHeiles
-    PROCEDURE :: Write0_QModel   => Write0_QML_HenonHeiles
   END TYPE QML_HenonHeiles_t
 
   PUBLIC :: QML_HenonHeiles_t,Init_QML_HenonHeiles
@@ -184,21 +183,6 @@ MODULE QML_HenonHeiles_m
     CLASS(QML_HenonHeiles_t),   intent(in) :: QModel
     integer,                     intent(in) :: nio
 
-
-    write(nio,*) 'HenonHeiles current parameters'
-    write(nio,*)
-    write(nio,*) '    ndim  :  ',QModel%ndim
-    write(nio,*) '    lambda:  ',QModel%lambda
-    write(nio,*)
-    write(nio,*) 'end HenonHeiles current parameters'
-
-  END SUBROUTINE Write_QML_HenonHeiles
-  SUBROUTINE Write0_QML_HenonHeiles(QModel,nio)
-  IMPLICIT NONE
-
-    CLASS(QML_HenonHeiles_t),   intent(in) :: QModel
-    integer,                     intent(in) :: nio
-
     write(nio,*) 'HenonHeiles default parameters'
     write(nio,*)
     write(nio,*) ' Potential and parameters from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499'
@@ -225,9 +209,14 @@ MODULE QML_HenonHeiles_m
     write(nio,*)  '    precision around 10^-6'
     write(nio,*)
     write(nio,*) 'end HenonHeiles default parameters'
+    write(nio,*) 'HenonHeiles current parameters'
+    write(nio,*)
+    write(nio,*) '    ndim  :  ',QModel%ndim
+    write(nio,*) '    lambda:  ',QModel%lambda
+    write(nio,*)
+    write(nio,*) 'end HenonHeiles current parameters'
 
-  END SUBROUTINE Write0_QML_HenonHeiles
-
+  END SUBROUTINE Write_QML_HenonHeiles
 !> @brief Subroutine wich calculates the HenonHeiles potential with derivatives up to the 2d order.
 !!
 !! @param QModel             TYPE(QML_HenonHeiles_t): derived type in which the parameters are set-up.

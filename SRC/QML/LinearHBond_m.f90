@@ -76,7 +76,6 @@ MODULE QML_LinearHBond_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_LinearHBond
     PROCEDURE :: Write_QModel    => Write_QML_LinearHBond
-    PROCEDURE :: Write0_QModel   => Write0_QML_LinearHBond
   END TYPE QML_LinearHBond_t
 
   PUBLIC :: QML_LinearHBond_t,Init_QML_LinearHBond
@@ -293,33 +292,6 @@ MODULE QML_LinearHBond_m
     CLASS(QML_LinearHBond_t),   intent(in) :: QModel
     integer,                    intent(in) :: nio
 
-    write(nio,*) 'LinearHBond current parameters:'
-    CALL QModel%QML_Empty_t%Write_QModel(nio)
-    write(nio,*)
-    write(nio,*) 'PubliUnit: ',QModel%PubliUnit
-    write(nio,*) 'nsurf:     ',QModel%nsurf
-    write(nio,*) 'ndim:      ',QModel%ndim
-    write(nio,*)
-    write(nio,*) '   Morse parameters:   '
-    CALL Write_QML_Morse(QModel%Morse1,nio)
-    CALL Write_QML_Morse(QModel%Morse2,nio)
-    write(nio,*) '   Buckingham parameters:   '
-    CALL Write_QML_Buck(QModel%Buck,nio)
-    write(nio,*) '  Eref2 = ',QModel%Eref2
-
-    write(nio,*) 'END LinearHBond current parameters'
-
-  END SUBROUTINE Write_QML_LinearHBond
-!> @brief Subroutine wich prints the default QML_LinearHBond parameters.
-!!
-!! @param QModel            CLASS(QML_LinearHBond_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_LinearHBond(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_LinearHBond_t),   intent(in) :: QModel
-    integer,                     intent(in) :: nio
-
     write(nio,*) 'LinearHBond default parameters:'
     write(nio,*)
     write(nio,*) ' Potential and parameters from:'
@@ -361,9 +333,23 @@ MODULE QML_LinearHBond_m
     write(nio,*)
     write(nio,*) 'end LinearHBond default parameters'
 
+    write(nio,*) 'LinearHBond current parameters:'
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
+    write(nio,*)
+    write(nio,*) 'PubliUnit: ',QModel%PubliUnit
+    write(nio,*) 'nsurf:     ',QModel%nsurf
+    write(nio,*) 'ndim:      ',QModel%ndim
+    write(nio,*)
+    write(nio,*) '   Morse parameters:   '
+    CALL Write_QML_Morse(QModel%Morse1,nio)
+    CALL Write_QML_Morse(QModel%Morse2,nio)
+    write(nio,*) '   Buckingham parameters:   '
+    CALL Write_QML_Buck(QModel%Buck,nio)
+    write(nio,*) '  Eref2 = ',QModel%Eref2
 
-  END SUBROUTINE Write0_QML_LinearHBond
+    write(nio,*) 'END LinearHBond current parameters'
 
+  END SUBROUTINE Write_QML_LinearHBond
 !> @brief Subroutine wich calculates the LinearHBond potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_LinearHBond_t):   derived type in which the parameters are set-up.

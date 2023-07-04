@@ -69,7 +69,6 @@ MODULE QML_HONO_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel => EvalPot_QML_HONO
     PROCEDURE :: Write_QModel    => Write_QML_HONO
-    PROCEDURE :: Write0_QModel   => Write0_QML_HONO
   END TYPE QML_HONO_t
 
   PUBLIC :: QML_HONO_t,Init_QML_HONO
@@ -221,20 +220,6 @@ MODULE QML_HONO_m
     write(nio,*) 'end HONO current parameters'
 
   END SUBROUTINE Write_QML_HONO
-  SUBROUTINE Write0_QML_HONO(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_HONO_t),   intent(in) :: QModel
-    integer,              intent(in) :: nio
-
-    write(nio,*) 'HONO default parameters'
-    write(nio,*)
-    write(nio,*)
-    write(nio,*) 'end HONO default parameters'
-
-
-  END SUBROUTINE Write0_QML_HONO
-
 !> @brief Subroutine wich calculates the HONO potential with derivatives up to the 2d order.
 !!
 !! @param QModel             TYPE(QML_HONO_t):    derived type in which the parameters are set-up.

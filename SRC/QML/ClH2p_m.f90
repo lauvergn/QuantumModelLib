@@ -67,7 +67,6 @@ MODULE QML_ClH2p_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_ClH2p
     PROCEDURE :: Write_QModel    => Write_QML_ClH2p
-    PROCEDURE :: Write0_QModel   => Write_QML_ClH2p
   END TYPE QML_ClH2p_t
 
   PUBLIC :: QML_ClH2p_t,Init_QML_ClH2p

@@ -44,7 +44,7 @@
 !! @date 07/01/2020
 !!
 MODULE QML_HNNHp_m
-  USE QDUtil_NumParameters_m, out_unit => out_unit
+  USE QDUtil_NumParameters_m
   USE QML_Empty_m
   IMPLICIT NONE
 
@@ -61,9 +61,10 @@ MODULE QML_HNNHp_m
      integer,          allocatable :: tab_func(:,:)
 
    CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_HNNHp
-    PROCEDURE :: Write_QModel    => Write_QML_HNNHp
-    PROCEDURE :: Write0_QModel   => Write0_QML_HNNHp
+    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_HNNHp
+    PROCEDURE :: Write_QModel     => Write_QML_HNNHp
+    PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_HNNHp
+
   END TYPE QML_HNNHp_t
 
   PUBLIC :: QML_HNNHp_t,Init_QML_HNNHp
@@ -103,7 +104,8 @@ MODULE QML_HNNHp_m
     QModel%QML_Empty_t = QModel_in
 
     QModel%nsurf    = 1
-    QModel%ndim     = 6
+    QModel%ndimQ    = 6
+    QModel%ndimCart = 12
     QModel%pot_name = 'hnnhp'
 
     IF (QModel%option < 1 .OR. QModel%option > 1) QModel%option = 1
@@ -116,16 +118,16 @@ MODULE QML_HNNHp_m
       read(nio_fit,*) QModel%nb_funcModel
       !write(out_unit,*) 'nb_funcModel',QModel%nb_funcModel
 
-      allocate(QModel%Qref(QModel%ndim))
+      allocate(QModel%Qref(QModel%ndimQ))
       allocate(QModel%F(QModel%nb_funcModel))
-      allocate(QModel%tab_func(QModel%ndim,QModel%nb_funcModel))
+      allocate(QModel%tab_func(QModel%ndimQ,QModel%nb_funcModel))
 
        k = 0
        DO
         nb_columns = min(6,QModel%nb_funcModel-k)
         !write(out_unit,*) k+1,k+nb_columns,nb_columns
         IF (nb_columns == 0) EXIT
-         read(nio_fit,11) (QModel%tab_func(1:QModel%ndim,j),QModel%F(j),j=k+1,k+nb_columns)
+         read(nio_fit,11) (QModel%tab_func(1:QModel%ndimQ,j),QModel%F(j),j=k+1,k+nb_columns)
  11      format(6i1,f15.8,5(2x,6i1,f15.8))
          k = k + nb_columns
        END DO
@@ -146,6 +148,11 @@ MODULE QML_HNNHp_m
 
     END SELECT
 
+    IF (QModel%Cart_TO_Q) THEN
+      QModel%ndim       = QModel%ndimCart
+    ELSE
+      QModel%ndim       = QModel%ndimQ
+    END IF
 
     IF (debug) write(out_unit,*) 'init Q0 of HNNHp'
     QModel%Q0 = QModel%Qref([2,1,4,3,5,6])
@@ -241,19 +248,6 @@ MODULE QML_HNNHp_m
     write(nio,*) 'end HNNHp current parameters'
 
   END SUBROUTINE Write_QML_HNNHp
-  SUBROUTINE Write0_QML_HNNHp(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_HNNHp_t),   intent(in) :: QModel
-    integer,                intent(in) :: nio
-
-    write(nio,*) 'HNNHp default parameters'
-    write(nio,*)
-    write(nio,*)
-    write(nio,*) 'end HNNHp default parameters'
-
-
-  END SUBROUTINE Write0_QML_HNNHp
 
 !> @brief Subroutine wich calculates the HNNHp potential with derivatives up to the 2d order.
 !!
@@ -294,6 +288,7 @@ MODULE QML_HNNHp_m
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_HNNHp(Mat_OF_PotDia,dnQ,QModel)
+    USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE
 
@@ -305,9 +300,18 @@ MODULE QML_HNNHp_m
     TYPE (dnS_t)        :: DQ(6,6)
     TYPE (dnS_t)        :: Vtemp
     integer             :: i,j
+    !logical, parameter  :: debug = .TRUE.
+    logical, parameter  :: debug = .FALSE.
 
-    !write(out_unit,*) ' sub EvalPot1_QML_HNNHp' ; flush(6)
+    IF (debug) THEN
+      write(out_unit,*) ' sub EvalPot1_QML_HNNHp'
+      write(out_unit,*) ' dnQ(:)',get_d0(dnQ)
 
+      !DO i=1,size(dnQ)
+      !  CALL Write_dnS(dnQ(i),info='dnQ' // TO_string(i),nderiv=0)
+      !END DO
+      flush(out_unit)
+    END IF
       ! Warning, the coordinate ordering in the potential data (from the file) is different from the z-matrix one.
       DQ(:,1) = dnQ([2,1,4,3,5,6]) - QModel%Qref(:)
       DO j=2,size(DQ,dim=2)
@@ -323,7 +327,7 @@ MODULE QML_HNNHp_m
 
       DO j=1,QModel%nb_funcModel
         Vtemp = QModel%F(j)
-        DO i=1,QModel%ndim
+        DO i=1,size(DQ,dim=1)
           IF (QModel%tab_func(i,j) == 0) CYCLE
           Vtemp = Vtemp * DQ(i,QModel%tab_func(i,j))
         END DO
@@ -336,39 +340,73 @@ MODULE QML_HNNHp_m
    CALL dealloc_dnS(Vtemp)
    CALL dealloc_dnS(DQ)
 
-   !write(out_unit,*) ' end EvalPot1_QML_HNNHp' ; flush(6)
+   IF (debug) THEN
+    write(out_unit,*) ' end EvalPot1_QML_HNNHp'
+    flush(out_unit)
+   END IF
 
   END SUBROUTINE EvalPot1_QML_HNNHp
 
   ! here we suppose that the atom ordering: N1-N2-H1-H2
   ! the bounds are N1-N2, N1-H1, n2-H2
-  SUBROUTINE Cart_TO_Q_QML_HNNHp(dnX,dnQ,QModel,nderiv)
+  SUBROUTINE Cart_TO_Q_QML_HNNHp(QModel,dnX,dnQ,nderiv)
     USE ADdnSVM_m
     IMPLICIT NONE
 
+    CLASS(QML_HNNHp_t),  intent(in)    :: QModel
     TYPE (dnS_t),        intent(in)    :: dnX(:,:)
     TYPE (dnS_t),        intent(inout) :: dnQ(:)
-    TYPE(QML_HNNHp_t), intent(in)    :: QModel
     integer,             intent(in)    :: nderiv
 
 
     ! local vector
-    TYPE (dnS_t)    :: VecNN(3),VecN1H1(3),VecN2H2(3)
+    TYPE (dnS_t)      :: V1(3),V2(3),v3(3),v4(3),V5(3)
+    TYPE (dnS_t)      :: ca,sa
+    real (kind=Rkind) :: phi
 
 
-    VecNN(:)   = dnX(:,1)-dnX(:,2)
-    VecN1H1(:) = dnX(:,1)-dnX(:,3)
-    VecN2H2(:) = dnX(:,2)-dnX(:,4)
 
-    dnQ(1) = sqrt(dot_product(VecNN,VecNN))
-    dnQ(2) = sqrt(dot_product(VecN1H1,VecN1H1))
-    dnQ(4) = sqrt(dot_product(VecN2H2,VecN2H2))
+    ! atoms : N1 N2 H3 H4
 
-    dnQ(3) = acos(dot_product(VecNN,VecN1H1)/(dnQ(1)*dnQ(2)))
-    dnQ(5) = acos(dot_product(VecNN,VecN2H2)/(dnQ(1)*dnQ(4)))
+    !dihedral first: zmatrix order : nc1=4 (H4),nc2=2 (N2),nc3=1 (N1),nc4=3 (H3)
+    !CALL calc_vector2(v1,norm1,nc2,nc1,dnx%d0,ncart0) ! N2->H4
+    V1(:) = dnX(:,4)-dnX(:,2)  ! N2->H4
+    dnQ(4) = sqrt(dot_product(V1,V1))
+
+    !CALL calc_vector2(v2,norm2,nc2,nc3,dnx%d0,ncart0) ! N2->N1
+    V2(:) = dnX(:,1)-dnX(:,2)  ! N2->N1
+    dnQ(1) = sqrt(dot_product(V2,V2))
+    dnQ(5) = acos(dot_product(V1,V2)/(dnQ(1)*dnQ(4))) ! aNNH1
+
+    !CALL calc_vector2(v3,norm3,nc3,nc4,dnx%d0,ncart0) ! N1->H3
+    V3(:) = dnX(:,3)-dnX(:,1)
+    dnQ(2) = sqrt(dot_product(V3,V3)) ! N1->H3
+    dnQ(3) = acos(-dot_product(V3,V2)/(dnQ(1)*dnQ(2))) ! aNNH1
+
+    !CALL calc_cross_product(v1,norm1,v2,norm2,v4,norm4)
+    !CALL calc_cross_product(v3,norm3,v2,norm2,v5,norm5)
+    V4(:) = cross_product(V1,V2)
+    V5(:) = cross_product(V3,V2)
 
 
+    !CALL calc_angle_d(angle_d,v4,norm4,v5,norm5,v2,norm2)
+    !SUBROUTINE calc_angle_d(angle_d,v1,norm1,v2,norm2,v3,norm3)
+    ca = dot_product(v4,v5)
+    sa = (v4(1)*(v5(2)*v2(3)-v5(3)*v2(2))                             &
+         -v4(2)*(v5(1)*v2(3)-v5(3)*v2(1))                             &
+         +v4(3)*(v5(1)*v2(2)-v5(2)*v2(1)))                            &
+         /dnQ(1)
+
+    !write(6,*) 'cos, sin: ',get_d0(ca),get_d0(sa)
+    dnQ(6) = atan2(sa,ca)
+
+    ! Transformation to have phi (dnQ(6)) between [0,2pi]
+    phi = mod(get_d0(dnQ(6)),TWO*pi)
+    IF (phi < ZERO) phi = phi + TWO*pi
+    CALL set_dnS(dnQ(6),phi,ider=[0])
+
+    !write(6,*) 'dnQ: ',get_d0(dnQ)
 
   END SUBROUTINE Cart_TO_Q_QML_HNNHp
 
-END MODULE QML_HNNHp_m
+  END MODULE QML_HNNHp_m

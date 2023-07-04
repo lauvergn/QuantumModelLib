@@ -71,7 +71,6 @@ MODULE QML_OneDSOC_1S1T_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel => EvalPot_QML_OneDSOC_1S1T
     PROCEDURE :: Write_QModel    => Write_QML_OneDSOC_1S1T
-    PROCEDURE :: Write0_QModel   => Write0_QML_OneDSOC_1S1T
   END TYPE QML_OneDSOC_1S1T_t
 
   PUBLIC :: QML_OneDSOC_1S1T_t,Init_QML_OneDSOC_1S1T
@@ -191,39 +190,6 @@ MODULE QML_OneDSOC_1S1T_m
     CLASS(QML_OneDSOC_1S1T_t), intent(in) :: QModel
     integer,                     intent(in) :: nio
 
-    write(nio,*) 'OneDSOC_1S1T current parameters:'
-    write(nio,*)
-    write(nio,*) '  a1,a2:          ',QModel%a1,QModel%a2
-    write(nio,*) '  alpha1,alpha2:  ',QModel%alpha1,QModel%alpha2
-    write(nio,*) '  DE:             ',QModel%DE
-
-    write(nio,*) '  C0:             ',QModel%C0
-    write(nio,*) '  C1=RC1 + i IC1: ',QModel%RC1,QModel%IC1
-
-    write(nio,*) '   Rsig:          ',QModel%Rsig
-    write(nio,*) '  DRsig:          ',QModel%DRsig
-    write(nio,*)
-    write(nio,*) ' option:          ',QModel%option
-    IF (QModel%option == 1) THEN
-      write(nio,*) ' Original sigmoid function'
-    ELSE
-      write(nio,*) ' Modified sigmoid function:'
-      write(nio,*) ' sigmoid(R) = tanh(-4 * (R-Rsig)/DRsig )'
-    END IF
-    write(nio,*) '  nsurf:          ',QModel%nsurf
-    write(nio,*)
-    write(nio,*) 'end OneDSOC_1S1T current parameters'
-
-  END SUBROUTINE Write_QML_OneDSOC_1S1T
-!> @brief Subroutine wich prints the default QML_OneDSOC_1S1T parameters.
-!!
-!! @param QModel            CLASS(QML_OneDSOC_1S1T_t):  derived type in which the parameters are set-up.
-!! @param nio               integer:                      file unit to print the parameters.
-  SUBROUTINE Write0_QML_OneDSOC_1S1T(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_OneDSOC_1S1T_t),   intent(in) :: QModel
-    integer,                       intent(in) :: nio
 
     write(nio,*) 'OneDSOC_1S1T default parameters, from reference:'
     write(nio,*)
@@ -261,10 +227,30 @@ MODULE QML_OneDSOC_1S1T_m
     write(nio,*) 'WARNING: The NAC, associated to the 2 degenerated vectors, are numerically not well defined !!!!'
     write(nio,*)
     write(nio,*) 'end OneDSOC_1S1T default parameters'
+    write(nio,*) 'OneDSOC_1S1T current parameters:'
+    write(nio,*)
+    write(nio,*) '  a1,a2:          ',QModel%a1,QModel%a2
+    write(nio,*) '  alpha1,alpha2:  ',QModel%alpha1,QModel%alpha2
+    write(nio,*) '  DE:             ',QModel%DE
 
+    write(nio,*) '  C0:             ',QModel%C0
+    write(nio,*) '  C1=RC1 + i IC1: ',QModel%RC1,QModel%IC1
 
-  END SUBROUTINE Write0_QML_OneDSOC_1S1T
+    write(nio,*) '   Rsig:          ',QModel%Rsig
+    write(nio,*) '  DRsig:          ',QModel%DRsig
+    write(nio,*)
+    write(nio,*) ' option:          ',QModel%option
+    IF (QModel%option == 1) THEN
+      write(nio,*) ' Original sigmoid function'
+    ELSE
+      write(nio,*) ' Modified sigmoid function:'
+      write(nio,*) ' sigmoid(R) = tanh(-4 * (R-Rsig)/DRsig )'
+    END IF
+    write(nio,*) '  nsurf:          ',QModel%nsurf
+    write(nio,*)
+    write(nio,*) 'end OneDSOC_1S1T current parameters'
 
+  END SUBROUTINE Write_QML_OneDSOC_1S1T
 !> @brief Subroutine wich calculates the OneDSOC_1S1T potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_OneDSOC_1S1T_t): derived type in which the parameters are set-up.

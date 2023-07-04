@@ -120,24 +120,6 @@ MODULE QML_XXX_m
     integer,              intent(in) :: nio
 
   END SUBROUTINE Write_QML_XXX
-!> @brief Subroutine wich prints the default QML_XXX parameters.
-!!
-!! @param QModel            CLASS(QML_XXX_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_XXX(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_XXX_t),     intent(in) :: QModel
-    integer,              intent(in) :: nio
-
-    write(nio,*) 'XXX default parameters'
-    write(nio,*)
-    write(nio,*)
-    write(nio,*) 'end XXX default parameters'
-
-
-  END SUBROUTINE Write0_QML_XXX
-
 !> @brief Subroutine wich calculates the XXX potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_XXX_t):   derived type in which the parameters are set-up.

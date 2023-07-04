@@ -63,7 +63,6 @@ MODULE QML_H2O_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_H2O
     PROCEDURE :: Write_QModel    => Write_QML_H2O
-    PROCEDURE :: Write0_QModel   => Write_QML_H2O
   END TYPE QML_H2O_t
 
   PUBLIC :: QML_H2O_t,Init_QML_H2O

@@ -57,7 +57,6 @@ MODULE QML_HOO_DMBE_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_HOO_DMBE
     PROCEDURE :: Write_QModel     => Write_QML_HOO_DMBE
-    PROCEDURE :: Write0_QModel    => Write0_QML_HOO_DMBE
     PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_HOO_DMBE
   END TYPE QML_HOO_DMBE_t
 
@@ -227,23 +226,6 @@ MODULE QML_HOO_DMBE_m
     CLASS(QML_HOO_DMBE_t),   intent(in) :: QModel
     integer,                   intent(in) :: nio
 
-    write(nio,*) 'HOO_DMBE IV current parameters'
-
-    CALL QModel%QML_Empty_t%Write_QModel(nio)
-
-    write(nio,*) 'end HOO_DMBE IV current parameters'
-
-  END SUBROUTINE Write_QML_HOO_DMBE
-!> @brief Subroutine wich prints the default QML_HOO_DMBE parameters.
-!!
-!! @param QModel            CLASS(QML_HOO_DMBE_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_HOO_DMBE(QModel,nio)
-  IMPLICIT NONE
-
-    CLASS(QML_HOO_DMBE_t),   intent(in) :: QModel
-    integer,                   intent(in) :: nio
-
     write(nio,*) 'HOO_DMBE IV default parameters'
 
     write(nio,*) 'Ref: '
@@ -270,9 +252,13 @@ MODULE QML_HOO_DMBE_m
     write(nio,*)
     write(nio,*) 'end HOO_DMBE IV default parameters'
 
+    write(nio,*) 'HOO_DMBE IV current parameters'
 
-  END SUBROUTINE Write0_QML_HOO_DMBE
+    CALL QModel%QML_Empty_t%Write_QModel(nio)
 
+    write(nio,*) 'end HOO_DMBE IV current parameters'
+
+  END SUBROUTINE Write_QML_HOO_DMBE
 !> @brief Subroutine wich calculates the HOO_DMBE potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_HOO_DMBE_t):   derived type in which the parameters are set-up.

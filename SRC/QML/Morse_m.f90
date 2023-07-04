@@ -71,7 +71,6 @@ MODULE QML_Morse_m
   CONTAINS
     PROCEDURE :: EvalPot_QModel => EvalPot_QML_Morse
     PROCEDURE :: Write_QModel    => Write_QML_Morse
-    PROCEDURE :: Write0_QModel   => Write0_QML_Morse
   END TYPE QML_Morse_t
 
   PUBLIC :: QML_Morse_t,Init_QML_Morse,Init0_QML_Morse,Write_QML_Morse,QML_dnMorse
@@ -233,35 +232,6 @@ CONTAINS
     req_inout  = req
 
   END SUBROUTINE Read_QML_Morse
-!> @brief Subroutine wich prints the Morse parameters.
-!!
-!> @author David Lauvergnat
-!! @date 30/07/2019
-!!
-!! @param nio                integer          :   file unit to print the parameters.
-  SUBROUTINE Write0_QML_Morse(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_Morse_t),    intent(in) :: QModel
-    integer,                intent(in) :: nio
-
-    write(nio,*) 'Morse parameters:'
-    write(nio,*)
-    write(nio,*) ' For H-F (Default values):'
-    write(nio,*) '    V(R) = D.( 1 - exp(-a.(r-req)) )^2'
-    write(nio,*) '  D   = 0.225  Hartree'
-    write(nio,*) '  a   = 1.1741 bohr^-1'
-    write(nio,*) '  req = 1.7329 bohr'
-    write(nio,*) '  mu  = 1744.60504565084306291455 au'
-    write(nio,*)
-    write(nio,*) 'Value at: R=2.0 Bohr'
-    write(nio,*) 'V        = 0.016304 Hartree'
-    write(nio,*) 'gradient = 0.103940'
-    write(nio,*) 'hessian  = 0.209272'
-    write(nio,*)
-    write(nio,*) 'end Morse parameters'
-
-  END SUBROUTINE Write0_QML_Morse
 !> @brief Subroutine wich prints the Morse current parameters.
 !!
 !> @author David Lauvergnat
@@ -275,7 +245,21 @@ CONTAINS
     CLASS(QML_Morse_t),    intent(in) :: QModel
     integer,               intent(in) :: nio
 
-
+    write(nio,*) 'Morse default parameters:'
+    write(nio,*)
+    write(nio,*) ' For H-F (Default values):'
+    write(nio,*) '    V(R) = D.( 1 - exp(-a.(r-req)) )^2'
+    write(nio,*) '  D   = 0.225  Hartree'
+    write(nio,*) '  a   = 1.1741 bohr^-1'
+    write(nio,*) '  req = 1.7329 bohr'
+    write(nio,*) '  mu  = 1744.60504565084306291455 au'
+    write(nio,*)
+    write(nio,*) 'Value at: R=2.0 Bohr'
+    write(nio,*) 'V        = 0.016304 Hartree'
+    write(nio,*) 'gradient = 0.103940'
+    write(nio,*) 'hessian  = 0.209272'
+    write(nio,*)
+    write(nio,*) 'end Morse default parameters'
     write(nio,*) 'Morse current parameters:'
     CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*)

@@ -73,7 +73,6 @@ MODULE QML_OneDSOC_2S1T_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel => EvalPot_QML_OneDSOC_2S1T
     PROCEDURE :: Write_QModel    => Write_QML_OneDSOC_2S1T
-    PROCEDURE :: Write0_QModel   => Write0_QML_OneDSOC_2S1T
   END TYPE QML_OneDSOC_2S1T_t
 
   PUBLIC :: QML_OneDSOC_2S1T_t,Init_QML_OneDSOC_2S1T
@@ -175,28 +174,6 @@ MODULE QML_OneDSOC_2S1T_m
     CLASS(QML_OneDSOC_2S1T_t),   intent(in) :: QModel
     integer,                       intent(in) :: nio
 
-    write(nio,*) 'QML_OneDSOC_2S1T current parameters'
-    write(nio,*)
-    write(nio,*) '  a1,a2:          ',QModel%a1,QModel%a2
-    write(nio,*) '  alpha1,alpha2:  ',QModel%alpha1,QModel%alpha2
-    write(nio,*) '  gamma_1,gamma_2:',QModel%gamma_1,QModel%gamma_2
-    write(nio,*) '  DE,DEs:         ',QModel%DE,QModel%DEs
-    write(nio,*) '  Phi_12:         ',QModel%Phi_12
-    !write(nio,*)
-    !write(nio,*) ' option:          ',QModel%option
-    write(nio,*)
-    write(nio,*) 'end QML_OneDSOC_2S1T current parameters'
-
-  END SUBROUTINE Write_QML_OneDSOC_2S1T
-!> @brief Subroutine wich prints the default QML_OneDSOC_2S1T parameters.
-!!
-!! @param QModel            CLASS(QML_OneDSOC_2S1T_t): derived type in which the parameters are set-up.
-!! @param nio               integer:                     file unit to print the parameters.
-  SUBROUTINE Write0_QML_OneDSOC_2S1T(QModel,nio)
-  IMPLICIT NONE
-
-    CLASS(QML_OneDSOC_2S1T_t),   intent(in) :: QModel
-    integer,                       intent(in) :: nio
 
     write(nio,*) 'OneDSOC_2S1T default parameters, from reference:'
     write(nio,*) 'Granucci et al., J. Chem. Phys. V137, p22A501 (2012)'
@@ -228,8 +205,19 @@ MODULE QML_OneDSOC_2S1T_m
     write(nio,*)
     write(nio,*) 'end OneDSOC_2S1T default parameters'
 
+    write(nio,*) 'QML_OneDSOC_2S1T current parameters'
+    write(nio,*)
+    write(nio,*) '  a1,a2:          ',QModel%a1,QModel%a2
+    write(nio,*) '  alpha1,alpha2:  ',QModel%alpha1,QModel%alpha2
+    write(nio,*) '  gamma_1,gamma_2:',QModel%gamma_1,QModel%gamma_2
+    write(nio,*) '  DE,DEs:         ',QModel%DE,QModel%DEs
+    write(nio,*) '  Phi_12:         ',QModel%Phi_12
+    !write(nio,*)
+    !write(nio,*) ' option:          ',QModel%option
+    write(nio,*)
+    write(nio,*) 'end QML_OneDSOC_2S1T current parameters'
 
-  END SUBROUTINE Write0_QML_OneDSOC_2S1T
+  END SUBROUTINE Write_QML_OneDSOC_2S1T
 
 !> @brief Subroutine wich calculates the OneDSOC_2S1T potential with derivatives up to the 2d order.
 !!

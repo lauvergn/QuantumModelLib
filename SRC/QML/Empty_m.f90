@@ -100,7 +100,6 @@ MODULE QML_Empty_m
       PROCEDURE :: EvalScalOp_QModel      => EvalScalOp_QML_Empty
       PROCEDURE :: EvalFunc_QModel        => EvalFunc_QML_Empty
       PROCEDURE :: Write_QModel           => Write_QML_Empty
-      PROCEDURE :: Write0_QModel          => Write0_QML_Empty
      !PROCEDURE :: get2_Q0_QModel         => get2_Q0_QML_Empty
       PROCEDURE :: get_d0GGdef_QModel     => get_d0GGdef_QML_Empty
       PROCEDURE :: Cart_TO_Q_QModel       => Cart_TO_Q_QML_Empty
@@ -563,44 +562,6 @@ MODULE QML_Empty_m
     flush(nio)
 
   END SUBROUTINE Write_QML_Empty
-  SUBROUTINE Write0_QML_Empty(QModel,nio)
-    USE QDUtil_m,  ONLY : Write_RMat => Write_Mat
-    IMPLICIT NONE
-
-    CLASS (QML_Empty_t), intent(in)    :: QModel
-    integer,             intent(in)    :: nio
-
-
-    write(nio,*) 'QUANTUM MODEL default parameters'
-    flush(nio)
-
-    write(nio,*)
-    write(nio,*) 'Potential parameters are written just below'
-    write(nio,*) 'Init:                      ',QModel%Init
-    write(nio,*) 'option:                    ',QModel%option
-    write(nio,*)
-    write(nio,*) 'nsurf:                     ',QModel%nsurf
-    write(nio,*) 'ndim:                      ',QModel%ndim
-    write(nio,*) 'numeric:                   ',QModel%numeric
-    write(nio,*) 'adiabatic:                 ',QModel%adiabatic
-    write(nio,*) 'no analytical derivatives: ',QModel%no_ana_der
-    write(nio,*) 'Cartesian => model coord.: ',QModel%Cart_TO_Q
-    write(nio,*) 'ndimQ:                     ',QModel%ndimQ
-    write(nio,*) 'ndimCart:                  ',QModel%ndimCart
-    write(nio,*) 'ndimFunc:                  ',QModel%ndimFunc
-    write(nio,*) 'nb_Func:                   ',QModel%nb_Func
-    write(nio,*)
-
-    IF (allocated(QModel%d0GGdef)) THEN
-     write(nio,*) 'Deformation metric tensor (~ 1/Mii)'
-     CALL Write_RMat(QModel%d0GGdef,nio,nbcol=5)
-    END IF
-
-    write(nio,*) 'END QUANTUM MODEL default parameters'
-    flush(nio)
-
-
-  END SUBROUTINE Write0_QML_Empty
 
   SUBROUTINE Cart_TO_Q_QML_Empty(QModel,dnX,dnQ,nderiv)
     USE ADdnSVM_m, ONLY : dnS_t

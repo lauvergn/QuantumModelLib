@@ -111,7 +111,6 @@ MODULE QML_ClH2p_Botschwina_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_ClH2p_Botschwina
     PROCEDURE :: Write_QModel    => Write_QML_ClH2p_Botschwina
-    PROCEDURE :: Write0_QModel   => Write_QML_ClH2p_Botschwina
   END TYPE QML_ClH2p_Botschwina_t
 
   PUBLIC :: QML_ClH2p_Botschwina_t,Init_QML_ClH2p_Botschwina

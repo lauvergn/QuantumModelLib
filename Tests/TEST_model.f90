@@ -44,7 +44,7 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
-  !CALL test_Phenol()  ; CALL Finalize_Test(test_var) ; stop
+  !CALL test_HNNHp() ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_NO3()  ; CALL Finalize_Test(test_var) ; stop
   !CALL test_H2()  ; CALL Finalize_Test(test_var) ; stop
@@ -683,8 +683,7 @@ SUBROUTINE test_Buckingham
   write(out_unit,*) ' Buckingham potential (Ar-Ar parameters)'
   write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
   write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='Buck',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
+  CALL Init_Model(QModel,pot_name='Buck')
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
@@ -1399,8 +1398,7 @@ SUBROUTINE test_Retinal_JPCB2000
   write(out_unit,*) ' Retinal_JPCB2000 potential'
   write(out_unit,*) ' With units: Atomic Units'
   write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='Retinal_JPCB2000',Print_init=.FALSE.)
-  CALL Write0_Model(QModel)
+  CALL Init_Model(QModel,pot_name='Retinal_JPCB2000')
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
@@ -1603,9 +1601,10 @@ SUBROUTINE test_HNNHp
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: q(:)
+  real (kind=Rkind), allocatable :: q(:),xyz(:)
   integer                        :: ndim,nsurf,nderiv,i,option
   TYPE (dnMat_t)                 :: PotVal
+  real (kind=Rkind) :: th
 
 
   nderiv = 2
@@ -1613,6 +1612,8 @@ SUBROUTINE test_HNNHp
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '------------ 6D-HNNH+ -----------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '------------ Z-matrix coordinates -----------'
   write(out_unit,*) '---------------------------------------------'
 
   CALL Init_Model(QModel,pot_name='HNNHp',Print_init=.FALSE.)
@@ -1640,9 +1641,33 @@ SUBROUTINE test_HNNHp
 
   ! For testing the model
   CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='HNNHp', &
+      test_var=test_var,last_test=.FALSE.)
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(q)
+  CALL dealloc_Model(QModel)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '------------ Cartesian coordinates ----------'
+  write(out_unit,*) '---------------------------------------------'
+
+  CALL Init_Model(QModel,pot_name='HNNHp',Cart_TO_Q=.TRUE.)
+
+  allocate(xyz(QModel%QM%ndim))
+  xyz = [ZERO,              ZERO,  ZERO,              &
+         ZERO,              ZERO,  2.200000000_Rkind, &
+         1.640097797_Rkind, ZERO, -0.959207599_Rkind, &
+         0.869189803_Rkind, 1.353682913_Rkind,  2.749592264_Rkind]
+
+  CALL Eval_Pot(QModel,xyz,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+    ! For testing the model
+  CALL Test_QdnV_FOR_Model(xyz,PotVal,QModel,info='HNNHp', &
       test_var=test_var,last_test=.TRUE.)
 
-
+  CALL dealloc_dnMat(PotVal)
+  deallocate(xyz)
   CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'

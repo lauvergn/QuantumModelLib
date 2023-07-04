@@ -88,7 +88,6 @@ MODULE QML_CH5_m
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_CH5
     PROCEDURE :: EvalFunc_QModel => EvalFunc_QML_CH5
     PROCEDURE :: Write_QModel     => Write_QML_CH5
-    PROCEDURE :: Write0_QModel    => Write0_QML_CH5
   END TYPE QML_CH5_t
 
   PUBLIC :: QML_CH5_t,Init_QML_CH5
@@ -298,64 +297,6 @@ MODULE QML_CH5_m
     integer,              intent(in) :: nio
 
   END SUBROUTINE Write_QML_CH5
-!> @brief Subroutine wich prints the default QML_CH5 parameters.
-!!
-!! @param QModel            CLASS(QML_CH5_t):   derived type in which the parameters are set-up.
-!! @param nio               integer:              file unit to print the parameters.
-  SUBROUTINE Write0_QML_CH5(QModel,nio)
-  IMPLICIT NONE
-
-    CLASS(QML_CH5_t),   intent(in) :: QModel
-    integer,              intent(in) :: nio
-
-    write(nio,*) 'CH5 parameters'
-    write(nio,*)
-    write(nio,*) ' H + H-CH3 -> H-H + CH3 approximate 12D-potential:'
-    write(nio,*)
-    write(nio,*) '   Quadratic potential along the reaction path'
-    write(nio,*) '   Reaction coordinate: R- = 1/2(RCH1-RHH)'
-    write(nio,*) '   Optimal coordinates along the path at CCSD(T)-F12/cc-pVTZ-F12'
-    write(nio,*) '   V0 along the path at CCSD(T)-F12/cc-pVTZ-F12'
-    write(nio,*) '   Hessian along the path at MP2/cc-pVDZ'
-    write(nio,*)
-    write(nio,*) 'Two options are availble, which differ from the coordinates'
-    write(nio,*) '-option=4 (default)'
-    write(nio,*) '-option=5:'
-    write(nio,*) '  Coordinate transformations on some valence angles are added.'
-    write(nio,*) '  x = tan(A-Pi/2), so that the tranformed angle range is ]-inf,+inf[.'
-    write(nio,*)
-    write(nio,*) 'Primitive coordinates (z-matrix):'
-    write(nio,*) '   C'
-    write(nio,*) '   H 1 RCH1'
-    write(nio,*) '   H 1 RCH2 2 ACH2'
-    write(nio,*) '   H 1 RCH3 2 ACH3 3 DH3'
-    write(nio,*) '   H 1 RCH4 2 ACH4 3 DH4'
-    write(nio,*) '   X 2 1.   1 Pi/2 3 0.'
-    write(nio,*) '   X 2 1.   1 Pi/2 3 Pi/2'
-    write(nio,*) '   H 2 RHH  7 A    6 D'
-    write(nio,*)
-    write(nio,*) 'If option=5 is selected, the angles (ACH2,ACH3,ACH4,A) are transformed:'
-    write(nio,*)     ' x = tan(A-Pi/2)'
-    write(nio,*)
-    write(nio,*) 'Symetrization of some coordinates (linear combinations):'
-    write(nio,*)
-    write(nio,*) '   R-= 1/2 (RCH1 - RHH)'
-    write(nio,*) '   R+= 1/2 (RCH1 + RHH)'
-    write(nio,*)
-    write(nio,*) '   Ra1= 1/3      (  RCH1 + RCH2 + RCH3)'
-    write(nio,*) '   Re1= 1/sqrt(6)(2.RCH1 - RCH2 - RCH3)'
-    write(nio,*) '   Re2= 1/sqrt(2)(         RCH2 - RCH3)'
-    write(nio,*)
-    write(nio,*) '   Aa1= 1/3      (  ACH1 + ACH2 + ACH3)'
-    write(nio,*) '   Ae1= 1/sqrt(6)(2.ACH1 - ACH2 - ACH3)'
-    write(nio,*) '   Ae2= 1/sqrt(2)(         ACH2 - ACH3)'
-    write(nio,*) '   Remark: when option=5 is selected, ...'
-    write(nio,*) '      ... the symetrization is performed on the transformed angle, x.'
-    write(nio,*)
-    write(nio,*) 'end CH5 parameters'
-
-  END SUBROUTINE Write0_QML_CH5
-
 !> @brief Subroutine wich calculates the CH5 potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_CH5_t):   derived type in which the parameters are set-up.

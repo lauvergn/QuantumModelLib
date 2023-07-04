@@ -70,7 +70,6 @@ MODULE QML_Buck_m
   CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Buck
     PROCEDURE :: Write_QModel    => Write_QML_Buck
-    PROCEDURE :: Write0_QModel   => Write0_QML_Buck
   END TYPE QML_Buck_t
 
   PUBLIC :: QML_Buck_t,Init_QML_Buck,Init0_QML_Buck,Write_QML_Buck,QML_dnBuck
@@ -222,13 +221,14 @@ CONTAINS
     QModel%C = C
 
   END SUBROUTINE Read_QML_Buck
-!> @brief Subroutine wich prints the Buckingham parameters from his publication.
+!> @brief Subroutine wich prints the Buckingham parameters (from his publication) + the ones used
 !!
 !> @author David Lauvergnat
-!! @date 20/07/2019
+!! @date 03/08/2017
 !!
+!! @param QModel          TYPE(QML_Buck_t):    derived type with the Buckingham parameters.
 !! @param nio                integer:             file unit to print the parameters.
-  SUBROUTINE Write0_QML_Buck(QModel,nio)
+  SUBROUTINE Write_QML_Buck(QModel,nio)
     IMPLICIT NONE
 
     CLASS (QML_Buck_t), intent(in) :: QModel
@@ -250,21 +250,6 @@ CONTAINS
     write(nio,*) 'hessian  =  0.001088'
     write(nio,*)
     write(nio,*) 'end Buckingham parameters'
-
-  END SUBROUTINE Write0_QML_Buck
-!> @brief Subroutine wich prints the Buckingham parameters.
-!!
-!> @author David Lauvergnat
-!! @date 03/08/2017
-!!
-!! @param QModel          TYPE(QML_Buck_t):    derived type with the Buckingham parameters.
-!! @param nio                integer:             file unit to print the parameters.
-  SUBROUTINE Write_QML_Buck(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS (QML_Buck_t), intent(in) :: QModel
-    integer,             intent(in) :: nio
-
     write(nio,*) 'Buckingham current parameters:'
     write(nio,*)
     write(nio,*) '    V(R) = A.Exp(-B.r) - C/r^6'

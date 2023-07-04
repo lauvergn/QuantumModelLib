@@ -48,7 +48,7 @@ MODULE Model_m
   PUBLIC :: Model_t,Init_Model,Eval_Pot,Eval_Func,Eval_tab_HMatVibAdia,Eval_dnHVib_ana
   PUBLIC :: check_alloc_QM,check_Init_QModel,dealloc_Model
   PUBLIC :: check_alloc_d0GGdef
-  PUBLIC :: Write0_Model,Write_Model
+  PUBLIC :: Write_Model
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
   PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model,Qact_TO_Q
@@ -2686,36 +2686,6 @@ CONTAINS
     flush(nio_loc)
 
   END SUBROUTINE Write_Model
-  SUBROUTINE Write0_Model(QModel,nio)
-    IMPLICIT NONE
-
-    TYPE(Model_t),    intent(in)              :: QModel
-    integer,          intent(in), optional    :: nio
-
-    integer :: nio_loc
-
-
-    IF (present(nio)) THEN
-      nio_loc = nio
-    ELSE
-      nio_loc = out_unit
-    END IF
-
-    CALL check_alloc_QM(QModel,'Write0_Model')
-
-    IF (nio_loc /= out_unit) THEN
-      open(nio_loc,file=trim(adjustl(QModel%QM%pot_name))//'.out',form='formatted')
-    END IF
-
-
-    CALL QModel%QM%Write0_QModel(nio=nio_loc)
-
-
-    IF (nio_loc /= out_unit) THEN
-      close(nio_loc)
-    END IF
-
-  END SUBROUTINE Write0_Model
   SUBROUTINE Write_QdnV_FOR_Model(Q,PotVal,QModel,Vec,NAC,info,name_file)
     USE QDUtil_m, ONLY : file_open2
     USE ADdnSVM_m

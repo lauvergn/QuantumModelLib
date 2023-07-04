@@ -63,7 +63,6 @@ MODULE QML_H2SiN_m
    CONTAINS
     PROCEDURE :: EvalPot_QModel => EvalPot_QML_H2SiN
     PROCEDURE :: Write_QModel    => Write_QML_H2SiN
-    PROCEDURE :: Write0_QModel   => Write0_QML_H2SiN
   END TYPE QML_H2SiN_t
 
   PUBLIC :: QML_H2SiN_t,Init_QML_H2SiN
@@ -315,19 +314,6 @@ MODULE QML_H2SiN_m
     write(nio,*) 'end H2SiN current parameters'
 
   END SUBROUTINE Write_QML_H2SiN
-  SUBROUTINE Write0_QML_H2SiN(QModel,nio)
-    IMPLICIT NONE
-
-    CLASS(QML_H2SiN_t),   intent(in) :: QModel
-    integer,                intent(in) :: nio
-
-    write(nio,*) 'H2SiN default parameters'
-    write(nio,*)
-    write(nio,*)
-    write(nio,*) 'end H2SiN default parameters'
-
-
-  END SUBROUTINE Write0_QML_H2SiN
 
 !> @brief Subroutine wich calculates the H2SiN potential with derivatives up to the 2d order.
 !!

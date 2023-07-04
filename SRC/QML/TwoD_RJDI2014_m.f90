@@ -122,6 +122,14 @@ MODULE QML_TwoD_RJDI2014_m
       QModel%c     = 0.00008092_Rkind
 
       QModel%Q0    = [-QModel%a/TWO,ZERO]
+    CASE (3)  ! minimum of V(1,1), other parameters (BMA)
+      QModel%w1    = 0.007743_Rkind
+      QModel%w2    = 0.00668_Rkind
+      QModel%Delta = ZERO
+      QModel%a     = 31.05_Rkind
+      QModel%c     = 0.00008092_Rkind
+
+      QModel%Q0    = [-QModel%a/TWO,ZERO]
     CASE Default ! ! minimum of V(1,1), other parameters
       QModel%w1    = 0.007743_Rkind
       QModel%w2    = 0.00668_Rkind
@@ -170,6 +178,8 @@ MODULE QML_TwoD_RJDI2014_m
       write(nio,*) 'Current parameters (from the publication):'
     CASE (0)
       write(nio,*) 'Current parameters (unpublished):'
+    CASE (3)
+      write(nio,*) 'Current parameters (BMA):'
     CASE DEFAULT
       write(nio,*) 'Current parameters (unpublished):'
     END SELECT
