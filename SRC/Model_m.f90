@@ -144,7 +144,7 @@ CONTAINS
     logical :: Phase_checking,Phase_Following
     logical :: Cart_TO_Q,AbInitio,MassWeighted
 
-    character (len=20) :: pot_name
+    character (len=100) :: pot_name
     integer :: err_read,nb_act
     integer :: list_act(max_act)
     integer :: list_Op(max_Op)

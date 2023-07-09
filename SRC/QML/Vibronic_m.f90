@@ -74,7 +74,7 @@ MODULE QML_Vibronic_m
   PUBLIC :: QML_Vibronic_t, Init_QML_Vibronic
 
   CONTAINS
-!> @brief Subroutine which makes the initialization of the Morse parameters.
+!> @brief Subroutine which makes the initialization of a vibronic models.
 !!      Those parameters cannot be modified (PRIVATE).
 !!
 !> @author David Lauvergnat
@@ -88,7 +88,6 @@ MODULE QML_Vibronic_m
 
     IMPLICIT NONE
 
-    !TYPE (QML_Vibronic_t), allocatable                :: QModel
     TYPE (QML_Vibronic_t)                             :: QModel
 
     TYPE(QML_Empty_t),           intent(in)           :: QModel_in ! variable to transfer info to the init
@@ -99,8 +98,6 @@ MODULE QML_Vibronic_m
     integer :: i,j
     real (kind=Rkind), allocatable :: d1(:),d2(:,:)
 
-
-    !allocate(QML_Vibronic_t :: QModel)
 
     QModel%QML_Empty_t = QModel_in
     IF (present(Vibronic_name)) QModel%Vibronic_name = Vibronic_name
@@ -140,12 +137,6 @@ MODULE QML_Vibronic_m
       END DO
       END DO
 
-      !write(out_unit,*) 'nderiv:'
-      !DO i=1,QModel%nsurf
-      !DO j=1,QModel%nsurf
-      !  write(out_unit,*) 'i,j',get_nderiv(QModel%Diab(j,i)%Ene)
-      !END DO
-      !END DO
     END IF
   END FUNCTION Init_QML_Vibronic
 
@@ -159,6 +150,8 @@ MODULE QML_Vibronic_m
     SELECT CASE (QModel%Vibronic_name)
     CASE ('twod_rjdi2014')
       CALL Internal_QML_RJDI2014(QModel)
+    CASE ('7dm23_jgbl2023_test')
+      CALL Internal_QML_7DM23_JGBL2023(QModel)
     CASE ('xxx')
       CALL Internal_QML_XXX(QModel)
     CASE Default
@@ -218,6 +211,77 @@ MODULE QML_Vibronic_m
     QModel%Diab(i,j)%Qref = QModel%Diab(j,i)%Qref
 
   END SUBROUTINE Internal_QML_RJDI2014
+  SUBROUTINE Internal_QML_7DM23_JGBL2023(QModel)
+    USE ADdnSVM_m,        ONLY : dnS_t, set_dnS
+    IMPLICIT NONE
+
+    CLASS (QML_Vibronic_t), intent(inout)   :: QModel
+
+
+
+    integer :: i,j,k
+    real (kind=Rkind), allocatable :: d1(:),ks(:),d2(:,:)
+    real (kind=Rkind), parameter     :: E1 = -1153.0899777201398_Rkind
+    real (kind=Rkind), parameter     :: E2 = -1153.0794579197113_Rkind
+
+
+    QModel%ndim  = 7
+    QModel%nsurf = 2
+
+    allocate(QModel%Diab(QModel%nsurf,QModel%nsurf))
+    allocate(d1(QModel%ndim))
+    allocate(ks(QModel%ndim))
+    allocate(d2(QModel%ndim,QModel%ndim))
+
+    ks(:) = [0.0000443070,0.0000568669,0.0000574396,0.0000577292,0.0001151293,0.0001028125,0.0001021209]
+    !V11:
+    i=1
+
+    allocate(QModel%Diab(i,i)%Qref(QModel%ndim))
+    QModel%Diab(i,i)%Qref(:) = ZERO
+
+    d1(:) = [-0.0001922727,0.0003186424,-0.0001563349,0.0003059985,-0.0009354068,0.0002594575,-0.0001718730] ! gradient
+
+    d2(:,:) = ZERO ! hessian
+    DO k=1,QModel%ndim
+      d2(k,k) = ks(k)
+    END DO
+ 
+    CALL set_dnS(QModel%Diab(i,i)%Ene,d0=E1,d1=d1,d2=d2)
+
+    !V22: 
+    i=2
+    allocate(QModel%Diab(i,i)%Qref(QModel%ndim))
+    QModel%Diab(i,i)%Qref(:) = ZERO
+
+    d1(:) = [-0.0003068858,-0.0003058996,-0.0001800164,0.0000235402,-0.0000709817,-0.0002218948,-0.0009107390] ! gradient
+
+    d2(:,:) = ZERO ! hessian
+    DO k=1,QModel%ndim
+      d2(k,k) = ks(k)
+    END DO
+    CALL set_dnS(QModel%Diab(i,i)%Ene,d0=E2,d1=d1,d2=d2)
+
+    ! V12: 1 * Q(1) (linear coupling)
+    i=2 ; j=1
+    allocate(QModel%Diab(j,i)%Qref(QModel%ndim))
+    QModel%Diab(j,i)%Qref(:) = ZERO
+
+    !d1(:) = ZERO ! gradient
+    !d1(1) = ONE
+    d1(:) = [-0.0001124937,0.0001443638,0.0000963052,0.0000066299,-0.0000932210,0.0001905968,0.0001902977]
+
+
+    CALL set_dnS(QModel%Diab(j,i)%Ene,d0=ZERO,d1=d1)
+
+    ! V21
+    QModel%Diab(i,j)%Ene  = QModel%Diab(j,i)%Ene
+    QModel%Diab(i,j)%Qref = QModel%Diab(j,i)%Qref
+
+    ! metric tensor
+    QModel%d0GGdef      = Identity_Mat(QModel%ndim)
+
+  END SUBROUTINE Internal_QML_7DM23_JGBL2023
   SUBROUTINE Internal_QML_XXX(QModel)
     USE QDUtil_m,         ONLY : Identity_Mat
     USE ADdnSVM_m,        ONLY : dnS_t, set_dnS
