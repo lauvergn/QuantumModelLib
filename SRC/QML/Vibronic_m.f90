@@ -212,6 +212,7 @@ MODULE QML_Vibronic_m
 
   END SUBROUTINE Internal_QML_RJDI2014
   SUBROUTINE Internal_QML_7DM23_JGBL2023(QModel)
+    USE QDUtil_m,         ONLY : Identity_Mat
     USE ADdnSVM_m,        ONLY : dnS_t, set_dnS
     IMPLICIT NONE
 
