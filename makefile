@@ -158,7 +158,7 @@ ifeq ($(FFC),ifort)
       #FFLAGS = -O -parallel -g -traceback
       FFLAGS = -O  -g -traceback -heap-arrays
   else
-      FFLAGS = -O0 -check all -g -traceback
+      FFLAGS = -O0 -check all -g -traceback -heap-arrays
   endif
 
   # integer kind management

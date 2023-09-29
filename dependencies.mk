@@ -15,6 +15,7 @@ qml_h2nsi_m = $(OBJ_DIR)/H2NSi_m.o
 qml_h2o_m = $(OBJ_DIR)/H2O_m.o
 qml_h2sin_m = $(OBJ_DIR)/H2SiN_m.o
 qml_h2_m = $(OBJ_DIR)/H2_m.o
+qml_h3_m = $(OBJ_DIR)/H3-1_m.o
 qml_h3_m = $(OBJ_DIR)/H3_m.o
 qml_hnnhp_m = $(OBJ_DIR)/HNNHp_m.o
 qml_hno3_m = $(OBJ_DIR)/HNO3_m.o
@@ -26,6 +27,7 @@ qml_morse_m = $(OBJ_DIR)/Morse_m.o
 qml_no3_m = $(OBJ_DIR)/NO3_m.o
 qml_onedsoc_1s1t_m = $(OBJ_DIR)/OneDSOC_1S1T_m.o
 qml_onedsoc_2s1t_m = $(OBJ_DIR)/OneDSOC_2S1T_m.o
+qml_oned_photons_m = $(OBJ_DIR)/OneD_Photons_m.o
 qml_ph4_m = $(OBJ_DIR)/PH4_m.o
 qml_psb3_m = $(OBJ_DIR)/PSB3_m.o
 qml_phenol_m = $(OBJ_DIR)/Phenol_m.o
@@ -102,6 +104,7 @@ $(OBJ_DIR)/Model_m.o : \
           $(qml_twod_valahu2022_m) \
           $(qml_vibronic_m) \
           $(qml_uracil_m) \
+          $(qml_oned_photons_m) \
           $(addnsvm_m) \
           $(qmllib_finitediff_m) \
           $(qdutil_test_m)
@@ -172,6 +175,11 @@ $(OBJ_DIR)/H2_m.o : \
           $(qdutil_numparameters_m) \
           $(qml_empty_m) \
           $(addnsvm_m)
+$(OBJ_DIR)/H3-1_m.o : \
+          $(qdutil_numparameters_m) \
+          $(qml_empty_m) \
+          $(qdutil_m) \
+          $(addnsvm_m)
 $(OBJ_DIR)/H3_m.o : \
           $(qdutil_numparameters_m) \
           $(qml_empty_m) \
@@ -226,6 +234,11 @@ $(OBJ_DIR)/OneDSOC_1S1T_m.o : \
           $(qdutil_m) \
           $(addnsvm_m)
 $(OBJ_DIR)/OneDSOC_2S1T_m.o : \
+          $(qdutil_numparameters_m) \
+          $(qml_empty_m) \
+          $(qdutil_m) \
+          $(addnsvm_m)
+$(OBJ_DIR)/OneD_Photons_m.o : \
           $(qdutil_numparameters_m) \
           $(qml_empty_m) \
           $(qdutil_m) \
@@ -298,8 +311,10 @@ $(OBJ_DIR)/TwoD_m.o : \
           $(qdutil_m) \
           $(addnsvm_m)
 $(OBJ_DIR)/Uracil_m.o : \
-          $(qmllib_numparameters_m) \
+          $(qdutil_numparameters_m) \
           $(qml_empty_m) \
+          $(qdutil_m) \
+          $(qmllib_utillib_m) \
           $(addnsvm_m)
 $(OBJ_DIR)/Vibronic_m.o : \
           $(qdutil_numparameters_m) \

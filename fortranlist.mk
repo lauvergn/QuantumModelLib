@@ -17,6 +17,7 @@ H2NSi_m.f90  \
 H2O_m.f90  \
 H2SiN_m.f90  \
 H2_m.f90  \
+H3-1_m.f90  \
 H3_m.f90  \
 HNNHp_m.f90  \
 HNO3_m.f90  \
@@ -28,6 +29,7 @@ Morse_m.f90  \
 NO3_m.f90  \
 OneDSOC_1S1T_m.f90  \
 OneDSOC_2S1T_m.f90  \
+OneD_Photons_m.f90  \
 PH4_m.f90  \
 PSB3_m.f90  \
 Phenol_m.f90  \

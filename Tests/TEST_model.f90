@@ -44,6 +44,7 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
+  !CALL test_OneD_Photons()  ; CALL Finalize_Test(test_var) ; stop
   !CALL test_HNNHp() ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_NO3()  ; CALL Finalize_Test(test_var) ; stop
@@ -87,6 +88,7 @@ PROGRAM TEST_model
   CALL test_TwoD_RJDI2014()
   CALL test_Vibronic()
   CALL test_TwoD_Valahu2022()
+  CALL test_OneD_Photons() 
   CALL test_Retinal_JPCB2000()
   CALL test_NO3()
 
@@ -2698,6 +2700,85 @@ SUBROUTINE test_TwoD_Valahu2022
 
 
 END SUBROUTINE test_TwoD_Valahu2022
+SUBROUTINE test_OneD_Photons
+  USE QDUtil_NumParameters_m
+  USE QDUtil_m,         ONLY : Write_Vec
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' test_OneD_Photons potential'
+  write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
+  write(out_unit,*) '---------------------------------------------'
+  flush(out_unit)
+  CALL Init_Model(QModel,pot_name='OneD_Photons',adiabatic=.FALSE.,Print_init=.TRUE.)
+
+  Q = [THREE,ZERO]
+
+  nderiv=2
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '----- CHECK POT -----------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unit,*) 'Q(:) (bohr):'
+  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv,test_var)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Diabatic Potential and derivatives',nderiv
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+
+  write(out_unit,*) 'Q(:) (bohr):'
+  CALL Write_Vec(Q,out_unit,QModel%ndim)
+  write(out_unit,*) 'Energy (Hartree)'
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  ! For testing the model
+  CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='OneD_Photons', &
+      test_var=test_var,last_test=.TRUE.)
+
+
+      ! from Edouarda:    -0.55055055    0.65065065    0.07056147   -0.00110611   -0.00110611    0.43460551
+  Q = [-0.55055055_Rkind, 0.65065065_Rkind]
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+
+  write(out_unit,*) 'Q(:) (bohr):'
+  CALL Write_Vec(Q,out_unit,QModel%ndim)
+  write(out_unit,*) 'Diabatic Energy (Hartree)'
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  QModel%QM%adiabatic = .TRUE.
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+
+  !        -0.5506        0.6507        0.0706
+  write(out_unit,*) 'Q(:) (bohr):'
+  CALL Write_Vec(Q,out_unit,QModel%ndim)
+  write(out_unit,*) 'adiabatic Energy (Hartree)'
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Q)
+  CALL dealloc_Model(QModel)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '- END CHECK POT -----------------------------'
+  write(out_unit,*) '---------------------------------------------'
+
+END SUBROUTINE test_OneD_Photons
 SUBROUTINE test_HNO3
   USE QDUtil_NumParameters_m
   USE QDUtil_m,         ONLY : Write_Vec
