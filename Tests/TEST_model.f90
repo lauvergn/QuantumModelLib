@@ -2751,7 +2751,7 @@ SUBROUTINE test_OneD_Photons
       test_var=test_var,last_test=.TRUE.)
 
 
-      ! from Edouarda:    -0.55055055    0.65065065    0.07056147   -0.00110611   -0.00110611    0.43460551
+      ! from Eduarda:    -0.55055055    0.65065065    0.07056147   -0.00110611   -0.00110611    0.43460551
   Q = [-0.55055055_Rkind, 0.65065065_Rkind]
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
 
@@ -2772,6 +2772,14 @@ SUBROUTINE test_OneD_Photons
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '------------ 2D-Grid ------------------------'
+
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-ONE,-2._Rkind],Qmax=[Ten,2._Rkind],         &
+  nb_points=101,grid_file='grid_OneD_photons')
+  write(out_unit,*) '---------------------------------------------'
+
   CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
