@@ -44,6 +44,7 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
+  !CALL test_ClH2p_op56() ; CALL Finalize_Test(test_var) ; stop
   !CALL test_OneD_Photons()  ; CALL Finalize_Test(test_var) ; stop
   !CALL test_HNNHp() ; CALL Finalize_Test(test_var) ; stop
 
@@ -2300,6 +2301,7 @@ SUBROUTINE test_ClH2p_op56
   USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
+  USE QML_ClH2p_m,      ONLY : QML_ClH2p_CCSDTF12
   USE Opt_m
   IMPLICIT NONE
 
@@ -2310,6 +2312,7 @@ SUBROUTINE test_ClH2p_op56
   TYPE (dnMat_t)                 :: PotVal_gaussian
   real (kind=Rkind), allocatable :: qtest(:,:),EAbInitio(:)
   TYPE (QML_Opt_t)               :: Opt_p
+  real (kind=Rkind)              :: V
 
 
   nderiv = 2
@@ -2375,13 +2378,28 @@ SUBROUTINE test_ClH2p_op56
   CALL Eval_pot_ON_Grid(QModel,Qmin=[0.8_Rkind,Q(2),-0.5_Rkind], &
                                Qmax=[2.6_Rkind,Q(2), 0.5_Rkind], &
                         nb_points=101,grid_file='grid_ClH2+_op56_Q13.tab')
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '----- CHECK SUBROUTINE ----------------------'
+  write(out_unit,*) '---------------------------------------------'
+  CALL dealloc_dnMat(PotVal)
+  Q = [ 1.3_Rkind,1.2_Rkind, -0.5_Rkind]
+  write(out_unit,*) 'Q:'
+  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=0)
+  !CALL Write_dnMat(PotVal,nio=out_unit)
+  write(out_unit,*) 'pot (QML)',get_d0(PotVal)
+
+  CALL QML_ClH2p_CCSDTF12(V,Q)
+  write(out_unit,*) 'pot (sub)',V
+
   deallocate(q)
   CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
-
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
