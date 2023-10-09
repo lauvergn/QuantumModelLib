@@ -2301,7 +2301,7 @@ SUBROUTINE test_ClH2p_op56
   USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
-  USE QML_ClH2p_m,      ONLY : QML_ClH2p_CCSDTF12
+  USE QML_ClH2p_m,      ONLY : QML_ClH2p_CCSDTF12, QML_ClH2p_Qsym_CCSDTF12
   USE Opt_m
   IMPLICIT NONE
 
@@ -2391,9 +2391,12 @@ SUBROUTINE test_ClH2p_op56
   !CALL Write_dnMat(PotVal,nio=out_unit)
   write(out_unit,*) 'pot (QML)',get_d0(PotVal)
 
-  CALL QML_ClH2p_CCSDTF12(V,Q)
+  CALL QML_ClH2p_Qsym_CCSDTF12(V,Q)
   write(out_unit,*) 'pot (sub)',V
 
+  Q = [1.7_Rkind, 0.7_Rkind, 1.3_Rkind]
+  CALL QML_ClH2p_CCSDTF12(V,Q)
+  write(out_unit,*) 'pot (sub)',V
   deallocate(q)
   CALL dealloc_Model(QModel)
 
