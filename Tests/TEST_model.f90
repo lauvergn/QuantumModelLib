@@ -44,7 +44,8 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
-  !CALL test_ClH2p_op56() ; CALL Finalize_Test(test_var) ; stop
+  !CALL test_ClH2p_op12() ; CALL test_ClH2p_op34() ; CALL test_ClH2p_op56()
+  !CALL test_ClH2p_Botschwina() ; CALL Finalize_Test(test_var) ; stop
   !CALL test_OneD_Photons()  ; CALL Finalize_Test(test_var) ; stop
   !CALL test_HNNHp() ; CALL Finalize_Test(test_var) ; stop
 
@@ -2301,7 +2302,7 @@ SUBROUTINE test_ClH2p_op56
   USE QDUtil_m,         ONLY : Write_Vec
   USE ADdnSVM_m
   USE Model_m
-  USE QML_ClH2p_m,      ONLY : QML_ClH2p_CCSDTF12, QML_ClH2p_Qsym_CCSDTF12
+  USE QML_ClH2p_m,      ONLY : QML_ClH2p_CCSDTF12, QML_ClH2p_Qsym_CCSDTF12, QML_ClH2p_Qsym_CCSDTF12_bis
   USE Opt_m
   IMPLICIT NONE
 

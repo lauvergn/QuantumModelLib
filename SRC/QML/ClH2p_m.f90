@@ -70,7 +70,7 @@ MODULE QML_ClH2p_m
   END TYPE QML_ClH2p_t
 
   PUBLIC :: QML_ClH2p_t,Init_QML_ClH2p
-  PUBLIC :: QML_ClH2p_CCSDTF12, QML_ClH2p_Qsym_CCSDTF12
+  PUBLIC :: QML_ClH2p_CCSDTF12, QML_ClH2p_Qsym_CCSDTF12,QML_ClH2p_Qsym_CCSDTF12_bis
 
   CONTAINS
 !> @brief Subroutine which makes the initialization of the ClH2p parameters.
@@ -908,4 +908,75 @@ MODULE QML_ClH2p_m
 
   END SUBROUTINE QML_ClH2p_Qsym_CCSDTF12
 
+  SUBROUTINE QML_ClH2p_Qsym_CCSDTF12_bis(V,Qsym)
+    USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real32,real64,real128
+    IMPLICIT NONE
+  
+    integer, parameter :: Rk = real64
+    integer, parameter :: ndim = 3
+    real (kind=Rk),    intent(inout) :: V
+    real (kind=Rk),    intent(in)    :: Qsym(ndim)
+
+    real (kind=Rk), save     :: Qref(ndim)
+    real (kind=Rk), save     :: E0
+    real (kind=Rk), save     :: F(81)
+    integer,        save     :: ind(ndim,81)
+    integer,        save     :: max_exp
+
+
+    real (kind=Rk), allocatable :: DQ(:,:)
+    real (kind=Rk)              :: Vtemp
+    integer                     :: i,j,nio
+    character (len=10)          :: stemp
+    logical, save :: begin = .TRUE.
+
+    IF (begin) THEN
+      open(newunit=nio,file='../InternalData/ClH2p/ClH2p_CCSDTF12_cc-pVTZ-cpl2023.txt')
+      !write(out_unit,*) ' sub QML_ClH2p_Qsym_CCSDTF12_bis' ; flush(6)
+      read(nio,*)
+      read(nio,*)
+      read(nio,*)
+      read(nio,*)
+      read(nio,*)
+      read(nio,*)
+      read(nio,*)
+      read(nio,*)
+      read(nio,*)
+      read(nio,*) stemp,E0
+      read(nio,*) stemp,Qref
+      read(nio,*)
+      DO i=1,size(F)
+        read(nio,*) ind(:,i),F(i)
+      END DO
+      max_exp = maxval(ind)
+      !write(out_unit,*) ' E0',E0
+      !write(out_unit,*) ' Qref',Qref
+      !write(out_unit,*) ' max_exp',max_exp
+      begin = .FALSE.
+    END IF
+
+    allocate(DQ(ndim,0:max_exp))
+    DQ(:,0) = 1._Rk
+    DQ(:,1) = Qsym(:) - Qref(:)
+    DO j=2,ubound(DQ,dim=2)
+      DQ(:,j) = DQ(:,j-1) * DQ(:,1)
+    END DO
+  !write(out_unit,*) ' DQ done' ; flush(6)
+
+
+  V = E0
+  !write(out_unit,*) 'V0',V
+
+  DO j=1,size(ind,dim=2)
+    !write(out_unit,*) j,':',ind1(:,j),F1(j) 
+    Vtemp = F(j) 
+    DO i=1,ndim
+      Vtemp = Vtemp * DQ(i,ind(i,j))
+    END DO
+    V = V + Vtemp
+  END DO
+
+  !write(out_unit,*) ' end QML_ClH2p_Qsym_CCSDTF12_bis' ; flush(6)
+
+  END SUBROUTINE QML_ClH2p_Qsym_CCSDTF12_bis
 END MODULE QML_ClH2p_m
