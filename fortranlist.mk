@@ -17,7 +17,6 @@ H2NSi_m.f90  \
 H2O_m.f90  \
 H2SiN_m.f90  \
 H2_m.f90  \
-H3-1_m.f90  \
 H3_m.f90  \
 HNNHp_m.f90  \
 HNO3_m.f90  \

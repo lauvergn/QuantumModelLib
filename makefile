@@ -183,7 +183,7 @@ ifeq ($(FFC),ifort)
   FLIB    = $(EXTLib)
   ifeq ($(LLAPACK),1)
     #FLIB += -mkl -lpthread
-    FLIB += -qmkl -lpthread
+    IntLIB = -qmkl -lpthread
     #IntLIB =  ${MKLROOT}/lib/libmkl_blas95_ilp64.a ${MKLROOT}/lib/libmkl_lapack95_ilp64.a ${MKLROOT}/lib/libmkl_intel_ilp64.a \
     #         ${MKLROOT}/lib/libmkl_intel_thread.a ${MKLROOT}/lib/libmkl_core.a -liomp5 -lpthread -lm -ldl
   else

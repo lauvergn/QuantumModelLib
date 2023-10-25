@@ -15,7 +15,6 @@ qml_h2nsi_m = $(OBJ_DIR)/H2NSi_m.o
 qml_h2o_m = $(OBJ_DIR)/H2O_m.o
 qml_h2sin_m = $(OBJ_DIR)/H2SiN_m.o
 qml_h2_m = $(OBJ_DIR)/H2_m.o
-qml_h3_m = $(OBJ_DIR)/H3-1_m.o
 qml_h3_m = $(OBJ_DIR)/H3_m.o
 qml_hnnhp_m = $(OBJ_DIR)/HNNHp_m.o
 qml_hno3_m = $(OBJ_DIR)/HNO3_m.o
@@ -174,11 +173,6 @@ $(OBJ_DIR)/H2SiN_m.o : \
 $(OBJ_DIR)/H2_m.o : \
           $(qdutil_numparameters_m) \
           $(qml_empty_m) \
-          $(addnsvm_m)
-$(OBJ_DIR)/H3-1_m.o : \
-          $(qdutil_numparameters_m) \
-          $(qml_empty_m) \
-          $(qdutil_m) \
           $(addnsvm_m)
 $(OBJ_DIR)/H3_m.o : \
           $(qdutil_numparameters_m) \
