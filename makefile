@@ -38,6 +38,11 @@ ifeq ($(LAPACK),)
 else
   LLAPACK      := $(LAPACK)
 endif
+ifeq ($(INT),)
+  IINT      := 4
+else
+  IINT      := $(INT)
+endif
 #=================================================================================
 #
 # Operating system, OS? automatic using uname:
@@ -48,7 +53,7 @@ QML_ver  := $(shell awk '/QML/ {print $$3}' version-QML)
 QML_path := $(shell pwd)
 
 # Extension for the object directory and the library
-ext_obj=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
+ext_obj=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(IINT)
 
 # library name
 QMLIBA=libQMLib$(ext_obj).a
@@ -109,7 +114,7 @@ ifeq ($(FFC),gfortran)
   endif
 
   # integer kind management
-  ifeq ($(INT),8)
+  ifeq ($(IINT),8)
     FFLAGS += -fdefault-integer-8
     FFLAGS0 += -fdefault-integer-8
   endif
@@ -162,7 +167,7 @@ ifeq ($(FFC),ifort)
   endif
 
   # integer kind management
-  ifeq ($(INT),8)
+  ifeq ($(IINT),8)
     FFLAGS += -i8
   endif
 
@@ -215,7 +220,7 @@ ifeq ($(FFC),nagfor)
   endif
 
   # integer kind management
-  ifeq ($(INT),8)
+  ifeq ($(IINT),8)
     FFLAGS += -i8
   endif
 
@@ -260,7 +265,7 @@ $(info ***********COMPILER:     $(FFC))
 $(info ***********COMPILER_VER: $(FC_VER))
 $(info ***********OPTIMIZATION: $(OOPT))
 $(info ***********OpenMP:       $(OOMP))
-$(info ***********INT:          $(INT))
+$(info ***********INT:          $(IINT))
 $(info ***********LAPACK:       $(LLAPACK))
 $(info ***********FFLAGS:       $(FFLAGS))
 $(info ***********FLIB:         $(FLIB))
@@ -293,7 +298,7 @@ OBJ=$(addprefix $(OBJ_DIR)/, $(OBJ0))
 .PHONY: ut UT
 UT ut: $(TESTS).x
 	@echo "model (QML) compilation: OK"
-	cd Tests ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(INT) 1
+	cd Tests ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(IINT) 1
 #	cd Tests ; ../$(TESTS).x  < input.dat > res 2>error.log
 
 #	./$(TESTS).x |	grep "Number of error(s)"
@@ -377,14 +382,14 @@ $(QDLIBA):
 	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
 	@test -d $(QD_DIR) || (cd $(ExtLibDIR) ; ./get_QDUtilLib.sh $(EXTLIB_TYPE))
 	@test -d $(QD_DIR) || (echo $(QD_DIR) "does not exist" ; exit 1)
-	cd $(QD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(INT) ExtLibDIR=$(ExtLibDIR)
+	cd $(QD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(IINT) ExtLibDIR=$(ExtLibDIR)
 	@echo "  done " $(QDLIBA) " in "$(BaseName)
 #
 $(ADLIBA):
 	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
 	@test -d $(AD_DIR) || (cd $(ExtLibDIR) ; ./get_AD_dnSVM.sh  $(EXTLIB_TYPE))
 	@test -d $(AD_DIR) || (echo $(AD_DIR) "does not exist" ; exit 1)
-	cd $(AD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(INT) ExtLibDIR=$(ExtLibDIR)
+	cd $(AD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(IINT) ExtLibDIR=$(ExtLibDIR)
 	@echo "  done " $(AD_DIR) " in "$(BaseName)
 #
 #===============================================
