@@ -306,18 +306,18 @@ all: $(QMLIBA) $(MAINSx) $(TESTS).x
 #===============================================
 #============= Main executable and tests  ======
 #=============================================== libQMLibFull$(ext_obj).a
-TEST_VibAdia.x: $(OBJ_DIR)/TEST_VibAdia.o $(QMLIBA) $(EXTLib)
+TEST_VibAdia.x: $(OBJ_DIR)/TEST_VibAdia.o $(QMLIBA) | $(EXTLib)
 	$(FFC) $(FFLAGS) -o TEST_VibAdia.x  $(OBJ_DIR)/TEST_VibAdia.o libQMLibFull$(ext_obj).a $(IntLIB)
-TEST_OOP.x: $(OBJ_DIR)/TEST_OOP.o $(QMLIBA) $(EXTLib)
+TEST_OOP.x: $(OBJ_DIR)/TEST_OOP.o $(QMLIBA) | $(EXTLib)
 	$(FFC) $(FFLAGS) -o TEST_OOP.x  $(OBJ_DIR)/TEST_OOP.o libQMLibFull$(ext_obj).a $(IntLIB)
-TEST_grid.x: $(OBJ_DIR)/TEST_grid.o $(QMLIBA) $(EXTLib)
+TEST_grid.x: $(OBJ_DIR)/TEST_grid.o $(QMLIBA) | $(EXTLib)
 	$(FFC) $(FFLAGS) -o TEST_grid.x  $(OBJ_DIR)/TEST_grid.o libQMLibFull$(ext_obj).a $(IntLIB)
-TEST_OMPloop.x: $(OBJ_DIR)/TEST_OMPloop.o $(QMLIBA) $(EXTLib)
+TEST_OMPloop.x: $(OBJ_DIR)/TEST_OMPloop.o $(QMLIBA) | $(EXTLib)
 	$(FFC) $(FFLAGS) -o TEST_OMPloop.x  $(OBJ_DIR)/TEST_OMPloop.o libQMLibFull$(ext_obj).a $(IntLIB)
-TEST_driver.x: $(OBJ_DIR)/TEST_driver.o $(QMLIBA) $(EXTLib)
+TEST_driver.x: $(OBJ_DIR)/TEST_driver.o $(QMLIBA) | $(EXTLib)
 	$(FFC) $(FFLAGS) -o TEST_driver.x  $(OBJ_DIR)/TEST_driver.o libQMLibFull$(ext_obj).a $(IntLIB)
 #
-$(TESTS).x: $(OBJ_DIR)/$(TESTS).o $(QMLIBA) $(EXTLib)
+$(TESTS).x: $(OBJ_DIR)/$(TESTS).o $(QMLIBA) | $(EXTLib)
 	$(FFC) $(FFLAGS) -o $(TESTS).x  $(OBJ_DIR)/$(TESTS).o libQMLibFull$(ext_obj).a $(IntLIB)
 #===============================================
 #============= Library: libQD.a  ===============
@@ -335,7 +335,7 @@ $(QMLIBA): $(OBJ)
 #===============================================
 #============= compilation =====================
 #===============================================
-$(OBJ_DIR)/%.o: %.f90 $(EXTLib)
+$(OBJ_DIR)/%.o: %.f90 | $(EXTLib)
 	@echo "  compile: " $<
 	$(FFC) $(FFLAGS) -o $@ -c $<
 #===============================================
@@ -396,11 +396,11 @@ dependencies.mk fortranlist.mk dep:
 ##################################################################################
 ### dependencies
 #
-$(OBJ_DIR)/TEST_model.o:    $(QMLIBA) $(EXTLib)
-$(OBJ_DIR)/TEST_driver.o:   $(QMLIBA) $(EXTLib)
-$(OBJ_DIR)/TEST_VibAdia.o:  $(QMLIBA) $(EXTLib)
-$(OBJ_DIR)/TEST_grid.o:     $(QMLIBA) $(EXTLib)
-$(OBJ_DIR)/TEST_OMPloop.o:  $(QMLIBA) $(EXTLib)
+$(OBJ_DIR)/TEST_model.o:    $(QMLIBA) | $(EXTLib)
+$(OBJ_DIR)/TEST_driver.o:   $(QMLIBA) | $(EXTLib)
+$(OBJ_DIR)/TEST_VibAdia.o:  $(QMLIBA) | $(EXTLib)
+$(OBJ_DIR)/TEST_grid.o:     $(QMLIBA) | $(EXTLib)
+$(OBJ_DIR)/TEST_OMPloop.o:  $(QMLIBA) | $(EXTLib)
 
 include ./dependencies.mk
 #
