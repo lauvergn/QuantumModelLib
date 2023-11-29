@@ -27,6 +27,7 @@ qml_no3_m = $(OBJ_DIR)/NO3_m.o
 qml_onedsoc_1s1t_m = $(OBJ_DIR)/OneDSOC_1S1T_m.o
 qml_onedsoc_2s1t_m = $(OBJ_DIR)/OneDSOC_2S1T_m.o
 qml_oned_photons_m = $(OBJ_DIR)/OneD_Photons_m.o
+qml_ph4jo_m = $(OBJ_DIR)/PH4Jo_m.o
 qml_ph4_m = $(OBJ_DIR)/PH4_m.o
 qml_psb3_m = $(OBJ_DIR)/PSB3_m.o
 qml_phenol_m = $(OBJ_DIR)/Phenol_m.o
@@ -87,6 +88,7 @@ $(OBJ_DIR)/Model_m.o : \
           $(qml_hno3_m) \
           $(qml_no3_m) \
           $(qml_ch5_m) \
+          $(qml_ph4jo_m) \
           $(qml_ph4_m) \
           $(qml_hoo_dmbe_m) \
           $(qml_h3_m) \
@@ -236,6 +238,12 @@ $(OBJ_DIR)/OneD_Photons_m.o : \
           $(qdutil_numparameters_m) \
           $(qml_empty_m) \
           $(qdutil_m) \
+          $(addnsvm_m)
+$(OBJ_DIR)/PH4Jo_m.o : \
+          $(qdutil_numparameters_m) \
+          $(qml_empty_m) \
+          $(qdutil_m) \
+          $(qmllib_utillib_m) \
           $(addnsvm_m)
 $(OBJ_DIR)/PH4_m.o : \
           $(qdutil_numparameters_m) \
