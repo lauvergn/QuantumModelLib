@@ -301,6 +301,7 @@ CONTAINS
   USE QML_HNO3_m
   USE QML_NO3_m
   USE QML_CH5_m
+  USE QML_PH4Jo_m
   USE QML_PH4_m
 
   USE QML_HOO_DMBE_m
@@ -829,7 +830,7 @@ CONTAINS
       allocate(QML_CH5_t :: QModel%QM)
       QModel%QM = Init_QML_CH5(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
-    CASE ('ph4')
+    CASE ('ph4old')
       !! === README ==
       !! H + PH3 -> H-H + PH2 potential
       !!    Quadratic potential along the reaction path'
@@ -846,6 +847,9 @@ CONTAINS
       allocate(QML_PH4_t :: QModel%QM)
       QModel%QM = Init_QML_PH4(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
+    CASE ('ph4','ph4jo')
+      allocate(QML_PH4jo_t :: QModel%QM)
+      QModel%QM = Init_QML_PH4Jo(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
     CASE ('hnnhp')
       allocate(QML_HNNHp_t :: QModel%QM)
       QModel%QM = Init_QML_HNNHp(QModel_in,read_param=read_nml,nio_param_file=nio_loc)

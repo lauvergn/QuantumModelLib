@@ -29,6 +29,7 @@ NO3_m.f90  \
 OneDSOC_1S1T_m.f90  \
 OneDSOC_2S1T_m.f90  \
 OneD_Photons_m.f90  \
+PH4Jo_m.f90  \
 PH4_m.f90  \
 PSB3_m.f90  \
 Phenol_m.f90  \
