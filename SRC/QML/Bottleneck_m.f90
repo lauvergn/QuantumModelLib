@@ -65,10 +65,14 @@ MODULE QML_Bottleneck_m
     real(kind=Rkind) :: sig=0.15_Rkind
     real(kind=Rkind) :: lambda=0.25_Rkind !bohr^-2
     real(kind=Rkind) :: mu = 1837.152_Rkind ! au 
+    real(kind=Rkind) :: qref = ZERO 
 
-    ! parameter of the reference, option=2
-    real(kind=Rkind) :: b  = 0.1_Rkind ! instead of b
+    ! parameter of the reference, option=2 and 3
+    real(kind=Rkind) :: b  = 0.1_Rkind
     real(kind=Rkind) :: w0 = -ONE ! so that k0=mu*w0^2
+
+        ! parameter of the reference, option=3
+    real(kind=Rkind) :: alpha  = 0._Rkind ! To have unsymetric potential
 
    CONTAINS
     PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Bottleneck
@@ -119,7 +123,7 @@ MODULE QML_Bottleneck_m
     IF (QModel%ndim == 1) QModel%pot_name = 'Eckart'
 
 
-    IF (QModel%option < 1 .OR. QModel%option > 2) QModel%option = 2
+    IF (QModel%option < 1 .OR. QModel%option > 3) QModel%option = 2
 
     SELECT CASE (QModel%option)
     CASE (1)
@@ -137,17 +141,32 @@ MODULE QML_Bottleneck_m
       QModel%w0     = -ONE
       QModel%mu     = 1060._Rkind ! au 
 
-      QModel%k0     = QModel%mu * QModel%w0**2
 
       IF (read_param) CALL Read_QML_Bottleneck(QModel,nio_param_file)
 
       IF (QModel%w0 < ZERO) QModel%w0 = QModel%V0
 
+      QModel%k0     = QModel%mu * QModel%w0**2
+
+    CASE (3) ! model H+PH3->H2+PH2
+      QModel%V0     = 0.00551239856_Rkind
+      QModel%a      = 1.5_Rkind ! bohr^-1
+      QModel%alpha  = 7.3_Rkind
+
+      QModel%b      = 0.1_Rkind
+      QModel%w0     = -ONE
+      QModel%mu     = 1783.31376308_Rkind ! au 
+
+      IF (read_param) CALL Read_QML_Bottleneck(QModel,nio_param_file)
+
+      IF (QModel%w0 < ZERO) QModel%w0 = QModel%V0
+
+      QModel%k0     = QModel%mu * QModel%w0**2
     CASE Default
-      write(out_unit,*) ' ERROR in EvalPot_QML_Bottleneck '
+      write(out_unit,*) ' ERROR in Init_QML_Bottleneck '
       write(out_unit,*) ' This option is not possible. option: ',QModel%option
-      write(out_unit,*) ' Its value MUST be 1 or 2'
-      STOP 'ERROR in EvalPot_QML_Bottleneck: wrong option'
+      write(out_unit,*) ' Its value MUST be 1, 2 or 3'
+      STOP 'ERROR in Init_QML_Bottleneck: wrong option'
     END SELECT
 
 
@@ -184,19 +203,21 @@ MODULE QML_Bottleneck_m
     TYPE (QML_Bottleneck_t), intent(inout)   :: QModel
     integer,                 intent(in)      :: nio
 
-    real (kind=Rkind) :: sig,b,V0,a,mu,w0
+    real (kind=Rkind) :: sig,b,V0,a,mu,w0,qref,alpha
     integer           :: err_read
 
 
-    namelist /Bottleneck/ sig,b,V0,a,w0,mu
+    namelist /Bottleneck/ sig,b,V0,a,w0,mu,qref,alpha
 
-    sig = QModel%sig
-    b   = QModel%b
-    V0  = QModel%V0
-    a   = QModel%a
-    mu  = QModel%mu
+    sig   = QModel%sig
+    b     = QModel%b
+    alpha = QModel%alpha
+    V0    = QModel%V0
+    a     = QModel%a
+    mu    = QModel%mu
+    qref  = QModel%qref
 
-    w0  = -ONE
+    w0    = -ONE
 
     read(nio,nml=Bottleneck,IOSTAT=err_read)
     IF (err_read < 0) THEN
@@ -215,12 +236,14 @@ MODULE QML_Bottleneck_m
     END IF
 
     !write(out_unit,nml=Bottleneck)
-    QModel%sig = sig
-    QModel%b   = b
-    QModel%V0  = V0
-    QModel%a   = a
-    QModel%mu  = mu
-    QModel%w0  = w0
+    QModel%sig   = sig
+    QModel%b     = b
+    QModel%alpha = alpha
+    QModel%V0    = V0
+    QModel%a     = a
+    QModel%mu    = mu
+    QModel%w0    = w0
+    QModel%qref  = qref
 
   END SUBROUTINE Read_QML_Bottleneck
   !> @brief Subroutine wich prints the QML_Bottleneck parameters.
@@ -240,6 +263,8 @@ MODULE QML_Bottleneck_m
     write(nio,*) '                                       '
     write(nio,*) '  1st coordinates: s                   '
     write(nio,*) '             an Eckart Barrier         '
+    write(nio,*) '        or   an ansymetric Barrier     '
+
     write(nio,*) '                                       '
     write(nio,*) '  along the other coordinates: q2...qn '
     write(nio,*) '     a quadratic potential             '
@@ -253,6 +278,8 @@ MODULE QML_Bottleneck_m
     write(nio,*) '   Smolyak representations with absorbing boundary conditions ...'
     write(nio,*) '       for reaction path Hamiltonian model of reactive scattering.'
     write(nio,*) '   DOI: 10.1016/j.cplett.2021.139241'
+    write(nio,*) ' option 3:                             '
+    write(nio,*) ' ref: PhD of L. Dupuy'
     write(nio,*) '---------------------------------------'
 
     write(nio,*) '  PubliUnit:      ',QModel%PubliUnit
@@ -283,6 +310,11 @@ MODULE QML_Bottleneck_m
       write(nio,*) '  with V0 =  0.425 eV (converted in au)'
       write(nio,*) '  with a =  1. bohr^-1                 '
       write(nio,*) '                                       '
+      write(nio,*) '  a  =',QModel%a
+      write(nio,*) '  V0 =',QModel%V0
+      write(nio,*) '                                       '
+
+      write(nio,*) '                                       '
       write(nio,*) ' V2(q,s) = sum_i 1/2 k(s) q^2          '
       write(nio,*) '   k(s) = k0(1 + b sech(a s)^2)        '
       write(nio,*) '  with k0 =  mu*w0^2                   '
@@ -292,12 +324,39 @@ MODULE QML_Bottleneck_m
       write(nio,*) 'The constant metric tensor is obtained '
       write(nio,*) '   mu = 1060. au                       '
       write(nio,*) '                                       '
+      write(nio,*) '  b  =',QModel%b
+      write(nio,*) '  k0 =',QModel%k0
+      write(nio,*) '                                       '
+    CASE (3)
+      write(nio,*) '                                       '
+      write(nio,*) ' V1(s) = V0(1-(1-Exp(a.s))/(1+Exp(c.a.x))) '
+      write(nio,*) '  with V0 =  0.425 eV (converted in au)'
+      write(nio,*) '  with a =  1. bohr^-1                 '
+      write(nio,*) '                                       '
+      write(nio,*) '  a     =',QModel%a
+      write(nio,*) '  alpha =',QModel%alpha
+      write(nio,*) '  V0    =',QModel%V0
+      write(nio,*) '                                       '
+
+      write(nio,*) '                                       '
+      write(nio,*) ' V2(q,s) = sum_i 1/2 k(s) q^2          '
+      write(nio,*) '   k(s) = k0(1 + b sech(a s)^2)        '
+      write(nio,*) '  with k0 =  mu*w0^2                   '
+      write(nio,*) '  with b=0.1                           '
+      write(nio,*) '  with w0 =  0.425 eV (converted in au)'
+      write(nio,*) '  with lambda=0.25 bohr^-2             '
+      write(nio,*) 'The constant metric tensor is obtained '
+      write(nio,*) '   mu = 1060. au                       '
+      write(nio,*) '                                       '
+      write(nio,*) '  b  =',QModel%b
+      write(nio,*) '  k0 =',QModel%k0
+      write(nio,*) '                                       '
     CASE Default
         write(out_unit,*) ' ERROR in write_QModel '
         write(out_unit,*) ' This option is not possible. option: ',QModel%option
-        write(out_unit,*) ' Its value MUST be 1 or 2'
-        STOP
-    END SELECT
+        write(out_unit,*) ' Its value MUST be 1, 2 or 3'
+        STOP 'ERROR in Write_QML_Bottleneck: wrong option'
+      END SELECT
     write(nio,*) '---------------------------------------'
     write(nio,*)
     write(nio,*) 'end Bottleneck current parameters'
@@ -311,7 +370,8 @@ MODULE QML_Bottleneck_m
     TYPE (QML_Bottleneck_t),     intent(in)    :: QModel
     integer,                     intent(in)    :: option
 
-    Q0(:) = ZERO
+    Q0(:) = QModel%qref
+    Q0(1) = ZERO
 
   END SUBROUTINE get_Q0_QML_Bottleneck
 !> @brief Subroutine wich calculates the Bottleneck potential (unpublished model) with derivatives up to the 2d order is required.
@@ -335,19 +395,48 @@ MODULE QML_Bottleneck_m
     SELECT CASE (QModel%option)
     CASE (1)
       k = QModel%k0*(ONE - QModel%sig * exp(-QModel%lambda * dnQ(1)**2))
+
+      Mat_OF_PotDia(1,1) = QML_Eckart(dnQ(1),QModel%V0,QModel%a) + &
+        HALF*k * sum((dnQ(2:QModel%ndim)-QModel%qref)**2)
     CASE (2)
       k = QModel%k0*(ONE + QModel%b / cosh(QModel%a * dnQ(1))**2 )
+
+      Mat_OF_PotDia(1,1) = QML_Eckart(dnQ(1),QModel%V0,QModel%a) + &
+        HALF*k * sum((dnQ(2:QModel%ndim)-QModel%qref)**2)
+    CASE (3)
+      k = QModel%k0*(ONE + QModel%b / cosh(QModel%a * dnQ(1))**2 )
+
+      Mat_OF_PotDia(1,1) = QML_AsymEckart(dnQ(1),QModel%V0,QModel%a,QModel%alpha) + &
+        HALF*k * sum((dnQ(2:QModel%ndim)-QModel%qref)**2)
     CASE Default
       write(out_unit,*) ' ERROR in EvalPot_QML_Bottleneck '
       write(out_unit,*) ' This option is not possible. option: ',QModel%option
-      write(out_unit,*) ' Its value MUST be 1 or 2'
+      write(out_unit,*) ' Its value MUST be 1, 2 or 3'
       STOP 'ERROR in EvalPot_QML_Bottleneck: wrong option'
     END SELECT
 
-    Mat_OF_PotDia(1,1) = QModel%V0 / cosh(QModel%a * dnQ(1))**2 + &
-        HALF*k * sum(dnQ(2:QModel%ndim)**2)
-
   END SUBROUTINE EvalPot_QML_Bottleneck
 
+  FUNCTION QML_Eckart(x,V0,a) RESULT (V)
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
+    TYPE (dnS_t)                          :: V
+    TYPE (dnS_t),              intent(in) :: x
+    real (kind=Rkind),         intent(in) :: V0,a
+
+    V = V0 / cosh(a * x)**2
+
+  END FUNCTION QML_Eckart
+  FUNCTION QML_AsymEckart(x,V0,a,alpha) RESULT (V)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    TYPE (dnS_t)                          :: V
+    TYPE (dnS_t),              intent(in) :: x
+    real (kind=Rkind),         intent(in) :: V0,a,alpha
+
+    V = V0 * ( (1-alpha)/(1+exp(-TWO*a*x))+ (HALF*(1+sqrt(alpha))/cosh(a * x))**2)
+
+  END FUNCTION QML_AsymEckart
 END MODULE QML_Bottleneck_m
