@@ -1414,6 +1414,7 @@ CONTAINS
     IF (present(nderiv)) write(out_unit,*) '   nderiv',nderiv
     flush(out_unit)
   END IF
+  !write(out_unit,*) 'in Eval_Pot Q ',Q
 
   CALL check_alloc_QM(QModel,name_sub)
   PF = QModel%QM%Phase_Following
@@ -1545,6 +1546,7 @@ CONTAINS
     write(out_unit,*) ' END ',name_sub
     flush(out_unit)
   END IF
+  !CALL Write_dnMat(PotVal,nio=out_unit,info='in Eval_Pot: PotVal')
 
   END SUBROUTINE Eval_Pot
 
