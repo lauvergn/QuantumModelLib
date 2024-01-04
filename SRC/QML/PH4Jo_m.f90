@@ -222,17 +222,17 @@ MODULE QML_PH4Jo_m
     SELECT CASE(QModel%option)
     CASE (6)
         write(nio,*) '-------------------- 9D model -------------------------------'
-        write(nio,*) '-------------------- V=V0+grad(i)*dqi+Hess(i,i)*dqi*dqi -----'
+        write(nio,*) '-------------------- V=V0+grad(i)*dqi+1/2Hess(i,i)*dqi*dqi --'
     CASE (7)
         write(nio,*) '-------------------- 1D model: s ----------------------------'
         write(nio,*) '-------------------- V=V0 -----------------------------------'
     CASE (8)
         write(nio,*) '-------------------- 2D model: s,rho ------------------------'
-        write(nio,*) '------------- V=V0+grad(rho)*drho+Hess(rho,rho)*drho**2 -----'
+        write(nio,*) '------------- V=V0+grad(rho)*drho+1/2Hess(rho,rho)*drho**2 --'
     CASE (18)
         write(nio,*) '-------------------- 2D model: s,rho ------------------------'
-        write(nio,*) '------------- V=V0+grad(rho)*drho+Hess(rho,rho)*drho**2 -----'
-      write(nio,*) '------------- with new coordinates (add a transfo) ----------'
+        write(nio,*) '------------- V=V0+grad(rho)*drho+1/2Hess(rho,rho)*drho**2 --'
+        write(nio,*) '------------- with new coordinates (add a transfo) ----------'
       sO   = ZERO
       rhoO = 0.89_Rkind
       CALL srho_old_TO_srho_new(sO,rhoO,sN,rhoN)
@@ -478,7 +478,7 @@ MODULE QML_PH4Jo_m
     USE ADdnSVM_m
     IMPLICIT NONE
 
-    CLASS(QML_PH4Jo_t),     intent(in)    :: QModel
+    CLASS(QML_PH4Jo_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Func(:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv

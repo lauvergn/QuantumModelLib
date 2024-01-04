@@ -45,25 +45,6 @@ PROGRAM TEST_model
 
   !CALL test_PH4Jo ; stop
   CALL Initialize_Test(test_var,test_name='QModel')
-  !CALL test_ClH2p_op12() ; CALL test_ClH2p_op34() ; CALL test_ClH2p_op56()
-  !CALL test_ClH2p_Botschwina() ; CALL Finalize_Test(test_var) ; stop
-  !CALL test_OneD_Photons()  ; CALL Finalize_Test(test_var) ; stop
-  !CALL test_HNNHp() ; CALL Finalize_Test(test_var) ; stop
-
-  !CALL test_NO3()  ; CALL Finalize_Test(test_var) ; stop
-  !CALL test_H2()  ; CALL Finalize_Test(test_var) ; stop
-
-  !CALL test_TwoD_RJDI2014()
-  !CALL test_Vibronic() ; stop
-
-  !CALL test_Test() ; stop
-
-
-   !CALL test_H3() ; stop
-   !CALL test_IRC_H3_AbInitio() ; stop
-
-
-
 
   ! One electronic surface
   CALL test_LinearHBond()
@@ -2888,7 +2869,7 @@ SUBROUTINE test_PH4Jo
   IMPLICIT NONE
   TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: Q(:)
-  integer                        :: ndim,nsurf,nderiv,i,i1,option
+  integer                        :: ndim,nsurf,nderiv,i,i1,option,nio
   TYPE (dnMat_t)                 :: PotVal
   TYPE (dnS_t),      allocatable :: Func(:)
   TYPE (QML_Opt_t)               :: Opt_p
@@ -2925,10 +2906,10 @@ SUBROUTINE test_PH4Jo
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '------------ 9D-PH4: H+PH3 -> H2+PH2 --------'
+  write(out_unit,*) '------------ 2D-PH4: H+PH3 -> H2+PH2 --------'
   write(out_unit,*) '---------------------------------------------'
 
-  CALL Init_Model(QModel,pot_name='PH4',option=18,Print_init=.FALSE.)
+  CALL Init_Model(QModel,pot_name='PH4',option=8,Print_init=.FALSE.)
 
   allocate(Q(QModel%ndim))
   write(out_unit,*) '---------------------------------------------'
@@ -2951,52 +2932,31 @@ SUBROUTINE test_PH4Jo
 
   CALL Init_QML_Opt(Opt_p,QModel,read_param=.FALSE.,icv=4,list_act=[1,2])
   Opt_p%nb_neg = 1
-  CALL QML_Opt(Q,QModel,Opt_p,Q0=[1.55_Rkind,2.16_Rkind])
+  CALL QML_Opt(Q,QModel,Opt_p,Q0=[1._Rkind,0._Rkind])
   
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=2)
   CALL Write_dnMat(PotVal,nio=out_unit)
-  STOP
-
 
   write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---- 2D-Grid --------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Functions'
-  write(out_unit,*) 'Q:'
-  CALL Write_Vec(Q,out_unit,QModel%ndim)
+  CALL Eval_pot_ON_Grid(QModel,nb_points=100, &
+                        Qmin=[0.4_Rkind,-20._Rkind],Qmax=[1.7_Rkind,+20._Rkind],  &
+                        nderiv=0,grid_file='grid_PH4_2D')
 
-  DO i=0,200
-    Q(1)= -FIVE + real(i,kind=Rkind)*TEN/real(200,kind=Rkind)
-    CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-    write(out_unit,*) Q(1:1),get_d0(Func)
-    flush(6)
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---- 1D-functions ---------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  allocate(Func(QModel%QM%nb_Func))
+  open(newunit=nio,file='grid_PH4_Func')
+  DO i=-200,200
+    Q = [i*0.1_Rkind]
+    CALL Eval_Func(QModel,Q,Func,nderiv=0)
+    write(nio,*) 'func',Q,get_d0(Func([1,2,10,18]))
   END DO
-
-  Q(1)= 0.5_Rkind
-  CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-  write(out_unit,*) Q(1),'Energy',get_d0(Func(1))
-  write(out_unit,*) Q(1),'Qopt',get_d0(Func(2:9))
-  write(out_unit,*) Q(1),'Grad',get_d0(Func(10:17))
-  write(out_unit,*) Q(1),'hessian'
-  DO i=1,64
-    write(out_unit,*) '                       ',get_d0(Func(17+i)),',     &'
-  END DO
+  close(nio)
 
   deallocate(Q)
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential in the asymptotic region'
-
-  allocate(Q(QModel%ndim))
-  Q(1)= 10._Rkind
-  CALL Eval_Func(QModel,Q(1:1),Func,nderiv=0)
-  Q(2:9) = get_d0(Func(2:9))
-
-  write(out_unit,*) 'Q:'
-  CALL Write_Vec(Q,out_unit,QModel%ndim)
-  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMat(PotVal,nio=out_unit)
-
   CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'
