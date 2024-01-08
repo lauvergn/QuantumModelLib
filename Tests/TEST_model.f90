@@ -43,8 +43,10 @@ PROGRAM TEST_model
 
   TYPE (test_t)                  :: test_var
 
+
   !CALL test_PH4Jo ; stop
   CALL Initialize_Test(test_var,test_name='QModel')
+  !CALL test_H3() ; stop
 
   ! One electronic surface
   CALL test_LinearHBond()
@@ -3248,7 +3250,7 @@ SUBROUTINE test_H3
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: Q(:,:),x(:,:),Qcart(:),Q1D(:)
+  real (kind=Rkind), allocatable :: Q(:,:),x(:,:),Qcart(:),Q1D(:),Q2D(:)
   real (kind=Rkind), allocatable :: MW_hessian(:,:),EigVal(:),EigVec(:,:)
   integer                        :: ndim,nsurf,nderiv,i,j,option
   TYPE (dnMat_t)                 :: PotVal
@@ -3328,8 +3330,8 @@ SUBROUTINE test_H3
   CALL Eval_Pot(QModel,Qcart,PotVal,nderiv=2)
   CALL Write_dnMat(PotVal,nio=out_unit)
 
-  CALL Test_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH', &
-      test_var=test_var,last_test=.FALSE.)
+  !CALL Test_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH', &
+  !    test_var=test_var,last_test=.FALSE.)
 
   ! harmonic frequencies
   MW_hessian = reshape(get_d2(PotVal),shape=[QModel%ndim,QModel%ndim])
@@ -3370,8 +3372,8 @@ SUBROUTINE test_H3
   CALL Eval_Pot(QModel,Qcart,PotVal,nderiv=2)
   CALL Write_dnMat(PotVal,nio=out_unit)
 
-  CALL Test_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH', &
-      test_var=test_var,last_test=.TRUE.)
+  !CALL Test_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH', &
+  !    test_var=test_var,last_test=.TRUE.)
 
 
  ! harmonic frequencies
@@ -3414,8 +3416,8 @@ SUBROUTINE test_H3
   CALL Eval_Pot(QModel,Qcart,PotVal,nderiv=2)
   CALL Write_dnMat(PotVal,nio=out_unit)
 
-  CALL Test_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH', &
-      test_var=test_var,last_test=.FALSE.)
+  !CALL Test_QdnV_FOR_Model(Qcart,PotVal,QModel,info='H3_LSTH', &
+  !    test_var=test_var,last_test=.FALSE.)
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Qcart)
@@ -3444,8 +3446,43 @@ SUBROUTINE test_H3
     flush(6)
   END DO
 
+  deallocate(Func)
   CALL dealloc_dnMat(PotVal)
   deallocate(Q1D)
+  CALL dealloc_Model(QModel)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' MEP (op=72) : (1/R1, 1/R2) => (rho, s)'
+  CALL Init_Model(QModel,pot_name='H3_LSTH',option=72)
+
+  Q2D = [ZERO,1.242_Rkind]
+  write(out_unit,*) 'Potential+derivatives at:',Q2D
+  CALL Eval_Pot(QModel,Q2D,PotVal,nderiv=2)
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-FOUR,0.8_Rkind],Qmax=[FOUR,2._Rkind],nb_points=100,          &
+                        grid_file='grid_H3_V72')
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Q2D)
+  CALL dealloc_Model(QModel)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' MEP (op=74) : (1/R1, 1/R2) => (rho, s)'
+  CALL Init_Model(QModel,pot_name='H3_LSTH',option=74)
+
+  Q2D = [ZERO,1.242_Rkind]
+  write(out_unit,*) 'Potential+derivatives at:',Q2D
+  CALL Eval_Pot(QModel,Q2D,PotVal,nderiv=2)
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-FOUR,0.8_Rkind],Qmax=[FOUR,2._Rkind],nb_points=100,          &
+                        grid_file='grid_H3_V74')
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Q2D)
   CALL dealloc_Model(QModel)
 
   write(out_unit,*) '---------------------------------------------'

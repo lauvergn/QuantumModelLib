@@ -715,14 +715,14 @@ MODULE QML_H3_m
 
     CASE (72) 
       CALL EvalFunc_QML_H3_v72(QModel,Func,[dnQ(1)],nderiv)
-      deltaRho=(dnQ(2)-Func(3))
-      Mat_OF_PotDia(1,1) = Func(1) + Func(4)*deltaRho + Func(2)*deltaRho*deltaRho
+      deltaRho=(dnQ(2)-Func(4))
+      Mat_OF_PotDia(1,1) = Func(1) + Func(2)*deltaRho + Func(3)*deltaRho*deltaRho
 
     CASE (74) 
       CALL EvalFunc_QML_H3_v74(QModel,Func,[dnQ(1)],nderiv)
-      deltaRho=(dnQ(2)-Func(3))
-      Mat_OF_PotDia(1,1) = Func(1) + Func(4)*deltaRho + Func(2)*deltaRho*deltaRho  &
-      + Func(5)*deltaRho*deltaRho*deltaRho + Func(6)*deltaRho*deltaRho*deltaRho*deltaRho
+      deltaRho=(dnQ(2)-Func(6))
+      Mat_OF_PotDia(1,1) = Func(1) + Func(2)*deltaRho + Func(3)*deltaRho*deltaRho  &
+      + Func(4)*deltaRho*deltaRho*deltaRho + Func(5)*deltaRho*deltaRho*deltaRho*deltaRho
     END SELECT
     !write(*,*) "Mat_pot", get_d0(Mat_OF_PotDia) 
   END SUBROUTINE EvalPot_QML_H3
