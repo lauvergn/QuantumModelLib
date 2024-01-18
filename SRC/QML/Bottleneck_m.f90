@@ -279,7 +279,8 @@ MODULE QML_Bottleneck_m
     write(nio,*) '       for reaction path Hamiltonian model of reactive scattering.'
     write(nio,*) '   DOI: 10.1016/j.cplett.2021.139241'
     write(nio,*) ' option 3:                             '
-    write(nio,*) ' ref: PhD of L. Dupuy'
+    write(nio,*) ' ref: L. Dupuy et al, JCTC 18, 6447–6462 (2022)'
+    write(nio,*) '     https://doi.org/10.1021/acs.jctc.2c00744'
     write(nio,*) '---------------------------------------'
 
     write(nio,*) '  PubliUnit:      ',QModel%PubliUnit
@@ -296,11 +297,12 @@ MODULE QML_Bottleneck_m
       write(nio,*) '  with V0 =  0.036 Hartree             '
       write(nio,*) '  with a =  0.4 bohr^-1                '
       write(nio,*) '                                       '
-      write(nio,*) ' V2(q,s) = sum_i 1/2.k(s).q^2          '
+      write(nio,*) ' V2(q,s) = sum_i 1/2.k(s).(q-qref)^2   '
       write(nio,*) '   k(s) = k0(1 - sig.exp(- lambda.s^2))'
       write(nio,*) '  with k0 =  0.1909 au                 '
       write(nio,*) '  with sig=0.15                        '
       write(nio,*) '  with lambda=0.25 bohr^-2             '
+      write(nio,*) '  with qref=0. bohr                    '
       write(nio,*) 'The constant metric tensor is obtained '
       write(nio,*) '   mu = 1837.152 au                    '
       write(nio,*) '                                       '
@@ -315,7 +317,7 @@ MODULE QML_Bottleneck_m
       write(nio,*) '                                       '
 
       write(nio,*) '                                       '
-      write(nio,*) ' V2(q,s) = sum_i 1/2 k(s) q^2          '
+      write(nio,*) ' V2(q,s) = sum_i 1/2 k(s) (q-qref)^2   '
       write(nio,*) '   k(s) = k0(1 + b sech(a s)^2)        '
       write(nio,*) '  with k0 =  mu*w0^2                   '
       write(nio,*) '  with b=0.1                           '
@@ -324,14 +326,14 @@ MODULE QML_Bottleneck_m
       write(nio,*) 'The constant metric tensor is obtained '
       write(nio,*) '   mu = 1060. au                       '
       write(nio,*) '                                       '
-      write(nio,*) '  b  =',QModel%b
-      write(nio,*) '  k0 =',QModel%k0
+      write(nio,*) '  b    =',QModel%b
+      write(nio,*) '  k0   =',QModel%k0
+      write(nio,*) '  qref =',QModel%qref
       write(nio,*) '                                       '
-    CASE (3)
+    CASE (3) ! V = V0 * ( (1-alpha)/(1+exp(-2*a*x)) + (0.5*(1+sqrt(alpha))/cosh(a * x))**2)
       write(nio,*) '                                       '
-      write(nio,*) ' V1(s) = V0(1-(1-Exp(a.s))/(1+Exp(c.a.x))) '
-      write(nio,*) '  with V0 =  0.425 eV (converted in au)'
-      write(nio,*) '  with a =  1. bohr^-1                 '
+      write(nio,*) ' V1(s) = V = V0 * ( (1-alpha)/(1+exp(-2*a*s)) + ... '
+      write(nio,*) '           ... (0.5*(1+sqrt(alpha))/cosh(a * s))**2)'
       write(nio,*) '                                       '
       write(nio,*) '  a     =',QModel%a
       write(nio,*) '  alpha =',QModel%alpha
@@ -339,18 +341,18 @@ MODULE QML_Bottleneck_m
       write(nio,*) '                                       '
 
       write(nio,*) '                                       '
-      write(nio,*) ' V2(q,s) = sum_i 1/2 k(s) q^2          '
+      write(nio,*) ' V2(q,s) = sum_i 1/2 k(s) (q-qref)^2   '
       write(nio,*) '   k(s) = k0(1 + b sech(a s)^2)        '
       write(nio,*) '  with k0 =  mu*w0^2                   '
-      write(nio,*) '  with b=0.1                           '
-      write(nio,*) '  with w0 =  0.425 eV (converted in au)'
-      write(nio,*) '  with lambda=0.25 bohr^-2             '
+      write(nio,*) '  b    =',QModel%b
+      write(nio,*) '  w0   =',QModel%w0
+      write(nio,*) '  k0   =',QModel%k0
+      write(nio,*) '  qref =',QModel%qref
+      write(nio,*) '                                       '
       write(nio,*) 'The constant metric tensor is obtained '
-      write(nio,*) '   mu = 1060. au                       '
+      write(nio,*) '  mu  =',QModel%mu
       write(nio,*) '                                       '
-      write(nio,*) '  b  =',QModel%b
-      write(nio,*) '  k0 =',QModel%k0
-      write(nio,*) '                                       '
+
     CASE Default
         write(out_unit,*) ' ERROR in write_QModel '
         write(out_unit,*) ' This option is not possible. option: ',QModel%option

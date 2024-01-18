@@ -43,9 +43,10 @@ PROGRAM TEST_model
 
   TYPE (test_t)                  :: test_var
 
-
-  !CALL test_PH4Jo ; stop
   CALL Initialize_Test(test_var,test_name='QModel')
+
+  !CALL test_Bottleneck ; CALL Finalize_Test(test_var) ; stop
+  !CALL test_PH4Jo ; stop
   !CALL test_H3() ; stop
 
   ! One electronic surface
@@ -901,6 +902,68 @@ SUBROUTINE test_HenonHeiles
   write(out_unit,*) '---------------------------------------------'
 
 END SUBROUTINE test_HenonHeiles
+SUBROUTINE test_Bottleneck
+  USE QDUtil_NumParameters_m
+  USE QDUtil_m,         ONLY : Write_Vec
+  USE ADdnSVM_m
+  USE Model_m
+  IMPLICIT NONE
+
+  TYPE (Model_t)                 :: QModel
+  real (kind=Rkind), allocatable :: Q(:)
+  integer                        :: ndim,nsurf,nderiv,i,option
+  TYPE (dnMat_t)                 :: PotVal
+
+
+  nderiv = 2
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '------------ 2D-test_Bottleneck -------------'
+  write(out_unit,*) '---------------------------------------------'
+
+  CALL Init_Model(QModel,pot_name='Bottleneck',ndim=2, option=3)
+
+  Q = [ (0.1_Rkind*real(i,kind=Rkind),i=1,QModel%QM%ndim) ]
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '----- CHECK POT -----------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Check analytical derivatives with respect to numerical ones'
+
+  write(out_unit,*) 'Q:'
+  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv,test_var)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Potential and derivatives'
+  write(out_unit,*) 'Q:'
+  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  ! For testing the model
+  !CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='4D-HenonHeiles', &
+   !   test_var=test_var,last_test=.TRUE.)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' 1D-grid'
+  write(out_unit,*) '---------------------------------------------'
+  CALL Eval_pot_ON_Grid(QModel, &
+  Qmin=[-5._Rkind,ZERO],Qmax=[5._Rkind,ZERO],nb_points=101,grid_file='grid_bottleneck')
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(Q)
+  CALL dealloc_Model(QModel)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '- END CHECK POT -----------------------------'
+  write(out_unit,*) '---------------------------------------------'
+
+END SUBROUTINE test_Bottleneck
 SUBROUTINE test_LinearHBond
   USE QDUtil_NumParameters_m
   USE ADdnSVM_m
