@@ -44,6 +44,7 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
+  !CALL test_HenonHeiles() ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_Bottleneck ; CALL Finalize_Test(test_var) ; stop
   !CALL test_PH4Jo ; stop
@@ -901,6 +902,52 @@ SUBROUTINE test_HenonHeiles
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
 
+  nderiv = 3
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '------------ 2D-HenonHeiles -----------------'
+  write(out_unit,*) '-------------option 1, 2 and 3 --------------'
+  write(out_unit,*) '---------------------------------------------'
+
+  CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=2,option=1)
+
+  Q = [ ZERO,ZERO ]
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Potential and derivatives'
+  write(out_unit,*) 'Q:'
+  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=2,option=2)
+  write(out_unit,*) 'Q:'
+  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=2,option=3)
+  write(out_unit,*) 'Q:'
+  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
+
+  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  CALL dealloc_dnMat(PotVal)
+  deallocate(q)
+  CALL dealloc_Model(QModel)
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '- END CHECK POT -----------------------------'
+  write(out_unit,*) '---------------------------------------------'
 END SUBROUTINE test_HenonHeiles
 SUBROUTINE test_Bottleneck
   USE QDUtil_NumParameters_m

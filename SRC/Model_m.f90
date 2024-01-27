@@ -348,7 +348,7 @@ CONTAINS
 
 
     ! local variables
-    TYPE(QML_Empty_t)              :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t)              :: QModel_in ! to transfer info into QModel
     integer                        :: i,nio_loc,i_inact,nb_inact
     logical                        :: read_param_loc,read_nml,Print_init_loc
     logical,           allocatable :: list_Q(:)
@@ -391,7 +391,6 @@ CONTAINS
     CALL check_QML_Path()
 
     CALL dealloc_Model(QModel)
-    !IF (allocated(QModel%QM)) deallocate(QModel%QM)
 
     IF (present(ndim)) THEN
       QModel_in%ndim      = ndim
@@ -634,6 +633,10 @@ CONTAINS
       !! pot_name  = 'HenonHeiles'
       !! ndim      > 1
       !! nsurf     = 1
+      !! remark: three options are possible (option = 1,2,3)
+      !!    option 1: usual HenonHeiles (default)
+      !!    option 2: quadratic contribution + morse potentials and tanh contributions
+      !!    option 2: quadratic contribution + tanh contributions for the anharmonic part
       !! reduced masses(:)      = ONE au
       !! ref:  parameters taken from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
       !! === END README ==

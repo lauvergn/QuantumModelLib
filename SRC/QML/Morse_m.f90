@@ -73,7 +73,7 @@ MODULE QML_Morse_m
     PROCEDURE :: Write_QModel    => Write_QML_Morse
   END TYPE QML_Morse_t
 
-  PUBLIC :: QML_Morse_t,Init_QML_Morse,Init0_QML_Morse,Write_QML_Morse,QML_dnMorse
+  PUBLIC :: QML_Morse_t,Init_QML_Morse,Init0_QML_Morse,Write_QML_Morse,QML_dnMorse,QML_dnbeta
 
 CONTAINS
 !> @brief Subroutine which makes the initialization of the Morse parameters.
@@ -320,8 +320,8 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @return QML_dnMorse           TYPE (dnS_t):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
-!! @param dnR                TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
+!! @return QML_dnMorse   TYPE (dnS_t):           derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
+!! @param dnR            TYPE (dnS_t):           derived type with the value of "r" and,if required, its derivatives.
 !! @param QModel         TYPE(QML_Morse_t):   derived type with the Morse parameters.
   FUNCTION QML_dnMorse(dnR,QModel)
     USE ADdnSVM_m, ONLY :  dnS_t,exp,Write_dnS,get_d0,dealloc_dnS
@@ -340,6 +340,7 @@ CONTAINS
     !CALL Write_dnS(dnR)
 
     dnbeta  = exp(-QModel%a*(dnR-QModel%req))
+    !dnbeta = QML_dnbeta(dnR,QModel)
     !write(out_unit,*) 'dnbeta'
     !CALL Write_dnS(dnbeta)
 
@@ -354,4 +355,16 @@ CONTAINS
 
   END FUNCTION QML_dnMorse
 
+  FUNCTION QML_dnbeta(dnR,QModel)
+    USE ADdnSVM_m, ONLY :  dnS_t,exp,Write_dnS,get_d0,dealloc_dnS
+    IMPLICIT NONE
+
+    TYPE (dnS_t)                        :: QML_dnbeta
+
+    TYPE (dnS_t),         intent(in)    :: dnR
+    TYPE (QML_Morse_t),   intent(in)    :: QModel
+
+    QML_dnbeta  = exp(-QModel%a*(dnR-QModel%req))
+
+  END FUNCTION QML_dnbeta
 END MODULE QML_Morse_m

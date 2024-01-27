@@ -46,6 +46,7 @@
 MODULE QML_HenonHeiles_m
   USE QDUtil_NumParameters_m, out_unit => out_unit
   USE QML_Empty_m
+  USE QML_Morse_m
   IMPLICIT NONE
 
   PRIVATE
@@ -56,10 +57,11 @@ MODULE QML_HenonHeiles_m
 
      real (kind=Rkind) :: lambda = 0.111803_Rkind
 
+     TYPE (QML_Morse_t) :: Morse ! for option=2
+
    CONTAINS
-    !PROCEDURE :: EvalPot_QModel => EvalPot_QML_HenonHeiles
-    PROCEDURE :: EvalPot_QModel => EvalPotnew_QML_HenonHeiles
-    PROCEDURE :: Write_QModel    => Write_QML_HenonHeiles
+    PROCEDURE :: EvalPot_QModel => EvalPot_QML_HenonHeiles
+    PROCEDURE :: Write_QModel   => Write_QML_HenonHeiles
   END TYPE QML_HenonHeiles_t
 
   PUBLIC :: QML_HenonHeiles_t,Init_QML_HenonHeiles
@@ -73,9 +75,10 @@ MODULE QML_HenonHeiles_m
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HenonHeiles(QModel_in,read_param,nio_param_file,lambda) RESULT(QModel)
     USE QDUtil_m,         ONLY : Identity_Mat
+    USE QML_Morse_m
     IMPLICIT NONE
 
-    TYPE (QML_HenonHeiles_t)                    :: QModel ! RESULT
+    TYPE (QML_HenonHeiles_t)                     :: QModel ! RESULT
 
     TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
@@ -102,6 +105,8 @@ MODULE QML_HenonHeiles_m
     ! initalization of the default values
     QModel%lambda     = 0.111803_Rkind
 
+    IF (QModel%option < 1 .OR. QModel%option >3) QModel%option = 1
+
     IF (read_param) THEN
       CALL Read_QML_HenonHeiles(QModel,nio_param_file)
     ELSE
@@ -116,6 +121,10 @@ MODULE QML_HenonHeiles_m
     END IF
 
 
+    IF (QModel%option == 2) THEN
+      CALL Init0_QML_Morse(QModel%Morse,D=NINE/(EIGHT*QModel%lambda**2),      &
+                           a=TWO*QModel%lambda/THREE,req=ZERO,model_name='Morse')
+    END IF
     IF (debug) write(out_unit,*) 'init Q0 of HenonHeiles'
     allocate(QModel%Q0(QModel%ndim))
     QModel%Q0 = ZERO
@@ -178,10 +187,11 @@ MODULE QML_HenonHeiles_m
 !! @param QModel            CLASS(QML_HenonHeiles_t): derived type in which the parameters are set-up.
 !! @param nio               integer:                   file unit to print the parameters.
   SUBROUTINE Write_QML_HenonHeiles(QModel,nio)
+    USE QML_Morse_m
     IMPLICIT NONE
 
     CLASS(QML_HenonHeiles_t),   intent(in) :: QModel
-    integer,                     intent(in) :: nio
+    integer,                    intent(in) :: nio
 
     write(nio,*) 'HenonHeiles default parameters'
     write(nio,*)
@@ -213,6 +223,13 @@ MODULE QML_HenonHeiles_m
     write(nio,*)
     write(nio,*) '    ndim  :  ',QModel%ndim
     write(nio,*) '    lambda:  ',QModel%lambda
+    write(nio,*) '    option:  ',QModel%option
+    IF (QModel%option == 2) THEN
+      write(nio,*) ' Modification with Morse potential and tanh()'
+      CALL QModel%Morse%Write_QModel(nio)
+    ELSE IF (QModel%option == 3) THEN
+      write(nio,*) ' Modification with tanh()'
+    END IF
     write(nio,*)
     write(nio,*) 'end HenonHeiles current parameters'
 
@@ -224,7 +241,7 @@ MODULE QML_HenonHeiles_m
 !! @param dnQ(:)             TYPE (dnS_t)              value for which the potential is calculated
 !! @param nderiv             integer:                  it enables to specify up to which derivatives the potential is calculated:
 !!                                                     the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
-  SUBROUTINE EvalPot_QML_HenonHeiles(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPotold_QML_HenonHeiles_option1(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
     IMPLICIT NONE
 
@@ -296,9 +313,31 @@ MODULE QML_HenonHeiles_m
     IF (nderiv == 1) CALL set_dnS(Mat_OF_PotDia(1,1),d0,d1)
     IF (nderiv == 2) CALL set_dnS(Mat_OF_PotDia(1,1),d0,d1,d2)
 
+  END SUBROUTINE EvalPotold_QML_HenonHeiles_option1
+
+  SUBROUTINE EvalPot_QML_HenonHeiles(QModel,Mat_OF_PotDia,dnQ,nderiv)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_HenonHeiles_t),  intent(in)    :: QModel
+    TYPE (dnS_t),              intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),              intent(in)    :: dnQ(:)
+    integer,                   intent(in)    :: nderiv
+
+    SELECT CASE(QModel%option)
+    CASE(1)
+      CALL EvalPot_QML_HenonHeiles_option1(QModel,Mat_OF_PotDia,dnQ,nderiv)
+    CASE(2)
+      CALL EvalPot_QML_HenonHeiles_option2(QModel,Mat_OF_PotDia,dnQ,nderiv)
+    CASE(3)
+      CALL EvalPot_QML_HenonHeiles_option3(QModel,Mat_OF_PotDia,dnQ,nderiv)
+    CASE DEFAULT
+      STOP 'ERROR in EvalPot_QML_HenonHeiles: not default'
+    END SELECT
+
   END SUBROUTINE EvalPot_QML_HenonHeiles
 
-  SUBROUTINE EvalPotnew_QML_HenonHeiles(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalPot_QML_HenonHeiles_option1(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
     IMPLICIT NONE
 
@@ -310,7 +349,6 @@ MODULE QML_HenonHeiles_m
 
     integer          :: i
     TYPE (dnS_t)     :: dnV
-
 
     ! Potential calculation
     dnV = dnQ(1) ! for the initialization
@@ -326,6 +364,65 @@ MODULE QML_HenonHeiles_m
 
     CALL dealloc_dnS(dnV)
 
-  END SUBROUTINE EvalPotnew_QML_HenonHeiles
+  END SUBROUTINE EvalPot_QML_HenonHeiles_option1
+  SUBROUTINE EvalPot_QML_HenonHeiles_option2(QModel,Mat_OF_PotDia,dnQ,nderiv)
+    USE ADdnSVM_m
+    USE QML_Morse_m
+    IMPLICIT NONE
 
+    CLASS(QML_HenonHeiles_t), intent(in)    :: QModel
+    TYPE (dnS_t),              intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),              intent(in)    :: dnQ(:)
+    integer,                   intent(in)    :: nderiv
+
+
+    integer          :: i
+    TYPE (dnS_t)     :: dnV
+
+    ! Potential calculation
+    dnV = HALF * dnQ(1)**2
+    DO i=2,QModel%ndim
+      dnV = dnV + QML_dnMorse(dnQ(i),QModel%Morse)
+    END DO
+    DO i=1,QModel%ndim-1
+      !dnV = dnV + QModel%lambda * dnQ(i)**2 * dnQ(i+1)
+      !dnV = dnV + dnQ(i)**2 * THREE/TWO * QML_dnbeta(dnQ(i+1),QModel%Morse)
+      dnV = dnV + QModel%lambda * dnQ(i)**2 * tanh(dnQ(i+1))
+    END DO
+
+    Mat_OF_PotDia(1,1) = dnV
+
+    CALL dealloc_dnS(dnV)
+
+  END SUBROUTINE EvalPot_QML_HenonHeiles_option2
+  SUBROUTINE EvalPot_QML_HenonHeiles_option3(QModel,Mat_OF_PotDia,dnQ,nderiv)
+    USE ADdnSVM_m
+    USE QML_Morse_m
+    IMPLICIT NONE
+
+    CLASS(QML_HenonHeiles_t),  intent(in)    :: QModel
+    TYPE (dnS_t),              intent(inout) :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),              intent(in)    :: dnQ(:)
+    integer,                   intent(in)    :: nderiv
+
+
+    integer          :: i
+    TYPE (dnS_t)     :: dnV,dntQ
+
+    ! Potential calculation
+    dnV = HALF * dnQ(1)**2
+    DO i=2,QModel%ndim
+      dnV = dnV + HALF * dnQ(i)**2
+    END DO
+    DO i=1,QModel%ndim-1
+      dntQ = tanh(dnQ(i+1))
+      dnV = dnV + QModel%lambda * (dnQ(i)**2 * dntQ - dntQ**3/THREE )
+    END DO
+
+    Mat_OF_PotDia(1,1) = dnV
+
+    CALL dealloc_dnS(dnV)
+    CALL dealloc_dnS(dnV)
+
+  END SUBROUTINE EvalPot_QML_HenonHeiles_option3
 END MODULE QML_HenonHeiles_m
