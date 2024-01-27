@@ -590,7 +590,7 @@ From the main QuantumModelLib directory:
       !! remark: three options are possible (option = 1,2,3)
       !!    option 1: usual HenonHeiles (default)
       !!    option 2: quadratic contribution + morse potentials and tanh contributions
-      !!    option 2: quadratic contribution + tanh contributions for the anharmonic part
+      !!    option 3: quadratic contribution + tanh contributions for the anharmonic part
       !! reduced masses(:)      = ONE au
       !! ref:  parameters taken from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
 =========================================
