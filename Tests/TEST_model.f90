@@ -100,6 +100,9 @@ PROGRAM TEST_model
   ! 3D (full-D), One electronic surface (spectro): CNH Murrell
   CALL test_CNH_Murrell
 
+  ! 9D (full-D), One electronic surface (spectro, torsional levels): HO-NO2 
+  CALL test_HNO3()
+
   ! 3D (full-D), One electronic surface for collision
   CALL test_HOO_DMBE()
 
@@ -2927,8 +2930,7 @@ SUBROUTINE test_HNO3
 
   CALL Init_Model(QModel,ndim=9,pot_name='HNO3')
 
-  allocate(q(QModel%ndim))
-  Q(:) = [2.65450_Rkind,2.28_Rkind,2.0_Rkind,Pi/TWO,                    &
+  Q = [2.65450_Rkind,2.28_Rkind,2.0_Rkind,Pi/TWO,                    &
           ZERO,ZERO,1.83492_Rkind,1.77157_Rkind,Pi/TWO]
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '----- CHECK POT -----------------------------'
@@ -2958,6 +2960,7 @@ SUBROUTINE test_HNO3
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Functions'
   write(out_unit,*) 'Q:'
+  Q(1) = 1.57080_Rkind
   CALL Write_Vec(Q,out_unit,QModel%ndim)
 
   CALL Eval_Func(QModel,Q,Func,nderiv=nderiv)
