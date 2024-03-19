@@ -55,7 +55,7 @@ MODULE QML_PSB3_m
 
     real (kind=Rkind) :: blamin   = 0.0912615_Rkind
     real (kind=Rkind) :: blaTSdir = 0.025079167_Rkind
-    real (kind=Rkind) :: deepth   = 2000_Rkind
+    real (kind=Rkind) :: deepth   = 2000._Rkind
 
     real (kind=Rkind) :: kf1 = 3733.5_Rkind
     real (kind=Rkind) :: d2  = 54.633_Rkind
@@ -311,7 +311,7 @@ MODULE QML_PSB3_m
 !!
 !! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
 !! @param r                  real:                value for which the potential is calculated
-!! @param PSB3Pot          TYPE(PSB3Pot_t):    derived type in which the parameters are set-up.
+!! @param PSB3Pot            TYPE(PSB3Pot_t):     derived type in which the parameters are set-up.
 !! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv)
@@ -348,18 +348,24 @@ MODULE QML_PSB3_m
        BLA = BLA * LenghtConv
     END IF
 
+    !write(*,*) 'coucou BLA,Tors,HOOP',get_d0(BLA),get_d0(Tors),get_d0(HOOP)
 !-----------------------------------------------------------------------!
     d1 = SQRT(PSB3Pot%kf1/(TWO * PSB3Pot%deepth))
     d4 = SQRT(PSB3Pot%kf4/(TWO * PSB3Pot%deepth))
+    !write(*,*) 'coucou d1,d4',d1,d4
 
     MorseBLAP = PSB3Pot%deepth * (-ONE + EXP(-d1 * (BLA - PSB3Pot%blaTSdir)))**2
     Morsemin  = PSB3Pot%deepth * (-ONE + EXP(-d4 * (BLA - PSB3Pot%blamin  )))**2
+    !write(*,*) 'coucou MorseBLAP,Morsemin',get_d0(MorseBLAP),get_d0(Morsemin)
 
     Overlap   = Tors - HOOP/TWO
+    !write(*,*) 'coucou Overlap',get_d0(Overlap)
 
     Hdir2D = sin(Overlap)**2 * (MorseBLAP + PSB3Pot%d2) + PSB3Pot%d3 * cos(Overlap / TWO)**2 + Morsemin * Cos(Overlap)**2
     Hct2D  = (ONE + PSB3Pot%c5 * sin(Overlap)**2) * (PSB3Pot%c1 * BLA**2 + &
              PSB3Pot%c2 * BLA + PSB3Pot%c3) + PSB3Pot%c4 * cos(Overlap)**2
+    !write(*,*) 'coucou Hdir2D,Hct2D',get_d0(Hdir2D),get_d0(Hct2D)
+
 !-----------------------------------------------------------------------!
 
 !-----------------------------------------------------------------------!

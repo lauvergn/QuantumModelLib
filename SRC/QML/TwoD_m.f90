@@ -89,9 +89,9 @@ MODULE QML_TwoD_m
     USE QDUtil_m,         ONLY : Identity_Mat
     IMPLICIT NONE
 
-    TYPE (QML_TwoD_t)                          :: QModel ! RESULT
+    TYPE (QML_TwoD_t)                            :: QModel ! RESULT
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
@@ -112,6 +112,9 @@ MODULE QML_TwoD_m
     QModel%ndim     = 2
     QModel%pot_name = 'twod'
 
+    IF (read_param) THEN
+      CALL Read_QML_TwoD(QModel,nio_param_file)
+    END IF
 
     IF (debug) write(out_unit,*) 'init Q0 of TwoD'
     SELECT CASE (QModel%option)
@@ -135,7 +138,73 @@ MODULE QML_TwoD_m
     END IF
 
   END FUNCTION Init_QML_TwoD
-!> @brief Subroutine wich prints the current QML_TwoD parameters.
+  SUBROUTINE Read_QML_TwoD(QModel,nio)
+    IMPLICIT NONE
+
+    TYPE (QML_TwoD_t),   intent(inout) :: QModel
+    integer,             intent(in)    :: nio
+
+    !local variables
+    real(kind=Rkind)     :: KX    = 0.02_Rkind
+    real(kind=Rkind)     :: KY    = 0.1_Rkind
+    real(kind=Rkind)     :: DELTA = 0.01_Rkind
+    real(kind=Rkind)     :: X1    = 6._Rkind
+    real(kind=Rkind)     :: X2    = 2._Rkind
+    real(kind=Rkind)     :: X3    = 31._Rkind/8.0_Rkind
+    real(kind=Rkind)     :: GAMMA = 0.01_Rkind
+    real(kind=Rkind)     :: ALPHA = 3._Rkind
+    real(kind=Rkind)     :: BETA  = 1.5_Rkind
+ 
+    real(kind=Rkind)     :: muX  = 20000._Rkind
+    real(kind=Rkind)     :: muY  = 6667._Rkind
+
+    integer :: err_read
+
+    namelist /TwoD/ kx,ky,x1,x2,x3,Delta,gamma,alpha,beta,mux,muy
+
+    KX    = 0.02_Rkind
+    KY    = 0.1_Rkind
+    DELTA = 0.01_Rkind
+    X1    = 6._Rkind
+    X2    = 2._Rkind
+    X3    = 31._Rkind/8.0_Rkind
+    GAMMA = 0.01_Rkind
+    ALPHA = 3._Rkind
+    BETA  = 1.5_Rkind
+    muX  = 20000._Rkind
+    muY  = 6667._Rkind
+
+    read(nio,nml=TwoD,IOSTAT=err_read)
+    IF (err_read < 0) THEN
+      write(out_unit,*) ' ERROR in Read_QML_TwoD'
+      write(out_unit,*) ' End-of-file or End-of-record'
+      write(out_unit,*) ' The namelist "TwoD" is probably absent'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
+      STOP ' ERROR in Read_QML_TwoD'
+    ELSE IF (err_read > 0) THEN
+      write(out_unit,*) ' ERROR in Read_QML_TwoD'
+      write(out_unit,*) ' Some parameter names of the namelist "TwoD" are probaly wrong'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,nml=TwoD)
+      STOP ' ERROR in Read_QML_TwoD'
+    END IF
+    !write(out_unit,nml=TwoD)
+
+    QModel%KX    = KX   
+    QModel%KY    = KY   
+    QModel%DELTA = DELTA
+    QModel%X1    = X1   
+    QModel%X2    = X2   
+    QModel%X3    = X3   
+    QModel%GAMMA = GAMMA
+    QModel%ALPHA = ALPHA
+    QModel%BETA  = BETA 
+    QModel%muX   = muX  
+    QModel%muY   = muY  
+
+  END SUBROUTINE Read_QML_TwoD
+  !> @brief Subroutine wich prints the current QML_TwoD parameters.
 !!
 !! @param QModel            CLASS(QML_TwoD_t):   derived type in which the parameters are set-up.
 !! @param nio               integer:              file unit to print the parameters.

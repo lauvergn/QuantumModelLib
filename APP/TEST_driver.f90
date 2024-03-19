@@ -40,11 +40,13 @@
 PROGRAM main_pot
   IMPLICIT NONE
 
+  CALL test_TwoD_RJDI2014() ; stop
 
+
+  CALL test_PSB3() ; stop
   CALL test_PH4()
   CALL test_HBond()
   CALL test_1DSOC_1S1T()
-  CALL test_PSB3()
   CALL test_Phenol_Dia(10**7)
   CALL test_Phenol_ADia()
   CALL test_henonheiles(10**7)
@@ -323,7 +325,85 @@ SUBROUTINE test_PSB3
   write(out_unit,*) '============================================================'
 
 END SUBROUTINE test_PSB3
+SUBROUTINE test_TwoD_RJDI2014
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unit=>INPUT_UNIT,out_unit=>OUTPUT_UNIT,Rkind => real64
+!$ USE omp_lib
+  IMPLICIT NONE
 
+  real (kind=Rkind),      allocatable     :: Q(:)
+  real (kind=Rkind),      allocatable     :: GGdef(:,:)
+  real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: Vec(:,:)
+  real (kind=Rkind),      allocatable     :: g(:,:,:)
+  real (kind=Rkind),      allocatable     :: h(:,:,:,:)
+  real (kind=Rkind),      allocatable     :: NAC(:,:,:)
+
+  character (len=16)                  :: pot_name
+  logical                             :: adiabatic
+
+  integer                             :: ndim,nsurf,option,ix,iy,nio
+
+  write(out_unit,*) '============================================================'
+  write(out_unit,*) '============================================================'
+  pot_name  = 'read_model'
+  ndim      = 0 ! it would be initialized
+  nsurf     = 0 ! it would be initialized
+  option    = -1
+  adiabatic = .TRUE.
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+
+
+  Q(:) = [0._Rkind,0.0_Rkind]
+
+  CALL sub_Qmodel_V(V,Q)
+  write(out_unit,*) ' Diabatic potential as a 2x2 matrix:'
+  write(out_unit,'(2f12.8)') V
+
+  CALL sub_Qmodel_Check_anaVSnum(Q,2)
+
+  write(out_unit,*) '============================================================'
+  write(out_unit,*) '== Optimisation ==='
+  write(out_unit,*) '============================================================'
+
+  !sub_Qmodel_Opt(Q,i_surf,nb_neg,icv,Max_it)
+  CALL sub_Qmodel_Opt(Q,1,-1,3,-1)
+
+  deallocate(V)
+  deallocate(Q)
+
+
+  write(out_unit,*) '============================================================'
+  write(out_unit,*) '============================================================'
+
+
+  write(out_unit,*) '============================================================'
+  write(out_unit,*) '== 2D-Grid ==='
+  write(out_unit,*) '============================================================'
+  open(newunit=nio,file='grid_TwoD_RJDI2014.tab')
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+
+  DO ix=-40,40
+    DO iy=-20,20
+      Q=[0.1_Rkind*ix,0.1_Rkind*iy]
+      CALL sub_Qmodel_V(V,Q)
+      write(nio,*) Q,V
+    END DO
+    write(nio,*)
+  END DO
+  close(nio)
+  deallocate(V)
+  deallocate(Q)
+
+
+  write(out_unit,*) '============================================================'
+  write(out_unit,*) '============================================================'
+END SUBROUTINE test_TwoD_RJDI2014
 SUBROUTINE test_Test
   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unit=>INPUT_UNIT, out_unit=>OUTPUT_UNIT, Rkind => real64
   IMPLICIT NONE

@@ -1,0 +1,6 @@
+&potential
+  pot_name='TwoD_RJDI2014' ! potential surface name
+  adiabatic=f ! diabatic basis
+  read_nml=t
+/
+&TwoD_RJDI2014 wX=1. wY=1. a=2. c=0.1 Delta=1. /

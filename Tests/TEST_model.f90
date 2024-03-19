@@ -44,7 +44,7 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
-  !CALL test_HenonHeiles() ; CALL Finalize_Test(test_var) ; stop
+  !CALL test_PSB3() ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_Bottleneck ; CALL Finalize_Test(test_var) ; stop
   !CALL test_PH4Jo ; stop
@@ -1341,7 +1341,7 @@ SUBROUTINE test_PSB3
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' PSB3 potential'
-  write(out_unit,*) ' With units: Atomic Units (Angstrom, Rad, Rad, kcal.mol^-1)'
+  write(out_unit,*) ' With units: Atomic Units (Bohr, Rad, Rad, Hartree)'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 

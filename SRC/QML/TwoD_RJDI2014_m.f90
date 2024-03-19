@@ -53,8 +53,8 @@ MODULE QML_TwoD_RJDI2014_m
   TYPE, EXTENDS (QML_Empty_t) ::  QML_TwoD_RJDI2014_t
    PRIVATE
 
-   real(kind=Rkind)     :: w1    = 9.557e-3_Rkind
-   real(kind=Rkind)     :: w2    = 3.3515e-3_Rkind
+   real(kind=Rkind)     :: wX    = 9.557e-3_Rkind
+   real(kind=Rkind)     :: wY    = 3.3515e-3_Rkind
    real(kind=Rkind)     :: Delta = 0.01984_Rkind
    real(kind=Rkind)     :: a     = 20.07_Rkind
    real(kind=Rkind)     :: c     = 6.127e-4_Rkind
@@ -98,6 +98,7 @@ MODULE QML_TwoD_RJDI2014_m
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unit,*) 'BEGINNING ',name_sub
+      write(out_unit,*) 'read_param,nio_param_file',read_param,nio_param_file
       flush(out_unit)
     END IF
 
@@ -107,38 +108,42 @@ MODULE QML_TwoD_RJDI2014_m
     QModel%ndim     = 2
     QModel%pot_name = 'TwoD_RJDI2014'
 
-
-    IF (debug) write(out_unit,*) 'init Q0 of TwoD_RJDI2014'
     SELECT CASE (QModel%option)
-    CASE (1) ! minimum of V(1,1)
-      QModel%Q0 = [-QModel%a/TWO,ZERO]
-    CASE (2)  ! minimum of V(2,2)
-      QModel%Q0 = [QModel%a/TWO,ZERO]
     CASE (0)  ! minimum of V(1,1), other parameters
-      QModel%w1    = 0.007743_Rkind
-      QModel%w2    = 0.00668_Rkind
+      QModel%wX    = 0.007743_Rkind
+      QModel%wY    = 0.00668_Rkind
       QModel%Delta = ZERO
       QModel%a     = 51.05_Rkind
       QModel%c     = 0.00008092_Rkind
 
-      QModel%Q0    = [-QModel%a/TWO,ZERO]
     CASE (3)  ! minimum of V(1,1), other parameters (BMA)
-      QModel%w1    = 0.007743_Rkind
-      QModel%w2    = 0.00668_Rkind
+      QModel%wX    = 0.007743_Rkind
+      QModel%wY    = 0.00668_Rkind
       QModel%Delta = ZERO
       QModel%a     = 31.05_Rkind
       QModel%c     = 0.00008092_Rkind
 
-      QModel%Q0    = [-QModel%a/TWO,ZERO]
     CASE Default ! ! minimum of V(1,1), other parameters
-      QModel%w1    = 0.007743_Rkind
-      QModel%w2    = 0.00668_Rkind
+      QModel%wX    = 0.007743_Rkind
+      QModel%wY    = 0.00668_Rkind
       QModel%Delta = ZERO
       QModel%a     = 51.05_Rkind
       QModel%c     = 0.00008092_Rkind
+    END SELECT
 
+
+    IF (read_param) THEN
+      CALL Read_QML_TwoD_RJDI2014(QModel,nio_param_file)
+    END IF
+
+    IF (debug) write(out_unit,*) 'init Q0 of TwoD_RJDI2014'
+    SELECT CASE (QModel%option)
+    CASE (0,1,3) ! minimum of V(1,1)
+      QModel%Q0 = [-QModel%a/TWO,ZERO]
+    CASE (2)  ! minimum of V(2,2)
+      QModel%Q0 = [QModel%a/TWO,ZERO]
+    CASE Default ! ! minimum of V(1,1), other parameters
       QModel%Q0    = [-QModel%a/TWO,ZERO]
-
     END SELECT
 
     IF (debug) write(out_unit,*) 'init d0GGdef of TwoD_RJDI2014'
@@ -153,6 +158,60 @@ MODULE QML_TwoD_RJDI2014_m
     END IF
 
   END FUNCTION Init_QML_TwoD_RJDI2014
+  SUBROUTINE Read_QML_TwoD_RJDI2014(QModel,nio)
+    IMPLICIT NONE
+
+    TYPE (QML_TwoD_RJDI2014_t),   intent(inout) :: QModel
+    integer,                      intent(in)    :: nio
+
+    !local variables
+    real(kind=Rkind)     :: wX    = 9.557e-3_Rkind
+    real(kind=Rkind)     :: wY    = 3.3515e-3_Rkind
+    real(kind=Rkind)     :: Delta = 0.01984_Rkind
+    real(kind=Rkind)     :: a     = 20.07_Rkind
+    real(kind=Rkind)     :: c     = 6.127e-4_Rkind
+
+    real (kind=Rkind)    :: muX   = 1._Rkind
+    real (kind=Rkind)    :: muY   = 1._Rkind
+
+    integer :: err_read
+
+    namelist /TwoD_RJDI2014/ wX,wY,Delta,a,c,muX,muY
+
+    wX    = 9.557e-3_Rkind
+    wY    = 3.3515e-3_Rkind
+    Delta = 0.01984_Rkind
+    a     = 20.07_Rkind
+    c     = 6.127e-4_Rkind
+    muX   = 1._Rkind
+    muY   = 1._Rkind
+
+    read(nio,nml=TwoD_RJDI2014,IOSTAT=err_read)
+    IF (err_read < 0) THEN
+      write(out_unit,*) ' ERROR in Read_QML_TwoD_RJDI2014'
+      write(out_unit,*) ' End-of-file or End-of-record'
+      write(out_unit,*) ' The namelist "TwoD_RJDI2014" is probably absent'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
+      STOP ' ERROR in Read_QML_TwoD_RJDI2014'
+    ELSE IF (err_read > 0) THEN
+      write(out_unit,*) ' ERROR in Read_QML_TwoD_RJDI2014'
+      write(out_unit,*) ' Some parameter names of the namelist "TwoD_RJDI2014" are probaly wrong'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,nml=TwoD_RJDI2014)
+      STOP ' ERROR in Read_QML_TwoD_RJDI2014'
+    END IF
+    !write(out_unit,nml=TwoD_RJDI2014)
+
+    QModel%wX    = wX   
+    QModel%wY    = wY   
+    QModel%Delta = Delta
+    QModel%a     = a    
+    QModel%c     = c    
+    QModel%muX   = muX  
+    QModel%muY   = muY  
+
+  END SUBROUTINE Read_QML_TwoD_RJDI2014
 !> @brief Subroutine wich prints the current QML_TwoD_RJDI2014 parameters.
 !!
 !! @param QModel            CLASS(QML_TwoD_RJDI2014_t):   derived type in which the parameters are set-up.
@@ -186,8 +245,8 @@ MODULE QML_TwoD_RJDI2014_m
 
     write(nio,*) '-----------------------------------------'
     write(nio,*) '-----------------------------------------'
-    write(nio,*) 'w1 (X) =',QModel%w1
-    write(nio,*) 'w2 (Y) =',QModel%w2
+    write(nio,*) 'wX     =',QModel%wX
+    write(nio,*) 'wY     =',QModel%wY
     write(nio,*) 'DELTA  =',QModel%DELTA
     write(nio,*) 'a      =',QModel%a
     write(nio,*) 'c      =',QModel%c
@@ -217,11 +276,11 @@ MODULE QML_TwoD_RJDI2014_m
     TYPE (dnS_t),                intent(in)    :: dnQ(:)
     integer,                     intent(in)    :: nderiv
 
-   !Hel(1,1,x,y)=0.5*w1**2 * (X+a/2)**2 + 0.5d0*w2**2 * Y**2 + Delta/2
-   Mat_OF_PotDia(1,1) = HALF*( (QModel%w1 * (dnQ(1)+QModel%a/2))**2 + (QModel%w2 * dnQ(2))**2) + QModel%Delta/2
+   !Hel(1,1,x,y)=0.5*wX**2 * (X+a/2)**2 + 0.5d0*wY**2 * Y**2 + Delta/2
+   Mat_OF_PotDia(1,1) = HALF*( (QModel%wX * (dnQ(1)+QModel%a/2))**2 + (QModel%wY * dnQ(2))**2) + QModel%Delta/2
 
-   !Hel(2,2,x,y)=0.5*w1**2 * (X-a/2)**2 + 0.5d0*w2**2 * Y**2 - Delta/2
-   Mat_OF_PotDia(2,2) = HALF*( (QModel%w1 * (dnQ(1)-QModel%a/2))**2 + (QModel%w2 * dnQ(2))**2) - QModel%Delta/2
+   !Hel(2,2,x,y)=0.5*wX**2 * (X-a/2)**2 + 0.5d0*wY**2 * Y**2 - Delta/2
+   Mat_OF_PotDia(2,2) = HALF*( (QModel%wX * (dnQ(1)-QModel%a/2))**2 + (QModel%wY * dnQ(2))**2) - QModel%Delta/2
 
    !Hel(1,2,x,y) = c * Y
    Mat_OF_PotDia(1,2) = QModel%c * dnQ(2)
