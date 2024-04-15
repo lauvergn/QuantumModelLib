@@ -276,7 +276,7 @@ MODULE QML_PH4Jo_m
     USE ADdnSVM_m
     IMPLICIT NONE
 
-    CLASS(QML_PH4Jo_t),     intent(in)    :: QModel
+    CLASS(QML_PH4Jo_t),   intent(in)    :: QModel
     TYPE (dnS_t),         intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),         intent(in)    :: dnQ(:)
     integer,              intent(in)    :: nderiv
@@ -284,7 +284,8 @@ MODULE QML_PH4Jo_m
 
     integer, parameter          :: nonAct =1, nonGrad =13, nonHess =13, nqact =8
     TYPE (dnS_t), allocatable   :: dnPoly(:)
-    TYPE (dnS_t)    :: Func(QModel%nb_Func), Grad(QModel%nb_Func-nonGrad), Hess(QModel%nb_Func-nonHess), miHess(nqact, nqact)
+    TYPE (dnS_t)    :: Func(QModel%nb_Func), Gradient(QModel%nb_Func-nonGrad)
+    TYPE (dnS_t)    :: Hess(QModel%nb_Func-nonHess), miHess(nqact, nqact)
     TYPE (dnS_t)    :: dnDQ(QModel%ndim), vh,Rm,tRm, V0, V1, Somme, Somme2, Dq(QModel%ndim-nonAct)
     TYPE (dnS_t)    :: dnQFunc(QModel%ndimFunc)
     integer         :: i1,i2,i,ifunc,j,k
@@ -306,10 +307,10 @@ MODULE QML_PH4Jo_m
       dnQFunc = [dnQ(2)] ! s
       CALL EvalFunc_QML_PH4Jo(QModel,Func,dnQFunc,nderiv)
       V0 =Func(1)
-      Grad = ZERO
-      Hess = ZERO
-      somme = ZERO
-      somme2 = ZERO
+      Gradient = ZERO
+      Hess     = ZERO
+      somme    = ZERO
+      somme2   = ZERO
       Dq(:) = ZERO
       Dq(1) = (dnQ(1)-Func(2))
       Dq(2) = (dnQ(3)-Func(3))
@@ -320,13 +321,13 @@ MODULE QML_PH4Jo_m
       Dq(7) = (dnQ(8)-Func(8))
       Dq(8) = (dnQ(9)-Func(9))
       DO j=10,17
-         Grad(j-9) = Func(j)
+         Gradient(j-9) = Func(j)
       END DO
       DO k=18,25
          Hess(k-17) = Func(k)
       END DO
       DO i=1,8
-         somme = somme + (Dq(i))*Grad(i)
+         somme = somme + (Dq(i))*Gradient(i)
          somme2 = somme2 +  HALF*(Dq(i)*Dq(i))*Hess(i)  
       END DO
       Mat_OF_PotDia(1,1) = V0 + somme + somme2
@@ -388,7 +389,7 @@ MODULE QML_PH4Jo_m
       dnQFunc = [dnQ(2)] ! s
       CALL EvalFunc_QML_PH4Jo(QModel,Func,dnQFunc,nderiv)
       V0 =Func(1)
-      Grad = ZERO
+      Gradient = ZERO
       Hess = ZERO
       somme = ZERO
       somme2 = ZERO
@@ -396,12 +397,12 @@ MODULE QML_PH4Jo_m
       Dq(1) = (dnQ(1)-Func(2))
 
       DO j=10,17
-         Grad(j-9) = Func(j)
+         Gradient(j-9) = Func(j)
       END DO
       DO k=18,25
          Hess(k-17) = Func(k)
       END DO
-      somme = Dq(1)*Grad(1) + HALF*(Dq(1)*Dq(1))*Hess(1)  
+      somme = Dq(1)*Gradient(1) + HALF*(Dq(1)*Dq(1))*Hess(1)  
 
       Mat_OF_PotDia(1,1) = V0 + somme 
     CASE(18) ! Model with V0 + grad(rhoOpt)*DeltarhoOpt + HALF*Hess(rhoOpt)*DeltarhoOpt**2   
@@ -410,16 +411,16 @@ MODULE QML_PH4Jo_m
         CALL EvalFunc_QML_PH4Jo(QModel,Func,dnQFunc,nderiv)
         V0      = Func(1)
         Dq(1)   = (rhoO-Func(2))
-        Grad(1) = Func(10)
+        Gradient(1) = Func(10)
         Hess(1) = Func(18)
   
-        Mat_OF_PotDia(1,1) = V0 + Dq(1)*Grad(1) + HALF*(Dq(1)*Dq(1))*Hess(1) 
+        Mat_OF_PotDia(1,1) = V0 + Dq(1)*Gradient(1) + HALF*(Dq(1)*Dq(1))*Hess(1) 
     CASE(9) ! Model with V0 +grad*di+Hess*dQi*dQj  
       dnQFunc = [dnQ(2)] ! s
       CALL EvalFunc_QML_PH4Jo(QModel,Func,dnQFunc,nderiv)
       V0 =Func(1)
       V1 =ZERO
-      Grad = ZERO
+      Gradient = ZERO
       miHess(:,:) = ZERO
       somme = ZERO
       somme2 = ZERO
@@ -434,7 +435,7 @@ MODULE QML_PH4Jo_m
       Dq(8) = (dnQ(9)-Func(9))
 
       DO j=10,17
-         Grad(j-9) = Func(j)
+         Gradient(j-9) = Func(j)
       END DO
       DO k=18,25
          miHess(k-17,k-17) = Func(k)
@@ -462,7 +463,7 @@ MODULE QML_PH4Jo_m
       DO i=1,8
          DO j=1,8
             IF(j <= i) THEN
-               V1 = V1  + (Dq(i))*Grad(i) +  HALF*(Dq(i)*Dq(j))*miHess(i,j)
+               V1 = V1  + (Dq(i))*Gradient(i) +  HALF*(Dq(i)*Dq(j))*miHess(i,j)
             END IF
          END DO  
       END DO

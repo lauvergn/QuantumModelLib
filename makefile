@@ -295,6 +295,10 @@ OBJ=$(addprefix $(OBJ_DIR)/, $(OBJ0))
 #===============================================
 #============= Tests ===========================
 #===============================================
+.PHONY: test TEST
+test TEST: $(TESTS).x
+	@echo "model (QML) compilation: OK"
+#
 .PHONY: ut UT
 UT ut: $(TESTS).x
 	@echo "model (QML) compilation: OK"

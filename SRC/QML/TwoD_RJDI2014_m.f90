@@ -220,7 +220,7 @@ MODULE QML_TwoD_RJDI2014_m
     IMPLICIT NONE
 
     CLASS(QML_TwoD_RJDI2014_t),  intent(in) :: QModel
-    integer,              intent(in) :: nio
+    integer,                     intent(in) :: nio
 
     write(nio,*) 'TwoD_RJDI2014 current parameters'
     write(nio,*) '-----------------------------------------'

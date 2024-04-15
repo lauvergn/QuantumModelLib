@@ -44,6 +44,8 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
+  !CALL test_TwoD_RJDI2014() ; CALL Finalize_Test(test_var) ; stop
+
   !CALL test_PSB3() ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_Bottleneck ; CALL Finalize_Test(test_var) ; stop
@@ -2708,7 +2710,7 @@ SUBROUTINE test_TwoD_RJDI2014
   write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
   write(out_unit,*) '---------------------------------------------'
   flush(out_unit)
-  CALL Init_Model(QModel,pot_name='TwoD_RJDI2014',adiabatic=.TRUE.,Print_init=.TRUE.,option=1)
+  CALL Init_Model(QModel,pot_name='TwoD_RJDI2014',adiabatic=.TRUE.,Print_init=.TRUE.,option=3)
 
   Q = [ZERO,HALF]
 

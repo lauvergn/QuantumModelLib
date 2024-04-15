@@ -17,7 +17,7 @@ echo $FC OPT: $OPT OMP: $OMP LAPACK: $LAPACK INT: $INT FromMakefile: $FromMakefi
 if [ "$FromMakefile" != 1 ]
 then
   cd ..
-    make FC=$FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK INT=$INT ut > $here/comp.log 2>&1
+    make FC=$FC OPT=$OPT OMP=$OMP LAPACK=$LAPACK INT=$INT TEST > $here/comp.log 2>&1
   cd  $here
   nbOK=`grep -c "model (QML) compilation: OK" comp.log`
   if [ "$nbOK" = 0 ]
@@ -26,7 +26,6 @@ then
     exit
   fi
 fi
-
 
 echo "=========================================="
 echo " TESTING the internal potentials of ModLib"

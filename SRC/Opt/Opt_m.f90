@@ -343,7 +343,7 @@ CONTAINS
   END SUBROUTINE Write_QML_Opt
   SUBROUTINE QML_Opt(Q,QModel,Opt_param,Q0)
     USE QDUtil_m,         ONLY : Identity_Mat, diagonalization, LinearSys_Solve
-    USE ADdnSVM_m
+    USE ADdnSVM_m, ONLY : dnMat_t,Write_dnMat
     USE Model_m
     IMPLICIT NONE
 
