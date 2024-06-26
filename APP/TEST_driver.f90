@@ -40,11 +40,13 @@
 PROGRAM main_pot
   IMPLICIT NONE
 
-  CALL test_TwoD_RJDI2014() ; stop
+  CALL test_Phenol_Dia(10**7)
+  stop
+  CALL test_TwoD_RJDI2014()
 
 
-  CALL test_PSB3() ; stop
-  CALL test_PH4()
+  CALL test_PSB3()
+  !CALL test_PH4()
   CALL test_HBond()
   CALL test_1DSOC_1S1T()
   CALL test_Phenol_Dia(10**7)
@@ -531,6 +533,7 @@ END SUBROUTINE test_HBond
 
 SUBROUTINE test_Phenol_Dia(nb_eval)
   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unit=>INPUT_UNIT,out_unit=>OUTPUT_UNIT,Rkind => real64
+  USE QDUtil_m, ONLY : TO_string
 !$ USE omp_lib
   IMPLICIT NONE
 
@@ -545,7 +548,7 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
 
-  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
+  integer                             :: i,j,k,i_surf,ndim,nsurf,option,nb_eval,maxth
 
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
@@ -597,14 +600,18 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
   write(out_unit,*) '============================================================'
 
        !sub_Qmodel_Opt(Q,i_surf,nb_deg,icv,Max_it)
-  CALL sub_Qmodel_Opt(Q,1,-1,2,-1)
-  CALL sub_Qmodel_VGH(V,G,H,Q)
-  write(out_unit,*) 'Diabatic potential'
-  write(out_unit,'(3f12.8)') V
-  write(out_unit,*) 'Diabatic gradient of V(1,1)'
-  write(out_unit,'(2f12.8)') g(1,1,:)
-  write(out_unit,*) 'Diabatic hessian of V(1,1)'
-  write(out_unit,'(2f12.8)') h(1,1,:,:)
+  DO i_surf=1,3
+    Q = [2.0_Rkind,-0.5_Rkind]
+    CALL sub_Qmodel_Opt(Q,i_surf,-1,3,-1)
+    CALL sub_Qmodel_VGH(V,G,H,Q)
+    write(out_unit,'(a,i0,a,2f12.8)') 'Diabatic potential: ',i_surf,', Optimal coord:',Q
+    write(out_unit,'(a,i0)') 'Diabatic potential: ',i_surf
+    write(out_unit,'(3f12.8)') V
+    write(out_unit,'(a,i0,a,i0,a)') 'Diabatic gradient of V(',i_surf,',',i_surf,')'
+    write(out_unit,'(2f12.8)') g(i_surf,i_surf,:)
+    write(out_unit,'(a,i0,a,i0,a)') 'Diabatic hessian of V(',i_surf,',',i_surf,')'
+    write(out_unit,'(2f12.8)') h(i_surf,i_surf,:,:)
+  END DO
 
   deallocate(V)
   deallocate(GGdef)
