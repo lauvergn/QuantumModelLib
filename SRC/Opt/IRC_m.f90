@@ -782,7 +782,7 @@ SUBROUTINE QML_IRC_mEuler(s,QactOld,QactNew,Ene_AT_s,dQactds_AT_s,            &
   END SUBROUTINE QML_IRC_ModMidPoint
 
   SUBROUTINE QML_IRC_fcn(s,Qact,dQact,Ene_AT_s,QModel,IRC_p,forward,Grad)
-  USE ADdnSVM_m
+  USE ADdnSVM_m, ONLY : dnMat_t
   USE Model_m
   IMPLICIT NONE
 
