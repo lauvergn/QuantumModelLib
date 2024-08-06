@@ -1,6 +1,6 @@
 #!/bin/bash
 
-gfortran -o Compare_txt.exe ../bin/Compare_txt.f90
+gfortran -o Compare_txt.exe ../scripts/Compare_txt.f90
 
 for new_file in *txt
 do

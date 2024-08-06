@@ -206,6 +206,7 @@ $(OBJ_DIR)/HOO_DMBE_m.o : \
 $(OBJ_DIR)/HenonHeiles_m.o : \
           $(qdutil_numparameters_m) \
           $(qml_empty_m) \
+          $(qml_morse_m) \
           $(qdutil_m) \
           $(addnsvm_m)
 $(OBJ_DIR)/LinearHBond_m.o : \

@@ -156,11 +156,10 @@ endif
 #=================================================================================
 # ifort compillation v17 v18 with mkl
 #=================================================================================
-ifeq ($(FFC),ifort)
+ifeq ($(FFC),$(filter $(FFC),ifort ifx))
 
   # opt management
   ifeq ($(OOPT),1)
-      #FFLAGS = -O -parallel -g -traceback
       FFLAGS = -O  -g -traceback -heap-arrays
   else
       FFLAGS = -O0 -check all -g -traceback -heap-arrays
@@ -176,24 +175,31 @@ ifeq ($(FFC),ifort)
 
   # omp management
   ifeq ($(OOMP),1)
-    FFLAGS += -qopenmp
+    ifeq ($(FFC),ifort)
+      FFLAGS += -qopenmp -parallel
+    else # ifx
+      FFLAGS += -qopenmp
+    endif
   endif
-
   # some cpreprocessing
+
   FFLAGS += -cpp $(CPPSHELL_QML)
 
   # where to look the .mod files
   FFLAGS += -I$(QDMOD_DIR) -I$(ADMOD_DIR)
 
   FLIB    = $(EXTLib)
-  ifeq ($(LLAPACK),1)
-    #FLIB += -mkl -lpthread
-    IntLIB = -qmkl -lpthread
-    #IntLIB =  ${MKLROOT}/lib/libmkl_blas95_ilp64.a ${MKLROOT}/lib/libmkl_lapack95_ilp64.a ${MKLROOT}/lib/libmkl_intel_ilp64.a \
-    #         ${MKLROOT}/lib/libmkl_intel_thread.a ${MKLROOT}/lib/libmkl_core.a -liomp5 -lpthread -lm -ldl
+
+  ifneq ($(LLAPACK),1)
+    ifeq ($(FFC),ifort)
+      IntLIB = -mkl -lpthread
+    else # ifx
+      IntLIB = -qmkl -lpthread
+    endif
   else
     IntLIB = -lpthread
   endif
+
   FLIB += $(IntLIB)
 
   FC_VER = $(shell $(FFC) --version | head -1 )
@@ -367,7 +373,7 @@ cleanall : clean
 #================ make the readme.txt ==========
 .PHONY: readme
 readme:
-	./bin/extractReadMe
+	./scripts/extractReadMe
 #===============================================
 #================ zip and copy the directory ===
 ExtLibSAVEDIR := /Users/lauvergn/git/Ext_Lib
@@ -401,7 +407,7 @@ $(ADLIBA):
 #===============================================
 .PHONY: dep
 dependencies.mk fortranlist.mk dep:
-	bin/dependency.sh
+	./scripts/dependency.sh
 ##################################################################################
 ### dependencies
 #

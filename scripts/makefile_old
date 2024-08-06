@@ -299,7 +299,7 @@ cleanall : clean
 #================ make the readme.txt ==========
 .PHONY: readme
 readme:
-	./bin/extractReadMe
+	./scripts/extractReadMe
 #===============================================
 #================ zip and copy the directory ===
 ExtLibSAVEDIR := /Users/lauvergn/git/Ext_Lib

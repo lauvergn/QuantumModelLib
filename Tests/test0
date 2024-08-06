@@ -15,4 +15,4 @@ echo "=========================================="
 
  ../Driver.x > res
 #../ModLib.x < input.dat > res
-#../bin/Compare_QML > Test_QML.log
+#../scripts/Compare_QML > Test_QML.log
