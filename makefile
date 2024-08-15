@@ -190,7 +190,7 @@ ifeq ($(FFC),$(filter $(FFC),ifort ifx))
 
   FLIB    = $(EXTLib)
 
-  ifneq ($(LLAPACK),1)
+  ifeq ($(LLAPACK),1)
     ifeq ($(FFC),ifort)
       IntLIB = -mkl -lpthread
     else # ifx
