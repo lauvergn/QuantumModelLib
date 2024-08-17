@@ -2,7 +2,7 @@
 #=================================================================================
 # Compiler?
 #Possible values: (Empty: gfortran)
-#                gfortran (version: 9.0 linux and osx)
+#                gfortran (version: 9.0 linux and osx), ifx, ifort
  FC = gfortran
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
@@ -69,10 +69,7 @@ TESTS_DIR=Tests
 
 CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
                -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
-               -D__COMPILER="'$(FFC)'" \
-               -D__COMPILER_VER="'$(FC_VER)'" \
-               -D__COMPILER_OPT="'$(FFLAGS0)'" \
-               -D__QMLPATH="'$(MAIN_path)'" \
+			   -D__QMLPATH="'$(MAIN_path)'" \
                -D__QML_VER='"$(QML_ver)"'
 #=================================================================================
 # External Libraries directory
@@ -121,16 +118,13 @@ $(info ***********FLIB:         $(FLIB))
 $(info ***********EXTMOD_DIR:   $(EXTMOD_DIR))
 $(info ***********ext_obj:      $(ext_obj))
 $(info ***********************************************************************)
-$(info ***********FFLAGS:       $(FFLAGS))
-$(info ***********FLIB:         $(FLIB))
-$(info ***********************************************************************)
 
 VPATH = $(TESTS_DIR) $(MAIN_DIR) $(SRC_DIR)  \
         $(SRC_DIR)/QMLLib $(SRC_DIR)/QML $(SRC_DIR)/Opt $(SRC_DIR)/AdiaChannels
 
 MAINS= TEST_driver TEST_VibAdia TEST_grid TEST_OMPloop
 MAINSx=$(addsuffix .x,$(MAINS))
-$(info ***********MAINSx:      $(MAINSx))
+#$(info ***********MAINSx:      $(MAINSx))
 
 TESTS=TEST_model
 

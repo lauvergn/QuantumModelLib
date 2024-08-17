@@ -94,37 +94,48 @@ MODULE Model_m
       "unknown: -D__COMPILE_HOST=?"
 #endif
 
-  character (len=*), parameter :: compiler =                              &
-#if defined(__COMPILER)
-      __COMPILER
-#else
-      "unknown: -D__COMPILER=?"
-#endif
-
-  character (len=*), parameter :: compiler_ver =                          &
-#if defined(__COMPILER_VER)
-      __COMPILER_VER
-#else
-      "unknown: -D__COMPILER_VER=?"
-#endif
-
-  character (len=*), parameter :: compiler_opt =                          &
-#if defined(__COMPILER_OPT)
-      __COMPILER_OPT
-#else
-      "unknown: -D__COMPILER_OPT=?"
-#endif
-  character (len=*), parameter :: compiler_libs =                         &
-#if defined(__COMPILER_LIBS)
-       __COMPILER_LIBS
-#else
-      "unknown: -D__COMPILER_LIBS=?"
-#endif
+  logical, private :: Print_Version_done = .FALSE.
 
   TYPE(Model_t), PUBLIC  :: QuantumModel
 
 CONTAINS
 
+  SUBROUTINE version_QML(Print_Version)
+    USE iso_fortran_env
+    USE QDUtil_m
+    USE QMLLib_UtilLib_m, ONLY : QML_path
+    IMPLICIT NONE
+
+    logical,             intent(in)    :: Print_Version
+
+    IF (Print_Version) THEN
+      Print_Version_done = .TRUE.
+      write(out_unit,*) '================================================='
+      write(out_unit,*) '================================================='
+      write(out_unit,*) '== QML: Quantum Model Lib (E-CAM) ==============='
+      write(out_unit,*) '== QML version:       ',QML_version
+      write(out_unit,*) '== QML path:          ',QML_path
+      write(out_unit,*) '-------------------------------------------------'
+      write(out_unit,*) '== Compiled on       "',compile_host, '" the ',compile_date
+      write(out_unit,*) '== Compiler:         ',compiler_version()
+      write(out_unit,*) '== Compiler options: ',compiler_options()
+      write(out_unit,*) '-------------------------------------------------'
+      write(out_unit,*) 'QML is under the MIT license and '
+      write(out_unit,*) '  is written by David Lauvergnat [1]'
+      write(out_unit,*) '  with contributions of'
+      write(out_unit,*) '     Félix MOUHAT [2]'
+      write(out_unit,*) '     Liang LIANG [3]'
+      write(out_unit,*) '     Emanuele MARSILI [1,4]'
+      write(out_unit,*)
+      write(out_unit,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
+      write(out_unit,*) '[2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France'
+      write(out_unit,*) '[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France'
+      write(out_unit,*) '[4]: Durham University, Durham, UK'
+      write(out_unit,*) '================================================='
+      write(out_unit,*) '================================================='
+    END IF
+    
+  END SUBROUTINE version_QML
 
   SUBROUTINE Read_Model(QModel_inout,nio,read_nml1,opt1,IRC1)
     IMPLICIT NONE
@@ -358,31 +369,9 @@ CONTAINS
     Print_init_loc = .TRUE.
     IF (present(Print_init)) Print_init_loc = Print_init
 
+    CALL version_QML(Print_init_loc)
+
     IF (Print_init_loc) THEN
-      write(out_unit,*) '================================================='
-      write(out_unit,*) '================================================='
-      write(out_unit,*) '== QML: Quantum Model Lib (E-CAM) ==============='
-      write(out_unit,*) '== QML version:       ',QML_version
-      write(out_unit,*) '== QML path:          ',QML_path
-      write(out_unit,*) '-------------------------------------------------'
-      write(out_unit,*) '== Compiled on       "',compile_host, '" the ',compile_date
-      write(out_unit,*) '== Compiler:         ',compiler
-      write(out_unit,*) '== Compiler version: ',compiler_ver
-      write(out_unit,*) '== Compiler options: ',compiler_opt
-      write(out_unit,*) '== Compiler libs:    ',compiler_libs
-      write(out_unit,*) '-------------------------------------------------'
-      write(out_unit,*) 'QML is under the MIT license and '
-      write(out_unit,*) '  is written by David Lauvergnat [1]'
-      write(out_unit,*) '  with contributions of'
-      write(out_unit,*) '     Félix MOUHAT [2]'
-      write(out_unit,*) '     Liang LIANG [3]'
-      write(out_unit,*) '     Emanuele MARSILI [1,4]'
-      write(out_unit,*)
-      write(out_unit,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
-      write(out_unit,*) '[2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France'
-      write(out_unit,*) '[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France'
-      write(out_unit,*) '[4]: Durham University, Durham, UK'
-      write(out_unit,*) '================================================='
       write(out_unit,*) '================================================='
       write(out_unit,*) '== Initialization of the Model =================='
     END IF

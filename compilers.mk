@@ -7,9 +7,7 @@ ifeq ($(FFC),gfortran)
   ifeq ($(OOPT),1)
     FFLAGS = -O5 -g -fbacktrace -funroll-loops -ftree-vectorize -falign-loops=16
   else
-    #FFLAGS = -Og -g -fbacktrace -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -finit-real=nan -finit-integer=nan
-    FFLAGS = -Og
-
+    FFLAGS = -Og -g -fbacktrace -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -finit-real=nan -finit-integer=nan
   endif
 
   # integer kind management
