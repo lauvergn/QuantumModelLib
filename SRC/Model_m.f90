@@ -120,18 +120,24 @@ CONTAINS
       write(out_unit,*) '== Compiler:         ',compiler_version()
       write(out_unit,*) '== Compiler options: ',compiler_options()
       write(out_unit,*) '-------------------------------------------------'
-      write(out_unit,*) 'QML is under the MIT license and '
-      write(out_unit,*) '  is written by David Lauvergnat [1]'
-      write(out_unit,*) '  with contributions of'
-      write(out_unit,*) '     Félix MOUHAT [2]'
-      write(out_unit,*) '     Liang LIANG [3]'
-      write(out_unit,*) '     Emanuele MARSILI [1,4]'
-      write(out_unit,*)
-      write(out_unit,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
-      write(out_unit,*) '[2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France'
-      write(out_unit,*) '[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France'
-      write(out_unit,*) '[4]: Durham University, Durham, UK'
+      write(out_unit,*) 'QuantumModelLib* is a free software under the MIT Licence.'
+      write(out_unit,*) '  Copyright (c) 2022 David Lauvergnat [1]'
+      write(out_unit,*) '  with contributions of:'
+      write(out_unit,*) '    Félix MOUHAT [2]'
+      write(out_unit,*) '    Liang LIANG [3]'
+      write(out_unit,*) '    Emanuele MARSILI [1,4]'
+      write(out_unit,*) '    Evaristo Villaseco Arribas [5]'
+      write(out_unit,*) 
+      write(out_unit,*) '  [1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
+      write(out_unit,*) '  [2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France'
+      write(out_unit,*) '  [3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France'
+      write(out_unit,*) '  [4]: Durham University, Durham, UK'
+      write(out_unit,*) '  [5]: Department of Physics, Rutgers University, Newark, New Jersey 07102, USA'
+      write(out_unit,*) '    * Originally, it has been developed during the Quantum-Dynamics E-CAM project :'
+      write(out_unit,*) '       https://www.e-cam2020.eu/quantum-dynamics'
       write(out_unit,*) '================================================='
+      write(out_unit,*) '============ WARNING ============================'
+      write(out_unit,*) ' From the version 23.2, the "Phase_Following" default is .FALSE.'
       write(out_unit,*) '================================================='
     END IF
     
@@ -419,7 +425,7 @@ CONTAINS
     IF (present(Phase_Following)) THEN
       QModel_in%Phase_Following = Phase_Following
     ELSE
-      QModel_in%Phase_Following = .TRUE.
+      QModel_in%Phase_Following = .FALSE.
     END IF
 
     IF (present(Phase_checking)) THEN

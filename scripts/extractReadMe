@@ -102,8 +102,11 @@ or with  lapack/blas (linux)
     Some extra parameters can be initialized with specific procedures:
 
     - Phase_Following (default: .TRUE. ) for the adiabatic calculations:
+      WARNING: From the version 23.2, the default is .FALSE.
               CALL set_Qmodel_Phase_Following(Phase_Following)
 
+    - Phase_Checking (default: .TRUE. ) for the adiabatic calculations:
+              CALL set_Qmodel_Phase_Checking(Phase_Checking)
     - Phase_Checking (default: .TRUE. ) for the adiabatic calculations:
               CALL set_Qmodel_Phase_Checking(Phase_Checking)
 
