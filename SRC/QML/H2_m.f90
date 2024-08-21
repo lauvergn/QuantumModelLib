@@ -250,10 +250,10 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      Potential with derivatives,.
 !! @param r                  real:                value for which the potential is calculated
 !! @param QModel             TYPE(QML_H2_t):   derived type with the H2 parameters.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:             it enables to secify the derivative order:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H2(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
@@ -296,12 +296,12 @@ CONTAINS
     END IF
   END SUBROUTINE EvalPot_QML_H2
 
-!> @brief Function wich calculates the H2 potential with derivatives up to the 2d order is required.
+!> @brief Function wich calculates the H2 potential with derivatives.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @return QML_dnH2      TYPE (dnS_t):     derived type with a value (pot),,if required, its derivatives (gradient (grad) and hessian (hess)).
+!! @return QML_dnH2      TYPE (dnS_t):     derived type with a value (pot), if required, its derivatives.
 !! @param dnQ            TYPE (dnS_t):     derived type with the value of "r" and,if required, its derivatives.
 !! @param QModel         TYPE(QML_H2_t):   derived type with the H2 parameters.
   FUNCTION QML_dnH2(dnQ,QModel)

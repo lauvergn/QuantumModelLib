@@ -301,12 +301,12 @@ MODULE QML_Tully_m
     write(nio,*) 'end Tully parameters'
 
   END SUBROUTINE Write_QML_Tully
-!> @brief Subroutine wich calculates the Tully potential (for the 3 models) with derivatives up to the 2d order is required.
+!> @brief Subroutine wich calculates the Tully potential (for the 3 models) with derivatives.
 !!
 !! @param QModel             CLASS(QML_Tully_t):  derived type in which the parameters are set-up.
-!! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         Potential with derivatives,.
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
-!! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:              it enables to secify the derivative order:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Tully(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
@@ -332,15 +332,15 @@ MODULE QML_Tully_m
     END SELECT
 
   END SUBROUTINE EvalPot_QML_Tully
-!> @brief Subroutine wich calculates the Tully potential (for the 1st model) with derivatives up to the 2d order is required.
+!> @brief Subroutine wich calculates the Tully potential (for the 1st model) with derivatives.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      Potential with derivatives,.
 !! @param r                  real:                value for which the potential is calculated
 !! @param QModel             TYPE(QML_Tully_t):  derived type in which the parameters are set-up.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:             it enables to secify the derivative order:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv)
   !A. Simple avoided crossing
@@ -367,15 +367,15 @@ MODULE QML_Tully_m
 
 
   END SUBROUTINE EvalPot1_QML_Tully
-!> @brief Subroutine wich calculates the Tully potential (for the 2d model) with derivatives up to the 2d order is required.
+!> @brief Subroutine wich calculates the Tully potential (for the 2d model) with derivatives.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      Potential with derivatives,.
 !! @param r                  real:                value for which the potential is calculated
 !! @param QModel             TYPE(QML_Tully_t):  derived type in which the parameters are set-up.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:             it enables to secify the derivative order:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot2_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv) !2d Tully's potential
   !B. Dual avoided crossing
@@ -397,15 +397,15 @@ MODULE QML_Tully_m
 
 
   END SUBROUTINE EvalPot2_QML_Tully
-!> @brief Subroutine wich calculates the Tully potential (for the 3d model) with derivatives up to the 2d order is required.
+!> @brief Subroutine wich calculates the Tully potential (for the 3d model) with derivatives.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      Potential with derivatives,.
 !! @param r                  real:                value for which the potential is calculated
 !! @param QModel             TYPE(QML_Tully_t):  derived type in which the parameters are set-up.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:             it enables to secify the derivative order:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot3_QML_Tully(Mat_OF_PotDia,dnR,QModel,nderiv) !3d Tully's potential
   !C. Extended coupling with reflection

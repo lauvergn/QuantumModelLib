@@ -75,7 +75,8 @@ MODULE QML_Empty_m
     logical :: Phase_Checking   = .TRUE.
     logical :: adiabatic        = .TRUE.
     integer :: option           = 0
-    logical :: PubliUnit        = .FALSE. ! when PubliUnit=.TRUE., the units of a reference (publi ...) are used. Default (atomic unit)
+    logical :: PubliUnit        = .FALSE. ! when PubliUnit=.TRUE., the units of a reference (publi ...) are used. 
+                                          !  Default (atomic unit)
     logical :: In_a_Model       = .FALSE.
 
 
@@ -94,7 +95,7 @@ MODULE QML_Empty_m
 
     !Vec0 must be allocatable, to be able to deallocate with deallocate of the QML_Empty_t variable.
     TYPE (dnMat_t),     allocatable :: Vec0 ! to get the correct phase of the adiatic couplings
-    CONTAINS
+  CONTAINS
       PROCEDURE :: EvalPot_QModel         => EvalPot_QML_Empty
       PROCEDURE :: EvalPotAbInitio_QModel => EvalPotAbInitio_QML_Empty
       PROCEDURE :: EvalScalOp_QModel      => EvalScalOp_QML_Empty
@@ -105,7 +106,7 @@ MODULE QML_Empty_m
       PROCEDURE :: Cart_TO_Q_QModel       => Cart_TO_Q_QML_Empty
       PROCEDURE, PRIVATE :: Empty2_TO_Empty1_QML_Empty
       GENERIC,   PUBLIC  :: assignment(=) => Empty2_TO_Empty1_QML_Empty
-      END TYPE QML_Empty_t
+  END TYPE QML_Empty_t
 
   INTERFACE get_Q0_QModel
     MODULE PROCEDURE get_Q0_QML_Empty
@@ -161,17 +162,6 @@ MODULE QML_Empty_m
 
     QModel%AbInitio         = QModel_in%AbInitio
     QModel%nb_ScalOp        = QModel_in%nb_ScalOp
-
-    IF (QModel%adiabatic) THEN
-      write(out_unit,*) 'Adiabatic potential . . .'
-    ELSE
-      write(out_unit,*) 'Non-adiabatic potential . . .'
-    END IF
-    flush(out_unit)
-
-    IF (QModel%numeric) THEN
-      write(out_unit,*) 'You have decided to perform a numeric checking of the analytic formulas.'
-    END IF
 
     IF (allocated(QModel%pot_name)) deallocate(QModel%pot_name )
     QModel%pot_name = 'QML_Empty'

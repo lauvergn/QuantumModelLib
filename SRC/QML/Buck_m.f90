@@ -282,15 +282,15 @@ CONTAINS
 
   END SUBROUTINE get_Q0_QML_Buck
 
-!> @brief Subroutine wich calculates the Buckingham potential with derivatives up to the 2d order is required.
+!> @brief Subroutine wich calculates the Buckingham potential with derivatives.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE (dnS_t):         Matrix of dnS with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnS_t):         Matrix of dnS with the potential (pot),.
 !! @param dnR                TYPE (dnS_t):         derived type wich contain the value for which the potential is calculated: dnR%d0
 !! @param QModel          TYPE(QML_Buck_t):    derived type with the Buckingham parameters.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:             it enables to secify the derivative order:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Buck(QModel,Mat_OF_PotDia,dnQ,nderiv)
   USE ADdnSVM_m
@@ -310,7 +310,7 @@ CONTAINS
 
   END SUBROUTINE EvalPot_QML_Buck
 
-!> @brief Function wich calculates the Buckingham potential with derivatives up to the 2d order is required.
+!> @brief Function wich calculates the Buckingham potential with derivatives.
 !> @brief V(R) = A.Exp(-B*r)-C/r^6
 !!
 !> @author David Lauvergnat

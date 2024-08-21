@@ -229,9 +229,9 @@ MODULE QML_PH4_m
 !> @brief Subroutine wich calculates the PH4 potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_PH4_t):   derived type in which the parameters are set-up.
-!! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         Potential with derivatives,.
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
-!! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:              it enables to secify the derivative order:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_PH4(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m

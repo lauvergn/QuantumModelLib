@@ -248,12 +248,12 @@ MODULE QML_H2O_m
     END SELECT
 
   END SUBROUTINE get_Q0_QML_H2O
-!> @brief Subroutine wich calculates the H2O potential (unpublished model) with derivatives up to the 2d order is required.
+!> @brief Subroutine wich calculates the H2O potential (unpublished model) with derivatives.
 !!
-!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      Potential with derivatives,.
 !! @param r                  real:                value for which the potential is calculated
 !! @param QModel             TYPE(QML_H2O_t):    derived type in which the parameters are set-up.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:             it enables to secify the derivative order:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_H2O(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m

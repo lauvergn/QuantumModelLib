@@ -248,10 +248,10 @@ CONTAINS
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
-!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      Potential with derivatives,.
 !! @param r                  real:                value for which the potential is calculated
 !! @param QModel         TYPE(QML_Poly1D_t):   derived type with the Poly1D parameters.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:             it enables to secify the derivative order:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_Poly1D(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m

@@ -276,9 +276,9 @@ MODULE QML_PSB3_m
 !> @brief Subroutine wich calculates the PSB3 potential with derivatives up to the 2d order.
 !!
 !! @param QModel             CLASS(QML_PSB3_t):  derived type in which the parameters are set-up.
-!! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param Mat_OF_PotDia(:,:) TYPE (dnS_t):         Potential with derivatives,.
 !! @param dnQ(:)             TYPE (dnS_t)          value for which the potential is calculated
-!! @param nderiv             integer:              it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:              it enables to secify the derivative order:
 !!                                                 the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot_QML_PSB3(QModel,Mat_OF_PotDia,dnQ,nderiv)
     USE ADdnSVM_m
@@ -307,12 +307,12 @@ MODULE QML_PSB3_m
 
   END SUBROUTINE EvalPot_QML_PSB3
 
-!> @brief Subroutine wich calculates the PSB3 potential with derivatives up to the 2d order is required.
+!> @brief Subroutine wich calculates the PSB3 potential with derivatives.
 !!
-!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      Potential with derivatives,.
 !! @param r                  real:                value for which the potential is calculated
 !! @param PSB3Pot            TYPE(PSB3Pot_t):     derived type in which the parameters are set-up.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:             it enables to secify the derivative order:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot1_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv)
     USE ADdnSVM_m
@@ -411,12 +411,12 @@ MODULE QML_PSB3_m
 
   END SUBROUTINE EvalPot1_QML_PSB3
 
-!> @brief Subroutine wich calculates the PSB3 potential (Published model) with derivatives up to the 2d order is required.
+!> @brief Subroutine wich calculates the PSB3 potential (Published model) with derivatives.
 !!
-!! @param PotVal             TYPE (dnMat_t):      derived type with the potential (pot),  the gradient (grad) and the hessian (hess).
+!! @param PotVal             TYPE (dnMat_t):      Potential with derivatives,.
 !! @param r                  real:                value for which the potential is calculated
 !! @param PSB3Pot          TYPE(PSB3Pot_t):    derived type in which the parameters are set-up.
-!! @param nderiv             integer:             it enables to specify up to which derivatives the potential is calculated:
+!! @param nderiv             integer:             it enables to secify the derivative order:
 !!                                                the pot (nderiv=0) or pot+grad (nderiv=1) or pot+grad+hess (nderiv=2).
   SUBROUTINE EvalPot2_QML_PSB3(Mat_OF_PotDia,dnQ,PSB3Pot,nderiv) !Second PSB3's potential
     USE ADdnSVM_m
