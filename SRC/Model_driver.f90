@@ -237,6 +237,29 @@ SUBROUTINE sub_Qmodel_V(V,Q)
   CALL calc_pot(V,QuantumModel,Q(1:QuantumModel%ndim))
 
 END SUBROUTINE sub_Qmodel_V
+SUBROUTINE sub_Qmodel_Vdia_Vadia(Vdia,Vadia,Q)
+  USE QDUtil_NumParameters_m
+  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
+  USE Model_m
+  IMPLICIT NONE
+
+  real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)     :: Vdia(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     :: Vadia(QuantumModel%nsurf,QuantumModel%nsurf)
+
+  TYPE (dnMat_t)                         :: PotVal_adia,PotVal_dia
+
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_Vdia_Vadia')
+
+  CALL Eval_Pot(QuantumModel,Q,PotVal_adia,nderiv=0,PotVal_dia=PotVal_dia)
+
+  Vadia = PotVal_adia%d0
+  Vdia  = PotVal_dia%d0
+
+  CALL dealloc_dnMat(PotVal_dia)
+  CALL dealloc_dnMat(PotVal_adia)
+
+END SUBROUTINE sub_Qmodel_Vdia_Vadia
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   USE QDUtil_NumParameters_m
   USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat

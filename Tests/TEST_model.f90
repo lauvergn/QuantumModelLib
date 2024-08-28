@@ -44,7 +44,7 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
-
+  !CALL test_TwoD() ; CALL Finalize_Test(test_var) ; stop
   !CALL test_H3() ; stop
 
   !CALL test_TwoD_RJDI2014() ; CALL Finalize_Test(test_var) ; stop
@@ -2640,7 +2640,7 @@ SUBROUTINE test_TwoD
   TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: Q(:)
   integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                 :: PotVal
+  TYPE (dnMat_t)                 :: PotVal_dia,PotVal_adia
 
 
   write(out_unit,*) '---------------------------------------------'
@@ -2652,7 +2652,7 @@ SUBROUTINE test_TwoD
   write(out_unit,*) '---------------------------------------------'
   flush(out_unit)
 
-  CALL Init_Model(QModel,pot_name='TwoD',adiabatic=.FALSE.,Print_init=.FALSE.)
+  CALL Init_Model(QModel,pot_name='TwoD',adiabatic=.TRUE.,Print_init=.FALSE.)
 
   allocate(q(QModel%ndim))
   Q(:) = [3.875_Rkind,0.5_Rkind]
@@ -2672,19 +2672,21 @@ SUBROUTINE test_TwoD
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Potential and derivatives',nderiv
 
-  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  CALL Eval_Pot(QModel,Q,PotVal_adia,nderiv=nderiv,PotVal_dia=PotVal_dia)
 
   write(out_unit,*) 'Q(:) (bohr):'
   CALL Write_Vec(Q,out_unit,QModel%ndim)
-  write(out_unit,*) 'Energy (Hartree)'
-  CALL Write_dnMat(PotVal,nio=out_unit)
-
+  write(out_unit,*) 'Adiabatic Energy (Hartree)'
+  CALL Write_dnMat(PotVal_adia,nio=out_unit)
+  write(out_unit,*) 'Diabatic Energy (Hartree)'
+  CALL Write_dnMat(PotVal_dia,nio=out_unit)
   ! For testing the model
-  CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='twod', &
+  CALL Test_QdnV_FOR_Model(Q,PotVal_dia,QModel,info='twod', &
       test_var=test_var,last_test=.TRUE.)
 
 
-  CALL dealloc_dnMat(PotVal)
+  CALL dealloc_dnMat(PotVal_adia)
+  CALL dealloc_dnMat(PotVal_dia)
   deallocate(q)
   CALL dealloc_Model(QModel)
 

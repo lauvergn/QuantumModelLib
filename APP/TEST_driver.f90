@@ -40,10 +40,10 @@
 PROGRAM main_pot
   IMPLICIT NONE
 
-  CALL test_Phenol_Dia(10**7)
-  stop
+  CALL test_Phenol_Dia(10**6)
+  
   CALL test_TwoD_RJDI2014()
-
+  stop
 
   CALL test_PSB3()
   !CALL test_PH4()
@@ -339,6 +339,8 @@ SUBROUTINE test_TwoD_RJDI2014
   real (kind=Rkind),      allocatable     :: g(:,:,:)
   real (kind=Rkind),      allocatable     :: h(:,:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: Vdia(:,:)
+  real (kind=Rkind),      allocatable     :: Vadia(:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
@@ -347,7 +349,7 @@ SUBROUTINE test_TwoD_RJDI2014
 
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
-  pot_name  = 'read_model'
+  pot_name  = 'TwoD_RJDI2014'
   ndim      = 0 ! it would be initialized
   nsurf     = 0 ! it would be initialized
   option    = -1
@@ -356,15 +358,22 @@ SUBROUTINE test_TwoD_RJDI2014
 
 
   allocate(Q(ndim))
-  allocate(V(nsurf,nsurf))
+  allocate(Vdia(nsurf,nsurf))
+  allocate(Vadia(nsurf,nsurf))
 
+
+  Q(:) = [0.5_Rkind,0.5_Rkind]
+
+  CALL sub_Qmodel_Vdia_Vadia(Vdia,Vadia,Q)
+  write(out_unit,*) ' Diabatic potential as a 2x2 matrix:'
+  write(out_unit,'(2f12.8)') Vdia
+  write(out_unit,*) ' Adiabatic potential as a 2x2 matrix:'
+  write(out_unit,'(2f12.8)') Vadia
+
+  adiabatic = .FALSE.
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
   Q(:) = [0._Rkind,0.0_Rkind]
-
-  CALL sub_Qmodel_V(V,Q)
-  write(out_unit,*) ' Diabatic potential as a 2x2 matrix:'
-  write(out_unit,'(2f12.8)') V
-
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
 
   write(out_unit,*) '============================================================'
@@ -374,7 +383,8 @@ SUBROUTINE test_TwoD_RJDI2014
   !sub_Qmodel_Opt(Q,i_surf,nb_neg,icv,Max_it)
   CALL sub_Qmodel_Opt(Q,1,-1,3,-1)
 
-  deallocate(V)
+  deallocate(Vdia)
+  deallocate(Vadia)
   deallocate(Q)
 
 
