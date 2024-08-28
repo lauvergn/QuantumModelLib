@@ -137,7 +137,7 @@ CONTAINS
       write(out_unit,*) '       https://www.e-cam2020.eu/quantum-dynamics'
       write(out_unit,*) '================================================='
       write(out_unit,*) '============ WARNING ============================'
-      write(out_unit,*) ' From the version 23.2:'
+      write(out_unit,*) ' From the version 23.3:'
       write(out_unit,*) '   the "Phase_Following" and "Phase_Checking" default are .FALSE.'
       write(out_unit,*) '================================================='
     END IF
