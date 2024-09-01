@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #remove le link
-rm -f AD_dnSVM QDUtilLib
+rm -f QDUtilLib
 
-for dirlib in *_loc
+for dirlib in *loc
 do
   echo $dirlib
   test -d $dirlib || continue

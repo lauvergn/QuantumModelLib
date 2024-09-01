@@ -77,6 +77,7 @@ CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
 ifeq ($(ExtLibDIR),)
   ExtLibDIR := $(MAIN_path)/Ext_Lib
 endif
+$(shell [ -d $(ExtLibDIR) ] || (echo $(ExtLibDIR) "does not exist" ; exit 1))
 
 QD_DIR    = $(ExtLibDIR)/QDUtilLib
 QDMOD_DIR = $(QD_DIR)/OBJ/obj$(ext_obj)
@@ -224,19 +225,19 @@ zip: cleanall
 # AD_dnSVM + QDUTIL Lib
 #===============================================
 #
-$(QDLIBA):
-	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
-	@test -d $(QD_DIR) || (cd $(ExtLibDIR) ; ./get_QDUtilLib.sh $(EXTLIB_TYPE))
-	@test -d $(QD_DIR) || (echo $(QD_DIR) "does not exist" ; exit 1)
-	cd $(QD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(IINT) ExtLibDIR=$(ExtLibDIR) CompilersDIR=$(CompilersDIR)
-	@echo "  done " $(QDLIBA) " in "$(BaseName)
+.PHONY: getlib
+getlib:
+	cd $(ExtLibDIR) ; ./get_Lib.sh QDUtilLib dev
+	cd $(ExtLibDIR) ; ./get_Lib.sh AD_dnSVM dev
 #
-$(ADLIBA):
-	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
-	@test -d $(AD_DIR) || (cd $(ExtLibDIR) ; ./get_AD_dnSVM.sh  $(EXTLIB_TYPE))
-	@test -d $(AD_DIR) || (echo $(AD_DIR) "does not exist" ; exit 1)
-	cd $(AD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(IINT) ExtLibDIR=$(ExtLibDIR) CompilersDIR=$(CompilersDIR)
-	@echo "  done " $(AD_DIR) " in "$(BaseName)
+$(QDLIBA): getlib
+	cd $(ExtLibDIR)/QDUtilLib ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(INT) ExtLibDIR=$(ExtLibDIR) CompilersDIR=$(CompilersDIR)
+	@test -f $(QDLIBA) || (echo $(QDLIBA) "does not exist" ; exit 1)
+	@echo "  done " $(QDLIBA)
+$(ADLIBA): getlib
+	cd $(ExtLibDIR)/AD_dnSVM ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(INT) ExtLibDIR=$(ExtLibDIR) CompilersDIR=$(CompilersDIR)
+	@test -f $(ADLIBA) || (echo $(ADLIBA) "does not exist" ; exit 1)
+	@echo "  done " $(ADLIBA)
 #
 #===============================================
 #============= make dependencies =============

@@ -1644,8 +1644,11 @@ CONTAINS
       IF (debug) write(out_unit,*) 'PotVal already done'
     ELSE
       CALL QModel%QM%EvalPot_QModel(Mat_OF_PotDia,dnQ,nderiv=nderiv)
+      IF (debug) write(out_unit,*) ' PotVal done' ; flush(out_unit)
     END IF
+
     PotVal = Mat_OF_PotDia ! transfert the potential and its derivatives to the matrix form (PotVal)
+    IF (debug) write(out_unit,*) ' transfert done' ; flush(out_unit)
 
     ! deallocation
     DO i=1,size(dnQ)
@@ -1671,6 +1674,7 @@ CONTAINS
 
       PotVal_dia_loc = PotVal
       IF (present(PotVal_dia)) PotVal_dia = PotVal_dia_loc
+      IF (debug) write(out_unit,*) ' save pot dia  done' ; flush(out_unit)
 
       IF (present(Vec)) THEN
         IF (present(NAC)) THEN
@@ -1688,6 +1692,7 @@ CONTAINS
         END IF
         CALL dealloc_dnMat(Vec_loc)
       END IF
+      IF (debug) write(out_unit,*) ' dia => adia  done' ; flush(out_unit)
       CALL dealloc_dnMat(PotVal_dia_loc)
     END IF
 
@@ -3102,8 +3107,8 @@ CONTAINS
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Check_analytical_numerical_derivatives'
-    logical, parameter :: debug = .FALSE.
-    !logical, parameter :: debug = .TRUE.
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
     IF (QModel%QM%no_ana_der) RETURN
@@ -3116,13 +3121,11 @@ CONTAINS
 
     CALL check_alloc_QM(QModel,name_sub)
 
-
     CALL alloc_dnMat(PotVal_ana,nsurf=QModel%QM%nsurf,              &
                          nVar=QModel%QM%ndim,nderiv=nderiv)
 
     CALL alloc_dnMat(PotVal_num,nsurf=QModel%QM%nsurf,              &
                          nVar=QModel%QM%ndim,nderiv=nderiv)
-
 
     IF (QModel%QM%adiabatic .AND. QModel%QM%nsurf > 1) THEN
       CALL Eval_Pot(QModel,Q,PotVal_ana,nderiv,NAC_ana,Vec_ana,numeric=.FALSE.)
