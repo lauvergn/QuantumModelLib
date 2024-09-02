@@ -2816,7 +2816,7 @@ CONTAINS
     close(nio_loc)
 
   END SUBROUTINE Write_QdnV_FOR_Model
-  SUBROUTINE Test_QdnV_FOR_Model(Q,PotVal,QModel,Vec,NAC,info,name_file,test_var,last_test)
+  SUBROUTINE Test_QdnV_FOR_Model(Q,PotVal,QModel,Vec,NAC,info,name_file,test_file_path,test_var,last_test)
     USE QDUtil_m, ONLY : file_open2, TO_string, Write_Mat
     USE QDUtil_Test_m
     USE QMLLib_UtilLib_m
@@ -2829,13 +2829,13 @@ CONTAINS
     TYPE (dnMat_t),    intent(in),    optional :: Vec ! for non adiabatic couplings
     TYPE (dnMat_t),    intent(in),    optional :: NAC ! for non adiabatic couplings
     character(len=*),  intent(in),    optional :: info
-    character(len=*),  intent(in),    optional :: name_file
+    character(len=*),  intent(in),    optional :: name_file,test_file_path
     TYPE (test_t),     intent(inout)           :: test_var
     logical,           intent(in),    optional :: last_test
 
     integer :: write_file_unit,read_file_unit,err_io,nsize
     logical :: read_file_open,read_file_exist,last_test_loc
-    character(len=:),  allocatable :: write_file_name,read_file_name
+    character(len=:),  allocatable :: write_file_name,read_file_name,test_file_path_loc
     real (kind=Rkind), allocatable :: Qref(:)
     TYPE (dnMat_t)                 :: PotValref,Vecref
     real (kind=Rkind), allocatable :: d1NAC(:)
@@ -2847,12 +2847,17 @@ CONTAINS
     character(len=Name_longlen) ::dum_name
 
     ! open file to write
+    IF (present(test_file_path)) THEN
+      test_file_path_loc = trim(adjustl(test_file_path))
+    ELSE
+      test_file_path_loc = 'RES_files/'
+    END IF
     IF (present(name_file)) THEN
       write_file_name = trim(adjustl(name_file))
     ELSE
-      write_file_name = trim(adjustl(QModel%QM%pot_name))//'.txt'
+      write_file_name = trim(adjustl(QModel%QM%pot_name)) // '.txt'
     END IF
-    CALL file_open2(write_file_name,write_file_unit,lformatted=.TRUE.,append=.TRUE.,err_file=err_io)
+    CALL file_open2((test_file_path_loc // write_file_name),write_file_unit,lformatted=.TRUE.,append=.TRUE.,err_file=err_io)
     IF (err_io /= 0) THEN
       write(out_unit,*) 'ERROR in Test_QdnV_FOR_Model'
       write(out_unit,*) ' Impossible to open the file: ',write_file_name

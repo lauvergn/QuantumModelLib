@@ -205,6 +205,7 @@ cleanall : clean
 	rm -fr OBJ/obj* OBJ/*mod build
 	rm -f lib*.a
 	rm -f TESTS/res* TESTS/*log
+	rm -f RES_files DAT_files
 	@echo "  done all cleaning"
 #===============================================
 #================ make the readme.txt ==========
@@ -221,6 +222,8 @@ zip: cleanall
 	$(ExtLibSAVEDIR)/makezip.sh $(BaseName)
 	cd $(ExtLibSAVEDIR) ; ./cp_QML.sh
 	@echo "  done zip"
+#
+#===============================================
 #=== external libraries ========================
 # AD_dnSVM + QDUTIL Lib
 #===============================================
@@ -239,6 +242,15 @@ $(ADLIBA): getlib
 	@test -f $(ADLIBA) || (echo $(ADLIBA) "does not exist" ; exit 1)
 	@echo "  done " $(ADLIBA)
 #
+#===============================================
+#=== Add links to directories for fpm ==========
+#===============================================
+#
+.PHONY: fpmlink
+fpmlink: getlib
+	ln -s Tests/RES_files RES_files
+	ln -s Tests/DAT_files DAT_files
+
 #===============================================
 #============= make dependencies =============
 #===============================================

@@ -48,8 +48,9 @@ grep "TESTING" QModel.log | grep "Number of error"
 # test if the analytical and numerical derivatives match.
 echo "=========================================="
 nb_err_ana_num=`grep "ana == numer" QModel.log | grep -c "Err"`
-if test $nb_err_ana_num -gt 0
-then
+if (test -z $nb_err_ana_num) then
+   echo "Error(s) on the analytical/numerical derivatives: No test found!"
+elif (test $nb_err_ana_num -gt 0) then
    grep "ana == numer" QModel.log | grep "Err"
    echo "Error(s) on the analytical/numerical derivatives detected!!"
 else
@@ -59,8 +60,9 @@ echo "=========================================="
 
 nb_pb=`grep "TESTING QModel module. Number of error" QModel.log | LANG=C awk -F: '{print $2}'`
 
-if test $nb_pb -gt 0
-then
+if (test -z $nb_pb) then
+   echo "Error(s) detected: No test found!"
+elif (test $nb_pb -gt 0) then
    echo "Error(s) detected!!"
 else
    echo "No error!"

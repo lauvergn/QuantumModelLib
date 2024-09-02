@@ -2,3 +2,4 @@ rm -f res* grid* *txt
 rm -f Compare_QML.exe *log
 rm -f xx*
 rm -f *com *FChk
+rm -f RES_files/*
