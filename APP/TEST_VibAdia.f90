@@ -37,7 +37,7 @@
 !
 !===========================================================================
 !===========================================================================
-PROGRAM TEST_adia
+PROGRAM TEST_Vibadia
   USE QDUtil_NumParameters_m
   USE ADdnSVM_m
   USE Model_m
@@ -65,4 +65,4 @@ PROGRAM TEST_adia
     write(out_unit,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
   END DO
 
-END PROGRAM TEST_adia
+END PROGRAM TEST_Vibadia

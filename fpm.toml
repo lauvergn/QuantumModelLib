@@ -1,0 +1,57 @@
+name = "QuantumModelLib"
+version = "24.0.0"
+license = "MIT"
+author = "David Lauvergnat"
+maintainer = "david.lauvergnat@universite-paris-saclay.fr"
+copyright = "2024 David Lauvergnat"
+
+[library]
+source-dir="SRC"
+
+[install]
+library = true
+
+[[test]]
+name="TestQML"
+source-dir="Tests"
+main="TEST_model.f90"
+
+
+[[executable]]
+name="driver"
+source-dir="APP"
+main="TEST_driver.f90"
+
+[[executable]]
+name="grid"
+source-dir="APP"
+main="TEST_grid.f90"
+
+[[executable]]
+name="omp"
+source-dir="APP"
+main="TEST_OMPloop.f90"
+
+[[executable]]
+name="vibadia"
+source-dir="APP"
+main="TEST_VibAdia.f90"
+
+
+[build]
+link = ["blas", "lapack"]
+auto-executables = false
+auto-examples = false
+auto-tests = false
+
+[fortran]
+implicit-external = true 
+
+
+[preprocess]
+cpp.macros = ["__LAPACK=1","__QMLPATH=\"'/Users/lauvergn/git/QuantumModelLib'\""]
+
+[dependencies]
+QDUtilLib = { path = "Ext_lib/QDUtilLib" }
+AD_dnSVM  = { path = "Ext_lib/AD_dnSVM" }
+openmp = "*"

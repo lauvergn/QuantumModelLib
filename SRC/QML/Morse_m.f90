@@ -232,6 +232,14 @@ CONTAINS
     req_inout  = req
 
   END SUBROUTINE Read_QML_Morse
+!! === README ==
+!! Morse potential: $V(R) = D(1-exp(-a \cdot(R-Req))^2$
+!! pot_name  = 'Morse'
+!! ndim      = 1
+!! nsurf     = 1
+!! reduced mass      = 1744.60504565084306291455 au
+!! remark: Default parameters for H-F
+!! === END README ==
 !> @brief Subroutine wich prints the Morse current parameters.
 !!
 !> @author David Lauvergnat

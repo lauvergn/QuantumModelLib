@@ -1,0 +1,11 @@
+.DS_Store
+OBJ/*
+Vec_dnS
+build
+Tests/*log
+Tests/res*
+*.x
+dnSca.txt
+*.a
+*.log
+res

@@ -1,3 +1,7 @@
-AD_dnSVM*
-QDUtil*
-
+.DS_Store
+*/*.a
+*/obj/*
+*/OBJ/*
+QDUtilLib
+AD_dnSVM
+*-copy

@@ -6,10 +6,7 @@
 *.x
 *.a
 *.log
-SRC/AdiaChannels/mod_Basis.f90-pointer
-SRC/AdiaChannels/mod_Basis.f90.i
-SRC/AdiaChannels/mod_Basis.f90.corrfort17
-SRC/QML/H3-1_m.f90
+SRC/*/*.f90.i
 Tests/*txt
 Tests/*com
 Tests/*FChk
@@ -20,3 +17,5 @@ Tests/irc
 SRC/QML/chqml
 OBJ
 Examples
+*txt
+grid*
