@@ -2860,7 +2860,7 @@ CONTAINS
     CALL file_open2((test_file_path_loc // write_file_name),write_file_unit,lformatted=.TRUE.,append=.TRUE.,err_file=err_io)
     IF (err_io /= 0) THEN
       write(out_unit,*) 'ERROR in Test_QdnV_FOR_Model'
-      write(out_unit,*) ' Impossible to open the file: ',write_file_name
+      write(out_unit,*) ' Impossible to open the file: ',(test_file_path_loc // write_file_name)
       STOP 'ERROR in Test_QdnV_FOR_Model: Impossible to open the file'
     END IF
     
