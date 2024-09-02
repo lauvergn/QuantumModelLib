@@ -96,13 +96,21 @@ endif
 #=================================================================================
 ifeq ($(FFC),$(filter $(FFC),ifort ifx))
 
-  # opt management
+  # opt management + add/remove some flag to ifort/ifx (mainly to avoid bugs with ifx)
   ifeq ($(OOPT),1)
-    FFLAGS = -O  -g -traceback -heap-arrays
-    CFLAGS = -O  -g -traceback -heap-arrays
+    FFLAGS = -O  -g -traceback
+    CFLAGS = -O  -g -traceback
+    ifeq ($(FFC),ifort)
+      FFLAGS += -heap-arrays
+    endif
   else
-    FFLAGS = -O0 -check all -g -traceback
-    CFLAGS = -O0            -g -traceback
+    FFLAGS = -O0  -g -traceback
+    CFLAGS = -O0  -g -traceback
+    ifeq ($(FFC),ifort)
+      FFLAGS += -heap-arrays -check all
+    else
+      FFLAGS += -check all,nouninit
+    endif
   endif
 
   # integer kind management
