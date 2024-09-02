@@ -44,8 +44,7 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
-  !CALL test_TwoD() ; CALL Finalize_Test(test_var) ; stop
-  !CALL test_H3() ; stop
+  !CALL test_Vib_adia() ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_TwoD_RJDI2014() ; CALL Finalize_Test(test_var) ; stop
 
@@ -195,7 +194,7 @@ SUBROUTINE test_Tully
   write(out_unit,*) '   Tully, J. Chem. Phys. V93, pp15, 1990.'
   write(out_unit,*) ' Be carrefull, the non-adiabatic coupling is scaled by -1/50.'
   CALL Init_Model(QModel,pot_name='Tully',Print_init=.FALSE.,option=1)
-  CALL Eval_pot_ON_Grid(QModel,Qmin=[-TEN],Qmax=[TEN],nb_points=1001,grid_file='grid_Tully1')
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-TEN],Qmax=[TEN],nb_points=1001,grid_file='RES_files/grid_Tully1')
 
   CALL dealloc_Model(QModel)
 
@@ -208,7 +207,7 @@ SUBROUTINE test_Tully
   write(out_unit,*) ' Be carrefull, the non-adiabatic coupling is scaled by -1/12.'
 
   CALL Init_Model(QModel,pot_name='Tully',Print_init=.FALSE.,option=2)
-  CALL Eval_pot_ON_Grid(QModel,Qmin=[-TEN],Qmax=[TEN],nb_points=1001,grid_file='grid_Tully2')
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-TEN],Qmax=[TEN],nb_points=1001,grid_file='RES_files/grid_Tully2')
 
   CALL dealloc_Model(QModel)
 
@@ -221,7 +220,7 @@ SUBROUTINE test_Tully
   write(out_unit,*) ' Be carrefull, the sign of non-adiabatic coupling is changed.'
 
   CALL Init_Model(QModel,pot_name='Tully',Print_init=.FALSE.,option=3)
-  CALL Eval_pot_ON_Grid(QModel,Qmin=[-TEN],Qmax=[TEN],nb_points=1001,grid_file='grid_Tully3')
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[-TEN],Qmax=[TEN],nb_points=1001,grid_file='RES_files/grid_Tully3')
 
   CALL dealloc_Model(QModel)
 
@@ -335,7 +334,7 @@ SUBROUTINE test_OneDSOC_1S1T
 
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[3._Rkind],Qmax=[20._Rkind], &
-                        nb_points=1001,nderiv=0,grid_file='grid_1DSOC_1S1T')
+                        nb_points=1001,nderiv=0,grid_file='RES_files/grid_1DSOC_1S1T')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -448,7 +447,7 @@ SUBROUTINE test_OneDSOC_2S1T
 
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[3._Rkind],Qmax=[20._Rkind], &
-                        nb_points=1001,nderiv=0,grid_file='grid_1DSOC_2S1T')
+                        nb_points=1001,nderiv=0,grid_file='RES_files/grid_1DSOC_2S1T')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -523,7 +522,7 @@ SUBROUTINE test_Morse
   write(out_unit,*) '   file name: "grid_Morse"'
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[1._Rkind],Qmax=[5._Rkind],nb_points=1001,&
-                        grid_file='grid_Morse')
+                        grid_file='RES_files/grid_Morse')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -654,7 +653,7 @@ SUBROUTINE test_H2
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '   file name: "grid_H2"'
 
-  CALL Eval_pot_ON_Grid(QModel,Qmin=[0.7_Rkind],Qmax=[20._Rkind],nb_points=1001,grid_file='grid_H2')
+  CALL Eval_pot_ON_Grid(QModel,Qmin=[0.7_Rkind],Qmax=[20._Rkind],nb_points=1001,grid_file='RES_files/grid_H2')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -730,7 +729,7 @@ SUBROUTINE test_Buckingham
   write(out_unit,*) '   file name: "grid_Buck"'
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[6._Rkind],Qmax=[20._Rkind],nb_points=1001,&
-                        grid_file='grid_Buck')
+                        grid_file='RES_files/grid_Buck')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -847,7 +846,7 @@ SUBROUTINE test_Phenol
   CALL Init_Model(QModel,pot_name='phenol',PubliUnit=.TRUE.,Print_init=.FALSE.,adiabatic = .FALSE.)
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[0.5_Rkind,ZERO],Qmax=[5._Rkind,ZERO], &
-                        nb_points=1001,grid_file='grid_Phenol')
+                        nb_points=1001,grid_file='RES_files/grid_Phenol')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -1008,7 +1007,7 @@ SUBROUTINE test_Bottleneck
   write(out_unit,*) ' 1D-grid'
   write(out_unit,*) '---------------------------------------------'
   CALL Eval_pot_ON_Grid(QModel, &
-  Qmin=[-5._Rkind,ZERO],Qmax=[5._Rkind,ZERO],nb_points=101,grid_file='grid_bottleneck')
+  Qmin=[-5._Rkind,ZERO],Qmax=[5._Rkind,ZERO],nb_points=101,grid_file='RES_files/grid_bottleneck')
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q)
@@ -1098,7 +1097,7 @@ SUBROUTINE test_LinearHBond
 
   CALL Eval_pot_ON_Grid(QModel, &
                         Qmin=[2.75_Rkind,-0.6_Rkind],Qmax=[2.75_Rkind,0.6_Rkind],nb_points=1001,&
-                        grid_file='grid_Hbond-sym')
+                        grid_file='RES_files/grid_Hbond-sym')
 
   CALL dealloc_Model(QModel)
 
@@ -1153,7 +1152,7 @@ SUBROUTINE test_LinearHBond
 
   CALL Eval_pot_ON_Grid(QModel, &
                         Qmin=[3._Rkind,-0.8_Rkind],Qmax=[3._Rkind,0.7_Rkind],nb_points=1001,&
-                        grid_file='grid_Hbond-asym')
+                        grid_file='RES_files/grid_Hbond-asym')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
@@ -1247,10 +1246,10 @@ SUBROUTINE test_Vib_adia
   write(out_unit,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
 
   ! For testing the model
-  CALL Test_QdnV_FOR_Model(Qact,PotVal,QModel,info='Pot',name_file='Vib_adia.txt', &
+  CALL Test_QdnV_FOR_Model(Qact,PotVal,QModel,info='Pot Adiabatic',name_file='Vib_adia.txt', &
       test_var=test_var,last_test=.FALSE.)
 
-  CALL Test_QdnV_FOR_Model(Qact,NAC,QModel,info='NAC',name_file='Vib_adia.txt', &
+  CALL Test_QdnV_FOR_Model(Qact,NAC,QModel,info='NAC Adiabatic',name_file='Vib_adia.txt', &
       test_var=test_var,last_test=.TRUE.)
 
   write(out_unit,*) '---------------------------------------------'
@@ -1565,7 +1564,7 @@ SUBROUTINE test_Retinal_JPCB2000
   QModel%QM%adiabatic = .TRUE.
   DQ2 = TWO
   CALL Eval_pot_ON_Grid(QModel,Qmin=[-pi/TWO,-DQ2],Qmax=[THREE*pi/TWO,DQ2],         &
-                        nb_points=101,grid_file='grid_Retinal_JPCB2000')
+                        nb_points=101,grid_file='RES_files/grid_Retinal_JPCB2000')
 
 
   CALL dealloc_dnMat(PotVal)
@@ -1692,7 +1691,7 @@ SUBROUTINE test_HONO
                               2.23738_Rkind,1.975200_Rkind,ZERO],        &
                         Qmax=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
                               2.23738_Rkind,1.975200_Rkind,pi],          &
-                        nb_points=1001, grid_file='grid_HONO')
+                        nb_points=1001, grid_file='RES_files/grid_HONO')
 
   CALL dealloc_Model(QModel)
 
@@ -2303,25 +2302,25 @@ SUBROUTINE test_ClH2p_op34
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[0.8_Rkind,Q(2),Q(3)], &
                                Qmax=[2.6_Rkind,Q(2),Q(3)], &
-                        nb_points=101,grid_file='grid_ClH2+_op34_Q1.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op34_Q1.tab')
   CALL Eval_pot_ON_Grid(QModel,Qmin=[Q(1),2.1_Rkind,Q(3)], &
                                Qmax=[Q(1),3.1_Rkind,Q(3)], &
-                        nb_points=101,grid_file='grid_ClH2+_op34_Q2.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op34_Q2.tab')
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[Q(1),Q(2),-0.5_Rkind], &
                                Qmax=[Q(1),Q(2), 0.5_Rkind], &
-                        nb_points=101,grid_file='grid_ClH2+_op34_Q3.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op34_Q3.tab')
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[0.8_Rkind,2.1_Rkind,Q(3)], &
                                Qmax=[2.6_Rkind,3.1_Rkind,Q(3)], &
-                        nb_points=101,grid_file='grid_ClH2+_op34_Q12.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op34_Q12.tab')
   CALL Eval_pot_ON_Grid(QModel,Qmin=[Q(1),2.1_Rkind,-0.5_Rkind], &
                                Qmax=[Q(1),3.1_Rkind, 0.5_Rkind], &
-                        nb_points=101,grid_file='grid_ClH2+_op34_Q23.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op34_Q23.tab')
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[0.8_Rkind,Q(2),-0.5_Rkind], &
                                Qmax=[2.6_Rkind,Q(2), 0.5_Rkind], &
-                        nb_points=101,grid_file='grid_ClH2+_op34_Q13.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op34_Q13.tab')
   deallocate(q)
   CALL dealloc_Model(QModel)
 
@@ -2464,25 +2463,25 @@ SUBROUTINE test_ClH2p_op56
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[0.8_Rkind,Q(2),Q(3)], &
                                Qmax=[2.6_Rkind,Q(2),Q(3)], &
-                        nb_points=101,grid_file='grid_ClH2+_op56_Q1.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op56_Q1.tab')
   CALL Eval_pot_ON_Grid(QModel,Qmin=[Q(1),2.1_Rkind,Q(3)], &
                                Qmax=[Q(1),3.1_Rkind,Q(3)], &
-                        nb_points=101,grid_file='grid_ClH2+_op56_Q2.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op56_Q2.tab')
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[Q(1),Q(2),-0.5_Rkind], &
                                Qmax=[Q(1),Q(2), 0.5_Rkind], &
-                        nb_points=101,grid_file='grid_ClH2+_op56_Q3.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op56_Q3.tab')
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[0.8_Rkind,2.1_Rkind,Q(3)], &
                                Qmax=[2.6_Rkind,3.1_Rkind,Q(3)], &
-                        nb_points=101,grid_file='grid_ClH2+_op56_Q12.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op56_Q12.tab')
   CALL Eval_pot_ON_Grid(QModel,Qmin=[Q(1),2.1_Rkind,-0.5_Rkind], &
                                Qmax=[Q(1),3.1_Rkind, 0.5_Rkind], &
-                        nb_points=101,grid_file='grid_ClH2+_op56_Q23.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op56_Q23.tab')
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[0.8_Rkind,Q(2),-0.5_Rkind], &
                                Qmax=[2.6_Rkind,Q(2), 0.5_Rkind], &
-                        nb_points=101,grid_file='grid_ClH2+_op56_Q13.tab')
+                        nb_points=101,grid_file='RES_files/grid_ClH2+_op56_Q13.tab')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '----- CHECK SUBROUTINE ----------------------'
@@ -2905,7 +2904,7 @@ SUBROUTINE test_OneD_Photons
   write(out_unit,*) '------------ 2D-Grid ------------------------'
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[-ONE,-2._Rkind],Qmax=[Ten,2._Rkind],         &
-  nb_points=101,grid_file='grid_OneD_photons')
+  nb_points=101,grid_file='RES_files/grid_OneD_photons')
   write(out_unit,*) '---------------------------------------------'
 
   CALL dealloc_Model(QModel)
@@ -3064,13 +3063,13 @@ SUBROUTINE test_PH4Jo
   write(out_unit,*) '---------------------------------------------'
   CALL Eval_pot_ON_Grid(QModel,nb_points=100, &
                         Qmin=[0.4_Rkind,-20._Rkind],Qmax=[1.7_Rkind,+20._Rkind],  &
-                        nderiv=0,grid_file='grid_PH4_2D')
+                        nderiv=0,grid_file='RES_files/grid_PH4_2D')
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---- 1D-functions ---------------------------'
   write(out_unit,*) '---------------------------------------------'
   allocate(Func(QModel%QM%nb_Func))
-  open(newunit=nio,file='grid_PH4_Func')
+  open(newunit=nio,file='RES_files/grid_PH4_Func')
   DO i=-200,200
     Q = [i*0.1_Rkind]
     CALL Eval_Func(QModel,Q,Func,nderiv=0)
@@ -3555,7 +3554,7 @@ SUBROUTINE test_H3
   CALL Write_dnMat(PotVal,nio=out_unit)
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[-FOUR],Qmax=[FOUR],nb_points=801,          &
-                        grid_file='grid_H3_V61')
+                        grid_file='RES_files/grid_H3_V61')
 
   allocate(Func(QModel%QM%nb_Func))
 
@@ -3582,7 +3581,7 @@ SUBROUTINE test_H3
   CALL Write_dnMat(PotVal,nio=out_unit)
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[-FOUR,0.8_Rkind],Qmax=[FOUR,2._Rkind],nb_points=100,          &
-                        grid_file='grid_H3_V72')
+                        grid_file='RES_files/grid_H3_V72')
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q2D)
@@ -3599,7 +3598,7 @@ SUBROUTINE test_H3
   CALL Write_dnMat(PotVal,nio=out_unit)
 
   CALL Eval_pot_ON_Grid(QModel,Qmin=[-FOUR,0.8_Rkind],Qmax=[FOUR,2._Rkind],nb_points=100,          &
-                        grid_file='grid_H3_V74')
+                        grid_file='RES_files/grid_H3_V74')
 
   CALL dealloc_dnMat(PotVal)
   deallocate(Q2D)

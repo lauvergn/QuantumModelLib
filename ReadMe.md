@@ -201,7 +201,7 @@ Here, it is a 1D basis set (particle-in-a-box), with
 
 WARNING: It is working only with ONE inactive variable.
 
-The following subroutine enables to get the effective Hamiltonian along Qact(:).
+The following subroutine enables to get the effective Hamiltonian along $Qact(:)$.
 ```fortran
   CALL sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
 ```
@@ -294,37 +294,56 @@ From the main QuantumModelLib directory:
 - If you want to remove OpenMP feature, 
 
 - build:
-```
+```bash
 fpm build
 ```
 
 Remark: if you get this error "'./././/Ext_lib/QDUtilLib/fpm.toml' could not be found"
 Its means that the link between some dependencies are lost. Do:
-make getlib
+```bash
+  make fpmlink
+```
 
--tests:
-The fpm tests are set up, but they are somme problems while reading input files (wrong directory).
+- tests:
+
+```bash
+  fpm test --> res
+```
+
+The intermediate result files (*.txt grid*) are in the RES_files directory (link to Tests/RES_files).
+The tests summaries are in QModel.log file (about 43 tests are performed)
+
+Remark: if you get this error "STOP ERROR in Test_QdnV_FOR_Model: Impossible to open the file"
+Its means that the link between RES_files and/or DAT_files are lost. Do:
+```bash
+  make fpmlink
+```
 
 - run examples:
-```
+
+```bash
  fpm run driver --< Tests/DAT_files/Vibadia_HBond.dat --> res_driver
 ```
 => Test sevral models (1 or several surfaces, optimization, Vibration adiabatic separation)
 
-```
+```bash
  fpm run vibadia --< Tests/DAT_files/Vibadia_HBond.dat --> res_VibAdia
  ```
 => Test a Vibration adiabatic separation model.
 
-```
+```bash
   fpm run grid
 ```
 => Test the 1D and 2D-cut generation for HenonHeiles potential (it uses subroutines with Fortran modules)
 
-```
+```bash
 fpm run omp
 ```
 => Test an OpenMP loop ($10^6$) on the HONO model (several seconds)
+
+
+# Model list
+
 ## Model 'buck'
        Buckingham potential: V(R) = A*exp(-B*R)-C/R^6
        pot_name  = 'buck'
@@ -527,7 +546,7 @@ fpm run omp
 
  reduced mass      = 1837.1526464003414/2 au
 ## Model 'Morse'
- Morse potential: $V(R) = D(1-exp(-a \cdot(r-Req))^2$
+ Morse potential: $V(R) = D(1-exp(-a \cdot(R-Req))^2$
  pot_name  = 'Morse'
  ndim      = 1
  nsurf     = 1
