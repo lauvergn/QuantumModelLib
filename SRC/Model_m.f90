@@ -522,42 +522,14 @@ CONTAINS
 
     SELECT CASE (trim(tab_pot_name(1)))
     CASE ('morse')
-      !! === README ==
-      !! Morse potential: V(R) = D*(1-exp(-a*(r-Req))**2
-      !! pot_name  = 'Morse'
-      !! ndim      = 1
-      !! nsurf     = 1
-      !! reduced mass      = 1744.60504565084306291455 au
-      !! remark: Default parameters for H-F
-      !! === END README ==
-
       allocate(QML_Morse_t :: QModel%QM)
       QModel%QM = Init_QML_Morse(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('poly1d')
-      !! === README ==
-      !! Polynomial potential: V(R) = sum_i coef(i) * (r-Req)**i
-      !! pot_name  = 'Poly1D'
-      !! ndim      = 1
-      !! nsurf     = 1
-      !! reduced mass      = 1744.60504565084306291455 au
-      !! remark: Default parameters for H-F
-      !! === END README ==
-
       allocate(QML_Poly1D_t :: QModel%QM)
       QModel%QM = Init_QML_Poly1D(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('h2')
-      !! === README ==
-      !! H2 potential: V(R) = Sum_i a_i * (R-Req)**(i-1)
-      !! pot_name  = 'H2'
-      !! ndim      = 1
-      !! nsurf     = 1
-      !! options: (1,2) Talyor expansion 
-      !!     Level: CCSD(T)-F12B/VTZ-F12 (with molpro 2010)
-      !! options:(3) extract for the H+H2 LSTH potential
-      !! reduced mass      = 1837.1526464003414/2 au
-      !! === END README ==
       allocate(QML_H2_t :: QModel%QM)
       QModel%QM = Init_QML_H2(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
@@ -633,7 +605,7 @@ CONTAINS
       !!    option 1: usual HenonHeiles (default)
       !!    option 2: quadratic contribution + morse potentials and tanh contributions
       !!    option 3: quadratic contribution + tanh contributions for the anharmonic part
-      !! reduced masses(:)      = ONE au
+      !! reduced masses      = ONE au
       !! ref:  parameters taken from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
       !! === END README ==
       allocate(QML_HenonHeiles_t :: QModel%QM)
@@ -688,7 +660,7 @@ CONTAINS
       !! pot_name  = 'Phenol'
       !! ndim      = 2 (R=rOH, th=OH-torsion)
       !! nsurf     = 3
-      !! Diagonal Metric Tensor(:)      = (/ 0.0005786177, 0.0002550307 /) au
+      !! Diagonal Metric Tensor      = [ 0.0005786177, 0.0002550307 ] au
       !! remark:
       !! ref: Z. Lan, W. Domcke, V. Vallet, A.L. Sobolewski, S. Mahapatra, J. Chem. Phys. 122 (2005) 224315. doi:10.1063/1.1906218.
       !! === END README ==
@@ -702,7 +674,7 @@ CONTAINS
       !! pot_name  = 'TwoD'
       !! ndim      = 2 (X,Y)
       !! nsurf     = 2
-      !! Reduced masses(:)      = (/ 20000., 6667. /) au
+      !! Reduced masses$      = [ 20000., 6667. ] au
       !! remark: The parameter values have been modified
       !! ref: A. Ferretti, G. Granucci, A. Lami, M. Persico, G. Villani, J. Chem. Phys. 104, 5517 (1996); https://doi.org/10.1063/1.471791
       !! === END README ==
@@ -715,7 +687,7 @@ CONTAINS
       !! pot_name  = 'TwoD_RJDI2014'
       !! ndim      = 2 (X,Y)
       !! nsurf     = 2
-      !! Reduced masses(:)      = [1. , 1.] au
+      !! Reduced masses      = [1. , 1.] au
       !! ref:  Ilya G. Ryabinkin, Loïc Joubert-Doriol, and Artur F. Izmaylov, ...
       !!       ... J. Chem. Phys. 140, 214116 (2014); https://doi.org/10.1063/1.4881147
       !! === END README ==

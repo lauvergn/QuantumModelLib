@@ -161,7 +161,7 @@ CONTAINS
 
     CASE default
       write(out_unit,*) 'ERROR in Init_QML_H2'
-      write(out_unit,*) 'Possible option: 1,2'
+      write(out_unit,*) 'Possible option: 1,2,3'
       write(out_unit,*) 'Actual value, option=',QModel%option
       STOP 'ERROR in Init_QML_H2: wrong option value'
     END SELECT
@@ -219,6 +219,20 @@ CONTAINS
     Req_inout  = Req
 
   END SUBROUTINE Read_QML_H2
+!! === README ==
+!! H2 potential
+!! pot_name  = 'H2'
+!! ndim      = 1
+!! nsurf     = 1
+!!
+!! options, (1) Talyor expansion: $V(R) = \sum_i a_i \cdot (R-Req)^{i-1}$
+!!     Level: CCSD(T)-F12B/VTZ-F12 (with molpro 2010)
+!! options, (2) Talyor expansion: $V(R) = \sum_i a_i \cdot x^{i-1}$ with $x=Req/R-1$
+!!     Level: CCSD(T)-F12B/VTZ-F12 (with molpro 2010)
+!! options(3) extract for the H+H2 LSTH potential
+!!
+!! reduced mass      = 1837.1526464003414/2 au
+!! === END README ==
 !> @brief Subroutine wich prints the H2 current parameters.
 !!
 !> @author David Lauvergnat
@@ -328,7 +342,7 @@ CONTAINS
     CASE (1)
       dnDeltaQ  = dnQ-QModel%Req
     CASE(2)
-      dnDeltaQ  = dnQ-ONE
+      dnDeltaQ  = QModel%Req/dnQ-ONE
     END SELECT
     IF (debug) CALL Write_dnS(dnDeltaQ,info='dnDeltaQ')
 

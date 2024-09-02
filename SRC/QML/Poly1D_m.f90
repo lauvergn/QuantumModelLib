@@ -204,13 +204,21 @@ CONTAINS
 
 
   END SUBROUTINE Read_QML_Poly1D
+!! === README ==
+!! Polynomial potential: $V(R) = \sum_i coef(i) \cdot (r-Req)^i$
+!! pot_name  = 'Poly1D'
+!! ndim      = 1
+!! nsurf     = 1
+!! reduced mass      = 1744.60504565084306291455 au
+!! remark: Default parameters for H-F
+!! === END README ==
 !> @brief Subroutine wich prints the Poly1D current parameters.
 !!
 !> @author David Lauvergnat
 !! @date 03/08/2017
 !!
 !! @param QModel         TYPE(QML_Poly1D_t):   derived type with the Poly1D parameters.
-!! @param nio                integer          :   file unit to print the parameters.
+!! @param nio            integer          :   file unit to print the parameters.
   SUBROUTINE Write_QML_Poly1D(QModel,nio)
     IMPLICIT NONE
 

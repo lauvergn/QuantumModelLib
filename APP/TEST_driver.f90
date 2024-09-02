@@ -37,7 +37,7 @@
 !
 !===========================================================================
 !===========================================================================
-PROGRAM main_pot
+PROGRAM test_driver
   IMPLICIT NONE
 
   CALL test_Phenol_Dia(10**6)
@@ -56,7 +56,7 @@ PROGRAM main_pot
   CALL test_Test()
   !CALL test_Read_Model() ; stop
 
-END PROGRAM main_pot
+END PROGRAM test_driver
 SUBROUTINE test_Read_Model()
   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unit=>INPUT_UNIT,out_unit=>OUTPUT_UNIT, Rkind => real64
   IMPLICIT NONE
