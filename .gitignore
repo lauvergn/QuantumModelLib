@@ -19,4 +19,7 @@ OBJ
 Examples
 *txt
 grid*
+res
 Tests/RES_files/*
+RES_files
+DAT_files
