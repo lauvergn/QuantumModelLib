@@ -103,12 +103,13 @@ CONTAINS
   SUBROUTINE version_QML(Print_Version)
     USE iso_fortran_env
     USE QDUtil_m
-    USE QMLLib_UtilLib_m, ONLY : QML_path
+    USE QMLLib_UtilLib_m, ONLY : QML_path,check_QML_Path
     IMPLICIT NONE
 
     logical,             intent(in)    :: Print_Version
 
     IF (Print_Version) THEN
+      CALL check_QML_Path()
       Print_Version_done = .TRUE.
       write(out_unit,*) '================================================='
       write(out_unit,*) '================================================='
