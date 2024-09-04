@@ -1163,29 +1163,6 @@ CONTAINS
 
   END SUBROUTINE get_Q0_Model
 
-  SUBROUTINE check_QML_Path()
-    USE QMLLib_UtilLib_m, ONLY : make_QMLInternalFileName, QML_path
-    IMPLICIT NONE
-
-    character (len=:), allocatable :: FileName
-    logical :: file_exist
-
-
-    FileName = make_QMLInternalFileName('InternalData/Test_QML_Path.txt')
-
-    inquire(file=FileName,exist=file_exist)
-
-    IF (.NOT. file_exist) THEN
-      write(out_unit,*) 'ERROR: the QML directory path is wrong !!'
-      write(out_unit,*) ' FileName: ',FileName
-      write(out_unit,*) ' QML_path: ',QML_path
-      write(out_unit,*) ' Probably, the QML directory has been moved'
-      write(out_unit,*) ' Recompile again QML.'
-      STOP 'ERROR in check_QML_Path: Wrong QML_path'
-    END IF
-
-  END SUBROUTINE check_QML_Path
-
   ! check if the QM [CLASS(QML_Empty_t)] is allocated
   SUBROUTINE check_alloc_QM(QModel,name_sub_in)
     IMPLICIT NONE

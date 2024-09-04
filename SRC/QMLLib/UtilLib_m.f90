@@ -44,15 +44,21 @@ MODULE QMLLib_UtilLib_m
 
   PRIVATE
 
-  character (len=*), parameter :: QML_path   =                         &
+  character (len=*), parameter   :: QML_path0 =                         &
 #if defined(__QMLPATH)
     __QMLPATH
 #else
     '~/QuantumModelLib'
 #endif
 
+  character (len=*), parameter   :: QML_path1 = QML_path0 // '/Ext_Lib/QuantumModelLib'
+
+  character (len=:), allocatable :: QML_path
+
+
   PUBLIC :: Find_Label,NFind_Label,FFind_Label,Pot_Name_Analysis,      &
-            Read_alloc_Vect,make_QMLInternalFileName,QML_path
+            Read_alloc_Vect,                                           &
+            make_QMLInternalFileName,QML_path,check_QML_Path
 
   
   INTERFACE Pot_Name_Analysis
@@ -279,6 +285,41 @@ MODULE QMLLib_UtilLib_m
 
   END FUNCTION QML_Read_alloc_Vect
 
+  SUBROUTINE check_QML_Path()
+    IMPLICIT NONE
+
+    character (len=:), allocatable :: FileName0
+    character (len=:), allocatable :: FileName1
+    logical :: file_exist
+
+
+    FileName0 = make_QMLInternalFileName('InternalData/Test_QML_Path.txt',FPath=QML_path0)
+    inquire(file=FileName0,exist=file_exist)
+
+    IF (file_exist) THEN
+      QML_path = QML_path0
+    ELSE
+      write(out_unit,*) 'WARNING: the QML directory path (',QML_path0,') is wrong !!'
+      write(out_unit,*) '   Trying with: ',QML_path1
+
+      FileName1 = make_QMLInternalFileName('InternalData/Test_QML_Path.txt',FPath=QML_path1)
+      inquire(file=FileName1,exist=file_exist)
+      IF (file_exist) QML_path = QML_path1
+    END IF
+
+    IF (.NOT. file_exist) THEN
+      write(out_unit,*) 'ERROR: the QML directory path is wrong !!'
+      write(out_unit,*) ' Try with two paths:'
+
+      write(out_unit,*) '   QML_path0: ',QML_path0
+      write(out_unit,*) '   QML_path1: ',QML_path1
+
+      write(out_unit,*) ' Probably, the QML directory has been moved'
+      write(out_unit,*) ' Recompile again QML.'
+      STOP 'ERROR in check_QML_Path: Wrong QML_path'
+    END IF
+
+  END SUBROUTINE check_QML_Path
   FUNCTION make_QMLInternalFileName(FileName,FPath) RESULT(make_FileName)
     USE QDUtil_m, ONLY : err_FileName
     IMPLICIT NONE
@@ -296,7 +337,11 @@ MODULE QMLLib_UtilLib_m
     IF (present(FPath)) THEN
       FPath_loc = FPath
     ELSE
-      FPath_loc = QML_path
+      IF (allocated(QML_path)) THEN
+        FPath_loc = QML_path
+      ELSE
+        STOP 'ERROR in make_QMLInternalFileName: QML_path is not set, CALL check_QML_Path() before.'
+      END IF
     END IF
 
     err = err_FileName(FileName,name_sub='make_QMLInternalFileName')
