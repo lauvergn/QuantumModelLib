@@ -292,7 +292,7 @@ MODULE QMLLib_UtilLib_m
     character (len=:), allocatable :: FileName1
     logical :: file_exist
 
-
+    IF (allocated(QML_path)) RETURN ! it means the check_QML_Path as been called already
     FileName0 = make_QMLInternalFileName('InternalData/Test_QML_Path.txt',FPath=QML_path0)
     inquire(file=FileName0,exist=file_exist)
 
