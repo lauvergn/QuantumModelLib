@@ -49,7 +49,7 @@ implicit-external = true
 
 
 [preprocess]
-cpp.macros = ["__LAPACK=1","__QMLPATH=\"'/Users/lauvergn/git/QuantumModelLib'\""]
+cpp.macros = ["__LAPACK=1","__QMLPATH=\"'`pwd`'\""]
 
 [dependencies]
 QDUtilLib = { path = "Ext_lib/QDUtilLib" }
