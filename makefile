@@ -38,11 +38,6 @@ ifeq ($(LAPACK),)
 else
   LLAPACK      := $(LAPACK)
 endif
-ifeq ($(INT),)
-  IINT      := 4
-else
-  IINT      := $(INT)
-endif
 #=================================================================================
 #
 # Operating system, OS? automatic using uname:
@@ -52,7 +47,7 @@ OS :=$(shell uname)
 QML_ver  := $(shell awk '/QML/ {print $$3}' version-QML)
 
 # Extension for the object directory and the library
-ext_obj=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(IINT)
+ext_obj=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
 
 # library name
 QMLIBA=libQMLib$(ext_obj).a
@@ -112,7 +107,7 @@ $(info ***********COMPILER:     $(FFC))
 $(info ***********COMPILER_VER: $(FC_VER))
 $(info ***********OPTIMIZATION: $(OOPT))
 $(info ***********OpenMP:       $(OOMP))
-$(info ***********INT:          $(IINT))
+$(info ***********INT:          $(INT))
 $(info ***********LAPACK:       $(LLAPACK))
 $(info ***********FFLAGS:       $(FFLAGS))
 $(info ***********FLIB:         $(FLIB))
@@ -149,7 +144,7 @@ test TEST: $(TESTS).x
 .PHONY: ut UT
 UT ut: $(TESTS).x
 	@echo "model (QML) compilation: OK"
-	cd Tests ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(IINT) 1
+	cd Tests ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(INT) 1
 #===============================================
 #============= all: lib, tests ...  ============
 #===============================================
