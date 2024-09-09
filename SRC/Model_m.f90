@@ -1328,7 +1328,7 @@ CONTAINS
 
   END SUBROUTINE Eval_tab_HMatVibAdia
 
-  SUBROUTINE Eval_Pot(QModel,Q,PotVal,nderiv,NAC,Vec,numeric,PotVal_dia)
+  SUBROUTINE Eval_Pot(QModel,Q,PotVal,nderiv,NAC,Vec,numeric,PotVal_dia,Vec0)
     USE ADdnSVM_m
     IMPLICIT NONE
 
@@ -1337,6 +1337,7 @@ CONTAINS
     real (kind=Rkind),  intent(in)               :: Q(:)
     integer,            intent(in),    optional  :: nderiv
     TYPE (dnMat_t),     intent(inout), optional  :: NAC,Vec
+    TYPE (dnMat_t),     intent(inout), optional  :: Vec0
     logical,            intent(in),    optional  :: numeric
     TYPE (dnMat_t),     intent(inout), optional  :: PotVal_dia
 
@@ -1406,10 +1407,14 @@ CONTAINS
     !write(out_unit,*) 'PotVal (Vib_dia)'
     !CALL Write_dnMat(PotVal_dia_loc,nio=out_unit)
 
-    IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
-    CALL dia_TO_adia(PotVal_dia_loc,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,      &
+    IF (present(Vec0)) THEN
+      CALL dia_TO_adia(PotVal_dia_loc,PotVal_loc,Vec_loc,Vec0,NAC_loc,      &
+                       PF,PC,nderiv_loc,type_diag=1)
+    ELSE IF (.NOT. allocated(QModel%QM%Vec0)) THEN 
+      allocate(QModel%QM%Vec0)
+      CALL dia_TO_adia(PotVal_dia_loc,PotVal_loc,Vec_loc,QModel%QM%Vec0,NAC_loc,      &
                      PF,PC,nderiv_loc,type_diag=1)
-
+    END IF
     CALL submatrix_dnMat2_TO_dnMat1(PotVal,PotVal_loc,lb=1,ub=QModel%QM%nb_Channels)
 
     IF (present(Vec)) THEN
@@ -1471,20 +1476,37 @@ CONTAINS
         END IF
       END IF
     ELSE ! analytical calculation
-      IF (present(Vec)) THEN
-        IF (present(NAC)) THEN
-          CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,Vec=Vec,Nac=NAC,PotVal_dia=PotVal_dia_loc)
+      IF (present(Vec0)) THEN
+        IF (present(Vec)) THEN
+          IF (present(NAC)) THEN
+            CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,Vec=Vec,Nac=NAC,PotVal_dia=PotVal_dia_loc,Vec0=Vec0)
+          ELSE
+            CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,Vec=Vec,PotVal_dia=PotVal_dia_loc,Vec0=Vec0)
+          END IF
         ELSE
-          CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,Vec=Vec,PotVal_dia=PotVal_dia_loc)
+          IF (present(NAC)) THEN
+            CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,Nac=NAC,PotVal_dia=PotVal_dia_loc,Vec0=Vec0)
+          ELSE
+            CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,PotVal_dia=PotVal_dia_loc,Vec0=Vec0)
+          END IF
         END IF
+        IF (present(PotVal_dia)) PotVal_dia = PotVal_dia_loc
       ELSE
-        IF (present(NAC)) THEN
-          CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,Nac=NAC,PotVal_dia=PotVal_dia_loc)
+        IF (present(Vec)) THEN
+          IF (present(NAC)) THEN
+            CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,Vec=Vec,Nac=NAC,PotVal_dia=PotVal_dia_loc)
+          ELSE
+            CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,Vec=Vec,PotVal_dia=PotVal_dia_loc)
+          END IF
         ELSE
-          CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,PotVal_dia=PotVal_dia_loc)
+          IF (present(NAC)) THEN
+            CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,Nac=NAC,PotVal_dia=PotVal_dia_loc)
+          ELSE
+            CALL Eval_Pot_ana(QModel,Q,PotVal,nderiv_loc,PotVal_dia=PotVal_dia_loc)
+          END IF
         END IF
+        IF (present(PotVal_dia)) PotVal_dia = PotVal_dia_loc
       END IF
-      IF (present(PotVal_dia)) PotVal_dia = PotVal_dia_loc
     END IF
   END IF
 
@@ -1502,7 +1524,7 @@ CONTAINS
 
   END SUBROUTINE Eval_Pot
 
-  SUBROUTINE Eval_Pot_ana(QModel,Q,PotVal,nderiv,NAC,Vec,PotVal_dia)
+  SUBROUTINE Eval_Pot_ana(QModel,Q,PotVal,nderiv,NAC,Vec,PotVal_dia,Vec0)
     USE ADdnSVM_m, ONLY : dnS_t,alloc_dnS,dealloc_dnS,Variable,                &
              dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat,Write_dnMat
     IMPLICIT NONE
@@ -1513,6 +1535,7 @@ CONTAINS
     real (kind=Rkind),     intent(in)               :: Q(:)
     integer,               intent(in)               :: nderiv
     TYPE (dnMat_t),        intent(inout), optional  :: NAC,Vec,PotVal_dia
+    TYPE (dnMat_t),        intent(inout), optional  :: Vec0
 
     ! local variables
     integer                     :: i,j,ij,id,nat
@@ -1620,27 +1643,47 @@ CONTAINS
         CALL Write_dnMat(PotVal,nio=out_unit)
         flush(out_unit)
       END IF
-      IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
 
       PotVal_dia_loc = PotVal
       IF (present(PotVal_dia)) PotVal_dia = PotVal_dia_loc
       IF (debug) write(out_unit,*) ' save pot dia  done' ; flush(out_unit)
 
-      IF (present(Vec)) THEN
-        IF (present(NAC)) THEN
-          CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec,QModel%QM%Vec0,NAC,PF,PC,nderiv)
+      IF (present(Vec0)) THEN
+        IF (present(Vec)) THEN
+          IF (present(NAC)) THEN
+            CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec,Vec0,NAC,PF,PC,nderiv)
+          ELSE
+            CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec,Vec0,NAC_loc,PF,PC,nderiv)
+            CALL dealloc_dnMat(NAC_loc)
+          END IF
         ELSE
-          CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec,QModel%QM%Vec0,NAC_loc,PF,PC,nderiv)
-          CALL dealloc_dnMat(NAC_loc)
+          IF (present(NAC)) THEN
+            CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec_loc,Vec0,NAC,PF,PC,nderiv)
+          ELSE
+            CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec_loc,Vec0,NAC_loc,PF,PC,nderiv)
+            CALL dealloc_dnMat(NAC_loc)
+          END IF
+          CALL dealloc_dnMat(Vec_loc)
         END IF
       ELSE
-        IF (present(NAC)) THEN
-          CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec_loc,QModel%QM%Vec0,NAC,PF,PC,nderiv)
+        IF (.NOT. allocated(QModel%QM%Vec0)) allocate(QModel%QM%Vec0)
+  
+        IF (present(Vec)) THEN
+          IF (present(NAC)) THEN
+            CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec,QModel%QM%Vec0,NAC,PF,PC,nderiv)
+          ELSE
+            CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec,QModel%QM%Vec0,NAC_loc,PF,PC,nderiv)
+            CALL dealloc_dnMat(NAC_loc)
+          END IF
         ELSE
-          CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec_loc,QModel%QM%Vec0,NAC_loc,PF,PC,nderiv)
-          CALL dealloc_dnMat(NAC_loc)
+          IF (present(NAC)) THEN
+            CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec_loc,QModel%QM%Vec0,NAC,PF,PC,nderiv)
+          ELSE
+            CALL dia_TO_adia(PotVal_dia_loc,PotVal,Vec_loc,QModel%QM%Vec0,NAC_loc,PF,PC,nderiv)
+            CALL dealloc_dnMat(NAC_loc)
+          END IF
+          CALL dealloc_dnMat(Vec_loc)
         END IF
-        CALL dealloc_dnMat(Vec_loc)
       END IF
       IF (debug) write(out_unit,*) ' dia => adia  done' ; flush(out_unit)
       CALL dealloc_dnMat(PotVal_dia_loc)
@@ -2418,12 +2461,12 @@ CONTAINS
 
     IF (Phase_checking) THEN
       CALL DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,                &
-                         dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag_loc)
+                      dnVec=Vec,dnVecProj=NAC,dnVec0=Vec0,type_diag=type_diag_loc)
 
       IF (Phase_Following) Vec0%d0 = Vec%d0
     ELSE
       CALL DIAG_dnMat(dnMat=PotVal_dia,dnMatDiag=PotVal_adia,                &
-                         dnVec=Vec,dnVecProj=NAC,type_diag=type_diag_loc)
+                      dnVec=Vec,dnVecProj=NAC,type_diag=type_diag_loc)
     END IF
 
     IF (debug) THEN

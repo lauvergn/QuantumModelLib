@@ -288,6 +288,38 @@ SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   CALL dealloc_dnMat(Vec_loc)
 
 END SUBROUTINE sub_Qmodel_VVec
+SUBROUTINE sub_Qmodel_VVec_Vec0(V,Vec,Vec0,Q)
+  USE QDUtil_NumParameters_m
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
+  USE Model_m
+  IMPLICIT NONE
+
+  real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)     :: V(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     :: Vec(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     :: Vec0(QuantumModel%nsurf,QuantumModel%nsurf)
+
+  TYPE (dnMat_t)                  :: Vec_loc,PotVal_loc,Vec0_loc
+
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VVec_Vec0 in Model_driver.f90')
+
+
+  CALL alloc_dnMat(Vec_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
+  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
+  CALL alloc_dnMat(Vec0_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
+
+  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=0,Vec=Vec_loc,Vec0=Vec0_loc)
+
+  V(:,:)    = PotVal_loc%d0
+  Vec(:,:)  = Vec_loc%d0
+  Vec0(:,:) = Vec0_loc%d0
+
+  CALL dealloc_dnMat(PotVal_loc)
+  CALL dealloc_dnMat(Vec_loc)
+  CALL dealloc_dnMat(Vec0_loc)
+
+END SUBROUTINE sub_Qmodel_VVec_Vec0
 SUBROUTINE sub_Qmodel_VG(V,G,Q)
   USE QDUtil_NumParameters_m
   USE Model_m
@@ -335,6 +367,40 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   CALL dealloc_dnMat(NAC_loc)
 
 END SUBROUTINE sub_Qmodel_VG_NAC
+SUBROUTINE sub_Qmodel_VG_NAC_Vec0(V,G,NAC,Vec0,Q)
+  USE QDUtil_NumParameters_m
+  USE Model_m
+  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
+  IMPLICIT NONE
+
+  real (kind=Rkind),      intent(in)       :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)    :: V(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)    :: G(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)    :: NAC(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)    :: Vec0(QuantumModel%nsurf,QuantumModel%nsurf)
+
+  TYPE (dnMat_t)                  :: NAC_loc,PotVal_loc,Vec0_loc
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VG_NAC_Vec0 in Model_driver.f90')
+
+
+  CALL alloc_dnMat(NAC_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
+  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
+  CALL alloc_dnMat(Vec0_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
+
+  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc,Vec0=Vec0_loc)
+
+  V(:,:)     = PotVal_loc%d0
+  G(:,:,:)   = PotVal_loc%d1
+  NAC(:,:,:) = NAC_loc%d1
+  Vec0(:,:)  = Vec0_loc%d0
+
+  CALL dealloc_dnMat(PotVal_loc)
+  CALL dealloc_dnMat(NAC_loc)
+  CALL dealloc_dnMat(Vec0_loc)
+
+
+END SUBROUTINE sub_Qmodel_VG_NAC_Vec0
 SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
   USE QDUtil_NumParameters_m
   USE Model_m
