@@ -1363,6 +1363,10 @@ CONTAINS
   IF (debug) THEN
     write(out_unit,*) ' BEGINNING ',name_sub
     IF (present(nderiv)) write(out_unit,*) '   nderiv',nderiv
+    write(out_unit,*) '   present(NAC): ',present(NAC)
+    write(out_unit,*) '   present(Vec): ',present(Vec)
+    write(out_unit,*) '   present(Vec0):',present(Vec0)
+    IF (present(Vec0)) CALL Write_dnMat(Vec0,nio=out_unit)
     flush(out_unit)
   END IF
   !write(out_unit,*) 'in Eval_Pot Q ',Q
@@ -1517,6 +1521,10 @@ CONTAINS
       write(out_unit,*) 'PotVal (dia)'
     END IF
     CALL Write_dnMat(PotVal,nio=out_unit)
+    IF (present(Vec0)) THEN
+      write(out_unit,*) 'Vec0'
+      CALL Write_dnMat(Vec0,nio=out_unit)
+    END IF
     write(out_unit,*) ' END ',name_sub
     flush(out_unit)
   END IF
@@ -1555,6 +1563,8 @@ CONTAINS
       write(out_unit,*) '   nderiv:       ',nderiv
       write(out_unit,*) '   present(NAC): ',present(NAC)
       write(out_unit,*) '   present(Vec): ',present(Vec)
+      write(out_unit,*) '   present(Vec0):',present(Vec0)
+      IF (present(Vec0)) CALL Write_dnMat(Vec0,nio=out_unit)
       flush(out_unit)
     END IF
 
@@ -1697,6 +1707,10 @@ CONTAINS
         write(out_unit,*) 'PotVal (dia)'
       END IF
       CALL Write_dnMat(PotVal,nio=out_unit)
+      IF (present(Vec0)) THEN
+        write(out_unit,*) 'Vec0'
+        CALL Write_dnMat(Vec0,nio=out_unit)
+      END IF
       write(out_unit,*) ' END ',name_sub
       flush(out_unit)
     END IF
@@ -2414,8 +2428,6 @@ CONTAINS
       write(out_unit,*) ' BEGINNING ',name_sub
       IF (present(nderiv)) write(out_unit,*) '   nderiv',nderiv
       !n = size(PotVal_dia%d0,dim=1)
-      write(out_unit,*) 'max Val odd-even',maxval(abs(PotVal_dia%d0(1::2,2::2)))
-      write(out_unit,*) 'max Val even-odd',maxval(abs(PotVal_dia%d0(2::2,1::2)))
       write(out_unit,*) 'type_diag_loc',type_diag_loc
       write(out_unit,*) 'Phase_Checking',Phase_Checking
       write(out_unit,*) 'Phase_Following',Phase_Following
@@ -2473,11 +2485,14 @@ CONTAINS
 
       write(out_unit,*) 'Eig',(PotVal_adia%d0(i,i),i=1,nsurf)
 
-      write(out_unit,*) 'PotVal_adia',PotVal_adia%d0(1:2,1:2)
+      write(out_unit,*) 'PotVal_adia'
       CALL Write_dnMat(PotVal_adia,nio=out_unit)
 
       write(out_unit,*) 'Vec'
       CALL Write_dnMat(Vec,nio=out_unit)
+
+      write(out_unit,*) 'Vec0'
+      CALL Write_dnMat(Vec0,nio=out_unit)
 
       write(out_unit,*) 'NAC'
       CALL Write_dnMat(NAC,nio=out_unit)

@@ -309,6 +309,8 @@ SUBROUTINE sub_Qmodel_VVec_Vec0(V,Vec,Vec0,Q)
   CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
   CALL alloc_dnMat(Vec0_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
 
+  Vec0_loc%d0 = Vec0(:,:)
+
   CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=0,Vec=Vec_loc,Vec0=Vec0_loc)
 
   V(:,:)    = PotVal_loc%d0
@@ -387,6 +389,8 @@ SUBROUTINE sub_Qmodel_VG_NAC_Vec0(V,G,NAC,Vec0,Q)
   CALL alloc_dnMat(NAC_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
   CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
   CALL alloc_dnMat(Vec0_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
+
+  Vec0_loc%d0 = Vec0(:,:)
 
   CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc,Vec0=Vec0_loc)
 
