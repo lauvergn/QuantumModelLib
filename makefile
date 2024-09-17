@@ -223,16 +223,19 @@ zip: cleanall
 # AD_dnSVM + QDUTIL Lib
 #===============================================
 #
+DEV=
 .PHONY: getlib
 getlib:
-	cd $(ExtLibDIR) ; ./get_Lib.sh QDUtilLib dev
-	cd $(ExtLibDIR) ; ./get_Lib.sh AD_dnSVM dev
+	cd $(ExtLibDIR) ; ./get_Lib.sh QDUtilLib $(DEV)
+	cd $(ExtLibDIR) ; ./get_Lib.sh AD_dnSVM  $(DEV)
 #
-$(QDLIBA): getlib
+$(QDLIBA):
+	cd $(ExtLibDIR) ; ./get_Lib.sh QDUtilLib $(DEV)
 	cd $(ExtLibDIR)/QDUtilLib ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(INT) ExtLibDIR=$(ExtLibDIR) CompilersDIR=$(CompilersDIR)
 	@test -f $(QDLIBA) || (echo $(QDLIBA) "does not exist" ; exit 1)
 	@echo "  done " $(QDLIBA)
-$(ADLIBA): getlib
+$(ADLIBA):
+	cd $(ExtLibDIR) ; ./get_Lib.sh AD_dnSVM  $(DEV)
 	cd $(ExtLibDIR)/AD_dnSVM ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(INT) ExtLibDIR=$(ExtLibDIR) CompilersDIR=$(CompilersDIR)
 	@test -f $(ADLIBA) || (echo $(ADLIBA) "does not exist" ; exit 1)
 	@echo "  done " $(ADLIBA)
