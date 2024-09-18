@@ -1,5 +1,4 @@
-.DS_Store
-*/.DS_Store
+**/.DS_Store
 *.x
 *.a
 *.log
@@ -15,7 +14,7 @@
 /Tests/irc
 /OBJ
 /Examples
-*txt
+/*txt
 grid*
 res
 /RES_files
