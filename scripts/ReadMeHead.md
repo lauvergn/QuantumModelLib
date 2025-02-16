@@ -2,7 +2,7 @@
 
  QuantumModelLib or QML* is a free software under the MIT Licence.
 
-  date: 01/09/2024
+  date: 16/02/2025
 
 ```
     Copyright (c) 2022 David Lauvergnat [1]
@@ -11,6 +11,8 @@
         Liang LIANG [3]
         Emanuele MARSILI [1,4]
         Evaristo Villaseco Arribas [5]
+        Peter Schürger [1]
+
 ```
 [1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
 [2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France

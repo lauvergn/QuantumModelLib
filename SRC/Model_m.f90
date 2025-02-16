@@ -335,11 +335,14 @@ CONTAINS
   USE QML_Buck_m
   USE QML_Phenol_m
   USE QML_Sigmoid_m
+
   USE QML_TwoD_m
   USE QML_TwoD_RJDI2014_m
   USE QML_TwoD_Valahu2022_m
   USE QML_Vibronic_m
   USE QML_Uracil_m
+  USE QML_fulvene_m
+  USE QML_dmabn_m
 
   USE AdiaChannels_Basis_m
 
@@ -761,6 +764,14 @@ CONTAINS
 
       allocate(QML_Uracil_t :: QModel%QM)
       QModel%QM = Init_QML_Uracil(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+
+    CASE ('fulvene')
+      allocate(QML_fulvene_t :: QModel%QM)
+      QModel%QM = Init_QML_fulvene(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+    CASE ('dmabn')
+      allocate(QML_dmabn_t :: QModel%QM)
+      QModel%QM = Init_QML_dmabn(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('hono')
       allocate(QML_HONO_t :: QModel%QM)

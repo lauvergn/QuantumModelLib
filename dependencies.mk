@@ -43,6 +43,8 @@ qml_twod_valahu2022_m = $(OBJ_DIR)/TwoD_Valahu2022_m.o
 qml_twod_m = $(OBJ_DIR)/TwoD_m.o
 qml_uracil_m = $(OBJ_DIR)/Uracil_m.o
 qml_vibronic_m = $(OBJ_DIR)/Vibronic_m.o
+qml_dmabn_m = $(OBJ_DIR)/dmabn_m.o
+qml_fulvene_m = $(OBJ_DIR)/fulvene_m.o
 qmllib_finitediff_m = $(OBJ_DIR)/FiniteDiff_m.o
 qmllib_utillib_m = $(OBJ_DIR)/UtilLib_m.o
 #===============================================
@@ -66,6 +68,7 @@ $(OBJ_DIR)/Model_m.o : \
           $(qdutil_numparameters_m) \
           $(qml_empty_m) \
           $(adiachannels_basis_m) \
+          $(iso_fortran_env) \
           $(qdutil_m) \
           $(qmllib_utillib_m) \
           $(qml_template_m) \
@@ -105,6 +108,8 @@ $(OBJ_DIR)/Model_m.o : \
           $(qml_twod_valahu2022_m) \
           $(qml_vibronic_m) \
           $(qml_uracil_m) \
+          $(qml_fulvene_m) \
+          $(qml_dmabn_m) \
           $(qml_oned_photons_m) \
           $(addnsvm_m) \
           $(qmllib_finitediff_m) \
@@ -324,6 +329,15 @@ $(OBJ_DIR)/Vibronic_m.o : \
           $(addnsvm_m) \
           $(qml_empty_m) \
           $(qdutil_m)
+$(OBJ_DIR)/dmabn_m.o : \
+          $(qdutil_numparameters_m) \
+          $(qml_empty_m) \
+          $(qdutil_m) \
+          $(addnsvm_m)
+$(OBJ_DIR)/fulvene_m.o : \
+          $(qml_empty_m) \
+          $(qdutil_m) \
+          $(addnsvm_m)
 $(OBJ_DIR)/FiniteDiff_m.o : \
           $(qdutil_numparameters_m) \
           $(addnsvm_m)

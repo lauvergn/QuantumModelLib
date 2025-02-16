@@ -49,6 +49,21 @@ PROGRAM TEST_grid
   character (len=:), allocatable :: grid_file
   integer                        :: i,j
 
+  ! CALL Init_Model(QModel,pot_name='H3',ndim=2)
+  ! Qmin = [0.7_Rkind,0.7_Rkind]
+  ! Qmax = [FIVE,FIVE]
+
+  ! grid_file = 'grid2D_H3'
+
+  ! CALL Eval_pot_ON_Grid(QModel,Qmin=Qmin,Qmax=Qmax,       &
+  !                       nb_points=41,nderiv=0,grid_file=grid_file)
+
+  ! deallocate(Qmin)
+  ! deallocate(Qmax)
+  ! deallocate(grid_file)
+
+  ! STOP
+
   a=SIX
 
   CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=6)
@@ -85,6 +100,8 @@ PROGRAM TEST_grid
   deallocate(Qmin)
   deallocate(Qmax)
   deallocate(grid_file)
+
+
 
 
 END PROGRAM TEST_grid
