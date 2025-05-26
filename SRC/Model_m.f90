@@ -55,17 +55,28 @@ MODULE Model_m
   PUBLIC :: Set_step_epsi_Model
   PUBLIC :: Write_QdnV_FOR_Model,Test_QdnV_FOR_Model
 
+  TYPE :: QML_t
+    CLASS (QML_Empty_t),  allocatable :: QM
+  END TYPE QML_t
   TYPE :: Model_t
     ! Add nsurf and ndim to avoid crash when using the driver without initialization
     ! At the intialization, the variables are set-up to the correct values and are
     !   identical to QM%nsurf and QM%ndim ones respectively.
     integer                           :: nsurf       = 0
     integer                           :: ndim        = 0
+    integer                           :: ipot        = -1
+    integer                           :: icap        = -1
+    integer                           :: idipx       = -1
+    integer                           :: idipy       = -1
+    integer                           :: idipz       = -1
+    TYPE (QML_t),         allocatable :: tab_Op(:)
     CLASS (QML_Empty_t),  allocatable :: QM
     TYPE (QML_Basis_t),   allocatable :: Basis ! Basis for the adiabatic separation between coordinates
     logical                           :: opt         = .FALSE.
     logical                           :: irc         = .FALSE.
   END TYPE Model_t
+
+
 
   !real (kind=Rkind)                     :: step = ONETENTH**4 ! model TWOD => 0.4e-7 (nderiv=2)
   real (kind=Rkind)                     :: step = ONETENTH**3 ! model TWOD => 0.6e-9 (nderiv=2)
