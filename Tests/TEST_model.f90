@@ -4183,7 +4183,7 @@ SUBROUTINE test_Vibronic_SO2
   write(out_unit,*) '---------------------------------------------'
   flush(out_unit)
 
-  CALL Init_Model(QModel,pot_name='Vibronic SO2',adiabatic=.TRUE.)
+  CALL Init_Model(QModel,pot_name='Vibronic  SO2',adiabatic=.FALSE.)
 
 
   Q = [0.1_Rkind,-0.1_Rkind,0.2_Rkind]
