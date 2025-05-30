@@ -84,7 +84,7 @@ MODULE QML_Vibronic_m
 !! @param PubliUnit          logical (optional):   when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
   FUNCTION Init_QML_Vibronic(QModel_in,read_param,nio_param_file,Vibronic_name) RESULT(QModel)
     USE QDUtil_m,         ONLY : Read_Vec, Read_Mat, Identity_Mat, TO_string
-    USE ADdnSVM_m,        ONLY : dnS_t, set_dnS, get_nderiv
+    USE ADdnSVM_m,        ONLY : dnS_t, set_dnS, get_nderiv, Write_dnS
 
     IMPLICIT NONE
 
@@ -138,6 +138,7 @@ MODULE QML_Vibronic_m
       END DO
 
     END IF
+
   END FUNCTION Init_QML_Vibronic
 
   SUBROUTINE Internal_QML_Vibronic(QModel)
@@ -152,6 +153,8 @@ MODULE QML_Vibronic_m
       CALL Internal_QML_RJDI2014(QModel)
     CASE ('7dm23_jgbl2023_test')
       CALL Internal_QML_7DM23_JGBL2023(QModel)
+    CASE ('so2')
+      CALL Internal_QML_SO2(QModel)
     CASE ('xxx')
       CALL Internal_QML_XXX(QModel)
     CASE Default
@@ -283,6 +286,134 @@ MODULE QML_Vibronic_m
     QModel%d0GGdef      = Identity_Mat(QModel%ndim)
 
   END SUBROUTINE Internal_QML_7DM23_JGBL2023
+  SUBROUTINE Internal_QML_SO2(QModel)
+    USE QDUtil_m,         ONLY : Identity_Mat, TO_string
+    USE ADdnSVM_m,        ONLY : dnS_t, set_dnS, Write_dnS
+    IMPLICIT NONE
+
+    CLASS (QML_Vibronic_t), intent(inout)   :: QModel
+
+    real(kind=Rkind)  :: epsilon(13),SOC(13,13)
+    real(kind=Rkind)  :: w(3)
+    real(kind=Rkind)  :: kappa(3,13),lambda(3,13,13)
+
+
+    integer :: i,j,ic
+    real (kind=Rkind) :: d0
+    real (kind=Rkind), allocatable :: d1(:),d2(:,:)
+
+    epsilon(:) = [ZERO,0.1553277839_Rkind,0.1688652931_Rkind,0.3088375445_Rkind, &
+                  0.1231069775_Rkind,0.1231069775_Rkind,0.1231069775_Rkind,      &
+                  0.1547471701_Rkind,0.1547471701_Rkind,0.1547471701_Rkind,      &
+                  0.1600894729_Rkind,0.1600894729_Rkind,0.1600894729_Rkind]
+    w(:)       = [0.0023635993_Rkind, 0.0053089059_Rkind, 0.0064027455_Rkind]
+
+    kappa(:,:)    = ZERO
+    ! the 4 singlet contributions
+    kappa(1:2, 1) = [-6.48289e-04_Rkind,-9.15365e-04_Rkind]
+    kappa(1:2, 2) = [1.06541e-03_Rkind, 1.08185e-02_Rkind]
+    kappa(1:2, 3) = [-7.92795e-03_Rkind, 1.63364e-02_Rkind]
+    kappa(1:2, 4) = [-4.80026e-03_Rkind, 1.70393e-02_Rkind]
+    ! the 3 singlet contributions (3 components)
+    kappa(1:2, 5) = [ 2.60893e-03_Rkind, 6.95032e-03_Rkind]
+    kappa(1:2, 6) = [ 2.60893e-03_Rkind, 6.95032e-03_Rkind]
+    kappa(1:2, 7) = [ 2.60893e-03_Rkind, 6.95032e-03_Rkind]
+    kappa(1:2, 8) = [-5.24793e-03_Rkind, 1.71110e-02_Rkind]
+    kappa(1:2, 9) = [-5.24793e-03_Rkind, 1.71110e-02_Rkind]
+    kappa(1:2,10) = [-5.24793e-03_Rkind, 1.71110e-02_Rkind]
+    kappa(1:2,11) = [-7.98845e-03_Rkind, 1.62033e-02_Rkind]
+    kappa(1:2,12) = [-7.98845e-03_Rkind, 1.62033e-02_Rkind]
+    kappa(1:2,13) = [-7.98845e-03_Rkind, 1.62033e-02_Rkind]
+
+    lambda(:,:,:) = ZERO
+    ! 4 singlets
+    lambda(3,1,4) = 1.65920e-02_Rkind
+    lambda(3,4,1) = 1.65920e-02_Rkind
+    lambda(3,2,3) = -5.55909e-03_Rkind
+    lambda(3,3,2) = -5.55909e-03_Rkind
+    lambda(3,1,3) = -3.66103e-03_Rkind
+    lambda(3,3,1) = -3.66103e-03_Rkind
+
+    ! triplets          5, 6, 7   8, 9,10  11,12,13
+    ! corresponding ?: 1x,1y,1z  2x,2y,2z  3x,3y,3z
+    lambda(3,5,11) = -3.66103e-03_Rkind ! x component
+    lambda(3,6,12) = -3.66103e-03_Rkind ! y component
+    lambda(3,7,13) = -3.66103e-03_Rkind ! z component
+    lambda(3,11,5) = -3.66103e-03_Rkind ! x component
+    lambda(3,12,6) = -3.66103e-03_Rkind ! y component
+    lambda(3,13,7) = -3.66103e-03_Rkind ! z component
+  
+
+    SOC(:, 1) = [ZERO,ZERO,ZERO,ZERO,ZERO,   &
+                -1.3669005e-07_Rkind,-2.0899909e-04_Rkind,-6.6636399e-04_Rkind,ZERO,1.3669005e-07_Rkind, &
+                ZERO,-2.0503508e-06_Rkind,4.5563350e-08_Rkind]
+    SOC(:, 2) = [ZERO,ZERO,ZERO,ZERO,ZERO,   &
+                1.2270210e-04_Rkind,-4.5563350e-08_Rkind,ZERO,-9.1126700e-08_Rkind,-ZERO,&
+                -9.1126700e-08_Rkind,-4.5563350e-08_Rkind,-2.5014279e-04_Rkind]
+    SOC(:, 3) = [ZERO,ZERO,ZERO,ZERO,ZERO,   &
+                4.5563350e-08_Rkind,ZERO,-4.5563350e-08_Rkind,-2.0070656e-04_Rkind,-1.3669005e-07_Rkind,&
+                2.3451456e-04_Rkind,ZERO,4.1007015e-07_Rkind]
+    SOC(:, 4) = [ZERO,ZERO,ZERO,ZERO,1.3669005e-07_Rkind,   &
+                -1.0023937e-06_Rkind,-1.6612397e-04_Rkind,-5.7469053e-04_Rkind,2.7793644e-06_Rkind,9.5683035e-07_Rkind, &
+                2.4148575e-06_Rkind,-2.0047874e-06_Rkind,2.2781675e-07_Rkind]
+
+    SOC(:, 5) = [ZERO,ZERO,ZERO,1.3669005e-07_Rkind,ZERO,&
+                ZERO,ZERO,ZERO,9.1126700e-08_Rkind,2.4080230e-04_Rkind,&
+                ZERO,ZERO,ZERO]
+    SOC(:, 6) = [-1.3669005e-07_Rkind,1.2270210e-04_Rkind,4.5563350e-08_Rkind,-1.0023937e-06_Rkind,ZERO, &
+                ZERO,ZERO,-9.1126700e-08_Rkind,ZERO,ZERO,&
+                ZERO,ZERO,2.1915971e-04_Rkind]
+    SOC(:, 7) = [-2.0899909e-04_Rkind,-4.5563350e-08_Rkind,ZERO,-1.6612397e-04_Rkind,ZERO,&
+                ZERO,ZERO,-2.4080230e-04_Rkind,ZERO,ZERO,&
+                ZERO,-2.1915971e-04_Rkind,ZERO]
+    SOC(:, 8) = [-6.6636399e-04_Rkind,ZERO,-4.5563350e-08_Rkind,-5.7469053e-04_Rkind,ZERO,&
+                -9.1126700e-08_Rkind,-2.4080230e-04_Rkind,ZERO,ZERO,ZERO,  &
+                ZERO,-9.3860501e-05_Rkind,-ZERO]
+    SOC(:, 9) = [ZERO,-9.1126700e-08_Rkind,-2.0070656e-04_Rkind,2.7793644e-06_Rkind,9.1126700e-08_Rkind, &
+                ZERO,ZERO,ZERO,ZERO,ZERO,&
+                9.3860501e-05_Rkind,ZERO,2.2781675e-07_Rkind]
+    SOC(:,10) = [ 1.3669005e-07_Rkind,-ZERO,-1.3669005e-07_Rkind,9.5683035e-07_Rkind,2.4080230e-04_Rkind,&
+                  ZERO,ZERO,ZERO,ZERO,ZERO,&
+                  ZERO,-2.2781675e-07_Rkind,ZERO]
+    SOC(:,11) = [ZERO,-9.1126700e-08_Rkind,2.3451456e-04_Rkind,2.4148575e-06_Rkind,ZERO,&
+                ZERO,ZERO,ZERO,9.3860501e-05_Rkind,ZERO, &
+                ZERO,ZERO,ZERO]
+    SOC(:,12) = [-2.0503508e-06_Rkind,-4.5563350e-08_Rkind,ZERO,-2.0047874e-06_Rkind,ZERO,&
+                ZERO,-2.1915971e-04_Rkind,-9.3860501e-05_Rkind,ZERO,-2.2781675e-07_Rkind,&
+                ZERO,ZERO,ZERO]
+    SOC(:,13) = [4.5563350e-08_Rkind,-2.5014279e-04_Rkind,4.1007015e-07_Rkind,2.2781675e-07_Rkind,ZERO,&
+                2.1915971e-04_Rkind,ZERO,-ZERO,2.2781675e-07_Rkind,ZERO,&
+                ZERO,ZERO,ZERO]
+  
+  
+    QModel%nsurf    = 13 ! 4 singlets and 3 triplets (3 coponents each)
+    QModel%ndim     = 3
+
+    allocate(QModel%Diab(QModel%nsurf,QModel%nsurf))
+
+    DO i=1,QModel%nsurf
+      QModel%Diab(i,i)%Qref = [ZERO,ZERO,ZERO]
+      d0 = epsilon(i) + SOC(i,i)
+      d1 = kappa(:,i)
+      d2 = Identity_Mat(QModel%ndim)
+      DO ic=1,QModel%ndim
+        d2(ic,ic) = w(ic)
+      END DO
+      CALL set_dnS(QModel%Diab(i,i)%Ene,d0=d0,d1=d1,d2=d2)
+      !CALL Write_dnS(QModel%Diab(i,i)%Ene,info='Diab_' // TO_String(i) // '-' // TO_String(i))
+    END DO
+
+    DO i=1,QModel%nsurf
+    DO j=1,QModel%nsurf
+      IF (i == j) CYCLE
+      QModel%Diab(j,i)%Qref = [ZERO,ZERO,ZERO]
+      d0 = SOC(j,i)
+      d1 = lambda(:,j,i)
+      CALL set_dnS(QModel%Diab(j,i)%Ene,d0=d0,d1=d1)
+    END DO
+    END DO
+
+  END SUBROUTINE Internal_QML_SO2
   SUBROUTINE Internal_QML_XXX(QModel)
     USE QDUtil_m,         ONLY : Identity_Mat
     USE ADdnSVM_m,        ONLY : dnS_t, set_dnS
@@ -370,16 +501,28 @@ MODULE QML_Vibronic_m
     write(nio,*) '  Vibronic name: ',QModel%Vibronic_name
     write(nio,*) '  ndim:  ',QModel%ndim
     write(nio,*) '  nsurf: ',QModel%nsurf
-    DO i=1,QModel%nsurf
-      write(nio,*) 'Qref_' // TO_String(i) // '-' // TO_String(i),QModel%Diab(i,i)%Qref
-      CALL Write_dnS(QModel%Diab(i,i)%Ene,nio=nio,info='Diab_' // TO_String(i) // '-' // TO_String(i))
-    END DO
-    DO i=1,QModel%nsurf
-    DO j=i+1,QModel%nsurf
-      write(nio,*) 'Qref_' // TO_String(i) // '-' // TO_String(j),QModel%Diab(j,i)%Qref
-      CALL Write_dnS(QModel%Diab(j,i)%Ene,nio=nio,info='Coupling_' // TO_String(j) // '-' // TO_String(i))
-    END DO
-    END DO
+    SELECT CASE (QModel%Vibronic_name)
+    CASE ('twod_rjdi2014')
+      write(nio,*) 'Published model from: '
+      write(nio,*) ' Ilya G. Ryabinkin, Loïc Joubert-Doriol, and Artur F. Izmaylov, ...'
+      write(nio,*) '  .... J. Chem. Phys. 140, 214116 (2014); https://doi.org/10.1063/1.4881147'
+    CASE ('so2')
+      write(nio,*) 'Published model from: '
+      write(nio,*) ' Felix Plasser, Sandra Gómez, Maximilian F. S. J. Menger, Sebastian Mai and Leticia González, ...'
+      write(nio,*) '  .... Phys. Chem. Chem. Phys., 2019, 21, 57--69; https://doi.org/10.1039/c8cp05662e'
+    END SELECT
+    !IF (print_level > -1) THEN
+      DO i=1,QModel%nsurf
+        write(nio,*) 'Qref_' // TO_String(i) // '-' // TO_String(i),QModel%Diab(i,i)%Qref
+        CALL Write_dnS(QModel%Diab(i,i)%Ene,nio=nio,info='Diab_' // TO_String(i) // '-' // TO_String(i))
+      END DO
+      DO i=1,QModel%nsurf
+      DO j=i+1,QModel%nsurf
+        write(nio,*) 'Qref_' // TO_String(i) // '-' // TO_String(j),QModel%Diab(j,i)%Qref
+        CALL Write_dnS(QModel%Diab(j,i)%Ene,nio=nio,info='Coupling_' // TO_String(j) // '-' // TO_String(i))
+      END DO
+      END DO
+    !END IF
     write(nio,*) 'END Vibronics parameters'
 
   END SUBROUTINE Write_QML_Vibronic
