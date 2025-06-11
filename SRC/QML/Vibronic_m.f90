@@ -84,7 +84,7 @@ MODULE QML_Vibronic_m
 !! @param PubliUnit          logical (optional):   when PubliUnit=.TRUE., the units (Angstrom and eV) are used. Default (atomic unit).
   FUNCTION Init_QML_Vibronic(QModel_in,read_param,nio_param_file,Vibronic_name) RESULT(QModel)
     USE QDUtil_m,         ONLY : Read_Vec, Read_Mat, Identity_Mat, TO_string
-    USE ADdnSVM_m,        ONLY : dnS_t, set_dnS, get_nderiv, Write_dnS
+    USE ADdnSVM_m,        ONLY : dnS_t, set_dnS, get_nderiv
 
     IMPLICIT NONE
 
@@ -138,7 +138,6 @@ MODULE QML_Vibronic_m
       END DO
 
     END IF
-
   END FUNCTION Init_QML_Vibronic
 
   SUBROUTINE Internal_QML_Vibronic(QModel)
@@ -288,7 +287,7 @@ MODULE QML_Vibronic_m
   END SUBROUTINE Internal_QML_7DM23_JGBL2023
   SUBROUTINE Internal_QML_SO2(QModel)
     USE QDUtil_m,         ONLY : Identity_Mat, TO_string
-    USE ADdnSVM_m,        ONLY : dnS_t, set_dnS, Write_dnS
+    USE ADdnSVM_m,        ONLY : dnS_t, set_dnS, write_dnS
     IMPLICIT NONE
 
     CLASS (QML_Vibronic_t), intent(inout)   :: QModel
@@ -306,7 +305,7 @@ MODULE QML_Vibronic_m
                   0.1231069775_Rkind,0.1231069775_Rkind,0.1231069775_Rkind,      &
                   0.1547471701_Rkind,0.1547471701_Rkind,0.1547471701_Rkind,      &
                   0.1600894729_Rkind,0.1600894729_Rkind,0.1600894729_Rkind]
-    w(:)       = [0.0023635993_Rkind, 0.0053089059_Rkind, 0.0064027455_Rkind]
+    w(:)    = [0.0023635993_Rkind, 0.0053089059_Rkind, 0.0064027455_Rkind]
 
     kappa(:,:)    = ZERO
     ! the 4 singlet contributions
@@ -386,7 +385,7 @@ MODULE QML_Vibronic_m
                 ZERO,ZERO,ZERO]
   
   
-    QModel%nsurf    = 13 ! 4 singlets and 3 triplets (3 coponents each)
+    QModel%nsurf    = 13 ! 4 singlets and 3 triplets (3 components each)
     QModel%ndim     = 3
 
     allocate(QModel%Diab(QModel%nsurf,QModel%nsurf))
@@ -400,12 +399,11 @@ MODULE QML_Vibronic_m
         d2(ic,ic) = w(ic)
       END DO
       CALL set_dnS(QModel%Diab(i,i)%Ene,d0=d0,d1=d1,d2=d2)
-      !CALL Write_dnS(QModel%Diab(i,i)%Ene,info='Diab_' // TO_String(i) // '-' // TO_String(i))
+      !CALL write_dnS(QModel%Diab(i,i)%Ene,info=('diabtic state #' // TO_string(i)))
     END DO
 
     DO i=1,QModel%nsurf
     DO j=1,QModel%nsurf
-      IF (i == j) CYCLE
       QModel%Diab(j,i)%Qref = [ZERO,ZERO,ZERO]
       d0 = SOC(j,i)
       d1 = lambda(:,j,i)
