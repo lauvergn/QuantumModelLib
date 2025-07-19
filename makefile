@@ -187,7 +187,7 @@ $(OBJ_DIR)/%.o: %.f90 | $(EXTLib)
 	$(FFC) $(FFLAGS) -o $@ -c $<
 #===============================================
 #================ cleaning =====================
-.PHONY: clean cleanall
+.PHONY: clean cleanall cleanlocextlib
 clean:
 	cd $(TESTS_DIR) ; ./clean
 	rm -f $(OBJ_DIR)/*/*.o $(OBJ_DIR)/*.o
@@ -202,6 +202,9 @@ cleanall : clean
 	rm -f TESTS/res* TESTS/*log
 	rm -f RES_files DAT_files
 	@echo "  done all cleaning"
+cleanlocextlib: cleanall
+	cd $(MAIN_path)/Ext_Lib ; rm -rf *_loc
+	@echo "  done remove all local library directories (..._loc)"
 #===============================================
 #================ make the readme.txt ==========
 .PHONY: readme
