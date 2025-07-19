@@ -54,11 +54,11 @@ PROGRAM TEST_dnS
 
     integer                          :: i,j
 
-
-    real (kind=Rkind), external  :: faplusx,faminusx,fatimex,faoverx
-    real (kind=Rkind), external  :: SQRT_perso,ABS_perso,EXP_perso,LOG_perso,LOG10_perso
-    real (kind=Rkind), external  :: SIN_perso,ASIN_perso,COS_perso,ACOS_perso,TAN_perso,ATAN_perso
-    real (kind=Rkind), external  :: SINH_perso,ASINH_perso,COSH_perso,ACOSH_perso,TANH_perso,ATANH_perso
+    ! Add the functions in the CONTAINS to avoid a compiler bug (?, gfortran 15)
+    !real (kind=Rkind), external  :: faplusx,faminusx,fatimex,faoverx
+    !real (kind=Rkind), external  :: SQRT_perso,ABS_perso,EXP_perso,LOG_perso,LOG10_perso
+    !real (kind=Rkind), external  :: SIN_perso,ASIN_perso,COS_perso,ACOS_perso,TAN_perso,ATAN_perso
+    !real (kind=Rkind), external  :: SINH_perso,ASINH_perso,COSH_perso,ACOSH_perso,TANH_perso,ATANH_perso
 
     character (len=*), parameter :: name_sub='TEST_dnS'
 
@@ -85,57 +85,57 @@ PROGRAM TEST_dnS
 
   res_test = (dnX == dnX)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                   info='dnX == dnX:   T ? ' // logical_TO_char(res_test) )
+                   info='dnX == dnX:   T ? ' // TO_string(res_test) )
   res_test = (dnX == dn2X)
   CALL Logical_Test(test_var,test1=res_test,test2=.FALSE.,                      &
-                   info='dnX == dn2X:  F ? ' // logical_TO_char(res_test) )
+                   info='dnX == dn2X:  F ? ' // TO_string(res_test) )
 
   res_test = (dnX /= dnX)
   CALL Logical_Test(test_var,test1=res_test,test2=.FALSE.,                      &
-                   info='dnX /= dnX:   F ? ' // logical_TO_char(res_test) )
+                   info='dnX /= dnX:   F ? ' // TO_string(res_test) )
   res_test = (dnX /= dn2X)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                   info='dnX /= dn2X:  T ? ' // logical_TO_char(res_test) )
+                   info='dnX /= dn2X:  T ? ' // TO_string(res_test) )
 
   res_test = (dnX > dnX)
   CALL Logical_Test(test_var,test1=res_test,test2=.FALSE.,                      &
-                   info='dnX  > dnX:   F ? ' // logical_TO_char(res_test) )
+                   info='dnX  > dnX:   F ? ' // TO_string(res_test) )
   res_test = (dnX  > dn2X)
   CALL Logical_Test(test_var,test1=res_test,test2=.FALSE.,                      &
-                   info='dnX  > dn2X:  F ? ' // logical_TO_char(res_test) )
+                   info='dnX  > dn2X:  F ? ' // TO_string(res_test) )
   res_test = (dn2X > dnX)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                   info='dn2X > dnX:   T ? ' // logical_TO_char(res_test) )
+                   info='dn2X > dnX:   T ? ' // TO_string(res_test) )
 
   res_test = (dnX >= dnX)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                   info='dnX  >= dnX:  T ? ' // logical_TO_char(res_test) )
+                   info='dnX  >= dnX:  T ? ' // TO_string(res_test) )
   res_test = (dnX  >= dn2X)
   CALL Logical_Test(test_var,test1=res_test,test2=.FALSE.,                      &
-                   info='dnX  >= dn2X: F ? ' // logical_TO_char(res_test) )
+                   info='dnX  >= dn2X: F ? ' // TO_string(res_test) )
   res_test = (dn2X >= dnX)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                   info='dn2X >= dnX:  T ? ' // logical_TO_char(res_test) )
+                   info='dn2X >= dnX:  T ? ' // TO_string(res_test) )
 
   res_test = (dnX  < dnX)
   CALL Logical_Test(test_var,test1=res_test,test2=.FALSE.,                      &
-                   info='dnX  < dnX:   F ? ' // logical_TO_char(res_test) )
+                   info='dnX  < dnX:   F ? ' // TO_string(res_test) )
   res_test = (dnX  < dn2X)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                   info='dnX  < dn2X:  T ? ' // logical_TO_char(res_test) )
+                   info='dnX  < dn2X:  T ? ' // TO_string(res_test) )
   res_test = (dn2X < dnX)
   CALL Logical_Test(test_var,test1=res_test,test2=.FALSE.,                      &
-                   info='dn2X < dnX:   F ? ' // logical_TO_char(res_test) )
+                   info='dn2X < dnX:   F ? ' // TO_string(res_test) )
 
   res_test = (dnX  <= dnX)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                   info='dnX  <= dnX:  T ? ' // logical_TO_char(res_test) )
+                   info='dnX  <= dnX:  T ? ' // TO_string(res_test) )
   res_test = (dnX  <= dn2X)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                   info='dnX  <= dn2X: T ? ' // logical_TO_char(res_test) )
+                   info='dnX  <= dn2X: T ? ' // TO_string(res_test) )
   res_test = (dn2X <= dnX)
   CALL Logical_Test(test_var,test1=res_test,test2=.FALSE.,                      &
-                   info='dn2X <= dnX:  F ? ' // logical_TO_char(res_test) )
+                   info='dn2X <= dnX:  F ? ' // TO_string(res_test) )
 
   CALL Flush_Test(test_var)
 
@@ -145,24 +145,24 @@ PROGRAM TEST_dnS
 
   res_test = (dnX .EQ. dnX)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                  info='dnX .EQ. dnX:   T ? ' // logical_TO_char(res_test) )
+                  info='dnX .EQ. dnX:   T ? ' // TO_string(res_test) )
   res_test = (dnX .NE. dn2X)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                  info='dnX .NE.dn2X:   T ? ' // logical_TO_char(res_test) )
+                  info='dnX .NE.dn2X:   T ? ' // TO_string(res_test) )
 
   res_test = (dnX .GT. dnX)
   CALL Logical_Test(test_var,test1=res_test,test2=.FALSE.,                      &
-                  info='dnX .GT. dnX:   F ? ' // logical_TO_char(res_test) )
+                  info='dnX .GT. dnX:   F ? ' // TO_string(res_test) )
   res_test = (dnX .GE. dnX)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                  info='dnX .GE. dnX:   T ? ' // logical_TO_char(res_test) )
+                  info='dnX .GE. dnX:   T ? ' // TO_string(res_test) )
 
   res_test = (dnX .LT. dnX)
   CALL Logical_Test(test_var,test1=res_test,test2=.FALSE.,                      &
-                  info='dnX .LT. dnX:   F ? ' // logical_TO_char(res_test) )
+                  info='dnX .LT. dnX:   F ? ' // TO_string(res_test) )
   res_test = (dnX .LE. dnX)
   CALL Logical_Test(test_var,test1=res_test,                                    &
-                  info='dnX .LE. dnX:   T ? ' // logical_TO_char(res_test) )
+                  info='dnX .LE. dnX:   T ? ' // TO_string(res_test) )
 
   CALL Flush_Test(test_var)
 
@@ -889,6 +889,50 @@ PROGRAM TEST_dnS
   CALL Append_Test(test_var,'------------------------------------------------------',Print_res=.FALSE.)
   CALL Append_Test(test_var,'------------------------------------------------------',Print_res=.FALSE.)
 
+  CALL Append_Test(test_var,'============================================')
+  CALL Append_Test(test_var,'new tests : reduced derivatives')
+  CALL Append_Test(test_var,'============================================')
+  CALL Flush_Test(test_var)
+
+  nderiv = 2
+  x=HALF
+
+  dnX         = Variable(x,nderiv=nderiv) ! 1D
+  CALL Write_dnS(dnX,string=test_var%test_log,info="dnS 1D")
+
+  dnY =  FROM_dnSReducedDer(nVar=3,list=[2],S=dnX)
+  CALL Write_dnS(dnY,string=test_var%test_log,info="dnS 1D->3D")
+
+  dnZ = TO_dnSReducedDer(dnY,list=[2])
+  CALL Write_dnS(dnZ,string=test_var%test_log,info="dnS 3D->1D")
+
+  res_test = AD_Check_dnS_IS_ZERO(dnZ - dnX,dnSerr_test)
+  CALL Logical_Test(test_var,test1=res_test,info='Reduced Derivative ok ?')
+
+  CALL Flush_Test(test_var)
+
+  nderiv = 0
+  x=HALF
+
+  dnX         = Variable(x,nderiv=nderiv) ! 1D
+  CALL Write_dnS(dnX,string=test_var%test_log,info="dnS 1D")
+
+  dnY =  FROM_dnSReducedDer(nVar=3,list=[2],S=dnX)
+  CALL Write_dnS(dnY,string=test_var%test_log,info="dnS 1D->3D")
+
+  dnZ = TO_dnSReducedDer(dnY,list=[2])
+  CALL Write_dnS(dnZ,string=test_var%test_log,info="dnS 3D->1D")
+
+  res_test = AD_Check_dnS_IS_ZERO(dnZ - dnX,dnSerr_test)
+  CALL Logical_Test(test_var,test1=res_test,info='Reduced Derivative ok ?')
+
+  CALL Flush_Test(test_var)
+
+  CALL Flush_Test(test_var)
+  CALL Append_Test(test_var,'------------------------------------------------------',Print_res=.FALSE.)
+  CALL Append_Test(test_var,'------------------------------------------------------',Print_res=.FALSE.)
+  CALL Append_Test(test_var,'------------------------------------------------------',Print_res=.FALSE.)
+
 
   CALL Append_Test(test_var,'============================================')
   CALL Append_Test(test_var,'new tests : function combination')
@@ -907,6 +951,20 @@ PROGRAM TEST_dnS
   dnFX        = cos(dnY)
   res_test = AD_Check_dnS_IS_ZERO(dnFX - dnFX,dnSerr_test)
   CALL Logical_Test(test_var,test1=res_test,info='function combination  ==0?')
+
+  nderiv = 0
+  x=ONE
+
+  dnX         = Variable(x,nderiv=nderiv) ! 1D for the function
+  dnF         = cos(dnX)
+
+  dnY         = Variable(x,iVar=2,nVar=4,nderiv=nderiv)
+
+  dnFY        = dnF_OF_dnS(dnF,dnX)
+  dnFX        = cos(dnY)
+  res_test = AD_Check_dnS_IS_ZERO(dnFX - dnFX,dnSerr_test)
+  CALL Logical_Test(test_var,test1=res_test,info='function combination  ==0?')
+
   CALL Flush_Test(test_var)
 
   CALL Flush_Test(test_var)
@@ -1033,7 +1091,15 @@ CONTAINS
 
   END SUBROUTINE TEST_EXCEPTION
 
-END PROGRAM TEST_dnS
+FUNCTION SQRT_perso(x) RESULT(f)
+  USE QDUtil_m
+  IMPLICIT NONE
+  real (kind=Rkind) :: f
+  real (kind=Rkind), intent(in) :: x
+
+  f = sqrt(x)
+
+END FUNCTION SQRT_perso
 
 
 FUNCTION faplusx(x)
@@ -1076,15 +1142,7 @@ FUNCTION faoverx(x)
   faoverx = 0.5_Rkind / x
 
 END FUNCTION faoverx
-FUNCTION SQRT_perso(x) RESULT(f)
-  USE QDUtil_m
-  IMPLICIT NONE
-  real (kind=Rkind) :: f
-  real (kind=Rkind), intent(in) :: x
 
-  f = sqrt(x)
-
-END FUNCTION SQRT_perso
 FUNCTION ABS_perso(x) RESULT(f)
   USE QDUtil_m
   IMPLICIT NONE
@@ -1229,3 +1287,5 @@ FUNCTION ATANH_perso(x) RESULT(f)
     f = atanh(x)
 
 END FUNCTION ATANH_perso
+END PROGRAM TEST_dnS
+
