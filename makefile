@@ -14,7 +14,13 @@ LAPACK = 1
 ## force the default integer (without kind) during the compillation.
 ## default 4: , INT=8 (for kind=8)
 INT = 4
-## how to get external libraries;  "loc" (default): from local zip file, Empty or something else (v0.5): from github
+## change the real kind
+## default real64: , possibilities, real32, real64, real128
+RKIND = real64
+# For some compilers (like lfortran), real128 (quadruple precision) is not implemented
+# WITHRK16 = 1 (0) compilation with (without) real128
+WITHRK16 = 
+## how to get external libraries;  "loc" (default)
 EXTLIB_TYPE = loc
 #=================================================================================
 #=================================================================================
@@ -28,33 +34,79 @@ ifeq ($(OPT),)
 else
   OOPT      := $(OPT)
 endif
+ifneq ($(OOPT),$(filter $(OOPT),0 1))
+  $(info *********** OPT (optimisation):        $(OOPT))
+  $(info Possible values: 0, 1)
+  $(error ERROR: Incompatible options)
+endif
 ifeq ($(OMP),)
   OOMP      := 1
 else
   OOMP      := $(OMP)
+endif
+ifneq ($(OOMP),$(filter $(OOMP),0 1))
+  $(info *********** OMP (openmp):        $(OOMP))
+  $(info Possible values: 0, 1)
+  $(error ERROR: Incompatible options)
 endif
 ifeq ($(LAPACK),)
   LLAPACK      := 1
 else
   LLAPACK      := $(LAPACK)
 endif
+ifneq ($(LLAPACK),$(filter $(LLAPACK),0 1))
+  $(info *********** LAPACK:        $(LLAPACK))
+  $(info Possible values: 0, 1)
+  $(error ERROR: Incompatible options)
+endif
+ifeq ($(WITHRK16),)
+  WWITHRK16      :=$(shell $(FFC) -o scripts/testreal128.exe scripts/testreal128.f90 &>comp.log ; ./scripts/testreal128.exe ; rm scripts/testreal128.exe)
+else
+  WWITHRK16      := $(WITHRK16)
+endif
+ifneq ($(WWITHRK16),$(filter $(WWITHRK16),0 1))
+  $(info *********** WITHRK16 (compilation with real128):        $(WWITHRK16))
+  $(info Possible values: 0, 1)
+  $(error ERROR: Incompatible options)
+endif
+ifneq ($(INT),$(filter $(INT),4 8))
+  $(info *********** INT (change default integer):        $(INT))
+  $(info Possible values: 4, 8)
+  $(error ERROR: Incompatible options)
+endif
+ifneq ($(RKIND),$(filter $(RKIND),real32 real64 real128))
+  $(info *********** RKIND (select the real kind):        $(RKIND))
+  $(info Possible values (case sensitive): real32 real64 real128)
+  $(error ERROR: Incompatible options)
+endif
+#=================================================================================
+ifeq ($(RKIND),real128)
+  ifeq ($(WWITHRK16),0)
+    $(info "Incompatible options:")
+    $(info ***********RKIND:        $(RKIND))
+    $(info ***********WITHRK16:     $(WWITHRK16))
+    $(error ERROR: Incompatible options)
+  endif
+endif
 #=================================================================================
 #
 # Operating system, OS? automatic using uname:
 OS :=$(shell uname)
 
-
-QML_ver  := $(shell awk '/QML/ {print $$3}' version-QML)
+QML_VER=$(shell awk '/version/ {print $$3}' fpm.toml | head -1)
 
 # Extension for the object directory and the library
-ext_obj=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
+ext_obj    :=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)_$(RKIND)
+extold_obj :=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
 
 # library name
-QMLIBA=libQMLib$(ext_obj).a
+QMLIBA    := libQMLib$(ext_obj).a
+QMLIBAOLD := libQMLib$(extold_obj).a
 #=================================================================================
 MAIN_path := $(shell pwd)
 
-OBJ_DIR=OBJ/obj$(ext_obj)
+OBJ_DIR    := OBJ/obj$(ext_obj)
+OBJOLD_DIR := OBJ/obj$(extold_obj)
 $(shell [ -d $(OBJ_DIR) ] || mkdir -p $(OBJ_DIR))
 
 MOD_DIR=$(OBJ_DIR)
@@ -62,10 +114,13 @@ SRC_DIR=SRC
 MAIN_DIR=APP
 TESTS_DIR=Tests
 
-CPPSHELL_QML = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
-               -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
-			   -D__QMLPATH="'$(MAIN_path)'" \
-               -D__QML_VER='"$(QML_ver)"'
+CPPSHELL    = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
+              -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
+              -D__QML_VER='"$(QML_ver)"' \
+              -D__QMLPATH="'$(MAIN_path)'" \
+              -D__RKIND="$(RKIND)" -D__WITHRK16="$(WWITHRK16)" \
+              -D__LAPACK="$(LLAPACK)"
+
 #=================================================================================
 # External Libraries directory
 #
@@ -97,7 +152,6 @@ ifeq ($(CompilersDIR),)
 else
   include $(CompilersDIR)/compilers.mk
 endif
-FFLAGS += $(CPPSHELL_QML)
 #=================================================================================
 #=================================================================================
 #=================================================================================
@@ -108,6 +162,9 @@ $(info ***********COMPILER_VER: $(FC_VER))
 $(info ***********OPTIMIZATION: $(OOPT))
 $(info ***********OpenMP:       $(OOMP))
 $(info ***********INT:          $(INT))
+$(info ***********RKIND:        $(RKIND))
+$(info ***********WITHRK16:     $(WWITHRK16))
+$(info ***********LAPACK:       $(LLAPACK))
 $(info ***********LAPACK:       $(LLAPACK))
 $(info ***********FFLAGS:       $(FFLAGS))
 $(info ***********FLIB:         $(FLIB))
@@ -174,6 +231,10 @@ lib: $(QMLIBA)
 
 $(QMLIBA): $(OBJ)
 	ar -cr $(QMLIBA) $(OBJ)
+	rm -f  $(OBJOLD_DIR)
+	cd OBJ ; ln -s obj$(ext_obj) obj$(extold_obj)
+	rm -f  $(QMLIBAOLD)
+	ln -s  $(QMLIBA) $(QMLIBAOLD)
 	ar -cr libQMLibFull$(ext_obj).a $(OBJ) $(ADMOD_DIR)/*.o $(QDMOD_DIR)/*.o
 	@echo "  done Library: "$(QMLIBA)
 #===============================================
@@ -210,16 +271,6 @@ cleanlocextlib: cleanall
 .PHONY: readme
 readme:
 	./scripts/extractReadMe
-#===============================================
-#================ zip and copy the directory ===
-ExtLibSAVEDIR := /Users/lauvergn/git/Ext_Lib
-BaseName := QuantumModelLib
-.PHONY: zip
-zip: cleanall
-	test -d $(ExtLibSAVEDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
-	$(ExtLibSAVEDIR)/makezip.sh $(BaseName)
-	cd $(ExtLibSAVEDIR) ; ./cp_QML.sh
-	@echo "  done zip"
 #
 #===============================================
 #=== external libraries ========================

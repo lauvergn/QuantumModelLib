@@ -31,9 +31,11 @@
 
 ```
    This version works with:
-       gfortran 9.0 (linux and macOS)
+       gfortran 11, 12, 13, 14, 15 (linux and macOS)
        ifort/ifx    19
 ```
+
+Although, the library can be compiled and used with real in single precision (real32), it is not recomended (most of the tests will fail).
 
 ## 2) Link the library to your code
 

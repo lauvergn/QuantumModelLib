@@ -2417,6 +2417,7 @@ SUBROUTINE test_ClH2p_op56
   real (kind=Rkind), allocatable :: qtest(:,:),EAbInitio(:)
   TYPE (QML_Opt_t)               :: Opt_p
   real (kind=Rkind)              :: V
+  real (kind=Rk8)                :: V_Rk8
 
 
   nderiv = 2
@@ -2495,12 +2496,15 @@ SUBROUTINE test_ClH2p_op56
   !CALL Write_dnMat(PotVal,nio=out_unit)
   write(out_unit,*) 'pot (QML)',get_d0(PotVal)
 
-  CALL QML_ClH2p_Qsym_CCSDTF12(V,Q)
-  write(out_unit,*) 'pot (sub)',V
+  ! special potential made for the CPL publication (only double precision, real64 or Rk8)
+  IF (Rkind == Rk8) THEN
+    CALL QML_ClH2p_Qsym_CCSDTF12(V_Rk8,real(Q,kind=Rk8))
+    write(out_unit,*) 'pot (sub)',V_Rk8
 
-  Q = [1.7_Rkind, 0.7_Rkind, 1.3_Rkind]
-  CALL QML_ClH2p_CCSDTF12(V,Q)
-  write(out_unit,*) 'pot (sub)',V
+    Q = [1.7_Rkind, 0.7_Rkind, 1.3_Rkind]
+    CALL QML_ClH2p_CCSDTF12(V_Rk8,real(Q,kind=Rk8))
+    write(out_unit,*) 'pot (sub)',V_Rk8
+  END IF
   deallocate(q)
   CALL dealloc_Model(QModel)
 

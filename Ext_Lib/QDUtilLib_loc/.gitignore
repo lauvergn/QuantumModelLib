@@ -1,4 +1,8 @@
-.DS_Store */.DS_Store */*/.DS_Store
+.DS_Store 
+*/.DS_Store 
+*/*/.DS_Store
+SRC/*.mod
+SRC/*/*.mod
 OBJ/*
 *.x
 *.a 
@@ -7,5 +11,6 @@ res
 test_io_file.txt
 TESTS/*log
 TESTS/res*
+TESTS/output
 file.*
 doc/ford_site

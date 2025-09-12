@@ -520,7 +520,7 @@ MODULE QML_dmabn_m
       !< Conversion factor from Hartree to electronvolts
 
       !H0 Hamiltionian
-      dnH0=0.5d0*sum(QModel%omega_(:)*dnQ(:)**2 )
+      dnH0=0.5_Rkind*sum(QModel%omega_(:)*dnQ(:)**2 )
 
       !W1 diagonal
       dnW0_1=sum(QModel%kappa1_(:)*dnQ(:))
