@@ -14,7 +14,6 @@ ClH2p_m.f90  \
 CNH_Murrell_m.f90  \
 dmabn_m.f90  \
 Empty_m.f90  \
-FormicAcid_m.f90  \
 fulvene_m.f90  \
 H2_m.f90  \
 H2NSi_m.f90  \

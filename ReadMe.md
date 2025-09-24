@@ -16,7 +16,7 @@
 ```
 [1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
 [2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France
-[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France
+[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay, France
 [4]: Durham University, Durham, UK
 [5]: Department of Physics, Rutgers University, Newark, New Jersey 07102, USA
 
@@ -27,7 +27,7 @@
 
    From the QuantumModelLib directory, when make is executated, the **libQMLibFull_XXX_optx_ompy_lapakz.a** must be created (ex: **libQMLibFull_gfortran_opt1_omp1_lapack1**).
    **XXX** is the compiler name and **x**, **y** and **z** are 0/1 when flags are turn off/on. 
-   They correspond to OPT (compiler optimzation), OpenMP and Lapack/blas, respectively.
+   They correspond to OPT (compiler optimization), OpenMP and Lapack/blas, respectively.
 
 ```
    This version works with:

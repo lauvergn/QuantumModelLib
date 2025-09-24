@@ -23,8 +23,7 @@ RKIND := real64
 # For some compilers (like lfortran), real128 (quadruple precision) is not implemented
 # WITHRK16 = 1 (0) compilation with (without) real128
 WITHRK16 :=
-## how to get external libraries;  "loc" (default): from local zip file, Empty or something else, from github
-EXTLIB_TYPE := loc
+## branch of the external libraries
 BRANCH      := dev2
 #=================================================================================
 ifeq ($(FC),)
@@ -278,6 +277,13 @@ $(LIBA): $(OBJ)
 	ln -s  $(LIBA) $(LIBAshort)
 	@echo "  done Library: "$(LIBA)
 #===============================================
+#============= makefile help ===================
+#===============================================
+.PHONY: help
+help:
+	@echo " Makefile usage:"
+	@./scripts/makefile_usage.sh
+#===============================================
 #===============================================
 #============= External libraries  =============
 #===============================================
@@ -300,13 +306,13 @@ cleanall: clean
 	rm -f lib*.a
 	rm -rf OBJ
 	cd $(TESTS_DIR) && ./clean
-	if test "$(EXTLIB_LIST)" != ""; then ./scripts/cleanExtLib cleanall $(ExtLibDIR); fi  
+	if test "$(EXTLIB_LIST)" != ""; then ./scripts/cleanExtLib cleanall "$(ExtLibDIR)" "$(EXTLIB_LIST)"; fi  
 	@echo "  done remove the *.a libraries and the OBJ directory"
 cleanlocextlib: clean
 	rm -f lib*.a
 	rm -rf OBJ
 	cd $(TESTS_DIR) && ./clean
-	if test "$(EXTLIB_LIST)" != ""; then ./scripts/cleanExtLib cleanlocextlib $(ExtLibDIR); fi 
+	if test "$(EXTLIB_LIST)" != ""; then ./scripts/cleanExtLib cleanlocextlib "$(ExtLibDIR)" "$(EXTLIB_LIST)"; fi 
 	@echo "  done remove all local library directories (..._loc)"
 #===============================================
 #============= make dependencies ===============

@@ -12,7 +12,6 @@ qml_clh2p_m = $(OBJ_DIR)/ClH2p_m.o
 qml_cnh_murrell_m = $(OBJ_DIR)/CNH_Murrell_m.o
 qml_dmabn_m = $(OBJ_DIR)/dmabn_m.o
 qml_empty_m = $(OBJ_DIR)/Empty_m.o
-qml_formicacid_m = $(OBJ_DIR)/FormicAcid_m.o
 qml_fulvene_m = $(OBJ_DIR)/fulvene_m.o
 qml_h2_m = $(OBJ_DIR)/H2_m.o
 qml_h2nsi_m = $(OBJ_DIR)/H2NSi_m.o
@@ -181,12 +180,6 @@ $(OBJ_DIR)/Empty_m.o : \
           $(addnsvm_m) \
           $(qdutil_m) \
           $(qmllib_utillib_m)
-#file+mod_name: SRC/QML/FormicAcid_m.f90 qml_formicacid_m
-$(OBJ_DIR)/FormicAcid_m.o : \
-          $(qdutil_numparameters_m) \
-          $(qml_empty_m) \
-          $(qdutil_m) \
-          $(addnsvm_m)
 #file+mod_name: SRC/QML/fulvene_m.f90 qml_fulvene_m
 $(OBJ_DIR)/fulvene_m.o : \
           $(qdutil_numparameters_m) \

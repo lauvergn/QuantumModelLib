@@ -4,7 +4,7 @@ name_dep=scripts/dependencies.mk
 SRCFile=scripts/fortranlist.mk
 
 list=`ls SRC/*.f90 SRC/*/*.f90`
-ExcludeList=''
+ExcludeList='FormicAcid_m.f90 H3-1_m.f90 PH4JoOri_m.f90 PH4Jo2_m.f90'
 
 echo "#===============================================" > $name_dep
 echo "#===============================================" > $SRCFile
