@@ -16,6 +16,10 @@ name="TestQML"
 source-dir="Tests"
 main="TEST_model.f90"
 
+[[test]]
+name="TestExt"
+source-dir="Tests"
+main="TEST_ExtModel.f90"
 
 [[executable]]
 name="driver"

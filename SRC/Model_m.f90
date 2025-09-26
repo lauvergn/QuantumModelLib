@@ -309,6 +309,8 @@ CONTAINS
 
   USE QML_Template_m
   USE QML_Test_m
+  USE QML_ExtModel_m
+
   USE QML_Morse_m
   USE QML_Poly1D_m
   USE QML_H2_m
@@ -977,6 +979,10 @@ CONTAINS
       !! test-potential
       allocate(QML_Test_t :: QModel%QM)
       QModel%QM = Init_QML_Test(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+    CASE ('extmodel')
+      !! external-potential
+      allocate(QML_ExtModel_t :: QModel%QM)
+      QModel%QM = Init_QML_ExtModel(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('oned_photons')
       allocate(QML_OneD_Photons_t :: QModel%QM)

@@ -117,6 +117,8 @@ TESTS_DIR    := Tests
 TESTSOUT_DIR := $(TESTS_DIR)/output
 
 LIB_NAME     := QuantumModelLib
+
+EXTMODEL_DIR := $(MAIN_path)/Ext_Model
 #=================================================================================
 # Cpreprocessing macros
 #=================================================================================
@@ -136,6 +138,18 @@ ifeq ($(CompilersDIR),)
   include scripts/compilers.mk
 else
   include $(CompilersDIR)/compilers.mk
+endif
+#=================================================================================
+# External Model : ExtModel_m.f90
+#=================================================================================
+# it will create the link
+MES := $(shell test -L $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90 || echo "the ExtModel_m.f90 link does not exist")
+$(info ***********MES:       $(MES))
+MES := $(shell test -L $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90 || ln -s  $(EXTMODEL_DIR)/ExtModel_m.f90 $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90)
+MES := $(shell if test -L $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90; then echo "the ExtModel_m.f90 link exists"; else echo "ERR"; fi)
+$(info ***********MES:       $(MES))
+ifeq ("$(MES)","ERR")
+    $(error ERROR: the ExtModel_m.f90 link does not exist)
 endif
 #=================================================================================
 # External Libraries : QDUtilLib AD_dnSVM
@@ -181,6 +195,8 @@ $(info )
 $(info ***********ExtLibDIR:       $(ExtLibDIR))
 $(info ***********EXTLib:          $(EXTLib))
 $(info ***********EXTMod:          $(EXTMod))
+$(info )
+$(info ***********EXTMODEL_DIR:    $(EXTMODEL_DIR))
 $(info ***********************************************************************)
 #
 SRCPATH := $(shell find $(SRC_DIR)/* -maxdepth 1 -type d )
@@ -237,6 +253,11 @@ endif
 ut: $(TESTEXE)
 	@echo "model (QML) compilation: OK"
 	cd $(TESTS_DIR) ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(INT) 1
+	mkdir -p $(TESTSOUT_DIR)
+	cd $(TESTSOUT_DIR) ; ../../TEST_ExtModel.x > Test.log
+	@grep "Number of error(s)" $(TESTSOUT_DIR)/Test.log
+	@awk  -F: 'BEGIN{test=0} /Number of tests/ {test+=$$2} END {print "Number of tests: " test}' $(TESTSOUT_DIR)/Test.log
+	@awk  -F: 'BEGIN{err=0} /Number of error/ {err=err+$$2} END {print "Number of error(s) for all tests: " err}' $(TESTSOUT_DIR)/Test.log
 	@echo "  done Tests"
 #
 #===============================================
@@ -250,6 +271,10 @@ $(OBJ_DIR)/%.o: %.f90
 %.x: $(OBJ_DIR)/%.o
 	$(FC) $(FFLAGS) -o $@ $< $(LIBA) $(EXTLib) $(FLIB)
 	@echo $@ compilation: OK
+#
+# Special rule for the external model 
+$(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90:
+	ln -s  $(MAIN_path)/Ext_Model/ExtModel_m.f90 $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90
 #
 #===============================================
 #============= object directory  ===============
@@ -293,6 +318,7 @@ clean:
 	rm -f  *.log
 	rm -fr *.dSYM
 	rm -fr build
+	rm -f $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.mod $(OBJ_DIR)/*.MOD
 	@echo "  done cleaning"
 cleanall: clean
