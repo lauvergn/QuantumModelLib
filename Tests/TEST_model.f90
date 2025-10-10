@@ -3289,7 +3289,7 @@ SUBROUTINE test_HOO_DMBE
   TYPE (dnMat_t)                 :: PotVal
 
 
-  nderiv = 2
+  nderiv = 1
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'

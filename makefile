@@ -168,6 +168,7 @@ ifneq ($(EXTLIB_LIST),)
 
   EXTLib_DIR  := $(addprefix $(ExtLibDIR)/, $(EXTLIB_LIST))
   EXTMod      := $(addsuffix /OBJ/obj$(ext_obj), $(EXTLib_DIR))
+  EXTLibOBJ   := $(addsuffix /*.o, $(EXTMod))
   EXTMod      := $(addprefix -I,$(EXTMod))
   #$(info ***********EXTLib_DIR:       $(EXTLib_DIR))
   EXTLib := $(shell for LLIB in $(EXTLIB_LIST) ; do echo $(ExtLibDIR)/$$LLIB"/lib"$$LLIB""$(ext_obj)".a" ; done)
@@ -268,9 +269,13 @@ ut: $(TESTEXE)
 $(OBJ_DIR)/%.o: %.f90
 	$(FC) $(FFLAGS) -o $@ -c $<
 #
-%.x: $(OBJ_DIR)/%.o
-	$(FC) $(FFLAGS) -o $@ $< $(LIBA) $(EXTLib) $(FLIB)
+%.x: $(OBJ_DIR)/%.o $(LIBAF)
+	$(FC) $(FFLAGS) -o $@ $< $(LIBAF) $(FLIB)
 	@echo $@ compilation: OK
+
+#%.x: $(OBJ_DIR)/%.o
+#	$(FC) $(FFLAGS) -o $@ $< $(LIBA) $(EXTLib) $(FLIB)
+#	@echo $@ compilation: OK
 #
 # Special rule for the external model 
 $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90:
@@ -290,17 +295,29 @@ $(OBJ_DIR):
 LIBAshort      := lib$(LIB_NAME).a
 LIBA           := lib$(LIB_NAME)$(ext_obj).a
 LIBAOLD        := lib$(LIB_NAME)$(extold_obj).a
+
+LIBAF          := lib$(LIB_NAME)Full$(ext_obj).a
+LIBAFOLD       := libQMLFull$(extold_obj).a
+LIBAFshort     := libQMLFull.a
+
 #
 .PHONY: lib
-lib: $(LIBA)
+lib: $(LIBA) $(LIBAF)
+
 $(LIBA): $(OBJ)
 	ar -cr $(LIBA) $(OBJ)
 	rm -f  $(LIBAOLD)
 	ln -s  $(LIBA) $(LIBAOLD)
 	rm -f $(LIBAshort)
 	ln -s  $(LIBA) $(LIBAshort)
-	#ar -cr libQMLibFull$(ext_obj).a $(OBJ) $(ADMOD_DIR)/*.o $(QDMOD_DIR)/*.o
 	@echo "  done Library: "$(LIBA)
+$(LIBAF): $(OBJ)
+	ar -cr $(LIBAF) $(OBJ) $(EXTLibOBJ)
+	rm -f  $(LIBAFOLD)
+	ln -s  $(LIBAF) $(LIBAFOLD)
+	rm -f $(LIBAFshort)
+	ln -s  $(LIBAF) $(LIBAFshort)
+	@echo "  done Library (including external libraries): "$(LIBAF)
 #===============================================
 #===============================================
 #============= External libraries  =============
@@ -342,9 +359,9 @@ scripts/dependencies.mk scripts/fortranlist.mk dep:
 #===============================================
 #============= module dependencies =============
 #===============================================
-$(OBJ) $(OBJAPP) $(OBJTEST):         | $(OBJ_DIR)
-$(OBJAPP):                   $(LIBA) | $(EXTLib)
-$(OBJTEST):                  $(LIBA) | $(EXTLib)
-$(OBJ):                              | $(EXTLib)
+$(OBJ) $(OBJAPP) $(OBJTEST):          | $(OBJ_DIR)
+$(OBJAPP):                   $(LIBAF) | $(EXTLib)
+$(OBJTEST):                  $(LIBAF) | $(EXTLib)
+$(OBJ):                               | $(EXTLib)
 include scripts/dependencies.mk
 #===============================================
