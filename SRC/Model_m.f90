@@ -360,6 +360,7 @@ CONTAINS
   USE AdiaChannels_Basis_m
 
   USE QML_OneD_Photons_m
+  USE QML_OneD_Photons2_m
   IMPLICIT NONE
 
     TYPE (Model_t),      intent(inout)           :: QModel
@@ -987,6 +988,10 @@ CONTAINS
     CASE ('oned_photons')
       allocate(QML_OneD_Photons_t :: QModel%QM)
       QModel%QM = Init_QML_OneD_Photons(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+    CASE ('oned_photons2')
+      allocate(QML_OneD_Photons2_t :: QModel%QM)
+      QModel%QM = Init_QML_OneD_Photons2(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
     CASE DEFAULT
         write(out_unit,*) ' ERROR in Init_Model'
         write(out_unit,*) ' This model/potential is unknown. pot_name: ',pot_name_loc

@@ -9,6 +9,7 @@ qml_hoo_dmbe_m := $(OBJ_DIR)/HOO_DMBE_m.o
 qml_oned_photons_m := $(OBJ_DIR)/OneD_Photons_m.o
 qml_h2o_m := $(OBJ_DIR)/H2O_m.o
 qml_cnh_murrell_m := $(OBJ_DIR)/CNH_Murrell_m.o
+qml_oned_photons2_m := $(OBJ_DIR)/OneD_Photons2_m.o
 qml_poly1d_m := $(OBJ_DIR)/Poly1D_m.o
 qml_linearhbond_m := $(OBJ_DIR)/LinearHBond_m.o
 qml_onedsoc_1s1t_m := $(OBJ_DIR)/OneDSOC_1S1T_m.o
@@ -100,6 +101,12 @@ $(OBJ_DIR)/H2O_m.o : \
           $(addnsvm_m)
 #file+mod_name: SRC/QML/CNH_Murrell_m.f90 qml_cnh_murrell_m
 $(OBJ_DIR)/CNH_Murrell_m.o : \
+          $(qdutil_numparameters_m) \
+          $(qml_empty_m) \
+          $(qdutil_m) \
+          $(addnsvm_m)
+#file+mod_name: SRC/QML/OneD_Photons2_m.f90 qml_oned_photons2_m
+$(OBJ_DIR)/OneD_Photons2_m.o : \
           $(qdutil_numparameters_m) \
           $(qml_empty_m) \
           $(qdutil_m) \
@@ -385,6 +392,7 @@ $(OBJ_DIR)/Model_m.o : \
           $(qml_fulvene_m) \
           $(qml_dmabn_m) \
           $(qml_oned_photons_m) \
+          $(qml_oned_photons2_m) \
           $(addnsvm_m) \
           $(qmllib_finitediff_m) \
           $(qdutil_test_m)

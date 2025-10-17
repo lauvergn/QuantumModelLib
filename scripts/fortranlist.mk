@@ -10,6 +10,7 @@ HOO_DMBE_m.f90  \
 OneD_Photons_m.f90  \
 H2O_m.f90  \
 CNH_Murrell_m.f90  \
+OneD_Photons2_m.f90  \
 Poly1D_m.f90  \
 LinearHBond_m.f90  \
 OneDSOC_1S1T_m.f90  \
