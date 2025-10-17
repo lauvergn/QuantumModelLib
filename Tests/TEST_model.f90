@@ -46,7 +46,7 @@ PROGRAM TEST_model
   CALL Initialize_Test(test_var,test_name='QModel')
   !CALL test_Vibronic_SO2() ; CALL Finalize_Test(test_var) ; stop
 
-  CALL test_OneD_Photons2() ; CALL Finalize_Test(test_var) ; stop
+  !CALL test_OneD_Photons2() ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_PSB3() ; CALL Finalize_Test(test_var) ; stop
 
@@ -80,7 +80,8 @@ PROGRAM TEST_model
   CALL test_TwoD_RJDI2014()
   CALL test_Vibronic()
   CALL test_TwoD_Valahu2022()
-  CALL test_OneD_Photons() 
+  CALL test_OneD_Photons()
+  CALL test_OneD_Photons2()
   CALL test_Retinal_JPCB2000()
   CALL test_NO3()
 
