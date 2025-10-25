@@ -1,3 +1,6 @@
+# Disable the default rules
+MAKEFLAGS += --no-builtin-rules --no-builtin-variables
+#
 DEBUG := f
 DDEBUG := $(subst T,t,$(DEBUG))
 #=================================================================================
@@ -23,9 +26,10 @@ RKIND := real64
 # For some compilers (like lfortran), real128 (quadruple precision) is not implemented
 # WITHRK16 = 1 (0) compilation with (without) real128
 WITHRK16 :=
-## how to get external libraries;  "loc" (default): from local zip file, Empty or something else, from github
-EXTLIB_TYPE := loc
+## branch of the external libraries
 BRANCH      := dev2
+# how to clean (recursively (1) or not (0)) the external libraries (*_loc)
+RECCLEAN    := 1
 #=================================================================================
 ifeq ($(FC),)
   override FC := gfortran
@@ -154,7 +158,7 @@ endif
 #=================================================================================
 # External Libraries : QDUtilLib AD_dnSVM
 #=================================================================================
-EXTLIB_LIST := QDUtilLib AD_dnSVM
+EXTLIB_LIST := AD_dnSVM QDUtilLib
 ifneq ($(EXTLIB_LIST),)
   ifeq ($(ExtLibDIR),)
     ExtLibDIR := $(MAIN_path)/Ext_Lib
@@ -337,19 +341,19 @@ clean:
 	rm -fr build
 	rm -f $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.mod $(OBJ_DIR)/*.MOD
-	@echo "  done cleaning"
+	@echo "  done cleaning for "$(LIB_NAME)
 cleanall: clean
 	rm -f lib*.a
 	rm -rf OBJ
 	cd $(TESTS_DIR) && ./clean
-	if test "$(EXTLIB_LIST)" != ""; then ./scripts/cleanExtLib cleanall "$(ExtLibDIR)" "$(EXTLIB_LIST)"; fi  
-	@echo "  done remove the *.a libraries and the OBJ directory"
+	if [ "$(EXTLIB_LIST)" != "" -a "$(RECCLEAN)" = "1" ]; then ./scripts/cleanExtLib cleanall "$(ExtLibDIR)" "$(EXTLIB_LIST)" 0; fi  
+	@echo "  done remove the *.a libraries and the OBJ directory for "$(LIB_NAME)
 cleanlocextlib: clean
 	rm -f lib*.a
 	rm -rf OBJ
 	cd $(TESTS_DIR) && ./clean
-	if test "$(EXTLIB_LIST)" != ""; then ./scripts/cleanExtLib cleanlocextlib "$(ExtLibDIR)" "$(EXTLIB_LIST)"; fi 
-	@echo "  done remove all local library directories (..._loc)"
+	if [ "$(EXTLIB_LIST)" != "" -a "$(RECCLEAN)" = "1" ] ; then ./scripts/cleanExtLib cleanlocextlib "$(ExtLibDIR)" "$(EXTLIB_LIST)" 0; fi 
+	@echo "  done remove all local library directories (..._loc) for "$(LIB_NAME)
 #===============================================
 #============= make dependencies ===============
 #===============================================
