@@ -55,7 +55,7 @@ SUBROUTINE sub_Read_Qmodel(ndim,nsurf,nio)
     CALL Init_Model(QuantumModel,ndim=ndim,nsurf=nsurf,                         &
                     read_param=.TRUE.,nio_param_file=nio)
 
-    CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Init_Qmodel in Model_driver.f90')
+    CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Read_Qmodel in Model_driver.f90')
 
     ndim  = QuantumModel%ndim
     nsurf = QuantumModel%nsurf

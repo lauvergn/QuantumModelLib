@@ -72,7 +72,7 @@ where
   - option     : option, to be able to select a model with several options (Tully ...) [integer]
 ```
 
-he list of available models is given below
+The list of available models is given below
 
 Example:
 ```fortran
@@ -95,6 +95,41 @@ It initializes the phenol potential (2D and 3 PES).
   - nsurf      : the number of electronic surface(s) (adiabatic or diabatic) [integer]
   - nio        : file unit where the namelist is read. It can be the standard unit [integer]
 ```
+Then, the **&potential** namelist is read.
+In the following exemple, the 2+1D-retinal model ('Retinal_JPCB2000') is read.
+
+```fortran
+  &potential
+    pot_name='Retinal_JPCB2000' ! potential surface name
+    ndim=3 PubliUnit=f
+    adiabatic=t
+    Phase_checking=f
+     /
+```
+
+  It initializes the 2+1D-retinal model (ndim=3).
+  For this model, fhe number of electronic surfaces is automatically set up to 2.
+    => adiabatic=t      : Computation of the adiabatic surface: 
+    => Phase_checking=f : The adiabatic vector phases are not checked between several calculations
+    => PubliUnit=f      : The atomic units are used
+
+### 3a2bis) Initialization of the potential (reading the model, alternative way)
+
+It use the usual initialization, but the variable **pot_name** must be set to 'read_model'.
+
+```fortran
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+```
+
+```
+where
+  - ndim       : the number of degree(s) of freedom [integer]
+  - nsurf      : the number of electronic surface(s) (adiabatic or diabatic) [integer]
+  - pot_name='read_model'
+  - adiabatic  : flag (.TRUE. or .FALSE.) [logical]
+  - option     : option, to be able to select a model with several options (Tully ...) [integer]
+```
+
 Then, the **&potential** namelist is read.
 In the following exemple, the 2+1D-retinal model ('Retinal_JPCB2000') is read.
 
