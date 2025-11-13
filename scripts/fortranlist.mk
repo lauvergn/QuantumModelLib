@@ -28,6 +28,7 @@ TwoD_MullerBrown_m.f90  \
 Test_m.f90  \
 ClH2p_m.f90  \
 Bottleneck_m.f90  \
+H2_H2On_m.f90  \
 dmabn_m.f90  \
 Uracil_m.f90  \
 Buck_m.f90  \

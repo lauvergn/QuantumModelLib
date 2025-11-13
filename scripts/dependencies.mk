@@ -27,6 +27,7 @@ qml_twod_mullerbrown_m := $(OBJ_DIR)/TwoD_MullerBrown_m.o
 qml_test_m := $(OBJ_DIR)/Test_m.o
 qml_clh2p_m := $(OBJ_DIR)/ClH2p_m.o
 qml_bottleneck_m := $(OBJ_DIR)/Bottleneck_m.o
+qml_h2_h2on_m := $(OBJ_DIR)/H2_H2On_m.o
 qml_dmabn_m := $(OBJ_DIR)/dmabn_m.o
 qml_uracil_m := $(OBJ_DIR)/Uracil_m.o
 qml_buck_m := $(OBJ_DIR)/Buck_m.o
@@ -217,6 +218,11 @@ $(OBJ_DIR)/Bottleneck_m.o : \
           $(qml_empty_m) \
           $(qdutil_m) \
           $(addnsvm_m)
+#file+mod_name: SRC/QML/H2_H2On_m.f90 qml_h2_h2on_m
+$(OBJ_DIR)/H2_H2On_m.o : \
+          $(qdutil_numparameters_m) \
+          $(qml_empty_m) \
+          $(addnsvm_m)
 #file+mod_name: SRC/QML/dmabn_m.f90 qml_dmabn_m
 $(OBJ_DIR)/dmabn_m.o : \
           $(qdutil_numparameters_m) \
@@ -366,6 +372,7 @@ $(OBJ_DIR)/Model_m.o : \
           $(qml_h2sin_m) \
           $(qml_h2nsi_m) \
           $(qml_h2o_m) \
+          $(qml_h2_h2on_m) \
           $(qml_clh2p_m) \
           $(qml_clh2p_botschwina_m) \
           $(qml_bottleneck_m) \

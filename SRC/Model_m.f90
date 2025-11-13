@@ -327,6 +327,8 @@ CONTAINS
   USE QML_H2NSi_m
 
   USE QML_H2O_m
+  USE QML_H2_H2On_m
+
   USE QML_ClH2p_m
   USE QML_ClH2p_Botschwina_m
   USE QML_Bottleneck_m
@@ -918,6 +920,17 @@ CONTAINS
       !! === END README ==
       allocate(QML_H2O_t :: QModel%QM)
       QModel%QM = Init_QML_H2O(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('h2_h2on','h2_clathrate')
+      !! === README ==
+      !! H2_H2On potential:
+      !! pot_name  = 'H2_H2On'
+      !! option    = 1 (default 1)
+      !! ndim      = 6
+      !! nsurf     = 1
+      !! === END README ==
+      allocate(QML_H2_H2On_t :: QModel%QM)
+      QModel%QM = Init_QML_H2_H2On(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('bottleneck','eckart')
       !! === README ==
