@@ -56,7 +56,7 @@ PROGRAM TEST_model
   logical                        :: Lerr
   integer                        :: err
 
-  CALL Initialize_Test(test_var,test_name='QModel_ExtModel')
+  CALL Initialize_Test(test_var,test_name='QModel_H2_H2On')
 
   nderiv = 0
   write(out_unit,*) '---------------------------------------------'
@@ -115,6 +115,6 @@ PROGRAM TEST_model
 
 
 
-  !CALL Finalize_Test(test_var)
+  CALL Finalize_Test(test_var)
 
 END PROGRAM TEST_model

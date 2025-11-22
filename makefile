@@ -246,11 +246,14 @@ app: $(APPEXE)
 SRCTESTFILES := $(notdir $(shell ls $(TESTS_DIR)/*.f90))
 OBJTEST      := $(addprefix $(OBJ_DIR)/, $(SRCTESTFILES:.f90=.o))
 TESTEXE      := $(SRCTESTFILES:.f90=.x)
+NEWTESTEXE   := $(filter-out TEST_model.x, $(TESTEXE))
+
 #
 ifeq ($(DDEBUG),t)
   $(info ***********SRCTESTFILES:    $(SRCTESTFILES))
   $(info ***********OBJ test files:  $(OBJTEST))
   $(info ***********app test exe:    $(TESTEXE))
+  $(info ***********app nextest exe: $(NEWTESTEXE))
   $(info ***********************************************************************)
 endif
 #
@@ -259,7 +262,7 @@ ut: $(TESTEXE)
 	@echo "model (QML) compilation: OK"
 	cd $(TESTS_DIR) ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(INT) 1
 	mkdir -p $(TESTSOUT_DIR)
-	cd $(TESTSOUT_DIR) ; ../../TEST_ExtModel.x > Test.log
+	cd $(TESTSOUT_DIR) ; rm -f *.log ; $(foreach Texe,$(NEWTESTEXE), ../../$(Texe) >>  Test.log ;)
 	@grep "Number of error(s)" $(TESTSOUT_DIR)/Test.log
 	@awk  -F: 'BEGIN{test=0} /Number of tests/ {test+=$$2} END {print "Number of tests: " test}' $(TESTSOUT_DIR)/Test.log
 	@awk  -F: 'BEGIN{err=0} /Number of error/ {err=err+$$2} END {print "Number of error(s) for all tests: " err}' $(TESTSOUT_DIR)/Test.log
@@ -276,10 +279,6 @@ $(OBJ_DIR)/%.o: %.f90
 %.x: $(OBJ_DIR)/%.o $(LIBAF)
 	$(FC) $(FFLAGS) -o $@ $< $(LIBAF) $(FLIB)
 	@echo $@ compilation: OK
-
-#%.x: $(OBJ_DIR)/%.o
-#	$(FC) $(FFLAGS) -o $@ $< $(LIBA) $(EXTLib) $(FLIB)
-#	@echo $@ compilation: OK
 #
 # Special rule for the external model 
 $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90:

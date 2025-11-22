@@ -70,7 +70,8 @@ MODULE QML_Morse_m
      real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
   CONTAINS
     PROCEDURE :: EvalPot_QModel => EvalPot_QML_Morse
-    PROCEDURE :: Write_QModel    => Write_QML_Morse
+    PROCEDURE :: Write_QModel   => Write_QML_Morse
+    PROCEDURE :: Test_QModel    => Test_QML_Morse
   END TYPE QML_Morse_t
 
   PUBLIC :: QML_Morse_t,Init_QML_Morse,Init0_QML_Morse,Write_QML_Morse,QML_dnMorse,QML_dnbeta
@@ -90,9 +91,9 @@ CONTAINS
   FUNCTION Init_QML_Morse(QModel_in,read_param,nio_param_file,D,a,req) RESULT(QModel)
   IMPLICIT NONE
 
-    TYPE (QML_Morse_t)                          :: QModel
+    TYPE (QML_Morse_t)                           :: QModel
 
-    TYPE(QML_Empty_t),          intent(in)      :: QModel_in ! variable to transfer info to the init
+    TYPE(QML_Empty_t),           intent(in)      :: QModel_in ! variable to transfer info to the init
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
     real (kind=Rkind), optional, intent(in)      :: D,a,req
@@ -375,4 +376,92 @@ CONTAINS
     QML_dnbeta  = exp(-QModel%a*(dnR-QModel%req))
 
   END FUNCTION QML_dnbeta
+
+  SUBROUTINE Test_QML_Morse(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_Morse_t),intent(in)              :: QModel
+
+    integer,           intent(inout)           :: err
+
+    integer,           intent(in)              :: nderiv
+    real (kind=Rkind), intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),    intent(inout), optional :: dnMatV
+
+    real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+
+    real (kind=Rkind), allocatable :: Mat(:,:)
+    integer        :: i
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Test_QML_Morse'
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
+    END IF
+
+    IF (.NOT. QModel%Init) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'The model is not initialized!'
+      err = -1
+      RETURN
+    ELSE
+      err = 0
+    END IF
+
+    IF (present(Q0)) THEN
+      IF (size(Q0) /= QModel%ndim) THEN
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'incompatible Q0 size:'
+        write(out_unit,*) 'size(Q0), ndimQ:',size(Q0),QModel%ndim
+        err = 1
+        Q0(:) = HUGE(ONE)
+        RETURN
+      END IF
+      Q0(:) = TWO
+    END IF
+
+    IF (present(dnMatV)) THEN
+      err = 0
+      CALL alloc_dnMat(dnMatV,nsurf=QModel%nsurf,nVar=QModel%ndim,nderiv=nderiv)
+
+      allocate(Mat(QModel%nsurf,QModel%nsurf))
+
+      IF (nderiv >= 0) THEN ! no derivative
+        Mat = 1.6304262638703583E-002_Rkind
+        CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV)
+      END IF
+
+      IF (nderiv >= 1) THEN ! 1st order derivatives
+        Mat = 0.10393965194050944_Rkind
+        CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV,ider=[1])
+      END IF
+
+      IF (nderiv >= 2) THEN ! 2d order derivatives
+        Mat = 0.20927202387687954_Rkind
+        CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV,ider=[1,1])
+      END IF
+
+      IF (nderiv >= 3) THEN ! 3d derivative
+        Mat = ZERO
+        CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV,ider=[0,0,0]) ! all 3d order derivatives
+      END IF
+
+      IF (allocated(Mat)) deallocate(Mat)
+    END IF
+
+    IF (present(d0GGdef)) d0GGdef = 5.7319563673905317E-004_Rkind
+
+
+    IF (debug) THEN
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE Test_QML_Morse
 END MODULE QML_Morse_m
