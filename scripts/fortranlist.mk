@@ -4,6 +4,7 @@ FiniteDiff_m.f90  \
 UtilLib_m.f90  \
 TwoD_RJDI2014_m.f90  \
 Tully_m.f90  \
+DoubleWell_m.f90  \
 ExtModel_m.f90  \
 Vibronic_m.f90  \
 HOO_DMBE_m.f90  \

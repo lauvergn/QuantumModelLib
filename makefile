@@ -247,6 +247,8 @@ SRCTESTFILES := $(notdir $(shell ls $(TESTS_DIR)/*.f90))
 OBJTEST      := $(addprefix $(OBJ_DIR)/, $(SRCTESTFILES:.f90=.o))
 TESTEXE      := $(SRCTESTFILES:.f90=.x)
 NEWTESTEXE   := $(filter-out TEST_model.x, $(TESTEXE))
+#NEWTESTEXE   := TEST_ExtModel.x
+#TEST_morse.x TEST_H2_H2On.x TEST_ExtModel.x
 
 #
 ifeq ($(DDEBUG),t)

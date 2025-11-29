@@ -316,6 +316,7 @@ CONTAINS
   USE QML_H2_m
 
   USE QML_HenonHeiles_m
+  USE QML_DoubleWell_m
   USE QML_Tully_m
 
   USE QML_PSB3_m
@@ -631,6 +632,18 @@ CONTAINS
       allocate(QML_HenonHeiles_t :: QModel%QM)
       QModel%QM = Init_QML_HenonHeiles(QModel_in,                               &
                                        read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('doublewell')
+      !! === README ==
+      !! DoubleWell potential
+      !! pot_name  = 'DoubleWell'
+      !! ndim      = 1
+      !! nsurf     = 1
+      !! reduced masses      = ONE au
+      !! ref:  Nancy Makri & William H. Miller, The Journal of Chemical Physics 87, 5781 (1987); doi: 10.1063/1.453501
+      !! === END README ==
+      allocate(QML_DoubleWell_t :: QModel%QM)
+      QModel%QM = Init_QML_DoubleWell(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('tully')
       !! === README ==
@@ -3174,8 +3187,8 @@ CONTAINS
 
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Check_analytical_numerical_derivatives'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
     IF (Model%QM%no_ana_der) RETURN

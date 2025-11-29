@@ -101,7 +101,7 @@ MODULE QML_Empty_m
       PROCEDURE :: EvalScalOp_QModel      => EvalScalOp_QML_Empty
       PROCEDURE :: EvalFunc_QModel        => EvalFunc_QML_Empty
       PROCEDURE :: Write_QModel           => Write_QML_Empty
-      PROCEDURE :: Test_QModel            => Test_QML_Empty
+      PROCEDURE :: Ref_FOR_Test_QModel    => Ref_FOR_Test_QML_Empty
      !PROCEDURE :: get2_Q0_QModel         => get2_Q0_QML_Empty
       PROCEDURE :: get_d0GGdef_QModel     => get_d0GGdef_QML_Empty
       PROCEDURE :: Cart_TO_Q_QModel       => Cart_TO_Q_QML_Empty
@@ -584,7 +584,7 @@ MODULE QML_Empty_m
     END DO
 
   END SUBROUTINE Qact_TO_Q_QML_Empty
-    SUBROUTINE Test_QML_Empty(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+    SUBROUTINE Ref_FOR_Test_QML_Empty(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
     USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE
@@ -601,7 +601,7 @@ MODULE QML_Empty_m
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Test_QML_Empty'
+    character (len=*), parameter :: name_sub='Ref_FOR_Test_QML_Empty'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -624,5 +624,5 @@ MODULE QML_Empty_m
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Test_QML_Empty
+  END SUBROUTINE Ref_FOR_Test_QML_Empty
 END MODULE QML_Empty_m

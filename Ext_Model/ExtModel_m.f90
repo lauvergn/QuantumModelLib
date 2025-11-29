@@ -62,10 +62,10 @@ MODULE QML_ExtModel_m
     real (kind =Rkind) :: c
 
   CONTAINS
-    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_ExtModel
-    PROCEDURE :: Write_QModel     => Write_QML_ExtModel
-    PROCEDURE :: Cart_TO_Q_QModel => Cart_TO_Q_QML_ExtModel ! optional
-    PROCEDURE :: Test_QModel      => Test_QML_ExtModel
+    PROCEDURE :: EvalPot_QModel      => EvalPot_QML_ExtModel
+    PROCEDURE :: Write_QModel        => Write_QML_ExtModel
+    PROCEDURE :: Cart_TO_Q_QModel    => Cart_TO_Q_QML_ExtModel ! optional
+    PROCEDURE :: Ref_FOR_Test_QModel => Ref_FOR_Test_QML_ExtModel
   END TYPE QML_ExtModel_t
 
   PUBLIC :: QML_ExtModel_t,Init_QML_ExtModel
@@ -141,6 +141,7 @@ CONTAINS
     integer,                 intent(in) :: nio
 
     ! add something you want to print about your model (reference, system ...)
+    CALL QModel%QML_Empty_t%Write_QModel(out_unit)
     write(out_unit,*) 'model name: ',QModel%pot_name
     write(out_unit,*) 'a,b',a,b
     write(out_unit,*) 'c',QModel%c
@@ -278,7 +279,7 @@ CONTAINS
       END IF
   END SUBROUTINE Cart_TO_Q_QML_ExtModel
 
-  SUBROUTINE Test_QML_ExtModel(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+  SUBROUTINE Ref_FOR_Test_QML_ExtModel(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
     USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE
@@ -297,9 +298,9 @@ CONTAINS
     integer        :: i
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Test_QML_ExtModel'
-    !logical, parameter :: debug = .FALSE.
-    logical, parameter :: debug = .TRUE.
+    character (len=*), parameter :: name_sub='Ref_FOR_Test_QML_ExtModel'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unit,*) ' BEGINNING ',name_sub
@@ -371,5 +372,5 @@ CONTAINS
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Test_QML_ExtModel
+  END SUBROUTINE Ref_FOR_Test_QML_ExtModel
 END MODULE QML_ExtModel_m
