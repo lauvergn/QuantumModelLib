@@ -4,6 +4,7 @@
 *.log
 /SRC/*.f90.i
 /SRC/*/*.f90.i
+/SRC/QML/ExtModel_m.f90
 /SRC/QML/chqml
 /Tests/*txt
 /Tests/*com

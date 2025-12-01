@@ -1,5 +1,5 @@
 name = "QuantumModelLib"
-version = "26.1.1"
+version = "26.1.2"
 license = "MIT"
 author = "David Lauvergnat"
 maintainer = "david.lauvergnat@universite-paris-saclay.fr"
@@ -16,6 +16,10 @@ name="TestQML"
 source-dir="Tests"
 main="TEST_model.f90"
 
+[[test]]
+name="TestExt"
+source-dir="Tests"
+main="TEST_ExtModel.f90"
 
 [[executable]]
 name="driver"

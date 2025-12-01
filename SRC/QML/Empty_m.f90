@@ -101,6 +101,7 @@ MODULE QML_Empty_m
       PROCEDURE :: EvalScalOp_QModel      => EvalScalOp_QML_Empty
       PROCEDURE :: EvalFunc_QModel        => EvalFunc_QML_Empty
       PROCEDURE :: Write_QModel           => Write_QML_Empty
+      PROCEDURE :: Ref_FOR_Test_QModel    => Ref_FOR_Test_QML_Empty
      !PROCEDURE :: get2_Q0_QModel         => get2_Q0_QML_Empty
       PROCEDURE :: get_d0GGdef_QModel     => get_d0GGdef_QML_Empty
       PROCEDURE :: Cart_TO_Q_QModel       => Cart_TO_Q_QML_Empty
@@ -583,4 +584,45 @@ MODULE QML_Empty_m
     END DO
 
   END SUBROUTINE Qact_TO_Q_QML_Empty
+    SUBROUTINE Ref_FOR_Test_QML_Empty(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_Empty_t), intent(in)             :: QModel
+
+    integer,           intent(inout)           :: err
+
+    integer,           intent(in)              :: nderiv
+    real (kind=Rkind), intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),    intent(inout), optional :: dnMatV
+
+    real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Ref_FOR_Test_QML_Empty'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
+    END IF
+
+    IF (.NOT. QModel%Init) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'The model is not initialized!'
+      err = -1
+      RETURN
+    ELSE
+      err = 0
+    END IF
+
+    IF (debug) THEN
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE Ref_FOR_Test_QML_Empty
 END MODULE QML_Empty_m
