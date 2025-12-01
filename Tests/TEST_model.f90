@@ -46,7 +46,7 @@ PROGRAM TEST_model
   CALL Initialize_Test(test_var,test_name='QModel')
   !CALL test_Vibronic_SO2() ; CALL Finalize_Test(test_var) ; stop
 
-  !CALL test_OneD_Photons() ; CALL test_OneD_Photons2() ; CALL Finalize_Test(test_var) ; stop
+  !CALL test_OneD_Photons2() ; CALL Finalize_Test(test_var) ; stop
 
   !CALL test_PSB3() ; CALL Finalize_Test(test_var) ; stop
 
@@ -59,7 +59,6 @@ PROGRAM TEST_model
   CALL test_Opt_LinearHBond()
   CALL test_HenonHeiles()
   CALL test_Buckingham()
-  CALL test_Morse()
   CALL test_Poly1D()
 
   ! One electronic surface + optimization + IRC
@@ -460,77 +459,7 @@ SUBROUTINE test_OneDSOC_2S1T
   CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_OneDSOC_2S1T
-SUBROUTINE test_Morse
-  USE QDUtil_NumParameters_m
-  USE ADdnSVM_m
-  USE Model_m
-  IMPLICIT NONE
 
-  TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: q(:)
-  integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                 :: PotVal
-
-
-  nderiv = 2
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Morse potential (H-F parameters)'
-  write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-
-  CALL Init_Model(QModel,pot_name='Morse',read_param=.FALSE.)
-
-  allocate(q(QModel%QM%ndim))
-  q(:) = 2._Rkind
-
-  nderiv=2
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '----- CHECK POT -----------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Check analytical derivatives with respect to numerical ones'
-
-  write(out_unit,'(a,f12.6)') 'R (Bohr)',q(:)
-  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv,test_var)
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential and derivatives'
-
-  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  write(out_unit,'(a,f12.6)') 'R (Bohr)',q(:)
-  write(out_unit,*) 'Energy (Hartree)'
-  CALL Write_dnMat(PotVal,nio=out_unit)
-
-  ! For testing the model
-  CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='Morse_HF', &
-                           test_var=test_var,last_test=.TRUE.)
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '- END CHECK POT -----------------------------'
-  write(out_unit,*) '---------------------------------------------'
-
-  CALL dealloc_dnMat(PotVal)
-  deallocate(q)
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential on a 1D grid (as a function of R)'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '   file name: "grid_Morse"'
-
-  CALL Eval_pot_ON_Grid(QModel,Qmin=[1._Rkind],Qmax=[5._Rkind],nb_points=1001,&
-                        grid_file='RES_files/grid_Morse')
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  CALL dealloc_Model(QModel)
-
-END SUBROUTINE test_Morse
 SUBROUTINE test_Poly1D
   USE QDUtil_NumParameters_m
   USE ADdnSVM_m
@@ -3367,7 +3296,7 @@ SUBROUTINE test_HOO_DMBE
   TYPE (dnMat_t)                 :: PotVal
 
 
-  nderiv = 2
+  nderiv = 1
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'

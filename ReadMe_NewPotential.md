@@ -81,7 +81,7 @@ This subroutine is bounded to the **QML_XXX_t** type and mapped to the generic p
 
   Remark: if required, the intermediate variables MUST be of the dnS_t type.
 
-### e) The Cartesian coordinate transformation subroutine: **Cart_TO_Q_QML_Test**
+### e) The Cartesian coordinate transformation subroutine: **Cart_TO_Q_QML_XXX**
 
 This subroutine is bounded to the **QML_XXX_t** type and mapped to the generic procedure **Cart_TO_Q_QModel**. The dummy arguments are:
 

@@ -1,18 +1,18 @@
 #!/bin/bash
 
-name_dep=dependencies.mk
-SRCFile=fortranlist.mk
+name_dep=scripts/dependencies.mk
+SRCFile=scripts/fortranlist.mk
 
-list=`ls SRC/*.f90 SRC/*/*.f90`
+list=`find SRC  -name "*.f90"`
 ExcludeList='FormicAcid_m.f90 H3-1_m.f90 PH4JoOri_m.f90 PH4Jo2_m.f90'
 
 echo "#===============================================" > $name_dep
 echo "#===============================================" > $SRCFile
-echo "SRCFILES= \\" >> $SRCFile
+echo "SRCFILES := \\" >> $SRCFile
 
 for ff90 in $list
 do
-   ff=`awk '{name=$1 ; n=split(name,tab,"/") ; if (n > 0) {l=length(tab[n]) ; print tab[n]}}' <<< $ff90`
+   ff=`basename $ff90`
    #echo $ff
    if grep -vq $ff <<< $ExcludeList;  then
      echo $ff " \\" >> $SRCFile
@@ -23,8 +23,11 @@ done
 echo "#===============================================" >> $name_dep
 for ff90 in $list
 do
-   ff=`awk '{name=$1 ; n=split(name,tab,"/") ; if (n > 0) {l=length(tab[n]) ; print tab[n]}}' <<< $ff90`
+   ff=`basename $ff90`
+   #echo '# '$ff >> $name_dep
    if grep -vq $ff <<< $ExcludeList;  then
-     awk -f scripts/dep2.awk $ff90 >> $name_dep
+     mname=`awk -f scripts/get_modname.awk $ff90`
+     #echo "#mname: " $mname >> $name_dep
+     awk -v mod_name=$mname -f scripts/dep2.awk $ff90 >> $name_dep
    fi
 done

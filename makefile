@@ -1,324 +1,372 @@
+# Disable the default rules
+MAKEFLAGS += --no-builtin-rules --no-builtin-variables
+#
+DEBUG := f
+DDEBUG := $(subst T,t,$(DEBUG))
 #=================================================================================
 #=================================================================================
 # Compiler?
-#Possible values: (Empty: gfortran)
-#                gfortran (version: 9.0 linux and osx), ifx, ifort
- FC = gfortran
+#Possible values: ifort, ifx, gfortran (default), nagfor 
+ FC := gfortran
+#FC := ifort
+#FC := nagfor
 #
-# Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+# Optimize? Empty: default Optimization; 0: No Optimization; 1 Optimization
+OPT := 1
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP := 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 1
+LAPACK := 1
 ## force the default integer (without kind) during the compillation.
 ## default 4: , INT=8 (for kind=8)
-INT = 4
+INT := 4
 ## change the real kind
 ## default real64: , possibilities, real32, real64, real128
-RKIND = real64
+RKIND := real64
 # For some compilers (like lfortran), real128 (quadruple precision) is not implemented
 # WITHRK16 = 1 (0) compilation with (without) real128
-WITHRK16 = 
-## how to get external libraries;  "loc" (default)
-EXTLIB_TYPE = loc
-#=================================================================================
+WITHRK16 :=
+## branch of the external libraries
+BRANCH      := dev
+# how to clean (recursively (1) or not (0)) the external libraries (*_loc)
+RECCLEAN    := 1
 #=================================================================================
 ifeq ($(FC),)
-  FFC      := gfortran
-else
-  FFC      := $(FC)
+  override FC := gfortran
 endif
+FFC := $(FC)
+
 ifeq ($(OPT),)
-  OOPT      := 1
-else
-  OOPT      := $(OPT)
+  override OPT := 1
 endif
-ifneq ($(OOPT),$(filter $(OOPT),0 1))
-  $(info *********** OPT (optimisation):        $(OOPT))
+ifneq ($(OPT),$(filter $(OPT),0 1))
+  $(info *********** OPT (optimisation):        $(OPT))
   $(info Possible values: 0, 1)
-  $(error ERROR: Incompatible options)
+  $(error ERROR: Incompatible option values)
 endif
+OOPT := $(OPT)
+
 ifeq ($(OMP),)
-  OOMP      := 1
-else
-  OOMP      := $(OMP)
+  override OMP := 1
 endif
-ifneq ($(OOMP),$(filter $(OOMP),0 1))
-  $(info *********** OMP (openmp):        $(OOMP))
+ifneq ($(OMP),$(filter $(OMP),0 1))
+  $(info *********** OMP (openmp):        $(OMP))
   $(info Possible values: 0, 1)
-  $(error ERROR: Incompatible options)
+  $(error ERROR: Incompatible option values)
 endif
+OOMP := $(OMP)
+
 ifeq ($(LAPACK),)
-  LLAPACK      := 1
-else
-  LLAPACK      := $(LAPACK)
+  override LAPACK := 1
 endif
-ifneq ($(LLAPACK),$(filter $(LLAPACK),0 1))
-  $(info *********** LAPACK:        $(LLAPACK))
+ifneq ($(LAPACK),$(filter $(LAPACK),0 1))
+  $(info *********** LAPACK:        $(LAPACK))
   $(info Possible values: 0, 1)
-  $(error ERROR: Incompatible options)
+  $(error ERROR: Incompatible option values)
 endif
-ifeq ($(WITHRK16),)
-  WWITHRK16      :=$(shell $(FFC) -o scripts/testreal128.exe scripts/testreal128.f90 &>comp.log ; ./scripts/testreal128.exe ; rm scripts/testreal128.exe)
-else
-  WWITHRK16      := $(WITHRK16)
-endif
-ifneq ($(WWITHRK16),$(filter $(WWITHRK16),0 1))
-  $(info *********** WITHRK16 (compilation with real128):        $(WWITHRK16))
-  $(info Possible values: 0, 1)
-  $(error ERROR: Incompatible options)
-endif
+LLAPACK := $(LAPACK)
+
 ifneq ($(INT),$(filter $(INT),4 8))
   $(info *********** INT (change default integer):        $(INT))
   $(info Possible values: 4, 8)
-  $(error ERROR: Incompatible options)
+  $(error ERROR: Incompatible option values)
 endif
+
 ifneq ($(RKIND),$(filter $(RKIND),real32 real64 real128))
   $(info *********** RKIND (select the real kind):        $(RKIND))
   $(info Possible values (case sensitive): real32 real64 real128)
-  $(error ERROR: Incompatible options)
+  $(error ERROR: Incompatible option values)
 endif
-#=================================================================================
+ifeq ($(WITHRK16),)
+  override WITHRK16 := $(shell $(FFC) -o scripts/testreal128.exe scripts/testreal128.f90 &> /dev/null ; wait ; ./scripts/testreal128.exe ; rm scripts/testreal128.exe)
+endif
+WWITHRK16 := $(WITHRK16)
+ifneq ($(WITHRK16),$(filter $(WITHRK16),0 1))
+  $(info *********** WITHRK16 (compilation with real128):        $(WITHRK16))
+  $(info Possible values: 0, 1)
+  $(error ERROR: Incompatible option values)
+endif
 ifeq ($(RKIND),real128)
   ifeq ($(WWITHRK16),0)
     $(info "Incompatible options:")
     $(info ***********RKIND:        $(RKIND))
-    $(info ***********WITHRK16:     $(WWITHRK16))
-    $(error ERROR: Incompatible options)
+    $(info ***********WITHRK16:     $(WITHRK16))
+    $(error ERROR: Incompatible RKIND and WITHRK16 option values)
   endif
 endif
-#=================================================================================
+export RKIND WITHRK16 INT  LAPACK  FC  OPT  OMP BRANCH
+export      WWITHRK16     LLAPACK FFC OOPT OOMP
 #
-# Operating system, OS? automatic using uname:
-OS :=$(shell uname)
-
-QML_VER=$(shell awk '/version/ {print $$3}' fpm.toml | head -1)
-
-# Extension for the object directory and the library
-ext_obj    :=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)_$(RKIND)
-extold_obj :=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
-
-# library name
-QMLIBA    := libQMLib$(ext_obj).a
-QMLIBAOLD := libQMLib$(extold_obj).a
 #=================================================================================
-MAIN_path := $(shell pwd)
+# Operating system, OS? automatic using uname:
+#=================================================================================
+OS:=$(shell uname)
+#=================================================================================
+# extension for the library (.a), objects and modules directory
+#=================================================================================
+ext_obj    :=_$(FC)_opt$(OPT)_omp$(OMP)_lapack$(LAPACK)_int$(INT)_$(RKIND)
+extold_obj :=_$(FC)_opt$(OPT)_omp$(OMP)_lapack$(LAPACK)_int$(INT)
+#=================================================================================
+# Directories
+#=================================================================================
+MAIN_path    := $(shell pwd)
+#
+OBJ_DIR      := OBJ/obj$(ext_obj)
+OBJOLD_DIR   := OBJ/obj$(extold_obj)
+MOD_DIR      := $(OBJ_DIR)
+#
+SRC_DIR      := SRC
+APP_DIR      := APP
+TESTS_DIR    := Tests
+TESTSOUT_DIR := $(TESTS_DIR)/output
 
-OBJ_DIR    := OBJ/obj$(ext_obj)
-OBJOLD_DIR := OBJ/obj$(extold_obj)
-$(shell [ -d $(OBJ_DIR) ] || mkdir -p $(OBJ_DIR))
+LIB_NAME     := QuantumModelLib
 
-MOD_DIR=$(OBJ_DIR)
-SRC_DIR=SRC
-MAIN_DIR=APP
-TESTS_DIR=Tests
-
+EXTMODEL_DIR := $(MAIN_path)/Ext_Model
+#=================================================================================
+# Cpreprocessing macros
+#=================================================================================
+LIB_VERSION=$(shell awk '/version/ {print $$3}' fpm.toml | head -1)
+#
 CPPSHELL    = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
               -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
-              -D__QML_VER='"$(QML_ver)"' \
+              -D__QML_VER='$(LIB_VERSION)' \
               -D__QMLPATH="'$(MAIN_path)'" \
-              -D__RKIND="$(RKIND)" -D__WITHRK16="$(WWITHRK16)" \
-              -D__LAPACK="$(LLAPACK)"
-
-#=================================================================================
-# External Libraries directory
-#
-ifeq ($(ExtLibDIR),)
-  ExtLibDIR := $(MAIN_path)/Ext_Lib
-endif
-$(shell [ -d $(ExtLibDIR) ] || (echo $(ExtLibDIR) "does not exist" ; exit 1))
-
-QD_DIR    = $(ExtLibDIR)/QDUtilLib
-QDMOD_DIR = $(QD_DIR)/OBJ/obj$(ext_obj)
-QDLIBA    = $(QD_DIR)/libQD$(ext_obj).a
-
-AD_DIR    = $(ExtLibDIR)/AD_dnSVM
-ADMOD_DIR = $(AD_DIR)/OBJ/obj$(ext_obj)
-ADLIBA    = $(AD_DIR)/libAD_dnSVM$(ext_obj).a
-
-EXTMOD_DIR = $(QDMOD_DIR) $(ADMOD_DIR)
-
-EXTMod     = -I$(QDMOD_DIR) -I$(ADMOD_DIR)
-EXTLib     = $(ADLIBA) $(QDLIBA)
-#===============================================================================
-#=================================================================================
- #
+              -D__RKIND="$(RKIND)" -D__WITHRK16="$(WITHRK16)" \
+              -D__LAPACK="$(LAPACK)"
 #=================================================================================
 # To deal with external compilers.mk file
-CompilersDIR = $(MAIN_path)
+#=================================================================================
+CompilersDIR = $(MAIN_path)/scripts
 ifeq ($(CompilersDIR),)
-  include compilers.mk
+  include scripts/compilers.mk
 else
   include $(CompilersDIR)/compilers.mk
 endif
 #=================================================================================
+# External Model : ExtModel_m.f90
+#=================================================================================
+# it will create the link
+MES := $(shell test -L $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90 || echo "the ExtModel_m.f90 link does not exist")
+$(info ***********MES:       $(MES))
+MES := $(shell test -L $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90 || ln -s  $(EXTMODEL_DIR)/ExtModel_m.f90 $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90)
+MES := $(shell if test -L $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90; then echo "the ExtModel_m.f90 link exists"; else echo "ERR"; fi)
+$(info ***********MES:       $(MES))
+ifeq ("$(MES)","ERR")
+    $(error ERROR: the ExtModel_m.f90 link does not exist)
+endif
+#=================================================================================
+# External Libraries : QDUtilLib AD_dnSVM
+#=================================================================================
+EXTLIB_LIST := AD_dnSVM QDUtilLib
+ifneq ($(EXTLIB_LIST),)
+  ifeq ($(ExtLibDIR),)
+    ExtLibDIR := $(MAIN_path)/Ext_Lib
+  endif
+  OK := $(shell if test -d $(ExtLibDIR); then echo "ok"; fi)
+  #$(info ***********OK:       $(OK))
+  ifeq ($(OK),)
+    $(error ERROR: $(ExtLibDIR) does not exist!)
+  endif
+  export ExtLibDIR
+
+  EXTLib_DIR  := $(addprefix $(ExtLibDIR)/, $(EXTLIB_LIST))
+  EXTMod      := $(addsuffix /OBJ/obj$(ext_obj), $(EXTLib_DIR))
+  EXTLibOBJ   := $(addsuffix /*.o, $(EXTMod))
+  EXTMod      := $(addprefix -I,$(EXTMod))
+  #$(info ***********EXTLib_DIR:       $(EXTLib_DIR))
+  EXTLib := $(shell for LLIB in $(EXTLIB_LIST) ; do echo $(ExtLibDIR)/$$LLIB"/lib"$$LLIB""$(ext_obj)".a" ; done)
+endif
+#=================================================================================
+#=================================================================================
 #=================================================================================
 #=================================================================================
 $(info ***********************************************************************)
-$(info ***********QML_VERSION:       $(QML_ver))
-$(info ***********OS:                $(OS))
-$(info ***********COMPILER:          $(FFC))
-$(info ***********COMPILER_VER:      $(FC_VER))
-$(info ***********OPTIMIZATION:      $(OOPT))
-$(info ***********OpenMP:            $(OOMP))
-$(info ***********INT:               $(INT))
-$(info ***********RKIND:             $(RKIND))
-$(info ***********WITHRK16:          $(WWITHRK16))
-$(info ***********LAPACK:            $(LLAPACK))
-$(info ***********LAPACK:            $(LLAPACK))
-$(info ***********FFLAGS:            $(FFLAGS))
-$(info ***********FLIB:              $(FLIB))
-$(info ***********EXTMOD_DIR:        $(EXTMOD_DIR))
-$(info ***********ext_obj:           $(ext_obj))
+$(info ***********Library name:    $(LIB_NAME))
+$(info ***********Library version: $(LIB_VERSION))
+$(info ***********OS:              $(OS))
+$(info ***********COMPILER:        $(FC))
+$(info ***********COMPILER_VER:    $(FC_VER))
+$(info ***********OPTIMIZATION:    $(OPT))
+$(info ***********OpenMP:          $(OMP))
+$(info ***********INT:             $(INT))
+$(info ***********RKIND:           $(RKIND))
+$(info ***********WITHRK16:        $(WWITHRK16))
+$(info ***********LAPACK:          $(LAPACK))
+$(info ***********FFLAGS:          $(FFLAGS))
+$(info ***********FLIB:            $(FLIB))
+$(info ***********ext_obj:         $(ext_obj))
+$(info )
+$(info ***********ExtLibDIR:       $(ExtLibDIR))
+$(info ***********EXTLib:          $(EXTLib))
+$(info ***********EXTMod:          $(EXTMod))
+$(info )
+$(info ***********EXTMODEL_DIR:    $(EXTMODEL_DIR))
 $(info ***********************************************************************)
+#
+SRCPATH := $(shell find $(SRC_DIR)/* -maxdepth 1 -type d )
+VPATH := $(APP_DIR):$(TESTS_DIR):$(SRC_DIR):$(SRCPATH)
+#
+include scripts/fortranlist.mk
 
-VPATH = $(TESTS_DIR) $(MAIN_DIR) $(SRC_DIR)  \
-        $(SRC_DIR)/QMLLib $(SRC_DIR)/QML $(SRC_DIR)/Opt $(SRC_DIR)/AdiaChannels
-
-MAINS= TEST_driver TEST_VibAdia TEST_grid TEST_OMPloop
-MAINSx=$(addsuffix .x,$(MAINS))
-#$(info ***********MAINSx:      $(MAINSx))
-
-TESTS=TEST_model
-
-MAINSRCFILES=TEST_VibAdia.f90 TEST_grid.f90 TEST_OMPloop.f90 TEST_driver.f90
-TESTSRCFILES=TEST_model.f90
-
-# liste of source files in SRCFILES
-include ./fortranlist.mk
-
-
-OBJ0=${SRCFILES:.f90=.o}
+OBJ0=$(SRCFILES:.f90=.o)
 OBJ=$(addprefix $(OBJ_DIR)/, $(OBJ0))
 
+ifeq ($(DEGUB),T) 
+  $(info ***********SRCPATH:         $(SRCPATH))
+  $(info ***********OBJ files:       $(OBJ))
+endif
 #===============================================
-#============= Tests ===========================
-#===============================================
-.PHONY: test TEST
-test TEST: $(TESTS).x
-	@echo "model (QML) compilation: OK"
+#============= Main programs: tests + example ==
 #
-.PHONY: ut UT
-UT ut: $(TESTS).x
-	@echo "model (QML) compilation: OK"
-	cd Tests ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(INT) 1
-#===============================================
-#============= all: lib, tests ...  ============
-#===============================================
 .PHONY: all
-all: $(QMLIBA) $(MAINSx) $(TESTS).x
-#===============================================
-#============= Main executable and tests  ======
-#=============================================== libQMLibFull$(ext_obj).a
-TEST_VibAdia.x: $(OBJ_DIR)/TEST_VibAdia.o $(QMLIBA) | $(EXTLib)
-	$(FFC) $(FFLAGS) -o TEST_VibAdia.x  $(OBJ_DIR)/TEST_VibAdia.o libQMLibFull$(ext_obj).a $(FLIB)
-TEST_OOP.x: $(OBJ_DIR)/TEST_OOP.o $(QMLIBA) | $(EXTLib)
-	$(FFC) $(FFLAGS) -o TEST_OOP.x  $(OBJ_DIR)/TEST_OOP.o libQMLibFull$(ext_obj).a $(FLIB)
-TEST_grid.x: $(OBJ_DIR)/TEST_grid.o $(QMLIBA) | $(EXTLib)
-	$(FFC) $(FFLAGS) -o TEST_grid.x  $(OBJ_DIR)/TEST_grid.o libQMLibFull$(ext_obj).a $(FLIB)
-TEST_OMPloop.x: $(OBJ_DIR)/TEST_OMPloop.o $(QMLIBA) | $(EXTLib)
-	$(FFC) $(FFLAGS) -o TEST_OMPloop.x  $(OBJ_DIR)/TEST_OMPloop.o libQMLibFull$(ext_obj).a $(FLIB)
-TEST_driver.x: $(OBJ_DIR)/TEST_driver.o $(QMLIBA) | $(EXTLib)
-	$(FFC) $(FFLAGS) -o TEST_driver.x  $(OBJ_DIR)/TEST_driver.o libQMLibFull$(ext_obj).a $(FLIB)
-#
-$(TESTS).x: $(OBJ_DIR)/$(TESTS).o $(QMLIBA) | $(EXTLib)
-	$(FFC) $(FFLAGS) -o $(TESTS).x  $(OBJ_DIR)/$(TESTS).o libQMLibFull$(ext_obj).a $(FLIB)
-#===============================================
-#============= Library: libQD.a  ===============
-#===============================================
-.PHONY: lib
-lib: $(QMLIBA)
+all: lib $(APPEXE) $(TESTEXE)
 
-$(QMLIBA): $(OBJ)
-	ar -cr $(QMLIBA) $(OBJ)
-	rm -f  $(OBJOLD_DIR)
-	cd OBJ ; ln -s obj$(ext_obj) obj$(extold_obj)
-	rm -f  $(QMLIBAOLD)
-	ln -s  $(QMLIBA) $(QMLIBAOLD)
-	ar -cr libQMLibFull$(ext_obj).a $(OBJ) $(ADMOD_DIR)/*.o $(QDMOD_DIR)/*.o
-	@echo "  done Library: "$(QMLIBA)
 #===============================================
+#================ Example(s) ===================
 #===============================================
+SRCAPPFILES := $(notdir $(shell ls $(APP_DIR)/*f90))
+OBJAPP      := $(addprefix $(OBJ_DIR)/, $(SRCAPPFILES:.f90=.o))
+APPEXE      := $(SRCAPPFILES:.f90=.x)
 #
+ifeq ($(DDEBUG),t)
+  $(info ***********SRCAPPFILES:     $(SRCAPPFILES))
+  $(info ***********OBJ app files:   $(OBJAPP))
+  $(info ***********app test exe:    $(APPEXE))
+  $(info ***********************************************************************)
+endif
+#
+.PHONY: app
+app: $(APPEXE)
+	@echo "Application compilation: OK"
+#
+#===============================================
+#================ unitary tests ================
+#===============================================
+SRCTESTFILES := $(notdir $(shell ls $(TESTS_DIR)/*.f90))
+OBJTEST      := $(addprefix $(OBJ_DIR)/, $(SRCTESTFILES:.f90=.o))
+TESTEXE      := $(SRCTESTFILES:.f90=.x)
+NEWTESTEXE   := $(filter-out TEST_model.x, $(TESTEXE))
+#NEWTESTEXE   := TEST_ExtModel.x
+#TEST_morse.x TEST_H2_H2On.x TEST_ExtModel.x
+
+#
+ifeq ($(DDEBUG),t)
+  $(info ***********SRCTESTFILES:    $(SRCTESTFILES))
+  $(info ***********OBJ test files:  $(OBJTEST))
+  $(info ***********app test exe:    $(TESTEXE))
+  $(info ***********app nextest exe: $(NEWTESTEXE))
+  $(info ***********************************************************************)
+endif
+#
+.PHONY: ut
+ut: $(TESTEXE)
+	@echo "model (QML) compilation: OK"
+	cd $(TESTS_DIR) ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(INT) 1
+	mkdir -p $(TESTSOUT_DIR)
+	cd $(TESTSOUT_DIR) ; rm -f *.log ; $(foreach Texe,$(NEWTESTEXE), ../../$(Texe) >>  Test.log ;)
+	@grep "Number of error(s)" $(TESTSOUT_DIR)/Test.log
+	@awk  -F: 'BEGIN{test=0} /Number of tests/ {test+=$$2} END {print "Number of tests: " test}' $(TESTSOUT_DIR)/Test.log
+	@awk  -F: 'BEGIN{err=0} /Number of error/ {err=err+$$2} END {print "Number of error(s) for all tests: " err}' $(TESTSOUT_DIR)/Test.log
+	@echo "  done Tests"
+#
+#===============================================
 #===============================================
 #============= compilation =====================
 #===============================================
-$(OBJ_DIR)/%.o: %.f90 | $(EXTLib)
-	@echo "  compile: " $<
-	$(FFC) $(FFLAGS) -o $@ -c $<
+#
+$(OBJ_DIR)/%.o: %.f90
+	$(FC) $(FFLAGS) -o $@ -c $<
+#
+%.x: $(OBJ_DIR)/%.o $(LIBAF)
+	$(FC) $(FFLAGS) -o $@ $< $(LIBAF) $(FLIB)
+	@echo $@ compilation: OK
+#
+# Special rule for the external model 
+$(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90:
+	ln -s  $(MAIN_path)/Ext_Model/ExtModel_m.f90 $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90
+#
+#===============================================
+#============= object directory  ===============
+#===============================================
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+	rm -f  $(OBJOLD_DIR)
+	cd OBJ && ln -s obj$(ext_obj) obj$(extold_obj)
+	@echo OBJ_DIR: $(OBJ_DIR)
+#===============================================
+#============= Main library ====================
+#===============================================
+LIBAshort      := lib$(LIB_NAME).a
+LIBA           := lib$(LIB_NAME)$(ext_obj).a
+LIBAOLD        := lib$(LIB_NAME)$(extold_obj).a
+
+LIBAF          := lib$(LIB_NAME)Full$(ext_obj).a
+LIBAFOLD       := libQMLFull$(extold_obj).a
+LIBAFshort     := libQMLFull.a
+
+#
+.PHONY: lib
+lib: $(LIBA) $(LIBAF)
+
+$(LIBA): $(OBJ)
+	ar -cr $(LIBA) $(OBJ)
+	rm -f  $(LIBAOLD)
+	ln -s  $(LIBA) $(LIBAOLD)
+	rm -f $(LIBAshort)
+	ln -s  $(LIBA) $(LIBAshort)
+	@echo "  done Library: "$(LIBA)
+$(LIBAF): $(OBJ)
+	ar -cr $(LIBAF) $(OBJ) $(EXTLibOBJ)
+	rm -f  $(LIBAFOLD)
+	ln -s  $(LIBAF) $(LIBAFOLD)
+	rm -f $(LIBAFshort)
+	ln -s  $(LIBAF) $(LIBAFshort)
+	@echo "  done Library (including external libraries): "$(LIBAF)
+#===============================================
+#===============================================
+#============= External libraries  =============
+#===============================================
+.PHONY: getlib
+getlib: $(EXTLib)
+#
+$(EXTLib):
+	$(MAKE) -C $(ExtLibDIR) -f $(MAIN_path)/scripts/makefile-extlib LIBA=$@
 #===============================================
 #================ cleaning =====================
 .PHONY: clean cleanall cleanlocextlib
 clean:
-	cd $(TESTS_DIR) ; ./clean
-	rm -f $(OBJ_DIR)/*/*.o $(OBJ_DIR)/*.o
-	rm -f *.log grid* res*
-	rm -f TEST*.x
-	@echo "  done cleaning"
-
-cleanall : clean
-	cd $(ExtLibDIR) ; ./cleanlib
-	rm -fr OBJ/obj* OBJ/*mod build
+	rm -f  $(TESTEXE) $(APPEXE)
+	rm -f  *.log
+	rm -fr *.dSYM
+	rm -fr build
+	rm -f $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90
+	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.mod $(OBJ_DIR)/*.MOD
+	@echo "  done cleaning for "$(LIB_NAME)
+cleanall: clean
 	rm -f lib*.a
-	rm -f TESTS/res* TESTS/*log
-	rm -f RES_files DAT_files
-	@echo "  done all cleaning"
-cleanlocextlib: cleanall
-	cd $(MAIN_path)/Ext_Lib ; rm -rf *_loc
-	@echo "  done remove all local library directories (..._loc)"
+	rm -rf OBJ
+	cd $(TESTS_DIR) && ./clean
+	if [ "$(EXTLIB_LIST)" != "" -a "$(RECCLEAN)" = "1" ]; then ./scripts/cleanExtLib cleanall "$(ExtLibDIR)" "$(EXTLIB_LIST)" 0; fi  
+	@echo "  done remove the *.a libraries and the OBJ directory for "$(LIB_NAME)
+cleanlocextlib: clean
+	rm -f lib*.a
+	rm -rf OBJ
+	cd $(TESTS_DIR) && ./clean
+	if [ "$(EXTLIB_LIST)" != "" -a "$(RECCLEAN)" = "1" ] ; then ./scripts/cleanExtLib cleanlocextlib "$(ExtLibDIR)" "$(EXTLIB_LIST)" 0; fi 
+	@echo "  done remove all local library directories (..._loc) for "$(LIB_NAME)
 #===============================================
-#================ make the readme.txt ==========
-.PHONY: readme
-readme:
-	./scripts/extractReadMe
-#
-#===============================================
-#=== external libraries ========================
-# AD_dnSVM + QDUTIL Lib
-#===============================================
-#
-DEV=
-.PHONY: getlib
-getlib:
-	cd $(ExtLibDIR) ; ./get_Lib.sh QDUtilLib $(DEV)
-	cd $(ExtLibDIR) ; ./get_Lib.sh AD_dnSVM  $(DEV)
-#
-$(QDLIBA):
-	cd $(ExtLibDIR) ; ./get_Lib.sh QDUtilLib $(DEV)
-	cd $(ExtLibDIR)/QDUtilLib ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(INT) ExtLibDIR=$(ExtLibDIR) CompilersDIR=$(CompilersDIR)
-	@test -f $(QDLIBA) || (echo $(QDLIBA) "does not exist" ; exit 1)
-	@echo "  done " $(QDLIBA)
-$(ADLIBA):
-	cd $(ExtLibDIR) ; ./get_Lib.sh AD_dnSVM  $(DEV)
-	cd $(ExtLibDIR)/AD_dnSVM ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) INT=$(INT) ExtLibDIR=$(ExtLibDIR) CompilersDIR=$(CompilersDIR)
-	@test -f $(ADLIBA) || (echo $(ADLIBA) "does not exist" ; exit 1)
-	@echo "  done " $(ADLIBA)
-#
-#===============================================
-#=== Add links to directories for fpm ==========
-#===============================================
-#
-.PHONY: fpmlink
-fpmlink: getlib
-	ln -s Tests/RES_files RES_files
-	ln -s Tests/DAT_files DAT_files
-
-#===============================================
-#============= make dependencies =============
+#============= make dependencies ===============
 #===============================================
 .PHONY: dep
-dependencies.mk fortranlist.mk dep:
+scripts/dependencies.mk scripts/fortranlist.mk dep:
 	./scripts/dependency.sh
-##################################################################################
-### dependencies
-#
-$(OBJ_DIR)/TEST_model.o:    $(QMLIBA) | $(EXTLib)
-$(OBJ_DIR)/TEST_driver.o:   $(QMLIBA) | $(EXTLib)
-$(OBJ_DIR)/TEST_VibAdia.o:  $(QMLIBA) | $(EXTLib)
-$(OBJ_DIR)/TEST_grid.o:     $(QMLIBA) | $(EXTLib)
-$(OBJ_DIR)/TEST_OMPloop.o:  $(QMLIBA) | $(EXTLib)
-
-include ./dependencies.mk
-#
-############################################################################
+#===============================================
+#============= module dependencies =============
+#===============================================
+$(OBJ) $(OBJAPP) $(OBJTEST):          | $(OBJ_DIR)
+$(OBJAPP):                   $(LIBAF) | $(EXTLib)
+$(OBJTEST):                  $(LIBAF) | $(EXTLib)
+$(OBJ):                               | $(EXTLib)
+include scripts/dependencies.mk
+#===============================================

@@ -1,0 +1,83 @@
+#!/bin/bash
+
+
+CleanType=$1
+CleanDIR=$2
+CleanList=$3
+RecClean=$4
+
+if test -z "$RecClean"
+then
+  echo "RecClean is not defined."
+  echo "=> It is set to 0 (no recursive cleaning)"
+  RecClean=0
+fi
+
+echo "The script command is: \"$0 $@\""
+echo CleanType: $CleanType
+echo CleanDIR:  $CleanDIR
+echo CleanList: $CleanList
+echo RecClean:  $RecClean
+
+if test -z "$CleanType"
+then
+  echo "The present script, cleanExtLib, has three arguments:"
+  echo "    The first argument, the cleaning type: cleanall or cleanlocextlib"
+  echo "    The second argument, the directory to be cleaned"
+  echo "    The third argument, the list of module(s) to be cleaned"
+  exit 1
+fi
+
+if test -z "$CleanList"
+then
+  echo No module to be cleaned!
+  exit 0
+fi
+
+if test -z "$CleanDIR"
+then
+  echo No or empty second argument!
+  exit 0
+fi
+
+if test ! -d $CleanDIR
+then
+  echo The directory $CleanDIR does not exist!
+  exit 0
+fi
+
+if [ "$CleanType" = "cleanall" ]
+then
+  cd $CleanDIR
+  for dirlib in $CleanList
+  do
+    echo $dirlib
+
+    #remove the link
+    rm -fr $dirlib
+
+    #clean the libraries
+    #test -d $dirlib"_loc" &&  make -C $dirlib"_loc" --silent cleanall RECCLEAN=$RecClean &> /dev/null
+     test -d $dirlib"_loc" && make -C $dirlib"_loc"           cleanall RECCLEAN=$RecClean
+  done
+elif [ "$CleanType" = "cleanlocextlib" ]
+then
+  cd $CleanDIR
+  for dirlib in $CleanList
+  do
+    echo $dirlib
+
+    #remove the link
+    rm -fr $dirlib
+
+    #remove the directory
+    rm -rf $dirlib"_loc"
+    echo "Remove the "$dirlib"_loc directory."
+  done
+else
+  echo "The present script, cleanExtLib, has three arguments:"
+  echo "    The first argument, the cleaning type: cleanall or cleanlocextlib"
+  echo "    The second argument, the directory to be cleaned"
+  echo "    The third argument, the list of module(s) to be cleaned"
+  exit 1
+fi
