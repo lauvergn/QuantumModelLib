@@ -37,7 +37,7 @@
 !
 !===========================================================================
 !===========================================================================
-PROGRAM TEST_morse
+PROGRAM TEST_HONO
   USE QDUtil_NumParameters_m
   USE QDUtil_Test_m
   USE ADdnSVM_m
@@ -45,7 +45,7 @@ PROGRAM TEST_morse
   IMPLICIT NONE
 
   TYPE (Model_t)                 :: Model
-  real (kind=Rkind), allocatable :: Q(:),Qref(:)
+  real (kind=Rkind), allocatable :: Q(:),Qref(:),xyz(:)
   real (kind=Rkind), allocatable :: G(:,:),Gref(:,:) ! metric tensor
   integer                        :: ndim,nsurf,nderiv,i,option,err
   logical                        :: Lerr
@@ -54,22 +54,22 @@ PROGRAM TEST_morse
   TYPE (dnMat_t)                 :: dnErr
   TYPE (test_t)                  :: test_var
   real (kind=Rkind), parameter   :: epsi = 1.e-10_Rkind
+  real (kind=Rkind), parameter   :: a0 = 0.52917720835354106_Rkind ! from Tnum
 
 
-  CALL Initialize_Test(test_var,test_name='QModel_Morse')
+  CALL Initialize_Test(test_var,test_name='QModel_HONO')
 
   nderiv = 2
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Morse potential (H-F parameters)'
+  write(out_unit,*) ' HONO potential'
   write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
-  CALL Init_Model(Model,pot_name='Morse',read_param=.FALSE.)
-
-  Q = [TWO]
+  CALL Init_Model(Model,pot_name='HONO',read_param=.FALSE.)
+  Q = [2.696732586_Rkind,1.822912197_Rkind,1.777642018_Rkind,2.213326419_Rkind,1.9315017_Rkind,pi]
 
   nderiv=2
 
@@ -78,15 +78,17 @@ PROGRAM TEST_morse
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Check analytical derivatives with respect to numerical ones'
 
-  write(out_unit,'(a,f12.6)') 'R (Bohr)',Q(:)
+  write(out_unit,'(a,6f12.6)') 'Q (Bohr)',Q(:)
   CALL Check_analytical_numerical_derivatives(Model,Q,nderiv,test_var)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential and derivatives'
+  write(out_unit,*) ' Potential and derivatives (option=0)'
+  CALL Init_Model(Model,pot_name='HONO',read_param=.FALSE.,option=0)
+  Q = [2.696732586_Rkind,1.822912197_Rkind,1.777642018_Rkind,2.213326419_Rkind,1.9315017_Rkind,pi]
 
   CALL Eval_Pot(Model,Q,PotVal,nderiv=nderiv)
-  write(out_unit,'(a,f12.6)') 'R (Bohr)',q(:)
+  write(out_unit,'(a,6f12.6)') 'Q (Bohr/Radian)',Q(:)
   write(out_unit,*) 'Energy (Hartree)'
   CALL Write_dnMat(PotVal,nio=out_unit)
   flush(out_unit)
@@ -95,51 +97,120 @@ PROGRAM TEST_morse
   allocate(Qref(Model%ndim))
   allocate(Gref(Model%ndim,Model%ndim))
   CALL Model%QM%Ref_FOR_Test_QModel(err,Q0=Qref,d0GGdef=Gref,dnMatV=PotValref,nderiv=nderiv)
-  write(out_unit,*) 'Reference Energy (Hartree)'
+
+  write(out_unit,*) 'Reference Energy (Hartree)' ; flush(out_unit)
   CALL Write_dnMat(PotValref,nio=out_unit)
   flush(out_unit)
   dnErr = PotValref-PotVal
   Lerr  = Check_dnMat_IS_ZERO(dnErr)
 
   CALL Logical_Test(test_var,test1=Lerr,info='dnMatV')
+  IF (.NOT. Lerr) CALL Write_dnMat(dnErr,nio=out_unit,info='dnErr')
 
   Lerr = all(abs(Q-Qref) < epsi)
   CALL Logical_Test(test_var,test1=Lerr,info='Q(:)')
+  IF (.NOT. Lerr) Write(out_unit,*) 'Q-Qref',Q-Qref
 
   G = get_d0GGdef_Model(Model=Model)
   Lerr = all(abs(G-Gref) < epsi)
   CALL Logical_Test(test_var,test1=Lerr,info='G (metrix tensor)')
+  IF (.NOT. Lerr) Write(out_unit,*) 'G-Gref',G-Gref
+
+  deallocate(Qref)
+  deallocate(Gref)
+
+ write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Potential and derivatives (option=2, cis)'
+  CALL Init_Model(Model,pot_name='HONO',read_param=.FALSE.,option=2)
+  Q = [2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,2.23738_Rkind,1.975200_Rkind,ZERO]
+
+  CALL Eval_Pot(Model,Q,PotVal,nderiv=nderiv)
+  write(out_unit,'(a,6f12.6)') 'Q (Bohr/Radian)',Q(:)
+  write(out_unit,*) 'Energy (Hartree)'
+  CALL Write_dnMat(PotVal,nio=out_unit)
+  flush(out_unit)
+
+  ! For testing the model
+  allocate(Qref(Model%ndim))
+  allocate(Gref(Model%ndim,Model%ndim))
+  CALL Model%QM%Ref_FOR_Test_QModel(err,Q0=Qref,d0GGdef=Gref,dnMatV=PotValref,nderiv=nderiv)
+
+  write(out_unit,*) 'Reference Energy (Hartree)' ; flush(out_unit)
+  CALL Write_dnMat(PotValref,nio=out_unit)
+  flush(out_unit)
+  dnErr = PotValref-PotVal
+  Lerr  = Check_dnMat_IS_ZERO(dnErr)
+
+  CALL Logical_Test(test_var,test1=Lerr,info='dnMatV')
+  IF (.NOT. Lerr) CALL Write_dnMat(dnErr,nio=out_unit,info='dnErr')
+
+  Lerr = all(abs(Q-Qref) < epsi)
+  CALL Logical_Test(test_var,test1=Lerr,info='Q(:)')
+  IF (.NOT. Lerr) Write(out_unit,*) 'Q-Qref',Q-Qref
+
+  G = get_d0GGdef_Model(Model=Model)
+  Lerr = all(abs(G-Gref) < epsi)
+  CALL Logical_Test(test_var,test1=Lerr,info='G (metrix tensor)')
+  IF (.NOT. Lerr) Write(out_unit,*) 'G-Gref',G-Gref
+
+  deallocate(Qref)
+  deallocate(Gref)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
+
+
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Potential on a 1D grid (as a function of q)'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) ' Potential on a 1D grid (as a function of q(6), the torsion)'
+  write(out_unit,*) '   file name: "grid_HONO"'
+
+  CALL Eval_pot_ON_Grid(Model,                                      &
+                        Qmin=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
+                              2.23738_Rkind,1.975200_Rkind,ZERO],        &
+                        Qmax=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
+                              2.23738_Rkind,1.975200_Rkind,pi],          &
+                        nb_points=1001, grid_file='grid_HONO')
+
+  CALL dealloc_Model(Model)
+ 
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '------------ Cartesian coordinates ----------'
+  write(out_unit,*) '---------------------------------------------'
+      !1          8           0        0.000000    0.000000    0.000000
+      !2          7           0        0.000000    0.000000    1.427049
+      !3          1           0        0.944081    0.000000   -0.198113
+      !4          8           0       -1.095870    0.000000    1.840421
+
+  CALL Init_Model(Model,pot_name='HONO',Cart_TO_Q=.TRUE.)
+
+  allocate(xyz(Model%ndim))
+  xyz = [ZERO,           ZERO,  ZERO,           &
+         ZERO,           ZERO,  1.427049_Rkind, &
+         0.944081_Rkind, ZERO, -0.198113_Rkind, &
+        -1.095870_Rkind, 0.1_Rkind,  1.840421_Rkind]/a0
+
+
+  CALL Eval_Pot(Model,xyz,PotVal,nderiv=nderiv)
+  CALL Write_dnMat(PotVal,nio=out_unit)
+
+  deallocate(xyz)
 
   CALL dealloc_dnMat(PotVal)
   CALL dealloc_dnMat(PotValref)
   CALL dealloc_dnMat(dnErr)
 
   deallocate(Q)
-  deallocate(Qref)
   deallocate(G)
-  deallocate(Gref)
-
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential on a 1D grid (as a function of R)'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '   file name: "grid_Morse"'
-
-  CALL Eval_pot_ON_Grid(Model,Qmin=[1._Rkind],Qmax=[5._Rkind],nb_points=1001,&
-                        grid_file='grid_Morse')
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
 
   CALL dealloc_Model(Model)
 
+
   CALL Finalize_Test(test_var)
 
-END PROGRAM TEST_morse
+END PROGRAM TEST_HONO

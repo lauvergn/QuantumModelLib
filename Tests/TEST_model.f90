@@ -85,7 +85,6 @@ PROGRAM TEST_model
   CALL test_NO3()
 
   ! 6D (full-D), One electronic surface (spectro)
-  CALL test_HONO()
   CALL test_HNNHp()
 
   CALL test_H2SiN()
@@ -1539,97 +1538,7 @@ SUBROUTINE test_Retinal_JPCB2000
   CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_Retinal_JPCB2000
-SUBROUTINE test_HONO
-  USE QDUtil_NumParameters_m
-  USE QDUtil_m,         ONLY : Write_Vec
-  USE ADdnSVM_m
-  USE Model_m
-  IMPLICIT NONE
 
-  TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: q(:)
-  integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                 :: PotVal
-
-
-  nderiv = 2
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '------------ 6D-HONO ------------------------'
-  CALL Init_Model(QModel,pot_name='HONO',Print_init=.TRUE.)
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-
-  CALL Init_Model(QModel,pot_name='HONO')
-
-  allocate(q(QModel%QM%ndim))
-  q(:) = [2.696732586_Rkind,1.822912197_Rkind,1.777642018_Rkind,2.213326419_Rkind,1.9315017_Rkind,pi]
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '----- CHECK POT -----------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Check analytical derivatives with respect to numerical ones'
-
-  write(out_unit,*) 'Q:'
-  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
-  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv,test_var)
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential and derivatives at the trans minimum'
-  write(out_unit,*) 'Q:'
-  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
-
-  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMat(PotVal,nio=out_unit)
-
-  ! For testing the model
-  CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='HONO',test_var=test_var)
-
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential and derivatives at the cis minimum'
-  q(:) = [2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,2.23738_Rkind,1.975200_Rkind,ZERO]
-
-  write(out_unit,*) 'Q:'
-  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
-
-  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  CALL Write_dnMat(PotVal,nio=out_unit)
-
-  ! For testing the model
-  CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='HONO', &
-      test_var=test_var,last_test=.TRUE.)
-
-
-  CALL dealloc_dnMat(PotVal)
-  deallocate(q)
-
-
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential on a 1D grid (as a function of q)'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential on a 1D grid (as a function of q(6), the torsion)'
-  write(out_unit,*) '   file name: "grid_HONO"'
-
-  CALL Eval_pot_ON_Grid(QModel,                                      &
-                        Qmin=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
-                              2.23738_Rkind,1.975200_Rkind,ZERO],        &
-                        Qmax=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
-                              2.23738_Rkind,1.975200_Rkind,pi],          &
-                        nb_points=1001, grid_file='RES_files/grid_HONO')
-
-  CALL dealloc_Model(QModel)
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '- END CHECK POT -----------------------------'
-  write(out_unit,*) '---------------------------------------------'
-
-END SUBROUTINE test_HONO
 SUBROUTINE test_HNNHp
   USE QDUtil_NumParameters_m
   USE QDUtil_m,         ONLY : Write_Vec

@@ -6,6 +6,7 @@
 /SRC/*/*.f90.i
 /SRC/QML/ExtModel_m.f90
 /SRC/QML/chqml
+/SRC/QML/VerificationFiles
 /Tests/*txt
 /Tests/*com
 /Tests/*FChk
