@@ -98,7 +98,7 @@ PROGRAM TEST_model
   write(out_unit,*) 'Energy (Hartree)'
   CALL Write_dnMat(PotVal,nio=out_unit)
 
-  !CALL QModel%QM%Ref_FOR_Test_QModel(err,dnMatV=PotValref,nderiv=nderiv)
+  !CALL QModel%QM%RefValues_QModel(err,dnMatV=PotValref,nderiv=nderiv)
   !dnErr = PotValref-PotVal
   !Lerr  = Check_dnMat_IS_ZERO(dnErr)
   

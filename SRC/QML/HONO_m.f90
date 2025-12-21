@@ -72,7 +72,7 @@ MODULE QML_HONO_m
     PROCEDURE :: EvalPot_QModel      => EvalPot_QML_HONO
     PROCEDURE :: Write_QModel        => Write_QML_HONO
     PROCEDURE :: Cart_TO_Q_QModel    => Cart_TO_Q_QML_HONO
-    PROCEDURE :: Ref_FOR_Test_QModel => Ref_FOR_Test_QML_HONO
+    PROCEDURE :: RefValues_QModel => RefValues_QML_HONO
   END TYPE QML_HONO_t
 
   PUBLIC :: QML_HONO_t,Init_QML_HONO
@@ -887,22 +887,22 @@ Vtemp = Vtemp - &
  
   END SUBROUTINE Q_TO_Cart_QML_HONO
 
-  SUBROUTINE Ref_FOR_Test_QML_HONO(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+  SUBROUTINE RefValues_QML_HONO(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
     USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE
 
     CLASS(QML_HONO_t), intent(in)              :: QModel
-
     integer,           intent(inout)           :: err
-
     integer,           intent(in)              :: nderiv
+
     real (kind=Rkind), intent(inout), optional :: Q0(:)
     TYPE (dnMat_t),    intent(inout), optional :: dnMatV
     real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+    integer,           intent(in),    optional :: option
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Ref_FOR_Test_QML_HONO'
+    character (len=*), parameter :: name_sub='RefValues_QML_HONO'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -920,17 +920,17 @@ Vtemp = Vtemp - &
       err = 0
     END IF
 
-    SELECT CASE (QModel%option)
+    SELECT CASE (option)
     CASE (0) ! ref
-      IF (present(Q0))      CALL Ref_FOR_Test_QML_HONO0(QModel,err,nderiv=nderiv,Q0=Q0)
-      IF (present(dnMatV))  CALL Ref_FOR_Test_QML_HONO0(QModel,err,nderiv=nderiv,dnMatV=dnMatV)
-      IF (present(d0GGdef)) CALL Ref_FOR_Test_QML_HONO0(QModel,err,nderiv=nderiv,d0GGdef=d0GGdef)
+      IF (present(Q0))      CALL RefValues_QML_HONO0(QModel,err,nderiv=nderiv,Q0=Q0)
+      IF (present(dnMatV))  CALL RefValues_QML_HONO0(QModel,err,nderiv=nderiv,dnMatV=dnMatV)
+      IF (present(d0GGdef)) CALL RefValues_QML_HONO0(QModel,err,nderiv=nderiv,d0GGdef=d0GGdef)
     CASE (1) ! trans
       CONTINUE
     CASE (2) ! cis
-      IF (present(Q0))      CALL Ref_FOR_Test_QML_HONO2(QModel,err,nderiv=nderiv,Q0=Q0)
-      IF (present(dnMatV))  CALL Ref_FOR_Test_QML_HONO2(QModel,err,nderiv=nderiv,dnMatV=dnMatV)
-      IF (present(d0GGdef)) CALL Ref_FOR_Test_QML_HONO2(QModel,err,nderiv=nderiv,d0GGdef=d0GGdef)
+      IF (present(Q0))      CALL RefValues_QML_HONO2(QModel,err,nderiv=nderiv,Q0=Q0)
+      IF (present(dnMatV))  CALL RefValues_QML_HONO2(QModel,err,nderiv=nderiv,dnMatV=dnMatV)
+      IF (present(d0GGdef)) CALL RefValues_QML_HONO2(QModel,err,nderiv=nderiv,d0GGdef=d0GGdef)
     CASE (3) ! ts
       CONTINUE
     CASE Default
@@ -950,8 +950,8 @@ Vtemp = Vtemp - &
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Ref_FOR_Test_QML_HONO
- SUBROUTINE Ref_FOR_Test_QML_HONO0(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+  END SUBROUTINE RefValues_QML_HONO
+ SUBROUTINE RefValues_QML_HONO0(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
     USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE
@@ -970,7 +970,7 @@ Vtemp = Vtemp - &
     integer        :: i
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Ref_FOR_Test_QML_HONO0'
+    character (len=*), parameter :: name_sub='RefValues_QML_HONO0'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -1037,7 +1037,7 @@ Vtemp = Vtemp - &
       CASE(2)
         CALL set_dnMat(dnMatV,d0=d0,d1=d1,d2=d2)
       CASE Default
-        STOP 'ERROR in Ref_FOR_Test_QML_HONO0: nderiv MUST < 3'
+        STOP 'ERROR in RefValues_QML_HONO0: nderiv MUST < 3'
       END SELECT
 
     END IF
@@ -1050,8 +1050,8 @@ Vtemp = Vtemp - &
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Ref_FOR_Test_QML_HONO0
-  SUBROUTINE Ref_FOR_Test_QML_HONO2(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+  END SUBROUTINE RefValues_QML_HONO0
+  SUBROUTINE RefValues_QML_HONO2(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
     USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE
@@ -1070,7 +1070,7 @@ Vtemp = Vtemp - &
     integer        :: i
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Ref_FOR_Test_QML_HONO2'
+    character (len=*), parameter :: name_sub='RefValues_QML_HONO2'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -1138,7 +1138,7 @@ Vtemp = Vtemp - &
       CASE(2)
         CALL set_dnMat(dnMatV,d0=d0,d1=d1,d2=d2)
       CASE Default
-        STOP 'ERROR in Ref_FOR_Test_QML_HONO2: nderiv MUST < 3'
+        STOP 'ERROR in RefValues_QML_HONO2: nderiv MUST < 3'
       END SELECT
 
     END IF
@@ -1151,5 +1151,5 @@ Vtemp = Vtemp - &
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Ref_FOR_Test_QML_HONO2
+  END SUBROUTINE RefValues_QML_HONO2
 END MODULE QML_HONO_m

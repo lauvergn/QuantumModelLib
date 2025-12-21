@@ -65,7 +65,7 @@ MODULE QML_ExtModel_m
     PROCEDURE :: EvalPot_QModel      => EvalPot_QML_ExtModel
     PROCEDURE :: Write_QModel        => Write_QML_ExtModel
     PROCEDURE :: Cart_TO_Q_QModel    => Cart_TO_Q_QML_ExtModel ! optional
-    PROCEDURE :: Ref_FOR_Test_QModel => Ref_FOR_Test_QML_ExtModel
+    PROCEDURE :: RefValues_QModel => RefValues_QML_ExtModel
   END TYPE QML_ExtModel_t
 
   PUBLIC :: QML_ExtModel_t,Init_QML_ExtModel
@@ -279,26 +279,25 @@ CONTAINS
       END IF
   END SUBROUTINE Cart_TO_Q_QML_ExtModel
 
-  SUBROUTINE Ref_FOR_Test_QML_ExtModel(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+  SUBROUTINE RefValues_QML_ExtModel(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
     USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE
 
-    CLASS(QML_ExtModel_t), intent(in)          :: QModel
-
+    CLASS(QML_ExtModel_t), intent(in)             :: QModel
     integer,           intent(inout)           :: err
-
     integer,           intent(in)              :: nderiv
+
     real (kind=Rkind), intent(inout), optional :: Q0(:)
     TYPE (dnMat_t),    intent(inout), optional :: dnMatV
-
     real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+    integer,           intent(in),    optional :: option
 
     real (kind=Rkind), allocatable :: Mat(:,:)
     integer        :: i
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Ref_FOR_Test_QML_ExtModel'
+    character (len=*), parameter :: name_sub='RefValues_QML_ExtModel'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -372,5 +371,5 @@ CONTAINS
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Ref_FOR_Test_QML_ExtModel
+  END SUBROUTINE RefValues_QML_ExtModel
 END MODULE QML_ExtModel_m

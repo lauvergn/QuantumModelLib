@@ -62,7 +62,7 @@ MODULE QML_DoubleWell_m
   CONTAINS
     PROCEDURE :: EvalPot_QModel      => EvalPot_QML_DoubleWell
     PROCEDURE :: Write_QModel        => Write_QML_DoubleWell
-    PROCEDURE :: Ref_FOR_Test_QModel => Ref_FOR_Test_QML_DoubleWell
+    PROCEDURE :: RefValues_QModel => RefValues_QML_DoubleWell
   END TYPE QML_DoubleWell_t
 
   PUBLIC :: QML_DoubleWell_t, Init_QML_DoubleWell, Read_QML_DoubleWell, Write_QML_DoubleWell
@@ -242,26 +242,25 @@ CONTAINS
 
   END SUBROUTINE EvalPot_QML_DoubleWell
 
-    SUBROUTINE Ref_FOR_Test_QML_DoubleWell(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+    SUBROUTINE RefValues_QML_DoubleWell(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
     USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE
 
-    CLASS(QML_DoubleWell_t),intent(in)              :: QModel
+    CLASS(QML_DoubleWell_t), intent(in)             :: QModel
+    integer,           intent(inout)           :: err
+    integer,           intent(in)              :: nderiv
 
-    integer,                intent(inout)           :: err
-
-    integer,                intent(in)              :: nderiv
-    real (kind=Rkind),      intent(inout), optional :: Q0(:)
-    TYPE (dnMat_t),         intent(inout), optional :: dnMatV
-
-    real (kind=Rkind),      intent(inout), optional :: d0GGdef(:,:)
+    real (kind=Rkind), intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),    intent(inout), optional :: dnMatV
+    real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+    integer,           intent(in),    optional :: option
 
     real (kind=Rkind), allocatable :: Mat(:,:)
     integer        :: i
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Ref_FOR_Test_QML_DoubleWell'
+    character (len=*), parameter :: name_sub='RefValues_QML_DoubleWell'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -328,5 +327,5 @@ CONTAINS
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Ref_FOR_Test_QML_DoubleWell
+  END SUBROUTINE RefValues_QML_DoubleWell
 END MODULE QML_DoubleWell_m

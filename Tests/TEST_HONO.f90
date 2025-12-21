@@ -84,7 +84,6 @@ PROGRAM TEST_HONO
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Potential and derivatives (option=0)'
-  CALL Init_Model(Model,pot_name='HONO',read_param=.FALSE.,option=0)
   Q = [2.696732586_Rkind,1.822912197_Rkind,1.777642018_Rkind,2.213326419_Rkind,1.9315017_Rkind,pi]
 
   CALL Eval_Pot(Model,Q,PotVal,nderiv=nderiv)
@@ -96,7 +95,7 @@ PROGRAM TEST_HONO
   ! For testing the model
   allocate(Qref(Model%ndim))
   allocate(Gref(Model%ndim,Model%ndim))
-  CALL Model%QM%Ref_FOR_Test_QModel(err,Q0=Qref,d0GGdef=Gref,dnMatV=PotValref,nderiv=nderiv)
+  CALL Model%QM%RefValues_QModel(err,nderiv=nderiv,Q0=Qref,d0GGdef=Gref,dnMatV=PotValref,option=0)
 
   write(out_unit,*) 'Reference Energy (Hartree)' ; flush(out_unit)
   CALL Write_dnMat(PotValref,nio=out_unit)
@@ -121,8 +120,7 @@ PROGRAM TEST_HONO
 
  write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential and derivatives (option=2, cis)'
-  CALL Init_Model(Model,pot_name='HONO',read_param=.FALSE.,option=2)
+  write(out_unit,*) ' Potential and derivatives'
   Q = [2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,2.23738_Rkind,1.975200_Rkind,ZERO]
 
   CALL Eval_Pot(Model,Q,PotVal,nderiv=nderiv)
@@ -134,7 +132,7 @@ PROGRAM TEST_HONO
   ! For testing the model
   allocate(Qref(Model%ndim))
   allocate(Gref(Model%ndim,Model%ndim))
-  CALL Model%QM%Ref_FOR_Test_QModel(err,Q0=Qref,d0GGdef=Gref,dnMatV=PotValref,nderiv=nderiv)
+  CALL Model%QM%RefValues_QModel(err,nderiv=nderiv,Q0=Qref,d0GGdef=Gref,dnMatV=PotValref,option=2)
 
   write(out_unit,*) 'Reference Energy (Hartree)' ; flush(out_unit)
   CALL Write_dnMat(PotValref,nio=out_unit)
