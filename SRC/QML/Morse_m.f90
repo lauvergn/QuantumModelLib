@@ -69,8 +69,8 @@ MODULE QML_Morse_m
      real (kind=Rkind) :: req = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
      real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
   CONTAINS
-    PROCEDURE :: EvalPot_QModel      => EvalPot_QML_Morse
-    PROCEDURE :: Write_QModel        => Write_QML_Morse
+    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_Morse
+    PROCEDURE :: Write_QModel     => Write_QML_Morse
     PROCEDURE :: RefValues_QModel => RefValues_QML_Morse
   END TYPE QML_Morse_t
 

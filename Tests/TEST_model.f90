@@ -58,7 +58,6 @@ PROGRAM TEST_model
   CALL test_LinearHBond()
   CALL test_Opt_LinearHBond()
   CALL test_HenonHeiles()
-  CALL test_Buckingham()
   CALL test_Poly1D()
 
   ! One electronic surface + optimization + IRC
@@ -593,79 +592,6 @@ SUBROUTINE test_H2
   CALL dealloc_Model(QModel)
 
 END SUBROUTINE test_H2
-SUBROUTINE test_Buckingham
-  USE QDUtil_NumParameters_m
-  USE ADdnSVM_m
-  USE Model_m
-  IMPLICIT NONE
-
-  TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: q(:)
-  integer                        :: ndim,nsurf,nderiv,i,option
-  TYPE (dnMat_t)                 :: PotVal
-
-  nderiv = 2
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Buckingham potential (Ar-Ar parameters)'
-  write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
-  write(out_unit,*) '---------------------------------------------'
-  CALL Init_Model(QModel,pot_name='Buck')
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-
-  CALL Init_Model(QModel,pot_name='Buck',read_param=.FALSE.)
-
-  allocate(q(QModel%QM%ndim))
-  q(:) = 7._Rkind
-  nderiv=2
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '----- CHECK POT -----------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Check analytical derivatives with respect to numerical ones'
-
-  write(out_unit,'(a,f12.6)') 'R (Bohr)',q(:)
-  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv,test_var)
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential and derivatives'
-
-  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  write(out_unit,'(a,f12.6)') 'R (Bohr)',q(:)
-  write(out_unit,*) 'Energy (Hartree)'
-  CALL Write_dnMat(PotVal,nio=out_unit)
-
-  ! For testing the model
-  CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='Buckingham_Ar-Ar', &
-                           test_var=test_var,last_test=.TRUE.)
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '- END CHECK POT -----------------------------'
-  write(out_unit,*) '---------------------------------------------'
-
-  CALL dealloc_dnMat(PotVal)
-  deallocate(q)
-
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential on a 1D grid (as a function of R)'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '   file name: "grid_Buck"'
-
-  CALL Eval_pot_ON_Grid(QModel,Qmin=[6._Rkind],Qmax=[20._Rkind],nb_points=1001,&
-                        grid_file='RES_files/grid_Buck')
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  CALL dealloc_Model(QModel)
-
-END SUBROUTINE test_Buckingham
 
 SUBROUTINE test_Phenol
   USE QDUtil_NumParameters_m
