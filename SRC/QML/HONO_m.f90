@@ -72,7 +72,7 @@ MODULE QML_HONO_m
     PROCEDURE :: EvalPot_QModel      => EvalPot_QML_HONO
     PROCEDURE :: Write_QModel        => Write_QML_HONO
     PROCEDURE :: Cart_TO_Q_QModel    => Cart_TO_Q_QML_HONO
-    PROCEDURE :: RefValues_QModel => RefValues_QML_HONO
+    PROCEDURE :: RefValues_QModel    => RefValues_QML_HONO
   END TYPE QML_HONO_t
 
   PUBLIC :: QML_HONO_t,Init_QML_HONO
@@ -414,7 +414,8 @@ Vtemp = Vtemp - &
            0.0026913524_Rkind*d6(1)*q2(4) - &
            0.00242284791_Rkind*q3(1) - &
            0.00459921985_Rkind*d6(1)*q3(1) - &
-           0.00279190874_Rkind*d6(2)*q3(1) - &
+           0.00279190874_Rkind*d6(2)*q3(1)
+Vtemp = Vtemp - &
            0.000949245129_Rkind*d6(3)*q3(1) - &
            0.00033370905_Rkind*d6(4)*q3(1) + &
            0.00894355549_Rkind*q1(1)*q3(1) + &
@@ -481,7 +482,8 @@ Vtemp = Vtemp - &
            0.0465284723_Rkind*d6(1)*q3(5) + &
            0.684631535_Rkind*q3(6) + &
            0.136390997_Rkind*d6(1)*q3(6) - &
-           0.00455237659_Rkind*t1(1) - &
+           0.00455237659_Rkind*t1(1)
+Vtemp = Vtemp - &
            0.00342497933_Rkind*d6(1)*t1(1) + &
            0.00176367547_Rkind*d6(2)*t1(1) + &
            0.00104093751_Rkind*d6(3)*t1(1) + &
@@ -550,7 +552,8 @@ Vtemp = Vtemp - &
            0.0042138202_Rkind*d6(1)*t1(2) + &
            0.00872268723_Rkind*d6(2)*t1(2) - &
            0.000354403712_Rkind*d6(3)*t1(2) - &
-           0.000828993629_Rkind*d6(4)*t1(2) - &
+           0.000828993629_Rkind*d6(4)*t1(2)
+Vtemp = Vtemp - &
            0.0108297159_Rkind*q1(1)*t1(2) - &
            0.0254890658_Rkind*d6(1)*q1(1)*t1(2) + &
            0.00899383548_Rkind*d6(2)*q1(1)*t1(2) + &
@@ -614,7 +617,8 @@ Vtemp = Vtemp - &
            0.160969317_Rkind*d6(2)*q1(1)*q2(1)*t2(1) - &
            0.0237237205_Rkind*d6(3)*q1(1)*q2(1)*t2(1) + &
            0.29026056_Rkind*q1(2)*q2(1)*t2(1) - &
-           0.156599513_Rkind*d6(1)*q1(2)*q2(1)*t2(1) - &
+           0.156599513_Rkind*d6(1)*q1(2)*q2(1)*t2(1)
+Vtemp = Vtemp - &
            0.108076274_Rkind*q2(2)*t2(1) - &
            0.020691359_Rkind*d6(1)*q2(2)*t2(1) - &
            0.00610632304_Rkind*d6(2)*q2(2)*t2(1) - &
@@ -688,7 +692,8 @@ Vtemp = Vtemp - &
            0.000147364731_Rkind*d6(3)*t1(2)*t2(1) + &
            0.0615294787_Rkind*q1(1)*t1(2)*t2(1) + &
            0.027017626_Rkind*d6(1)*q1(1)*t1(2)*t2(1) - &
-           0.0288241546_Rkind*q2(1)*t1(2)*t2(1) - &
+           0.0288241546_Rkind*q2(1)*t1(2)*t2(1)
+Vtemp = Vtemp - &
            0.0486327764_Rkind*d6(1)*q2(1)*t1(2)*t2(1) + &
            0.0488017381_Rkind*q3(1)*t1(2)*t2(1) + &
            0.0102779306_Rkind*d6(1)*q3(1)*t1(2)*t2(1) + &
@@ -722,7 +727,8 @@ Vtemp = Vtemp - &
            0.0343237583_Rkind*q2(1)*q3(1)*t2(2) + &
            0.0412379456_Rkind*d6(1)*q2(1)*q3(1)*t2(2) + &
            0.0871897999_Rkind*q3(2)*t2(2) - &
-           0.0574355743_Rkind*d6(1)*q3(2)*t2(2) - &
+           0.0574355743_Rkind*d6(1)*q3(2)*t2(2)
+Vtemp = Vtemp - &
            0.0159867411_Rkind*t1(1)*t2(2) - &
            0.00265186155_Rkind*d6(1)*t1(1)*t2(2) - &
            0.0102316103_Rkind*d6(2)*t1(1)*t2(2) + &
@@ -925,15 +931,16 @@ Vtemp = Vtemp - &
       IF (present(Q0))      CALL RefValues_QML_HONO0(QModel,err,nderiv=nderiv,Q0=Q0)
       IF (present(dnMatV))  CALL RefValues_QML_HONO0(QModel,err,nderiv=nderiv,dnMatV=dnMatV)
       IF (present(d0GGdef)) CALL RefValues_QML_HONO0(QModel,err,nderiv=nderiv,d0GGdef=d0GGdef)
-    CASE (1) ! trans
-      CONTINUE
+    !CASE (1) ! trans
+    !  CONTINUE
     CASE (2) ! cis
       IF (present(Q0))      CALL RefValues_QML_HONO2(QModel,err,nderiv=nderiv,Q0=Q0)
       IF (present(dnMatV))  CALL RefValues_QML_HONO2(QModel,err,nderiv=nderiv,dnMatV=dnMatV)
       IF (present(d0GGdef)) CALL RefValues_QML_HONO2(QModel,err,nderiv=nderiv,d0GGdef=d0GGdef)
-    CASE (3) ! ts
-      CONTINUE
+    !CASE (3) ! ts
+    !  CONTINUE
     CASE Default
+      STOP 'ERROR in RefValues_QML_LinearHBond1: wrong option. Possible values: 0,2'
     END SELECT
 
 
