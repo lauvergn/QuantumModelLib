@@ -62,8 +62,7 @@ MODULE QML_CHFClBr_m
 !! @param norder      integer: order of the expansion (up to 4). The default is 4
   TYPE, EXTENDS (QML_Empty_t) :: QML_CHFClBr_t ! V(R) = Sum_i C_i * r-Req)**i
      PRIVATE
-     integer           :: norder = 4
-
+     integer          :: norder = 4
   CONTAINS
     PROCEDURE :: EvalPot_QModel   => EvalPot_QML_CHFClBr
     PROCEDURE :: Write_QModel     => Write_QML_CHFClBr
@@ -130,7 +129,13 @@ CONTAINS
     QModel%Q0 = [(ZERO,i=1,QModel%ndim)]
 
     IF (debug) write(out_unit,*) 'init d0GGdef of CHFClBr'
+    QModel%masses = [952.84844038464450_Rkind,681.50589213793319_Rkind,505.79570923770643_Rkind, &
+                     319.83919070617901_Rkind,270.72255106228903_Rkind,198.46622168004251_Rkind, &
+                     179.17740535161565_Rkind,165.50265366523007_Rkind,66.985713015455389_Rkind]
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
+    DO i=1,QModel%ndim
+      QModel%d0GGdef(i,i) = ONE/QModel%masses(i)
+    END DO
 
     IF (debug) THEN
       write(out_unit,*) 'QModel%pot_name: ',QModel%pot_name
@@ -567,6 +572,7 @@ CONTAINS
     integer,              intent(in),    optional :: option
 
     real (kind=Rkind), allocatable :: d0(:,:),d1(:,:,:),d2(:,:,:,:),d3(:,:,:,:,:),V(:)
+    real (kind=Rkind), allocatable :: masses(:)
     integer        :: i
 
     !----- for debuging --------------------------------------------------
@@ -617,7 +623,15 @@ CONTAINS
 
     END IF
 
-    IF (present(d0GGdef)) d0GGdef = Identity_Mat(QModel%ndim)
+    IF (present(d0GGdef)) THEN 
+      d0GGdef = Identity_Mat(QModel%ndim)
+      masses  = [952.84844038464450_Rkind,681.50589213793319_Rkind,505.79570923770643_Rkind, &
+                 319.83919070617901_Rkind,270.72255106228903_Rkind,198.46622168004251_Rkind, &
+                 179.17740535161565_Rkind,165.50265366523007_Rkind,66.985713015455389_Rkind]
+      DO i=1,QModel%ndim
+        d0GGdef(i,i) = ONE/masses(i)
+      END DO
+    END IF
 
 
     IF (debug) THEN
