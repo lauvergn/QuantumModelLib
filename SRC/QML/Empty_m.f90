@@ -620,6 +620,7 @@ MODULE QML_Empty_m
 
     write(out_unit,*) 'ERROR in RefValues_QModel (RefValues_QML_Empty)'
     write(out_unit,*) '  The intialized model does not have RefValues_QModel subroutine!'
+    write(out_unit,*) '  model name:',Qmodel%pot_name
     STOP 'ERROR in RefValues_QML_Empty: the intialized model does not have RefValues_QModel subroutine'
 
     IF (debug) THEN

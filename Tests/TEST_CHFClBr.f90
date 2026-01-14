@@ -37,7 +37,7 @@
 !
 !===========================================================================
 !===========================================================================
-PROGRAM TEST_HONO
+PROGRAM TEST_CHFClBr
   USE QDUtil_NumParameters_m
   USE QDUtil_Test_m
   USE ADdnSVM_m
@@ -46,7 +46,6 @@ PROGRAM TEST_HONO
 
   TYPE (Model_t)                 :: Model
   real (kind=Rkind), allocatable :: Q(:),Qref(:),xyz(:)
-  !real (kind=Rkind), allocatable :: G(:,:),Gref(:,:) ! metric tensor
   integer                        :: ndim,nsurf,nderiv,i,option,err
   logical                        :: Lerr
   TYPE (dnMat_t)                 :: PotVal
@@ -57,19 +56,19 @@ PROGRAM TEST_HONO
   real (kind=Rkind), parameter   :: a0 = 0.52917720835354106_Rkind ! from Tnum
 
 
-  CALL Initialize_Test(test_var,test_name='QModel_HONO')
+  CALL Initialize_Test(test_var,test_name='QModel_CHFClBr')
 
   nderiv = 2
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' HONO potential'
+  write(out_unit,*) ' CHFClBr potential'
   write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
-  CALL Init_Model(Model,pot_name='HONO',read_param=.FALSE.)
-  Q = [2.696732586_Rkind,1.822912197_Rkind,1.777642018_Rkind,2.213326419_Rkind,1.9315017_Rkind,pi]
+  CALL Init_Model(Model,pot_name='CHFClBr',read_param=.FALSE.)
+  Q = [0.1_Rkind,-0.1_Rkind,0.2_Rkind,-0.2_Rkind,0.3_Rkind,-0.3_Rkind,0.4_Rkind,-0.4_Rkind,0.5_Rkind]
 
   nderiv=2
 
@@ -78,77 +77,25 @@ PROGRAM TEST_HONO
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Check analytical derivatives with respect to numerical ones'
 
-  write(out_unit,'(a,6f12.6)') 'Q (Bohr)',Q(:)
+  write(out_unit,'(a,9f12.6)') 'Q (Bohr)',Q(:)
   CALL Check_analytical_numerical_derivatives(Model,Q,nderiv,test_var)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential and derivatives (option=0)'
-  Q = [2.696732586_Rkind,1.822912197_Rkind,1.777642018_Rkind,2.213326419_Rkind,1.9315017_Rkind,pi]
+  write(out_unit,*) ' Potential'
+  Q = [0.1_Rkind,-0.1_Rkind, 0.2_Rkind,-0.2_Rkind, 0.3_Rkind,-0.3_Rkind,0.4_Rkind,-0.4_Rkind,0.5_Rkind]
 
-  CALL Test_QVG_FOR_Model(Model,Q,test_var,nderiv,option=0)
-
- write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential and derivatives'
-  Q = [2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,2.23738_Rkind,1.975200_Rkind,ZERO]
-
-  CALL Test_QVG_FOR_Model(Model,Q,test_var,nderiv,option=2)
-
+  CALL Test_QVG_FOR_Model(Model,Q,test_var,option=0,nderiv=0)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
-  write(out_unit,*) '---------------------------------------------'
-
-
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential on a 1D grid (as a function of q)'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential on a 1D grid (as a function of q(6), the torsion)'
-  write(out_unit,*) '   file name: "grid_HONO"'
-
-  CALL Eval_pot_ON_Grid(Model,                                      &
-                        Qmin=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
-                              2.23738_Rkind,1.975200_Rkind,ZERO],        &
-                        Qmax=[2.63122_Rkind,1.84164_Rkind,1.822274_Rkind,&
-                              2.23738_Rkind,1.975200_Rkind,pi],          &
-                        nb_points=1001, grid_file='grid_HONO')
-
-  CALL dealloc_Model(Model)
+  write(out_unit,*) '---------------------------------------------' 
  
-  write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) '------------ Cartesian coordinates ----------'
-  write(out_unit,*) '---------------------------------------------'
-      !1          8           0        0.000000    0.000000    0.000000
-      !2          7           0        0.000000    0.000000    1.427049
-      !3          1           0        0.944081    0.000000   -0.198113
-      !4          8           0       -1.095870    0.000000    1.840421
-
-  CALL Init_Model(Model,pot_name='HONO',Cart_TO_Q=.TRUE.)
-
-  allocate(xyz(Model%ndim))
-  xyz = [ZERO,           ZERO,  ZERO,           &
-         ZERO,           ZERO,  1.427049_Rkind, &
-         0.944081_Rkind, ZERO, -0.198113_Rkind, &
-        -1.095870_Rkind, 0.1_Rkind,  1.840421_Rkind]/a0
-
-
-  CALL Eval_Pot(Model,xyz,PotVal,nderiv=nderiv)
-  CALL Write_dnMat(PotVal,nio=out_unit)
-
-  deallocate(xyz)
-
-  CALL dealloc_dnMat(PotVal)
-  CALL dealloc_dnMat(PotValref)
-  CALL dealloc_dnMat(dnErr)
 
   deallocate(Q)
-
   CALL dealloc_Model(Model)
 
 
   CALL Finalize_Test(test_var)
 
-END PROGRAM TEST_HONO
+END PROGRAM TEST_CHFClBr
