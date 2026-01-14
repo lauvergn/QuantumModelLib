@@ -101,7 +101,7 @@ MODULE QML_Empty_m
       PROCEDURE :: EvalScalOp_QModel      => EvalScalOp_QML_Empty
       PROCEDURE :: EvalFunc_QModel        => EvalFunc_QML_Empty
       PROCEDURE :: Write_QModel           => Write_QML_Empty
-      PROCEDURE :: Ref_FOR_Test_QModel    => Ref_FOR_Test_QML_Empty
+      PROCEDURE :: RefValues_QModel       => RefValues_QML_Empty
      !PROCEDURE :: get2_Q0_QModel         => get2_Q0_QML_Empty
       PROCEDURE :: get_d0GGdef_QModel     => get_d0GGdef_QML_Empty
       PROCEDURE :: Cart_TO_Q_QModel       => Cart_TO_Q_QML_Empty
@@ -584,24 +584,23 @@ MODULE QML_Empty_m
     END DO
 
   END SUBROUTINE Qact_TO_Q_QML_Empty
-    SUBROUTINE Ref_FOR_Test_QML_Empty(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+    SUBROUTINE RefValues_QML_Empty(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
     USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE
 
     CLASS(QML_Empty_t), intent(in)             :: QModel
-
     integer,           intent(inout)           :: err
-
     integer,           intent(in)              :: nderiv
+
     real (kind=Rkind), intent(inout), optional :: Q0(:)
     TYPE (dnMat_t),    intent(inout), optional :: dnMatV
-
     real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+    integer,           intent(in),    optional :: option
 
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Ref_FOR_Test_QML_Empty'
+    character (len=*), parameter :: name_sub='RefValues_QML_Empty'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -619,10 +618,15 @@ MODULE QML_Empty_m
       err = 0
     END IF
 
+    write(out_unit,*) 'ERROR in RefValues_QModel (RefValues_QML_Empty)'
+    write(out_unit,*) '  The intialized model does not have RefValues_QModel subroutine!'
+    write(out_unit,*) '  model name:',Qmodel%pot_name
+    STOP 'ERROR in RefValues_QML_Empty: the intialized model does not have RefValues_QModel subroutine'
+
     IF (debug) THEN
       write(out_unit,*) ' END ',name_sub
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Ref_FOR_Test_QML_Empty
+  END SUBROUTINE RefValues_QML_Empty
 END MODULE QML_Empty_m

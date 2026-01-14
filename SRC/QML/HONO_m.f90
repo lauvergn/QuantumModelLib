@@ -55,20 +55,24 @@ MODULE QML_HONO_m
    PRIVATE
 
       real(kind=Rkind) :: Qref(6)=[2.696732586_Rkind,1.822912197_Rkind,           &
-                                              1.777642018_Rkind,2.213326419_Rkind,&
-                                              1.9315017_Rkind,ZERO]
+                                   1.777642018_Rkind,2.213326419_Rkind,           &
+                                   1.9315017_Rkind,ZERO]
+      real(kind=Rkind) :: Qtrans(6)=[2.6967325858163527_Rkind,1.8229121979747311_Rkind, &
+                                     1.7776420181002541_Rkind,2.2133264189824171_Rkind, &
+                                     1.9315016999563468_Rkind,PI]
 
-      real(kind=Rkind) :: Qtrans(6)=[2.696732586_Rkind,1.822912197_Rkind,           &
-                                                1.777642018_Rkind,2.213326419_Rkind,&
-                                                1.9315017_Rkind,ZERO]
+      real(kind=Rkind) :: Qcis(6)=[2.6312244087557923_Rkind,1.8416437107310599_Rkind, &
+                                   1.8222732963739141_Rkind,2.2373755278447467_Rkind, &
+                                   1.9751998135228246_Rkind,ZERO]
 
-      real(kind=Rkind) :: Qcis(6)=[2.696732586_Rkind,1.822912197_Rkind,           &
-                                              1.777642018_Rkind,2.213326419_Rkind,&
-                                              1.9315017_Rkind,ZERO]
-
-   CONTAINS
-    PROCEDURE :: EvalPot_QModel => EvalPot_QML_HONO
-    PROCEDURE :: Write_QModel    => Write_QML_HONO
+      real(kind=Rkind) :: Qts(6)=[2.8473952271126421_Rkind, 1.8180195633689995_Rkind, &
+                                  1.7578000374548906_Rkind, 2.2009306338889147_Rkind, &
+                                  1.9287756933719564_Rkind, 1.5076616151992459_Rkind]
+  CONTAINS
+    PROCEDURE :: EvalPot_QModel      => EvalPot_QML_HONO
+    PROCEDURE :: Write_QModel        => Write_QML_HONO
+    PROCEDURE :: Cart_TO_Q_QModel    => Cart_TO_Q_QML_HONO
+    PROCEDURE :: RefValues_QModel    => RefValues_QML_HONO
   END TYPE QML_HONO_t
 
   PUBLIC :: QML_HONO_t,Init_QML_HONO
@@ -82,6 +86,7 @@ MODULE QML_HONO_m
 !! @param read_param         logical:             when it is .TRUE., the parameters are read. Otherwise, they are initialized.
   FUNCTION Init_QML_HONO(QModel_in,read_param,nio_param_file) RESULT(QModel)
     USE QDUtil_m,         ONLY : Identity_Mat
+    USE ADdnSVM_m
     IMPLICIT NONE
 
     TYPE (QML_HONO_t)                            :: QModel ! RESULT
@@ -90,6 +95,8 @@ MODULE QML_HONO_m
     integer,                     intent(in)      :: nio_param_file
     logical,                     intent(in)      :: read_param
 
+    TYPE (dnS_t) :: dnX(3,4),dnQ(6)
+    integer :: ic
 
     !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Init_QML_HONO'
@@ -105,6 +112,8 @@ MODULE QML_HONO_m
 
     QModel%nsurf    = 1
     QModel%ndim     = 6
+    QModel%ndimQ    = 6
+    QModel%ndimCart = 12
     QModel%pot_name = 'hono'
 
     IF (QModel%option < 0 .OR. QModel%option > 2) QModel%option = 1
@@ -117,15 +126,55 @@ MODULE QML_HONO_m
       QModel%Q0 = QModel%Qtrans
     CASE (2) ! cis
       QModel%Q0 = QModel%Qcis
+    CASE (3) ! ts
+      QModel%Q0 = QModel%Qts
     CASE Default
 
       write(out_unit,*) ' ERROR in ',name_sub
       write(out_unit,*) ' This option is not possible. option: ',QModel%option
-      write(out_unit,*) ' Its value MUST be 0,1,2'
+      write(out_unit,*) ' Its value MUST be 0,1,2,3'
 
       STOP
     END SELECT
 
+    IF (QModel%Cart_TO_Q) THEN
+      QModel%ndim       = QModel%ndimCart
+    ELSE
+      QModel%ndim       = QModel%ndimQ
+    END IF
+
+    dnQ = Variable(QModel%Qtrans,nVar=QModel%ndim,nderiv=1) ! to set up the derivatives
+    CALL Q_TO_Cart_QML_HONO(QModel,dnQ,dnX,nderiv=1)
+    write(out_unit,*) '-------------------------------------------------'
+    write(out_unit,*) 'Qtrans=[',get_d0(dnQ),']'
+    write(out_unit,*) 'xyz Trans'
+    DO ic=1,size(dnX,dim=2)
+      write(out_unit,*) '[',get_d0(dnX(:,ic)),']'
+    END DO
+    CALL Cart_TO_Q_QML_HONO(QModel,dnX,dnQ,nderiv=1)
+    write(out_unit,*) 'Q->X->Q=[',get_d0(dnQ),']'
+
+
+    dnQ = Variable(QModel%Qcis,nVar=QModel%ndim,nderiv=1) ! to set up the derivatives
+    CALL Q_TO_Cart_QML_HONO(QModel,dnQ,dnX,nderiv=1)
+    write(out_unit,*) '-------------------------------------------------'
+    write(out_unit,*) 'Qcis=[',get_d0(dnQ),']'
+    write(out_unit,*) 'xyz Cis'
+    DO ic=1,size(dnX,dim=2)
+      write(out_unit,*) '[',get_d0(dnX(:,ic)),']'
+    END DO
+    write(out_unit,*) 'Q->X->Q=[',get_d0(dnQ),']'
+
+    dnQ = Variable(QModel%QTS,nVar=QModel%ndim,nderiv=1) ! to set up the derivatives
+    CALL Q_TO_Cart_QML_HONO(QModel,dnQ,dnX,nderiv=1)
+    write(out_unit,*) '-------------------------------------------------'
+    write(out_unit,*) 'QTS=[',get_d0(dnQ),']'
+    write(out_unit,*) 'xyz TS'
+    DO ic=1,size(dnX,dim=2)
+      write(out_unit,*) '[',get_d0(dnX(:,ic)),']'
+    END DO
+    write(out_unit,*) 'Q->X->Q=[',get_d0(dnQ),']'
+    write(out_unit,*) '-------------------------------------------------'
 
     IF (debug) write(out_unit,*) 'init d0GGdef of HONO'
     QModel%d0GGdef = Identity_Mat(QModel%ndim)
@@ -159,10 +208,10 @@ MODULE QML_HONO_m
     write(nio,*) '         Internal coordinates          '
     write(nio,*) '                                       '
     write(nio,*) '                            +Q(6)      '
-    write(nio,*) '      H                  O             '
+    write(nio,*) '      H3                 O4            '
     write(nio,*) '       \                /              '
     write(nio,*) '   Q(2) \ Q(3)    Q(5) /  Q(4)         '
-    write(nio,*) '         O------------N                '
+    write(nio,*) '         O1-----------N2               '
     write(nio,*) '             Q(1)                      '
     write(nio,*) '                                       '
     write(nio,*) '  Q(1) = dON (Bohr)                    '
@@ -238,13 +287,13 @@ MODULE QML_HONO_m
 
     SELECT CASE (QModel%option)
 
-    CASE (0,1,2)
+    CASE (0,1,2,3)
       CALL EvalPot1_QML_HONO(Mat_OF_PotDia,dnQ)
 
     CASE Default
       write(out_unit,*) ' ERROR in EvalPot_QML_HONO '
       write(out_unit,*) ' This option is not possible. option: ',QModel%option
-      write(out_unit,*) ' Its value MUST be 1'
+      write(out_unit,*) ' Its value MUST be 0,1,2,3'
 
       STOP
     END SELECT
@@ -365,7 +414,8 @@ Vtemp = Vtemp - &
            0.0026913524_Rkind*d6(1)*q2(4) - &
            0.00242284791_Rkind*q3(1) - &
            0.00459921985_Rkind*d6(1)*q3(1) - &
-           0.00279190874_Rkind*d6(2)*q3(1) - &
+           0.00279190874_Rkind*d6(2)*q3(1)
+Vtemp = Vtemp - &
            0.000949245129_Rkind*d6(3)*q3(1) - &
            0.00033370905_Rkind*d6(4)*q3(1) + &
            0.00894355549_Rkind*q1(1)*q3(1) + &
@@ -432,7 +482,8 @@ Vtemp = Vtemp - &
            0.0465284723_Rkind*d6(1)*q3(5) + &
            0.684631535_Rkind*q3(6) + &
            0.136390997_Rkind*d6(1)*q3(6) - &
-           0.00455237659_Rkind*t1(1) - &
+           0.00455237659_Rkind*t1(1)
+Vtemp = Vtemp - &
            0.00342497933_Rkind*d6(1)*t1(1) + &
            0.00176367547_Rkind*d6(2)*t1(1) + &
            0.00104093751_Rkind*d6(3)*t1(1) + &
@@ -501,7 +552,8 @@ Vtemp = Vtemp - &
            0.0042138202_Rkind*d6(1)*t1(2) + &
            0.00872268723_Rkind*d6(2)*t1(2) - &
            0.000354403712_Rkind*d6(3)*t1(2) - &
-           0.000828993629_Rkind*d6(4)*t1(2) - &
+           0.000828993629_Rkind*d6(4)*t1(2)
+Vtemp = Vtemp - &
            0.0108297159_Rkind*q1(1)*t1(2) - &
            0.0254890658_Rkind*d6(1)*q1(1)*t1(2) + &
            0.00899383548_Rkind*d6(2)*q1(1)*t1(2) + &
@@ -565,7 +617,8 @@ Vtemp = Vtemp - &
            0.160969317_Rkind*d6(2)*q1(1)*q2(1)*t2(1) - &
            0.0237237205_Rkind*d6(3)*q1(1)*q2(1)*t2(1) + &
            0.29026056_Rkind*q1(2)*q2(1)*t2(1) - &
-           0.156599513_Rkind*d6(1)*q1(2)*q2(1)*t2(1) - &
+           0.156599513_Rkind*d6(1)*q1(2)*q2(1)*t2(1)
+Vtemp = Vtemp - &
            0.108076274_Rkind*q2(2)*t2(1) - &
            0.020691359_Rkind*d6(1)*q2(2)*t2(1) - &
            0.00610632304_Rkind*d6(2)*q2(2)*t2(1) - &
@@ -639,7 +692,8 @@ Vtemp = Vtemp - &
            0.000147364731_Rkind*d6(3)*t1(2)*t2(1) + &
            0.0615294787_Rkind*q1(1)*t1(2)*t2(1) + &
            0.027017626_Rkind*d6(1)*q1(1)*t1(2)*t2(1) - &
-           0.0288241546_Rkind*q2(1)*t1(2)*t2(1) - &
+           0.0288241546_Rkind*q2(1)*t1(2)*t2(1)
+Vtemp = Vtemp - &
            0.0486327764_Rkind*d6(1)*q2(1)*t1(2)*t2(1) + &
            0.0488017381_Rkind*q3(1)*t1(2)*t2(1) + &
            0.0102779306_Rkind*d6(1)*q3(1)*t1(2)*t2(1) + &
@@ -673,7 +727,8 @@ Vtemp = Vtemp - &
            0.0343237583_Rkind*q2(1)*q3(1)*t2(2) + &
            0.0412379456_Rkind*d6(1)*q2(1)*q3(1)*t2(2) + &
            0.0871897999_Rkind*q3(2)*t2(2) - &
-           0.0574355743_Rkind*d6(1)*q3(2)*t2(2) - &
+           0.0574355743_Rkind*d6(1)*q3(2)*t2(2)
+Vtemp = Vtemp - &
            0.0159867411_Rkind*t1(1)*t2(2) - &
            0.00265186155_Rkind*d6(1)*t1(1)*t2(2) - &
            0.0102316103_Rkind*d6(2)*t1(1)*t2(2) + &
@@ -721,4 +776,387 @@ Vtemp = Vtemp - &
 
   END SUBROUTINE EvalPot1_QML_HONO
 
+  ! here we suppose that the atom ordering:
+  !                            +Q(6)
+  !      H3                 O4
+  !       \                /
+  !   Q(2) \ Q(3)    Q(5) /  Q(4)
+  !         O1-----------N2
+  !             Q(1)
+  ! the bounds are O1-N2, O1-H3, N2-O4
+  SUBROUTINE Cart_TO_Q_QML_HONO(QModel,dnX,dnQ,nderiv)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_HONO_t),   intent(in)    :: QModel
+    TYPE (dnS_t),        intent(in)    :: dnX(:,:)
+    TYPE (dnS_t),        intent(inout) :: dnQ(:)
+    integer,             intent(in)    :: nderiv
+
+
+    ! local vector
+    TYPE (dnS_t)      :: V1(3),V2(3),v3(3),v4(3),V5(3)
+    TYPE (dnS_t)      :: ca,sa
+    real (kind=Rkind) :: phi
+
+    !logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+
+    IF (debug) THEN
+      write(out_unit,*) 'BEGINNING Cart_TO_Q_QML_HONO'
+      write(out_unit,*) 'dnX (HONO): ',get_d0(dnX)
+      flush(out_unit)
+    END IF
+
+    ! atoms : O1 N2 H3 N4
+    ! atoms : N1 N2 H3 H4
+
+    !dihedral first: zmatrix order : nc1=4 (N4),nc2=2 (N2),nc3=1 (O1),nc4=3 (H3)
+    !CALL calc_vector2(v1,norm1,nc2,nc1,dnx%d0,ncart0) ! N2->N4
+    V1(:) = dnX(:,4)-dnX(:,2)  ! N2->N4
+    dnQ(4) = sqrt(dot_product(V1,V1)) ! dN2N4
+
+    !CALL calc_vector2(v2,norm2,nc2,nc3,dnx%d0,ncart0) ! N2->O1
+    V2(:) = dnX(:,1)-dnX(:,2)  ! N2->O1
+    dnQ(1) = sqrt(dot_product(V2,V2)) ! dN2O1
+    dnQ(5) = acos(dot_product(V1,V2)/(dnQ(1)*dnQ(4))) ! aO1N2O4
+
+    !CALL calc_vector2(v3,norm3,nc3,nc4,dnx%d0,ncart0) ! O1->H3
+    V3(:) = dnX(:,3)-dnX(:,1)  ! N1->H3
+    dnQ(2) = sqrt(dot_product(V3,V3))
+    dnQ(3) = acos(-dot_product(V3,V2)/(dnQ(1)*dnQ(2))) ! aHON
+
+    !CALL calc_cross_product(v1,norm1,v2,norm2,v4,norm4)
+    !CALL calc_cross_product(v3,norm3,v2,norm2,v5,norm5)
+    V4(:) = cross_product(V1,V2)
+    V5(:) = cross_product(V3,V2)
+
+
+    !CALL calc_angle_d(angle_d,v4,norm4,v5,norm5,v2,norm2)
+    !SUBROUTINE calc_angle_d(angle_d,v1,norm1,v2,norm2,v3,norm3)
+    ca = dot_product(v4,v5)
+    sa = (v4(1)*(v5(2)*v2(3)-v5(3)*v2(2))                             &
+         -v4(2)*(v5(1)*v2(3)-v5(3)*v2(1))                             &
+         +v4(3)*(v5(1)*v2(2)-v5(2)*v2(1)))                            &
+         /dnQ(1)
+
+    !write(6,*) 'cos, sin: ',get_d0(ca),get_d0(sa)
+    dnQ(6) = atan2(sa,ca)
+
+    ! Transformation to have phi (dnQ(6)) between [0,2pi]
+    phi = mod(get_d0(dnQ(6)),TWO*pi)
+    IF (phi < ZERO) phi = phi + TWO*pi
+    CALL set_dnS(dnQ(6),phi,ider=[0])
+
+    IF (debug) THEN
+      write(out_unit,*) 'dnQ (HONO): ',get_d0(dnQ)
+      write(out_unit,*) 'END Cart_TO_Q_QML_HONO'
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE Cart_TO_Q_QML_HONO
+
+  SUBROUTINE Q_TO_Cart_QML_HONO(QModel,dnQ,dnX,nderiv)
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_HONO_t),   intent(in)    :: QModel
+    TYPE (dnS_t),        intent(inout) :: dnX(:,:)
+    TYPE (dnS_t),        intent(in)    :: dnQ(:)
+    integer,             intent(in)    :: nderiv
+
+    !logical, parameter :: debug = .TRUE.
+    logical, parameter :: debug = .FALSE.
+
+    IF (debug) THEN
+      write(out_unit,*) 'BEGINNING Q_TO_Cart_QML_HONO'
+      write(out_unit,*) 'dnQ (HONO): ',get_d0(dnQ)
+      flush(out_unit)
+    END IF
+
+    dnX(:,1) = ZERO
+    dnX(:,2) = ZERO ; dnX(3,2) = dnQ(1)
+
+    dnX(1,3) =  dnQ(2)*sin(dnQ(3))
+    dnX(2,3) =  ZERO
+    dnX(3,3) =  dnQ(2)*cos(dnQ(3))
+
+    dnX(1,4) =           dnQ(4)*sin(dnQ(5))*cos(dnQ(6))
+    dnX(2,4) =           dnQ(4)*sin(dnQ(5))*sin(dnQ(6))
+    dnX(3,4) = dnQ(1) -  dnQ(4)*cos(dnQ(5))
+
+    IF (debug) THEN
+      write(out_unit,*) 'dnX (HONO): ',get_d0(dnX)
+      write(out_unit,*) 'END Q_TO_Cart_QML_HONO'
+      flush(out_unit)
+    END IF
+ 
+  END SUBROUTINE Q_TO_Cart_QML_HONO
+
+  SUBROUTINE RefValues_QML_HONO(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_HONO_t), intent(in)              :: QModel
+    integer,           intent(inout)           :: err
+    integer,           intent(in)              :: nderiv
+
+    real (kind=Rkind), intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),    intent(inout), optional :: dnMatV
+    real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+    integer,           intent(in),    optional :: option
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='RefValues_QML_HONO'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
+    END IF
+
+    IF (.NOT. QModel%Init) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'The model is not initialized!'
+      err = -1
+      RETURN
+    ELSE
+      err = 0
+    END IF
+
+    SELECT CASE (option)
+    CASE (0) ! ref
+      IF (present(Q0))      CALL RefValues_QML_HONO0(QModel,err,nderiv=nderiv,Q0=Q0)
+      IF (present(dnMatV))  CALL RefValues_QML_HONO0(QModel,err,nderiv=nderiv,dnMatV=dnMatV)
+      IF (present(d0GGdef)) CALL RefValues_QML_HONO0(QModel,err,nderiv=nderiv,d0GGdef=d0GGdef)
+    !CASE (1) ! trans
+    !  CONTINUE
+    CASE (2) ! cis
+      IF (present(Q0))      CALL RefValues_QML_HONO2(QModel,err,nderiv=nderiv,Q0=Q0)
+      IF (present(dnMatV))  CALL RefValues_QML_HONO2(QModel,err,nderiv=nderiv,dnMatV=dnMatV)
+      IF (present(d0GGdef)) CALL RefValues_QML_HONO2(QModel,err,nderiv=nderiv,d0GGdef=d0GGdef)
+    !CASE (3) ! ts
+    !  CONTINUE
+    CASE Default
+      STOP 'ERROR in RefValues_QML_LinearHBond1: wrong option. Possible values: 0,2'
+    END SELECT
+
+
+    IF (debug) THEN
+      write(out_unit,*) 'present Q0 dnMatV d0GGdef',present(Q0),present(dnMatV),present(d0GGdef)
+      IF (present(Q0))      write(out_unit,*) 'Q0',Q0
+      IF (present(dnMatV))  THEN
+        write(out_unit,*) 'dnMatV is present'
+        write(out_unit,*) 'dnMatV is allocated',(.NOT. Check_NotAlloc_dnMat(dnMatV,nderiv))
+        CALL write_dnMat(dnMatV,info='dnMatV')
+      END IF
+      IF (present(d0GGdef)) write(out_unit,*) 'd0GGdef',d0GGdef
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE RefValues_QML_HONO
+ SUBROUTINE RefValues_QML_HONO0(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_HONO_t), intent(in)              :: QModel
+
+    integer,           intent(inout)           :: err
+
+    integer,           intent(in)              :: nderiv
+    real (kind=Rkind), intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),    intent(inout), optional :: dnMatV
+
+    real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+
+    real (kind=Rkind), allocatable :: d0(:,:),d1(:,:,:),d2(:,:,:,:),d3(:,:,:,:,:),V(:)
+    integer        :: i
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='RefValues_QML_HONO0'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
+    END IF
+
+    IF (.NOT. QModel%Init) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'The model is not initialized!'
+      err = -1
+      RETURN
+    ELSE
+      err = 0
+    END IF
+
+    IF (present(Q0)) THEN
+      IF (size(Q0) /= QModel%ndim) THEN
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'incompatible Q0 size:'
+        write(out_unit,*) 'size(Q0), ndimQ:',size(Q0),QModel%ndim
+        err = 1
+        Q0(:) = HUGE(ONE)
+        RETURN
+      END IF
+      Q0(:) = [2.696732586_Rkind, 1.822912197_Rkind, 1.777642018_Rkind, 2.213326419_Rkind, 1.9315017_Rkind, 3.1415926535897931_Rkind]
+    END IF
+
+    IF (present(dnMatV)) THEN
+      err = 0
+
+      IF (nderiv >= 0) THEN ! no derivative
+        V  = [-5.3999860138986833E-012_Rkind]
+        d0 = reshape(V,shape=[QModel%nsurf,QModel%nsurf])
+      END IF
+
+      IF (nderiv >= 1) THEN ! 1st order derivatives
+        V  = [3.2200000017702443E-011_Rkind,  -5.0470000035230007E-010_Rkind,  -1.9999999811663727E-011_Rkind,   &
+              4.7600000032061232E-011_Rkind,   1.4000001299311476E-011_Rkind,  -4.2372886774487386E-018_Rkind]
+        d1 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim])
+      END IF
+
+      IF (nderiv >= 2) THEN ! 2d order derivatives
+        V  = [0.19011176195523777_Rkind,        3.6484630405999984E-003_Rkind,   4.1037857831599994E-002_Rkind,  &
+              0.13330580264539998_Rkind,        5.9860656064999990E-002_Rkind,   4.5546637831773716E-018_Rkind, &
+              3.6484630405999984E-003_Rkind,  0.51782131523608999_Rkind,        1.1792179056000000E-002_Rkind,  &
+              -6.6187920168999997E-003_Rkind,   1.5236471642000001E-002_Rkind,  -2.8842729854904554E-019_Rkind,  &
+              4.1037857831599994E-002_Rkind,   1.1792179056000000E-002_Rkind,  0.19446251309900001_Rkind,        &
+              2.1017604214600003E-002_Rkind,   7.0643699249999997E-002_Rkind,   9.2899160142622793E-019_Rkind,  &
+              0.13330580264539998_Rkind,       -6.6187920168999997E-003_Rkind,   2.1017604214600003E-002_Rkind,  &
+              0.86335131926859987_Rkind,        8.2334865066929996E-002_Rkind,   6.1047488865866790E-019_Rkind, &
+              5.9860656064999990E-002_Rkind,   1.5236471642000001E-002_Rkind,   7.0643699249999997E-002_Rkind,   &
+              8.2334865066929996E-002_Rkind,  0.53816864544099996_Rkind,        7.2102498465286775E-019_Rkind,  &
+              4.5546637831773716E-018_Rkind,  -2.8842729854904554E-019_Rkind,   9.2899160142622793E-019_Rkind,  &
+              6.1047488865866790E-019_Rkind,   7.2102498465286775E-019_Rkind,   3.4600087799999998E-002_Rkind]
+        d2 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim,QModel%ndim])
+      END IF
+      SELECT CASE (nderiv)
+      CASE(0)
+        CALL set_dnMat(dnMatV,d0=d0)
+      CASE(1)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1)
+      CASE(2)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1,d2=d2)
+      CASE Default
+        STOP 'ERROR in RefValues_QML_HONO0: nderiv MUST < 3'
+      END SELECT
+
+    END IF
+
+    IF (present(d0GGdef)) d0GGdef = Identity_Mat(QModel%ndim)
+
+
+    IF (debug) THEN
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE RefValues_QML_HONO0
+  SUBROUTINE RefValues_QML_HONO2(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_HONO_t), intent(in)              :: QModel
+
+    integer,           intent(inout)           :: err
+
+    integer,           intent(in)              :: nderiv
+    real (kind=Rkind), intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),    intent(inout), optional :: dnMatV
+
+    real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+
+    real (kind=Rkind), allocatable :: d0(:,:),d1(:,:,:),d2(:,:,:,:),d3(:,:,:,:,:),V(:)
+    integer        :: i
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='RefValues_QML_HONO2'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
+    END IF
+
+    IF (.NOT. QModel%Init) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'The model is not initialized!'
+      err = -1
+      RETURN
+    ELSE
+      err = 0
+    END IF
+
+    IF (present(Q0)) THEN
+      IF (size(Q0) /= QModel%ndim) THEN
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'incompatible Q0 size:'
+        write(out_unit,*) 'size(Q0), ndimQ:',size(Q0),QModel%ndim
+        err = 1
+        Q0(:) = HUGE(ONE)
+        RETURN
+      END IF
+      Q0(:) = [2.6312199999999999_Rkind,1.8416399999999999_Rkind,1.8222739999999999_Rkind,&
+               2.2373799999999999_Rkind,1.9752000000000001_Rkind,ZERO]
+    END IF
+
+    IF (present(dnMatV)) THEN
+      err = 0
+
+      IF (nderiv >= 0) THEN ! no derivative
+        V  = [4.2407876540784262E-004_Rkind]
+        d0 = reshape(V,shape=[QModel%nsurf,QModel%nsurf])
+      END IF
+
+      IF (nderiv >= 1) THEN ! 1st order derivatives
+        V  = [-3.9520383522950790E-007_Rkind,-1.8765549878810685E-006_Rkind,-5.7369473234629593E-008_Rkind,&
+              3.0809207074089859E-006_Rkind,3.8937294368326445E-007_Rkind,ZERO]
+        d1 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim])
+      END IF
+
+      IF (nderiv >= 2) THEN ! 2d order derivatives
+        V  = [0.21618786596459863_Rkind,1.7020803171963597E-002_Rkind,3.4305062840839146E-002_Rkind,       &
+              0.13157314255374800_Rkind,4.5645918937710306E-002_Rkind,0.0000000000000000_Rkind,            &
+              1.7020803171963597E-002_Rkind,0.48031754487165501_Rkind,1.6239451628938716E-002_Rkind,       &
+              -5.9434198034353661E-003_Rkind,-2.1683865981947159E-002_Rkind,0.0000000000000000_Rkind,      &
+              3.4305062840839146E-002_Rkind,1.6239451628938716E-002_Rkind,0.20100750808477230_Rkind,       &
+              5.1124285023904543E-003_Rkind,-5.4511664517279804E-002_Rkind,0.0000000000000000_Rkind,       &
+              0.13157314255374800_Rkind,-5.9434198034353661E-003_Rkind,5.1124285023904543E-003_Rkind,      &
+              0.80876906014557126_Rkind,9.8521830404478927E-002_Rkind,0.0000000000000000_Rkind,            &
+              4.5645918937710306E-002_Rkind,-2.1683865981947159E-002_Rkind,-5.4511664517279804E-002_Rkind, &
+              9.8521830404478927E-002_Rkind,0.57864111671992557_Rkind,0.0000000000000000_Rkind,            &
+              0.0000000000000000_Rkind,0.0000000000000000_Rkind,0.0000000000000000_Rkind,                  &
+              0.0000000000000000_Rkind,0.0000000000000000_Rkind,4.2264177114531197E-002_Rkind]
+        d2 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim,QModel%ndim])
+      END IF
+      SELECT CASE (nderiv)
+      CASE(0)
+        CALL set_dnMat(dnMatV,d0=d0)
+      CASE(1)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1)
+      CASE(2)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1,d2=d2)
+      CASE Default
+        STOP 'ERROR in RefValues_QML_HONO2: nderiv MUST < 3'
+      END SELECT
+
+    END IF
+
+    IF (present(d0GGdef)) d0GGdef = Identity_Mat(QModel%ndim)
+
+
+    IF (debug) THEN
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE RefValues_QML_HONO2
 END MODULE QML_HONO_m

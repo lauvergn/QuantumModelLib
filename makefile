@@ -147,7 +147,9 @@ endif
 # External Model : ExtModel_m.f90
 #=================================================================================
 # it will create the link
-MES := $(shell test -L $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90 || echo "the ExtModel_m.f90 link does not exist")
+MEL := $(shell readlink  $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90)
+$(info ***********MEL:       $(MEL))
+MES := $(shell if ! test -e "$(MEL)" ; then echo "the ExtModel_m.f90 link does not exist or is wrong"; rm -f $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90; fi)
 $(info ***********MES:       $(MES))
 MES := $(shell test -L $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90 || ln -s  $(EXTMODEL_DIR)/ExtModel_m.f90 $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90)
 MES := $(shell if test -L $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90; then echo "the ExtModel_m.f90 link exists"; else echo "ERR"; fi)

@@ -68,8 +68,9 @@ MODULE QML_Buck_m
      ! C= 102 10^-12 erg A^-6 = 106.54483566475760255666 Hartree bohr^-6
      real (kind=Rkind) :: mu  = 36423.484024390622_Rkind        ! au
   CONTAINS
-    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Buck
-    PROCEDURE :: Write_QModel    => Write_QML_Buck
+    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_Buck
+    PROCEDURE :: Write_QModel     => Write_QML_Buck
+    PROCEDURE :: RefValues_QModel => RefValues_QML_Buck
   END TYPE QML_Buck_t
 
   PUBLIC :: QML_Buck_t,Init_QML_Buck,Init0_QML_Buck,Write_QML_Buck,QML_dnBuck
@@ -342,4 +343,100 @@ CONTAINS
 
   END FUNCTION QML_dnBuck
 
+  SUBROUTINE RefValues_QML_Buck(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_Buck_t), intent(in)              :: QModel
+    integer,           intent(inout)           :: err
+    integer,           intent(in)              :: nderiv
+
+    real (kind=Rkind), intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),    intent(inout), optional :: dnMatV
+    real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+    integer,           intent(in),    optional :: option
+
+    real (kind=Rkind), allocatable :: d0(:,:),d1(:,:,:),d2(:,:,:,:),d3(:,:,:,:,:),V(:)
+
+    integer        :: i
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='RefValues_QML_Buck'
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
+    END IF
+
+    IF (.NOT. QModel%Init) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'The model is not initialized!'
+      err = -1
+      RETURN
+    ELSE
+      err = 0
+    END IF
+
+    IF (present(Q0)) THEN
+      IF (size(Q0) /= QModel%ndim) THEN
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'incompatible Q0 size:'
+        write(out_unit,*) 'size(Q0), ndimQ:',size(Q0),QModel%ndim
+        err = 1
+        Q0(:) = HUGE(ONE)
+        RETURN
+      END IF
+      Q0(:) = 7.000000000000000_Rkind
+    END IF
+
+    IF (present(dnMatV)) THEN
+      err = 0
+      CALL alloc_dnMat(dnMatV,nsurf=QModel%nsurf,nVar=QModel%ndim,nderiv=nderiv)
+
+      IF (nderiv >= 0) THEN ! no derivative
+        V  = [-4.0943819112303800E-004_Rkind]
+        d0 = reshape(V,shape=[QModel%nsurf,QModel%nsurf])
+      END IF
+
+      IF (nderiv >= 1) THEN ! 1st order derivatives
+        V  = [-1.8553806270932315E-004_Rkind]
+        d1 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim])
+      END IF
+
+      IF (nderiv >= 2) THEN ! 2d order derivatives
+        V  = [1.0880517621509414E-003_Rkind]
+        d2 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim,QModel%ndim])
+      END IF
+      IF (allocated(V)) deallocate(V)
+
+      SELECT CASE (nderiv)
+      CASE(0)
+        CALL set_dnMat(dnMatV,d0=d0)
+        deallocate(d0)
+      CASE(1)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1)
+        deallocate(d0)
+        deallocate(d1)
+      CASE(2)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1,d2=d2)
+        deallocate(d0)
+        deallocate(d1)
+        deallocate(d2)
+      CASE Default
+        STOP 'ERROR in RefValues_QML_HONO0: nderiv MUST < 3'
+      END SELECT
+    END IF
+
+    IF (present(d0GGdef)) d0GGdef = 2.7454814573212161E-005_Rkind
+
+
+    IF (debug) THEN
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE RefValues_QML_Buck
 END MODULE QML_Buck_m

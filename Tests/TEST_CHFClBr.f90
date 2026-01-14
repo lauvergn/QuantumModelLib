@@ -37,84 +37,65 @@
 !
 !===========================================================================
 !===========================================================================
-PROGRAM TEST_model
+PROGRAM TEST_CHFClBr
+  USE QDUtil_NumParameters_m
   USE QDUtil_Test_m
-  USE QDUtil_m
   USE ADdnSVM_m
   USE Model_m
   IMPLICIT NONE
 
-
-  TYPE (Model_t)                 :: QModel
-  real (kind=Rkind), allocatable :: Q(:)
-  integer                        :: nderiv
+  TYPE (Model_t)                 :: Model
+  real (kind=Rkind), allocatable :: Q(:),Qref(:),xyz(:)
+  integer                        :: ndim,nsurf,nderiv,i,option,err
+  logical                        :: Lerr
   TYPE (dnMat_t)                 :: PotVal
   TYPE (dnMat_t)                 :: PotValref
   TYPE (dnMat_t)                 :: dnErr
-
   TYPE (test_t)                  :: test_var
-  logical                        :: Lerr
-  integer                        :: err
+  real (kind=Rkind), parameter   :: epsi = 1.e-10_Rkind
+  real (kind=Rkind), parameter   :: a0 = 0.52917720835354106_Rkind ! from Tnum
 
-  CALL Initialize_Test(test_var,test_name='QModel_H2_H2On')
 
-  nderiv = 0
+  CALL Initialize_Test(test_var,test_name='QModel_CHFClBr')
+
+  nderiv = 2
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' H2_H2On potential (H2@clathrate)'
+  write(out_unit,*) ' CHFClBr potential'
   write(out_unit,*) ' With units: Bohr and Hartree (atomic units)'
   write(out_unit,*) '---------------------------------------------'
-  flush(out_unit)
+  write(out_unit,*) '---------------------------------------------'
 
-  CALL Init_Model(QModel,pot_name='H2_H2On',adiabatic=.FALSE.,PubliUnit=.FALSE.)
-  nderiv=1
+  CALL Init_Model(Model,pot_name='CHFClBr',read_param=.FALSE.)
+  Q = [0.1_Rkind,-0.1_Rkind,0.2_Rkind,-0.2_Rkind,0.3_Rkind,-0.3_Rkind,0.4_Rkind,-0.4_Rkind,0.5_Rkind]
 
-  allocate(q(QModel%QM%ndim))
-  q = QModel%QM%Q0
-  !CALL get_Q0_QML_H2_H2On(q,QModel%QM,option=1)
-  !CALL QModel%QM%Test_QModel(err,Q0=Q,nderiv=nderiv)
-
-  !CALL Logical_Test(test_var,test1=(err == 0),info='Q0 initialization')
+  nderiv=2
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '----- CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Check analytical derivatives with respect to numerical ones'
 
-  write(out_unit,*) 'Q(:) (bohr):'
-  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
-
-  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv,test_var)
+  write(out_unit,'(a,9f12.6)') 'Q (Bohr)',Q(:)
+  CALL Check_analytical_numerical_derivatives(Model,Q,nderiv,test_var)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
-  write(out_unit,*) ' Potential and derivatives'
-  nderiv = 1
-  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
+  write(out_unit,*) ' Potential'
+  Q = [0.1_Rkind,-0.1_Rkind, 0.2_Rkind,-0.2_Rkind, 0.3_Rkind,-0.3_Rkind,0.4_Rkind,-0.4_Rkind,0.5_Rkind]
 
-  write(out_unit,*) 'Q(:) (bohr):'
-  CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
-  write(out_unit,*) 'Energy (Hartree)'
-  CALL Write_dnMat(PotVal,nio=out_unit)
-
-  !CALL QModel%QM%RefValues_QModel(err,dnMatV=PotValref,nderiv=nderiv)
-  !dnErr = PotValref-PotVal
-  !Lerr  = Check_dnMat_IS_ZERO(dnErr)
-  
-  !CALL Logical_Test(test_var,test1=Lerr,info='dnVMat')
-
-
-  CALL dealloc_dnMat(PotVal)
-  deallocate(Q)
-  CALL dealloc_Model(QModel)
+  CALL Test_QVG_FOR_Model(Model,Q,test_var,option=0,nderiv=0)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
-  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '---------------------------------------------' 
+ 
 
+  deallocate(Q)
+  CALL dealloc_Model(Model)
 
 
   CALL Finalize_Test(test_var)
 
-END PROGRAM TEST_model
+END PROGRAM TEST_CHFClBr

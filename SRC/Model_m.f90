@@ -53,7 +53,7 @@ MODULE Model_m
   PUBLIC :: Check_analytical_numerical_derivatives
   PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model,get_d0GGdef_Model,Qact_TO_Q
   PUBLIC :: Set_step_epsi_Model
-  PUBLIC :: Write_QdnV_FOR_Model,Test_QdnV_FOR_Model
+  PUBLIC :: Write_QdnV_FOR_Model,Test_QdnV_FOR_Model,Test_QVG_FOR_Model
 
   TYPE :: QML_t
     CLASS (QML_Empty_t),  allocatable :: QM
@@ -326,6 +326,7 @@ CONTAINS
   USE QML_HNNHp_m
   USE QML_H2SiN_m
   USE QML_H2NSi_m
+  USE QML_CHFClBr_m
 
   USE QML_H2O_m
   USE QML_H2_H2On_m
@@ -363,7 +364,6 @@ CONTAINS
   USE AdiaChannels_Basis_m
 
   USE QML_OneD_Photons_m
-  USE QML_OneD_Photons2_m
   USE QML_OneD_Photons2_m
   IMPLICIT NONE
 
@@ -997,6 +997,18 @@ CONTAINS
       !! === END README ==
       allocate(QML_ClH2p_Botschwina_t :: QModel%QM)
       QModel%QM = Init_QML_ClH2p_Botschwina(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('chfclbr')
+      !! === README ==
+      !! CHFClBr QFF potential:
+      !! pot_name  = 'CHFClBr'
+      !! option    = no option (yet)
+      !! ndim      = 9
+      !! nsurf     = 1
+      !! refs: unpublished
+      !! === END README ==
+      allocate(QML_CHFClBr_t :: QModel%QM)
+      QModel%QM = Init_QML_CHFClBr(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('template')
       !! 3D-potential with 1 surface
@@ -3317,7 +3329,72 @@ CONTAINS
     END IF
 
   END SUBROUTINE Check_analytical_numerical_derivatives
+  SUBROUTINE Test_QVG_FOR_Model(Model,Q,test_var,nderiv,option)
+    USE QDUtil_m, ONLY : file_open2, TO_string, Write_Mat
+    USE QDUtil_Test_m
+    USE QMLLib_UtilLib_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
 
+    TYPE (Model_t),    intent(inout)           :: Model
+    real (kind=Rkind), intent(in)              :: Q(:)
+    TYPE (test_t),     intent(inout)           :: test_var
+    integer,           intent(in)              :: nderiv,option
+
+
+    real (kind=Rkind), allocatable :: Qref(:)
+    real (kind=Rkind), allocatable :: G(:,:),Gref(:,:) ! metric tensor
+    integer                        :: ndim,nsurf,i,err
+    logical                        :: Lerr
+    TYPE (dnMat_t)                 :: PotVal
+    TYPE (dnMat_t)                 :: PotValref
+    TYPE (dnMat_t)                 :: dnErr
+
+    character(len=:), allocatable  :: fmt
+
+
+    Lerr = check_Init_QModel(Model)
+    IF (.NOT. Lerr) THEN
+      write(out_unit,*) 'The model in not initialized'
+      CALL Logical_Test(test_var,test1=Lerr,info='The model in not initialized')
+      RETURN
+    END IF
+
+
+    CALL Eval_Pot(Model,Q,PotVal,nderiv=nderiv)
+    fmt = '(a,' // TO_string(Model%ndim) // 'f12.6)'
+    write(out_unit,fmt) 'Q',Q(:)
+    write(out_unit,*) 'Energy'
+    CALL Write_dnMat(PotVal,nio=out_unit)
+    flush(out_unit)
+
+    ! For testing the model
+    allocate(Qref(Model%ndim))
+    allocate(Gref(Model%ndim,Model%ndim))
+    CALL Model%QM%RefValues_QModel(err,nderiv=nderiv,Q0=Qref,d0GGdef=Gref,dnMatV=PotValref,option=option)
+
+    write(out_unit,*) 'Reference Energy' ; flush(out_unit)
+    CALL Write_dnMat(PotValref,nio=out_unit)
+    flush(out_unit)
+    dnErr = PotValref-PotVal
+    Lerr  = Check_dnMat_IS_ZERO(dnErr)
+
+    CALL Logical_Test(test_var,test1=Lerr,info='dnMatV')
+    IF (.NOT. Lerr) CALL Write_dnMat(dnErr,nio=out_unit,info='dnErr')
+
+    Lerr = all(abs(Q-Qref) < epsi)
+    CALL Logical_Test(test_var,test1=Lerr,info='Q(:)')
+    IF (.NOT. Lerr) Write(out_unit,*) 'Q-Qref',Q-Qref
+
+    G = get_d0GGdef_Model(Model=Model)
+    Lerr = all(abs(G-Gref) < epsi)
+    CALL Logical_Test(test_var,test1=Lerr,info='G (metrix tensor)')
+    IF (.NOT. Lerr) Write(out_unit,*) 'G-Gref',G-Gref
+
+    deallocate(Qref)
+    deallocate(Gref)
+
+  END SUBROUTINE Test_QVG_FOR_Model
   SUBROUTINE Eval_pot_ON_Grid(Model,Qmin,Qmax,nb_points,nderiv,grid_file)
     USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
     IMPLICIT NONE

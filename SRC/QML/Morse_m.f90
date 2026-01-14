@@ -69,9 +69,9 @@ MODULE QML_Morse_m
      real (kind=Rkind) :: req = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
      real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
   CONTAINS
-    PROCEDURE :: EvalPot_QModel      => EvalPot_QML_Morse
-    PROCEDURE :: Write_QModel        => Write_QML_Morse
-    PROCEDURE :: Ref_FOR_Test_QModel => Ref_FOR_Test_QML_Morse
+    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_Morse
+    PROCEDURE :: Write_QModel     => Write_QML_Morse
+    PROCEDURE :: RefValues_QModel => RefValues_QML_Morse
   END TYPE QML_Morse_t
 
   PUBLIC :: QML_Morse_t,Init_QML_Morse,Init0_QML_Morse,Write_QML_Morse,QML_dnMorse,QML_dnbeta
@@ -377,26 +377,25 @@ CONTAINS
 
   END FUNCTION QML_dnbeta
 
-  SUBROUTINE Ref_FOR_Test_QML_Morse(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+  SUBROUTINE RefValues_QML_Morse(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
     USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE
 
-    CLASS(QML_Morse_t),intent(in)              :: QModel
-
+    CLASS(QML_Morse_t), intent(in)             :: QModel
     integer,           intent(inout)           :: err
-
     integer,           intent(in)              :: nderiv
+
     real (kind=Rkind), intent(inout), optional :: Q0(:)
     TYPE (dnMat_t),    intent(inout), optional :: dnMatV
-
     real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+    integer,           intent(in),    optional :: option
 
     real (kind=Rkind), allocatable :: Mat(:,:)
     integer        :: i
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Ref_FOR_Test_QML_Morse'
+    character (len=*), parameter :: name_sub='RefValues_QML_Morse'
     !logical, parameter :: debug = .FALSE.
     logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -463,5 +462,5 @@ CONTAINS
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Ref_FOR_Test_QML_Morse
+  END SUBROUTINE RefValues_QML_Morse
 END MODULE QML_Morse_m

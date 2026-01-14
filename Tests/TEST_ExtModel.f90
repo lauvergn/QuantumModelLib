@@ -71,7 +71,7 @@ PROGRAM TEST_model
   nderiv=2
 
   allocate(q(QModel%QM%ndim))
-  CALL QModel%QM%Ref_FOR_Test_QModel(err,Q0=Q,nderiv=nderiv)
+  CALL QModel%QM%RefValues_QModel(err,Q0=Q,nderiv=nderiv)
 
   CALL Logical_Test(test_var,test1=(err == 0),info='Q0 initialization')
 
@@ -97,7 +97,7 @@ PROGRAM TEST_model
   write(out_unit,*) 'Energy (Hartree)'
   CALL Write_dnMat(PotVal,nio=out_unit)
 
-  CALL QModel%QM%Ref_FOR_Test_QModel(err,dnMatV=PotValref,nderiv=nderiv)
+  CALL QModel%QM%RefValues_QModel(err,dnMatV=PotValref,nderiv=nderiv)
   dnErr = PotValref-PotVal
   Lerr  = Check_dnMat_IS_ZERO(dnErr)
   

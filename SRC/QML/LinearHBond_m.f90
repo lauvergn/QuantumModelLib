@@ -74,8 +74,9 @@ MODULE QML_LinearHBond_m
      real (kind=Rkind)   :: Dp     = 0.1_Rkind     ! scaling for the exp for large ROO=QQ
 
    CONTAINS
-    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_LinearHBond
-    PROCEDURE :: Write_QModel    => Write_QML_LinearHBond
+    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_LinearHBond
+    PROCEDURE :: Write_QModel     => Write_QML_LinearHBond
+    PROCEDURE :: RefValues_QModel => RefValues_QML_LinearHBond
   END TYPE QML_LinearHBond_t
 
   PUBLIC :: QML_LinearHBond_t,Init_QML_LinearHBond
@@ -486,4 +487,249 @@ MODULE QML_LinearHBond_m
 
   END SUBROUTINE EvalPot_QML_LinearHBond
 
+
+
+  SUBROUTINE RefValues_QML_LinearHBond(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_LinearHBond_t), intent(in)              :: QModel
+    integer,                  intent(inout)           :: err
+    integer,                  intent(in)              :: nderiv
+      
+    real (kind=Rkind),        intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),           intent(inout), optional :: dnMatV
+    real (kind=Rkind),        intent(inout), optional :: d0GGdef(:,:)
+    integer,                  intent(in),    optional :: option
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='RefValues_QML_LinearHBond'
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
+    !-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
+    END IF
+
+    IF (.NOT. QModel%Init) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'The model is not initialized!'
+      err = -1
+      RETURN
+    ELSE
+      err = 0
+    END IF
+
+    SELECT CASE (option)
+    CASE (1)
+      IF (present(Q0))      CALL RefValues_QML_LinearHBond1(QModel,err,nderiv=nderiv,Q0=Q0)
+      IF (present(dnMatV))  CALL RefValues_QML_LinearHBond1(QModel,err,nderiv=nderiv,dnMatV=dnMatV)
+      IF (present(d0GGdef)) CALL RefValues_QML_LinearHBond1(QModel,err,nderiv=nderiv,d0GGdef=d0GGdef)
+    CASE (2)
+      IF (present(Q0))      CALL RefValues_QML_LinearHBond2(QModel,err,nderiv=nderiv,Q0=Q0)
+      IF (present(dnMatV))  CALL RefValues_QML_LinearHBond2(QModel,err,nderiv=nderiv,dnMatV=dnMatV)
+      IF (present(d0GGdef)) CALL RefValues_QML_LinearHBond2(QModel,err,nderiv=nderiv,d0GGdef=d0GGdef)
+    CASE Default
+      STOP 'ERROR in RefValues_QML_LinearHBond1: wrong option. Possible values: 1,2'
+    END SELECT
+
+
+    IF (debug) THEN
+      write(out_unit,*) 'present Q0 dnMatV d0GGdef',present(Q0),present(dnMatV),present(d0GGdef)
+      IF (present(Q0))      write(out_unit,*) 'Q0',Q0
+      IF (present(dnMatV))  THEN
+        write(out_unit,*) 'dnMatV is present'
+        write(out_unit,*) 'dnMatV is allocated',(.NOT. Check_NotAlloc_dnMat(dnMatV,nderiv))
+        CALL write_dnMat(dnMatV,info='dnMatV')
+      END IF
+      IF (present(d0GGdef)) write(out_unit,*) 'd0GGdef',d0GGdef
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE RefValues_QML_LinearHBond
+ SUBROUTINE RefValues_QML_LinearHBond1(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_LinearHBond_t), intent(in)              :: QModel
+
+    integer,           intent(inout)           :: err
+
+    integer,           intent(in)              :: nderiv
+    real (kind=Rkind), intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),    intent(inout), optional :: dnMatV
+
+    real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+
+    real (kind=Rkind), allocatable :: d0(:,:),d1(:,:,:),d2(:,:,:,:),d3(:,:,:,:,:),V(:)
+    integer        :: i
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='RefValues_QML_LinearHBond1'
+    !logical, parameter :: debug = .FALSE.
+    logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      write(out_unit,*) ' nderiv ',nderiv
+      flush(out_unit)
+    END IF
+
+    IF (.NOT. QModel%Init) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'The model is not initialized!'
+      err = -1
+      RETURN
+    ELSE
+      err = 0
+    END IF
+
+    IF (present(Q0)) THEN
+      IF (size(Q0) /= QModel%ndim) THEN
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'incompatible Q0 size:'
+        write(out_unit,*) 'size(Q0), ndimQ:',size(Q0),QModel%ndim
+        err = 1
+        Q0(:) = HUGE(ONE)
+        RETURN
+      END IF
+      Q0(:) = [2.7500000000000000_Rkind,0.0000000000000000_Rkind]
+    END IF
+
+    IF (present(dnMatV)) THEN
+      err = 0
+
+      IF (nderiv >= 0) THEN ! no derivative
+        V  = [-21.433837686691117_Rkind]
+        d0 = reshape(V,shape=[QModel%nsurf,QModel%nsurf])
+      END IF
+
+      IF (nderiv >= 1) THEN ! 1st order derivatives
+        V  = [58.250584715392705_Rkind, 0.0000000000000000_Rkind]
+        d1 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim])
+      END IF
+
+      IF (nderiv >= 2) THEN ! 2d order derivatives
+        V  = [60.433690177387675_Rkind,0.0000000000000000_Rkind,0.0000000000000000_Rkind,-164.33739380737944_Rkind]
+        d2 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim,QModel%ndim])
+      END IF
+      SELECT CASE (nderiv)
+      CASE(0)
+        CALL set_dnMat(dnMatV,d0=d0)
+      CASE(1)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1)
+      CASE(2)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1,d2=d2)
+      CASE Default
+        STOP 'ERROR in RefValues_QML_LinearHBond1: nderiv MUST < 3'
+      END SELECT
+
+    END IF
+
+    IF (present(d0GGdef)) THEN 
+      V  = [6.8594288780646898E-005_Rkind,0.0000000000000000_Rkind,0.0000000000000000_Rkind,5.4432058324569181E-004_Rkind]
+      d0GGdef = reshape(V,shape=[QModel%ndim,QModel%ndim])
+    END IF
+
+
+    IF (debug) THEN
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE RefValues_QML_LinearHBond1
+  SUBROUTINE RefValues_QML_LinearHBond2(QModel,err,Q0,dnMatV,d0GGdef,nderiv)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_LinearHBond_t), intent(in)              :: QModel
+
+    integer,           intent(inout)           :: err
+
+    integer,           intent(in)              :: nderiv
+    real (kind=Rkind), intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),    intent(inout), optional :: dnMatV
+
+    real (kind=Rkind), intent(inout), optional :: d0GGdef(:,:)
+
+    real (kind=Rkind), allocatable :: d0(:,:),d1(:,:,:),d2(:,:,:,:),d3(:,:,:,:,:),V(:)
+    integer        :: i
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='RefValues_QML_LinearHBond2'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
+    END IF
+
+    IF (.NOT. QModel%Init) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'The model is not initialized!'
+      err = -1
+      RETURN
+    ELSE
+      err = 0
+    END IF
+
+    IF (present(Q0)) THEN
+      IF (size(Q0) /= QModel%ndim) THEN
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'incompatible Q0 size:'
+        write(out_unit,*) 'size(Q0), ndimQ:',size(Q0),QModel%ndim
+        err = 1
+        Q0(:) = HUGE(ONE)
+        RETURN
+      END IF
+      Q0(:) = [3.0000000000000000_Rkind,0.0000000000000000_Rkind]
+    END IF
+
+    IF (present(dnMatV)) THEN
+      err = 0
+
+      IF (nderiv >= 0) THEN ! no derivative
+        V  = [12.461087065870526_Rkind]
+        d0 = reshape(V,shape=[QModel%nsurf,QModel%nsurf])
+      END IF
+
+      IF (nderiv >= 1) THEN ! 1st order derivatives
+        V  = [47.155990380263013_Rkind,30.846575531655297_Rkind]
+        d1 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim])
+      END IF
+
+      IF (nderiv >= 2) THEN ! 2d order derivatives
+        V  = [-9.8134908068753361_Rkind,-9.0867034873823300_Rkind,-9.0867034873823300_Rkind,-172.33857651280221_Rkind]
+        d2 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim,QModel%ndim])
+      END IF
+      SELECT CASE (nderiv)
+      CASE(0)
+        CALL set_dnMat(dnMatV,d0=d0)
+      CASE(1)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1)
+      CASE(2)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1,d2=d2)
+      CASE Default
+        STOP 'ERROR in RefValues_QML_LinearHBond2: nderiv MUST < 3'
+      END SELECT
+
+    END IF
+
+    IF (present(d0GGdef)) THEN 
+      V  = [6.8594288780646898E-005_Rkind,0.0000000000000000_Rkind,0.0000000000000000_Rkind,5.4432058324569181E-004_Rkind]
+      d0GGdef = reshape(V,shape=[QModel%ndim,QModel%ndim])
+    END IF
+
+    IF (debug) THEN
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE RefValues_QML_LinearHBond2
 END MODULE QML_LinearHBond_m
