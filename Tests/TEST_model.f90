@@ -466,8 +466,6 @@ SUBROUTINE test_Poly1D
   TYPE (Model_t)                 :: QModel
   real (kind=Rkind), allocatable :: Q(:)
   integer                        :: nderiv
-  TYPE (dnMat_t)                 :: PotVal
-
 
   nderiv = 2
   write(out_unit,*) '---------------------------------------------'
@@ -497,20 +495,12 @@ SUBROUTINE test_Poly1D
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) ' Potential and derivatives'
 
-  CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
-  write(out_unit,'(a,f12.6)') 'R (Bohr)',Q(:)
-  write(out_unit,*) 'Energy (Hartree)'
-  CALL Write_dnMat(PotVal,nio=out_unit)
-
-  ! For testing the model
-  CALL Test_QdnV_FOR_Model(Q,PotVal,QModel,info='Poly1D_HF',test_var=test_var,last_test=.TRUE.)
-
+  CALL Test_QVG_FOR_Model(QModel,Q,test_var,nderiv,option=0)
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
 
-  CALL dealloc_dnMat(PotVal)
   deallocate(Q)
   CALL dealloc_Model(QModel)
 

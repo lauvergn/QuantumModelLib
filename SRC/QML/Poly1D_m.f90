@@ -70,8 +70,9 @@ MODULE QML_Poly1D_m
      real (kind=Rkind) :: req = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
      real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
   CONTAINS
-    PROCEDURE :: EvalPot_QModel  => EvalPot_QML_Poly1D
-    PROCEDURE :: Write_QModel    => Write_QML_Poly1D
+    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_Poly1D
+    PROCEDURE :: Write_QModel     => Write_QML_Poly1D
+    PROCEDURE :: RefValues_QModel => RefValues_QML_Poly1D
   END TYPE QML_Poly1D_t
 
   PUBLIC :: QML_Poly1D_t,Init_QML_Poly1D,Write_QML_Poly1D
@@ -302,4 +303,95 @@ CONTAINS
     END IF
   END SUBROUTINE EvalPot_QML_Poly1D
 
+
+
+   SUBROUTINE RefValues_QML_Poly1D(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    CLASS(QML_Poly1D_t), intent(in)              :: QModel
+    integer,              intent(inout)           :: err
+    integer,              intent(in)              :: nderiv
+    real (kind=Rkind),    intent(inout), optional :: Q0(:)
+    TYPE (dnMat_t),       intent(inout), optional :: dnMatV
+    real (kind=Rkind),    intent(inout), optional :: d0GGdef(:,:)
+    integer,              intent(in),    optional :: option
+
+    real (kind=Rkind), allocatable :: d0(:,:),d1(:,:,:),d2(:,:,:,:),d3(:,:,:,:,:),V(:)
+    real (kind=Rkind), allocatable :: masses(:)
+    integer        :: i
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='RefValues_QML_Poly1D'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
+    END IF
+
+    IF (.NOT. QModel%Init) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'The model is not initialized!'
+      err = -1
+      RETURN
+    ELSE
+      err = 0
+    END IF
+
+    IF (present(Q0)) THEN
+      IF (size(Q0) /= QModel%ndim) THEN
+        write(out_unit,*) 'ERROR in ',name_sub
+        write(out_unit,*) 'incompatible Q0 size:'
+        write(out_unit,*) 'size(Q0), ndimQ:',size(Q0),QModel%ndim
+        err = 1
+        Q0(:) = HUGE(ONE)
+        RETURN
+      END IF
+      Q0(:) = [1.7329000000000001_Rkind]
+    END IF
+
+    IF (present(dnMatV)) THEN
+      err = 0
+
+      IF (nderiv >= 0) THEN ! no derivative
+        V  = [0.000000000000000_Rkind]
+        d0 = reshape(V,shape=[QModel%nsurf,QModel%nsurf])
+      END IF
+ 
+      IF (nderiv >= 1) THEN ! 1st order derivatives
+        V  = [0.000000000000000_Rkind]
+        d1 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim])
+      END IF
+
+      IF (nderiv >= 2) THEN ! 2d order derivatives
+        V  = [0.62032986449999994_Rkind]
+        d2 = reshape(V,shape=[QModel%nsurf,QModel%nsurf,QModel%ndim,QModel%ndim])
+      END IF
+      SELECT CASE (nderiv)
+      CASE(0)
+        CALL set_dnMat(dnMatV,d0=d0)
+      CASE(1)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1)
+      CASE(2)
+        CALL set_dnMat(dnMatV,d0=d0,d1=d1,d2=d2)
+      CASE Default
+        STOP 'ERROR in RefValues_QML_Poly1D: nderiv MUST < 3'
+      END SELECT
+
+    END IF
+
+    IF (present(d0GGdef)) THEN 
+      d0GGdef = 5.7319563673905317E-004_Rkind * Identity_Mat(QModel%ndim)
+    END IF
+
+
+    IF (debug) THEN
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+
+  END SUBROUTINE RefValues_QML_Poly1D
 END MODULE QML_Poly1D_m

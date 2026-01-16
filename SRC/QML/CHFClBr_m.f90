@@ -610,7 +610,7 @@ CONTAINS
       err = 0
 
       IF (nderiv >= 0) THEN ! no derivative
-        V  = [3.2766587723962216E-003]
+        V  = [3.2766587723962216E-003_Rkind]
         d0 = reshape(V,shape=[QModel%nsurf,QModel%nsurf])
       END IF
 
