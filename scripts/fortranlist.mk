@@ -52,5 +52,6 @@ MakeHinact_m.f90  \
 Basis_m.f90  \
 Model_driver.f90  \
 Model_m.f90  \
+QMLValues_m.f90  \
 IRC_m.f90  \
 Opt_m.f90  \

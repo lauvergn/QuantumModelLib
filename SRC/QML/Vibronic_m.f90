@@ -313,7 +313,7 @@ MODULE QML_Vibronic_m
     kappa(1:2, 2) = [1.06541e-03_Rkind, 1.08185e-02_Rkind]
     kappa(1:2, 3) = [-7.92795e-03_Rkind, 1.63364e-02_Rkind]
     kappa(1:2, 4) = [-4.80026e-03_Rkind, 1.70393e-02_Rkind]
-    ! the 3 singlet contributions (3 components)
+    ! the 3 triplet contributions (3 components)
     kappa(1:2, 5) = [ 2.60893e-03_Rkind, 6.95032e-03_Rkind]
     kappa(1:2, 6) = [ 2.60893e-03_Rkind, 6.95032e-03_Rkind]
     kappa(1:2, 7) = [ 2.60893e-03_Rkind, 6.95032e-03_Rkind]
