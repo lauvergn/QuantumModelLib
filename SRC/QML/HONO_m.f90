@@ -1004,7 +1004,8 @@ Vtemp = Vtemp - &
         Q0(:) = HUGE(ONE)
         RETURN
       END IF
-      Q0(:) = [2.696732586_Rkind, 1.822912197_Rkind, 1.777642018_Rkind, 2.213326419_Rkind, 1.9315017_Rkind, 3.1415926535897931_Rkind]
+      Q0(:) = [2.696732586_Rkind, 1.822912197_Rkind, 1.777642018_Rkind, &
+               2.213326419_Rkind, 1.9315017_Rkind, 3.1415926535897931_Rkind]
     END IF
 
     IF (present(dnMatV)) THEN
