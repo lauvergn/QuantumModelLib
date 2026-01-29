@@ -57,7 +57,8 @@ opt_m := $(OBJ_DIR)/Opt_m.o
 #file+mod_name: SRC/QMLLib/FiniteDiff_m.f90 qmllib_finitediff_m
 $(OBJ_DIR)/FiniteDiff_m.o : \
           $(qdutil_numparameters_m) \
-          $(addnsvm_m)
+          $(addnsvm_m) \
+          $(qmlvalues_m)
 #file+mod_name: SRC/QMLLib/UtilLib_m.f90 qmllib_utillib_m
 $(OBJ_DIR)/UtilLib_m.o : \
           $(qdutil_numparameters_m) \
@@ -428,7 +429,8 @@ $(OBJ_DIR)/Model_m.o : \
 #file+mod_name: SRC/QMLValues_m.f90 qmlvalues_m
 $(OBJ_DIR)/QMLValues_m.o : \
           $(qdutil_numparameters_m) \
-          $(addnsvm_m)
+          $(addnsvm_m) \
+          $(qdutil_m)
 #file+mod_name: SRC/Opt/IRC_m.f90 irc_m
 $(OBJ_DIR)/IRC_m.o : \
           $(qdutil_numparameters_m) \

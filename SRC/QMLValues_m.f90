@@ -43,11 +43,15 @@ MODULE QMLValues_m
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: QMLValues_t, dealloc_QMLValues, Write_QMLValues
+  PUBLIC :: QMLValues_t, alloc_QMLValues, dealloc_QMLValues, Write_QMLValues
+  PUBLIC :: WxQMLValuesd0_ADDTO_QMLValues2_ider
 
   TYPE :: QMLValues_t
+    logical                        :: alloc     = .FALSE.
     logical                        :: adiabatic = .FALSE.
     integer                        :: nderiv    = -1
+    integer                        :: ndim      = -1
+    integer                        :: nsurf     = -1
 
     real (kind=Rkind), allocatable :: Q(:)
 
@@ -64,13 +68,61 @@ MODULE QMLValues_m
 
 CONTAINS
 
+  SUBROUTINE alloc_QMLValues(QMLValues,adiabatic,cplx,ndim,nsurf,nderiv)
+    USE QDUtil_m
+    IMPLICIT NONE
+
+    TYPE(QMLValues_t),      intent(inout)           :: QMLValues
+    logical,                intent(in)              :: adiabatic,cplx
+    integer,                intent(in)              :: ndim,nsurf,nderiv
+
+    CALL dealloc_QMLValues(QMLValues)
+
+    QMLValues%nderiv       = nderiv
+    QMLValues%nsurf        = nsurf
+    QMLValues%ndim         = ndim
+
+    QMLValues%adiabatic    = adiabatic
+
+    allocate(QMLValues%Q(ndim))
+
+    CALL alloc_dnMat(QMLValues%PotDia,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
+    QMLValues%PotDia = ZERO
+
+    IF (cplx) THEN 
+      CALL alloc_dnMat(QMLValues%ImagPotDia,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
+      QMLValues%ImagPotDia = ZERO
+    END IF
+
+    IF (adiabatic) THEN
+      CALL alloc_dnMat(QMLValues%PotAdia,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
+      QMLValues%PotAdia = ZERO
+      IF (cplx) THEN 
+        CALL alloc_dnMat(QMLValues%ImagPotAdia,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
+        QMLValues%ImagPotAdia = ZERO
+      END IF
+      CALL alloc_dnMat(QMLValues%Vec,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
+      CALL alloc_dnMat(QMLValues%NAC,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
+      CALL alloc_dnMat(QMLValues%Vec0,nsurf=nsurf,nVar=ndim,nderiv=0)
+
+      QMLValues%Vec  = ZERO
+      QMLValues%Vec0 = ZERO
+      QMLValues%NAC  = ZERO
+    END IF
+
+    QMLValues%alloc    = .TRUE.
+
+  END SUBROUTINE alloc_QMLValues
   SUBROUTINE dealloc_QMLValues(QMLValues)
     IMPLICIT NONE
 
     TYPE(QMLValues_t),      intent(inout)           :: QMLValues
 
+    QMLValues%alloc        = .FALSE.
     IF (allocated(QMLValues%Q)) deallocate(QMLValues%Q)
     QMLValues%nderiv       = -1
+    QMLValues%nsurf        = -1
+    QMLValues%ndim         = -1
     QMLValues%adiabatic    = .FALSE.
 
     CALL dealloc_dnMat(QMLValues%PotAdia)
@@ -100,8 +152,10 @@ CONTAINS
 
     write(nio_loc,*) '-----------------------------------------------'
     write(nio_loc,*) 'QML Values'
-
+    write(nio_loc,*) 'alloc    : ',QMLValues%alloc
     write(nio_loc,*) 'nderiv   : ',QMLValues%nderiv
+    write(nio_loc,*) 'ndim     : ',QMLValues%ndim
+    write(nio_loc,*) 'nsurf    : ',QMLValues%nsurf
     write(nio_loc,*) 'adiabatic: ',QMLValues%adiabatic
 
     IF (allocated(QMLValues%Q)) THEN
@@ -109,7 +163,15 @@ CONTAINS
     ELSE
       write(nio_loc,*) 'Q (coordinates): not defined!'
     END IF
-    
+
+    !write(nio_loc,*) 'PotAdia:    ',get_Flatten(QMLValues%PotAdia)
+    !write(nio_loc,*) 'ImagPotAdia:',get_Flatten(QMLValues%ImagPotAdia)
+    !write(nio_loc,*) 'PotDia:     ',get_Flatten(QMLValues%PotDia)
+    !write(nio_loc,*) 'ImagPotDia: ',get_Flatten(QMLValues%ImagPotDia)
+    !write(nio_loc,*) 'Vec:        ',get_Flatten(QMLValues%Vec)
+    !write(nio_loc,*) 'Vec0:       ',get_Flatten(QMLValues%Vec0)
+    !write(nio_loc,*) 'NAC:        ',get_Flatten(QMLValues%NAC)
+
     CALL Write_dnMat(QMLValues%PotAdia,     nio_loc,info='PotAdia')
     CALL Write_dnMat(QMLValues%ImagPotAdia, nio_loc,info='ImagPotAdia')
     CALL Write_dnMat(QMLValues%PotDia,      nio_loc,info='PotDia')
@@ -123,5 +185,47 @@ CONTAINS
     flush(nio_loc)
 
   END SUBROUTINE Write_QMLValues
+
+  SUBROUTINE WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValues,W,QMLValues2,ider)
+    USE QDUtil_m
+    USE ADdnSVM_m
+    IMPLICIT NONE
+
+    TYPE(QMLValues_t),  intent(in)            :: QMLValues
+    TYPE(QMLValues_t),  intent(inout)         :: QMLValues2
+    integer,            intent(in),  optional :: ider(:)
+    real (kind=Rkind),  intent(in)            :: W
+
+    character (len=*), parameter :: name_sub='WxQMLValuesd0_ADDTO_QMLValues2_ider'
+
+    IF (present(ider)) THEN
+      CALL Mat_wADDTO_dnMat2_ider(QMLValues%PotDia%d0,W,QMLValues2%PotDia,ider)
+
+      IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotDia,QMLValues%nderiv))  &
+        CALL Mat_wADDTO_dnMat2_ider(QMLValues%ImagPotDia%d0,W,QMLValues2%ImagPotDia,ider)
+      IF (.NOT. Check_NotAlloc_dnMat(QMLValues%PotAdia,QMLValues%nderiv))  &
+        CALL Mat_wADDTO_dnMat2_ider(QMLValues%PotAdia%d0,W,QMLValues2%PotAdia,ider)
+      IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotAdia,QMLValues%nderiv))  &
+        CALL Mat_wADDTO_dnMat2_ider(QMLValues%ImagPotAdia%d0,W,QMLValues2%ImagPotAdia,ider)
+      IF (.NOT. Check_NotAlloc_dnMat(QMLValues%Vec,QMLValues%nderiv))  &
+        CALL Mat_wADDTO_dnMat2_ider(QMLValues%Vec%d0,W,QMLValues2%Vec,ider)
+      !IF (.NOT. Check_NotAlloc_dnMat(QMLValues%NAC,QMLValues%nderiv))  &
+      !  CALL Mat_wADDTO_dnMat2_ider(QMLValues%NAC%d0,W,QMLValues2%Nac,ider)
+    ELSE
+      CALL Mat_wADDTO_dnMat2_ider(QMLValues%PotDia%d0,W,QMLValues2%PotDia)
+
+      IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotDia,QMLValues%nderiv))  &
+        CALL Mat_wADDTO_dnMat2_ider(QMLValues%ImagPotDia%d0,W,QMLValues2%ImagPotDia)
+      IF (.NOT. Check_NotAlloc_dnMat(QMLValues%PotAdia,QMLValues%nderiv))  &
+        CALL Mat_wADDTO_dnMat2_ider(QMLValues%PotAdia%d0,W,QMLValues2%PotAdia)
+      IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotAdia,QMLValues%nderiv))  &
+        CALL Mat_wADDTO_dnMat2_ider(QMLValues%ImagPotAdia%d0,W,QMLValues2%ImagPotAdia)
+      IF (.NOT. Check_NotAlloc_dnMat(QMLValues%Vec,QMLValues%nderiv))  &
+        CALL Mat_wADDTO_dnMat2_ider(QMLValues%Vec%d0,W,QMLValues2%Vec)
+      !IF (.NOT. Check_NotAlloc_dnMat(QMLValues%NAC,QMLValues%nderiv))  &
+      !  CALL Mat_wADDTO_dnMat2_ider(QMLValues%NAC%d0,W,QMLValues2%Nac)
+    END IF
+
+  END SUBROUTINE WxQMLValuesd0_ADDTO_QMLValues2_ider
 
 END MODULE QMLValues_m

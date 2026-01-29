@@ -154,7 +154,7 @@ MODULE QMLLib_FiniteDiff_m
     !--------------------------------------------------------------------------
 
   PUBLIC :: Get_nb_pts,Get_indDQ,Set_QplusDQ
-  PUBLIC :: FiniteDiff_AddMat_TO_dnMat, FiniteDiff3_SymPerm_OF_dnMat, FiniteDiff_Finalize_dnMat
+  PUBLIC :: FiniteDiff_AddMat, FiniteDiff3_SymPerm, FiniteDiff_Finalize
 
   INTERFACE Get_nb_pts
     MODULE PROCEDURE QML_Get_nb_pts
@@ -168,16 +168,16 @@ MODULE QMLLib_FiniteDiff_m
     MODULE PROCEDURE QML_Set_QplusDQ
   END INTERFACE
 
-  INTERFACE FiniteDiff_AddMat_TO_dnMat
+  INTERFACE FiniteDiff_AddMat
     MODULE PROCEDURE QML_FiniteDiff_AddMat_TO_dnMat
   END INTERFACE
 
-  INTERFACE FiniteDiff3_SymPerm_OF_dnMat
+  INTERFACE FiniteDiff3_SymPerm
     MODULE PROCEDURE QML_FiniteDiff3_SymPerm_OF_dnMat
   END INTERFACE
 
-  INTERFACE FiniteDiff_Finalize_dnMat
-    MODULE PROCEDURE QML_FiniteDiff_Finalize_dnMat
+  INTERFACE FiniteDiff_Finalize
+    MODULE PROCEDURE QML_FiniteDiff_Finalize_dnMat,QML_FiniteDiff_Finalize_QMLValues
   END INTERFACE
 
 CONTAINS
@@ -731,4 +731,292 @@ CONTAINS
 
   END SUBROUTINE QML_FiniteDiff_Finalize_dnMat
 
+  SUBROUTINE QML_FiniteDiff_AddMat_TO_QMLValues(QMLValues,QMLValuesd0,indQ,indDQ,option)
+    USE ADdnSVM_m
+    USE QMLValues_m
+    IMPLICIT NONE
+
+    TYPE (QMLValues_t), intent(inout)         :: QMLValues
+    TYPE (QMLValues_t), intent(in)            :: QMLValuesd0
+    integer,            intent(in),  optional :: indQ(:)  ! indexes of the variables along DQ is made
+    integer,            intent(in),  optional :: indDQ(:) ! amplitude of DQ
+    integer,            intent(in),  optional :: option   ! version 3 or 4 (default 3)
+
+    integer:: option_loc
+
+    IF (present(option)) THEN
+      option_loc = option
+      IF (option /= 3) THEN
+        write(out_unit,*) ' ERROR in QML_FiniteDiff_AddMat_TO_QMLValues'
+        write(out_unit,*) ' Inconsitent option value.'
+        write(out_unit,*) ' option',option
+        write(out_unit,*) ' Right now the only possibility is option=3'
+        STOP 'STOP in QML_FiniteDiff_AddMat_TO_QMLValues: Inconsitent option value.'
+      END IF
+    ELSE
+      option_loc = 3
+    END IF
+
+
+    IF ( option_loc == 3) THEN
+      IF (present(indQ) .AND. present(indDQ)) THEN
+
+        CALL QML_FiniteDiff3_AddMat_TO_QMLValues(QMLValues,QMLValuesd0,indQ,indDQ)
+
+      ELSE IF (.NOT. present(indQ) .AND. .NOT. present(indDQ)) THEN
+
+        CALL QML_FiniteDiff3_AddMat_TO_QMLValues(QMLValues,QMLValuesd0)
+
+      ELSE
+        write(out_unit,*) ' ERROR in QML_FiniteDiff_AddMat_TO_QMLValues'
+        write(out_unit,*) ' Inconsitent parameters.'
+        write(out_unit,*) ' Both indQ and indDQ MUST be present'
+        write(out_unit,*) '     or '
+        write(out_unit,*) ' Both indQ and indDQ MUST be absent'
+        write(out_unit,*) ' present(indQ) ',present(indQ)
+        write(out_unit,*) ' present(indDQ)',present(indDQ)
+        STOP 'STOP in QML_FiniteDiff_AddMat_TO_QMLValues: Inconsitent parameters.'
+      END IF
+    END IF
+
+  END SUBROUTINE QML_FiniteDiff_AddMat_TO_QMLValues
+
+  SUBROUTINE QML_FiniteDiff3_AddMat_TO_QMLValues(QMLValues,QMLValuesd0,indQ,indDQ)
+    USE ADdnSVM_m
+    USE QMLValues_m
+    IMPLICIT NONE
+
+    TYPE (QMLValues_t), intent(inout)         :: QMLValues
+    TYPE (QMLValues_t), intent(in)            :: QMLValuesd0
+    integer,            intent(in),  optional :: indQ(:)  ! indexes of the variables along DQ is made
+    integer,            intent(in),  optional :: indDQ(:) ! amplitude of DQ
+
+    ! local variable
+    integer                            :: size_indQ,ndim,nderiv
+    integer                            :: i,j,k,ip,jp,kp
+
+    nderiv = QMLValues%nderiv
+    ndim   = QMLValues%ndim
+
+
+    IF (nderiv < 0) THEN
+      write(out_unit,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_QMLValues'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' nderiv < 0',nderiv
+      write(out_unit,*) '  => dnMat is not allocated'
+      STOP 'STOP in QML_FiniteDiff3_AddMat_TO_QMLValues: Inconsitent parameters.'
+    END IF
+
+    IF (present(indQ) .AND. present(indDQ)) THEN
+      IF (size(indQ) /= size(indDQ) .OR. minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
+        write(out_unit,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_QMLValues'
+        write(out_unit,*) ' Inconsitent parameters.'
+        write(out_unit,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
+        write(out_unit,*) ' ndim',ndim
+        write(out_unit,*) ' indQ(:)',indQ
+        write(out_unit,*) ' indDQ(:)',indDQ
+        STOP 'STOP in QML_FiniteDiff3_AddMat_TO_QMLValues: Inconsitent parameters.'
+      END IF
+
+    ELSE IF ( (.NOT. present(indQ) .AND.       present(indDQ)) .OR.     &
+              (      present(indQ) .AND. .NOT. present(indDQ)) ) THEN
+        write(out_unit,*) ' ERROR in QML_FiniteDiff3_AddMat_TO_QMLValues'
+        write(out_unit,*) ' Inconsitent parameters.'
+        write(out_unit,*) ' Both indQ and indDQ MUST be present'
+        write(out_unit,*) '     or '
+        write(out_unit,*) ' Both indQ and indDQ MUST be absent'
+        write(out_unit,*) ' present(indQ) ',present(indQ)
+        write(out_unit,*) ' present(indDQ)',present(indDQ)
+        STOP 'STOP in QML_FiniteDiff3_AddMat_TO_QMLValues: Inconsitent parameters.'
+    END IF
+
+    IF (present(indQ)) THEN
+      size_indQ = size(indQ)
+    ELSE
+      size_indQ = 0
+    END IF
+
+    SELECT CASE (size_indQ)
+    CASE (0)
+      CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,ONE,QMLValues)
+
+      IF (nderiv >= 2) THEN
+        DO i=1,ndim
+          CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,wDD(0),QMLValues,ider=[i,i])
+        END DO
+      END IF
+
+    CASE (1)
+      i  = indQ(1)
+      ip = indDQ(1)
+
+      CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,wD(ip),QMLValues,ider=[i])
+
+      IF (nderiv >= 2) THEN
+        CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,wDD(ip),QMLValues,ider=[i,i])
+      END IF
+
+      IF (nderiv >= 3) THEN
+        ! d3/dQidQidQi
+        CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,wDDD(ip),QMLValues,ider=[i,i,i])
+
+        ! d3/dQjdQjdQi
+        DO j=1,ndim
+          IF (i == j) CYCLE
+          CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w0aDDD(ip),QMLValues,ider=[j,j,i])
+        END DO
+      END IF
+
+      ! d3/dQkdQjdQi
+      IF (nderiv >= 3 .AND. ndim > 2 .AND. abs(ip) == 1) THEN
+
+        DO j=1,ndim
+        DO k=1,ndim
+          IF (k > j .AND. j > i)  THEN
+            CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w100DDD(ip),QMLValues,ider=[k,j,i])
+          END IF
+          !permutation between i and j (order: k,i,j)
+          IF (k > i .AND. i > j)  THEN
+            CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w100DDD(ip),QMLValues,ider=[k,i,j])
+          END IF
+          !permutation between i and k (order: i,k,j)
+          IF (i > k .AND. k > j)  THEN
+            CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w100DDD(ip),QMLValues,ider=[i,k,j])
+          END IF
+        END DO
+        END DO
+      END IF
+
+    CASE (2)
+
+      i  = indQ(1)
+      j  = indQ(2)
+      ip = indDQ(1)
+      jp = indDQ(2)
+
+      IF (abs(ip) == 1 .AND. abs(jp) == 1) THEN
+        ! d2/dQidQj
+        CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w11DD(jp,ip),QMLValues,ider=[j,i])
+
+        IF (nderiv >= 3) THEN
+          ! d3/dQidQidQj
+          CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w11DDD(ip,jp),QMLValues,ider=[i,i,j])
+          ! d3/dQjdQjdQi
+          CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w11DDD(jp,ip),QMLValues,ider=[j,j,i])
+
+          ! d3/dQidQjdQk
+          DO k=1,ndim
+            !IF (k == i .OR. k == j) CYCLE
+            IF (k > j .AND. j > i) THEN ! remark: in this version, j>i always
+              CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w110DDD(ip,jp),QMLValues,ider=[k,j,i])
+            END IF
+            IF (j > k .AND. k > i) THEN
+              CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w110DDD(ip,jp),QMLValues,ider=[j,k,i])
+            END IF
+            IF (j > i .AND. i > k) THEN
+              CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w110DDD(ip,jp),QMLValues,ider=[j,i,k])
+            END IF
+          END DO
+        END IF
+
+      ELSE IF (abs(ip) == 2 .AND. abs(jp) == 2) THEN
+
+        ! d2/dQidQj
+        CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w22DD(jp/2,ip/2),QMLValues,ider=[j,i])
+
+        IF (nderiv >= 3) THEN
+          ! d3/dQidQidQj
+          CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w22DDD(ip/2,jp/2),QMLValues,ider=[i,i,j])
+          ! d3/dQjdQjdQi
+          CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w22DDD(jp/2,ip/2),QMLValues,ider=[j,j,i])
+        END IF
+      END IF
+
+    CASE (3)
+
+      i  = indQ(1)
+      j  = indQ(2)
+      k  = indQ(3)
+
+      ip = indDQ(1)
+      jp = indDQ(2)
+      kp = indDQ(3)
+
+      CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValuesd0,w111DDD(kp,jp,ip),QMLValues,ider=[k,j,i])
+
+    CASE Default
+    END SELECT
+
+  END SUBROUTINE QML_FiniteDiff3_AddMat_TO_QMLValues
+
+  SUBROUTINE QML_FiniteDiff3_SymPerm_OF_QMLValues(QMLValues,indQ)
+    USE ADdnSVM_m
+    USE QMLValues_m
+    IMPLICIT NONE
+
+    TYPE (QMLValues_t), intent(inout)   :: QMLValues
+    integer,            intent(in)      :: indQ(:)  ! indexes of the variables along DQ is made
+
+    ! local variables
+    integer                            :: ndim
+
+
+    IF (QMLValues%nderiv < 0) THEN
+      write(out_unit,*) ' ERROR in QML_FiniteDiff3_SymPerm_OF_QMLValues'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' nderiv < 0',QMLValues%nderiv
+      write(out_unit,*) '  => dnMat is not allocated'
+      STOP 'STOP in QML_FiniteDiff3_SymPerm_OF_QMLValues: Inconsitent parameters.'
+    END IF
+
+    ndim   = QMLValues%ndim
+
+    IF (minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
+      write(out_unit,*) ' ERROR in QML_FiniteDiff3_SymPerm_OF_QMLValues'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' ndim',ndim
+      write(out_unit,*) ' indQ(:)',indQ
+      STOP 'STOP in QML_FiniteDiff3_SymPerm_OF_QMLValues: Inconsitent parameters.'
+    END IF
+
+    CALL QML_FiniteDiff3_SymPerm_OF_dnMat(QMLValues%PotDia,indQ)
+    IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotDia,QMLValues%nderiv))  &
+      CALL QML_FiniteDiff3_SymPerm_OF_dnMat(QMLValues%ImagPotDia,indQ)
+    IF (.NOT. Check_NotAlloc_dnMat(QMLValues%PotAdia,QMLValues%nderiv))  &
+      CALL QML_FiniteDiff3_SymPerm_OF_dnMat(QMLValues%PotAdia,indQ)
+    IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotAdia,QMLValues%nderiv))  &
+      CALL QML_FiniteDiff3_SymPerm_OF_dnMat(QMLValues%ImagPotAdia,indQ)
+    IF (.NOT. Check_NotAlloc_dnMat(QMLValues%Vec,QMLValues%nderiv))  &
+      CALL QML_FiniteDiff3_SymPerm_OF_dnMat(QMLValues%Vec,indQ)
+ 
+
+  END SUBROUTINE QML_FiniteDiff3_SymPerm_OF_QMLValues
+
+  SUBROUTINE QML_FiniteDiff_Finalize_QMLValues(QMLValues,step)
+    USE ADdnSVM_m
+    USE QMLValues_m
+    IMPLICIT NONE
+
+    TYPE (QMLValues_t), intent(inout)         :: QMLValues
+    real (kind=Rkind),  intent(in)            :: step
+
+    IF (QMLValues%nderiv < 0) THEN
+      write(out_unit,*) ' ERROR in QML_FiniteDiff_Finalize_QMLValues'
+      write(out_unit,*) ' Inconsitent parameters.'
+      write(out_unit,*) ' nderiv < 0',QMLValues%nderiv
+      write(out_unit,*) '  => QMLValues is not allocated'
+      STOP 'STOP in QML_FiniteDiff_Finalize_QMLValues: Inconsitent parameters.'
+    END IF
+
+    CALL QML_FiniteDiff_Finalize_dnMat(QMLValues%PotDia,step)
+    IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotDia,QMLValues%nderiv))  &
+      CALL QML_FiniteDiff_Finalize_dnMat(QMLValues%ImagPotDia,step)
+    IF (.NOT. Check_NotAlloc_dnMat(QMLValues%PotAdia,QMLValues%nderiv))  &
+      CALL QML_FiniteDiff_Finalize_dnMat(QMLValues%PotAdia,step)
+    IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotAdia,QMLValues%nderiv))  &
+      CALL QML_FiniteDiff_Finalize_dnMat(QMLValues%ImagPotAdia,step)
+    IF (.NOT. Check_NotAlloc_dnMat(QMLValues%Vec,QMLValues%nderiv))  &
+      CALL QML_FiniteDiff_Finalize_dnMat(QMLValues%Vec,step)
+
+  END SUBROUTINE QML_FiniteDiff_Finalize_QMLValues
 END MODULE QMLLib_FiniteDiff_m
