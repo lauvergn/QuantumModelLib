@@ -1706,136 +1706,6 @@ CONTAINS
 
   END SUBROUTINE Eval_Pot_old
 
-  SUBROUTINE Eval_Pot_new(Model,Q,QMLValues,nderiv,numeric)
-    USE ADdnSVM_m
-    USE QMLValues_m
-    IMPLICIT NONE
-
-    TYPE (Model_t),     intent(inout)            :: Model
-    TYPE (QMLValues_t), intent(inout)            :: QMLValues
-    real (kind=Rkind),  intent(in)               :: Q(:)
-    integer,            intent(in),    optional  :: nderiv
-    logical,            intent(in),    optional  :: numeric
-
-    ! local variables
-    integer                    :: i,nderiv_loc
-    TYPE (dnMat_t)             :: PotAdia_loc
-    TYPE (dnMat_t)             :: Vec_loc,NAC_loc
-    logical                    :: numeric_loc,adia_loc
-    logical                    :: PF ! phase_following
-    logical                    :: PC ! phase_checking
-
-    !real (kind=Rkind), allocatable :: G(:,:)
-
-    integer :: numeric_option = 3   ! 0 old (up to 2d derivatives
-                                    ! 3 version up to 3d derivatives less points than 4
-                                    ! 4 version up to 3d derivatives more points than 3
-    !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Eval_Pot_new'
-    logical, parameter :: debug = .FALSE.
-    !logical, parameter :: debug = .TRUE.
-    !-----------------------------------------------------------
-    IF (debug) THEN
-      write(out_unit,*) ' BEGINNING ',name_sub
-      IF (present(nderiv)) write(out_unit,*) '   nderiv',nderiv
-      CALL Write_dnMat(QMLValues%Vec0,nio=out_unit)
-      flush(out_unit)
-    END IF
-    !write(out_unit,*) 'in Eval_Pot Q ',Q
-
-    CALL check_alloc_QM(Model,name_sub)
-    PF = Model%QM%Phase_Following
-    PC = Model%QM%Phase_Checking
-    IF (debug) THEN
-      write(out_unit,*) '  Model%QM%numeric         ',Model%QM%numeric
-      write(out_unit,*) '  Model%QM%adiabatic       ',Model%QM%adiabatic
-      write(out_unit,*) '  Model%QM%Vib_adia        ',Model%QM%Vib_adia
-      write(out_unit,*) '  Model%QM%Phase_Following ',Model%QM%Phase_Following
-      write(out_unit,*) '  Model%QM%Phase_Checking  ',Model%QM%Phase_Checking
-      flush(out_unit)
-    END IF
-
-    IF (present(nderiv)) THEN
-      nderiv_loc = max(0,nderiv)
-      nderiv_loc = min(3,nderiv_loc)
-    ELSE
-      nderiv_loc = 0
-    END IF
-
-    IF (present(numeric)) THEN
-      numeric_loc = (numeric  .OR. Model%QM%no_ana_der)
-    ELSE
-      numeric_loc = (Model%QM%numeric .OR. Model%QM%no_ana_der)
-    END IF
-    numeric_loc = (numeric_loc .AND. nderiv_loc > 0)
-    IF (debug) THEN
-      write(out_unit,*) '  numeric_loc              ',numeric_loc
-      flush(out_unit)
-    END IF
-
-    IF (Model%QM%Vib_adia) THEN
-
-      CALL Eval_dnHVib_ana(Model,Q,QMLValues%PotDia,nderiv_loc)
-
-      !write(out_unit,*) 'QMLValues%PotDia (Vib_dia)'
-      !CALL Write_dnMat(QMLValues%PotDia,nio=out_unit)
-
-      CALL dia_TO_adia(QMLValues%PotDia,PotAdia_loc, &
-                       Vec_loc,QMLValues%Vec0,NAC_loc,PF,PC,nderiv_loc,type_diag=1)
-
-      CALL submatrix_dnMat2_TO_dnMat1(QMLValues%PotAdia,PotAdia_loc,lb=1,ub=Model%QM%nb_Channels)
-
-      ! it needs dnMat as a rectangular matrix !!
-      CALL submatrix_dnMat2_TO_dnMat1(QMLValues%Vec,Vec_loc,lb=1,ub=Model%QM%nb_Channels)
-      CALL submatrix_dnMat2_TO_dnMat1(QMLValues%NAC,NAC_loc,lb=1,ub=Model%QM%nb_Channels)
-
-        ! print the Vec%d0 if required
-        CALL Write_QML_EigenVec(Q,Vec_loc,Model,nio=out_unit)
-
-      CALL dealloc_dnMat(NAC_loc)
-      CALL dealloc_dnMat(Vec_loc)
-      CALL dealloc_dnMat(PotAdia_loc)
-
-    ELSE
-
-
-      IF (numeric_loc) THEN  ! numerical
-        adia_loc = (Model%QM%adiabatic .AND. Model%QM%nsurf > 1)
-        IF (.NOT. adia_loc) THEN
-          SELECT CASE (numeric_option)
-          CASE (0)
-            CALL Eval_Pot_Numeric_dia_old(Model,Q,QMLValues%PotDia,nderiv_loc)
-          CASE (3)
-            CALL Eval_Pot_Numeric_dia_v3(Model,Q,QMLValues%PotDia,nderiv_loc)
-          CASE (4)
-            CALL Eval_Pot_Numeric_dia_v4(Model,Q,QMLValues%PotDia,nderiv_loc)
-          CASE Default
-            CALL Eval_Pot_Numeric_dia_old(Model,Q,QMLValues%PotDia,nderiv_loc)
-          END SELECT
-          IF (Model%QM%adiabatic) QMLValues%PotAdia = QMLValues%PotDia
-        ELSE
-          CALL Eval_Pot_new_Numeric_adia(Model,Q,QMLValues,nderiv_loc,numeric_option)
-        END IF
-      ELSE ! analytical calculation
-        CALL Eval_Pot_new_ana(Model,Q,QMLValues,nderiv_loc)
-      END IF
-    END IF
-
-    IF (debug) THEN
-      IF ( Model%QM%adiabatic) THEN
-        write(out_unit,*) 'PotAdia'
-        CALL Write_dnMat(QMLValues%PotAdia,nio=out_unit)
-      ELSE
-        write(out_unit,*) 'PotDia'
-        CALL Write_dnMat(QMLValues%PotDia,nio=out_unit)
-      END IF
-      write(out_unit,*) 'Vec0'
-      CALL Write_dnMat(QMLValues%Vec0,nio=out_unit)
-      write(out_unit,*) ' END ',name_sub
-      flush(out_unit)
-    END IF
-  END SUBROUTINE Eval_Pot_new
-
   SUBROUTINE Eval_Pot_ana(Model,Q,PotVal,nderiv,NAC,Vec,PotVal_dia,Vec0)
     USE ADdnSVM_m, ONLY : dnS_t,alloc_dnS,dealloc_dnS,Variable,                &
              dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat,Write_dnMat
@@ -2020,6 +1890,111 @@ CONTAINS
 
   END SUBROUTINE Eval_Pot_ana
 
+
+  SUBROUTINE Eval_Pot_new(Model,Q,QMLValues,nderiv,numeric)
+    USE ADdnSVM_m
+    USE QMLValues_m
+    IMPLICIT NONE
+
+    TYPE (Model_t),     intent(inout)            :: Model
+    TYPE (QMLValues_t), intent(inout)            :: QMLValues
+    real (kind=Rkind),  intent(in)               :: Q(:)
+    integer,            intent(in),    optional  :: nderiv
+    logical,            intent(in),    optional  :: numeric
+
+    ! local variables
+    integer                    :: i,nderiv_loc
+    TYPE (dnMat_t)             :: PotAdia_loc
+    TYPE (dnMat_t)             :: Vec_loc,NAC_loc
+    logical                    :: numeric_loc,adia_loc
+    logical                    :: PF ! phase_following
+    logical                    :: PC ! phase_checking
+
+    !real (kind=Rkind), allocatable :: G(:,:)
+
+    integer :: numeric_option = 3   ! 0 old (up to 2d derivatives
+                                    ! 3 version up to 3d derivatives less points than 4
+                                    ! 4 version up to 3d derivatives more points than 3
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='Eval_Pot_new'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    !-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      IF (present(nderiv)) write(out_unit,*) '   nderiv',nderiv
+      CALL Write_dnMat(QMLValues%Vec0,nio=out_unit)
+      flush(out_unit)
+    END IF
+    !write(out_unit,*) 'in Eval_Pot Q ',Q
+
+    CALL check_alloc_QM(Model,name_sub)
+    PF = Model%QM%Phase_Following
+    PC = Model%QM%Phase_Checking
+    IF (debug) THEN
+      write(out_unit,*) '  Model%QM%numeric         ',Model%QM%numeric
+      write(out_unit,*) '  Model%QM%adiabatic       ',Model%QM%adiabatic
+      write(out_unit,*) '  Model%QM%Vib_adia        ',Model%QM%Vib_adia
+      write(out_unit,*) '  Model%QM%Phase_Following ',Model%QM%Phase_Following
+      write(out_unit,*) '  Model%QM%Phase_Checking  ',Model%QM%Phase_Checking
+      flush(out_unit)
+    END IF
+
+    IF (present(nderiv)) THEN
+      nderiv_loc = max(0,nderiv)
+      nderiv_loc = min(3,nderiv_loc)
+    ELSE
+      nderiv_loc = 0
+    END IF
+
+    IF (present(numeric)) THEN
+      numeric_loc = (numeric  .OR. Model%QM%no_ana_der)
+    ELSE
+      numeric_loc = (Model%QM%numeric .OR. Model%QM%no_ana_der)
+    END IF
+    numeric_loc = (numeric_loc .AND. nderiv_loc > 0)
+    IF (debug) THEN
+      write(out_unit,*) '  numeric_loc              ',numeric_loc
+      flush(out_unit)
+    END IF
+
+    IF (Model%QM%Vib_adia) THEN
+
+      CALL Eval_dnHVib_ana(Model,Q,QMLValues%PotDia,nderiv_loc)
+
+      !write(out_unit,*) 'QMLValues%PotDia (Vib_dia)'
+      !CALL Write_dnMat(QMLValues%PotDia,nio=out_unit)
+
+      CALL dia_TO_adia(QMLValues%PotDia,PotAdia_loc, &
+                       Vec_loc,QMLValues%Vec0,NAC_loc,PF,PC,nderiv_loc,type_diag=1)
+
+      CALL submatrix_dnMat2_TO_dnMat1(QMLValues%PotAdia,PotAdia_loc,lb=1,ub=Model%QM%nb_Channels)
+
+      ! it needs dnMat as a rectangular matrix !!
+      CALL submatrix_dnMat2_TO_dnMat1(QMLValues%Vec,Vec_loc,lb=1,ub=Model%QM%nb_Channels)
+      CALL submatrix_dnMat2_TO_dnMat1(QMLValues%NAC,NAC_loc,lb=1,ub=Model%QM%nb_Channels)
+
+      ! print the Vec%d0 if required
+      CALL Write_QML_EigenVec(Q,Vec_loc,Model,nio=out_unit)
+
+      CALL dealloc_dnMat(NAC_loc)
+      CALL dealloc_dnMat(Vec_loc)
+      CALL dealloc_dnMat(PotAdia_loc)
+
+    ELSE
+      IF (numeric_loc) THEN  ! numerical
+        CALL Eval_Pot_new_Numeric(Model,Q,QMLValues,nderiv_loc,numeric_option)
+      ELSE ! analytical calculation
+        CALL Eval_Pot_new_ana(Model,Q,QMLValues,nderiv_loc)
+      END IF
+    END IF
+
+    IF (debug) THEN
+      CALL Write_QMLValues(QMLValues)
+      write(out_unit,*) ' END ',name_sub
+      flush(out_unit)
+    END IF
+  END SUBROUTINE Eval_Pot_new
 
   SUBROUTINE Eval_Pot_new_ana(Model,Q,QMLValues,nderiv)
     USE ADdnSVM_m, ONLY : dnS_t,alloc_dnS,dealloc_dnS,Write_dnS,Variable,                &
@@ -2893,8 +2868,8 @@ CONTAINS
     !write(out_unit,*) 'coucouf Eval_Pot_Numeric_adia_v3' ; flush(6)
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
 
-  SUBROUTINE Eval_Pot_new_Numeric_adia(Model,Q,QMLValues,nderiv,option)
-    USE ADdnSVM_m, ONLY : dnMat_t
+  SUBROUTINE Eval_Pot_new_Numeric(Model,Q,QMLValues,nderiv,option)
+    USE ADdnSVM_m
     USE QMLValues_m
     IMPLICIT NONE
 
@@ -2904,8 +2879,10 @@ CONTAINS
     integer,            intent(in)     :: nderiv
     integer,            intent(in)     :: option
 
+    real (kind=Rkind), allocatable     :: tVec0(:,:)
+
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Eval_Pot_new_Numeric_adia'
+    character (len=*), parameter :: name_sub='Eval_Pot_new_Numeric'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -2918,26 +2895,32 @@ CONTAINS
     END IF
 
     SELECT CASE (option)
-    CASE (0)
-      CALL Eval_Pot_new_Numeric_adia_v0(Model,Q,QMLValues,nderiv)
-    CASE (3)
-      CALL Eval_Pot_new_Numeric_adia_v3(Model,Q,QMLValues,nderiv)
+    CASE (0) ! only second order
+      CALL Eval_Pot_new_Numeric_v0(Model,Q,QMLValues,nderiv)
+    CASE (3) ! up to 3d order
+      CALL Eval_Pot_new_Numeric_v3(Model,Q,QMLValues,nderiv)
     CASE (4)
-      STOP 'Eval_Pot_new_Numeric_adia: option=4, not yet'
-      !CALL Eval_Pot_new_Numeric_adia_v4(Model,Q,QMLValues,nderiv)
+      STOP 'Eval_Pot_new_Numeric: option=4, not yet'
+      !CALL Eval_Pot_new_Numeric_v4(Model,Q,QMLValues,nderiv)
     CASE Default
-      CALL Eval_Pot_new_Numeric_adia_v0(Model,Q,QMLValues,nderiv)
+      CALL Eval_Pot_new_Numeric_v0(Model,Q,QMLValues,nderiv)
     END SELECT
+
+    IF (Model%QM%adiabatic) THEN
+      tVec0         = transpose(QMLValues%Vec%d0)
+      QMLValues%NAC = matmul(tVec0,QMLValues%Vec)
+      deallocate(tVec0)
+    END IF
 
     IF (debug) THEN
       write(out_unit,*) ' END ',name_sub
       flush(out_unit)
     END IF
 
-  END SUBROUTINE Eval_Pot_new_Numeric_adia
-  SUBROUTINE Eval_Pot_new_Numeric_adia_v0(Model,Q,QMLValues,nderiv)
-    USE QDUtil_m,  ONLY : Identity_Mat, Write_Mat
-    USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat,Check_NotAlloc_dnMat
+  END SUBROUTINE Eval_Pot_new_Numeric
+  SUBROUTINE Eval_Pot_new_Numeric_v0(Model,Q,QMLValues,nderiv)
+    USE QDUtil_m
+    USE ADdnSVM_m
     USE QMLValues_m
     USE QMLLib_FiniteDiff_m
     IMPLICIT NONE
@@ -2951,10 +2934,11 @@ CONTAINS
     real (kind=Rkind), allocatable     :: Q_loc(:)
     TYPE (QMLValues_t)                 :: QMLValues_loc0
     integer                            :: i,j
-    real (kind=Rkind), allocatable     :: Vec0(:,:),tVec0(:,:)
+    real (kind=Rkind), allocatable     :: Vec0(:,:)
+    logical                            :: adiabatic
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Eval_Pot_new_Numeric_adia_v0'
+    character (len=*), parameter :: name_sub='Eval_Pot_new_Numeric_v0'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -2967,16 +2951,18 @@ CONTAINS
 
     CALL check_alloc_QM(Model,name_sub)
 
+    adiabatic = Model%QM%adiabatic
+
 
     IF (.NOT. QMLValues%alloc ) THEN
       CALL alloc_QMLValues(QMLValues, &
-                           adiabatic=.TRUE.,cplx=Model%QM%ImagContrib, &
+                           adiabatic=adiabatic,cplx=Model%QM%ImagContrib, &
                            nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,nderiv=nderiv)
     END IF
     QMLValues%Q(:) = Q
 
     CALL alloc_QMLValues(QMLValues_loc0, &
-                         adiabatic=.TRUE.,cplx=Model%QM%ImagContrib, &
+                         adiabatic=adiabatic,cplx=Model%QM%ImagContrib, &
                          nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,nderiv=0)
     QMLValues_loc0%Q(:) = Q
     Q_loc = Q
@@ -2991,9 +2977,7 @@ CONTAINS
       END DO
     END IF
 
-    Vec0             = QMLValues_loc0%Vec%d0
-    tVec0            = transpose(QMLValues_loc0%Vec%d0)
-    QMLValues%NAC%d0 = Identity_Mat(Model%QM%nsurf) ! or matmul(tVec0,Vec0)
+    IF (adiabatic) Vec0 = QMLValues_loc0%Vec%d0
 
     IF (debug) THEN 
       write(out_unit,*) 'QMLValues with values at Q'
@@ -3007,7 +2991,7 @@ CONTAINS
 
         Q_loc(i) = Q(i) + step        ! q+dq
         CALL Eval_Pot_new_ana(Model,Q_loc,QMLValues_loc0,nderiv=0)
-        CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
+        IF (adiabatic) CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
 
         CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValues_loc0,HALF,QMLValues,ider=[i])
 
@@ -3022,17 +3006,12 @@ CONTAINS
 
         Q_loc(i) = Q(i) - step        ! q-dq
         CALL Eval_Pot_new_ana(Model,Q_loc,QMLValues_loc0,nderiv=0)
-        CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
+        IF (adiabatic) CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
 
         CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValues_loc0,-HALF,QMLValues,ider=[i])
 
         IF (nderiv >= 2) THEN
           CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValues_loc0,ONE,QMLValues,ider=[i,i])
-        END IF
-
-        QMLValues%NAC%d1(:,:,i) = matmul(tVec0,QMLValues%Vec%d1(:,:,i))
-        IF (nderiv >= 2) THEN 
-          QMLValues%NAC%d2(:,:,i,i)   = matmul(tVec0,QMLValues%Vec%d2(:,:,i,i))
         END IF
 
         IF (debug) THEN 
@@ -3055,7 +3034,7 @@ CONTAINS
         Q_loc(i) = Q(i) + step        ! qi+dq
         Q_loc(j) = Q(j) + step        ! qj+dq
         CALL Eval_Pot_new_ana(Model,Q_loc,QMLValues_loc0,nderiv=0)
-        CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
+        IF (adiabatic) CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
         CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValues_loc0,FOURTH,QMLValues,ider=[j,i])
         IF (debug) THEN 
           write(out_unit,*) 'QMLValues with values at Q(ji)++step',j,i
@@ -3066,7 +3045,7 @@ CONTAINS
         Q_loc(i) = Q(i) - step        ! qi-dq
         Q_loc(j) = Q(j) - step        ! qj-dq
         CALL Eval_Pot_new_ana(Model,Q_loc,QMLValues_loc0,nderiv=0)
-        CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
+        IF (adiabatic) CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
         CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValues_loc0,FOURTH,QMLValues,ider=[j,i])
         IF (debug) THEN 
           write(out_unit,*) 'QMLValues with values at Q(ji)--step',j,i
@@ -3078,7 +3057,7 @@ CONTAINS
         Q_loc(i) = Q(i) + step        ! qi+dq
         Q_loc(j) = Q(j) - step        ! qj-dq
         CALL Eval_Pot_new_ana(Model,Q_loc,QMLValues_loc0,nderiv=0)
-        CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
+        IF (adiabatic) CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
         CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValues_loc0,-FOURTH,QMLValues,ider=[j,i])
         IF (debug) THEN 
           write(out_unit,*) 'QMLValues with values at Q(ji)+-step',j,i
@@ -3089,15 +3068,13 @@ CONTAINS
         Q_loc(i) = Q(i) - step        ! qi-dq
         Q_loc(j) = Q(j) + step        ! qj+dq
         CALL Eval_Pot_new_ana(Model,Q_loc,QMLValues_loc0,nderiv=0)
-        CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
+        IF (adiabatic) CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
         CALL WxQMLValuesd0_ADDTO_QMLValues2_ider(QMLValues_loc0,-FOURTH,QMLValues,ider=[j,i])
         IF (debug) THEN 
           write(out_unit,*) 'QMLValues with values at Q(ji)-+step',j,i
           CALL Write_Mat(QMLValues_loc0%PotAdia%d0,out_unit,5)
           CALL Write_QMLValues(QMLValues)
         END IF
-
-        QMLValues%NAC%d2(:,:,j,i)    = matmul(tVec0,QMLValues%Vec%d2(:,:,j,i))
 
         Q_loc(i) = Q(i)
         Q_loc(j) = Q(j)
@@ -3107,9 +3084,9 @@ CONTAINS
 
     CALL FiniteDiff_Finalize(QMLValues,step)
 
-    deallocate(Vec0)
-    deallocate(tVec0)
-    deallocate(Q_loc)
+
+    IF (allocated(Vec0))  deallocate(Vec0)
+    IF (allocated(Q_loc)) deallocate(Q_loc)
     CALL dealloc_QMLValues(QMLValues_loc0)
 
     IF (debug) THEN
@@ -3117,8 +3094,8 @@ CONTAINS
       write(out_unit,*) ' END ',name_sub
       flush(out_unit)
     END IF
-  END SUBROUTINE Eval_Pot_new_Numeric_adia_v0
-  SUBROUTINE Eval_Pot_new_Numeric_adia_v3(Model,Q,QMLValues,nderiv)
+  END SUBROUTINE Eval_Pot_new_Numeric_v0
+  SUBROUTINE Eval_Pot_new_Numeric_v3(Model,Q,QMLValues,nderiv)
     USE QDUtil_m
     USE QMLLib_FiniteDiff_m
     USE ADdnSVM_m
@@ -3138,10 +3115,11 @@ CONTAINS
 
     integer                            :: i_pt,nb_pts,ind1DQ(1),ind2DQ(2),ind3DQ(3)
 
-    real (kind=Rkind), allocatable     :: Vec0(:,:),tVec0(:,:)
+    real (kind=Rkind), allocatable     :: Vec0(:,:)
+    logical                            :: adiabatic
 
     !----- for debuging --------------------------------------------------
-    character (len=*), parameter :: name_sub='Eval_Pot_new_Numeric_adia_v3'
+    character (len=*), parameter :: name_sub='Eval_Pot_new_Numeric_v3'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
     !-----------------------------------------------------------
@@ -3152,18 +3130,19 @@ CONTAINS
       flush(out_unit)
     END IF
 
-    CALL check_alloc_QM(Model,'Eval_Pot_new_Numeric_adia_v3')
+    CALL check_alloc_QM(Model,'Eval_Pot_new_Numeric_v3')
 
+    adiabatic = Model%QM%adiabatic
 
     IF (.NOT. QMLValues%alloc ) THEN
       CALL alloc_QMLValues(QMLValues, &
-                           adiabatic=.TRUE.,cplx=Model%QM%ImagContrib, &
+                           adiabatic=adiabatic,cplx=Model%QM%ImagContrib, &
                            nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,nderiv=nderiv)
     END IF
     QMLValues%Q(:) = Q
 
     CALL alloc_QMLValues(QMLValues_loc0, &
-                         adiabatic=.TRUE.,cplx=Model%QM%ImagContrib, &
+                         adiabatic=adiabatic,cplx=Model%QM%ImagContrib, &
                          nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,nderiv=0)
     QMLValues_loc0%Q(:) = Q
     Q_loc = Q
@@ -3174,11 +3153,7 @@ CONTAINS
 
     CALL FiniteDiff_AddMat(QMLValues,QMLValues_loc0,option=3)
 
-
-    QMLValues%NAC%d0 = Identity_Mat(Model%QM%nsurf)
-
-    Vec0             = QMLValues_loc0%Vec%d0
-    tVec0            = transpose(QMLValues_loc0%Vec%d0)
+    IF (adiabatic) Vec0 = QMLValues_loc0%Vec%d0
 
     IF (nderiv >= 1) THEN ! 1st derivatives
 
@@ -3189,14 +3164,10 @@ CONTAINS
           CALL Set_QplusDQ(Q_loc,Q,indQ=[i],indDQ=ind1DQ,step_sub=step)
 
           CALL Eval_Pot_new_ana(Model,Q_loc,QMLValues_loc0,nderiv=0)
-          CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
+          IF (adiabatic) CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
 
           CALL FiniteDiff_AddMat(QMLValues,QMLValues_loc0,indQ=[i],indDQ=ind1DQ,option=3)
         END DO
-
-                         QMLValues%NAC%d1(:,:,i)     = matmul(tVec0,QMLValues%Vec%d1(:,:,i))
-        IF (nderiv >= 2) QMLValues%NAC%d2(:,:,i,i)   = matmul(tVec0,QMLValues%Vec%d2(:,:,i,i))
-        IF (nderiv >= 3) QMLValues%NAC%d3(:,:,i,i,i) = matmul(tVec0,QMLValues%Vec%d3(:,:,i,i,i))
 
       END DO
     END IF
@@ -3211,21 +3182,13 @@ CONTAINS
           CALL Set_QplusDQ(Q_loc,Q,indQ=[i,j],indDQ=ind2DQ,step_sub=step)
 
           CALL Eval_Pot_new_ana(Model,Q_loc,QMLValues_loc0,nderiv=0)
-          CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
+          IF (adiabatic) CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
 
           CALL FiniteDiff_AddMat(QMLValues,QMLValues_loc0,indQ=[i,j],indDQ=ind2DQ,option=3)
 
         END DO
 
-        QMLValues%NAC%d2(:,:,j,i)        = matmul(tVec0,QMLValues%Vec%d2(:,:,j,i))
-        IF (nderiv >= 3) THEN
-          QMLValues%NAC%d3(:,:,i,i,j)    = matmul(tVec0,QMLValues%Vec%d3(:,:,i,i,j))
-          QMLValues%NAC%d3(:,:,j,j,i)    = matmul(tVec0,QMLValues%Vec%d3(:,:,j,j,i))
-        END IF
-
         CALL FiniteDiff3_SymPerm(QMLValues,indQ=[i,j])
-        IF (.NOT. Check_NotAlloc_dnMat(QMLValues%NAC,QMLValues%nderiv))  & ! because it is not done FiniteDiff3_SymPerm with QMLValues
-          CALL FiniteDiff3_SymPerm(QMLValues%NAC,indQ=[i,j])
 
       END DO
       END DO
@@ -3243,17 +3206,13 @@ CONTAINS
           CALL Set_QplusDQ(Q_loc,Q,indQ=[i,j,k],indDQ=ind3DQ,step_sub=step)
 
           CALL Eval_Pot_new_ana(Model,Q_loc,QMLValues_loc0,nderiv=0)
-          CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
+          IF (adiabatic) CALL Change_EigenVecPhase(Vec=QMLValues_loc0%Vec%d0,Vec0=Vec0)
 
           CALL FiniteDiff_AddMat(QMLValues,QMLValues_loc0,indQ=[i,j,k],indDQ=ind3DQ,option=3)
  
         END DO
 
-        QMLValues%NAC%d3(:,:,k,j,i)    = matmul(tVec0,QMLValues%Vec%d3(:,:,k,j,i))
-
         CALL FiniteDiff3_SymPerm(QMLValues,indQ=[i,j,k])
-        IF (.NOT. Check_NotAlloc_dnMat(QMLValues%NAC,QMLValues%nderiv))  &
-          CALL FiniteDiff3_SymPerm(QMLValues%NAC,indQ=[i,j,k])
 
       END DO
       END DO
@@ -3262,13 +3221,8 @@ CONTAINS
 
     CALL FiniteDiff_Finalize(QMLValues,step)
 
-    ! special finalization for NAC
-    IF (.NOT. Check_NotAlloc_dnMat(QMLValues%NAC,QMLValues%nderiv))  &
-      CALL FiniteDiff_Finalize(QMLValues%NAC,step)
-
-    deallocate(Vec0)
-    deallocate(tVec0)
-    deallocate(Q_loc)
+    IF (allocated(Vec0))  deallocate(Vec0)
+    IF (allocated(Q_loc)) deallocate(Q_loc)
     CALL dealloc_QMLValues(QMLValues_loc0)
 
     IF (debug) THEN
@@ -3276,7 +3230,7 @@ CONTAINS
       write(out_unit,*) ' END ',name_sub
       flush(out_unit)
     END IF
-  END SUBROUTINE Eval_Pot_new_Numeric_adia_v3  
+  END SUBROUTINE Eval_Pot_new_Numeric_v3  
 
   SUBROUTINE Change_EigenVecPhase(Vec,Vec0)
     USE QDUtil_m
