@@ -170,10 +170,12 @@ MODULE QMLLib_FiniteDiff_m
 
   INTERFACE FiniteDiff_AddMat
     MODULE PROCEDURE QML_FiniteDiff_AddMat_TO_dnMat
+    MODULE PROCEDURE QML_FiniteDiff_AddMat_TO_QMLValues
   END INTERFACE
 
   INTERFACE FiniteDiff3_SymPerm
     MODULE PROCEDURE QML_FiniteDiff3_SymPerm_OF_dnMat
+    MODULE PROCEDURE QML_FiniteDiff3_SymPerm_OF_QMLValues
   END INTERFACE
 
   INTERFACE FiniteDiff_Finalize
