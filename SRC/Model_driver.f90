@@ -160,6 +160,17 @@ FUNCTION get_Qmodel_nsurf() RESULT(nsurf)
   nsurf  = QuantumModel%nsurf
 
 END FUNCTION get_Qmodel_nsurf
+FUNCTION get_Qmodel_NB() RESULT(NB)
+  USE Model_m
+  IMPLICIT NONE
+
+  integer     :: NB
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_ndim in Model_driver.f90')
+
+  NB  = QuantumModel%NB
+
+END FUNCTION get_Qmodel_NB
 FUNCTION get_Qmodel_Vib_Adia() RESULT(Vib_Adia)
   USE Model_m
   IMPLICIT NONE
@@ -296,8 +307,8 @@ SUBROUTINE sub_Qmodel_VVec_Vec0(V,Vec,Vec0,Q)
 
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
   real (kind=Rkind),      intent(inout)     :: V(QuantumModel%nsurf,QuantumModel%nsurf)
-  real (kind=Rkind),      intent(inout)     :: Vec(QuantumModel%nsurf,QuantumModel%nsurf)
-  real (kind=Rkind),      intent(inout)     :: Vec0(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     :: Vec(QuantumModel%NB,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     :: Vec0(QuantumModel%NB,QuantumModel%nsurf)
 
   TYPE (dnMat_t)                  :: Vec_loc,PotVal_loc,Vec0_loc
 
@@ -379,7 +390,7 @@ SUBROUTINE sub_Qmodel_VG_NAC_Vec0(V,G,NAC,Vec0,Q)
   real (kind=Rkind),      intent(inout)    :: V(QuantumModel%nsurf,QuantumModel%nsurf)
   real (kind=Rkind),      intent(inout)    :: G(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
   real (kind=Rkind),      intent(inout)    :: NAC(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
-  real (kind=Rkind),      intent(inout)    :: Vec0(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)    :: Vec0(QuantumModel%NB,QuantumModel%NB)
 
   TYPE (dnMat_t)                  :: NAC_loc,PotVal_loc,Vec0_loc
 
@@ -625,6 +636,17 @@ SUBROUTINE set_Qmodel_Phase_Checking(Phase_Checking)
   QuantumModel%QM%Phase_Checking = Phase_Checking
 
 END SUBROUTINE set_Qmodel_Phase_Checking
+SUBROUTINE set_Qmodel_Print_Vec_Overlap(Print_Vec_Overlap)
+  USE Model_m
+  USE ADdnSVM_m
+  IMPLICIT NONE
+
+  logical,                intent(inout)        :: Print_Vec_Overlap
+
+  IF (Print_Vec_Overlap) print_level_dia_dnMat = 2
+
+END SUBROUTINE set_Qmodel_Print_Vec_Overlap
+
 SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
   USE QDUtil_NumParameters_m
   USE Model_m

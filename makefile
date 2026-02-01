@@ -27,7 +27,7 @@ RKIND := real64
 # WITHRK16 = 1 (0) compilation with (without) real128
 WITHRK16 :=
 ## branch of the external libraries
-BRANCH      := main
+BRANCH      := 
 # how to clean (recursively (1) or not (0)) the external libraries (*_loc)
 RECCLEAN    := 1
 #=================================================================================
@@ -284,7 +284,10 @@ $(OBJ_DIR)/%.o: %.f90
 	$(FC) $(FFLAGS) -o $@ $< $(LIBAF) $(FLIB)
 	@echo $@ compilation: OK
 #
-# Special rule for the external model 
+# Special rule for the external model
+.PHONY: ln_ExtModel
+ln_ExtModel: $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90
+#
 $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90:
 	ln -s  $(MAIN_path)/Ext_Model/ExtModel_m.f90 $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90
 #

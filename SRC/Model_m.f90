@@ -63,6 +63,7 @@ MODULE Model_m
     ! At the intialization, the variables are set-up to the correct values and are
     !   identical to QM%nsurf and QM%ndim ones respectively.
     integer                           :: nsurf       = 0
+    integer                           :: NB          = 0 ! for Vib_adia (ortherwise, NB=nsurf)
     integer                           :: ndim        = 0
     integer                           :: ipot        = -1
     integer                           :: icap        = -1
@@ -1043,41 +1044,8 @@ CONTAINS
         STOP 'STOP in Init_Model: Other potentials have to be done'
     END SELECT
 
-    IF (present(ndim)) THEN
-      IF (ndim > QModel%QM%ndim) THEN
-          write(out_unit,*) ' ERROR in Init_Model'
-          write(out_unit,*) ' ndim is present and ...'
-          write(out_unit,*) ' its value is larger than QModel%QM%ndim'
-          write(out_unit,*) ' ndim,QModel%QM%ndim',ndim,QModel%QM%ndim
-          write(out_unit,*) ' check your data!'
-          STOP 'STOP in Init_Model: wrong ndim'
-      END IF
-      IF (ndim < QModel%QM%ndim  .AND. ndim > 0) THEN
-          write(out_unit,*) ' WARNING in Init_Model'
-          write(out_unit,*) ' ndim is present and ...'
-          write(out_unit,*) ' its value is smaller than QModel%QM%ndim'
-          write(out_unit,*) ' ndim,QModel%QM%ndim',ndim,QModel%QM%ndim
-          write(out_unit,*) ' => We assume that ...'
-          write(out_unit,*) ' ... all variables (QModel%QM%ndim) will be given!'
-      END IF
-    END IF
-    IF (present(nsurf)) THEN
-      IF (nsurf /= QModel%QM%nsurf .AND. nsurf > 0) THEN
-          write(out_unit,*) ' ERROR in Init_Model'
-          write(out_unit,*) ' nsurf is present and ...'
-          write(out_unit,*) ' its value is not equal to QModel%QM%nsurf'
-          write(out_unit,*) ' nsurf,QModel%QM%nsurf',nsurf,QModel%QM%nsurf
-          write(out_unit,*) ' check your data!'
-          STOP 'STOP in Init_Model: wrong nsurf'
-        END IF
-    END IF
-
-    QModel%ndim  = QModel%QM%ndim
-    QModel%nsurf = QModel%QM%nsurf
-
     ! special feature when Vib_adia = .TRUE.
     IF (QModel%QM%Vib_adia) THEN
-
       ! check the value of list_act (>0 and <= ndim)
       IF (any(QModel%QM%list_act < 1)           .OR. &
           any(QModel%QM%list_act > QModel%QM%ndim)) THEN
@@ -1120,12 +1088,53 @@ CONTAINS
       write(out_unit,*) 'list_act   ',QModel%QM%list_act
       write(out_unit,*) 'list_inact ',QModel%QM%list_inact
 
-      QModel%ndim  = size(QModel%QM%list_act)
-      QModel%nsurf = QModel%QM%nb_Channels
-
       allocate(QModel%Basis)
       CALL Read_Basis(QModel%Basis,nio_loc)
 
+      QModel%ndim  = size(QModel%QM%list_act)
+      QModel%nsurf = QModel%QM%nb_Channels
+      QModel%NB    = QModel%Basis%nb
+
+      write(out_unit,*) ' QModel%ndim, QModel%QM%ndim: ',QModel%ndim,QModel%QM%ndim
+      IF (present(ndim)) write(out_unit,*) ' ndim',ndim
+      write(out_unit,*) ' QModel%nsurf,QModel%QM%nsurf:',nsurf,QModel%QM%nsurf
+      IF (present(nsurf)) write(out_unit,*) ' nsurf',nsurf
+      write(out_unit,*) ' QModel%nNB: ',QModel%NB
+
+    ELSE
+      QModel%ndim  = QModel%QM%ndim
+      QModel%nsurf = QModel%QM%nsurf
+      QModel%NB    = QModel%QM%nsurf
+    END IF
+
+    IF (present(ndim)) THEN
+      IF (ndim > QModel%ndim) THEN
+          write(out_unit,*) ' ERROR in Init_Model'
+          write(out_unit,*) ' ndim is present and ...'
+          write(out_unit,*) ' its value is larger than QModel%ndim'
+          write(out_unit,*) ' ndim,QModel%ndim',ndim,QModel%ndim
+          write(out_unit,*) ' check your data!'
+          STOP 'STOP in Init_Model: wrong ndim'
+      END IF
+      IF (ndim < QModel%ndim  .AND. ndim > 0) THEN
+          write(out_unit,*) ' WARNING in Init_Model'
+          write(out_unit,*) ' ndim is present and > 0 and ...'
+          write(out_unit,*) ' its value is smaller than QModel%ndim'
+          write(out_unit,*) ' ndim,QModel%ndim',ndim,QModel%ndim
+          write(out_unit,*) ' => We assume that ...'
+          write(out_unit,*) ' ... all variables (QModelndim) will be given!'
+      END IF
+    END IF
+
+    IF (present(nsurf)) THEN
+      IF (nsurf /= QModel%nsurf .AND. nsurf > 0) THEN
+          write(out_unit,*) ' ERROR in Init_Model'
+          write(out_unit,*) ' nsurf is present and > 0 and ...'
+          write(out_unit,*) ' its value is not equal to QModel%nsurf'
+          write(out_unit,*) ' nsurf,QModel%QM%nsurf',nsurf,QModel%nsurf
+          write(out_unit,*) ' check your data!'
+          STOP 'STOP in Init_Model: wrong nsurf'
+        END IF
     END IF
 
     IF (Print_init_loc) THEN
@@ -2739,27 +2748,20 @@ CONTAINS
     Q_loc(:) = Q
     CALL alloc_dnMat(PotVal_loc0,nsurf=Model%QM%nsurf,nVar=Model%QM%ndim,nderiv=0)
     CALL alloc_dnMat(Vec_loc0,   nsurf=Model%QM%nsurf,nVar=Model%QM%ndim,nderiv=0)
-    !write(out_unit,*) 'coucou1 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
 
     ! no derivative : PotVal%d0
     CALL Eval_Pot_ana(Model,Q,PotVal_loc0,nderiv=0,vec=Vec_loc0)
-    !write(out_unit,*) 'coucou1.1 Eval_Pot_Numeric_adia_v3' ; flush(6)
-
-
 
     CALL FiniteDiff_AddMat(PotVal,PotVal_loc0%d0,option=3)
     CALL FiniteDiff_AddMat(Vec,   Vec_loc0%d0,   option=3)
-    !write(out_unit,*) 'coucou1.2 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     NAC%d0 = Identity_Mat(Model%QM%nsurf)
     !CALL Write_dnMat(NAC,info='NAC-dep0')
 
-    !write(out_unit,*) 'coucou1.3 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     allocate(tVec(Model%QM%nsurf,Model%QM%nsurf))
     tVec(:,:)      = transpose(Vec%d0)
-    !write(out_unit,*) 'coucou2 0-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     IF (nderiv >= 1) THEN ! 1st derivatives
 
@@ -2785,7 +2787,6 @@ CONTAINS
 
       END DO
     END IF
-    !write(out_unit,*) 'coucou2 1-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     IF (nderiv >= 2) THEN ! 2d derivatives
 
@@ -2819,7 +2820,6 @@ CONTAINS
       END DO
       END DO
     END IF
-    !write(out_unit,*) 'coucou2 2-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     IF (nderiv >= 3) THEN ! 3d derivatives: d3/dQidQidQj
 
@@ -2852,12 +2852,10 @@ CONTAINS
       END DO
       END DO
     END IF
-    !write(out_unit,*) 'coucou2 3-order Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     CALL FiniteDiff_Finalize(PotVal,step)
     CALL FiniteDiff_Finalize(Vec,step)
     CALL FiniteDiff_Finalize(NAC,step)
-    !write(out_unit,*) 'coucou3 Eval_Pot_Numeric_adia_v3' ; flush(6)
 
     !CALL Write_dnMat(NAC,info='NAC-final')
 
@@ -2865,7 +2863,6 @@ CONTAINS
     deallocate(Q_loc)
     CALL dealloc_dnMat(PotVal_loc0)
     CALL dealloc_dnMat(Vec_loc0)
-    !write(out_unit,*) 'coucouf Eval_Pot_Numeric_adia_v3' ; flush(6)
   END SUBROUTINE Eval_Pot_Numeric_adia_v3
 
   SUBROUTINE Eval_Pot_new_Numeric(Model,Q,QMLValues,nderiv,option)
@@ -3427,7 +3424,6 @@ CONTAINS
       dnHB(iq) = dnHB(iq) * Model%Basis%w(iq)
     END DO
     !CALL Write_dnS(dnHB(1),6,info='dnHB',all_type=.TRUE.)
-    !write(out_unit,*) 'coucou dnHB: done',ib ; flush(6)
     DO jb=1,nb
       IF (Model%Basis%tab_symab(ib) == Model%Basis%tab_symab(jb)) THEN
         dnHij = dot_product(Model%Basis%d0gb(:,jb),dnHB(:))
@@ -3590,7 +3586,7 @@ CONTAINS
 
     write(nio_loc,*) '-----------------------------------------------'
     write(nio_loc,*) 'Output file for potential library'
-
+    write(nio_loc,*) 'nsurf, NB',Model%nsurf,Model%NB
     CALL Model%QM%Write_QModel(nio=nio_loc)
     write(nio_loc,*)
     IF (allocated(Model%QM%d0GGdef)) THEN 

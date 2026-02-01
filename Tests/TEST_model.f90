@@ -774,6 +774,8 @@ SUBROUTINE test_HenonHeiles
   CALL Eval_Pot(QModel,Q,PotVal,nderiv=nderiv)
   CALL Write_dnMat(PotVal,nio=out_unit)
 
+  CALL Check_analytical_numerical_derivatives(QModel,Q,nderiv,test_var)
+
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
   CALL Init_Model(QModel,pot_name='HenonHeiles',ndim=2,option=2)

@@ -40,6 +40,8 @@
 PROGRAM test_driver
   IMPLICIT NONE
 
+  !CALL test_Vib_adia(100)
+
   CALL test_Phenol_Dia(10**6)
   
   CALL test_TwoD_RJDI2014()
@@ -823,14 +825,22 @@ SUBROUTINE test_Vib_adia(nb_eval)
 !$ USE omp_lib
   IMPLICIT NONE
 
+  integer :: get_Qmodel_NB ! function
+
   real (kind=Rkind),      allocatable     :: Q(:)
   real (kind=Rkind),      allocatable     :: V(:,:)
+  real (kind=Rkind),      allocatable     :: Vec0(:,:)
   real (kind=Rkind),      allocatable     :: g(:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
 
-  integer                             :: ndim,nsurf,nio_QML
+  integer                             :: ndim,nsurf,NB,nio_QML
   integer                             :: i,j,k,nb_eval,maxth
+
+  character (len=:), allocatable      :: pot_name
+  integer                             :: option
+  logical                             :: adiabatic
+  real (kind=Rkind)                   :: step
 
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
@@ -841,9 +851,13 @@ SUBROUTINE test_Vib_adia(nb_eval)
   write(out_unit,*) 'TEST_driver. number of threads:',maxth
 
   ndim      = 0 ! it would be initialized
-  nsurf     = 0 ! it would be initialized
+  nsurf     = 6 ! it would be initialized
   nio_QML   = in_unit
-  CALL sub_Read_Qmodel(ndim,nsurf,nio_QML)
+
+  pot_name  = 'read_model'
+  adiabatic = .TRUE.
+  option    = -1
+  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 
   write(out_unit,*) 'ndim,nsurf',ndim,nsurf
 
@@ -854,7 +868,7 @@ SUBROUTINE test_Vib_adia(nb_eval)
   allocate(NAC(nsurf,nsurf,ndim))
 
   CALL  random_number(Q)
-  Q = Q + 4.d0
+  Q = Q + 4._Rkind
   !Q=7.d0
 
   ! calculation of the adiabatic potential (as a matrix)
@@ -888,7 +902,7 @@ SUBROUTINE test_Vib_adia(nb_eval)
 !$OMP   DO SCHEDULE(STATIC)
   DO i=1,nb_eval
     CALL  random_number(Q)
-    Q = Q + 4.d0
+    Q = Q + 4._Rkind
 
     CALL sub_Qmodel_V(V,Q)
 
@@ -902,6 +916,28 @@ SUBROUTINE test_Vib_adia(nb_eval)
 !$OMP   END PARALLEL
 
   CALL QML_time_perso('Test read_model')
+  write(out_unit,*) '============================================================'
+  write(out_unit,*) '============================================================'
+
+  allocate(Q(ndim))
+  allocate(V(nsurf,nsurf))
+  allocate(G(nsurf,nsurf,ndim))
+  allocate(NAC(nsurf,nsurf,ndim))
+  NB = get_Qmodel_NB()
+  allocate(Vec0(NB,NB))
+  Vec0(:,:) = 0._Rkind
+  step = 4._Rkind/real(nb_eval,kind=Rkind)
+
+  write(out_unit,*) '==== Vib_adia, step, NB: ',step,NB
+  flush(out_unit)
+
+  CALL set_Qmodel_Print_Vec_Overlap(.FALSE.)
+  DO i=0,nb_eval
+    Q = 4.d0 + step*i
+    CALL sub_Qmodel_VG_NAC_Vec0(V,G,NAC,Vec0,Q)
+    write(out_unit,*) 'pot_Vib_Adia',Q,(V(k,k),k=1,nsurf)
+  END DO
+
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
 

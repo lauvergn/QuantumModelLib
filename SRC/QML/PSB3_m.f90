@@ -348,24 +348,18 @@ MODULE QML_PSB3_m
        BLA = BLA * LenghtConv
     END IF
 
-    !write(*,*) 'coucou BLA,Tors,HOOP',get_d0(BLA),get_d0(Tors),get_d0(HOOP)
 !-----------------------------------------------------------------------!
     d1 = SQRT(PSB3Pot%kf1/(TWO * PSB3Pot%deepth))
     d4 = SQRT(PSB3Pot%kf4/(TWO * PSB3Pot%deepth))
-    !write(*,*) 'coucou d1,d4',d1,d4
 
     MorseBLAP = PSB3Pot%deepth * (-ONE + EXP(-d1 * (BLA - PSB3Pot%blaTSdir)))**2
     Morsemin  = PSB3Pot%deepth * (-ONE + EXP(-d4 * (BLA - PSB3Pot%blamin  )))**2
-    !write(*,*) 'coucou MorseBLAP,Morsemin',get_d0(MorseBLAP),get_d0(Morsemin)
 
     Overlap   = Tors - HOOP/TWO
-    !write(*,*) 'coucou Overlap',get_d0(Overlap)
 
     Hdir2D = sin(Overlap)**2 * (MorseBLAP + PSB3Pot%d2) + PSB3Pot%d3 * cos(Overlap / TWO)**2 + Morsemin * Cos(Overlap)**2
     Hct2D  = (ONE + PSB3Pot%c5 * sin(Overlap)**2) * (PSB3Pot%c1 * BLA**2 + &
              PSB3Pot%c2 * BLA + PSB3Pot%c3) + PSB3Pot%c4 * cos(Overlap)**2
-    !write(*,*) 'coucou Hdir2D,Hct2D',get_d0(Hdir2D),get_d0(Hct2D)
-
 !-----------------------------------------------------------------------!
 
 !-----------------------------------------------------------------------!

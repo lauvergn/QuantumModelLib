@@ -57,6 +57,8 @@ MODULE ADdnSVM_dnMat_m
   IMPLICIT NONE
   PRIVATE
 
+  integer, public :: print_level_dia_dnMat = 0
+
   TYPE dnMat_t
      integer                        :: nderiv = -1
 
@@ -113,7 +115,7 @@ MODULE ADdnSVM_dnMat_m
   END INTERFACE
 
   INTERFACE set_dnMat
-    MODULE PROCEDURE AD_set_dnMat
+    MODULE PROCEDURE AD_set_dnMat,AD_set_dnMat_FROM_Vec
   END INTERFACE
 
   INTERFACE Write_dnMat
@@ -845,7 +847,138 @@ CONTAINS
     END IF
   
   END SUBROUTINE AD_set_dnMat
-!> @brief Public subroutine which copies a dnS derived type to one element of dnMat derived type.
+  SUBROUTINE AD_set_dnMat_FROM_Vec(dnMat,Vec,nsurf,sizeL,sizeC,nVar,nderiv,err_dnMat)
+    USE QDUtil_m
+    USE ADdnSVM_dnS_m
+    IMPLICIT NONE
+
+    CLASS (dnMat_t),   intent(inout)         :: dnMat
+    real (kind=Rkind), intent(in),  target   :: Vec(:) ! a vector which contains d0, d1 ...
+    integer,           intent(in),  optional :: nsurf !< number of electronic surfaces
+    integer,           intent(in),  optional :: sizeL,sizeC !< numbers of lines and columns
+
+    integer,           intent(in),  optional :: nVar  !< number of coordinates (for the derivatives)
+    integer,           intent(in),  optional :: nderiv  !< order of the derivatives [0,1,2]
+    integer,           intent(out), optional :: err_dnMat  !< to handle the errors
+
+    ! local variables
+    integer :: sizeL_loc,sizeC_loc,nVar_loc,err_dnMat_loc,nderiv_loc
+    integer :: ni0,nf0,ni1,nf1,ni2,nf2,ni3,nf3
+    real (kind=Rkind), pointer  :: d0(:,:),d1(:,:,:),d2(:,:,:,:),d3(:,:,:,:,:)
+
+
+    integer :: err_dim
+    character (len=*), parameter :: name_sub='AD_set_dnMat_FROM_Vec'
+
+    err_dnMat_loc = 0 ! no error
+
+    CALL AD_dealloc_dnMat(dnMat,err_dnMat_loc)
+    IF (err_dnMat_loc /= 0) THEN
+      write(out_unit,*) ' ERROR in AD_set_dnMat_FROM_Vec'
+      write(out_unit,*) ' Problem in AD_dealloc_dnMat CALL in AD_set_dnMat_FROM_Vec'
+      IF (present(err_dnMat)) THEN
+        err_dnMat = err_dnMat_loc
+        RETURN
+      ELSE
+        STOP 'Problem in AD_dealloc_dnMat CALL in AD_set_dnMat_FROM_Vec'
+      END IF
+    END IF
+
+    ! test nsurf, sizeL, sizeL
+    !       T      F       F    => ok
+    !       F      T       T    => ok
+    !   all other posiblities are wrong
+    IF ( (present(nsurf) .AND. .NOT. present(sizeL) .AND. .NOT. present(sizeC) ) .OR. &
+         (.NOT. present(nsurf) .AND. present(sizeL) .AND. present(sizeC) ) ) THEN
+      CONTINUE ! the two possiblities
+      !write(out_unit,*) 'present(nsurf): ',present(nsurf)
+      !write(out_unit,*) 'present(sizeL): ',present(sizeL)
+      !write(out_unit,*) 'present(sizeC): ',present(sizeC)
+    ELSE
+      write(out_unit,*) ' ERROR in AD_set_dnMat_FROM_Vec'
+      write(out_unit,*) ' wrong parameter presence:'
+      write(out_unit,*) 'present(nsurf): ',present(nsurf)
+      write(out_unit,*) 'present(sizeL): ',present(sizeL)
+      write(out_unit,*) 'present(sizeC): ',present(sizeC)
+      write(out_unit,*)
+      write(out_unit,*) ' The two correct possibilities are:'
+      write(out_unit,*) '----------------------------------------------'
+      write(out_unit,*) ' present(nsurf) present(sizeL) present(sizeC)'
+      write(out_unit,*) '    true           false           false'
+      write(out_unit,*) '    false          true            true'
+      write(out_unit,*) '----------------------------------------------'
+
+      IF (present(err_dnMat)) THEN
+        err_dnMat = 1
+        RETURN
+      ELSE
+        STOP 'ERROR in AD_set_dnMat_FROM_Vec: wrong parameter presence,nsurf and sizeL or sizeC'
+      END IF
+    END IF
+
+    IF (present(nsurf)) THEN
+      sizeL_loc = nsurf
+      sizeC_loc = nsurf
+    ELSE IF (present(sizeL) .AND. present(sizeC)) THEN
+      sizeL_loc = sizeL
+      sizeC_loc = sizeC
+    ELSE
+      sizeL_loc = 1
+      sizeC_loc = 1
+    END IF
+    IF (sizeL_loc < 1 .OR. sizeC_loc < 1) THEN
+      write(out_unit,*) ' ERROR in AD_set_dnMat_FROM_Vec'
+      write(out_unit,*) '  sizeL_loc < 0 or sizeC_loc < 0',sizeL_loc,sizeC_loc
+      IF (present(err_dnMat)) THEN
+        err_dnMat = 1
+        RETURN
+      ELSE
+        STOP 'ERROR in AD_set_dnMat_FROM_Vec: sizeL < 0 or sizeC < 0'
+      END IF
+    END IF
+
+    ! test nVar
+    IF (present(nVar)) THEN
+      nVar_loc = nVar
+    ELSE
+      nVar_loc = 1
+    END IF
+
+    ! test nderiv
+    IF (present(nderiv)) THEN
+      nderiv_loc = max(0,nderiv)
+      nderiv_loc = min(3,nderiv_loc)
+    ELSE
+      nderiv_loc = 0
+    END IF
+    dnMat%nderiv = nderiv_loc
+
+    IF (nderiv_loc >= 0) THEN
+      ni0 = 1
+      nf0 = sizeL_loc*sizeC_loc
+      d0(1:sizeL_loc,1:sizeC_loc) => Vec(ni0:nf0)
+      dnMat%d0 = d0
+    END IF
+    IF (nderiv >= 1) THEN
+      ni1 = nf0 + 1
+      nf1 = nf0  + nf0*nVar_loc
+      d1(1:sizeL_loc,1:sizeC_loc,1:nVar_loc) => Vec(ni1:nf1)
+      dnMat%d1 = d1
+    END IF
+    IF (nderiv >= 2) THEN
+      ni2 = nf1 + 1
+      nf2 = nf1  + nf0*nVar_loc**2
+      d2(1:sizeL_loc,1:sizeC_loc,1:nVar_loc,1:nVar_loc) => Vec(ni2:nf2)
+      dnMat%d2 = d2
+    END IF  
+    IF (nderiv >= 3) THEN
+      ni3 = nf2 + 1
+      nf3 = nf2  + nf0*nVar_loc**3
+      d3(1:sizeL_loc,1:sizeC_loc,1:nVar_loc,1:nVar_loc,1:nVar_loc) => Vec(ni1:nf1)
+      dnMat%d3 = d3
+    END IF
+  END SUBROUTINE AD_set_dnMat_FROM_Vec
+  !> @brief Public subroutine which copies a dnS derived type to one element of dnMat derived type.
 !!
 !> @author David Lauvergnat
 !! @date 30/07/2019
@@ -2355,7 +2488,7 @@ CONTAINS
     integer,            intent(in),    optional :: type_diag
 
     integer                       :: nVar,nderiv,nsurf
-    real(kind=Rkind), allocatable :: Vec(:,:),tVec(:,:),Eig(:),Mtemp(:,:),Vi(:),Vj(:)
+    real(kind=Rkind), allocatable :: Vec(:,:),tVec(:,:),Eig(:),Mtemp(:,:),Vi(:),Vj(:),tab_sii(:)
     TYPE (dnMat_t)                :: dnMat_OnVec
     integer                       :: i,j,k,id,jd,kd,i_max
     real (kind=Rkind)             :: ai,aj,aii,aij,aji,ajj,th,cc,ss,aii_max,max_diff
@@ -2405,111 +2538,124 @@ CONTAINS
     CALL diagonalization(dnMat%d0,Eig,Vec,nsurf,diago_type=type_diag_loc,sort=1,phase=.TRUE.)
 
     IF (present(dnVec0)) THEN
-      IF (debug) write(out_unit,*) 'Vec0 is present: the eigenvector phases are checked'
-      flush(out_unit)
+      IF (abs(dot_product(dnVec0%d0(:,1),dnVec0%d0(:,1))-ONE) < ONETENTH**6) THEN
+        IF (debug) THEN
+          write(out_unit,*) 'Vec0 is present: the eigenvector phases are checked'
+          flush(out_unit)
+        END IF
 
-       DO i=1,nsurf
-         IF (dot_product(dnVec0%d0(:,i),Vec(:,i)) < ZERO) THEN
-            IF (debug) write(out_unit,*) 'Change phase:',i
-            Vec(:,i) = -Vec(:,i)
-          END IF
-       END DO
-
-       IF (debug) THEN
-         write(out_unit,*) 'Vec before rotation'
-         CALL Write_Mat(Vec,nio=out_unit,nbcol=5)
-       END IF
-
-       !For degenerated eigenvectors (works only with 2 vectors)
-       DO i=1,nsurf-1
-         IF ( abs(Eig(i)-Eig(i+1)) < TEN*epsi) THEN
-           j = i+1
-           IF (debug) write(out_unit,*) 'degenerated vectors',i,j
-
-           aii = dot_product(dnVec0%d0(:,i),Vec(:,i))
-           aji = dot_product(dnVec0%d0(:,j),Vec(:,i))
-           aij = dot_product(dnVec0%d0(:,i),Vec(:,j))
-           ajj = dot_product(dnVec0%d0(:,j),Vec(:,j))
-
-           !change the phase of one vector (i) if det(Mij)<0
-           IF ((aii*ajj-aij*aji) < 0) THEN
-             IF (debug) write(out_unit,*) 'det < 0',(aii*ajj-aij*aji)
+        DO i=1,nsurf
+          IF (dot_product(dnVec0%d0(:,i),Vec(:,i)) < ZERO) THEN
+             IF (debug) write(out_unit,*) 'Change phase:',i
              Vec(:,i) = -Vec(:,i)
-             aii = -aii
-             aji = -aji
-           ELSE
-             IF (debug) write(out_unit,*) 'det > 0'
            END IF
-           IF (debug) write(out_unit,*) 'aii,ajj,aji,aij',aii,ajj,aji,aij
+        END DO
 
-           Mij(1,:) = [aii,aij]
-           Mij(2,:) = [aji,ajj]
+        IF (debug) THEN
+          write(out_unit,*) 'Vec before rotation'
+          CALL Write_Mat(Vec,nio=out_unit,nbcol=5)
+        END IF
 
-           th = atan2(aji-aij,aii+ajj) ! we have to test with +pi as well
+        !For degenerated eigenvectors (works only with 2 vectors)
+        DO i=1,nsurf-1
+          IF ( abs(Eig(i)-Eig(i+1)) < TEN*epsi) THEN
+            j = i+1
+            IF (debug) write(out_unit,*) 'degenerated vectors',i,j
 
-           cc = cos(th)
-           ss = sin(th)
+            aii = dot_product(dnVec0%d0(:,i),Vec(:,i))
+            aji = dot_product(dnVec0%d0(:,j),Vec(:,i))
+            aij = dot_product(dnVec0%d0(:,i),Vec(:,j))
+            ajj = dot_product(dnVec0%d0(:,j),Vec(:,j))
 
-           Rot(1,:) = [ cc,ss]
-           Rot(2,:) = [-ss,cc]
+            !change the phase of one vector (i) if det(Mij)<0
+            IF ((aii*ajj-aij*aji) < 0) THEN
+              IF (debug) write(out_unit,*) 'det < 0',(aii*ajj-aij*aji)
+              Vec(:,i) = -Vec(:,i)
+              aii = -aii
+              aji = -aji
+            ELSE
+              IF (debug) write(out_unit,*) 'det > 0'
+            END IF
+            IF (debug) write(out_unit,*) 'aii,ajj,aji,aij',aii,ajj,aji,aij
 
-           RMij = matmul(Rot,Mij)
-           RMij(1,1) = RMij(1,1)-1 ; RMij(2,2) = RMij(2,2)-1
-           IF (debug) write(out_unit,*) 'RMij',RMij
-           err1 = sqrt(sum(RMij**2))
-           IF (debug) write(out_unit,*) 'Err, th',th,err1
-           ! th+pi => Rot=-Rot
-           RMij = -matmul(Rot,Mij) ; RMij(1,1) = RMij(1,1)-1 ; RMij(2,2) = RMij(2,2)-1
-           IF (debug) write(out_unit,*) 'RMij',RMij
-           err2 = sqrt(sum(RMij**2))
-           IF (debug) write(out_unit,*) 'Err, th+pi',th+pi,err2
+            Mij(1,:) = [aii,aij]
+            Mij(2,:) = [aji,ajj]
 
-           IF (err2 < err1) THEN
-             th = th+pi
-             cc = -cc
-             ss = -ss
-           END IF
+            th = atan2(aji-aij,aii+ajj) ! we have to test with +pi as well
 
-           IF (debug) write(out_unit,*) 'theta',th
+            cc = cos(th)
+            ss = sin(th)
 
-           IF (abs(th) < epsi) CYCLE
+            Rot(1,:) = [ cc,ss]
+            Rot(2,:) = [-ss,cc]
 
-           Vj       = Vec(:,j)
-           Vi       = Vec(:,i)
-           Vec(:,i) =  cc * Vi + ss * Vj
-           Vec(:,j) = -ss * Vi + cc * Vj
-         END IF
-       END DO
+            RMij = matmul(Rot,Mij)
+            RMij(1,1) = RMij(1,1)-1 ; RMij(2,2) = RMij(2,2)-1
+            IF (debug) write(out_unit,*) 'RMij',RMij
+            err1 = sqrt(sum(RMij**2))
+            IF (debug) write(out_unit,*) 'Err, th',th,err1
+            ! th+pi => Rot=-Rot
+            RMij = -matmul(Rot,Mij) ; RMij(1,1) = RMij(1,1)-1 ; RMij(2,2) = RMij(2,2)-1
+            IF (debug) write(out_unit,*) 'RMij',RMij
+            err2 = sqrt(sum(RMij**2))
+            IF (debug) write(out_unit,*) 'Err, th+pi',th+pi,err2
 
-       IF (debug) write(out_unit,*) 'Change phase?'
-       flush(out_unit)
+            IF (err2 < err1) THEN
+              th = th+pi
+              cc = -cc
+              ss = -ss
+            END IF
 
-       DO i=1,nsurf
-         IF (dot_product(dnVec0%d0(:,i),Vec(:,i)) < ZERO) THEN
-            IF (debug) write(out_unit,*) 'Change phase:',i
-            Vec(:,i) = -Vec(:,i)
+            IF (debug) write(out_unit,*) 'theta',th
+
+            IF (abs(th) < epsi) CYCLE
+
+            Vj       = Vec(:,j)
+            Vi       = Vec(:,i)
+            Vec(:,i) =  cc * Vi + ss * Vj
+            Vec(:,j) = -ss * Vi + cc * Vj
           END IF
-       END DO
+        END DO
 
+        IF (debug) THEN 
+          write(out_unit,*) 'Change phase?'
+          flush(out_unit)
+        END IF
 
-       max_diff = -ONE
-       i_max    = 0
-       DO i=1,nsurf
-         aii = dot_product(dnVec0%d0(:,i),Vec(:,i))
-         IF (abs(aii-ONE) > max_diff) THEN
-           aii_max  = aii
-           max_diff = abs(aii-ONE)
-           i_max    = i
-         END IF
-         IF (debug) write(out_unit,*) '<Vec0(:,i)|Vec(:,i)> :',i,aii
-       END DO
-       IF (max_diff > 0.2_Rkind .OR. debug) THEN
-         write(out_unit,*) 'Largest difference to one of <Vec0(:,i)|Vec(:,i)> :',i_max,aii_max
-         write(out_unit,*) 'Vec:'
-         CALL Write_Mat(Vec,nio=out_unit,nbcol=5)
-         write(out_unit,*) 'Vec0:'
-         CALL Write_Mat(dnVec0%d0,nio=out_unit,nbcol=5)
-       END IF
+        DO i=1,nsurf
+          IF (dot_product(dnVec0%d0(:,i),Vec(:,i)) < ZERO) THEN
+             IF (debug) write(out_unit,*) 'Change phase:',i
+             Vec(:,i) = -Vec(:,i)
+           END IF
+        END DO
+
+        max_diff = -ONE
+        i_max    = 0
+        allocate(tab_sii(nsurf))
+        tab_sii(:) = ZERO
+        DO i=1,nsurf
+          aii = dot_product(dnVec0%d0(:,i),Vec(:,i))
+          tab_sii(i) = aii
+          IF (abs(aii-ONE) > max_diff) THEN
+            aii_max  = aii
+            max_diff = abs(aii-ONE)
+            i_max    = i
+          END IF
+          IF (debug) write(out_unit,*) '<Vec0(:,i)|Vec(:,i)> :',i,aii
+        END DO
+        IF (max_diff > 0.2_Rkind .OR. debug) THEN
+          write(out_unit,*) 'Largest difference to one of <Vec0(:,i)|Vec(:,i)> :',i_max,aii_max
+          IF (debug) THEN
+           write(out_unit,*) 'Vec:'
+           CALL Write_Mat(Vec,nio=out_unit,nbcol=5)
+           write(out_unit,*) 'Vec0:'
+           CALL Write_Mat(dnVec0%d0,nio=out_unit,nbcol=5)
+          END IF
+        END IF
+        IF (print_level_dia_dnMat > 1) write(out_unit,*) '<Vec0(:,i)|Vec(:,i)> :',tab_sii(:)
+      ELSE
+        dnVec0%d0 = Vec
+      END IF
     ELSE
       IF (debug) write(out_unit,*) 'Vec0 is absent: the eigenvector phases are not checked'
     END IF
