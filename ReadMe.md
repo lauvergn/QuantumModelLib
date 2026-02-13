@@ -25,9 +25,14 @@
 
 ## 1) Installation
 
-   From the QuantumModelLib directory, when make is executated, the **libQMLibFull_XXX_optx_ompy_lapakz.a** must be created (ex: **libQMLibFull_gfortran_opt1_omp1_lapack1**).
-   **XXX** is the compiler name and **x**, **y** and **z** are 0/1 when flags are turn off/on. 
-   They correspond to OPT (compiler optimization), OpenMP and Lapack/blas, respectively.
+From the QuantumModelLib directory, when make is executated, the **libQMLibFull_XXX_optW_ompX_lapacY_intZ_realR.a** must be created (ex: **libQMLibFull_gfortran_opt1_omp1_lapack1_int4_real64.a**).
+
+- **XXX**: the compiler name (like gfortran)
+- **W**: the value O or 1 when flags is turn off/on the compiler optimization, 
+- **X**: the value O or 1 when flags are turn off/on the OpenMP feature
+- **Y**: the value O or 1 when flags is turn off/on to add Lapack/blas libraries.
+- **Z**: the value 4 or 8 (default 4). 8 to change integer kind compiler default to long integer.
+- **R**: the value of real kind (32, 64, 128)
 
 ```
    This version works with:
@@ -42,15 +47,15 @@ Although, the library can be compiled and used with real in single precision (re
 When lapack/blas are not linked to the library:
 
 ```bash
-   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optx_ompy_lapak0.a
+   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optW_ompX_lapac0_intZ_realR.a
 ```
 
 or with  lapack/blas (linux)
 
 ```bash
-   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optx_ompy_lapak0.a -llapack -lblas
+   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optW_ompX_lapac1_intZ_realR.a -llapack -lblas
 ```
-*QuantumModelLib_path* contains the path of the **QuantumModelLib**
+*QuantumModelLib_path* contains the path of the **QuantumModelLib** directory.
 
 
 ## 3) In your Fortan code
@@ -83,7 +88,6 @@ Example:
 It initializes the phenol potential (2D and 3 PES).
 => Computation of the diabatic surface
 
-
 ### 3a2) Initialization of the potential (reading the model)
 
 ```fortran
@@ -95,7 +99,8 @@ It initializes the phenol potential (2D and 3 PES).
   - nsurf      : the number of electronic surface(s) (adiabatic or diabatic) [integer]
   - nio        : file unit where the namelist is read. It can be the standard unit [integer]
 ```
-Then, the **&potential** namelist is read.
+Then, the **&potential** namelist is read. It can be done with the **sub_Init_Qmodel** subroutine (see the nex section).
+
 In the following exemple, the 2+1D-retinal model ('Retinal_JPCB2000') is read.
 
 ```fortran

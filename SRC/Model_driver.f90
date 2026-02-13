@@ -38,13 +38,15 @@
 !===========================================================================
 !===========================================================================
 SUBROUTINE sub_Read_Qmodel(ndim,nsurf,nio)
+  !< Subroutine which enables to set the model (potential) in reading the 'potential' namelist.
   USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
 
-  integer,                intent(inout)     :: ndim,nsurf
-  integer,                intent(in)        :: nio
+  integer,                intent(inout)     :: ndim  !< number of degree(s) of freedom
+  integer,                intent(inout)     :: nsurf !< number of electronic states or vibrational adiabatic channels
+  integer,                intent(in)        :: nio   !< unit file where the namelist is read
 
 !$OMP CRITICAL (CRIT_sub_Read_Qmodel)
     !$ write(out_unit,*) 'begining: max threads?',omp_get_max_threads()
@@ -64,15 +66,17 @@ SUBROUTINE sub_Read_Qmodel(ndim,nsurf,nio)
 
 END SUBROUTINE sub_Read_Qmodel
 SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  !< Subroutine which enables to set the model (potential).
   USE QDUtil_NumParameters_m
   USE Model_m
   !$ USE omp_lib
   IMPLICIT NONE
 
-  integer,                intent(inout)     :: ndim,nsurf
-  character (len=*),      intent(in)        :: pot_name
-  integer,                intent(in)        :: option
-  logical,                intent(in)        :: adiabatic
+  integer,                intent(inout)     :: ndim      !< integer, number of degree(s) of freedom
+  integer,                intent(inout)     :: nsurf     !< integer, number of electronic states or vibrational adiabatic channels
+  character (len=*),      intent(in)        :: pot_name  !< character string, potential of model name
+  integer,                intent(in)        :: option    !< integer, option of the model (relevant to some models)
+  logical,                intent(in)        :: adiabatic !< logical, flag to turn on/off the adiatic calculations
 
 !$OMP CRITICAL (CRIT_sub_Init_Qmodel)
     !$ write(out_unit,*) 'begining: max threads?',omp_get_max_threads()

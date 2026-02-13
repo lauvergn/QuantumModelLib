@@ -310,7 +310,8 @@ CONTAINS
         Q0(:) = HUGE(ONE)
         RETURN
       END IF
-      Q0(:) = [0.1_Rkind,-0.1_Rkind,0.2_Rkind,-0.2_Rkind,0.3_Rkind,-0.3_Rkind,0.4_Rkind,-0.4_Rkind,0.5_Rkind]
+      Q0(:) = [0.1_Rkind,-0.1_Rkind,0.2_Rkind,-0.2_Rkind,0.3_Rkind,-0.3_Rkind,0.4_Rkind, &
+              -0.4_Rkind,0.5_Rkind]
     END IF
 
     IF (present(dnMatV)) THEN
