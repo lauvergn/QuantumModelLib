@@ -252,7 +252,7 @@ SUBROUTINE sub_Qmodel_V(V,Q)
   CALL calc_pot(V,QuantumModel,Q(1:QuantumModel%ndim))
 
 END SUBROUTINE sub_Qmodel_V
-SUBROUTINE sub_Qmodel_Vdia_Vadia(Vdia,Vadia,Q)
+SUBROUTINE sub_Qmodel_Vdia_Vadia_old(Vdia,Vadia,Q)
   USE QDUtil_NumParameters_m
   USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
   USE Model_m
@@ -273,6 +273,34 @@ SUBROUTINE sub_Qmodel_Vdia_Vadia(Vdia,Vadia,Q)
 
   CALL dealloc_dnMat(PotVal_dia)
   CALL dealloc_dnMat(PotVal_adia)
+
+END SUBROUTINE sub_Qmodel_Vdia_Vadia_old
+SUBROUTINE sub_Qmodel_Vdia_Vadia(Vdia,Vadia,Q)
+  USE QDUtil_NumParameters_m
+  USE QMLValues_m
+  USE Model_m
+  IMPLICIT NONE
+
+  real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)     :: Vdia(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     :: Vadia(QuantumModel%nsurf,QuantumModel%nsurf)
+
+  !TYPE (dnMat_t)             :: PotVal_adia,PotVal_dia
+  TYPE (QMLValues_t)         :: QMLValues
+
+
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_Vdia_Vadia')
+
+  CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=0)
+
+  IF (allocated(QMLValues%PotAdia%d0)) THEN
+    Vadia = QMLValues%PotAdia%d0
+  ELSE
+    Vadia = ZERO
+  END IF
+  Vdia  = QMLValues%PotDia%d0
+
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_Vdia_Vadia
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
