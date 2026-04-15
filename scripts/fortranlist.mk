@@ -41,6 +41,7 @@ H2_m.f90  \
 Retinal_JPCB2000_m.f90  \
 PSB3_m.f90  \
 HNNHp_m.f90  \
+TestImag_m.f90  \
 Template_m.f90  \
 H2NSi_m.f90  \
 TwoD_Valahu2022_m.f90  \
@@ -50,8 +51,10 @@ TwoD_m.f90  \
 PH4Jo_m.f90  \
 MakeHinact_m.f90  \
 Basis_m.f90  \
+Model_driver_util.f90  \
 Model_driver.f90  \
 Model_m.f90  \
 QMLValues_m.f90  \
 IRC_m.f90  \
 Opt_m.f90  \
+Model_driver_old.f90  \

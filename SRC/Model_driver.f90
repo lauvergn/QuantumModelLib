@@ -142,50 +142,6 @@ SUBROUTINE sub_check_Init_Qmodel(check)
 
 END SUBROUTINE sub_check_Init_Qmodel
 
-FUNCTION get_Qmodel_ndim() RESULT(ndim)
-  USE Model_m
-  IMPLICIT NONE
-
-  integer     :: ndim
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_ndim in Model_driver.f90')
-
-  ndim  = QuantumModel%ndim
-
-END FUNCTION get_Qmodel_ndim
-FUNCTION get_Qmodel_nsurf() RESULT(nsurf)
-  USE Model_m
-  IMPLICIT NONE
-
-  integer     :: nsurf
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_ndim in Model_driver.f90')
-
-  nsurf  = QuantumModel%nsurf
-
-END FUNCTION get_Qmodel_nsurf
-FUNCTION get_Qmodel_NB() RESULT(NB)
-  USE Model_m
-  IMPLICIT NONE
-
-  integer     :: NB
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_ndim in Model_driver.f90')
-
-  NB  = QuantumModel%NB
-
-END FUNCTION get_Qmodel_NB
-FUNCTION get_Qmodel_Vib_Adia() RESULT(Vib_Adia)
-  USE Model_m
-  IMPLICIT NONE
-
-  logical     :: Vib_Adia
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_VibAdia in Model_driver.f90')
-
-  Vib_Adia  = QuantumModel%QM%Vib_adia
-
-END FUNCTION get_Qmodel_Vib_Adia
 SUBROUTINE sub_Write_Qmodel(nio)
   USE Model_m
   IMPLICIT NONE
@@ -243,38 +199,90 @@ END SUBROUTINE get_Qmodel_Q0
 SUBROUTINE sub_Qmodel_V(V,Q)
   USE QDUtil_NumParameters_m
   USE Model_m
+  USE QMLValues_m
   IMPLICIT NONE
 
 
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
   real (kind=Rkind),      intent(inout)     :: V(QuantumModel%nsurf,QuantumModel%nsurf)
 
-  CALL calc_pot(V,QuantumModel,Q(1:QuantumModel%ndim))
+  TYPE (QMLValues_t)         :: QMLValues
+
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_V in Model_driver.f90')
+
+  CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=0)
+  
+  IF (allocated(QMLValues%PotAdia%d0)) THEN
+    V = QMLValues%PotAdia%d0
+  ELSE
+    V = QMLValues%PotDia%d0
+  END IF
+
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_V
-SUBROUTINE sub_Qmodel_Vdia_Vadia_old(Vdia,Vadia,Q)
+SUBROUTINE sub_Qmodel_VG(V,G,Q)
   USE QDUtil_NumParameters_m
-  USE ADdnSVM_m, ONLY : dnMat_t,dealloc_dnMat
+  USE QMLValues_m
   USE Model_m
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
-  real (kind=Rkind),      intent(inout)     :: Vdia(QuantumModel%nsurf,QuantumModel%nsurf)
-  real (kind=Rkind),      intent(inout)     :: Vadia(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     ::                          &
+                                V(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     ::                          &
+               g(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
 
-  TYPE (dnMat_t)                         :: PotVal_adia,PotVal_dia
+  TYPE (QMLValues_t)         :: QMLValues
 
-  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_Vdia_Vadia')
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_VG in Model_driver.f90')
 
-  CALL Eval_Pot(QuantumModel,Q,PotVal_adia,nderiv=0,PotVal_dia=PotVal_dia)
+  CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=1)
+  
+  IF (allocated(QMLValues%PotAdia%d0)) THEN
+    V = QMLValues%PotAdia%d0
+    g = QMLValues%PotAdia%d1
+  ELSE
+    V = QMLValues%PotDia%d0
+    g = QMLValues%PotDia%d1
+  END IF
 
-  Vadia = PotVal_adia%d0
-  Vdia  = PotVal_dia%d0
+  CALL dealloc_QMLValues(QMLValues)
 
-  CALL dealloc_dnMat(PotVal_dia)
-  CALL dealloc_dnMat(PotVal_adia)
+END SUBROUTINE sub_Qmodel_VG
+SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
+  USE QDUtil_NumParameters_m
+  USE Model_m
+  USE QMLValues_m
+  IMPLICIT NONE
 
-END SUBROUTINE sub_Qmodel_Vdia_Vadia_old
+  real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)     ::                                  &
+                                        V(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)     ::                                  &
+                      g(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)     :: h(QuantumModel%nsurf,            &
+                         QuantumModel%nsurf,QuantumModel%ndim,QuantumModel%ndim)
+
+  TYPE (QMLValues_t)         :: QMLValues
+
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_VGH in Model_driver.f90')
+
+  CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=2)
+  
+  IF (allocated(QMLValues%PotAdia%d0)) THEN
+    V = QMLValues%PotAdia%d0
+    g = QMLValues%PotAdia%d1
+    h = QMLValues%PotAdia%d2
+  ELSE
+    V = QMLValues%PotDia%d0
+    g = QMLValues%PotDia%d1
+    h = QMLValues%PotDia%d2
+  END IF
+
+  CALL dealloc_QMLValues(QMLValues)
+
+END SUBROUTINE sub_Qmodel_VGH
 SUBROUTINE sub_Qmodel_Vdia_Vadia(Vdia,Vadia,Q)
   USE QDUtil_NumParameters_m
   USE QMLValues_m
@@ -285,11 +293,9 @@ SUBROUTINE sub_Qmodel_Vdia_Vadia(Vdia,Vadia,Q)
   real (kind=Rkind),      intent(inout)     :: Vdia(QuantumModel%nsurf,QuantumModel%nsurf)
   real (kind=Rkind),      intent(inout)     :: Vadia(QuantumModel%nsurf,QuantumModel%nsurf)
 
-  !TYPE (dnMat_t)             :: PotVal_adia,PotVal_dia
   TYPE (QMLValues_t)         :: QMLValues
 
-
-  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_Vdia_Vadia')
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_Vdia_Vadia in Model_driver.f90')
 
   CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=0)
 
@@ -305,7 +311,7 @@ SUBROUTINE sub_Qmodel_Vdia_Vadia(Vdia,Vadia,Q)
 END SUBROUTINE sub_Qmodel_Vdia_Vadia
 SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   USE QDUtil_NumParameters_m
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
+  USE QMLValues_m
   USE Model_m
   IMPLICIT NONE
 
@@ -313,27 +319,26 @@ SUBROUTINE sub_Qmodel_VVec(V,Vec,Q)
   real (kind=Rkind),      intent(inout)     :: V(QuantumModel%nsurf,QuantumModel%nsurf)
   real (kind=Rkind),      intent(inout)     :: Vec(QuantumModel%nsurf,QuantumModel%nsurf)
 
-  TYPE (dnMat_t)                  :: Vec_loc,PotVal_loc
-
+  TYPE (QMLValues_t)         :: QMLValues
 
   CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VVec in Model_driver.f90')
 
+  CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=0)
 
-  CALL alloc_dnMat(Vec_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
-  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
+  V = QMLValues%PotAdia%d0
 
-  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=0,Vec=Vec_loc)
+  IF (allocated(QMLValues%Vec%d0)) THEN
+    Vec = QMLValues%Vec%d0
+  ELSE
+    Vec = ZERO
+  END IF
 
-  V(:,:)   = PotVal_loc%d0
-  Vec(:,:) = Vec_loc%d0
-
-  CALL dealloc_dnMat(PotVal_loc)
-  CALL dealloc_dnMat(Vec_loc)
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_VVec
 SUBROUTINE sub_Qmodel_VVec_Vec0(V,Vec,Vec0,Q)
   USE QDUtil_NumParameters_m
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
+  USE QMLValues_m
   USE Model_m
   IMPLICIT NONE
 
@@ -342,47 +347,26 @@ SUBROUTINE sub_Qmodel_VVec_Vec0(V,Vec,Vec0,Q)
   real (kind=Rkind),      intent(inout)     :: Vec(QuantumModel%NB,QuantumModel%nsurf)
   real (kind=Rkind),      intent(inout)     :: Vec0(QuantumModel%NB,QuantumModel%nsurf)
 
-  TYPE (dnMat_t)                  :: Vec_loc,PotVal_loc,Vec0_loc
-
+  TYPE (QMLValues_t)         :: QMLValues
 
   CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VVec_Vec0 in Model_driver.f90')
 
+  QMLValues%Vec0%d0 = Vec0(:,:)
 
-  CALL alloc_dnMat(Vec_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
-  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
-  CALL alloc_dnMat(Vec0_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
+  CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=0)
 
-  Vec0_loc%d0 = Vec0(:,:)
+  V    = QMLValues%PotAdia%d0
+  Vec  = QMLValues%Vec%d0
+  Vec0 = QMLValues%Vec0%d0
 
-  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=0,Vec=Vec_loc,Vec0=Vec0_loc)
-
-  V(:,:)    = PotVal_loc%d0
-  Vec(:,:)  = Vec_loc%d0
-  Vec0(:,:) = Vec0_loc%d0
-
-  CALL dealloc_dnMat(PotVal_loc)
-  CALL dealloc_dnMat(Vec_loc)
-  CALL dealloc_dnMat(Vec0_loc)
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_VVec_Vec0
-SUBROUTINE sub_Qmodel_VG(V,G,Q)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  IMPLICIT NONE
 
-  real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
-  real (kind=Rkind),      intent(inout)     ::                          &
-                                V(QuantumModel%nsurf,QuantumModel%nsurf)
-  real (kind=Rkind),      intent(inout)     ::                          &
-               g(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
-
-  CALL calc_pot_grad(V,G,QuantumModel,Q)
-
-END SUBROUTINE sub_Qmodel_VG
 SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   USE QDUtil_NumParameters_m
   USE Model_m
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
+  USE QMLValues_m
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)       :: Q(QuantumModel%ndim)
@@ -393,29 +377,23 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   real (kind=Rkind),      intent(inout)    :: NAC(QuantumModel%nsurf,   &
                                    QuantumModel%nsurf,QuantumModel%ndim)
 
-
-  TYPE (dnMat_t)                  :: NAC_loc,PotVal_loc
+  TYPE (QMLValues_t)         :: QMLValues
 
   CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VG_NAC in Model_driver.f90')
 
+  CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=1)
+  
+  V   = QMLValues%PotAdia%d0
+  g   = QMLValues%PotAdia%d1
+  NAC = QMLValues%NAC%d1
 
-  CALL alloc_dnMat(NAC_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
-  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
-
-  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc)
-
-  V(:,:)     = PotVal_loc%d0
-  G(:,:,:)   = PotVal_loc%d1
-  NAC(:,:,:) = NAC_loc%d1
-
-  CALL dealloc_dnMat(PotVal_loc)
-  CALL dealloc_dnMat(NAC_loc)
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_VG_NAC
 SUBROUTINE sub_Qmodel_VG_NAC_Vec0(V,G,NAC,Vec0,Q)
   USE QDUtil_NumParameters_m
   USE Model_m
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
+  USE QMLValues_m
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)       :: Q(QuantumModel%ndim)
@@ -424,34 +402,27 @@ SUBROUTINE sub_Qmodel_VG_NAC_Vec0(V,G,NAC,Vec0,Q)
   real (kind=Rkind),      intent(inout)    :: NAC(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
   real (kind=Rkind),      intent(inout)    :: Vec0(QuantumModel%NB,QuantumModel%NB)
 
-  TYPE (dnMat_t)                  :: NAC_loc,PotVal_loc,Vec0_loc
+  TYPE (QMLValues_t)         :: QMLValues
 
   CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VG_NAC_Vec0 in Model_driver.f90')
 
+  QMLValues%Vec0%d0 = Vec0(:,:)
 
-  CALL alloc_dnMat(NAC_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
-  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
-  CALL alloc_dnMat(Vec0_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
+  CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=1)
+  
+  V   = QMLValues%PotAdia%d0
+  g   = QMLValues%PotAdia%d1
+  NAC = QMLValues%NAC%d1
 
-  Vec0_loc%d0 = Vec0(:,:)
+  Vec0 = QMLValues%Vec0%d0
 
-  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc,Vec0=Vec0_loc)
-
-  V(:,:)     = PotVal_loc%d0
-  G(:,:,:)   = PotVal_loc%d1
-  NAC(:,:,:) = NAC_loc%d1
-  Vec0(:,:)  = Vec0_loc%d0
-
-  CALL dealloc_dnMat(PotVal_loc)
-  CALL dealloc_dnMat(NAC_loc)
-  CALL dealloc_dnMat(Vec0_loc)
-
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_VG_NAC_Vec0
 SUBROUTINE sub_Qmodel_VG_NAC_VecVec0(V,G,NAC,Vec,Vec0,Q)
   USE QDUtil_NumParameters_m
   USE Model_m
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
+  USE QMLValues_m
   IMPLICIT NONE
 
   real (kind=Rkind),      intent(in)       :: Q(QuantumModel%ndim)
@@ -461,48 +432,25 @@ SUBROUTINE sub_Qmodel_VG_NAC_VecVec0(V,G,NAC,Vec,Vec0,Q)
   real (kind=Rkind),      intent(inout)    :: Vec(QuantumModel%nsurf,QuantumModel%nsurf)
   real (kind=Rkind),      intent(inout)    :: Vec0(QuantumModel%nsurf,QuantumModel%nsurf)
 
-  TYPE (dnMat_t)                  :: NAC_loc,PotVal_loc,Vec_loc,Vec0_loc
+  TYPE (QMLValues_t)         :: QMLValues
 
   CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VG_NAC_VecVec0 in Model_driver.f90')
 
+  QMLValues%Vec0%d0 = Vec0(:,:)
 
-  CALL alloc_dnMat(NAC_loc,   nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
-  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
-  CALL alloc_dnMat(Vec0_loc,  nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
-  CALL alloc_dnMat(Vec_loc,   nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=0)
+  CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=1)
+  
+  V    = QMLValues%PotAdia%d0
+  g    = QMLValues%PotAdia%d1
+  NAC  = QMLValues%NAC%d1
+  Vec  = QMLValues%Vec%d0
 
-  Vec0_loc%d0 = Vec0(:,:)
+  Vec0 = QMLValues%Vec0%d0
 
-  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc,Vec=Vec_loc,Vec0=Vec0_loc)
-
-  V(:,:)     = PotVal_loc%d0
-  G(:,:,:)   = PotVal_loc%d1
-  NAC(:,:,:) = NAC_loc%d1
-  Vec(:,:)   = Vec_loc%d0
-  Vec0(:,:)  = Vec0_loc%d0
-
-  CALL dealloc_dnMat(PotVal_loc)
-  CALL dealloc_dnMat(NAC_loc)
-  CALL dealloc_dnMat(Vec_loc)
-  CALL dealloc_dnMat(Vec0_loc)
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_VG_NAC_VecVec0
-SUBROUTINE sub_Qmodel_VGH(V,G,H,Q)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  IMPLICIT NONE
 
-  real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
-  real (kind=Rkind),      intent(inout)     ::                                  &
-                                        V(QuantumModel%nsurf,QuantumModel%nsurf)
-  real (kind=Rkind),      intent(inout)     ::                                  &
-                      g(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
-  real (kind=Rkind),      intent(inout)     :: h(QuantumModel%nsurf,            &
-                         QuantumModel%nsurf,QuantumModel%ndim,QuantumModel%ndim)
-
-  CALL calc_pot_grad_hess(V,G,H,QuantumModel,Q)
-
-END SUBROUTINE sub_Qmodel_VGH
 SUBROUTINE sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
   USE QDUtil_NumParameters_m
   USE Model_m
@@ -530,27 +478,7 @@ SUBROUTINE sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
   tab_MatH(:,:,:) = tab_MatH_loc
 
 END SUBROUTINE sub_Qmodel_tab_HMatVibAdia
-SUBROUTINE sub_Qmodel_Check_anaVSnum(Q,nderiv)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  IMPLICIT NONE
 
-  real (kind=Rkind),      intent(in)        :: Q(QuantumModel%ndim)
-  integer,                intent(in)        :: nderiv
-
-  CALL Check_analytical_numerical_derivatives(QuantumModel,Q,nderiv=2)
-
-END SUBROUTINE sub_Qmodel_Check_anaVSnum
-SUBROUTINE sub_Qmodel_check_alloc_d0GGdef(check)
-  USE Model_m
-  IMPLICIT NONE
-
-  logical,            intent(inout)    :: check
-
-  check = check_Init_QModel(QuantumModel) ! check if QuantumModel%QM is allocated and initialized
-  IF (check) check = check_alloc_d0GGdef(QuantumModel%QM)
-
-END SUBROUTINE sub_Qmodel_check_alloc_d0GGdef
 SUBROUTINE get_Qmodel_GGdef(GGdef)
   USE QDUtil_NumParameters_m
   USE Model_m
@@ -606,635 +534,3 @@ SUBROUTINE set_Qmodel_GGdef(GGdef,ndim)
   QuantumModel%QM%d0GGdef(:,:) = GGdef
 
 END SUBROUTINE set_Qmodel_GGdef
-SUBROUTINE set_Qmodel_step(step_in)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  IMPLICIT NONE
-
-  real (kind=Rkind),      intent(in)        :: step_in
-
-  CALL set_step_epsi_Model(step_in=step_in)
-
-END SUBROUTINE set_Qmodel_step
-SUBROUTINE set_Qmodel_Print_level(printlevel)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: printlevel
-
-  CALL set_print_level(printlevel,force=.TRUE.) ! from them module QDUtil lib
-
-END SUBROUTINE set_Qmodel_Print_level
-SUBROUTINE set_Qmodel_in_unit(inunitp)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: inunitp
-
-  in_unit = inunitp  ! from the module QMLLib_NumParameters_m.f90
-
-END SUBROUTINE set_Qmodel_in_unit
-SUBROUTINE set_Qmodel_out_unit(outunitp)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: outunitp
-
-  out_unit = outunitp  ! from the module QMLLib_NumParameters_m.f90
-
-END SUBROUTINE set_Qmodel_out_unit
-SUBROUTINE set_Qmodel_Phase_Following(Phase_Following)
-  USE Model_m
-  IMPLICIT NONE
-
-  logical,                intent(in)        :: Phase_Following
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='set_Qmodel_Phase_Following in Model_driver.f90')
-
-  QuantumModel%QM%Phase_Following = Phase_Following
-
-END SUBROUTINE set_Qmodel_Phase_Following
-SUBROUTINE set_Qmodel_Phase_Checking(Phase_Checking)
-  USE Model_m
-  IMPLICIT NONE
-
-  logical,                intent(in)        :: Phase_Checking
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='set_Qmodel_Phase_Checking in Model_driver.f90')
-
-  QuantumModel%QM%Phase_Checking = Phase_Checking
-
-END SUBROUTINE set_Qmodel_Phase_Checking
-SUBROUTINE set_Qmodel_Print_Vec_Overlap(Print_Vec_Overlap)
-  USE Model_m
-  USE ADdnSVM_m
-  IMPLICIT NONE
-
-  logical,                intent(inout)        :: Print_Vec_Overlap
-
-  IF (Print_Vec_Overlap) print_level_dia_dnMat = 2
-
-END SUBROUTINE set_Qmodel_Print_Vec_Overlap
-
-SUBROUTINE sub_model_V(V,Q,ndim,nsurf)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  !$ USE omp_lib
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: ndim,nsurf
-  real (kind=Rkind),      intent(in)        :: Q(ndim)
-  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-
-  logical, SAVE                    :: begin = .TRUE.
-
-
-!$OMP CRITICAL (CRIT_sub_model_V)
-  IF (begin) THEN
-    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
-    CALL Init_Model(QuantumModel,pot_name='HenonHeiles',ndim=ndim,      &
-                    read_param=.FALSE.,adiabatic=.TRUE.)
-    IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unit,*) ' ERROR in sub_model_V'
-      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unit,*) '   .... with the intialized ones !!'
-      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unit,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model_V: wrong ndim or nsurf'
-    END IF
-    begin = .FALSE.
-  END IF
-!$OMP END CRITICAL (CRIT_sub_model_V)
-
-  CALL calc_pot(V,QuantumModel,Q)
-
-END SUBROUTINE sub_model_V
-SUBROUTINE sub_model1_V(V,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  !$ USE omp_lib
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: ndim,nsurf
-  real (kind=Rkind),      intent(in)        :: Q(ndim)
-  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-  character (len=*),      intent(in)        :: pot_name
-  integer,                intent(in)        :: option
-
-  logical, SAVE                    :: begin = .TRUE.
-
-
-  IF (option < 0) THEN
-    begin = .TRUE.
-    RETURN
-  END IF
-
-!$OMP CRITICAL (CRIT_sub_model1_V)
-  IF (begin .OR. option < 0) THEN
-    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unit)
-    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
-             ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.TRUE.)
-    IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unit,*) ' ERROR in sub_model1_V'
-      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unit,*) '   .... with the intialized ones !!'
-      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unit,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model1_V: wrong ndim or nsurf'
-    END IF
-    begin = .FALSE.
-  END IF
-!$OMP END CRITICAL (CRIT_sub_model1_V)
-
-  CALL calc_pot(V,QuantumModel,Q)
-
-
-END SUBROUTINE sub_model1_V
-
-SUBROUTINE sub_model1_VG(V,G,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  !$ USE omp_lib
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: ndim,nsurf
-  real (kind=Rkind),      intent(in)        :: Q(ndim)
-  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-  character (len=*),      intent(in)        :: pot_name
-  integer,                intent(in)        :: option
-  real (kind=Rkind),      intent(inout)     :: G(nsurf,nsurf,ndim)
-
-  logical, SAVE                    :: begin = .TRUE.
-
-  IF (option < 0) THEN
-    begin = .TRUE.
-    RETURN
-  END IF
-
-!$OMP CRITICAL (CRIT_sub_model1_VG)
-  IF (begin) THEN
-    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
-    QuantumModel%QM%adiabatic = .TRUE.
-    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unit)
-    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),ndim=ndim,read_param=.FALSE.,option=option)
-
-    IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unit,*) ' ERROR in sub_model1_VG'
-      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unit,*) '   .... with the intialized ones !!'
-      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unit,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model1_VG: wrong ndim or nsurf'
-    END IF
-    begin = .FALSE.
-  END IF
-!$OMP END CRITICAL (CRIT_sub_model1_VG)
-
-  CALL calc_pot_grad(V,G,QuantumModel,Q)
-
-
-END SUBROUTINE sub_model1_VG
-SUBROUTINE sub_model1_VG_NAC(V,G,NAC,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  USE ADdnSVM_m, ONLY : dnMat_t,alloc_dnMat,dealloc_dnMat
-  !$ USE omp_lib
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: ndim,nsurf
-  real (kind=Rkind),      intent(in)        :: Q(ndim)
-  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-  character (len=*),      intent(in)        :: pot_name
-  integer,                intent(in)        :: option
-  real (kind=Rkind),      intent(inout)     :: G(nsurf,nsurf,ndim)
-  real (kind=Rkind),      intent(inout)     :: NAC(nsurf,nsurf,ndim)
-
-
-  logical, SAVE                    :: begin = .TRUE.
-  TYPE (dnMat_t)                  :: NAC_loc,PotVal_loc
-
-  IF (option < 0) THEN
-    begin = .TRUE.
-    RETURN
-  END IF
-
-!$OMP CRITICAL (CRIT_sub_model1_VG)
-  IF (begin) THEN
-    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unit)
-    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
-             ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.TRUE.)
-
-    IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unit,*) ' ERROR in sub_model1_VG'
-      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unit,*) '   .... with the intialized ones !!'
-      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unit,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model1_VG: wrong ndim or nsurf'
-    END IF
-    begin = .FALSE.
-  END IF
-!$OMP END CRITICAL (CRIT_sub_model1_VG)
-
-  CALL alloc_dnMat(PotVal_loc,nsurf=QuantumModel%nsurf,nVar=QuantumModel%ndim,nderiv=1)
-
-  CALL Eval_Pot(QuantumModel,Q,PotVal_loc,nderiv=1,NAC=NAC_loc)
-
-  V(:,:)     = PotVal_loc%d0
-  G(:,:,:)   = PotVal_loc%d1
-  NAC(:,:,:) = NAC_loc%d1
-
-  CALL dealloc_dnMat(PotVal_loc)
-  CALL dealloc_dnMat(NAC_loc)
-
-
-END SUBROUTINE sub_model1_VG_NAC
-SUBROUTINE sub_model1_VGH(V,G,H,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  !$ USE omp_lib
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: ndim,nsurf
-  real (kind=Rkind),      intent(in)        :: Q(ndim)
-  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-  character (len=*),      intent(in)        :: pot_name
-  integer,                intent(in)        :: option
-  real (kind=Rkind),      intent(inout)     :: G(nsurf,nsurf,ndim)
-  real (kind=Rkind),      intent(inout)     :: H(nsurf,nsurf,ndim,ndim)
-
-  logical, SAVE                    :: begin = .TRUE.
-
-  IF (option < 0) THEN
-    begin = .TRUE.
-    RETURN
-  END IF
-
-!$OMP CRITICAL (CRIT_sub_model1_VGH)
-  IF (begin) THEN
-    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unit)
-    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
-             ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.TRUE.)
-
-    IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unit,*) ' ERROR in sub_model1_VGH'
-      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unit,*) '   .... with the intialized ones !!'
-      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unit,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model1_VGH: wrong ndim or nsurf'
-    END IF
-    begin = .FALSE.
-  END IF
-!$OMP END CRITICAL (CRIT_sub_model1_VGH)
-
-  CALL calc_pot_grad_hess(V,G,H,QuantumModel,Q)
-
-
-END SUBROUTINE sub_model1_VGH
-SUBROUTINE sub_model1_DiaV(V,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m
-  USE QDUtil_m, ONLY : TO_lowercase
-  USE Model_m
-  !$ USE omp_lib
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: ndim,nsurf
-  real (kind=Rkind),      intent(in)        :: Q(ndim)
-  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-  character (len=*),      intent(in)        :: pot_name
-  integer,                intent(in)        :: option
-
-  logical, SAVE                    :: begin = .TRUE.
-
-  character (len=:), allocatable   :: pot_name_loc
-
-
-  IF (option < 0) THEN
-    begin = .TRUE.
-    RETURN
-  END IF
-
-!$OMP CRITICAL (CRIT_sub_model1_DiaV)
-  IF (begin .OR. option < 0) THEN
-    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unit)
-
-    pot_name_loc = TO_lowercase(trim(adjustl(pot_name)))
-    IF (pot_name_loc == 'read_model') THEN
-      CALL Init_Model(QuantumModel,read_param=.TRUE.,adiabatic=.FALSE.)
-    ELSE
-      CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
-                    ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.FALSE.)
-      IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-        write(out_unit,*) ' ERROR in sub_model1_DiaV'
-        write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
-        write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
-        write(out_unit,*) '   .... with the intialized ones !!'
-        write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
-        write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-        write(out_unit,*) '   CHECK your data !!'
-        STOP 'ERROR in sub_model1_DiaV: wrong ndim or nsurf'
-      END IF
-    END IF
-    deallocate(pot_name_loc)
-
-    begin = .FALSE.
-  END IF
-!$OMP END CRITICAL (CRIT_sub_model1_DiaV)
-
-  CALL calc_pot(V,QuantumModel,Q)
-
-
-END SUBROUTINE sub_model1_DiaV
-SUBROUTINE sub_model1_DiaVG(V,G,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  !$ USE omp_lib
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: ndim,nsurf
-  real (kind=Rkind),      intent(in)        :: Q(ndim)
-  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-  character (len=*),      intent(in)        :: pot_name
-  integer,                intent(in)        :: option
-  real (kind=Rkind),      intent(inout)     :: G(nsurf,nsurf,ndim)
-
-  logical, SAVE                    :: begin = .TRUE.
-
-
-  IF (option < 0) THEN
-    begin = .TRUE.
-    RETURN
-  END IF
-
-!$OMP CRITICAL (CRIT_sub_model1_DiaVG)
-  IF (begin) THEN
-    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unit)
-    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
-                    ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.FALSE.)
-
-    IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unit,*) ' ERROR in sub_model1_DiaVG'
-      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unit,*) '   .... with the intialized ones !!'
-      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unit,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model1_DiaVG: wrong ndim or nsurf'
-    END IF
-    begin = .FALSE.
-  END IF
-!$OMP END CRITICAL (CRIT_sub_model1_DiaVG)
-
-  CALL calc_pot_grad(V,G,QuantumModel,Q)
-
-
-END SUBROUTINE sub_model1_DiaVG
-SUBROUTINE sub_model1_DiaVGH(V,G,H,Q,ndim,nsurf,pot_name,option)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  !$ USE omp_lib
-  IMPLICIT NONE
-
-  integer,                intent(in)        :: ndim,nsurf
-  real (kind=Rkind),      intent(in)        :: Q(ndim)
-  real (kind=Rkind),      intent(inout)     :: V(nsurf,nsurf)
-  character (len=*),      intent(in)        :: pot_name
-  integer,                intent(in)        :: option
-  real (kind=Rkind),      intent(inout)     :: G(nsurf,nsurf,ndim)
-  real (kind=Rkind),      intent(inout)     :: H(nsurf,nsurf,ndim,ndim)
-
-  logical, SAVE                    :: begin = .TRUE.
-
-  IF (option < 0) THEN
-    begin = .TRUE.
-    RETURN
-  END IF
-
-!$OMP CRITICAL (CRIT_sub_model1_DiaVGH)
-  IF (begin) THEN
-    !$ write(out_unit,*) 'begining: max threads?',begin,omp_get_max_threads()
-    write(out_unit,*) 'pot_name,option: ',trim(adjustl(pot_name)),option
-    write(out_unit,*) 'ndim,nsurf,    : ',ndim,nsurf
-    flush(out_unit)
-    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),      &
-                    ndim=ndim,read_param=.FALSE.,option=option,adiabatic=.FALSE.)
-
-    IF (ndim /= QuantumModel%ndim .OR. nsurf /= QuantumModel%nsurf) THEN
-      write(out_unit,*) ' ERROR in sub_model1_DiaVGH'
-      write(out_unit,*) ' ndim, nsurf :',ndim,nsurf
-      write(out_unit,*) ' The ndim or nsurf values are incompatible ...'
-      write(out_unit,*) '   .... with the intialized ones !!'
-      write(out_unit,*) ' model name                  : ',QuantumModel%QM%pot_name
-      write(out_unit,*) ' ndim, nsurf (from the model): ',QuantumModel%ndim,QuantumModel%nsurf
-      write(out_unit,*) '   CHECK your data !!'
-      STOP 'ERROR in sub_model1_DiaVGH: wrong ndim or nsurf'
-    END IF
-    begin = .FALSE.
-  END IF
-!$OMP END CRITICAL (CRIT_sub_model1_DiaVGH)
-
-  CALL calc_pot_grad_hess(V,G,H,QuantumModel,Q)
-
-
-END SUBROUTINE sub_model1_DiaVGH
-SUBROUTINE get_Qmodel_nb_Func_ndimFunc(nb_Func,ndimFunc)
-  USE Model_m
-  IMPLICIT NONE
-
-  integer,      intent(inout)     :: nb_Func,ndimFunc
-
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_nb_Func_ndimFunc in Model_driver.f90')
-
-  nb_Func  = QuantumModel%QM%nb_Func
-  ndimFunc = QuantumModel%QM%ndimFunc
-
-END SUBROUTINE get_Qmodel_nb_Func_ndimFunc
-SUBROUTINE get_Qmodel_IndexesFunc(IndexFunc_Ene,IndexFunc_Qop,IndexFunc_Grad,IndexFunc_Hess)
-  USE Model_m
-  IMPLICIT NONE
-
-  integer,      intent(inout)     :: IndexFunc_Ene
-  integer,      intent(inout)     :: IndexFunc_Qop
-  integer,      intent(inout)     :: IndexFunc_Grad,IndexFunc_Hess
-
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_IndexesFunc in Model_driver.f90')
-
-  IndexFunc_Ene  = QuantumModel%QM%IndexFunc_Ene
-  IndexFunc_Qop  = QuantumModel%QM%IndexFunc_Qop
-  IndexFunc_Grad = QuantumModel%QM%IndexFunc_Grad
-  IndexFunc_Hess = QuantumModel%QM%IndexFunc_Hess
-
-END SUBROUTINE get_Qmodel_IndexesFunc
-
-SUBROUTINE get_Qmodel_d0Func(d0Func,Q,nb_Func,ndimFunc)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
-  IMPLICIT NONE
-
-  integer,          intent(in)      :: nb_Func,ndimFunc
-  real(kind=Rkind), intent(inout)   :: d0Func(nb_Func)
-  real(kind=Rkind), intent(in)      :: Q(ndimFunc)
-
-
-  TYPE (dnS_t),     allocatable     :: Func(:)
-  integer                           :: i
-
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_d0Func in Model_driver.f90')
-
-  CALL Eval_Func(QuantumModel,Q,Func,nderiv=0)
-
-  DO i=1,size(Func)
-    CALL sub_get_dn(Func(i),d0=d0Func(i))
-  END DO
-
-  DO i=1,size(Func)
-    CALL dealloc_dnS(Func(i))
-  END DO
-  deallocate(Func)
-
-END SUBROUTINE get_Qmodel_d0Func
-SUBROUTINE get_Qmodel_d0d1Func(d0Func,d1Func,Q,nb_Func,ndimFunc)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
-  IMPLICIT NONE
-
-  integer,          intent(in)      :: nb_Func,ndimFunc
-  real(kind=Rkind), intent(inout)   :: d0Func(nb_Func)
-  real(kind=Rkind), intent(inout)   :: d1Func(ndimFunc,nb_Func)
-  !real(kind=Rkind), intent(inout)   :: d2Func(ndimFunc,ndimFunc,nb_Func)
-  !real(kind=Rkind), intent(inout)   :: d3Func(ndimFunc,ndimFunc,ndimFunc,nb_Func)
-  real(kind=Rkind), intent(in)      :: Q(ndimFunc)
-
-
-  TYPE (dnS_t),     allocatable     :: Func(:)
-  integer                           :: i
-
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_d0d1Func in Model_driver.f90')
-
-  CALL Eval_Func(QuantumModel,Q,Func,nderiv=1)
-
-  DO i=1,size(Func)
-    CALL sub_get_dn(Func(i),d0=d0Func(i),d1=d1Func(:,i))
-  END DO
-
-  DO i=1,size(Func)
-    CALL dealloc_dnS(Func(i))
-  END DO
-  deallocate(Func)
-
-END SUBROUTINE get_Qmodel_d0d1Func
-SUBROUTINE get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Q,nb_Func,ndimFunc)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
-  IMPLICIT NONE
-
-  integer,          intent(in)      :: nb_Func,ndimFunc
-  real(kind=Rkind), intent(inout)   :: d0Func(nb_Func)
-  real(kind=Rkind), intent(inout)   :: d1Func(ndimFunc,nb_Func)
-  real(kind=Rkind), intent(inout)   :: d2Func(ndimFunc,ndimFunc,nb_Func)
-  real(kind=Rkind), intent(in)      :: Q(ndimFunc)
-
-
-  TYPE (dnS_t),     allocatable     :: Func(:)
-  integer                           :: i
-
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_d0d1d2Func in Model_driver.f90')
-
-  CALL Eval_Func(QuantumModel,Q,Func,nderiv=2)
-
-  DO i=1,size(Func)
-    CALL sub_get_dn(Func(i),d0=d0Func(i),d1=d1Func(:,i),           &
-                                         d2=d2Func(:,:,i))
-  END DO
-
-  DO i=1,size(Func)
-    CALL dealloc_dnS(Func(i))
-  END DO
-  deallocate(Func)
-
-END SUBROUTINE get_Qmodel_d0d1d2Func
-SUBROUTINE get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Q,nb_Func,ndimFunc)
-  USE QDUtil_NumParameters_m
-  USE Model_m
-  USE ADdnSVM_m, ONLY : dnS_t,sub_get_dn,dealloc_dnS
-  IMPLICIT NONE
-
-  integer,          intent(in)      :: nb_Func,ndimFunc
-  real(kind=Rkind), intent(inout)   :: d0Func(nb_Func)
-  real(kind=Rkind), intent(inout)   :: d1Func(ndimFunc,nb_Func)
-  real(kind=Rkind), intent(inout)   :: d2Func(ndimFunc,ndimFunc,nb_Func)
-  real(kind=Rkind), intent(inout)   :: d3Func(ndimFunc,ndimFunc,ndimFunc,nb_Func)
-  real(kind=Rkind), intent(in)      :: Q(ndimFunc)
-
-
-  TYPE (dnS_t),     allocatable     :: Func(:)
-  integer                           :: i
-
-
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_d0d1d2d3Func in Model_driver.f90')
-
-  CALL Eval_Func(QuantumModel,Q,Func,nderiv=3)
-
-  DO i=1,size(Func)
-    CALL sub_get_dn(Func(i),d0=d0Func(i),d1=d1Func(:,i),           &
-                                         d2=d2Func(:,:,i),d3=d3Func(:,:,:,i))
-  END DO
-
-  DO i=1,size(Func)
-    CALL dealloc_dnS(Func(i))
-  END DO
-  deallocate(Func)
-
-END SUBROUTINE get_Qmodel_d0d1d2d3Func
-SUBROUTINE QML_time_perso(name_sub)
-  USE QDUtil_m, ONLY : time_perso
-  IMPLICIT NONE
-
-  character (len=*) :: name_sub
-
-
-  !$OMP    CRITICAL (QML_time_perso_CRIT)
-  CALL time_perso(name_sub)
-  !$OMP   END CRITICAL (QML_time_perso_CRIT)
-
-END SUBROUTINE QML_time_perso

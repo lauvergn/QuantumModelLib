@@ -56,13 +56,16 @@ MODULE QMLValues_m
     real (kind=Rkind), allocatable :: Q(:)
 
     TYPE (dnMat_t)                 :: PotAdia
-    TYPE (dnMat_t)                 :: ImagPotAdia
     TYPE (dnMat_t)                 :: PotDia
-    TYPE (dnMat_t)                 :: ImagPotDia
- 
     TYPE (dnMat_t)                 :: NAC
     TYPE (dnMat_t)                 :: Vec
     TYPE (dnMat_t)                 :: Vec0
+
+    TYPE (dnMat_t)                 :: ImagPotAdia
+    TYPE (dnMat_t)                 :: ImagPotDia
+    TYPE (dnMat_t)                 :: ImagNAC
+    TYPE (dnMat_t)                 :: ImagVec
+    TYPE (dnMat_t)                 :: ImagVec0
 
   END TYPE QMLValues_t
 
@@ -97,17 +100,23 @@ CONTAINS
     IF (adiabatic) THEN
       CALL alloc_dnMat(QMLValues%PotAdia,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
       QMLValues%PotAdia = ZERO
-      IF (cplx) THEN 
-        CALL alloc_dnMat(QMLValues%ImagPotAdia,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
-        QMLValues%ImagPotAdia = ZERO
-      END IF
       CALL alloc_dnMat(QMLValues%Vec,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
       CALL alloc_dnMat(QMLValues%NAC,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
       CALL alloc_dnMat(QMLValues%Vec0,nsurf=nsurf,nVar=ndim,nderiv=0)
-
       QMLValues%Vec  = ZERO
       QMLValues%Vec0 = ZERO
       QMLValues%NAC  = ZERO
+
+      IF (cplx) THEN 
+        CALL alloc_dnMat(QMLValues%ImagPotAdia,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
+        QMLValues%ImagPotAdia = ZERO
+        CALL alloc_dnMat(QMLValues%ImagVec,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
+        CALL alloc_dnMat(QMLValues%ImagNAC,nsurf=nsurf,nVar=ndim,nderiv=nderiv)
+        CALL alloc_dnMat(QMLValues%ImagVec0,nsurf=nsurf,nVar=ndim,nderiv=0)
+        QMLValues%ImagVec  = ZERO
+        QMLValues%ImagVec0 = ZERO
+        QMLValues%ImagNAC  = ZERO
+      END IF
     END IF
 
     QMLValues%alloc    = .TRUE.
@@ -126,13 +135,17 @@ CONTAINS
     QMLValues%adiabatic    = .FALSE.
 
     CALL dealloc_dnMat(QMLValues%PotAdia)
-    CALL dealloc_dnMat(QMLValues%ImagPotAdia)
     CALL dealloc_dnMat(QMLValues%PotDia)
-    CALL dealloc_dnMat(QMLValues%ImagPotDia) 
 
     CALL dealloc_dnMat(QMLValues%Vec)
     CALL dealloc_dnMat(QMLValues%Vec0)
     CALL dealloc_dnMat(QMLValues%NAC)
+
+    CALL dealloc_dnMat(QMLValues%ImagPotAdia)
+    CALL dealloc_dnMat(QMLValues%ImagPotDia) 
+    CALL dealloc_dnMat(QMLValues%ImagVec)
+    CALL dealloc_dnMat(QMLValues%ImagVec0)
+    CALL dealloc_dnMat(QMLValues%ImagNAC)
 
   END SUBROUTINE dealloc_QMLValues
 
@@ -163,24 +176,39 @@ CONTAINS
     ELSE
       write(nio_loc,*) 'Q (coordinates): not defined!'
     END IF
+    write(nio_loc,*)
 
     !write(nio_loc,*) 'PotAdia:    ',get_Flatten(QMLValues%PotAdia)
-    !write(nio_loc,*) 'ImagPotAdia:',get_Flatten(QMLValues%ImagPotAdia)
     !write(nio_loc,*) 'PotDia:     ',get_Flatten(QMLValues%PotDia)
-    !write(nio_loc,*) 'ImagPotDia: ',get_Flatten(QMLValues%ImagPotDia)
     !write(nio_loc,*) 'Vec:        ',get_Flatten(QMLValues%Vec)
     !write(nio_loc,*) 'Vec0:       ',get_Flatten(QMLValues%Vec0)
     !write(nio_loc,*) 'NAC:        ',get_Flatten(QMLValues%NAC)
+    !write(nio_loc,*) 'ImagPotAdia:',get_Flatten(QMLValues%ImagPotAdia)
+    !write(nio_loc,*) 'ImagPotDia: ',get_Flatten(QMLValues%ImagPotDia)
+    !write(nio_loc,*) 'ImagVec:    ',get_Flatten(QMLValues%ImagVec)
+    !write(nio_loc,*) 'ImagVec0:   ',get_Flatten(QMLValues%ImagVec0)
+    !write(nio_loc,*) 'ImagNAC:    ',get_Flatten(QMLValues%ImagNAC)
 
     CALL Write_dnMat(QMLValues%PotAdia,     nio_loc,info='PotAdia')
     CALL Write_dnMat(QMLValues%ImagPotAdia, nio_loc,info='ImagPotAdia')
+    write(nio_loc,*)
+
     CALL Write_dnMat(QMLValues%PotDia,      nio_loc,info='PotDia')
     CALL Write_dnMat(QMLValues%ImagPotDia,  nio_loc,info='ImagPotDia') 
+    write(nio_loc,*)
 
     CALL Write_dnMat(QMLValues%Vec,         nio_loc,info='Vec')
+    CALL Write_dnMat(QMLValues%ImagVec,     nio_loc,info='ImagVec')
+    write(nio_loc,*)
+
     CALL Write_dnMat(QMLValues%Vec0,        nio_loc,info='Vec0')
-    CALL Write_dnMat(QMLValues%NAC,         nio_loc,info='NAC') 
-  
+    CALL Write_dnMat(QMLValues%ImagVec0,    nio_loc,info='ImagVec0')
+    write(nio_loc,*)
+
+    CALL Write_dnMat(QMLValues%NAC,         nio_loc,info='NAC')
+    CALL Write_dnMat(QMLValues%ImagNAC,     nio_loc,info='ImagNAC')  
+    write(nio_loc,*)
+
     write(nio_loc,*) '-----------------------------------------------'
     flush(nio_loc)
 
@@ -203,27 +231,31 @@ CONTAINS
 
       IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotDia,QMLValues%nderiv))  &
         CALL Mat_wADDTO_dnMat2_ider(QMLValues%ImagPotDia%d0,W,QMLValues2%ImagPotDia,ider)
+
       IF (.NOT. Check_NotAlloc_dnMat(QMLValues%PotAdia,QMLValues%nderiv))  &
         CALL Mat_wADDTO_dnMat2_ider(QMLValues%PotAdia%d0,W,QMLValues2%PotAdia,ider)
       IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotAdia,QMLValues%nderiv))  &
         CALL Mat_wADDTO_dnMat2_ider(QMLValues%ImagPotAdia%d0,W,QMLValues2%ImagPotAdia,ider)
+
       IF (.NOT. Check_NotAlloc_dnMat(QMLValues%Vec,QMLValues%nderiv))  &
         CALL Mat_wADDTO_dnMat2_ider(QMLValues%Vec%d0,W,QMLValues2%Vec,ider)
-      !IF (.NOT. Check_NotAlloc_dnMat(QMLValues%NAC,QMLValues%nderiv))  &
-      !  CALL Mat_wADDTO_dnMat2_ider(QMLValues%NAC%d0,W,QMLValues2%Nac,ider)
+      IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagVec,QMLValues%nderiv))  &
+        CALL Mat_wADDTO_dnMat2_ider(QMLValues%ImagVec%d0,W,QMLValues2%ImagVec,ider)
     ELSE
       CALL Mat_wADDTO_dnMat2_ider(QMLValues%PotDia%d0,W,QMLValues2%PotDia)
 
       IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotDia,QMLValues%nderiv))  &
         CALL Mat_wADDTO_dnMat2_ider(QMLValues%ImagPotDia%d0,W,QMLValues2%ImagPotDia)
+
       IF (.NOT. Check_NotAlloc_dnMat(QMLValues%PotAdia,QMLValues%nderiv))  &
         CALL Mat_wADDTO_dnMat2_ider(QMLValues%PotAdia%d0,W,QMLValues2%PotAdia)
       IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagPotAdia,QMLValues%nderiv))  &
         CALL Mat_wADDTO_dnMat2_ider(QMLValues%ImagPotAdia%d0,W,QMLValues2%ImagPotAdia)
+
       IF (.NOT. Check_NotAlloc_dnMat(QMLValues%Vec,QMLValues%nderiv))  &
         CALL Mat_wADDTO_dnMat2_ider(QMLValues%Vec%d0,W,QMLValues2%Vec)
-      !IF (.NOT. Check_NotAlloc_dnMat(QMLValues%NAC,QMLValues%nderiv))  &
-      !  CALL Mat_wADDTO_dnMat2_ider(QMLValues%NAC%d0,W,QMLValues2%Nac)
+      IF (.NOT. Check_NotAlloc_dnMat(QMLValues%ImagVec,QMLValues%nderiv))  &
+        CALL Mat_wADDTO_dnMat2_ider(QMLValues%ImagVec%d0,W,QMLValues2%ImagVec) 
     END IF
 
   END SUBROUTINE WxQMLValuesd0_ADDTO_QMLValues2_ider

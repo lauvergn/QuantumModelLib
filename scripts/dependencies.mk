@@ -40,6 +40,7 @@ qml_h2_m := $(OBJ_DIR)/H2_m.o
 qml_retinal_jpcb2000_m := $(OBJ_DIR)/Retinal_JPCB2000_m.o
 qml_psb3_m := $(OBJ_DIR)/PSB3_m.o
 qml_hnnhp_m := $(OBJ_DIR)/HNNHp_m.o
+qml_testimag_m := $(OBJ_DIR)/TestImag_m.o
 qml_template_m := $(OBJ_DIR)/Template_m.o
 qml_h2nsi_m := $(OBJ_DIR)/H2NSi_m.o
 qml_twod_valahu2022_m := $(OBJ_DIR)/TwoD_Valahu2022_m.o
@@ -305,6 +306,12 @@ $(OBJ_DIR)/HNNHp_m.o : \
           $(qdutil_m) \
           $(qmllib_utillib_m) \
           $(addnsvm_m)
+#file+mod_name: SRC/QML/TestImag_m.f90 qml_testimag_m
+$(OBJ_DIR)/TestImag_m.o : \
+          $(qdutil_numparameters_m) \
+          $(qml_empty_m) \
+          $(qdutil_m) \
+          $(addnsvm_m)
 #file+mod_name: SRC/QML/Template_m.f90 qml_template_m
 $(OBJ_DIR)/Template_m.o : \
           $(qdutil_numparameters_m) \
@@ -362,13 +369,18 @@ $(OBJ_DIR)/Basis_m.o : \
           $(qdutil_numparameters_m) \
           $(qdutil_m) \
           $(addnsvm_m)
+#file+mod_name: SRC/Model_driver_util.f90 
+$(OBJ_DIR)/Model_driver_util.o : \
+          $(model_m) \
+          $(qdutil_numparameters_m) \
+          $(addnsvm_m) \
+          $(qdutil_m)
 #file+mod_name: SRC/Model_driver.f90 
 $(OBJ_DIR)/Model_driver.o : \
           $(qdutil_numparameters_m) \
           $(model_m) \
           $(opt_m) \
-          $(addnsvm_m) \
-          $(qdutil_m)
+          $(qmlvalues_m)
 #file+mod_name: SRC/Model_m.f90 model_m
 $(OBJ_DIR)/Model_m.o : \
           $(qdutil_numparameters_m) \
@@ -379,6 +391,7 @@ $(OBJ_DIR)/Model_m.o : \
           $(qmllib_utillib_m) \
           $(qml_template_m) \
           $(qml_test_m) \
+          $(qml_testimag_m) \
           $(qml_extmodel_m) \
           $(qml_morse_m) \
           $(qml_poly1d_m) \
@@ -445,3 +458,9 @@ $(OBJ_DIR)/Opt_m.o : \
           $(qdutil_m) \
           $(model_m) \
           $(addnsvm_m)
+#file+mod_name: SRC/Model_driver_old.f90 
+$(OBJ_DIR)/Model_driver_old.o : \
+          $(qdutil_numparameters_m) \
+          $(model_m) \
+          $(addnsvm_m) \
+          $(qdutil_m)

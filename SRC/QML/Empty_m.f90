@@ -155,6 +155,7 @@ MODULE QML_Empty_m
 
     QModel%numeric          = QModel_in%numeric
     QModel%adiabatic        = QModel_in%adiabatic
+    QModel%ImagContrib      = QModel_in%ImagContrib
     QModel%Phase_Following  = QModel_in%Phase_Following
     QModel%Phase_Checking   = QModel_in%Phase_Checking
     QModel%option           = QModel_in%option
@@ -304,13 +305,13 @@ MODULE QML_Empty_m
   
   END SUBROUTINE EvalScalOp_QML_Empty
 
-  SUBROUTINE EvalImagPot_QML_Empty(QModel,Mat_OF_PotDia,dnQ,nderiv)
+  SUBROUTINE EvalImagPot_QML_Empty(QModel,Mat_OF_ImagPotDia,dnQ,nderiv)
     USE ADdnSVM_m, ONLY : dnS_t
     IMPLICIT NONE
 
     CLASS (QML_Empty_t),    intent(in)     :: QModel
     TYPE (dnS_t),           intent(in)     :: dnQ(:)
-    TYPE (dnS_t),           intent(inout)  :: Mat_OF_PotDia(:,:)
+    TYPE (dnS_t),           intent(inout)  :: Mat_OF_ImagPotDia(:,:)
     integer,                intent(in)     :: nderiv
 
     IF (.NOT. QModel%ImagContrib) write(out_unit,*) ' WARNING in EvalImagPot_QML_Empty: ImagContrib is .FALSE.'
@@ -318,7 +319,7 @@ MODULE QML_Empty_m
     write(out_unit,*) 'ERROR in EvalImagPot_QML_Empty (EvalImagPot_QML_Empty)'
     write(out_unit,*) '  The intialized model does not have EvalPot_QModel subroutine!'
     STOP 'ERROR in EvalImagPot_QML_Empty: the intialized model does not have EvalImagPot_QModel subroutine'
-    Mat_OF_PotDia(:,:) = ZERO
+    Mat_OF_ImagPotDia(:,:) = ZERO
 
   END SUBROUTINE EvalImagPot_QML_Empty
 
@@ -334,6 +335,7 @@ MODULE QML_Empty_m
       integer,                intent(in)     :: nderiv
   
       IF (.NOT. QModel%ImagContrib) write(out_unit,*) ' WARNING in EvalImagScalOp_QModel: ImagContrib is .FALSE.'
+
       write(out_unit,*) 'ERROR in EvalImagScalOp_QModel (EvalImagScalOp_QML_Empty)'
       write(out_unit,*) '  The intialized model does not have EvalScalOp_QModel subroutine!'
       STOP 'ERROR in EvalImagScalOp_QML_Empty: the intialized model does not have EvalImagScalOp_QModel subroutine'
