@@ -63,8 +63,8 @@ MODULE AdiaChannels_Basis_m
     real(kind=Rkind),   allocatable :: d1gb(:,:,:)    ! basis functions d2gb(nq,nb,1)
     real(kind=Rkind),   allocatable :: d2gb(:,:,:,:)  ! basis functions d2gb(nq,nb,1,1)
 
-    TYPE (QML_Basis_t), pointer     :: tab_basis(:) => null()
-    !TYPE (QML_Basis_t), allocatable :: tab_basis(:)
+    !TYPE (QML_Basis_t), pointer     :: tab_basis(:) => null()
+    TYPE (QML_Basis_t), allocatable :: tab_basis(:)
 
   END TYPE QML_Basis_t
 
@@ -145,8 +145,8 @@ CONTAINS
     write(out_unit,*)
     write(out_unit,*)
     write(out_unit,*) 'nb_basis',Basis%nb_basis
-    !IF (allocated(Basis%tab_basis)) THEN
-    IF (associated(Basis%tab_basis)) THEN
+    IF (allocated(Basis%tab_basis)) THEN
+    !IF (associated(Basis%tab_basis)) THEN
       DO ib=1,size(Basis%tab_basis)
         CALL Write_Basis(Basis%tab_basis(ib))
       END DO
@@ -264,11 +264,12 @@ CONTAINS
     IF (allocated(Basis%d1gb))      deallocate(Basis%d1gb)
     IF (allocated(Basis%d2gb))      deallocate(Basis%d2gb)
 
-    IF (associated(Basis%tab_basis)) THEN
+    IF (allocated(Basis%tab_basis)) THEN
+    !IF (associated(Basis%tab_basis)) THEN
       DO ib=1,size(Basis%tab_basis)
         CALL dealloc_Basis(Basis%tab_basis(ib))
       END DO
-      nullify(Basis%tab_basis)
+      !nullify(Basis%tab_basis)
     END IF
 
   END SUBROUTINE QML_dealloc_Basis
