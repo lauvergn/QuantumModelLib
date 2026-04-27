@@ -3571,7 +3571,7 @@ CONTAINS
     ndim  = get_nVar(QMLValues%PotDia)
 
     IF (Phase_checking .AND. Check_NotAlloc_dnMat(QMLValues%Vec0,nderiv=0)) THEN
-       !$OMP CRITICAL (dia_TO_adia_new_cmplx)
+       !$OMP CRITICAL (dia_TO_adia_new_cmplx_CRIT)
        !CALL alloc_dnMat(QMLValues%Vec0,nsurf=nsurf,nVar=ndim,nderiv=0)
 
        allocate(Eig(nsurf))
@@ -3591,7 +3591,7 @@ CONTAINS
 
        IF (debug) write(out_unit,*) 'init Vec0 done'
 
-       !$OMP END CRITICAL (dia_TO_adia_new_cmplx)
+       !$OMP END CRITICAL (dia_TO_adia_new_cmplx_CRIT)
     END IF
 
     CALL set_dnCMat(dnMat,dnRMat=QMLValues%PotDia,dnIMat=QMLValues%ImagPotDia)
