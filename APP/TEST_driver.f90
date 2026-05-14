@@ -341,13 +341,14 @@ SUBROUTINE test_TwoD_RJDI2014
   real (kind=Rkind),      allocatable     :: g(:,:,:)
   real (kind=Rkind),      allocatable     :: h(:,:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
+  real (kind=Rkind),      allocatable     :: dNAC(:,:,:,:)
   real (kind=Rkind),      allocatable     :: Vdia(:,:)
   real (kind=Rkind),      allocatable     :: Vadia(:,:)
 
   character (len=16)                  :: pot_name
   logical                             :: adiabatic
 
-  integer                             :: ndim,nsurf,option,ix,iy,nio
+  integer                             :: i,j,ndim,nsurf,option,ix,iy,nio
 
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
@@ -362,6 +363,9 @@ SUBROUTINE test_TwoD_RJDI2014
   allocate(Q(ndim))
   allocate(Vdia(nsurf,nsurf))
   allocate(Vadia(nsurf,nsurf))
+  allocate(g(nsurf,nsurf,ndim))
+  allocate(NAC(nsurf,nsurf,ndim))
+  allocate(dNAC(nsurf,nsurf,ndim,ndim))
 
 
   Q(:) = [0.5_Rkind,0.5_Rkind]
@@ -371,6 +375,18 @@ SUBROUTINE test_TwoD_RJDI2014
   write(out_unit,'(2f12.8)') Vdia
   write(out_unit,*) ' Adiabatic potential as a 2x2 matrix:'
   write(out_unit,'(2f12.8)') Vadia
+
+  CALL sub_Qmodel_VG_NACdNAC(Vadia,g,NAC,dNAC,Q)
+  DO i=1,ndim
+    write(out_unit,*) ' NAC as a 2x2 matrix for coordinate:',i
+    write(out_unit,'(2f12.8)') NAC(:,:,i)
+  END DO
+  DO i=1,ndim
+  DO j=i,ndim
+    write(out_unit,*) ' dNAC=<Vec | d2Vec> as a 2x2 matrix for coordinates:',i,j
+    write(out_unit,'(2f12.8)') dNAC(:,:,j,i)
+  END DO
+  END DO
 
   adiabatic = .FALSE.
   CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)

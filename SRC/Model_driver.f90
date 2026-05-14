@@ -390,6 +390,32 @@ SUBROUTINE sub_Qmodel_VG_NAC(V,G,NAC,Q)
   CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_VG_NAC
+SUBROUTINE sub_Qmodel_VG_NACdNAC(V,G,NAC,dNAC,Q)
+  USE QDUtil_NumParameters_m
+  USE Model_m
+  USE QMLValues_m
+  IMPLICIT NONE
+
+  real (kind=Rkind),      intent(in)       :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)    :: V(QuantumModel%nsurf,QuantumModel%nsurf)
+  real (kind=Rkind),      intent(inout)    :: g(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)    :: NAC(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)    :: dNAC(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim,QuantumModel%ndim)
+
+  TYPE (QMLValues_t)         :: QMLValues
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Qmodel_VG_NAC in Model_driver.f90')
+
+  CALL Eval_Pot(QuantumModel,Q,QMLValues,nderiv=2)
+  
+  V    = QMLValues%PotAdia%d0
+  g    = QMLValues%PotAdia%d1
+  NAC  = QMLValues%NAC%d1
+  dNAC = QMLValues%NAC%d2
+
+  CALL dealloc_QMLValues(QMLValues)
+
+END SUBROUTINE sub_Qmodel_VG_NACdNAC
 SUBROUTINE sub_Qmodel_VG_NAC_Vec0(V,G,NAC,Vec0,Q)
   USE QDUtil_NumParameters_m
   USE Model_m
