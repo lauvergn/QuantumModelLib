@@ -25,7 +25,7 @@
 
 ## 1) Installation
 
-   From the QuantumModelLib directory, when make is executated, the **libQMLibFull_XXX_optx_ompy_lapakz.a** must be created (ex: **libQMLibFull_gfortran_opt1_omp1_lapack1**).
+   From the QuantumModelLib directory, when make is executated, the **libQMLibFull_XXX_optx_ompy_lapackz.a** must be created (ex: **libQMLibFull_gfortran_opt1_omp1_lapack1**).
    **XXX** is the compiler name and **x**, **y** and **z** are 0/1 when flags are turn off/on. 
    They correspond to OPT (compiler optimzation), OpenMP and Lapack/blas, respectively.
 
@@ -40,13 +40,13 @@
 When lapack/blas are not linked to the library:
 
 ```bash
-   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optx_ompy_lapak0.a
+   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optx_ompy_lapack0.a
 ```
 
 or with  lapack/blas (linux)
 
 ```bash
-   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optx_ompy_lapak0.a -llapack -lblas
+   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optx_ompy_lapack1.a -llapack -lblas
 ```
 *QuantumModelLib_path* contains the path of the **QuantumModelLib**
 
@@ -70,7 +70,15 @@ where
   - option     : option, to be able to select a model with several options (Tully ...) [integer]
 ```
 
-he list of available models is given below
+There is an alternative way to initialized a model, when the coordinate are given in Cartesian coordinates, but the potential is in internal (curvilinear) coordinates
+
+```fortran
+CALL sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
+```
+
+The parameters are indentical as the previous subroutine, but **ndim** is the number of Cartesian coordinates.
+Remark: the model Fortran file must contain a specific **Cart_TO_Q_QModel** subroutine.
+
 
 Example:
 ```fortran
@@ -81,6 +89,8 @@ Example:
 It initializes the phenol potential (2D and 3 PES).
 => Computation of the diabatic surface
 
+
+The list of available models is given below.
 
 ### 3a2) Initialization of the potential (reading the model)
 
@@ -147,7 +157,9 @@ Some extra parameters can be initialized with specific procedures:
 
     or it can be set up while reading the model (see 3a2).
 
-### 3b) Potential energy surface(s), PES, evaluation
+### 3b) Potential energy surface(s), PES, Vec and NAC evaluations
+
+A subroutine for the potential (adaibatic or diabtic):
 
 ```fortran
    CALL sub_Qmodel_V(V,Q)
@@ -158,20 +170,36 @@ Some extra parameters can be initialized with specific procedures:
     Q(:)   is the ndim coordinates (vector of real(kind=8))
     V(:,:) is PES and a  nsurf x nsurf matrix of real (kind=8)
   Remarks:
-    - when adiabatic is set to .TRUE., V(:,:) is a diagonal matrix.
-    - Use sub_Qmodel_VG(V,G,Q) to get the potential and the gradient
-          G(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
-    - Use sub_Qmodel_VGH(V,G,H,Q) to get the potential, the gradient and the hessian
-          H(:,:,:,:) are real (kind=8) of nsurf x nsurf x ndim x ndim
-    - Use sub_Qmodel_VG_NAC(V,G,NAC,Q) to get the potential, the gradient and the
-          non-adiabatic couplings (NAC).
-          NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
+    - when adiabatic is set to .TRUE. during initialization, V(:,:) is a diagonal matrix.
+```
+
+Full list of drivers:
+
+```fortran
+CALL sub_Qmodel_VG(V,G,Q) ! to get the potential and the gradient
+                          ! G(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
+CALL sub_Qmodel_VGH(V,G,H,Q) ! to get the potential, the gradient and the hessian
+                             ! H(:,:,:,:) are real (kind=8) of nsurf x nsurf x ndim x ndim
+
+CALL sub_Qmodel_Vdia_Vadia(Vdia,Vadia,Q) ! get the diabatic potential and the adiabatic one (if adiabatic=.TRUE.)
+
+CALL sub_Qmodel_VVec(V,Vec,Q) ! get the adiabatic potential (V) and the adiabatic vectors (Vec)
+CALL sub_Qmodel_VVec_Vec0(V,Vec,Vec0,Q) ! get the adiabatic potential (V) and the adiabatic vectors (Vec).
+                                        ! Vec0(:,:) (nsurf x NB) is initial vector (for the phase following)
+
+CALL sub_Qmodel_VG_NAC(V,G,NAC,Q) ! to get the potential, the gradient and the non-adiabatic couplings (NAC).
+                                  ! NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
+CALL sub_Qmodel_VG_NACdNAC(V,G,NAC,dNAC,Q) ! as the previous one + the 2d order derivative of the vectors, dNAC.
+                                  ! NAC(:,:,:,:) are real (kind=8) of nsurf x nsurf x ndim x ndim
+
+CALL sub_Qmodel_VG_NAC_Vec0(V,G,NAC,Vec0,Q) ! as sub_Qmodel_VG_NAC + Vec0(:,:) (nsurf x NB) is initial vector (for the phase following)
+CALL sub_Qmodel_VG_NAC_VecVec0(V,G,NAC,Vec,Vec0,Q) ! as the previous one + the adiatic vector, Vec(:,:) (nsurf x NB).
 ```
 
 ### 3c) Potential energy surface with vibrational adiabatic separation
 
 This feature can be used only when the **model** is read.
-Therefore in the initialization with sub_Init_Qmodel **pot_name** must be "read_model".
+Therefore in the initialization with **sub_Init_Qmodel**, the variable, **pot_name**, must be 'read_model'.
 Then:
 
 (i) The potential must be read as a namelist:
@@ -212,7 +240,7 @@ The table tab_MatH(nsurf,nsurf,nb_terms) contains:
   - F2 terms: tab_MatH(nsurf,nsurf,2:...)         [ (nb_act+1)nb_act/2 matrices)]
   - F1 terms: tab_MatH(nsurf,nsurf,...:nb_terms)  [ nb_act matrices ]
 
-### 3d) Get the metric tensor, GGdef
+### 3d) Get/set the metric tensor, GGdef
 
 ```fortran
   CALL get_Qmodel_GGdef(GGdef)
@@ -242,6 +270,43 @@ where
   - ndim       is the number of degree(s) of freedom it MUST be indentical to the initialized value (with sub_Init_Qmodel)
   - $GGdef(:,:)$  is the new metric tensor a ndim x ndim matrix of real (kind=8)
 
+### 3e) Miscellaneous subroutines or functions
+
+- Functions or subroutines to check data of the initialization:
+
+```fortran
+ndim    = get_Qmodel_ndim()                ! get ndim (number of coordinates)
+nsurf   = get_Qmodel_nsurf()               ! get nsurf (number of electronic surface or vibrational effective surface)
+NB      = get_Qmodel_NB()                  ! get the number of basis functions for the vibrational adiabatic separation
+VibAdia = get_Qmodel_Vib_Adia()            ! (logical), the value is .TRUE. for the vibrational adiabatic separation
+
+CALL sub_check_Init_Qmodel(check)          ! check if the model is initialized
+
+CALL sub_Write_Qmodel(nio)                 ! write the model to the unit **nio**
+
+CALL sub_Qmodel_check_alloc_d0GGdef(check) ! check is set to .TRUE., 
+                                           ! when a model is initialized and when the metric tensor is allocated.
+
+CALL sub_Qmodel_Check_anaVSnum(Q,nderiv)   ! check analitical versus numerical derivatives
+CALL set_Qmodel_step(step)                 ! set the displacement value when 
+                                           ! the derivatives are obtained using the finite difference approach.
+```
+
+- Subroutines to change default parameters:
+
+```fortran
+CALL set_Qmodel_Print_level(printlevel)    ! change the default printing level (default, printlevel=-1)
+CALL set_Qmodel_in_unit(inunitp)           ! change the reading unit.
+                                           !  usefull, when the model is read from a user defined unit
+CALL set_Qmodel_out_unit(outunitp)         ! change the writing unit.
+                                           ! usefull, when output is printed to a user defined unit
+
+CALL set_Qmodel_Phase_Checking(check)      ! change the default (.FALSE.) Phase_Checking flag (see 3a3)
+CALL set_Qmodel_Phase_Following(check)     ! change the default (.FALSE.) Phase_Following flag (see 3a3)
+CALL set_Qmodel_Print_Vec_Overlap(Print_Vec_Overlap) ! change the default (0) of Print_Vec_Overlap.
+                                                     ! relevant when Phase_Following=.TRUE.
+```
+
 ## 4) Examples and Tests
 
  With "make all", the libraries are created and several main programs.
@@ -252,6 +317,16 @@ where
 ```bash
     make ut
 ```
+ 
+ This will run all Fortran test files. 
+ 
+ To run a single test, the SRCTESTFILES makefile variable can be used.
+ For example, to only run TEST_buck.f90 test:
+
+```bash
+    make ut SRCTESTFILES=TEST_buck.f90
+```
+
  From the Tests directory
 
 ```bash
@@ -271,22 +346,22 @@ where
 From the main QuantumModelLib directory:
 
 ```bash
-  ./TEST_driver.x < Tests/DAT_files/Vibadia_HBond.dat > res_driver
+  ./APP_driver.x < Tests/DAT_files/Vibadia_HBond.dat > res_driver
 ```
 => Test sevral models (1 or several surfaces, optimization, Vibration adiabatic separation)
 
 ```bash
-  ./TEST_VibAdia.x < Tests/DAT_files/Vibadia_HBond.dat > res_VibAdia
+  ./APP_VibAdia.x < Tests/DAT_files/Vibadia_HBond.dat > res_VibAdia
 ```
 => Test a Vibration adiabatic separation model.
 
 ```bash
-  ./TEST_grid.x > res_grid
+  ./APP_grid.x > res_grid
 ```
 => Test the 1D and 2D-cut generation for HenonHeiles potential (it uses subroutines with Fortran modules)
 
 ```bash
-  ./TEST_OMPloop.x > res_loop
+  ./APP_OMPloop.x > res_loop
 ```
 => Test an OpenMP loop ($10^6$) on the HONO model (several seconds)
 

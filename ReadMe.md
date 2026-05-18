@@ -16,7 +16,7 @@
 ```
 [1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
 [2]: Laboratoire PASTEUR, ENS-PSL-Sorbonne Université-CNRS, France
-[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay, France
+[3]: Maison de la Simulation, CEA-CNRS-Université Paris-Saclay,France
 [4]: Durham University, Durham, UK
 [5]: Department of Physics, Rutgers University, Newark, New Jersey 07102, USA
 
@@ -25,37 +25,30 @@
 
 ## 1) Installation
 
-From the QuantumModelLib directory, when make is executated, the **libQMLibFull_XXX_optW_ompX_lapacY_intZ_realR.a** must be created (ex: **libQMLibFull_gfortran_opt1_omp1_lapack1_int4_real64.a**).
-
-- **XXX**: the compiler name (like gfortran)
-- **W**: the value O or 1 when flags is turn off/on the compiler optimization, 
-- **X**: the value O or 1 when flags are turn off/on the OpenMP feature
-- **Y**: the value O or 1 when flags is turn off/on to add Lapack/blas libraries.
-- **Z**: the value 4 or 8 (default 4). 8 to change integer kind compiler default to long integer.
-- **R**: the value of real kind (32, 64, 128)
+   From the QuantumModelLib directory, when make is executated, the **libQMLibFull_XXX_optx_ompy_lapackz.a** must be created (ex: **libQMLibFull_gfortran_opt1_omp1_lapack1**).
+   **XXX** is the compiler name and **x**, **y** and **z** are 0/1 when flags are turn off/on. 
+   They correspond to OPT (compiler optimzation), OpenMP and Lapack/blas, respectively.
 
 ```
    This version works with:
-       gfortran 11, 12, 13, 14, 15 (linux and macOS)
+       gfortran 9.0 (linux and macOS)
        ifort/ifx    19
 ```
-
-Although, the library can be compiled and used with real in single precision (real32), it is not recomended (most of the tests will fail).
 
 ## 2) Link the library to your code
 
 When lapack/blas are not linked to the library:
 
 ```bash
-   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optW_ompX_lapac0_intZ_realR.a
+   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optx_ompy_lapack0.a
 ```
 
 or with  lapack/blas (linux)
 
 ```bash
-   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optW_ompX_lapac1_intZ_realR.a -llapack -lblas
+   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optx_ompy_lapack1.a -llapack -lblas
 ```
-*QuantumModelLib_path* contains the path of the **QuantumModelLib** directory.
+*QuantumModelLib_path* contains the path of the **QuantumModelLib**
 
 
 ## 3) In your Fortan code
@@ -77,7 +70,15 @@ where
   - option     : option, to be able to select a model with several options (Tully ...) [integer]
 ```
 
-The list of available models is given below
+There is an alternative way to initialized a model, when the coordinate are given in Cartesian coordinates, but the potential is in internal (curvilinear) coordinates
+
+```fortran
+CALL sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
+```
+
+The parameters are indentical as the previous subroutine, but **ndim** is the number of Cartesian coordinates.
+Remark: the model Fortran file must contain a specific **Cart_TO_Q_QModel** subroutine.
+
 
 Example:
 ```fortran
@@ -87,6 +88,9 @@ Example:
 ```
 It initializes the phenol potential (2D and 3 PES).
 => Computation of the diabatic surface
+
+
+The list of available models is given below.
 
 ### 3a2) Initialization of the potential (reading the model)
 
@@ -99,42 +103,6 @@ It initializes the phenol potential (2D and 3 PES).
   - nsurf      : the number of electronic surface(s) (adiabatic or diabatic) [integer]
   - nio        : file unit where the namelist is read. It can be the standard unit [integer]
 ```
-Then, the **&potential** namelist is read. It can be done with the **sub_Init_Qmodel** subroutine (see the nex section).
-
-In the following exemple, the 2+1D-retinal model ('Retinal_JPCB2000') is read.
-
-```fortran
-  &potential
-    pot_name='Retinal_JPCB2000' ! potential surface name
-    ndim=3 PubliUnit=f
-    adiabatic=t
-    Phase_checking=f
-     /
-```
-
-  It initializes the 2+1D-retinal model (ndim=3).
-  For this model, fhe number of electronic surfaces is automatically set up to 2.
-    => adiabatic=t      : Computation of the adiabatic surface: 
-    => Phase_checking=f : The adiabatic vector phases are not checked between several calculations
-    => PubliUnit=f      : The atomic units are used
-
-### 3a2bis) Initialization of the potential (reading the model, alternative way)
-
-It use the usual initialization, but the variable **pot_name** must be set to 'read_model'.
-
-```fortran
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
-```
-
-```
-where
-  - ndim       : the number of degree(s) of freedom [integer]
-  - nsurf      : the number of electronic surface(s) (adiabatic or diabatic) [integer]
-  - pot_name='read_model'
-  - adiabatic  : flag (.TRUE. or .FALSE.) [logical]
-  - option     : option, to be able to select a model with several options (Tully ...) [integer]
-```
-
 Then, the **&potential** namelist is read.
 In the following exemple, the 2+1D-retinal model ('Retinal_JPCB2000') is read.
 
@@ -189,7 +157,9 @@ Some extra parameters can be initialized with specific procedures:
 
     or it can be set up while reading the model (see 3a2).
 
-### 3b) Potential energy surface(s), PES, evaluation
+### 3b) Potential energy surface(s), PES, Vec and NAC evaluations
+
+A subroutine for the potential (adaibatic or diabtic):
 
 ```fortran
    CALL sub_Qmodel_V(V,Q)
@@ -200,20 +170,36 @@ Some extra parameters can be initialized with specific procedures:
     Q(:)   is the ndim coordinates (vector of real(kind=8))
     V(:,:) is PES and a  nsurf x nsurf matrix of real (kind=8)
   Remarks:
-    - when adiabatic is set to .TRUE., V(:,:) is a diagonal matrix.
-    - Use sub_Qmodel_VG(V,G,Q) to get the potential and the gradient
-          G(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
-    - Use sub_Qmodel_VGH(V,G,H,Q) to get the potential, the gradient and the hessian
-          H(:,:,:,:) are real (kind=8) of nsurf x nsurf x ndim x ndim
-    - Use sub_Qmodel_VG_NAC(V,G,NAC,Q) to get the potential, the gradient and the
-          non-adiabatic couplings (NAC).
-          NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
+    - when adiabatic is set to .TRUE. during initialization, V(:,:) is a diagonal matrix.
+```
+
+Full list of drivers:
+
+```fortran
+CALL sub_Qmodel_VG(V,G,Q) ! to get the potential and the gradient
+                          ! G(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
+CALL sub_Qmodel_VGH(V,G,H,Q) ! to get the potential, the gradient and the hessian
+                             ! H(:,:,:,:) are real (kind=8) of nsurf x nsurf x ndim x ndim
+
+CALL sub_Qmodel_Vdia_Vadia(Vdia,Vadia,Q) ! get the diabatic potential and the adiabatic one (if adiabatic=.TRUE.)
+
+CALL sub_Qmodel_VVec(V,Vec,Q) ! get the adiabatic potential (V) and the adiabatic vectors (Vec)
+CALL sub_Qmodel_VVec_Vec0(V,Vec,Vec0,Q) ! get the adiabatic potential (V) and the adiabatic vectors (Vec).
+                                        ! Vec0(:,:) (nsurf x NB) is initial vector (for the phase following)
+
+CALL sub_Qmodel_VG_NAC(V,G,NAC,Q) ! to get the potential, the gradient and the non-adiabatic couplings (NAC).
+                                  ! NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
+CALL sub_Qmodel_VG_NACdNAC(V,G,NAC,dNAC,Q) ! as the previous one + the 2d order derivative of the vectors, dNAC.
+                                  ! NAC(:,:,:,:) are real (kind=8) of nsurf x nsurf x ndim x ndim
+
+CALL sub_Qmodel_VG_NAC_Vec0(V,G,NAC,Vec0,Q) ! as sub_Qmodel_VG_NAC + Vec0(:,:) (nsurf x NB) is initial vector (for the phase following)
+CALL sub_Qmodel_VG_NAC_VecVec0(V,G,NAC,Vec,Vec0,Q) ! as the previous one + the adiatic vector, Vec(:,:) (nsurf x NB).
 ```
 
 ### 3c) Potential energy surface with vibrational adiabatic separation
 
 This feature can be used only when the **model** is read.
-Therefore in the initialization with sub_Init_Qmodel **pot_name** must be "read_model".
+Therefore in the initialization with **sub_Init_Qmodel**, the variable, **pot_name**, must be 'read_model'.
 Then:
 
 (i) The potential must be read as a namelist:
@@ -254,7 +240,7 @@ The table tab_MatH(nsurf,nsurf,nb_terms) contains:
   - F2 terms: tab_MatH(nsurf,nsurf,2:...)         [ (nb_act+1)nb_act/2 matrices)]
   - F1 terms: tab_MatH(nsurf,nsurf,...:nb_terms)  [ nb_act matrices ]
 
-### 3d) Get the metric tensor, GGdef
+### 3d) Get/set the metric tensor, GGdef
 
 ```fortran
   CALL get_Qmodel_GGdef(GGdef)
@@ -284,6 +270,43 @@ where
   - ndim       is the number of degree(s) of freedom it MUST be indentical to the initialized value (with sub_Init_Qmodel)
   - $GGdef(:,:)$  is the new metric tensor a ndim x ndim matrix of real (kind=8)
 
+### 3e) Miscellaneous subroutines or functions
+
+- Functions or subroutines to check data of the initialization:
+
+```fortran
+ndim    = get_Qmodel_ndim()                ! get ndim (number of coordinates)
+nsurf   = get_Qmodel_nsurf()               ! get nsurf (number of electronic surface or vibrational effective surface)
+NB      = get_Qmodel_NB()                  ! get the number of basis functions for the vibrational adiabatic separation
+VibAdia = get_Qmodel_Vib_Adia()            ! (logical), the value is .TRUE. for the vibrational adiabatic separation
+
+CALL sub_check_Init_Qmodel(check)          ! check if the model is initialized
+
+CALL sub_Write_Qmodel(nio)                 ! write the model to the unit **nio**
+
+CALL sub_Qmodel_check_alloc_d0GGdef(check) ! check is set to .TRUE., 
+                                           ! when a model is initialized and when the metric tensor is allocated.
+
+CALL sub_Qmodel_Check_anaVSnum(Q,nderiv)   ! check analitical versus numerical derivatives
+CALL set_Qmodel_step(step)                 ! set the displacement value when 
+                                           ! the derivatives are obtained using the finite difference approach.
+```
+
+- Subroutines to change default parameters:
+
+```fortran
+CALL set_Qmodel_Print_level(printlevel)    ! change the default printing level (default, printlevel=-1)
+CALL set_Qmodel_in_unit(inunitp)           ! change the reading unit.
+                                           !  usefull, when the model is read from a user defined unit
+CALL set_Qmodel_out_unit(outunitp)         ! change the writing unit.
+                                           ! usefull, when output is printed to a user defined unit
+
+CALL set_Qmodel_Phase_Checking(check)      ! change the default (.FALSE.) Phase_Checking flag (see 3a3)
+CALL set_Qmodel_Phase_Following(check)     ! change the default (.FALSE.) Phase_Following flag (see 3a3)
+CALL set_Qmodel_Print_Vec_Overlap(Print_Vec_Overlap) ! change the default (0) of Print_Vec_Overlap.
+                                                     ! relevant when Phase_Following=.TRUE.
+```
+
 ## 4) Examples and Tests
 
  With "make all", the libraries are created and several main programs.
@@ -294,6 +317,16 @@ where
 ```bash
     make ut
 ```
+ 
+ This will run all Fortran test files. 
+ 
+ To run a single test, the SRCTESTFILES makefile variable can be used.
+ For example, to only run TEST_buck.f90 test:
+
+```bash
+    make ut SRCTESTFILES=TEST_buck.f90
+```
+
  From the Tests directory
 
 ```bash
@@ -313,22 +346,22 @@ where
 From the main QuantumModelLib directory:
 
 ```bash
-  ./TEST_driver.x < Tests/DAT_files/Vibadia_HBond.dat > res_driver
+  ./APP_driver.x < Tests/DAT_files/Vibadia_HBond.dat > res_driver
 ```
 => Test sevral models (1 or several surfaces, optimization, Vibration adiabatic separation)
 
 ```bash
-  ./TEST_VibAdia.x < Tests/DAT_files/Vibadia_HBond.dat > res_VibAdia
+  ./APP_VibAdia.x < Tests/DAT_files/Vibadia_HBond.dat > res_VibAdia
 ```
 => Test a Vibration adiabatic separation model.
 
 ```bash
-  ./TEST_grid.x > res_grid
+  ./APP_grid.x > res_grid
 ```
 => Test the 1D and 2D-cut generation for HenonHeiles potential (it uses subroutines with Fortran modules)
 
 ```bash
-  ./TEST_OMPloop.x > res_loop
+  ./APP_OMPloop.x > res_loop
 ```
 => Test an OpenMP loop ($10^6$) on the HONO model (several seconds)
 
@@ -414,6 +447,14 @@ fpm run omp
        remark: when option=2 is selected, a contribution is added along QQ:
           Dm.exp(-betam.(QQ-QQm)) + Dp.exp(+betap.(QQ-QQp))
       
+## Model 'TwoD_RJDI2014'
+       2D model
+       pot_name  = 'TwoD_RJDI2014'
+       ndim      = 2 (X,Y)
+       nsurf     = 2
+       Reduced masses      = [1. , 1.] au
+       ref:  Ilya G. Ryabinkin, Loïc Joubert-Doriol, and Artur F. Izmaylov, ...
+             ... J. Chem. Phys. 140, 214116 (2014); https://doi.org/10.1063/1.4881147
 ## Model 'TwoD_Valahu2022'
        2D model
        pot_name  = 'TwoD_Valahu2022'
@@ -504,18 +545,6 @@ fpm run omp
        options  0 and 10 : 3D model with IRC functions (1 potential + parameters)
        options  0 and  1 : first IRC funtions fitted in polar representation (alpha)
        options 10 and 11 : second IRC funtions fitted with the sum and the difference (alpha)
-## Model 'CNH_Murrell'
-       CNH or HCN potential:
-       pot_name  = 'CNH_Murrell'
-       option    = 0 (3D-3distances, default), 1,11 (3D-Jacobi), 2,21 (1D-Jacobi MEP)
-       ndim      = 3
-       nsurf     = 1
-       remarks: 
-         - Atomic order: C, N, H
-         - Cart_TO_Q is possible
-         - The options 11 and 21, the third coordinate is cos(theta)
-       ref: J. N. Murrell, S. Carter and L. O. Halonene, J. Mol. Spectrosc. vo93 p307 1982
-        doi: https://doi.org/10.1016/0022-2852(82)90170-9
 ## Model '2d_mb'
        2D Müller-Brown potential:
        pot_name  = '2d_mb'
@@ -530,6 +559,18 @@ fpm run omp
        remark: the option enables one to select among three minima and two TS.
                default (option=1), the first minimum (A in the reference)
       
+## Model 'CNH_Murrell'
+       CNH or HCN potential:
+       pot_name  = 'CNH_Murrell'
+       option    = 0 (3D-3distances, default), 1,11 (3D-Jacobi), 2,21 (1D-Jacobi MEP)
+       ndim      = 3
+       nsurf     = 1
+       remarks: 
+         - Atomic order: C, N, H
+         - Cart_TO_Q is possible
+         - The options 11 and 21, the third coordinate is cos(theta)
+       ref: J. N. Murrell, S. Carter and L. O. Halonene, J. Mol. Spectrosc. vo93 p307 1982
+        doi: https://doi.org/10.1016/0022-2852(82)90170-9
 ## Model 'H2O'
        H2O potential:
        pot_name  = 'H2O'
@@ -538,6 +579,12 @@ fpm run omp
        nsurf     = 1
        refs: Quadratic model potential for H2O; TIPS force constants taken from:  
              Dang and Pettitt, J. Chem. Phys. 91 (1987)
+## Model 'H2_H2On'
+       H2_H2On potential:
+       pot_name  = 'H2_H2On'
+       option    = 1 (default 1)
+       ndim      = 6
+       nsurf     = 1
 ## Model 'Bottleneck'
       Bottleneck potential: 1D Eckart Barrier + quadratic contributions'
        pot_name  = 'Bottleneck' or 'Eckart'
@@ -576,6 +623,20 @@ fpm run omp
           options = 2: CEPA-1 corrected
        ref: Peter Botschwina, J. Chem. Soc., Faraday Trans. 2, 1988, 84(9), 1263-1276'
             DOI: 10.1039/F29888401263
+## Model 'CHFClBr'
+       CHFClBr QFF potential:
+       pot_name  = 'CHFClBr'
+       option    = no option (yet)
+       ndim      = 9
+       nsurf     = 1
+       refs: unpublished
+## Model 'CHFClBr'
+ Polynomial potential: $V(R) = \sum_i coef(i) \cdot (r-Req)^i$
+ pot_name  = 'CHFClBr'
+ ndim      = 1
+ nsurf     = 1
+ reduced mass      = 1744.60504565084306291455 au
+ remark: Default parameters for H-F
 ## Model 'H2'
  H2 potential
  pot_name  = 'H2'
@@ -596,14 +657,6 @@ fpm run omp
  nsurf     = 1
  reduced mass      = 1744.60504565084306291455 au
  remark: Default parameters for H-F
-## Model 'Poly1D'
- Polynomial potential: $V(R) = \sum_i coef(i) \cdot (r-Req)^i$
- pot_name  = 'Poly1D'
- ndim      = 1
- nsurf     = 1
- reduced mass      = 1744.60504565084306291455 au
- remark: Default parameters for H-F
-## Model
 ## Model 'HenonHeiles'
        HenonHeiles potential
        pot_name  = 'HenonHeiles'
@@ -615,6 +668,21 @@ fpm run omp
           option 3: quadratic contribution + tanh contributions for the anharmonic part
        reduced masses      = ONE au
        ref:  parameters taken from M. Nest, H.-D. Meyer, J. Chem. Phys. 117 (2002) 10499. doi:10.1063/1.1521129
+## Model 'Poly1D'
+ Polynomial potential: $V(R) = \sum_i coef(i) \cdot (r-Req)^i$
+ pot_name  = 'Poly1D'
+ ndim      = 1
+ nsurf     = 1
+ reduced mass      = 1744.60504565084306291455 au
+ remark: Default parameters for H-F
+## Model
+## Model 'DoubleWell'
+       DoubleWell potential
+       pot_name  = 'DoubleWell'
+       ndim      = 1
+       nsurf     = 1
+       reduced masses      = ONE au
+       ref:  Nancy Makri & William H. Miller, The Journal of Chemical Physics 87, 5781 (1987); doi: 10.1063/1.453501
 ## Model 'Tully'
        Tully potential: three options
        pot_name  = 'Tully'
@@ -656,11 +724,3 @@ fpm run omp
        Reduced masses$      = [ 20000., 6667. ] au
        remark: The parameter values have been modified
        ref: A. Ferretti, G. Granucci, A. Lami, M. Persico, G. Villani, J. Chem. Phys. 104, 5517 (1996); https://doi.org/10.1063/1.471791
-## Model 'TwoD_RJDI2014'
-       2D model
-       pot_name  = 'TwoD_RJDI2014'
-       ndim      = 2 (X,Y)
-       nsurf     = 2
-       Reduced masses      = [1. , 1.] au
-       ref:  Ilya G. Ryabinkin, Loïc Joubert-Doriol, and Artur F. Izmaylov, ...
-             ... J. Chem. Phys. 140, 214116 (2014); https://doi.org/10.1063/1.4881147
