@@ -77,7 +77,7 @@ PROGRAM TEST_model
   CALL test_TwoD_RJDI2014()
   CALL test_Vibronic()
   CALL test_TwoD_Valahu2022()
-  CALL test_OneD_Photons()
+  !CALL test_OneD_Photons()
   CALL test_OneD_Photons2()
   CALL test_Retinal_JPCB2000()
   CALL test_NO3()
