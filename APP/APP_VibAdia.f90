@@ -54,7 +54,7 @@ PROGRAM TEST_Vibadia
   real(kind=Rkind), parameter :: auTOcm_inv = 219474.631443_Rkind
 
 
-  CALL Init_Model(QModel,Print_init=.FALSE.,Vib_adia=.TRUE.)
+  CALL Init_Model(QModel,Print_init=.TRUE.,Vib_adia=.TRUE.)
 
   dQ = TWO / real(nq,kind=Rkind)
   DO iq=0,nq
@@ -63,6 +63,7 @@ PROGRAM TEST_Vibadia
     !write(out_unit,*) 'NAC'
     !CALL Write_RMat(NAC%d1(:,:,1),out_unit,6,name_info='NAC')
     write(out_unit,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
+    write(out_unit,*) Qact,'NAC',(NAC%d1(1,i,1),i=1,get_nsurf(PotVal))
   END DO
 
 END PROGRAM TEST_Vibadia
