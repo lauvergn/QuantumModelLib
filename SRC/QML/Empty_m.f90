@@ -112,6 +112,10 @@ MODULE QML_Empty_m
       GENERIC,   PUBLIC  :: assignment(=) => Empty2_TO_Empty1_QML_Empty
   END TYPE QML_Empty_t
 
+  TYPE :: QML_t
+    CLASS (QML_Empty_t),  allocatable :: QM
+  END TYPE QML_t
+
   INTERFACE get_Q0_QModel
     MODULE PROCEDURE get_Q0_QML_Empty
   END INTERFACE
@@ -124,7 +128,7 @@ MODULE QML_Empty_m
   !  MODULE PROCEDURE Empty2_TO_Empty1_QML_Empty
   !END INTERFACE
 
-  PUBLIC :: QML_Empty_t
+  PUBLIC :: QML_Empty_t,QML_t
   PUBLIC :: get_Q0_QModel, get2_Q0_QML_Empty, Qact_TO_Q
 
   CONTAINS
