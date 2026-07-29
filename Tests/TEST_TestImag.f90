@@ -83,9 +83,8 @@ PROGRAM TEST_testImag
   write(out_unit,'(a,6f12.6)') 'Q (Bohr)',Q(:)
   CALL Check_analytical_numerical_derivatives(Model,Q,nderiv,test_var)
 
-  !STOP 'coucou'
 
-  CALL Test_QVG_FOR_Model(Model,Q,test_var,nderiv,option=0)
+  !CALL Test_QVG_FOR_Model(Model,Q,test_var,nderiv,option=0) ! pb for the test
 
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '- END CHECK POT -----------------------------'

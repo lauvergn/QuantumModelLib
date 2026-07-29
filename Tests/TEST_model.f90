@@ -46,14 +46,6 @@ PROGRAM TEST_model
   CALL Initialize_Test(test_var,test_name='QModel')
   !CALL test_Vibronic_SO2() ; CALL Finalize_Test(test_var) ; stop
 
-  !CALL test_OneD_Photons2() ; CALL Finalize_Test(test_var) ; stop
-
-  !CALL test_PSB3() ; CALL Finalize_Test(test_var) ; stop
-
-  !CALL test_Bottleneck ; CALL Finalize_Test(test_var) ; stop
-  !CALL test_PH4Jo ; stop
-  !CALL test_H3() ; stop
-
   ! One electronic surface
   CALL test_Opt_LinearHBond()
   CALL test_HenonHeiles()

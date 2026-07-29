@@ -264,7 +264,7 @@ ut: $(TESTEXE)
 	@echo "model (QML) compilation: OK"
 	cd $(TESTS_DIR) ; ./run_test_QML $(FFC) $(OOPT) $(OOMP) $(LLAPACK) $(INT) 1
 	mkdir -p $(TESTSOUT_DIR)
-	cd $(TESTSOUT_DIR) ; rm -f *.log ; $(foreach Texe,$(NEWTESTEXE), ../../$(Texe) >>  Test.log ;)
+	cd $(TESTSOUT_DIR) ; rm -f *.log ; $(foreach Texe,$(NEWTESTEXE), echo $(Texe) ; ../../$(Texe) >>  Test.log ;)
 	@grep "Number of error(s)" $(TESTSOUT_DIR)/Test.log
 	@awk  -F: 'BEGIN{test=0} /Number of tests/ {test+=$$2} END {print "Number of tests: " test}' $(TESTSOUT_DIR)/Test.log
 	@awk  -F: 'BEGIN{err=0} /Number of error/ {err=err+$$2} END {print "Number of error(s) for all tests: " err}' $(TESTSOUT_DIR)/Test.log
