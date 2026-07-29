@@ -2,7 +2,7 @@
 
  QuantumModelLib or QML* is a free software under the MIT Licence.
 
-  date: 16/02/2025
+  date: 29/07/2026
 
 ```
     Copyright (c) 2022 David Lauvergnat [1]
@@ -25,9 +25,64 @@
 
 ## 1) Installation
 
-   From the QuantumModelLib directory, when make is executated, the **libQMLibFull_XXX_optx_ompy_lapackz.a** must be created (ex: **libQMLibFull_gfortran_opt1_omp1_lapack1**).
-   **XXX** is the compiler name and **x**, **y** and **z** are 0/1 when flags are turn off/on. 
-   They correspond to OPT (compiler optimzation), OpenMP and Lapack/blas, respectively.
+To build the library with the default options:
+
+```bash
+make lib
+```
+
+The QuantumModelLib needs two other external libraries (AD_dnSVM and QDUtilLib) present in QuantumModelLib directory. Then, the compilation creates two libraries:
+
+- a standalone library: **libQuantumModelLibFull_XXX_optW_ompX_lapackY_intZ_realR.a** which contains everything except the .mod files
+- a QuantumModelLib library: **libQuantumModelLib_XXX_optW_ompX_lapackY_intZ_realR.a**. The two other external libraries need to be link separatlely.
+
+with:
+- XXX: the compiler name (like gfortran, ifx)
+- W, (OPT: compiler optimization): 0/1 when flags are turn off/on
+- X, (OMP: OpenMP): 0/1 when flags are turn off/on
+- Y, (LAPACK): 0/1 when flags are turn off/on
+- Z: (INT: integer default at compilation), possible values: 4 or 8
+- R: (REAL, the value of real kind), possible values: 32, 64, 128
+
+For instance, the default libraries are (XXX=gfortran, W=1, X=1, Y=1, Z=4 and R=64): 
+- **libQuantumModelLib_gfortran_opt1_omp1_lapack1_int4_real64.a**
+- **libQuantumModelLibFull_gfortran_opt1_omp1_lapack1_int4_real64.a**
+
+
+Remarks: 
+To be compatible with previous versions, the standalone library is linked to other library names: 
+- **libQMLFull_XXX_optW_ompX_lapackY_intZ.a** 
+- **libQMLFull.a**
+and QuantumModelLib library is linked to:
+- **libQuantumModelLib_XXX_optW_ompX_lapackY_intZ.a**
+- **libQuantumModelLib.a**
+
+
+The compiler options are (the first values are the default):
+
+- FC=gfortran or ifx or ifort ...
+- OPT=1 or 0: compilation with optimization or without optimization
+- OMP=1 or 0: with or without openmp
+- LAPACK=1 or 0: with or without blas and lapack libraries
+- INT=4 or 8: change the integer kind default compilation option
+- RKIND=real64 or real32 or real128: change the real kind
+
+Exemple: 
+
+```bash
+make FC=gfortran OPT=1 OMP=0 RKIND=real128
+```
+
+The module files (.mod) are in the **OBJ/obj_XXX_optW_lapackX_ompY_intZ_realR** directory.
+If you need to compile your code with them, then use the -I option (gfortran). For instance:
+
+```bash
+   gfortran -I/$QML_path/OBJ/obj_XXX_optW_lapackX_ompY_intZ_realR    -c YourCode.f90
+```
+
+*QML_path* contains the path of **QuantumModelLib**.
+
+
 
 ```
    This version works with:
@@ -40,20 +95,19 @@
 When lapack/blas are not linked to the library:
 
 ```bash
-   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optx_ompy_lapack0.a
+   gfortran ....   $QML_path/libQMLFull_XXX_optW_ompX_lapack0_intZ.a
 ```
 
 or with  lapack/blas (linux)
 
 ```bash
-   gfortran ....   $QuantumModelLib_path/libQMLibFull_XXX_optx_ompy_lapack1.a -llapack -lblas
+   gfortran ....   $QML_path/libQMLFull_XXX_optW_ompX_lapack1_intZ.a -llapack -lblas
 ```
-*QuantumModelLib_path* contains the path of the **QuantumModelLib**
 
 
 ## 3) In your Fortan code
 
- In the following, it shows how to initialize, compute with the driver subroutines (the full library is needed, the Fortran module files are not required)
+ In the following, it shows how to initialize, compute with the driver subroutines (the standalone library is needed, the Fortran module files are not required)
 
 ### 3a1) Initialization of the model (the Potential)
 
