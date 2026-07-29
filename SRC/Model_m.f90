@@ -1005,12 +1005,15 @@ CONTAINS
 
     CASE ('chfclbr')
       !! === README ==
-      !! CHFClBr QFF potential:
+      !! CHFClBr QFF and bQFF potentials:
       !! pot_name  = 'CHFClBr'
-      !! option    = no option (yet)
+      !! option    = no option
       !! ndim      = 9
       !! nsurf     = 1
-      !! refs: unpublished
+      !! remark, with read_nml=t, options are possible:
+      !!      * norder: order of the Taylor expansion (values: 2,3,4). Default norder=4
+      !!      * bQFF: corrected bound QFF (values: T,F). Default bQFF=T
+      !! refs: unpublished yet
       !! === END README ==
       allocate(QML_CHFClBr_t :: QModel%QM)
       QModel%QM = Init_QML_CHFClBr(QModel_in,read_param=read_nml,nio_param_file=nio_loc)

@@ -222,11 +222,17 @@ CONTAINS
 
     write(nio,*) 'CHFClBr default parameters:'
     write(nio,*)
-    write(nio,*) ' QFF potential at ??? level:'
+    write(nio,*) ' QFF potential at MP2/aug-cc-pVTZ level of theory:'
     write(nio,*)
     CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*)
     write(nio,*) '  norder: ',QModel%norder
+    write(nio,*) '  bQFF:   ',QModel%bQFF
+    write(nio,*)
+    write(nio,*) ' at Q={0.1,-0.1,0.2,-0.2,0.3,-0.3,0.4,-0.4,0.5}, ' 
+    write(nio,*) ' ... the bQFF potential value is: 3.2310845043165954E-003 Hartree'
+    write(nio,*)
+    write(nio,*) 'The ZPE (bQFF) is 4627.47 cm-1 (optained with ElVibRot and MCTDH).'
     write(nio,*)
     write(nio,*) 'end CHFClBr current parameters'
 
