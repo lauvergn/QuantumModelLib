@@ -233,11 +233,12 @@ CONTAINS
 
     write(nio_loc,*) '==============================================='
     write(nio_loc,*) 'QML Values'
-    write(nio_loc,*) 'alloc    : ',QMLValues%alloc
-    write(nio_loc,*) 'nderiv   : ',QMLValues%nderiv
-    write(nio_loc,*) 'ndim     : ',QMLValues%ndim
-    write(nio_loc,*) 'nsurf    : ',QMLValues%nsurf
-    write(nio_loc,*) 'adiabatic: ',QMLValues%adiabatic
+    write(nio_loc,*) 'alloc     : ',QMLValues%alloc
+    write(nio_loc,*) 'nderiv    : ',QMLValues%nderiv
+    write(nio_loc,*) 'ndim      : ',QMLValues%ndim
+    write(nio_loc,*) 'nsurf     : ',QMLValues%nsurf
+    write(nio_loc,*) 'nb_ScalOp : ',QMLValues%nb_ScalOp
+    write(nio_loc,*) 'adiabatic : ',QMLValues%adiabatic
 
     IF (allocated(QMLValues%Q)) THEN
       write(nio_loc,*) 'Q (coordinates): ',QMLValues%Q

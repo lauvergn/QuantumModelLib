@@ -68,7 +68,7 @@ MODULE QML_Empty_m
     logical :: Cart_TO_Q        = .FALSE. ! to perform the Cartesian to model coordinates
     logical :: MassWeighted     = .FALSE. ! Cartesian with mass Weighted
     logical :: AbInitio         = .FALSE. ! To use abitio calculation (experimental)
-    integer :: nb_ScalOp        = 1 ! number scalar operators including the potential
+    integer :: nb_ScalOp        = -1 ! number scalar operators including the potential
                                     ! numbering: [0: potential, 1...: other operators]
 
     logical :: ImagContrib      = .FALSE.
