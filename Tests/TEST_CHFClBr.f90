@@ -91,6 +91,12 @@ PROGRAM TEST_CHFClBr
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------' 
  
+  Q = ZERO
+  CALL Eval_Pot(Model,Q,PotVal,nderiv=3)
+  write(out_unit,'(a,9f12.6)') 'Q (Bohr)',Q(:)
+  write(out_unit,*) 'Energy (Hartree)'
+  CALL Write_dnMat(PotVal,nio=out_unit)
+  flush(out_unit)
 
   deallocate(Q)
   CALL dealloc_Model(Model)
