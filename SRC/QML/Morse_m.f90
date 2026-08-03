@@ -69,9 +69,10 @@ MODULE QML_Morse_m
      real (kind=Rkind) :: req = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
      real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
   CONTAINS
-    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_Morse
-    PROCEDURE :: Write_QModel     => Write_QML_Morse
-    PROCEDURE :: RefValues_QModel => RefValues_QML_Morse
+    PROCEDURE :: EvalPot_QModel    => EvalPot_QML_Morse
+    PROCEDURE :: EvalScalOp_QModel => EvalScalOp_QML_Morse
+    PROCEDURE :: Write_QModel      => Write_QML_Morse
+    PROCEDURE :: RefValues_QModel  => RefValues_QML_Morse
   END TYPE QML_Morse_t
 
   PUBLIC :: QML_Morse_t,Init_QML_Morse,Init0_QML_Morse,Write_QML_Morse,QML_dnMorse,QML_dnbeta
@@ -376,6 +377,30 @@ CONTAINS
     QML_dnbeta  = exp(-QModel%a*(dnR-QModel%req))
 
   END FUNCTION QML_dnbeta
+
+  SUBROUTINE EvalScalOp_QML_Morse(QModel,Mat_OF_ScalOpDia,list_Op,dnQ,nderiv)
+    USE QDUtil_m,  ONLY : ZERO
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
+  
+      CLASS (QML_Morse_t),    intent(in)     :: QModel
+      TYPE (dnS_t),           intent(in)     :: dnQ(:)
+      integer,                intent(in)     :: list_Op(:)
+      TYPE (dnS_t),           intent(inout)  :: Mat_OF_ScalOpDia(:,:,:)
+      integer,                intent(in)     :: nderiv
+  
+      IF (QModel%nb_ScalOp-1 /= size(list_Op)) THEN
+        write(out_unit,*) 'ERROR in EvalScalOp_QML_Morse'
+        write(out_unit,*) '  QModel%nb_ScalOp and size(list_Op) are inconsistent'
+        write(out_unit,*) '  QModel%nb_ScalOp (including potential)',QModel%nb_ScalOp
+        write(out_unit,*) ' size(list_Op)',size(list_Op)
+
+        STOP 'ERROR in EvalScalOp_QML_Morse: QModel%nb_ScalOp and size(list_Op) are inconsistent'
+      END IF
+ 
+      Mat_OF_ScalOpDia(:,:,:) = ZERO
+  
+  END SUBROUTINE EvalScalOp_QML_Morse
 
   SUBROUTINE RefValues_QML_Morse(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
     USE QDUtil_m

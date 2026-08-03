@@ -114,6 +114,16 @@ PROGRAM TEST_morse
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------'
 
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '- Scalar Operators --------------------------'
+  write(out_unit,*) '---------------------------------------------'
+
+  CALL Eval_Pot(Model,Q,PotVal,nderiv=nderiv)
+  write(out_unit,'(a,f12.6)') 'R (Bohr)',q(:)
+  write(out_unit,*) 'Energy (Hartree)'
+  CALL Write_dnMat(PotVal,nio=out_unit)
+  flush(out_unit)
+
   CALL dealloc_dnMat(PotVal)
   CALL dealloc_dnMat(PotValref)
   CALL dealloc_dnMat(dnErr)

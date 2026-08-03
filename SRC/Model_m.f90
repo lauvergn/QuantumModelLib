@@ -1908,7 +1908,7 @@ CONTAINS
   END SUBROUTINE Eval_Pot_ana
 
 
-  SUBROUTINE Eval_Pot_new(Model,Q,QMLValues,nderiv,numeric)
+  SUBROUTINE Eval_Pot_new(Model,Q,QMLValues,nderiv,numeric,ScalOp)
     USE ADdnSVM_m
     USE QMLValues_m
     IMPLICIT NONE
@@ -1918,6 +1918,7 @@ CONTAINS
     real (kind=Rkind),  intent(in)               :: Q(:)
     integer,            intent(in),    optional  :: nderiv
     logical,            intent(in),    optional  :: numeric
+    logical,            intent(in),    optional  :: ScalOp
 
     ! local variables
     integer                    :: i,nderiv_loc
@@ -2982,13 +2983,15 @@ CONTAINS
     IF (.NOT. QMLValues%alloc ) THEN
       CALL alloc_QMLValues(QMLValues, &
                            adiabatic=adiabatic,cplx=Model%QM%ImagContrib, &
-                           nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,nderiv=nderiv)
+                           nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,       &
+                           nb_ScalOp=Model%QM%nb_ScalOp,nderiv=nderiv)
     END IF
     QMLValues%Q(:) = Q
 
     CALL alloc_QMLValues(QMLValues_loc0, &
                          adiabatic=adiabatic,cplx=Model%QM%ImagContrib, &
-                         nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,nderiv=0)
+                         nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,       &
+                         nb_ScalOp=Model%QM%nb_ScalOp,nderiv=0)
     QMLValues_loc0%Q(:) = Q
     Q_loc = Q
 
@@ -3162,13 +3165,15 @@ CONTAINS
     IF (.NOT. QMLValues%alloc ) THEN
       CALL alloc_QMLValues(QMLValues, &
                            adiabatic=adiabatic,cplx=Model%QM%ImagContrib, &
-                           nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,nderiv=nderiv)
+                           nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,       &
+                           nb_ScalOp=Model%QM%nb_ScalOp,nderiv=nderiv)
     END IF
     QMLValues%Q(:) = Q
 
     CALL alloc_QMLValues(QMLValues_loc0, &
                          adiabatic=adiabatic,cplx=Model%QM%ImagContrib, &
-                         nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,nderiv=0)
+                         nsurf=Model%QM%nsurf,ndim=Model%QM%ndim,       &
+                         nb_ScalOp=Model%QM%nb_ScalOp,nderiv=0)
     QMLValues_loc0%Q(:) = Q
     Q_loc = Q
 
@@ -4252,11 +4257,13 @@ CONTAINS
 
     CALL alloc_QMLValues(QMLValues_ana,adiabatic=Model%QM%adiabatic,     &
                          cplx=Model%QM%ImagContrib,nsurf=Model%QM%nsurf, &
-                         ndim=Model%QM%ndim,nderiv=nderiv)
+                         ndim=Model%QM%ndim,nb_ScalOp=Model%QM%nb_ScalOp,&
+                         nderiv=nderiv)
 
     CALL alloc_QMLValues(QMLValues_num,adiabatic=Model%QM%adiabatic,     &
                          cplx=Model%QM%ImagContrib,nsurf=Model%QM%nsurf, &
-                         ndim=Model%QM%ndim,nderiv=nderiv)
+                         ndim=Model%QM%ndim,nb_ScalOp=Model%QM%nb_ScalOp,&
+                         nderiv=nderiv)
 
     CALL Eval_Pot(Model,Q,QMLValues_ana,nderiv=nderiv,numeric=.FALSE.)
     CALL Eval_Pot(Model,Q,QMLValues_num,nderiv=nderiv,numeric=.FALSE.)
