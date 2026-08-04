@@ -216,19 +216,27 @@ CONTAINS
     END IF
   END SUBROUTINE dealloc_QMLValues
 
-  SUBROUTINE Write_QMLValues(QMLValues,nio)
+  SUBROUTINE Write_QMLValues(QMLValues,nio,Flatten)
     USE QDUtil_m
     IMPLICIT NONE
 
     TYPE(QMLValues_t),  intent(in)           :: QMLValues
     integer,            intent(in), optional :: nio
+    logical,            intent(in), optional :: Flatten
+
 
     integer :: i,nio_loc
+    logical :: Flatten_loc
 
     IF (present(nio)) THEN
       nio_loc = nio
     ELSE
       nio_loc = out_unit
+    END IF
+    IF (present(Flatten)) THEN
+      Flatten_loc = Flatten
+    ELSE
+      Flatten_loc = .FALSE.
     END IF
 
     write(nio_loc,*) '==============================================='
@@ -247,60 +255,85 @@ CONTAINS
     END IF
     write(nio_loc,*)
 
-    !write(nio_loc,*) 'PotAdia:    ',get_Flatten(QMLValues%PotAdia)
-    !write(nio_loc,*) 'PotDia:     ',get_Flatten(QMLValues%PotDia)
-    !write(nio_loc,*) 'Vec:        ',get_Flatten(QMLValues%Vec)
-    !write(nio_loc,*) 'Vec0:       ',get_Flatten(QMLValues%Vec0)
-    !write(nio_loc,*) 'NAC:        ',get_Flatten(QMLValues%NAC)
-    !write(nio_loc,*) 'ImagPotAdia:',get_Flatten(QMLValues%ImagPotAdia)
-    !write(nio_loc,*) 'ImagPotDia: ',get_Flatten(QMLValues%ImagPotDia)
-    !write(nio_loc,*) 'ImagVec:    ',get_Flatten(QMLValues%ImagVec)
-    !write(nio_loc,*) 'ImagVec0:   ',get_Flatten(QMLValues%ImagVec0)
-    !write(nio_loc,*) 'ImagNAC:    ',get_Flatten(QMLValues%ImagNAC)
-    write(nio_loc,*) '-----------------------------------------------'
-    CALL Write_dnMat(QMLValues%PotAdia,     nio_loc,info='PotAdia')
-    CALL Write_dnMat(QMLValues%ImagPotAdia, nio_loc,info='ImagPotAdia')
-    write(nio_loc,*)
-    CALL Write_dnMat(QMLValues%PotDia,      nio_loc,info='PotDia')
-    CALL Write_dnMat(QMLValues%ImagPotDia,  nio_loc,info='ImagPotDia') 
-    write(nio_loc,*)
+    IF (Flatten_loc) THEN
+      write(nio_loc,*) 'PotAdia:    ',get_Flatten(QMLValues%PotAdia)
+      write(nio_loc,*) 'PotDia:     ',get_Flatten(QMLValues%PotDia)
+      write(nio_loc,*) 'Vec:        ',get_Flatten(QMLValues%Vec)
+      write(nio_loc,*) 'Vec0:       ',get_Flatten(QMLValues%Vec0)
+      write(nio_loc,*) 'NAC:        ',get_Flatten(QMLValues%NAC)
+      write(nio_loc,*) 'ImagPotAdia:',get_Flatten(QMLValues%ImagPotAdia)
+      write(nio_loc,*) 'ImagPotDia: ',get_Flatten(QMLValues%ImagPotDia)
+      write(nio_loc,*) 'ImagVec:    ',get_Flatten(QMLValues%ImagVec)
+      write(nio_loc,*) 'ImagVec0:   ',get_Flatten(QMLValues%ImagVec0)
+      write(nio_loc,*) 'ImagNAC:    ',get_Flatten(QMLValues%ImagNAC)
 
-    write(nio_loc,*) '-----------------------------------------------'
-    CALL Write_dnMat(QMLValues%Vec,         nio_loc,info='Vec')
-    CALL Write_dnMat(QMLValues%ImagVec,     nio_loc,info='ImagVec')
-    write(nio_loc,*)
-    CALL Write_dnMat(QMLValues%Vec0,        nio_loc,info='Vec0')
-    CALL Write_dnMat(QMLValues%ImagVec0,    nio_loc,info='ImagVec0')
-    write(nio_loc,*)
-    CALL Write_dnMat(QMLValues%NAC,         nio_loc,info='NAC')
-    CALL Write_dnMat(QMLValues%ImagNAC,     nio_loc,info='ImagNAC')  
-    write(nio_loc,*)
+      IF (allocated(QMLValues%ScalOpAdia)) THEN
+        DO i=1,size(QMLValues%ScalOpAdia)
+          write(nio_loc,*) 'ScalOpAdia:     ',i,get_Flatten(QMLValues%ScalOpAdia(i))
+        END DO
+      END IF
+      IF (allocated(QMLValues%ImagScalOpAdia)) THEN
+        DO i=1,size(QMLValues%ImagScalOpAdia)
+          write(nio_loc,*) 'ImagScalOpAdia: ',i,get_Flatten(QMLValues%ImagScalOpAdia(i))
+        END DO
+      END IF
+      IF (allocated(QMLValues%ScalOpDia)) THEN
+        DO i=1,size(QMLValues%ScalOpDia)
+          write(nio_loc,*) 'ScalOpDia:      ',i,get_Flatten(QMLValues%ScalOpDia(i))
+        END DO
+      END IF
+      IF (allocated(QMLValues%ImagScalOpDia)) THEN
+       DO i=1,size(QMLValues%ImagScalOpDia)
+          write(nio_loc,*) 'ImagScalOpDia:  ',i,get_Flatten(QMLValues%ImagScalOpDia(i))
+        END DO
+      END IF
 
-    IF (allocated(QMLValues%ScalOpAdia)) THEN
+    ELSE
       write(nio_loc,*) '-----------------------------------------------'
-      DO i=1,size(QMLValues%ScalOpAdia)
-        CALL Write_dnMat(QMLValues%ScalOpAdia(i),nio_loc,info='ScalOpAdia('//TO_string(i)//')')
-      END DO
-    END IF
-    IF (allocated(QMLValues%ImagScalOpAdia)) THEN
+      CALL Write_dnMat(QMLValues%PotAdia,     nio_loc,info='PotAdia')
+      CALL Write_dnMat(QMLValues%ImagPotAdia, nio_loc,info='ImagPotAdia')
+      write(nio_loc,*)
+      CALL Write_dnMat(QMLValues%PotDia,      nio_loc,info='PotDia')
+      CALL Write_dnMat(QMLValues%ImagPotDia,  nio_loc,info='ImagPotDia') 
+      write(nio_loc,*)
+
       write(nio_loc,*) '-----------------------------------------------'
-      DO i=1,size(QMLValues%ImagScalOpDia)
-        CALL Write_dnMat(QMLValues%ImagScalOpDia(i),nio_loc,info='ImagScalOpDia('//TO_string(i)//')')
-      END DO
+      CALL Write_dnMat(QMLValues%Vec,         nio_loc,info='Vec')
+      CALL Write_dnMat(QMLValues%ImagVec,     nio_loc,info='ImagVec')
+      write(nio_loc,*)
+      CALL Write_dnMat(QMLValues%Vec0,        nio_loc,info='Vec0')
+      CALL Write_dnMat(QMLValues%ImagVec0,    nio_loc,info='ImagVec0')
+      write(nio_loc,*)
+      CALL Write_dnMat(QMLValues%NAC,         nio_loc,info='NAC')
+      CALL Write_dnMat(QMLValues%ImagNAC,     nio_loc,info='ImagNAC')  
+      write(nio_loc,*)
+
+      IF (allocated(QMLValues%ScalOpAdia)) THEN
+        write(nio_loc,*) '-----------------------------------------------'
+        DO i=1,size(QMLValues%ScalOpAdia)
+          CALL Write_dnMat(QMLValues%ScalOpAdia(i),nio_loc,info='ScalOpAdia('//TO_string(i)//')')
+        END DO
+      END IF
+      IF (allocated(QMLValues%ImagScalOpAdia)) THEN
+        write(nio_loc,*) '-----------------------------------------------'
+        DO i=1,size(QMLValues%ImagScalOpDia)
+          CALL Write_dnMat(QMLValues%ImagScalOpDia(i),nio_loc,info='ImagScalOpDia('//TO_string(i)//')')
+        END DO
+      END IF
+      IF (allocated(QMLValues%ScalOpDia)) THEN
+        write(nio_loc,*) '-----------------------------------------------'
+        DO i=1,size(QMLValues%ScalOpDia)
+          CALL Write_dnMat(QMLValues%ScalOpDia(i),nio_loc,info='ScalOpDia('//TO_string(i)//')')
+        END DO
+      END IF
+      IF (allocated(QMLValues%ImagScalOpDia)) THEN
+        write(nio_loc,*) '-----------------------------------------------'
+        DO i=1,size(QMLValues%ImagScalOpDia)
+          CALL Write_dnMat(QMLValues%ImagScalOpDia(i),nio_loc,info='ImagScalOpDia('//TO_string(i)//')')
+        END DO
+      END IF
+      write(nio_loc,*) '==============================================='
     END IF
-    IF (allocated(QMLValues%ScalOpDia)) THEN
-      write(nio_loc,*) '-----------------------------------------------'
-      DO i=1,size(QMLValues%ScalOpDia)
-        CALL Write_dnMat(QMLValues%ScalOpDia(i),nio_loc,info='ScalOpDia('//TO_string(i)//')')
-      END DO
-    END IF
-    IF (allocated(QMLValues%ImagScalOpDia)) THEN
-      write(nio_loc,*) '-----------------------------------------------'
-      DO i=1,size(QMLValues%ImagScalOpDia)
-        CALL Write_dnMat(QMLValues%ImagScalOpDia(i),nio_loc,info='ImagScalOpDia('//TO_string(i)//')')
-      END DO
-    END IF
-    write(nio_loc,*) '==============================================='
     flush(nio_loc)
 
   END SUBROUTINE Write_QMLValues

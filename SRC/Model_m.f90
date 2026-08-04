@@ -374,6 +374,7 @@ CONTAINS
 
   USE QML_OneD_Photons_m
   USE QML_OneD_Photons2_m
+  USE QML_OneD_2Quadra_m
   IMPLICIT NONE
 
     TYPE (Model_t),      intent(inout)           :: QModel
@@ -1054,6 +1055,10 @@ CONTAINS
     CASE ('oned_photons2')
       allocate(QML_OneD_Photons2_t :: QModel%QM)
       QModel%QM = Init_QML_OneD_Photons2(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('oned_2quadra')
+      allocate(QML_OneD_2Quadra_t :: QModel%QM)
+      QModel%QM = Init_QML_OneD_2Quadra(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE DEFAULT
         write(out_unit,*) ' ERROR in Init_Model'
@@ -3787,8 +3792,8 @@ CONTAINS
         CALL set_dnCMat(dnPotcplx_ana,QMLValues_ana%PotDia)
       END IF
     END IF
-    CALL Write_dnMat(dnPotcplx_num,info='dnPotcplx_num')
-    CALL Write_dnMat(dnPotcplx_ana,info='dnPotcplx_ana')
+    IF (debug) CALL Write_dnMat(dnPotcplx_num,info='dnPotcplx_num')
+    IF (debug) CALL Write_dnMat(dnPotcplx_ana,info='dnPotcplx_ana')
 
     MaxMat      = get_maxval_OF_dnMat(dnPotcplx_ana)
     IF (MaxMat < ONETENTH**6) MaxMat = ONE

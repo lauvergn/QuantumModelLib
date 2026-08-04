@@ -17,6 +17,7 @@ Poly1D_m.f90  \
 LinearHBond_m.f90  \
 OneDSOC_1S1T_m.f90  \
 HenonHeiles_m.f90  \
+Sum_m.f90  \
 ClH2p_Botschwina_m.f90  \
 fulvene_m.f90  \
 CH5_m.f90  \
@@ -46,6 +47,7 @@ Template_m.f90  \
 H2NSi_m.f90  \
 TwoD_Valahu2022_m.f90  \
 Empty_m.f90  \
+OneD_2Quadra.f90  \
 H3_m.f90  \
 TwoD_m.f90  \
 PH4Jo_m.f90  \

@@ -16,6 +16,7 @@ qml_poly1d_m := $(OBJ_DIR)/Poly1D_m.o
 qml_linearhbond_m := $(OBJ_DIR)/LinearHBond_m.o
 qml_onedsoc_1s1t_m := $(OBJ_DIR)/OneDSOC_1S1T_m.o
 qml_henonheiles_m := $(OBJ_DIR)/HenonHeiles_m.o
+qml_sum_m := $(OBJ_DIR)/Sum_m.o
 qml_clh2p_botschwina_m := $(OBJ_DIR)/ClH2p_Botschwina_m.o
 qml_fulvene_m := $(OBJ_DIR)/fulvene_m.o
 qml_ch5_m := $(OBJ_DIR)/CH5_m.o
@@ -45,6 +46,7 @@ qml_template_m := $(OBJ_DIR)/Template_m.o
 qml_h2nsi_m := $(OBJ_DIR)/H2NSi_m.o
 qml_twod_valahu2022_m := $(OBJ_DIR)/TwoD_Valahu2022_m.o
 qml_empty_m := $(OBJ_DIR)/Empty_m.o
+qml_oned_2quadra_m := $(OBJ_DIR)/OneD_2Quadra.o
 qml_h3_m := $(OBJ_DIR)/H3_m.o
 qml_twod_m := $(OBJ_DIR)/TwoD_m.o
 qml_ph4jo_m := $(OBJ_DIR)/PH4Jo_m.o
@@ -156,6 +158,12 @@ $(OBJ_DIR)/HenonHeiles_m.o : \
           $(qml_morse_m) \
           $(qdutil_m) \
           $(addnsvm_m)
+#file+mod_name: SRC/QML/Sum_m.f90 qml_sum_m
+$(OBJ_DIR)/Sum_m.o : \
+          $(qdutil_numparameters_m) \
+          $(qml_empty_m) \
+          $(addnsvm_m) \
+          $(qdutil_m)
 #file+mod_name: SRC/QML/ClH2p_Botschwina_m.f90 qml_clh2p_botschwina_m
 $(OBJ_DIR)/ClH2p_Botschwina_m.o : \
           $(qdutil_numparameters_m) \
@@ -338,6 +346,12 @@ $(OBJ_DIR)/Empty_m.o : \
           $(addnsvm_m) \
           $(qdutil_m) \
           $(qmllib_utillib_m)
+#file+mod_name: SRC/QML/OneD_2Quadra.f90 qml_oned_2quadra_m
+$(OBJ_DIR)/OneD_2Quadra.o : \
+          $(qdutil_numparameters_m) \
+          $(qml_empty_m) \
+          $(qdutil_m) \
+          $(addnsvm_m)
 #file+mod_name: SRC/QML/H3_m.f90 qml_h3_m
 $(OBJ_DIR)/H3_m.o : \
           $(qdutil_numparameters_m) \
@@ -435,6 +449,7 @@ $(OBJ_DIR)/Model_m.o : \
           $(qml_dmabn_m) \
           $(qml_oned_photons_m) \
           $(qml_oned_photons2_m) \
+          $(qml_oned_2quadra_m) \
           $(addnsvm_m) \
           $(qmlvalues_m) \
           $(qmllib_finitediff_m) \
