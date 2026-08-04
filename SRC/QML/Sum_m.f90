@@ -206,25 +206,7 @@ CONTAINS
 
     write(nio,*) 'Sum default parameters:'
     write(nio,*)
-    write(nio,*) ' For H-F (Default values, from Morse parameters):'
-    write(nio,*) '    V(R) = 0.620329864 * (R-req)^2'
-    write(nio,*) '  req = 1.7329 bohr'
-    write(nio,*) '  mu  = 1744.60504565084306291455 au'
-    write(nio,*)
-    write(nio,*) 'Value at: R=req Bohr'
-    write(nio,*) 'V        = 0.0 Hartree'
-    write(nio,*) 'gradient = 0.0'
-    write(nio,*) 'hessian  = 0.620329864'
-    write(nio,*)
-    write(nio,*) 'end Sum default parameters'
-    write(nio,*)
-    write(nio,*) 'Sum current parameters:'
-    CALL QModel%QML_Empty_t%Write_QModel(nio)
-    write(nio,*)
-    write(nio,*) '    V(R) = Sum_i Coef_i * (R-Req)^i'
-    write(nio,*) '  norder: ',QModel%norder
-    write(nio,*) '  Coef:   ',QModel%coef(:)
-    write(nio,*) '  Req:    ',QModel%req
+    write(nio,*) 'nb_model',QModel%nb_model
     write(nio,*)
     write(nio,*) 'end Sum current parameters'
 
@@ -264,13 +246,7 @@ CONTAINS
       write(out_unit,*) ' Q(:):',(get_d0(dnQ(i)),i=1,size(dnQ))
     END IF
 
-    dnDR  = dnQ(1)-QModel%req
-
-
-    Mat_OF_PotDia(1,1) = QModel%coef(QModel%norder)
-    DO i=QModel%norder-1,0,-1
-      Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1)*dnDR + QModel%coef(i)
-    END DO
+    STOP 'sum not yet'
 
     IF (debug) THEN
       write(out_unit,*) 'Mat_OF_PotDia'
