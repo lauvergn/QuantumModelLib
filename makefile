@@ -337,7 +337,7 @@ $(EXTLib):
 	$(MAKE) -C $(ExtLibDIR) -f $(MAIN_path)/scripts/makefile-extlib LIBA=$@
 #===============================================
 #================ cleaning =====================
-.PHONY: clean cleanall cleanlocextlib
+.PHONY: clean cleantest cleanall cleanlocextlib
 clean:
 	rm -f  $(TESTEXE) $(APPEXE)
 	rm -f  *.log
@@ -346,16 +346,16 @@ clean:
 	rm -f $(MAIN_path)/$(SRC_DIR)/QML/ExtModel_m.f90
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.mod $(OBJ_DIR)/*.MOD
 	@echo "  done cleaning for "$(LIB_NAME)
-cleanall: clean
+cleantest:
+	cd $(TESTS_DIR) && ./clean
+cleanall: clean cleantest
 	rm -f lib*.a
 	rm -rf OBJ
-	cd $(TESTS_DIR) && ./clean
 	if [ "$(EXTLIB_LIST)" != "" -a "$(RECCLEAN)" = "1" ]; then ./scripts/cleanExtLib cleanall "$(ExtLibDIR)" "$(EXTLIB_LIST)" 0; fi  
 	@echo "  done remove the *.a libraries and the OBJ directory for "$(LIB_NAME)
-cleanlocextlib: clean
+cleanlocextlib: clean cleantest
 	rm -f lib*.a
 	rm -rf OBJ
-	cd $(TESTS_DIR) && ./clean
 	if [ "$(EXTLIB_LIST)" != "" -a "$(RECCLEAN)" = "1" ] ; then ./scripts/cleanExtLib cleanlocextlib "$(ExtLibDIR)" "$(EXTLIB_LIST)" 0; fi 
 	@echo "  done remove all local library directories (..._loc) for "$(LIB_NAME)
 #===============================================
