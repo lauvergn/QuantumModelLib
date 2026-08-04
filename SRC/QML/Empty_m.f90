@@ -549,6 +549,8 @@ MODULE QML_Empty_m
     write(nio,*)
     write(nio,*) 'nsurf:                     ',QModel%nsurf
     write(nio,*) 'ndim:                      ',QModel%ndim
+    write(nio,*) 'nb_ScalOp:                 ',QModel%nb_ScalOp
+
     write(nio,*) 'ImagContrib:               ',QModel%ImagContrib
     write(nio,*) 'numeric:                   ',QModel%numeric
     write(nio,*) 'no analytical derivatives: ',QModel%no_ana_der

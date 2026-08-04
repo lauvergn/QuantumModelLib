@@ -62,7 +62,7 @@ MODULE QML_DoubleWell_m
   CONTAINS
     PROCEDURE :: EvalPot_QModel      => EvalPot_QML_DoubleWell
     PROCEDURE :: Write_QModel        => Write_QML_DoubleWell
-    PROCEDURE :: RefValues_QModel => RefValues_QML_DoubleWell
+    PROCEDURE :: RefValues_QModel    => RefValues_QML_DoubleWell
   END TYPE QML_DoubleWell_t
 
   PUBLIC :: QML_DoubleWell_t, Init_QML_DoubleWell, Read_QML_DoubleWell, Write_QML_DoubleWell

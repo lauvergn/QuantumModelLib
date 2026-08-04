@@ -51,6 +51,7 @@ PROGRAM TEST_morse
   logical                        :: Lerr
   TYPE (dnMat_t)                 :: PotVal
   TYPE (dnMat_t)                 :: PotValref
+  TYPE (dnMat_t)                 :: ScalOp(2)
   TYPE (dnMat_t)                 :: dnErr
   TYPE (test_t)                  :: test_var
   real (kind=Rkind), parameter   :: epsi = 1.e-10_Rkind
@@ -67,7 +68,7 @@ PROGRAM TEST_morse
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
-  CALL Init_Model(Model,pot_name='Morse',read_param=.FALSE.)
+  CALL Init_Model(Model,pot_name='Morse',nb_ScalOp=size(ScalOp),read_param=.FALSE.)
 
   Q = [TWO]
 
@@ -118,10 +119,11 @@ PROGRAM TEST_morse
   write(out_unit,*) '- Scalar Operators --------------------------'
   write(out_unit,*) '---------------------------------------------'
 
-  CALL Eval_Pot(Model,Q,PotVal,nderiv=nderiv)
+  CALL Eval_ScalOp(Model,Q,ScalOp,nderiv=nderiv)
   write(out_unit,'(a,f12.6)') 'R (Bohr)',q(:)
   write(out_unit,*) 'Energy (Hartree)'
-  CALL Write_dnMat(PotVal,nio=out_unit)
+  CALL Write_dnMat(ScalOp(1),nio=out_unit,info='pot')
+  CALL Write_dnMat(ScalOp(2),nio=out_unit,info='mu')
   flush(out_unit)
 
   CALL dealloc_dnMat(PotVal)
