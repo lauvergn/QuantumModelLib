@@ -389,7 +389,9 @@ CONTAINS
       TYPE (dnS_t),           intent(inout)  :: Mat_OF_ScalOpDia(:,:,:)
       integer,                intent(in)     :: nderiv
   
-      IF (QModel%nb_ScalOp /= size(list_Op)) THEN
+      integer :: iScalOp
+
+      IF (QModel%nb_ScalOp-1 /= size(list_Op)) THEN
         write(out_unit,*) 'ERROR in EvalScalOp_QML_Morse'
         write(out_unit,*) '  QModel%nb_ScalOp and size(list_Op) are inconsistent'
         write(out_unit,*) '  QModel%nb_ScalOp (including potential)',QModel%nb_ScalOp
@@ -398,9 +400,9 @@ CONTAINS
         STOP 'ERROR in EvalScalOp_QML_Morse: QModel%nb_ScalOp and size(list_Op) are inconsistent'
       END IF
  
-      CALL EvalPot_QML_Morse(QModel,Mat_OF_ScalOpDia(:,:,1),dnQ,nderiv)
       IF (QModel%nb_ScalOp > 1) THEN
-        Mat_OF_ScalOpDia(1,1,2) = dnQ(1)
+        iScalOp = 1
+        Mat_OF_ScalOpDia(1,1,iScalOp) = dnQ(1)
       END IF
   
   END SUBROUTINE EvalScalOp_QML_Morse

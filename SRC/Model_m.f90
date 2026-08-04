@@ -1730,8 +1730,10 @@ CONTAINS
         !CALL Model%QM%EvalPot_QModel(Mat_OF_PotDia,dnQ,nderiv=nderiv)
         !CALL Model%QM%EvalImagPot_QModel(Mat_OF_ImagPotDia,dnQ,nderiv=nderiv)
         IF (debug) write(out_unit,*) ' ScalOp (Real+Imag) done' ; flush(out_unit)
-      ELSE ! real scalar operator
-        CALL Model%QM%EvalScalOp_QModel(Mat_OF_ScalOpDia,list_Op=[(i,i=1,Model%QM%nb_ScalOp)],dnQ=dnQ,nderiv=nderiv)
+      ELSE ! real scalar operators
+        CALL Model%QM%EvalPot_QModel(Mat_OF_ScalOpDia(:,:,1),dnQ=dnQ,nderiv=nderiv)
+        IF (Model%QM%nb_ScalOp > 1) &
+          CALL Model%QM%EvalScalOp_QModel(Mat_OF_ScalOpDia(:,:,2:),list_Op=[(i,i=2,Model%QM%nb_ScalOp)],dnQ=dnQ,nderiv=nderiv)
         IF (debug) write(out_unit,*) ' ScalOp done' ; flush(out_unit)
       END IF
     END IF

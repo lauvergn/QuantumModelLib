@@ -243,7 +243,9 @@ contains
       TYPE (dnS_t),                  intent(inout)  :: Mat_OF_ScalOpDia(:,:,:)
       integer,                       intent(in)     :: nderiv
   
-      IF (QModel%nb_ScalOp /= size(list_Op)) THEN
+      integer :: iScalOp
+
+      IF (QModel%nb_ScalOp-1 /= size(list_Op)) THEN
         write(out_unit,*) 'ERROR in EvalScalOp_QML_OneD_2Quadra'
         write(out_unit,*) '  QModel%nb_ScalOp and size(list_Op) are inconsistent'
         write(out_unit,*) '  QModel%nb_ScalOp (including potential)',QModel%nb_ScalOp
@@ -252,13 +254,12 @@ contains
         STOP 'ERROR in EvalScalOp_QML_OneD_2Quadra: QModel%nb_ScalOp and size(list_Op) are inconsistent'
       END IF
  
-      CALL EvalPot_QML_OneD_2Quadra(QModel,Mat_OF_ScalOpDia(:,:,1),dnQ,nderiv)
-
       IF (QModel%nb_ScalOp > 1) THEN ! dipole moments (diagonals+transition)
-        Mat_OF_ScalOpDia(1,1,2) = dnQ(1) * QModel%Z
-        Mat_OF_ScalOpDia(2,2,2) = dnQ(1) * QModel%Z
-        Mat_OF_ScalOpDia(1,2,2) = QModel%Mu12
-        Mat_OF_ScalOpDia(2,1,2) = QModel%Mu12
+        iScalOp=1
+        Mat_OF_ScalOpDia(1,1,iScalOp) = dnQ(1) * QModel%Z
+        Mat_OF_ScalOpDia(2,2,iScalOp) = dnQ(1) * QModel%Z
+        Mat_OF_ScalOpDia(1,2,iScalOp) = QModel%Mu12
+        Mat_OF_ScalOpDia(2,1,iScalOp) = QModel%Mu12
       END IF
   
   END SUBROUTINE EvalScalOp_QML_OneD_2Quadra
@@ -272,7 +273,7 @@ contains
     write(nio,*) 'QML_OneD_2Quadra current parameters'
     CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*)
-    write(nio,*) ' Parameters for the vibrational mode'
+    write(nio,*) ' Parameters for the potential (iOp=1)'
     write(nio,*) ' MR:   ',QModel%MR
     write(nio,*) ' k:    ',QModel%k
     write(nio,*) ' R1:   ',QModel%R1
@@ -282,7 +283,7 @@ contains
     write(nio,*) ' R3:   ',QModel%R3
     write(nio,*) ' Delta:',QModel%Delta
 
-    write(nio,*) ' Parameters for the dipole'
+    write(nio,*) ' Parameters for the dipole  (iOp=2)'
     write(nio,*) ' Mu12:   ',QModel%Mu12
     write(nio,*) ' Z:      ',QModel%Z ! diagonal part
     write(nio,*)
