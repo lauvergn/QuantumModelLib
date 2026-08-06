@@ -45,7 +45,7 @@ PROGRAM test_omp
   real (kind=8),      allocatable     :: Q0(:)
   real (kind=8),      allocatable     :: V(:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,ndim,nsurf,option,nb_eval,maxth
@@ -59,18 +59,18 @@ PROGRAM test_omp
   option    = 0
   adiabatic = .TRUE.
   nb_eval   = 10**6
-  pot_name  = 'HONO'
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
+  model_name  = 'HONO'
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)  ! a new initialization
 
   allocate(Q0(ndim))
   CALL get_Qmodel_Q0(Q0,0) ! the option of get_Qmodel_Q0 enables to select different reference geometries.
 
   write(*,*) '============================================================'
-  write(*,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  write(*,*) ' Test of ',nb_eval,' evaluations of the potential ',model_name
   maxth = 1
   !$ maxth           = omp_get_max_threads()
   write(*,*) 'NTEST_driver. number of threads:',maxth
-  CALL QML_time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // model_name)
 
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_eval,ndim,nsurf,maxth,Q0) &
@@ -104,7 +104,7 @@ PROGRAM test_omp
   deallocate(Q0)
 
 
-  CALL QML_time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // model_name)
   write(*,*) '============================================================'
   write(*,*) '============================================================'
 

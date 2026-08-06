@@ -712,8 +712,17 @@ fpm run omp
  pot_name  = 'Morse'
  ndim      = 1
  nsurf     = 1
+ nb_ScalOp = 2
+
  reduced mass      = 1744.60504565084306291455 au
+
+ Dipole moment $Dip(R) = dip0 + dip1 \cdot (R-Req)$
+    Obtained from MP2/6-31G** with gaussian09
+
  remark: Default parameters for H-F
+ Scalar Operotors:
+ iOp=1 => potential
+ iOp=2 => Dipole moment
 ## Model 'HenonHeiles'
        HenonHeiles potential
        pot_name  = 'HenonHeiles'

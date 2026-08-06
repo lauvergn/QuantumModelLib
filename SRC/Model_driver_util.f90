@@ -54,7 +54,7 @@ FUNCTION get_Qmodel_nsurf() RESULT(nsurf)
 
   integer     :: nsurf
 
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_ndim in Model_driver.f90')
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_nsurf in Model_driver.f90')
 
   nsurf  = QuantumModel%nsurf
 
@@ -65,11 +65,22 @@ FUNCTION get_Qmodel_NB() RESULT(NB)
 
   integer     :: NB
 
-  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_ndim in Model_driver.f90')
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_NB in Model_driver.f90')
 
   NB  = QuantumModel%NB
 
 END FUNCTION get_Qmodel_NB
+FUNCTION get_Qmodel_nb_ScalOp() RESULT(nb_ScalOp)
+  USE Model_m
+  IMPLICIT NONE
+
+  integer     :: nb_ScalOp
+
+  CALL check_alloc_QM(QuantumModel,name_sub_in='get_Qmodel_nb_ScalOp in Model_driver.f90')
+
+  nb_ScalOp  = QuantumModel%nb_ScalOp
+
+END FUNCTION get_Qmodel_nb_ScalOp
 FUNCTION get_Qmodel_Vib_Adia() RESULT(Vib_Adia)
   USE Model_m
   IMPLICIT NONE

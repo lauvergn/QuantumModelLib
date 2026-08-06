@@ -1,5 +1,5 @@
 &potential
-  pot_name='hbond' ! potential surface name
+  model_name='hbond' ! potential surface name
   Vib_adia=t
   list_act=1
   read_nml=f

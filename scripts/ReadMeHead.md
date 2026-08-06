@@ -2,7 +2,7 @@
 
  QuantumModelLib or QML* is a free software under the MIT Licence.
 
-  date: 29/07/2026
+  date: 06/08/2026
 
 ```
     Copyright (c) 2022 David Lauvergnat [1]
@@ -58,7 +58,7 @@ and QuantumModelLib library is linked to:
 - **libQuantumModelLib.a**
 
 
-The compiler options are (the first values are the default):
+Through the makefile, the compiler options are (the first values are the default):
 
 - FC=gfortran or ifx or ifort ...
 - OPT=1 or 0: compilation with optimization or without optimization
@@ -112,14 +112,14 @@ or with  lapack/blas (linux)
 ### 3a1) Initialization of the model (the Potential)
 
 ```fortran
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 ```
 
 ```
 where
   - ndim       : the number of degree(s) of freedom [integer]
   - nsurf      : the number of electronic surface(s) (adiabatic or diabatic) [integer]
-  - pot_name   : the name of the potential or model (phenol, Tully, HenonHeiles ...) [string of characters]
+  - model_name   : the name of the potential or model (phenol, Tully, HenonHeiles ...) [string of characters]
   - adiabatic  : flag (.TRUE. or .FALSE.) [logical]
   - option     : option, to be able to select a model with several options (Tully ...) [integer]
 ```
@@ -127,7 +127,7 @@ where
 There is an alternative way to initialized a model, when the coordinate are given in Cartesian coordinates, but the potential is in internal (curvilinear) coordinates
 
 ```fortran
-CALL sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
+CALL sub_Init_Qmodel_Cart(ndim,nsurf,model_name,adiabatic,option)
 ```
 
 The parameters are indentical as the previous subroutine, but **ndim** is the number of Cartesian coordinates.
@@ -162,7 +162,7 @@ In the following exemple, the 2+1D-retinal model ('Retinal_JPCB2000') is read.
 
 ```fortran
   &potential
-    pot_name='Retinal_JPCB2000' ! potential surface name
+    model_name='Retinal_JPCB2000' ! potential surface name
     ndim=3 PubliUnit=f
     adiabatic=t
     Phase_checking=f
@@ -175,7 +175,41 @@ In the following exemple, the 2+1D-retinal model ('Retinal_JPCB2000') is read.
     => Phase_checking=f : The adiabatic vector phases are not checked between several calculations
     => PubliUnit=f      : The atomic units are used
 
-### 3a3) Initialization (extra)
+### 3a3) Initialization of the model for Scalar Operator (potnetial+dipole ...)
+
+This feature is available from the version 26.3.0 and above.
+
+```fortran
+  CALL sub_Init_Qmodel_ScalOp(ndim,nsurf,nb_ScalOp,model_name,adiabatic,option)
+```
+
+```
+where
+  - ndim       : the number of degree(s) of freedom [integer]
+  - nsurf      : the number of electronic surface(s) (adiabatic or diabatic) [integer]
+  - nb_ScalOp  : the number of Sclar operators including the potential
+  - model_name   : the name of the potential or model (phenol, Tully, HenonHeiles ...) [string of characters]
+  - adiabatic  : flag (.TRUE. or .FALSE.) [logical]
+  - option     : option, to be able to select a model with several options (Tully ...) [integer]
+```
+
+
+Example:
+```fortran
+  model_name = 'Morse'
+  ndim       = 0 ! it would be initialized
+  nsurf      = 0 ! it would be initialized
+  nb_ScalOp  = 2
+  option     = -1
+  adiabatic  = .FALSE.
+  CALL sub_Init_Qmodel_ScalOp(ndim,nsurf,nb_ScalOp,model_name,adiabatic,option)
+```
+It initializes the Morse potential (1D and 1PES for HF molecule).
+
+
+The list of available models is given below.
+
+### 3a4) Initialization (extra)
 
 Some extra parameters can be initialized with specific procedures:
 
@@ -213,7 +247,7 @@ Some extra parameters can be initialized with specific procedures:
 
 ### 3b) Potential energy surface(s), PES, Vec and NAC evaluations
 
-A subroutine for the potential (adaibatic or diabtic):
+A subroutine for the potential (adiabatic or diabtic):
 
 ```fortran
    CALL sub_Qmodel_V(V,Q)
@@ -250,16 +284,53 @@ CALL sub_Qmodel_VG_NAC_Vec0(V,G,NAC,Vec0,Q) ! as sub_Qmodel_VG_NAC + Vec0(:,:) (
 CALL sub_Qmodel_VG_NAC_VecVec0(V,G,NAC,Vec,Vec0,Q) ! as the previous one + the adiatic vector, Vec(:,:) (nsurf x NB).
 ```
 
-### 3c) Potential energy surface with vibrational adiabatic separation
+### 3b) Scalar Operators (PES+diplole...), Vec and NAC evaluations
+
+A subroutine for the scalar operators (adiabatic or diabtic):
+This feature is available from the version 26.3.0 and above.
+
+```fortran
+   CALL sub_Qmodel_ScalOp(ScalOp,Q)
+```
+
+```
+  where
+    Q(:)          is the ndim coordinates (vector of real(kind=8))
+    ScalOp(:,:,:) is PES and a  nsurf x nsurf x nb_ScalOp table of real (kind=8)
+  Remarks:
+    - ScalOp(:,:,1)  is the potential (diabatic or adiabatic)
+    - when adiabatic is set to .TRUE. during initialization, ScalOp(:,:,1) is a diagonal matrix.
+```
+
+Full list of Scalar Operator drivers:
+
+```fortran
+CALL sub_Qmodel_dScalOp(ScalOp,dScalOp,Q) 
+            ! to get the scalar operators and the associated gradients
+            ! dScalOp(:,:,:,:) are real (kind=8) of nsurf x nsurf x ndim x nb_ScalOp
+CALL sub_Qmodel_ddScalOp(ScalOp,dScalOp,ddScalOp,Q) 
+            ! to get the scalar operators and the associated gradients and hessians
+            ! ddScalOp(:,:,:,:,:) are real (kind=8) of nsurf x nsurf x ndim x ndim x nb_ScalOp
+
+CALL sub_Qmodel_dScalOp_NAC(ScalOp,dScalOp,NAC,Q) 
+            ! to get the scalar operators, the associated gradients and the non-adiabatic couplings (NAC).
+            ! NAC(:,:,:) are real (kind=8) of nsurf x nsurf x ndim
+
+CALL sub_Qmodel_dScalOp_NAC_Vec0(ScalOp,dScalOp,NAC,Vec0,Q) 
+            ! as sub_Qmodel_dScalOp_NAC and
+            ! Vec0(:,:) (nsurf x NB) is initial vector (for the phase following)
+```
+
+### 3d) Potential energy surface with vibrational adiabatic separation
 
 This feature can be used only when the **model** is read.
-Therefore in the initialization with **sub_Init_Qmodel**, the variable, **pot_name**, must be 'read_model'.
+Therefore in the initialization with **sub_Init_Qmodel**, the variable, **model_name**, must be 'read_model'.
 Then:
 
 (i) The potential must be read as a namelist:
 ```fortran
   &potential
-      pot_name='hbond' ! potential surface name
+      model_name='hbond' ! potential surface name
       Vib_adia=t
       list_act=1
       read_nml=f
@@ -294,7 +365,7 @@ The table tab_MatH(nsurf,nsurf,nb_terms) contains:
   - F2 terms: tab_MatH(nsurf,nsurf,2:...)         [ (nb_act+1)nb_act/2 matrices)]
   - F1 terms: tab_MatH(nsurf,nsurf,...:nb_terms)  [ nb_act matrices ]
 
-### 3d) Get/set the metric tensor, GGdef
+### 3e) Get/set the metric tensor, GGdef
 
 ```fortran
   CALL get_Qmodel_GGdef(GGdef)
@@ -324,15 +395,16 @@ where
   - ndim       is the number of degree(s) of freedom it MUST be indentical to the initialized value (with sub_Init_Qmodel)
   - $GGdef(:,:)$  is the new metric tensor a ndim x ndim matrix of real (kind=8)
 
-### 3e) Miscellaneous subroutines or functions
+### 3f) Miscellaneous subroutines or functions
 
 - Functions or subroutines to check data of the initialization:
 
 ```fortran
-ndim    = get_Qmodel_ndim()                ! get ndim (number of coordinates)
-nsurf   = get_Qmodel_nsurf()               ! get nsurf (number of electronic surface or vibrational effective surface)
-NB      = get_Qmodel_NB()                  ! get the number of basis functions for the vibrational adiabatic separation
-VibAdia = get_Qmodel_Vib_Adia()            ! (logical), the value is .TRUE. for the vibrational adiabatic separation
+ndim      = get_Qmodel_ndim()              ! get ndim (number of coordinates)
+nsurf     = get_Qmodel_nsurf()             ! get nsurf (number of electronic surface or vibrational effective surface)
+nb_ScalOp = get_Qmodel_nb_ScalOp()         ! get nb_ScalOp (number of scalar operators)
+NB        = get_Qmodel_NB()                ! get the number of basis functions for the vibrational adiabatic separation
+VibAdia   = get_Qmodel_Vib_Adia()          ! (logical), the value is .TRUE. for the vibrational adiabatic separation
 
 CALL sub_check_Init_Qmodel(check)          ! check if the model is initialized
 
@@ -418,6 +490,12 @@ From the main QuantumModelLib directory:
   ./APP_OMPloop.x > res_loop
 ```
 => Test an OpenMP loop ($10^6$) on the HONO model (several seconds)
+
+```bash
+  ./APP_ScalOpDriver.x > res_ScalOpDriver
+```
+=> Test several models with scalar operators (Morse and OneD_2Quadra models)
+This feature is available from the version 26.3.0 and above.
 
 ## 5) Installation + examples with fpm
 

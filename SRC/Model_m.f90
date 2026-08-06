@@ -56,12 +56,13 @@ MODULE Model_m
   PUBLIC :: Write_QdnV_FOR_Model,Test_QdnV_FOR_Model,Test_QVG_FOR_Model
 
   TYPE :: Model_t
-    ! Add nsurf and ndim to avoid crash when using the driver without initialization
+    ! Add nsurf, ndim and nb_ScalOp to avoid crash when using the driver without initialization
     ! At the intialization, the variables are set-up to the correct values and are
     !   identical to QM%nsurf and QM%ndim ones respectively.
     integer                           :: nsurf       = 0
     integer                           :: NB          = 0 ! for Vib_adia (ortherwise, NB=nsurf)
     integer                           :: ndim        = 0
+    integer                           :: nb_ScalOp   = 0
     integer                           :: ipot        = -1
     integer                           :: icap        = -1
     integer                           :: idipx       = -1
@@ -181,13 +182,14 @@ CONTAINS
     logical :: Phase_checking,Phase_Following
     logical :: Cart_TO_Q,AbInitio,MassWeighted
 
-    character (len=100) :: pot_name
+    character (len=100) :: pot_name,model_name
     integer :: err_read,nb_act
     integer :: list_act(max_act)
     integer :: list_Op(max_Op)
 
     ! Namelists for input file
-    namelist /potential/ ndim,nsurf,pot_name,numeric,adiabatic,option,PubliUnit,&
+    namelist /potential/ ndim,nsurf,pot_name,model_name,                        &
+                         numeric,adiabatic,option,PubliUnit,                    &
                          Phase_Checking,Phase_Following,                        &
                          Cart_TO_Q,MassWeighted,AbInitio,                       &
                          list_Op,                                               &
@@ -205,7 +207,7 @@ CONTAINS
     Cart_TO_Q       = QModel_inout%Cart_TO_Q
     MassWeighted    = QModel_inout%MassWeighted
     AbInitio        = .FALSE.
-    list_Op(:)      = -1 ! 0: potential, then other scalar operators
+    list_Op(:)      = -1 ! 1: potential, then other scalar operators
 
     Vib_adia        = QModel_inout%Vib_adia
     nb_Channels     = 0
@@ -214,7 +216,8 @@ CONTAINS
     print_EigenVec_Grid  = .FALSE.
     print_EigenVec_Basis = .FALSE.
 
-    pot_name    = 'morse'
+    pot_name    = ''
+    model_name  = ''
     numeric     = .FALSE.
     PubliUnit   = .FALSE.
     read_nml    = read_nml1 ! if T, read the namelist in PotLib (HenonHeiles ....)
@@ -260,7 +263,28 @@ CONTAINS
     QModel_inout%AbInitio             = AbInitio
     QModel_inout%MassWeighted         = (Cart_TO_Q .AND. MassWeighted)
 
-    QModel_inout%pot_name             = trim(pot_name)
+    IF (len_trim(pot_name) > 0 .AND. len_trim(model_name) > 0) THEN
+      write(out_unit,*) ' ERROR in Read_Model'
+      write(out_unit,*) ' pot_name and model_name are both defined!'
+      write(out_unit,*) ' pot_name:   ',trim(pot_name)
+      write(out_unit,*) ' model_name: ',trim(model_name)
+      write(out_unit,*) ' USE only model_name'
+      write(out_unit,*) ' check your data!'
+      write(out_unit,*)
+      STOP ' ERROR in Read_Model: pot_name and model_name are both defined!'
+    END IF
+    IF (len_trim(pot_name) == 0 .AND. len_trim(model_name) == 0) THEN
+      QModel_inout%pot_name             = 'Morse' ! default value
+    ELSE IF (len_trim(model_name) == 0) THEN
+      QModel_inout%pot_name             = trim(pot_name)
+      write(out_unit,*) ' WARNING in Read_Model'
+      write(out_unit,*) ' pot_name is defined!'
+      write(out_unit,*) ' pot_name:   ',trim(pot_name)
+      write(out_unit,*) ' USE only model_name'
+    ELSE
+      QModel_inout%pot_name             = trim(model_name)
+    END IF
+
     QModel_inout%PubliUnit            = PubliUnit
 
     QModel_inout%print_EigenVec_Grid  = print_EigenVec_Grid
@@ -1113,20 +1137,24 @@ CONTAINS
       allocate(QModel%Basis)
       CALL Read_Basis(QModel%Basis,nio_loc)
 
-      QModel%ndim  = size(QModel%QM%list_act)
-      QModel%nsurf = QModel%QM%nb_Channels
-      QModel%NB    = QModel%Basis%nb
+      QModel%ndim      = size(QModel%QM%list_act)
+      QModel%nsurf     = QModel%QM%nb_Channels
+      QModel%NB        = QModel%Basis%nb
+      QModel%nb_ScalOp = QModel%QM%nb_ScalOp
 
       write(out_unit,*) ' QModel%ndim, QModel%QM%ndim: ',QModel%ndim,QModel%QM%ndim
       IF (present(ndim)) write(out_unit,*) ' ndim',ndim
-      write(out_unit,*) ' QModel%nsurf,QModel%QM%nsurf:',nsurf,QModel%QM%nsurf
+      write(out_unit,*) ' QModel%nsurf,QModel%QM%nsurf:',QModel%nsurf,QModel%QM%nsurf
       IF (present(nsurf)) write(out_unit,*) ' nsurf',nsurf
-      write(out_unit,*) ' QModel%nNB: ',QModel%NB
+      write(out_unit,*) ' QModel%NB: ',QModel%NB
+      write(out_unit,*) ' QModel%nb_ScalOp,QModel%QM%nb_ScalOp:',nb_ScalOp,QModel%QM%nb_ScalOp
+      IF (present(nb_ScalOp)) write(out_unit,*) ' nb_ScalOp',nb_ScalOp
 
     ELSE
-      QModel%ndim  = QModel%QM%ndim
-      QModel%nsurf = QModel%QM%nsurf
-      QModel%NB    = QModel%QM%nsurf
+      QModel%ndim      = QModel%QM%ndim
+      QModel%nsurf     = QModel%QM%nsurf
+      QModel%NB        = QModel%QM%nsurf
+      QModel%nb_ScalOp = QModel%QM%nb_ScalOp
     END IF
 
     IF (present(ndim)) THEN

@@ -63,11 +63,15 @@ MODULE QML_Morse_m
 !! @param req            real: Equilibrium distance (in bohr)
 !! @param mu             real: Reduced mass of HF (in au)
   TYPE, EXTENDS (QML_Empty_t) :: QML_Morse_t ! V(R) = D*(1-exp(-a*(r-Req))**2
-     PRIVATE
-     real (kind=Rkind) :: D   = 0.225_Rkind  !< Dissociation energy for HF (in Hartree)
-     real (kind=Rkind) :: a   = 1.1741_Rkind !< Scaling parameter for HF (in bohr^-1)
-     real (kind=Rkind) :: req = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
-     real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
+    PRIVATE
+    real (kind=Rkind) :: D    = 0.225_Rkind  !< Dissociation energy for HF (in Hartree)
+    real (kind=Rkind) :: a    = 1.1741_Rkind !< Scaling parameter for HF (in bohr^-1)
+    real (kind=Rkind) :: req  = 1.7329_Rkind !< Equilibrium HF distance (in bohr)
+    real (kind=Rkind), PUBLIC :: mu  = 1744.60504565084306291455_Rkind !< Reduced mass of HF (in au)
+    ! dipole moment (MP2/631G** with gaussian, 1 e.a0 -> 2.541746 Debye (gaussian value)
+    ! finite difference with dR=0.01 bohr
+    real (kind=Rkind) :: dip0 = 0.740160503842634_Rkind
+    real (kind=Rkind) :: dip1 = 0.283269846790356_Rkind
   CONTAINS
     PROCEDURE :: EvalPot_QModel    => EvalPot_QML_Morse
     PROCEDURE :: EvalScalOp_QModel => EvalScalOp_QML_Morse
@@ -239,8 +243,17 @@ CONTAINS
 !! pot_name  = 'Morse'
 !! ndim      = 1
 !! nsurf     = 1
+!! nb_ScalOp = 2
+!!
 !! reduced mass      = 1744.60504565084306291455 au
+!!
+!! Dipole moment $Dip(R) = dip0 + dip1 \cdot (R-Req)$
+!!    Obtained from MP2/6-31G** with gaussian09
+!!
 !! remark: Default parameters for H-F
+!! Scalar Operotor:
+!! iOp=1 => potential
+!! iOp=2 => Dipole moment
 !! === END README ==
 !> @brief Subroutine wich prints the Morse current parameters.
 !!
@@ -402,7 +415,7 @@ CONTAINS
  
       IF (QModel%nb_ScalOp > 1) THEN
         iScalOp = 1
-        Mat_OF_ScalOpDia(1,1,iScalOp) = dnQ(1)
+        Mat_OF_ScalOpDia(1,1,iScalOp) = QModel%dip0 + QModel%dip1*(dnQ(1)-QModel%req)
       END IF
   
   END SUBROUTINE EvalScalOp_QML_Morse

@@ -189,12 +189,16 @@ CONTAINS
     CALL dealloc_dnMat(QMLValues%ImagVec0)
     CALL dealloc_dnMat(QMLValues%ImagNAC)
 
+    !write(*,*) 'in dealloc_QMLValues, alloc ScalOpDia',allocated(QMLValues%ScalOpDia)
+    !flush(out_unit)
     IF (allocated(QMLValues%ScalOpDia)) THEN
       DO i=1,size(QMLValues%ScalOpDia)
         CALL dealloc_dnMat(QMLValues%ScalOpDia(i))
       END DO
       deallocate(QMLValues%ScalOpDia)
     END IF
+    !write(*,*) 'in dealloc_QMLValues, alloc ImagScalOpDia',allocated(QMLValues%ImagScalOpDia)
+    !flush(out_unit)
     IF (allocated(QMLValues%ImagScalOpDia)) THEN
       DO i=1,size(QMLValues%ImagScalOpDia)
         CALL dealloc_dnMat(QMLValues%ImagScalOpDia(i))
@@ -202,12 +206,16 @@ CONTAINS
       deallocate(QMLValues%ImagScalOpDia)
     END IF
 
+    !write(*,*) 'in dealloc_QMLValues, alloc ScalOpAdia',allocated(QMLValues%ScalOpAdia)
+    !flush(out_unit)
     IF (allocated(QMLValues%ScalOpAdia)) THEN
       DO i=1,size(QMLValues%ScalOpAdia)
         CALL dealloc_dnMat(QMLValues%ScalOpDia(i))
       END DO
       deallocate(QMLValues%ScalOpAdia)
     END IF
+    !write(*,*) 'in dealloc_QMLValues, alloc ImagScalOpAdia',allocated(QMLValues%ImagScalOpAdia)
+    !flush(out_unit)
     IF (allocated(QMLValues%ImagScalOpAdia)) THEN
       DO i=1,size(QMLValues%ImagScalOpDia)
         CALL dealloc_dnMat(QMLValues%ImagScalOpDia(i))

@@ -96,6 +96,39 @@ SUBROUTINE sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
 !$OMP END CRITICAL (CRIT_sub_Init_Qmodel)
 
 END SUBROUTINE sub_Init_Qmodel
+SUBROUTINE sub_Init_Qmodel_ScalOp(ndim,nsurf,nb_ScalOp,pot_name,adiabatic,option)
+  !< Subroutine which enables to set the model (potential).
+  USE QDUtil_NumParameters_m
+  USE Model_m
+  !$ USE omp_lib
+  IMPLICIT NONE
+
+  integer,                intent(inout)     :: ndim      !< integer, number of degree(s) of freedom
+  integer,                intent(inout)     :: nsurf     !< integer, number of electronic states or vibrational adiabatic channels
+  integer,                intent(inout)     :: nb_ScalOp !< integer, number of Scalar operators (including the potential)
+  character (len=*),      intent(in)        :: pot_name  !< character string, potential of model name
+  integer,                intent(in)        :: option    !< integer, option of the model (relevant to some models)
+  logical,                intent(in)        :: adiabatic !< logical, flag to turn on/off the adiatic calculations
+
+!$OMP CRITICAL (CRIT_sub_Init_Qmodel)
+    !$ write(out_unit,*) 'begining: max threads?',omp_get_max_threads()
+    write(out_unit,*) 'pot_name,option:       ',trim(adjustl(pot_name)),option
+    write(out_unit,*) 'ndim,nsurf,nb_ScalOp : ',ndim,nsurf,nb_ScalOp
+    flush(out_unit)
+
+    CALL Init_Model(QuantumModel,pot_name=trim(adjustl(pot_name)),  &
+                    ndim=ndim,nsurf=nsurf,nb_ScalOp=nb_ScalOp,      &
+                    adiabatic=adiabatic,option=option)
+
+    CALL check_alloc_QM(QuantumModel,name_sub_in='sub_Init_Qmodel in Model_driver.f90')
+
+    ndim      = QuantumModel%ndim
+    nsurf     = QuantumModel%nsurf
+    nb_ScalOp = QuantumModel%nb_ScalOp
+
+!$OMP END CRITICAL (CRIT_sub_Init_Qmodel)
+
+END SUBROUTINE sub_Init_Qmodel_ScalOp
 SUBROUTINE sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
   USE QDUtil_NumParameters_m
   USE Model_m
@@ -221,6 +254,7 @@ SUBROUTINE sub_Qmodel_V(V,Q)
   CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_V
+
 SUBROUTINE sub_Qmodel_VG(V,G,Q)
   USE QDUtil_NumParameters_m
   USE QMLValues_m
@@ -504,7 +538,191 @@ SUBROUTINE sub_Qmodel_tab_HMatVibAdia(tab_MatH,Q,nb_terms)
   tab_MatH(:,:,:) = tab_MatH_loc
 
 END SUBROUTINE sub_Qmodel_tab_HMatVibAdia
+SUBROUTINE sub_Qmodel_ScalOp(ScalOp,Q)
+  USE QDUtil_NumParameters_m
+  USE Model_m
+  USE QMLValues_m
+  IMPLICIT NONE
 
+
+  real (kind=Rkind),      intent(in)     :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)  :: ScalOp(QuantumModel%nsurf,QuantumModel%nsurf,&
+                                                   QuantumModel%nb_ScalOp)
+
+  TYPE (QMLValues_t)   :: QMLValues
+  integer              :: i
+  !logical, parameter   :: debug = .TRUE.
+  logical, parameter   :: debug = .FALSE.
+
+  IF (debug) THEN
+    write(out_unit,*) 'BEGINNING sub_Qmodel_ScalOp'
+    write(out_unit,*) 'ndim,nsurf,nb_ScalOp: ',QuantumModel%ndim,QuantumModel%nsurf,QuantumModel%nb_ScalOp
+    write(out_unit,*) 'shape ScalOp',shape(ScalOp)
+    write(out_unit,*) 'ScalOp',ScalOp
+  END IF
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_ScalOp in Model_driver.f90')
+
+  CALL Eval_ScalOp(QuantumModel,Q,QMLValues,nderiv=0)
+
+  IF (debug) THEN 
+    CALL Write_QMLValues(QMLValues)
+    write(out_unit,*) 'shape(QMLValues%ScalOpAdia)',shape(QMLValues%ScalOpAdia)
+    write(out_unit,*) 'shape(QMLValues%ScalOpDia)',shape(QMLValues%ScalOpDia)
+    flush(out_unit)
+  END IF
+
+  IF (QMLValues%adiabatic) THEN
+    DO i=1,size(QMLValues%ScalOpAdia)
+      ScalOp(:,:,i) = QMLValues%ScalOpAdia(i)%d0
+    END DO
+  ELSE
+    DO i=1,size(QMLValues%ScalOpDia)
+      ScalOp(:,:,i) = QMLValues%ScalOpDia(i)%d0
+    END DO
+  END IF
+
+  !CALL dealloc_QMLValues(QMLValues)
+
+  IF (debug) THEN
+    write(out_unit,*) 'END sub_Qmodel_ScalOp'
+  END IF
+END SUBROUTINE sub_Qmodel_ScalOp
+SUBROUTINE sub_Qmodel_dScalOp(ScalOp,dScalOp,Q)
+  USE QDUtil_NumParameters_m
+  USE Model_m
+  USE QMLValues_m
+  IMPLICIT NONE
+
+
+  real (kind=Rkind),      intent(in)     :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)  :: ScalOp(QuantumModel%nsurf,QuantumModel%nsurf,&
+                                                   QuantumModel%nb_ScalOp)
+  real (kind=Rkind),      intent(inout)  :: dScalOp(QuantumModel%nsurf,QuantumModel%nsurf,&
+                                                    QuantumModel%ndim,QuantumModel%nb_ScalOp)
+  TYPE (QMLValues_t)   :: QMLValues
+  integer              :: i
+
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_dScalOp in Model_driver.f90')
+
+  CALL Eval_ScalOp(QuantumModel,Q,QMLValues,nderiv=1)
+  
+  IF (QMLValues%adiabatic) THEN
+    DO i=1,size(QMLValues%ScalOpAdia)
+       ScalOp(:,:,i)   = QMLValues%ScalOpAdia(i)%d0
+      dScalOp(:,:,:,i) = QMLValues%ScalOpAdia(i)%d1
+    END DO
+  ELSE
+    DO i=1,size(QMLValues%ScalOpDia)
+      ScalOp(:,:,i)    = QMLValues%ScalOpDia(i)%d0
+      dScalOp(:,:,:,i) = QMLValues%ScalOpDia(i)%d1
+    END DO
+  END IF
+
+  !CALL dealloc_QMLValues(QMLValues)
+
+END SUBROUTINE sub_Qmodel_dScalOp
+SUBROUTINE sub_Qmodel_ddScalOp(ScalOp,dScalOp,ddScalOp,Q)
+  USE QDUtil_NumParameters_m
+  USE Model_m
+  USE QMLValues_m
+  IMPLICIT NONE
+
+
+  real (kind=Rkind),      intent(in)     :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)  :: ScalOp(QuantumModel%nsurf,QuantumModel%nsurf,&
+                                                   QuantumModel%nb_ScalOp)
+  real (kind=Rkind),      intent(inout)  :: dScalOp(QuantumModel%nsurf,QuantumModel%nsurf,&
+                                                    QuantumModel%ndim,QuantumModel%nb_ScalOp)
+  real (kind=Rkind),      intent(inout)  :: ddScalOp(QuantumModel%nsurf,QuantumModel%nsurf,&
+                                                    QuantumModel%ndim,QuantumModel%ndim,QuantumModel%nb_ScalOp)
+
+  TYPE (QMLValues_t)   :: QMLValues
+  integer              :: i
+
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_dScalOp in Model_driver.f90')
+
+  CALL Eval_ScalOp(QuantumModel,Q,QMLValues,nderiv=2)
+  
+  IF (QMLValues%adiabatic) THEN
+    DO i=1,size(QMLValues%ScalOpAdia)
+       ScalOp(:,:,i)      = QMLValues%ScalOpAdia(i)%d0
+      dScalOp(:,:,:,i)    = QMLValues%ScalOpAdia(i)%d1
+      ddScalOp(:,:,:,:,i) = QMLValues%ScalOpAdia(i)%d2
+    END DO
+  ELSE
+    DO i=1,size(QMLValues%ScalOpDia)
+      ScalOp(:,:,i)       = QMLValues%ScalOpDia(i)%d0
+      dScalOp(:,:,:,i)    = QMLValues%ScalOpDia(i)%d1
+      ddScalOp(:,:,:,:,i) = QMLValues%ScalOpDia(i)%d2
+    END DO
+  END IF
+
+  !CALL dealloc_QMLValues(QMLValues)
+
+END SUBROUTINE sub_Qmodel_ddScalOp
+SUBROUTINE sub_Qmodel_dScalOp_NAC(ScalOp,dScalOp,NAC,Q)
+  USE QDUtil_NumParameters_m
+  USE Model_m
+  USE QMLValues_m
+  IMPLICIT NONE
+
+
+  real (kind=Rkind),      intent(in)     :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)  :: ScalOp(QuantumModel%nsurf,QuantumModel%nsurf,&
+                                                   QuantumModel%nb_ScalOp)
+  real (kind=Rkind),      intent(inout)  :: dScalOp(QuantumModel%nsurf,QuantumModel%nsurf,&
+                                                    QuantumModel%ndim,QuantumModel%nb_ScalOp)
+  real (kind=Rkind),      intent(inout)  :: NAC(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
+
+  TYPE (QMLValues_t)   :: QMLValues
+  integer              :: i
+
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_dScalOp in Model_driver.f90')
+
+  CALL Eval_ScalOp(QuantumModel,Q,QMLValues,nderiv=1)
+
+  NAC = QMLValues%NAC%d1
+  DO i=1,size(QMLValues%ScalOpAdia)
+     ScalOp(:,:,i)   = QMLValues%ScalOpAdia(i)%d0
+    dScalOp(:,:,:,i) = QMLValues%ScalOpAdia(i)%d1
+  END DO
+
+  !CALL dealloc_QMLValues(QMLValues)
+
+END SUBROUTINE sub_Qmodel_dScalOp_NAC
+SUBROUTINE sub_Qmodel_dScalOp_NAC_Vec0(ScalOp,dScalOp,NAC,Vec0,Q)
+  USE QDUtil_NumParameters_m
+  USE Model_m
+  USE QMLValues_m
+  IMPLICIT NONE
+
+
+  real (kind=Rkind),      intent(in)     :: Q(QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)  :: ScalOp(QuantumModel%nsurf,QuantumModel%nsurf,&
+                                                   QuantumModel%nb_ScalOp)
+  real (kind=Rkind),      intent(inout)  :: dScalOp(QuantumModel%nsurf,QuantumModel%nsurf,&
+                                                    QuantumModel%ndim,QuantumModel%nb_ScalOp)
+  real (kind=Rkind),      intent(inout)  :: NAC(QuantumModel%nsurf,QuantumModel%nsurf,QuantumModel%ndim)
+  real (kind=Rkind),      intent(inout)  :: Vec0(QuantumModel%NB,QuantumModel%NB)
+
+  TYPE (QMLValues_t)   :: QMLValues
+  integer              :: i
+
+  CALL check_alloc_QM(QuantumModel,'sub_Qmodel_dScalOp in Model_driver.f90')
+
+  CALL Eval_ScalOp(QuantumModel,Q,QMLValues,nderiv=1)
+
+  NAC  = QMLValues%NAC%d1
+  Vec0 = QMLValues%Vec0%d0
+
+  DO i=1,size(QMLValues%ScalOpAdia)
+     ScalOp(:,:,i)   = QMLValues%ScalOpAdia(i)%d0
+    dScalOp(:,:,:,i) = QMLValues%ScalOpAdia(i)%d1
+  END DO
+
+  !CALL dealloc_QMLValues(QMLValues)
+
+END SUBROUTINE sub_Qmodel_dScalOp_NAC_Vec0
 SUBROUTINE get_Qmodel_GGdef(GGdef)
   USE QDUtil_NumParameters_m
   USE Model_m

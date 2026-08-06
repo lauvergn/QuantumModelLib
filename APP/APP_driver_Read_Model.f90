@@ -52,7 +52,7 @@ SUBROUTINE test_Read_Model()
   real (kind=Rkind),      allocatable     :: g(:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option
@@ -65,12 +65,12 @@ SUBROUTINE test_Read_Model()
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
 
-  pot_name  = 'read_model'
-  ndim      = 0 ! it would be initialized
-  nsurf     = 0 ! it would be initialized
-  option    = -1
-  adiabatic = .TRUE.
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  model_name  = 'read_model'
+  ndim        = 0 ! it would be initialized
+  nsurf       = 0 ! it would be initialized
+  option      = -1
+  adiabatic   = .TRUE.
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 
   write(out_unit,*) 'ndim,nsurf',ndim,nsurf
   allocate(Q(ndim))

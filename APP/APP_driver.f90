@@ -48,7 +48,6 @@ PROGRAM test_driver
   stop
 
   CALL test_PSB3()
-  !CALL test_PH4()
   CALL test_HBond()
   CALL test_1DSOC_1S1T()
   CALL test_Phenol_Dia(10**7)
@@ -68,7 +67,7 @@ SUBROUTINE test_Read_Model()
   real (kind=Rkind),      allocatable     :: g(:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option
@@ -81,12 +80,12 @@ SUBROUTINE test_Read_Model()
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
 
-  pot_name  = 'read_model'
-  ndim      = 0 ! it would be initialized
-  nsurf     = 0 ! it would be initialized
-  option    = -1
-  adiabatic = .TRUE.
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  model_name = 'read_model'
+  ndim       = 0 ! it would be initialized
+  nsurf      = 0 ! it would be initialized
+  option     = -1
+  adiabatic  = .TRUE.
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 
   write(out_unit,*) 'ndim,nsurf',ndim,nsurf
   allocate(Q(ndim))
@@ -149,7 +148,7 @@ SUBROUTINE test2_Vib_adia(nb_eval)
   real (kind=Rkind),      allocatable     :: g(:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
@@ -161,12 +160,12 @@ SUBROUTINE test2_Vib_adia(nb_eval)
   write(out_unit,*) '  Vibrational adiabatic separation'
   write(out_unit,*) 'TEST_driver. number of threads:',maxth
 
-  pot_name  = 'read_model'
-  ndim      = 0 ! it would be initialized
-  nsurf     = 0 ! it would be initialized
-  option    = -1
-  adiabatic = .FALSE.
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  model_name = 'read_model'
+  ndim       = 0 ! it would be initialized
+  nsurf      = 0 ! it would be initialized
+  option     = -1
+  adiabatic  = .FALSE.
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 
   write(out_unit,*) 'ndim,nsurf',ndim,nsurf
 
@@ -192,8 +191,8 @@ SUBROUTINE test2_Vib_adia(nb_eval)
   deallocate(G)
   deallocate(NAC)
 
-  write(out_unit,*) ' Test of evaluations of the potential ',pot_name
-  CALL QML_time_perso('Test ' // pot_name)
+  write(out_unit,*) ' Test of evaluations of the potential ',model_name
+  CALL QML_time_perso('Test ' // model_name)
 
   allocate(Q(ndim))
   allocate(V(nsurf,nsurf))
@@ -210,7 +209,7 @@ SUBROUTINE test2_Vib_adia(nb_eval)
   deallocate(Q)
   deallocate(V)
 
-  CALL QML_time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // model_name)
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
 
@@ -228,7 +227,7 @@ SUBROUTINE test_1DSOC_1S1T
   real (kind=Rkind),      allocatable     :: h(:,:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
@@ -237,15 +236,15 @@ SUBROUTINE test_1DSOC_1S1T
   write(out_unit,*) '============================================================'
   nb_eval = 1
 
-  pot_name = '1DSOC_1S1T'
-  write(out_unit,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
+  model_name = '1DSOC_1S1T'
+  write(out_unit,*) ' Test of ',nb_eval,' evaluations of the potential ',model_name
 
   ndim      = 1
   nsurf     = 4
   option    = 0
   adiabatic = .TRUE.
 
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 
 
   allocate(Q(ndim))
@@ -286,20 +285,20 @@ SUBROUTINE test_PSB3
   real (kind=Rkind),      allocatable     :: h(:,:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option
 
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
-  pot_name = 'PSB3'
-  ndim     = 3
-  nsurf    = 2
-  option   = 0
-  adiabatic = .FALSE.
+  model_name = 'PSB3'
+  ndim       = 3
+  nsurf      = 2
+  option     = 0
+  adiabatic  = .FALSE.
 
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 
 
   allocate(Q(ndim))
@@ -345,19 +344,19 @@ SUBROUTINE test_TwoD_RJDI2014
   real (kind=Rkind),      allocatable     :: Vdia(:,:)
   real (kind=Rkind),      allocatable     :: Vadia(:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,ndim,nsurf,option,ix,iy,nio
 
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
-  pot_name  = 'TwoD_RJDI2014'
-  ndim      = 0 ! it would be initialized
-  nsurf     = 0 ! it would be initialized
-  option    = -1
-  adiabatic = .TRUE.
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  model_name = 'TwoD_RJDI2014'
+  ndim       = 0 ! it would be initialized
+  nsurf      = 0 ! it would be initialized
+  option     = -1
+  adiabatic  = .TRUE.
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 
 
   allocate(Q(ndim))
@@ -389,7 +388,7 @@ SUBROUTINE test_TwoD_RJDI2014
   END DO
 
   adiabatic = .FALSE.
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 
   Q(:) = [0._Rkind,0.0_Rkind]
   CALL sub_Qmodel_Check_anaVSnum(Q,2)
@@ -443,20 +442,20 @@ SUBROUTINE test_Test
   real (kind=Rkind),      allocatable     :: g(:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
 
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
-  pot_name = 'Test'
-  ndim      = 0
-  nsurf     = 0
-  option    = 0
-  adiabatic = .TRUE.
+  model_name = 'Test'
+  ndim       = 0
+  nsurf      = 0
+  option     = 0
+  adiabatic  = .TRUE.
 
-  CALL sub_Init_Qmodel_Cart(ndim,nsurf,pot_name,adiabatic,option)
+  CALL sub_Init_Qmodel_Cart(ndim,nsurf,model_name,adiabatic,option)
   CALL set_Qmodel_Phase_Following(.FALSE.)
  
   write(out_unit,*) 'ndim,nsurf',ndim,nsurf
@@ -511,7 +510,7 @@ SUBROUTINE test_HBond
   real (kind=Rkind),      allocatable     :: h(:,:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option
@@ -519,13 +518,13 @@ SUBROUTINE test_HBond
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
 
-  pot_name = 'HBond'
-  ndim     = 2
-  nsurf    = 1
-  option   = 0
-  adiabatic = .FALSE.
+  model_name = 'HBond'
+  ndim       = 2
+  nsurf      = 1
+  option     = 0
+  adiabatic  = .FALSE.
 
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 
 
   allocate(Q(ndim))
@@ -573,7 +572,7 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
   real (kind=Rkind),      allocatable     :: h(:,:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,i_surf,ndim,nsurf,option,nb_eval,maxth
@@ -587,16 +586,16 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
-  pot_name = 'phenol'
-  write(out_unit,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL QML_time_perso('Test ' // pot_name)
+  model_name = 'phenol'
+  write(out_unit,*) ' Test of ',nb_eval,' evaluations of the potential ',model_name
+  CALL QML_time_perso('Test ' // model_name)
 
   ndim     = 2
   nsurf    = 3
   option   = 0
   adiabatic = .FALSE.
 
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 
   write(out_unit,*) 'ndim,nsurf',ndim,nsurf
 
@@ -646,10 +645,10 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
   deallocate(Q)
 
 
-  CALL QML_time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // model_name)
 
 !$OMP   PARALLEL DEFAULT(NONE) &
-!$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
+!$OMP   SHARED(nb_eval,ndim,nsurf,maxth,model_name,option) &
 !$OMP   PRIVATE(i,Q,V) &
 !$OMP   NUM_THREADS(maxth)
 
@@ -669,7 +668,7 @@ SUBROUTINE test_Phenol_Dia(nb_eval)
 
 !$OMP   END PARALLEL
 
-  CALL QML_time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // model_name)
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
 
@@ -688,7 +687,7 @@ SUBROUTINE test_Phenol_ADia
   real (kind=Rkind),      allocatable     :: h(:,:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
@@ -705,13 +704,13 @@ SUBROUTINE test_Phenol_ADia
 
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
-  pot_name = 'phenol'
-  write(out_unit,*) ' Test of the adiatic potential ',pot_name
+  model_name = 'phenol'
+  write(out_unit,*) ' Test of the adiatic potential ',model_name
 
 
-  ndim     = 2
-  nsurf    = 3
-  option   = 0
+  ndim      = 2
+  nsurf     = 3
+  option    = 0
   adiabatic = .TRUE.
 
   allocate(Q(ndim))
@@ -719,7 +718,7 @@ SUBROUTINE test_Phenol_ADia
   allocate(g(nsurf,nsurf,ndim))
   allocate(NAC(nsurf,nsurf,ndim))
 
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)  ! a new initialization
   CALL set_Qmodel_Phase_Checking(.FALSE.)
 
   Q = [1._Rkind,-0.5_Rkind ]
@@ -781,7 +780,7 @@ SUBROUTINE test_henonheiles(nb_eval)
   real (kind=Rkind),      allocatable     :: h(:,:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
@@ -796,19 +795,19 @@ SUBROUTINE test_henonheiles(nb_eval)
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
 
-  ndim     = 6
-  nsurf    = 1
-  option   = 0
-  adiabatic = .TRUE.
-  pot_name = 'henonheiles'
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)  ! a new initialization
+  ndim       = 6
+  nsurf      = 1
+  option     = 0
+  adiabatic  = .TRUE.
+  model_name = 'henonheiles'
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)  ! a new initialization
 
   write(out_unit,*) '============================================================'
-  write(out_unit,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL QML_time_perso('Test ' // pot_name)
+  write(out_unit,*) ' Test of ',nb_eval,' evaluations of the potential ',model_name
+  CALL QML_time_perso('Test ' // model_name)
 
 !$OMP   PARALLEL DEFAULT(NONE) &
-!$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
+!$OMP   SHARED(nb_eval,ndim,nsurf,maxth,model_name,option) &
 !$OMP   PRIVATE(i,k,Q,V) &
 !$OMP   NUM_THREADS(maxth)
 
@@ -830,7 +829,7 @@ SUBROUTINE test_henonheiles(nb_eval)
 
 !$OMP   END PARALLEL
 
-  CALL QML_time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // model_name)
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
 
@@ -853,7 +852,7 @@ SUBROUTINE test_Vib_adia(nb_eval)
   integer                             :: ndim,nsurf,NB,nio_QML
   integer                             :: i,j,k,nb_eval,maxth
 
-  character (len=:), allocatable      :: pot_name
+  character (len=:), allocatable      :: model_name
   integer                             :: option
   logical                             :: adiabatic
   real (kind=Rkind)                   :: step
@@ -866,14 +865,13 @@ SUBROUTINE test_Vib_adia(nb_eval)
   write(out_unit,*) '  Vibrational adiabatic separation'
   write(out_unit,*) 'TEST_driver. number of threads:',maxth
 
-  ndim      = 0 ! it would be initialized
-  nsurf     = 6 ! it would be initialized
-  nio_QML   = in_unit
-
-  pot_name  = 'read_model'
-  adiabatic = .TRUE.
-  option    = -1
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  ndim       = 0 ! it would be initialized
+  nsurf      = 6 ! it would be initialized
+  nio_QML    = in_unit
+  model_name = 'read_model'
+  adiabatic  = .TRUE.
+  option     = -1
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
 
   write(out_unit,*) 'ndim,nsurf',ndim,nsurf
 
@@ -958,56 +956,3 @@ SUBROUTINE test_Vib_adia(nb_eval)
   write(out_unit,*) '============================================================'
 
 END SUBROUTINE test_Vib_adia
-
-SUBROUTINE test_PH4
-  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : in_unit=>INPUT_UNIT,out_unit=>OUTPUT_UNIT,Rkind => real64
-!$ USE omp_lib
-  IMPLICIT NONE
-
-  real (kind=Rkind),      allocatable     :: Q(:)
-  real (kind=Rkind),      allocatable     :: GGdef(:,:)
-  real (kind=Rkind),      allocatable     :: V(:,:)
-  real (kind=Rkind),      allocatable     :: Vec(:,:)
-  real (kind=Rkind),      allocatable     :: g(:,:,:)
-  real (kind=Rkind),      allocatable     :: h(:,:,:,:)
-
-  character (len=16)                  :: pot_name
-  logical                             :: adiabatic
-
-  integer                             :: i,j,k,ndim,nsurf,option,nb_eval,maxth
-
-  nb_eval = 1
-  write(out_unit,*) '============================================================'
-  write(out_unit,*) '============================================================'
-  pot_name = 'PH4'
-
-  ndim     = 1
-  nsurf    = 1
-  option   = 0
-  adiabatic = .FALSE.
-
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
-
-
-  allocate(Q(ndim))
-  allocate(V(nsurf,nsurf))
-
-  DO i=-100,100
-
-    Q(1) = 0.1_Rkind * i
-
-    CALL sub_Qmodel_V(V,Q)
-    write(out_unit,*) Q,V
-  END DO
-
-
-  deallocate(V)
-  deallocate(Q)
-
-
-  write(out_unit,*) '============================================================'
-  write(out_unit,*) '============================================================'
-
-
-
-END SUBROUTINE test_PH4

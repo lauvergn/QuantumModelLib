@@ -51,7 +51,7 @@ PROGRAM TEST_gridNonAdia
   real (kind=Rkind),      allocatable     :: g(:,:,:)
   real (kind=Rkind),      allocatable     :: NAC(:,:,:)
 
-  character (len=16)                  :: pot_name
+  character (len=16)                  :: model_name
   logical                             :: adiabatic
 
   integer                             :: i,iQ,ndim,nsurf,option,nb_eval,maxth
@@ -66,22 +66,22 @@ PROGRAM TEST_gridNonAdia
 
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
-  pot_name = 'phenol'
-  write(out_unit,*) ' Test of ',nb_eval,' evaluations of the potential ',pot_name
-  CALL QML_time_perso('Test ' // pot_name)
+  model_name = 'phenol'
+  write(out_unit,*) ' Test of ',nb_eval,' evaluations of the potential ',model_name
+  CALL QML_time_perso('Test ' // model_name)
 
   ndim     = 2
   nsurf    = 3
   option   = 0
   adiabatic = .TRUE.
 
-  CALL sub_Init_Qmodel(ndim,nsurf,pot_name,adiabatic,option)
+  CALL sub_Init_Qmodel(ndim,nsurf,model_name,adiabatic,option)
   CALL set_Qmodel_Phase_Following(.TRUE.)
   CALL set_Qmodel_Phase_Checking(.TRUE.)
   write(out_unit,*) 'ndim,nsurf',ndim,nsurf
 
 !$OMP   PARALLEL DEFAULT(NONE) &
-!$OMP   SHARED(nb_eval,ndim,nsurf,maxth,pot_name,option) &
+!$OMP   SHARED(nb_eval,ndim,nsurf,maxth,model_name,option) &
 !$OMP   PRIVATE(i,iQ,Q,Q0,V,g,NAC,Vec0) &
 !$OMP   NUM_THREADS(maxth)
 
@@ -118,7 +118,7 @@ PROGRAM TEST_gridNonAdia
 
 !$OMP   END PARALLEL
 
-  CALL QML_time_perso('Test ' // pot_name)
+  CALL QML_time_perso('Test ' // model_name)
   write(out_unit,*) '============================================================'
   write(out_unit,*) '============================================================'
 
