@@ -50,6 +50,7 @@ PROGRAM TEST_CHFClBr
   logical                        :: Lerr
   TYPE (dnMat_t)                 :: PotVal
   TYPE (dnMat_t)                 :: PotValref
+  TYPE (dnMat_t)                 :: ScalOp(4)
   TYPE (dnMat_t)                 :: dnErr
   TYPE (test_t)                  :: test_var
   real (kind=Rkind), parameter   :: epsi = 1.e-10_Rkind
@@ -67,7 +68,7 @@ PROGRAM TEST_CHFClBr
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
-  CALL Init_Model(Model,pot_name='CHFClBr',read_param=.FALSE.)
+  CALL Init_Model(Model,pot_name='CHFClBr',read_param=.FALSE.,nb_ScalOp=4)
   Q = [0.1_Rkind,-0.1_Rkind,0.2_Rkind,-0.2_Rkind,0.3_Rkind,-0.3_Rkind,0.4_Rkind,-0.4_Rkind,0.5_Rkind]
 
   nderiv=2
@@ -91,12 +92,21 @@ PROGRAM TEST_CHFClBr
   write(out_unit,*) '- END CHECK POT -----------------------------'
   write(out_unit,*) '---------------------------------------------' 
  
-  Q = ZERO
-  CALL Eval_Pot(Model,Q,PotVal,nderiv=3)
-  write(out_unit,'(a,9f12.6)') 'Q (Bohr)',Q(:)
+  write(out_unit,*) '---------------------------------------------'
+  write(out_unit,*) '- Scalar Operators: potential+mux,muy,muz    '
+  write(out_unit,*) '---------------------------------------------'
+
+  CALL Eval_ScalOp(Model,Q,ScalOp,nderiv=nderiv)
+  write(out_unit,'(a,9f12.6)') 'Q',Q(:)
   write(out_unit,*) 'Energy (Hartree)'
-  CALL Write_dnMat(PotVal,nio=out_unit)
+  CALL Write_dnMat(ScalOp(1),nio=out_unit,info='pot')
+  write(out_unit,*) 'Dipole (au)',get_d0(ScalOp(2)),get_d0(ScalOp(3)),get_d0(ScalOp(4))
+  CALL Write_dnMat(ScalOp(2),nio=out_unit,info='mux')
+  CALL Write_dnMat(ScalOp(3),nio=out_unit,info='muy')
+  CALL Write_dnMat(ScalOp(4),nio=out_unit,info='muz')
+
   flush(out_unit)
+
 
   deallocate(Q)
   CALL dealloc_Model(Model)

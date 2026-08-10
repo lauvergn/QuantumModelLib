@@ -124,15 +124,6 @@ where
   - option     : option, to be able to select a model with several options (Tully ...) [integer]
 ```
 
-There is an alternative way to initialized a model, when the coordinate are given in Cartesian coordinates, but the potential is in internal (curvilinear) coordinates
-
-```fortran
-CALL sub_Init_Qmodel_Cart(ndim,nsurf,model_name,adiabatic,option)
-```
-
-The parameters are indentical as the previous subroutine, but **ndim** is the number of Cartesian coordinates.
-Remark: the model Fortran file must contain a specific **Cart_TO_Q_QModel** subroutine.
-
 
 Example:
 ```fortran
@@ -142,6 +133,15 @@ Example:
 ```
 It initializes the phenol potential (2D and 3 PES).
 => Computation of the diabatic surface
+
+There is an alternative way to initialized a model, when the coordinate are given in Cartesian coordinates, but the potential is in internal (curvilinear) coordinates
+
+```fortran
+CALL sub_Init_Qmodel_Cart(ndim,nsurf,model_name,adiabatic,option)
+```
+
+The parameters are identical as the previous subroutine, but **ndim** is the number of Cartesian coordinates.
+Remark: the model Fortran file must contain a specific **Cart_TO_Q_QModel** subroutine.
 
 
 The list of available models is given below.
@@ -170,12 +170,12 @@ In the following exemple, the 2+1D-retinal model ('Retinal_JPCB2000') is read.
 ```
 
   It initializes the 2+1D-retinal model (ndim=3).
-  For this model, fhe number of electronic surfaces is automatically set up to 2.
+  For this model, the number of electronic surfaces is automatically set up to 2.
     => adiabatic=t      : Computation of the adiabatic surface: 
     => Phase_checking=f : The adiabatic vector phases are not checked between several calculations
     => PubliUnit=f      : The atomic units are used
 
-### 3a3) Initialization of the model for Scalar Operator (potnetial+dipole ...)
+### 3a3) Initialization of the model for Scalar Operator (potential+dipole ...)
 
 This feature is available from the version 26.3.0 and above.
 
@@ -206,8 +206,6 @@ Example:
 ```
 It initializes the Morse potential (1D and 1PES for HF molecule).
 
-
-The list of available models is given below.
 
 ### 3a4) Initialization (extra)
 

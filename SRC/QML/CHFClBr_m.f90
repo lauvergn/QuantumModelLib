@@ -62,8 +62,9 @@ MODULE QML_CHFClBr_m
 !! @param norder      integer: order of the expansion (up to 4). The default is 4
   TYPE, EXTENDS (QML_Empty_t) :: QML_CHFClBr_t ! V(R) = Sum_i C_i * r-Req)**i
      PRIVATE
-     integer           :: norder = 4
-     logical           :: bQFF   = .TRUE.
+     integer           :: norder_pot = 4
+     integer           :: norder_dip = 3
+     logical           :: bQFF       = .TRUE.
 
      real (kind=Rkind) ::  quadratic(9) = [0.001049576065177_Rkind, 0.001461717593495_Rkind,  &
                                            0.001969821921105_Rkind, 0.003125330502741_Rkind,  &
@@ -71,9 +72,10 @@ MODULE QML_CHFClBr_m
                                            0.005689101160362_Rkind, 0.006101642415972_Rkind,  &
                                            0.014536840636557_Rkind ]
   CONTAINS
-    PROCEDURE :: EvalPot_QModel   => EvalPot_QML_CHFClBr
-    PROCEDURE :: Write_QModel     => Write_QML_CHFClBr
-    PROCEDURE :: RefValues_QModel => RefValues_QML_CHFClBr
+    PROCEDURE :: EvalPot_QModel    => EvalPot_QML_CHFClBr
+    PROCEDURE :: EvalScalOp_QModel => EvalScalOp_QML_CHFClBr
+    PROCEDURE :: Write_QModel      => Write_QML_CHFClBr
+    PROCEDURE :: RefValues_QModel  => RefValues_QML_CHFClBr
   END TYPE QML_CHFClBr_t
 
   PUBLIC :: QML_CHFClBr_t,Init_QML_CHFClBr,Write_QML_CHFClBr
@@ -119,17 +121,24 @@ CONTAINS
 
 
     IF (debug) write(out_unit,*) 'init default CHFClBr parameters'
-    QModel%norder = 4
+    QModel%norder_pot = 4
+    QModel%norder_dip = 3
 
     IF (read_param) THEN
       CALL Read_QML_CHFClBr(QModel,nio_param_file)
     END IF
 
-    IF (QModel%norder > 4 .OR. QModel%norder < 2) THEN
+    IF (QModel%norder_pot > 4 .OR. QModel%norder_pot < 2) THEN
       write(out_unit,*) 'ERROR in ',name_sub
-      write(out_unit,*) 'Wrong norder value:',QModel%norder
+      write(out_unit,*) 'Wrong norder_pot value:',QModel%norder_pot
       write(out_unit,*) 'Possible values: 2, 3, 4'
-      STOP 'ERROR in Init_QML_CHFClBr: Wrong norder value'
+      STOP 'ERROR in Init_QML_CHFClBr: Wrong norder_pot value'
+    END IF
+   IF (QModel%norder_dip > 3 .OR. QModel%norder_dip < 1) THEN
+      write(out_unit,*) 'ERROR in ',name_sub
+      write(out_unit,*) 'Wrong norder_dip value:',QModel%norder_dip
+      write(out_unit,*) 'Possible values: 1, 2, 3'
+      STOP 'ERROR in Init_QML_CHFClBr: Wrong norder_dip value'
     END IF
 
     IF (debug) write(out_unit,*) 'init Q0 of CHFClBr'
@@ -167,16 +176,17 @@ CONTAINS
 
     !local variable
     integer                       :: err_read
-    integer                       :: norder
+    integer                       :: norder_pot,norder_dip
     logical                       :: bQFF
 
-    namelist /CHFClBr/ norder,bQFF
+    namelist /CHFClBr/ norder_pot,norder_dip,bQFF
 
     write(out_unit,*) 'read CHFClBr namelist ...'
     flush(out_unit)
 
-    norder = 4
-    bQFF   = .TRUE.
+    norder_pot = 4
+    norder_dip = 3
+    bQFF       = .TRUE.
 
     read(nio,nml=CHFClBr,IOSTAT=err_read)
     IF (err_read < 0) THEN
@@ -194,19 +204,32 @@ CONTAINS
       STOP ' ERROR in Read_QML_CHFClBr'
     END IF
     !write(out_unit,nml=CHFClBr)
-    Qmodel%norder      = norder
+    Qmodel%norder_pot  = norder_pot
+    Qmodel%norder_dip  = norder_dip
     Qmodel%bQFF        = bQFF
 
 
   END SUBROUTINE Read_QML_CHFClBr
-!! === README ==
-!! Polynomial potential: $V(R) = \sum_i coef(i) \cdot (r-Req)^i$
-!! pot_name  = 'CHFClBr'
-!! ndim      = 1
-!! nsurf     = 1
-!! reduced mass      = 1744.60504565084306291455 au
-!! remark: Default parameters for H-F
-!! === END README ==
+      !! === README ==
+      !! CHFClBr QFF and bQFF potentials:
+      !! pot_name  = 'CHFClBr'
+      !! option    = no option
+      !! ndim      = 9
+      !! nsurf     = 1
+      !! nb_ScalOp = 4
+      !! QFF Dipole moments
+      !!
+      !! remarks: Default parameters for H-F
+      !!   Quantum Chemistry level (gaussian 16): MP2/aug-cc-pVTZ
+      !!   Scalar Operotors:
+      !!     iOp=1     => potential
+      !!     iOp=[2:4] => Dipole moments (dip_x, dip_y, dip_z)
+      !!  With read_nml=t, options are possible:
+      !!      * bQFF: corrected bound QFF (values: T,F). Default bQFF=T
+      !!      * norder_pot: order of the Taylor expansion (values: 2,3,4). Default norder=4
+      !!      * norder_dip: order of the Taylor expansion (values: 1,2,3). Default norder=3
+      !! refs: unpublished yet
+      !! === END README ==
 !> @brief Subroutine wich prints the CHFClBr current parameters.
 !!
 !> @author David Lauvergnat
@@ -226,14 +249,20 @@ CONTAINS
     write(nio,*)
     CALL QModel%QML_Empty_t%Write_QModel(nio)
     write(nio,*)
-    write(nio,*) '  norder: ',QModel%norder
-    write(nio,*) '  bQFF:   ',QModel%bQFF
+    write(nio,*) '  norder_pot: ',QModel%norder_pot
+    write(nio,*) '  bQFF:       ',QModel%bQFF
     write(nio,*)
     write(nio,*) ' at Q={0.1,-0.1,0.2,-0.2,0.3,-0.3,0.4,-0.4,0.5}, ' 
     write(nio,*) ' ... the bQFF potential value is: 3.2310845043165954E-003 Hartree'
     write(nio,*)
     write(nio,*) 'The ZPE (bQFF) is 4627.47 cm-1 (optained with ElVibRot and MCTDH).'
     write(nio,*)
+    write(nio,*) ' QFF dipole moments at MP2/aug-cc-pVTZ level of theory:'
+    write(nio,*)
+    write(nio,*) '  norder_dip: ',QModel%norder_dip
+    write(nio,*)
+    write(nio,*) ' at Q={0.1,-0.1,0.2,-0.2,0.3,-0.3,0.4,-0.4,0.5}, ' 
+    write(nio,*) ' ... the QFF dipole moments are: [6.5525116285220422E-003  -6.9040645320275831E-002  -1.3060122870039432E-002] au'
     write(nio,*) 'end CHFClBr current parameters'
 
   END SUBROUTINE Write_QML_CHFClBr
@@ -649,7 +678,7 @@ CONTAINS
     END DO
 
     E3 = ZERO
-    IF (QModel%norder >= 3) THEN
+    IF (QModel%norder_pot >= 3) THEN
       IF (QModel%bQFF) THEN
         DO i = 1, size(cubic)
             IF (idx3(1,i) == idx3(2,i) .AND. idx3(2,i) == idx3(3,i)) THEN
@@ -674,7 +703,7 @@ CONTAINS
     END IF
 
     E4 = ZERO
-    IF (QModel%norder >= 4) THEN
+    IF (QModel%norder_pot >= 4) THEN
       IF (QModel%bQFF) THEN
         DO i = 1,size(quartic)
           IF (idx4(1,i) == idx4(2,i) .AND. idx4(2,i) == idx4(3,i) .AND. idx4(3,i) == idx4(4,i)) THEN
@@ -710,7 +739,355 @@ CONTAINS
     END IF
   END SUBROUTINE EvalPot_QML_CHFClBr
 
-   SUBROUTINE RefValues_QML_CHFClBr(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
+  SUBROUTINE EvalScalOp_QML_CHFClBr(QModel,Mat_OF_ScalOpDia,list_Op,dnQ,nderiv)
+    USE QDUtil_m,  ONLY : ZERO
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
+  
+    CLASS (QML_CHFClBr_t),  intent(in)     :: QModel
+    TYPE (dnS_t),           intent(in)     :: dnQ(:)
+    integer,                intent(in)     :: list_Op(:)
+    TYPE (dnS_t),           intent(inout)  :: Mat_OF_ScalOpDia(:,:,:)
+    integer,                intent(in)     :: nderiv
+  
+    integer :: iOp
+
+    IF (QModel%nb_ScalOp-1 /= size(list_Op)) THEN
+      write(out_unit,*) 'ERROR in EvalScalOp_QML_CHFClBr'
+      write(out_unit,*) '  QModel%nb_ScalOp and size(list_Op) are inconsistent'
+      write(out_unit,*) '  QModel%nb_ScalOp (including potential)',QModel%nb_ScalOp
+      write(out_unit,*) ' size(list_Op)',size(list_Op)
+      STOP 'ERROR in EvalScalOp_QML_CHFClBr: QModel%nb_ScalOp and size(list_Op) are inconsistent'
+    END IF
+ 
+    write(6,*) 'shape Mat_OF_ScalOpDia',shape(Mat_OF_ScalOpDia)
+    DO iOp=1,size(list_Op)
+      SELECT CASE (list_Op(iOp))
+      CASE (2) ! x
+        CALL mux_QML_CHFClBr(dnQ,Mat_OF_ScalOpDia(1,1,iOp),QModel%norder_dip)
+      CASE (3) ! y
+        CALL muy_QML_CHFClBr(dnQ,Mat_OF_ScalOpDia(1,1,iOp),QModel%norder_dip)
+      CASE (4) ! z
+        CALL muz_QML_CHFClBr(dnQ,Mat_OF_ScalOpDia(1,1,iOp),QModel%norder_dip)
+      CASE Default
+        write(out_unit,*) 'ERROR in EvalScalOp_QML_CHFClBr'
+        write(out_unit,*) '  Wrong list_Op(:) values',list_Op(:)
+        write(out_unit,*) '  Possibilities: 1, 2 or 3 values among [2, 3, 4]'
+        STOP 'ERROR in EvalScalOp_QML_CHFClBr:  Wrong list_Op(:) values'
+      END SELECT
+    END DO
+  
+  END SUBROUTINE EvalScalOp_QML_CHFClBr
+  SUBROUTINE mux_QML_CHFClBr(Q,w,norder)
+    USE QDUtil_m,  ONLY : ZERO,ONE,SIX,HALF
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
+
+    TYPE (dnS_t),     INTENT(IN)  :: Q(:)
+    integer,          INTENT(IN)  :: norder
+    TYPE (dnS_t),     INTENT(OUT) :: w
+
+    REAL(kind=Rkind), PARAMETER :: linear(9) = [ &
+    -0.000402649831271D0, 0.006866875434982D0, 0.006423568777823D0, -0.069385758282487D0, -0.157775453141200D0,  &
+    -0.035897714418619D0, 0.076536454061953D0, -0.001517824206151D0, -0.000995223155219D0 ]
+
+    REAL(kind=Rkind), PARAMETER :: quadratic(45) = [ &
+    0.000279998763229D0, 0.001048425300996D0, -0.001145299321264D0, 0.001414999211309D0, 0.002731109162832D0,  &
+    0.002188430620212D0, -0.004263954501357D0, -0.003192125787694D0, 0.000230368614725D0, 0.001551476799810D0,  &
+    -0.010806349861975D0, -0.000737446851659D0, -0.001783692294608D0, -0.000309487003484D0, -0.001514546458378D0,  &
+    0.000075424668619D0, -0.006418495126918D0, -0.001021897933220D0, -0.003369789069293D0, -0.004175731605830D0,  &
+    -0.003216676353061D0, 0.007191237908252D0, 0.002727671915175D0, -0.001926351770309D0, 0.003570135137387D0,  &
+    0.000641005677249D0, 0.007676155757352D0, 0.001793548390951D0, -0.000072932777539D0, -0.000094588684015D0,  &
+    0.000365838689094D0, -0.001422625415076D0, -0.003468982629348D0, -0.000163693746459D0, -0.006484530110893D0,  &
+    -0.001636642894604D0, 0.000264081105025D0, 0.000685197715056D0, -0.000167076542353D0, -0.002674081778488D0,  &
+    -0.001102525000124D0, 0.001331531547913D0, -0.017920954446460D0, 0.000835065570348D0, 0.001436684505574D0 ]
+
+    REAL(kind=Rkind), PARAMETER :: cubic(81) = [ &
+    -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0,  &
+    -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0,  &
+    -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0, 0.001156850069639D0,  &
+    -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0,  &
+    0.000396503810712D0, -0.000000000000000D0, -0.000000000000000D0, -0.000743885673049D0, -0.000000000000000D0,  &
+    -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0, -0.000000000000000D0,  &
+    0.000854268261584D0, 0.000780721852496D0, -0.000831764375056D0, -0.000644432635900D0, -0.000000000000000D0,  &
+    -0.000936055411356D0, -0.000000000000000D0, -0.002227296775602D0, -0.001332569305313D0, -0.004018856972526D0,  &
+    -0.002788953801740D0, 0.001754257381012D0, 0.002091450335212D0, 0.000286201026180D0, 0.000300517010338D0,  &
+    -0.000000000000000D0, -0.001367953171013D0, -0.000604404766824D0, -0.002501925429010D0, -0.004450755056235D0,  &
+    -0.000906016376633D0, 0.003090194704727D0, -0.000178943820403D0, 0.000349236505150D0, -0.000000000000000D0,  &
+    0.001109391114971D0, -0.000000000000000D0, -0.002261953674991D0, 0.000537286672181D0, 0.001476092725766D0,  &
+    -0.011196631821476D0, 0.001030368370160D0, 0.000229036605935D0, -0.000000000000000D0, -0.001028760242150D0,  &
+    -0.000000000000000D0, -0.000813162667763D0, -0.001204899157741D0, 0.000332837549786D0, -0.010886580858709D0,  &
+    0.000274296131121D0, 0.002410195560459D0, -0.000275497303289D0, -0.000837888013735D0, -0.000114415009522D0,  &
+    0.000956809784430D0, 0.000679662332739D0, 0.000008819013472D0, 0.008084561694648D0, -0.000575316791524D0,  &
+    0.000026386832773D0 ]
+
+    INTEGER, PARAMETER :: idx2(2, 45) = RESHAPE([ &
+    1 , 1 , 2 , 1 , 2 , 2 , 3 , 1 , 3 , 2, &
+    3 , 3 , 4 , 1 , 4 , 2 , 4 , 3 , 4 , 4, &
+    5 , 1 , 5 , 2 , 5 , 3 , 5 , 4 , 5 , 5, &
+    6 , 1 , 6 , 2 , 6 , 3 , 6 , 4 , 6 , 5, &
+    6 , 6 , 7 , 1 , 7 , 2 , 7 , 3 , 7 , 4, &
+    7 , 5 , 7 , 6 , 7 , 7 , 8 , 1 , 8 , 2, &
+    8 , 3 , 8 , 4 , 8 , 5 , 8 , 6 , 8 , 7, &
+    8 , 8 , 9 , 1 , 9 , 2 , 9 , 3 , 9 , 4, &
+    9 , 5 , 9 , 6 , 9 , 7 , 9 , 8 , 9 , 9 ], [2, 45])
+
+    INTEGER, PARAMETER :: idx3(3, 81) = RESHAPE([ &
+    1 , 1 , 1 , 1 , 1 , 2 , 1 , 1 , 3 , 1, &
+    1 , 4 , 1 , 1 , 5 , 1 , 1 , 6 , 1 , 1, &
+    7 , 1 , 1 , 8 , 1 , 1 , 9 , 2 , 2 , 1, &
+    2 , 2 , 2 , 2 , 2 , 3 , 2 , 2 , 4 , 2, &
+    2 , 5 , 2 , 2 , 6 , 2 , 2 , 7 , 2 , 2, &
+    8 , 2 , 2 , 9 , 3 , 3 , 1 , 3 , 3 , 2, &
+    3 , 3 , 3 , 3 , 3 , 4 , 3 , 3 , 5 , 3, &
+    3 , 6 , 3 , 3 , 7 , 3 , 3 , 8 , 3 , 3, &
+    9 , 4 , 4 , 1 , 4 , 4 , 2 , 4 , 4 , 3, &
+    4 , 4 , 4 , 4 , 4 , 5 , 4 , 4 , 6 , 4, &
+    4 , 7 , 4 , 4 , 8 , 4 , 4 , 9 , 5 , 5, &
+    1 , 5 , 5 , 2 , 5 , 5 , 3 , 5 , 5 , 4, &
+    5 , 5 , 5 , 5 , 5 , 6 , 5 , 5 , 7 , 5, &
+    5 , 8 , 5 , 5 , 9 , 6 , 6 , 1 , 6 , 6, &
+    2 , 6 , 6 , 3 , 6 , 6 , 4 , 6 , 6 , 5, &
+    6 , 6 , 6 , 6 , 6 , 7 , 6 , 6 , 8 , 6, &
+    6 , 9 , 7 , 7 , 1 , 7 , 7 , 2 , 7 , 7, &
+    3 , 7 , 7 , 4 , 7 , 7 , 5 , 7 , 7 , 6, &
+    7 , 7 , 7 , 7 , 7 , 8 , 7 , 7 , 9 , 8, &
+    8 , 1 , 8 , 8 , 2 , 8 , 8 , 3 , 8 , 8, &
+    4 , 8 , 8 , 5 , 8 , 8 , 6 , 8 , 8 , 7, &
+    8 , 8 , 8 , 8 , 8 , 9 , 9 , 9 , 1 , 9, &
+    9 , 2 , 9 , 9 , 3 , 9 , 9 , 4 , 9 , 9, &
+    5 , 9 , 9 , 6 , 9 , 9 , 7 , 9 , 9 , 8, &
+    9 , 9 , 9 ], [3, 81])
+
+    integer :: i
+
+    w = ZERO
+    IF (norder >= 1) THEN
+      DO i = 1, 9
+        w = w + linear(i) * Q(i)
+      END DO
+    END IF
+
+    IF (norder >= 2) THEN
+      DO i = 1, 45
+        w = w + HALF * quadratic(i) * Q(idx2(1,i)) * Q(idx2(2,i))
+      END DO
+    END IF
+
+    IF (norder >= 3) THEN
+      DO i = 1, 81
+        w = w + (ONE/SIX) * cubic(i) * Q(idx3(1,i)) * Q(idx3(2,i)) * Q(idx3(3,i))
+      END DO
+    END IF
+
+  END SUBROUTINE mux_QML_CHFClBr
+  SUBROUTINE muy_QML_CHFClBr(Q,w,norder)
+     USE QDUtil_m,  ONLY : ZERO,ONE,SIX,HALF
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
+
+    TYPE (dnS_t),     INTENT(IN)  :: Q(:)
+    integer,          INTENT(IN)  :: norder
+    TYPE (dnS_t),     INTENT(OUT) :: w
+
+  REAL(kind=Rkind), PARAMETER :: linear(9) = [ &
+    -0.000457633682080D0, 0.001267062848771D0, 0.000380061204593D0, 0.044996816715195D0, -0.051630926877714D0,  &
+    0.132108013968028D0, 0.007509508773807D0, 0.024382817662231D0, -0.000072413897161D0 ]
+
+  REAL(kind=Rkind), PARAMETER :: quadratic(45) = [ &
+    0.001015607276289D0, -0.000041515748884D0, -0.001204963216515D0, 0.002978236435231D0, -0.001692849628965D0,  &
+    0.000848161220191D0, -0.003693911441441D0, 0.004735518404088D0, -0.003591765731154D0, -0.000711307611963D0,  &
+    -0.000869858357845D0, 0.005966339457007D0, 0.004636049806494D0, -0.002066624253990D0, -0.002856944138753D0,  &
+    -0.004685717903832D0, 0.002676915646757D0, -0.007055583287682D0, 0.004265892700350D0, -0.001678577516646D0,  &
+    0.008219865980746D0, 0.001761794463707D0, -0.005225664050591D0, -0.002051234408805D0, 0.000000029455007D0,  &
+    -0.000965780467311D0, 0.000876726110988D0, -0.002611866770798D0, -0.002651966094573D0, 0.001270834714036D0,  &
+    -0.004195307227523D0, -0.000343145699614D0, -0.000059172817840D0, 0.003415370049375D0, -0.002508687691099D0,  &
+    0.002600058979637D0, 0.000592661612801D0, -0.000289648952103D0, 0.000459782751196D0, 0.002589625158988D0,  &
+    -0.001655275972896D0, -0.000766495927502D0, -0.001454608778571D0, -0.010540011848990D0, -0.003043271754130D0 ]
+
+  REAL(kind=Rkind), PARAMETER :: cubic(81) = [ &
+    0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0,  &
+    0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0,  &
+    0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, -0.000720565640103D0,  &
+    0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0,  &
+    0.000605717752019D0, 0.000000000000000D0, 0.000000000000000D0, -0.001136395272782D0, 0.000000000000000D0,  &
+    0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0,  &
+    -0.000596550423755D0, 0.001192668516102D0, -0.001270645035773D0, 0.000401398182834D0, 0.000000000000000D0,  &
+    0.000763965391365D0, 0.000000000000000D0, -0.000571768513978D0, -0.000451371063324D0, -0.000759847241966D0,  &
+    -0.000435039784541D0, 0.001027522628412D0, 0.000548670609314D0, 0.000437215556292D0, -0.000187182586285D0,  &
+    0.000000000000000D0, 0.000852056256541D0, -0.000923321130109D0, 0.002471562388282D0, -0.002149919584861D0,  &
+    0.002437836800049D0, 0.000245647950243D0, 0.001871597808290D0, -0.000414257519664D0, 0.000000000000000D0,  &
+    0.000252721408585D0, 0.000000000000000D0, 0.000776287166624D0, -0.000423705572387D0, -0.000086548376950D0,  &
+    -0.000650134115266D0, -0.007386718773086D0, 0.000530798756938D0, 0.000000000000000D0, -0.000142038472561D0,  &
+    0.000000000000000D0, 0.001570445521137D0, -0.000907585687632D0, -0.001078317055606D0, -0.001466850269290D0,  &
+    -0.006327265708705D0, -0.005279779313297D0, 0.000631880782270D0, -0.000177452299260D0, -0.000302541169020D0,  &
+    -0.000393810685921D0, 0.000181866711336D0, -0.000545962840279D0, 0.000454444703744D0, 0.005911882995715D0,  &
+    -0.000176597019423D0 ]
+
+  INTEGER, PARAMETER :: idx2(2, 45) = RESHAPE([ &
+    1 , 1 , 2 , 1 , 2 , 2 , 3 , 1 , 3 , 2, &
+    3 , 3 , 4 , 1 , 4 , 2 , 4 , 3 , 4 , 4, &
+    5 , 1 , 5 , 2 , 5 , 3 , 5 , 4 , 5 , 5, &
+    6 , 1 , 6 , 2 , 6 , 3 , 6 , 4 , 6 , 5, &
+    6 , 6 , 7 , 1 , 7 , 2 , 7 , 3 , 7 , 4, &
+    7 , 5 , 7 , 6 , 7 , 7 , 8 , 1 , 8 , 2, &
+    8 , 3 , 8 , 4 , 8 , 5 , 8 , 6 , 8 , 7, &
+    8 , 8 , 9 , 1 , 9 , 2 , 9 , 3 , 9 , 4, &
+    9 , 5 , 9 , 6 , 9 , 7 , 9 , 8 , 9 , 9 ], [2, 45])
+
+  INTEGER, PARAMETER :: idx3(3, 81) = RESHAPE([ &
+    1 , 1 , 1 , 1 , 1 , 2 , 1 , 1 , 3 , 1, &
+    1 , 4 , 1 , 1 , 5 , 1 , 1 , 6 , 1 , 1, &
+    7 , 1 , 1 , 8 , 1 , 1 , 9 , 2 , 2 , 1, &
+    2 , 2 , 2 , 2 , 2 , 3 , 2 , 2 , 4 , 2, &
+    2 , 5 , 2 , 2 , 6 , 2 , 2 , 7 , 2 , 2, &
+    8 , 2 , 2 , 9 , 3 , 3 , 1 , 3 , 3 , 2, &
+    3 , 3 , 3 , 3 , 3 , 4 , 3 , 3 , 5 , 3, &
+    3 , 6 , 3 , 3 , 7 , 3 , 3 , 8 , 3 , 3, &
+    9 , 4 , 4 , 1 , 4 , 4 , 2 , 4 , 4 , 3, &
+    4 , 4 , 4 , 4 , 4 , 5 , 4 , 4 , 6 , 4, &
+    4 , 7 , 4 , 4 , 8 , 4 , 4 , 9 , 5 , 5, &
+    1 , 5 , 5 , 2 , 5 , 5 , 3 , 5 , 5 , 4, &
+    5 , 5 , 5 , 5 , 5 , 6 , 5 , 5 , 7 , 5, &
+    5 , 8 , 5 , 5 , 9 , 6 , 6 , 1 , 6 , 6, &
+    2 , 6 , 6 , 3 , 6 , 6 , 4 , 6 , 6 , 5, &
+    6 , 6 , 6 , 6 , 6 , 7 , 6 , 6 , 8 , 6, &
+    6 , 9 , 7 , 7 , 1 , 7 , 7 , 2 , 7 , 7, &
+    3 , 7 , 7 , 4 , 7 , 7 , 5 , 7 , 7 , 6, &
+    7 , 7 , 7 , 7 , 7 , 8 , 7 , 7 , 9 , 8, &
+    8 , 1 , 8 , 8 , 2 , 8 , 8 , 3 , 8 , 8, &
+    4 , 8 , 8 , 5 , 8 , 8 , 6 , 8 , 8 , 7, &
+    8 , 8 , 8 , 8 , 8 , 9 , 9 , 9 , 1 , 9, &
+    9 , 2 , 9 , 9 , 3 , 9 , 9 , 4 , 9 , 9, &
+    5 , 9 , 9 , 6 , 9 , 9 , 7 , 9 , 9 , 8, &
+    9 , 9 , 9 ], [3, 81])
+
+    integer :: i
+
+    w = ZERO
+    IF (norder >= 1) THEN
+      DO i = 1, 9
+        w = w + linear(i) * Q(i)
+      END DO
+    END IF
+
+    IF (norder >= 2) THEN
+      DO i = 1, 45
+        w = w + HALF * quadratic(i) * Q(idx2(1,i)) * Q(idx2(2,i))
+      END DO
+    END IF
+
+    IF (norder >= 3) THEN
+      DO i = 1, 81
+        w = w + (ONE/SIX) * cubic(i) * Q(idx3(1,i)) * Q(idx3(2,i)) * Q(idx3(3,i))
+      END DO
+    END IF
+
+  END SUBROUTINE muy_QML_CHFClBr
+  SUBROUTINE muz_QML_CHFClBr(Q,w,norder)
+    USE QDUtil_m,  ONLY : ZERO,ONE,SIX,HALF
+    USE ADdnSVM_m, ONLY : dnS_t
+    IMPLICIT NONE
+
+    TYPE (dnS_t),     INTENT(IN)  :: Q(:)
+    integer,          INTENT(IN)  :: norder
+    TYPE (dnS_t),     INTENT(OUT) :: w
+
+    REAL(kind=Rkind), PARAMETER :: linear(9) = [ &
+    -0.001323716795648D0, -0.002399773000917D0, 0.011986999258537D0, 0.028266104665809D0, -0.014165287928435D0,  &
+    -0.025858053252437D0, -0.006411587865222D0, 0.019605583233620D0, -0.001616797210585D0 ]
+
+    REAL(kind=Rkind), PARAMETER :: quadratic(45) = [ &
+    0.000140613197534D0, -0.000064451032491D0, 0.000452873002971D0, -0.000014393187832D0, 0.000617711815710D0,  &
+    0.000045033018532D0, -0.000743034135512D0, -0.000350867253954D0, 0.001313992530157D0, 0.003737565784907D0,  &
+    0.000446585120328D0, -0.000628594121541D0, -0.001000954635232D0, -0.002217661122811D0, 0.000824927347859D0,  &
+    -0.000391834881579D0, 0.000279231509846D0, -0.000401296402082D0, -0.000311185594680D0, -0.000040014111692D0,  &
+    -0.001129437856737D0, 0.000493756152802D0, 0.000809434114859D0, -0.000067460866332D0, -0.002325493355995D0,  &
+    -0.001135376986524D0, -0.000024915824490D0, -0.007002239873170D0, -0.000826328584436D0, -0.000373200504111D0,  &
+    0.001264688130894D0, 0.003435401017798D0, -0.001078543678495D0, 0.001881235005012D0, 0.000240839615740D0,  &
+    -0.005648820283420D0, -0.000029156678411D0, 0.000191486785050D0, -0.000697850811895D0, 0.004878855515820D0,  &
+    -0.002660286851937D0, -0.007341955793905D0, -0.000957461362483D0, 0.001931242385901D0, -0.009798596857137D0 ]
+
+  REAL(kind=Rkind), PARAMETER :: cubic(81) = [ &
+    0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0,  &
+    0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0,  &
+    0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000372699578962D0,  &
+    0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0,  &
+    -0.000059657621717D0, 0.000000000000000D0, 0.000000000000000D0, 0.000111924040922D0, 0.000000000000000D0,  &
+    0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0, 0.000000000000000D0,  &
+    -0.000379213472613D0, -0.000117466775130D0, 0.000125145903350D0, -0.000207615490479D0, 0.000000000000000D0,  &
+    0.001535420481683D0, 0.000000000000000D0, -0.000287008589493D0, -0.000147696409813D0, -0.000577610990050D0,  &
+    0.000168345033564D0, 0.000099202317499D0, 0.000266915326977D0, -0.000043061453288D0, 0.000096816568328D0,  &
+    0.000000000000000D0, -0.000440709214016D0, 0.000090937883245D0, 0.000429605222571D0, -0.000352130396076D0,  &
+    -0.000152324821711D0, 0.000036295557697D0, -0.000444481280158D0, -0.001884941414053D0, 0.000000000000000D0,  &
+    0.000150003985821D0, 0.000000000000000D0, 0.001844385334884D0, -0.000731006932967D0, -0.002222260062859D0,  &
+    0.000304567290826D0, -0.002576792837774D0, -0.001996576435729D0, 0.000000000000000D0, -0.000159390553688D0,  &
+    0.000000000000000D0, 0.001320100040328D0, -0.000715230215705D0, -0.001818340358122D0, -0.001027558683888D0,  &
+    0.000786357646924D0, -0.002912337673009D0, -0.000189913617621D0, -0.000116242496672D0, -0.000229780337542D0,  &
+    0.002360800227759D0, -0.001093893673540D0, -0.001855054951654D0, -0.000534958373998D0, 0.000711451967371D0,  &
+    -0.001617665557760D0 ]
+
+  INTEGER, PARAMETER :: idx2(2, 45) = RESHAPE([ &
+    1 , 1 , 2 , 1 , 2 , 2 , 3 , 1 , 3 , 2, &
+    3 , 3 , 4 , 1 , 4 , 2 , 4 , 3 , 4 , 4, &
+    5 , 1 , 5 , 2 , 5 , 3 , 5 , 4 , 5 , 5, &
+    6 , 1 , 6 , 2 , 6 , 3 , 6 , 4 , 6 , 5, &
+    6 , 6 , 7 , 1 , 7 , 2 , 7 , 3 , 7 , 4, &
+    7 , 5 , 7 , 6 , 7 , 7 , 8 , 1 , 8 , 2, &
+    8 , 3 , 8 , 4 , 8 , 5 , 8 , 6 , 8 , 7, &
+    8 , 8 , 9 , 1 , 9 , 2 , 9 , 3 , 9 , 4, &
+    9 , 5 , 9 , 6 , 9 , 7 , 9 , 8 , 9 , 9 ], [2, 45])
+
+  INTEGER, PARAMETER :: idx3(3, 81) = RESHAPE([ &
+    1 , 1 , 1 , 1 , 1 , 2 , 1 , 1 , 3 , 1, &
+    1 , 4 , 1 , 1 , 5 , 1 , 1 , 6 , 1 , 1, &
+    7 , 1 , 1 , 8 , 1 , 1 , 9 , 2 , 2 , 1, &
+    2 , 2 , 2 , 2 , 2 , 3 , 2 , 2 , 4 , 2, &
+    2 , 5 , 2 , 2 , 6 , 2 , 2 , 7 , 2 , 2, &
+    8 , 2 , 2 , 9 , 3 , 3 , 1 , 3 , 3 , 2, &
+    3 , 3 , 3 , 3 , 3 , 4 , 3 , 3 , 5 , 3, &
+    3 , 6 , 3 , 3 , 7 , 3 , 3 , 8 , 3 , 3, &
+    9 , 4 , 4 , 1 , 4 , 4 , 2 , 4 , 4 , 3, &
+    4 , 4 , 4 , 4 , 4 , 5 , 4 , 4 , 6 , 4, &
+    4 , 7 , 4 , 4 , 8 , 4 , 4 , 9 , 5 , 5, &
+    1 , 5 , 5 , 2 , 5 , 5 , 3 , 5 , 5 , 4, &
+    5 , 5 , 5 , 5 , 5 , 6 , 5 , 5 , 7 , 5, &
+    5 , 8 , 5 , 5 , 9 , 6 , 6 , 1 , 6 , 6, &
+    2 , 6 , 6 , 3 , 6 , 6 , 4 , 6 , 6 , 5, &
+    6 , 6 , 6 , 6 , 6 , 7 , 6 , 6 , 8 , 6, &
+    6 , 9 , 7 , 7 , 1 , 7 , 7 , 2 , 7 , 7, &
+    3 , 7 , 7 , 4 , 7 , 7 , 5 , 7 , 7 , 6, &
+    7 , 7 , 7 , 7 , 7 , 8 , 7 , 7 , 9 , 8, &
+    8 , 1 , 8 , 8 , 2 , 8 , 8 , 3 , 8 , 8, &
+    4 , 8 , 8 , 5 , 8 , 8 , 6 , 8 , 8 , 7, &
+    8 , 8 , 8 , 8 , 8 , 9 , 9 , 9 , 1 , 9, &
+    9 , 2 , 9 , 9 , 3 , 9 , 9 , 4 , 9 , 9, &
+    5 , 9 , 9 , 6 , 9 , 9 , 7 , 9 , 9 , 8, &
+    9 , 9 , 9 ], [3, 81])
+
+    integer :: i
+
+     w = ZERO
+    IF (norder >= 1) THEN
+      DO i = 1, 9
+        w = w + linear(i) * Q(i)
+      END DO
+    END IF
+
+    IF (norder >= 2) THEN
+      DO i = 1, 45
+        w = w + HALF * quadratic(i) * Q(idx2(1,i)) * Q(idx2(2,i))
+      END DO
+    END IF
+
+    IF (norder >= 3) THEN
+      DO i = 1, 81
+        w = w + (ONE/SIX) * cubic(i) * Q(idx3(1,i)) * Q(idx3(2,i)) * Q(idx3(3,i))
+      END DO
+    END IF
+
+  END SUBROUTINE muz_QML_CHFClBr
+  SUBROUTINE RefValues_QML_CHFClBr(QModel,err,nderiv,Q0,dnMatV,d0GGdef,option)
     USE QDUtil_m
     USE ADdnSVM_m
     IMPLICIT NONE

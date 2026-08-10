@@ -251,7 +251,7 @@ CONTAINS
 !!    Obtained from MP2/6-31G** with gaussian09
 !!
 !! remark: Default parameters for H-F
-!! Scalar Operotor:
+!! Scalar Operotors:
 !! iOp=1 => potential
 !! iOp=2 => Dipole moment
 !! === END README ==
