@@ -58,6 +58,9 @@ module QML_OneD_Photons_m
     real(kind=Rkind)     :: R3    = 3.875_Rkind ! "equilibrium" value for the coupling term
     real(kind=Rkind)     :: Delta = 0._Rkind ! Energy shift for the second quadratic potential
 
+    ! dipole moments
+    real(kind=Rkind)     :: Mu12 = 1.0_Rkind     ! transition dipole moment between the 2 diabatic states
+    real(kind=Rkind)     :: Z    = 1.0_Rkind     ! for the diagonal contribution
 
     ! photon modes
     integer                        :: nb_cavity_modes = 1 ! default only one cavity mode
@@ -65,8 +68,6 @@ module QML_OneD_Photons_m
     real(kind=Rkind), allocatable  :: w(:)   ! photo mode angular frequency (default 0.17)
 
     ! coupling betwee the ibrational mode and the cavity modes
-    real(kind=Rkind)             :: Mu12 = 1.0_Rkind     ! transition dipole moment between the 2 diabatic states
-    real(kind=Rkind),allocatable :: Z(:)       ! for the diagonal contribution (default value 1.)
     real(kind=Rkind),allocatable :: lambda(:)  ! global parameter (default value 0.01)
 
   CONTAINS
@@ -99,14 +100,14 @@ contains
     real(kind=Rkind)     :: b     ! parameter for the coupling term (b=0 => no-coupling)
     real(kind=Rkind)     :: R3    ! "equilibrium" value for the coupling term
     real(kind=Rkind)     :: Delta ! Energy shift for the second quadratic potential
-    real(kind=Rkind)     :: Mu12    ! transition dipole moment between the 2 diabatic states
+    real(kind=Rkind)     :: Mu12  ! transition dipole moment between the 2 diabatic states
+    real(kind=Rkind)     :: Z     ! for the diagonal contribution
 
     ! photon modes
     real(kind=Rkind), allocatable  :: MP(:)  !  mass associated to the photo mode
     real(kind=Rkind), allocatable  :: w(:)   ! photo mode angular frequency
 
     ! coupling betwee the vibrational mode and the photon mode
-    real(kind=Rkind),allocatable :: Z(:)       ! for the diagonal contribution
     real(kind=Rkind),allocatable :: lambda(:)  ! global parameter
 
     integer :: i
@@ -135,7 +136,6 @@ contains
       QModel%ndim     = 1+QModel%nb_cavity_modes  ! 1+1: 1 vibrational mode + 1 cavity mode
       QModel%MP       = [ONE]
       QModel%w        = [0.17_Rkind]
-      QModel%Z        = [ONE]
       QModel%lambda   = [0.01_Rkind]
     ELSE IF (QModel%ndim == 1) THEN
       QModel%nb_cavity_modes = 0
@@ -150,8 +150,6 @@ contains
       QModel%MP = ONE
       allocate(QModel%w(QModel%nb_cavity_modes))
       QModel%w = 0.17_Rkind ! it is silly to have allways the same frequencies
-     allocate(QModel%Z(QModel%nb_cavity_modes))
-      QModel%Z = ONE
       allocate(QModel%lambda(QModel%nb_cavity_modes))
       QModel%lambda = 0.01_Rkind
     ELSE ! ndim > 2 but read_param=.FALSE.
@@ -174,11 +172,11 @@ contains
       R3    = QModel%R3
       Delta = QModel%Delta
       Mu12  = QModel%Mu12
+      Z     = QModel%Z
 
       IF (QModel%nb_cavity_modes > 0) THEN
         MP     = QModel%MP
         w      = QModel%w
-        Z      = QModel%Z
         lambda = QModel%lambda
       END IF
 
@@ -208,11 +206,11 @@ contains
       QModel%R3    = R3
       QModel%Delta = Delta
       QModel%Mu12  = Mu12
+      QModel%Z     = Z
 
       IF (QModel%nb_cavity_modes > 0) THEN
         QModel%MP     = MP
         QModel%w      = w
-        QModel%Z      = Z
         QModel%lambda = lambda
       END IF
 
@@ -275,8 +273,8 @@ contains
 
     DO i=1,QModel%nb_cavity_modes
       Q = dnQ(i+1)
-      Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1) + HALF*(QModel%w(i)*Q)**2 + QModel%Z(i)*QModel%w(i)*QModel%lambda(i)*Q*R
-      Mat_OF_PotDia(2,2) = Mat_OF_PotDia(2,2) + HALF*(QModel%w(i)*Q)**2 + QModel%Z(i)*QModel%w(i)*QModel%lambda(i)*Q*R
+      Mat_OF_PotDia(1,1) = Mat_OF_PotDia(1,1) + HALF*(QModel%w(i)*Q)**2 + QModel%Z*QModel%w(i)*QModel%lambda(i)*Q*R
+      Mat_OF_PotDia(2,2) = Mat_OF_PotDia(2,2) + HALF*(QModel%w(i)*Q)**2 + QModel%Z*QModel%w(i)*QModel%lambda(i)*Q*R
       Mat_OF_PotDia(1,2) = Mat_OF_PotDia(1,2)                           - QModel%w(i)*QModel%lambda(i)*QModel%Mu12*Q
     END DO
     Mat_OF_PotDia(2,1) = Mat_OF_PotDia(1,2)
@@ -310,14 +308,27 @@ contains
     write(nio,*) ' b:    ',QModel%b
     write(nio,*) ' R3:   ',QModel%R3
     write(nio,*) ' Delta:',QModel%Delta
+    write(nio,*) ' Parameters dipole contributions'
+    write(nio,*) ' Mu12: ',QModel%Mu12
+    write(nio,*) ' Z:    ',QModel%Z
 
     write(nio,*) ' Parameters for the cavity mode(s)'
-    write(nio,*) ' MP:',QModel%MP
-    write(nio,*) ' w: ',QModel%w
+    IF (allocated(QModel%MP)) THEN 
+      write(nio,*) ' MP:',QModel%MP
+    ELSE
+      write(nio,*) ' MP: not allocated'
+    END IF
+    IF (allocated(QModel%w)) THEN 
+      write(nio,*) ' w:',QModel%w
+    ELSE
+      write(nio,*) ' w: not allocated'
+    END IF
     write(nio,*) ' Parameters for the coupling (vib/photon)'
-    write(nio,*) ' Z:      ',QModel%Z
-    write(nio,*) ' Mu12:   ',QModel%Mu12
-    write(nio,*) ' lambda: ',QModel%lambda
+    IF (allocated(QModel%lambda)) THEN 
+      write(nio,*) ' lambda:',QModel%lambda
+    ELSE
+      write(nio,*) ' lambda: not allocated'
+    END IF
     write(nio,*)
     write(nio,*) 'end QML_OneD_Photons current parameters'
     write(nio,*) '========================================'

@@ -62,7 +62,7 @@ module QML_OneD_Photons2_m
     real(kind=Rkind)     :: MP  = 1._Rkind !  mass associated to the photo mode
     real(kind=Rkind)     :: w   = 0.17_Rkind ! photo mode angular frequency
 
-    ! coupling betwee the ibrational mode and the photon mode
+    ! coupling between the vibrational mode and the photon mode
     real(kind=Rkind)     :: Z      = 1._Rkind ! for the diagonal contribution
     real(kind=Rkind)     :: Mu12   = 1.0_Rkind ! transition dipole moment between the 2 diabatic states
     real(kind=Rkind)     :: lambda = 0.01_Rkind ! global parameter
