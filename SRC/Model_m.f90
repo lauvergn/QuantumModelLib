@@ -1136,7 +1136,7 @@ CONTAINS
       write(out_unit,*) ' QModel%nsurf,QModel%QM%nsurf:',QModel%nsurf,QModel%QM%nsurf
       IF (present(nsurf)) write(out_unit,*) ' nsurf',nsurf
       write(out_unit,*) ' QModel%NB: ',QModel%NB
-      write(out_unit,*) ' QModel%nb_ScalOp,QModel%QM%nb_ScalOp:',nb_ScalOp,QModel%QM%nb_ScalOp
+      write(out_unit,*) ' QModel%nb_ScalOp,QModel%QM%nb_ScalOp:',QModel%nb_ScalOp,QModel%QM%nb_ScalOp
       IF (present(nb_ScalOp)) write(out_unit,*) ' nb_ScalOp',nb_ScalOp
 
     ELSE
