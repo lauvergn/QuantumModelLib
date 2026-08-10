@@ -94,12 +94,18 @@ PROGRAM TEST_model
 
   write(out_unit,*) 'Q(:) (bohr):'
   CALL Write_Vec(Q,out_unit,QModel%QM%ndim)
+
   write(out_unit,*) 'Energy (Hartree)'
-  CALL Write_dnMat(PotVal,nio=out_unit)
+  CALL Write_dnMat(PotVal,nio=out_unit,info='Energy')
 
   CALL QModel%QM%RefValues_QModel(err,dnMatV=PotValref,nderiv=nderiv)
+  write(out_unit,*) 'Ref Energy (Hartree)'
+  CALL Write_dnMat(PotValref,nio=out_unit,info='Ref Energy')
+
   dnErr = PotValref-PotVal
   Lerr  = Check_dnMat_IS_ZERO(dnErr)
+  IF (.NOT. Lerr) CALL Write_dnMat(dnErr,nio=out_unit,info='diff')
+
   
   CALL Logical_Test(test_var,test1=Lerr,info='dnVMat')
 

@@ -330,6 +330,7 @@ CONTAINS
     IF (present(dnMatV)) THEN
       err = 0
       CALL alloc_dnMat(dnMatV,nsurf=QModel%nsurf,nVar=QModel%ndimQ,nderiv=nderiv)
+      dnMatV = ZERO
 
       allocate(Mat(QModel%nsurf,QModel%nsurf))
 
@@ -352,18 +353,8 @@ CONTAINS
         CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV,ider=[1,1])
         CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV,ider=[2,2])
         CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV,ider=[3,3])
-
-        Mat = ZERO
-        CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV,ider=[1,2])
-        CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV,ider=[1,3])
-        CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV,ider=[3,2])
       END IF
-
-      IF (nderiv >= 3) THEN ! 3d derivative
-        Mat = ZERO
-        CALL Mat_wADDTO_dnMat2_ider(Mat,ONE,dnMatV,ider=[0,0,0]) ! all 3d order derivatives
-      END IF
-
+      ! all third derivates are zero
     END IF
 
     IF (debug) THEN
