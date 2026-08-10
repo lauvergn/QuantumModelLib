@@ -357,7 +357,8 @@ MODULE QML_HenonHeiles_m
       dnV = dnV + HALF * dnQ(i)**2
     END DO
     DO i=1,QModel%ndim-1
-      dnV = dnV + QModel%lambda*( dnQ(i)**2 * dnQ(i+1) - dnQ(i+1)**3/THREE )
+      !dnV = dnV + QModel%lambda*( dnQ(i)**2 * dnQ(i+1) - dnQ(i+1)**3/THREE )
+      dnV = dnV + QModel%lambda*( dnQ(i)**2 - dnQ(i+1)**2/THREE ) * dnQ(i+1)
     END DO
 
     Mat_OF_PotDia(1,1) = dnV
@@ -416,12 +417,12 @@ MODULE QML_HenonHeiles_m
     END DO
     DO i=1,QModel%ndim-1
       dntQ = tanh(dnQ(i+1))
-      dnV = dnV + QModel%lambda * (dnQ(i)**2 * dntQ - dntQ**3/THREE )
+      !dnV = dnV + QModel%lambda * (dnQ(i)**2 * dntQ - dntQ**3/THREE )
+      dnV = dnV + QModel%lambda * (dnQ(i)**2 - dntQ**2/THREE )*dntQ
     END DO
 
     Mat_OF_PotDia(1,1) = dnV
 
-    CALL dealloc_dnS(dnV)
     CALL dealloc_dnS(dnV)
 
   END SUBROUTINE EvalPot_QML_HenonHeiles_option3
