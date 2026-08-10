@@ -66,7 +66,14 @@ PROGRAM TEST_testImag
   write(out_unit,*) '---------------------------------------------'
   write(out_unit,*) '---------------------------------------------'
 
+#if __LAPACK == 0
+  write(out_unit,*) '  Lapack library is not linked: only diabatic potential'
+  CALL Init_Model(Model,pot_name='TestImag',read_param=.FALSE.,adiabatic=.FALSE.)
+
+#else
+      write(out_unit,*) '  Lapack library is linked: adiabatic potential'
   CALL Init_Model(Model,pot_name='TestImag',read_param=.FALSE.,adiabatic=.TRUE.)
+#endif
   Q = [ZERO,ZERO,ZERO]
 
   nderiv=1
