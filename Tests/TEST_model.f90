@@ -44,7 +44,8 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
-  !CALL test_Vibronic_SO2() ; CALL Finalize_Test(test_var) ; stop
+  !CALL test_ClH2p_op12()
+   ! CALL test_ClH2p_op34() ; CALL Finalize_Test(test_var) ; stop
 
   ! One electronic surface
   CALL test_Opt_LinearHBond()
@@ -69,7 +70,7 @@ PROGRAM TEST_model
   CALL test_TwoD_RJDI2014()
   CALL test_Vibronic()
   CALL test_TwoD_Valahu2022()
-  !CALL test_OneD_Photons()
+  CALL test_OneD_Photons()
   CALL test_OneD_Photons2()
   CALL test_Retinal_JPCB2000()
   CALL test_NO3()
@@ -83,7 +84,7 @@ PROGRAM TEST_model
   CALL test_H2O() ! for testing (PES: quadratic expansion)
 
   ! 3D (full-D), One electronic surface (spectro); ClH2+ (unpublished)
-  CALL test_ClH2p_op12()
+  CALL test_ClH2p_op12() 
   CALL test_ClH2p_op34()
   CALL test_ClH2p_op56()
   ! 3D (full-D), One electronic surface (spectro); ClH2+ (From Botschwina 1988)
