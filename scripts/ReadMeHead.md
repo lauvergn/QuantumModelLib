@@ -85,9 +85,13 @@ If you need to compile your code with them, then use the -I option (gfortran). F
 
 
 ```
-   This version works with:
-       gfortran 9.0 (linux and macOS)
-       ifort/ifx    19
+  This version works with (10/08/2026):
+    gfortran 12, 13, 14, 15, 16 (macOS) 9.5.0, 10, 13, 14, 15 (linux)
+    ifx      2025, 2026 (linux)
+    ifort    2024.2.1 (linux)
+    nagfor   7.1.29 (linux)
+  Remarks (internal compiler error, ice):
+    ifx      2024.2.1 (linux)
 ```
 
 ## 2) Link the library to your code
