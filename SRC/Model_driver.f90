@@ -581,7 +581,7 @@ SUBROUTINE sub_Qmodel_ScalOp(ScalOp,Q)
     END DO
   END IF
 
-  !CALL dealloc_QMLValues(QMLValues)
+  CALL dealloc_QMLValues(QMLValues)
 
   IF (debug) THEN
     write(out_unit,*) 'END sub_Qmodel_ScalOp'
@@ -618,7 +618,7 @@ SUBROUTINE sub_Qmodel_dScalOp(ScalOp,dScalOp,Q)
     END DO
   END IF
 
-  !CALL dealloc_QMLValues(QMLValues)
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_dScalOp
 SUBROUTINE sub_Qmodel_ddScalOp(ScalOp,dScalOp,ddScalOp,Q)
@@ -657,7 +657,7 @@ SUBROUTINE sub_Qmodel_ddScalOp(ScalOp,dScalOp,ddScalOp,Q)
     END DO
   END IF
 
-  !CALL dealloc_QMLValues(QMLValues)
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_ddScalOp
 SUBROUTINE sub_Qmodel_dScalOp_NAC(ScalOp,dScalOp,NAC,Q)
@@ -687,7 +687,7 @@ SUBROUTINE sub_Qmodel_dScalOp_NAC(ScalOp,dScalOp,NAC,Q)
     dScalOp(:,:,:,i) = QMLValues%ScalOpAdia(i)%d1
   END DO
 
-  !CALL dealloc_QMLValues(QMLValues)
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_dScalOp_NAC
 SUBROUTINE sub_Qmodel_dScalOp_NAC_Vec0(ScalOp,dScalOp,NAC,Vec0,Q)
@@ -720,7 +720,7 @@ SUBROUTINE sub_Qmodel_dScalOp_NAC_Vec0(ScalOp,dScalOp,NAC,Vec0,Q)
     dScalOp(:,:,:,i) = QMLValues%ScalOpAdia(i)%d1
   END DO
 
-  !CALL dealloc_QMLValues(QMLValues)
+  CALL dealloc_QMLValues(QMLValues)
 
 END SUBROUTINE sub_Qmodel_dScalOp_NAC_Vec0
 SUBROUTINE get_Qmodel_GGdef(GGdef)

@@ -210,15 +210,15 @@ CONTAINS
     !flush(out_unit)
     IF (allocated(QMLValues%ScalOpAdia)) THEN
       DO i=1,size(QMLValues%ScalOpAdia)
-        CALL dealloc_dnMat(QMLValues%ScalOpDia(i))
+        CALL dealloc_dnMat(QMLValues%ScalOpAdia(i))
       END DO
       deallocate(QMLValues%ScalOpAdia)
     END IF
     !write(*,*) 'in dealloc_QMLValues, alloc ImagScalOpAdia',allocated(QMLValues%ImagScalOpAdia)
     !flush(out_unit)
     IF (allocated(QMLValues%ImagScalOpAdia)) THEN
-      DO i=1,size(QMLValues%ImagScalOpDia)
-        CALL dealloc_dnMat(QMLValues%ImagScalOpDia(i))
+      DO i=1,size(QMLValues%ImagScalOpAdia)
+        CALL dealloc_dnMat(QMLValues%ImagScalOpAdia(i))
       END DO
       deallocate(QMLValues%ImagScalOpAdia)
     END IF
