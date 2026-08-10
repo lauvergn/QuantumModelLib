@@ -205,7 +205,7 @@ MODULE QML_ClH2p_m
 
     CASE Default
 
-      write(out_unit,*) ' ERROR in Init_QML_ClH2p '
+      write(out_unit,*) ' ERROR in ',name_sub
       write(out_unit,*) ' This option is not possible. option: ',QModel%option
       write(out_unit,*) ' Its value MUST be 1,2,3,4,5,6'
       STOP 'ERROR in Init_QML_ClH2p: wrong option'
@@ -216,6 +216,7 @@ MODULE QML_ClH2p_m
 
 
     read(nio_fit,*) name_Qref,nFit
+    read(nio_fit,*) ! read one blank line because nagfor does find the namelist
 
     IF (debug) write(out_unit,*) 'nFit',nFit
     flush(out_unit)
@@ -248,12 +249,19 @@ MODULE QML_ClH2p_m
       QModel%ndim         = ndim
       ! nb_WB must be used instead of nb_B because some basis functions might be skip
       QModel%nb_funcModel = QModel%nb_funcModel + nb_WB
+
+      ! for nagfor lines must be read: 4+nb_WB
+      DO i=1,4+nb_WB
+        read(nio_fit,*)
+      END DO
     END DO
 
     IF (debug) write(out_unit,*) 'nb_funcModel',QModel%nb_funcModel
 
     close(nio_fit)
     CALL file_open2(name_file=FileName,iunit=nio_fit,old=.TRUE.)
+    read(nio_fit,*) ! read two blank lines because nagfor does find the namelist
+    read(nio_fit,*)
 
     allocate(QModel%Qref(QModel%ndim))
     allocate(QModel%F(QModel%nb_funcModel))
@@ -262,7 +270,7 @@ MODULE QML_ClH2p_m
     iFunc = 0
     DO ifit=1,nFit
 
-      read(nio_fit,nDFitW)
+      read(nio_fit,nDFitW,IOSTAT=err_read)
       IF (debug) write(out_unit,nDFitW)
       IF (err_read < 0) THEN
         write(out_unit,*) ' ERROR in ',name_sub
