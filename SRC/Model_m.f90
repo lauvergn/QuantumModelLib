@@ -52,7 +52,7 @@ MODULE Model_m
   PUBLIC :: calc_pot,calc_grad,calc_hess,calc_pot_grad,calc_pot_grad_hess
   PUBLIC :: Check_analytical_numerical_derivatives
   PUBLIC :: Eval_pot_ON_Grid,get_Q0_Model,get_d0GGdef_Model,Qact_TO_Q
-  PUBLIC :: Set_step_epsi_Model
+  PUBLIC :: Set_step_epsi_Model,QML_set_print_level
   PUBLIC :: Write_QdnV_FOR_Model,Test_QdnV_FOR_Model,Test_QVG_FOR_Model
 
   TYPE :: Model_t
@@ -104,7 +104,8 @@ MODULE Model_m
       "unknown: -D__COMPILE_HOST=?"
 #endif
 
-  logical, private :: Print_Version_done = .FALSE.
+  logical, private       :: Print_Version_done = .FALSE.
+  integer, protected     :: QML_print_level    = -2        ! 0 minimal, 1 default, 2 large, -1 nothing, -2 not initialized
 
   TYPE(Model_t), PUBLIC  :: QuantumModel
 
@@ -163,7 +164,18 @@ CONTAINS
     END IF
     
   END SUBROUTINE version_QML
+  SUBROUTINE QML_set_print_level(prtlev,force)
+    IMPLICIT NONE
+    integer, intent(in)           :: prtlev
+    logical, intent(in), optional :: force
 
+    IF (present(force)) THEN
+      IF (force .OR. QML_print_level < -1) QML_print_level = prtlev
+    ELSE
+      IF (QML_print_level < -1)            QML_print_level = prtlev
+    END IF
+
+  END SUBROUTINE QML_set_print_level
   SUBROUTINE Read_Model(QModel_inout,nio,read_nml1,opt1,IRC1)
     IMPLICIT NONE
 
@@ -197,7 +209,7 @@ CONTAINS
                          print_EigenVec_Grid,print_EigenVec_Basis,opt,IRC
 
 !    ! Default values defined
-    printlevel      = 0
+    printlevel      = -3
     ndim            = QModel_inout%ndim
     nsurf           = QModel_inout%nsurf
     adiabatic       = QModel_inout%adiabatic
@@ -252,7 +264,12 @@ CONTAINS
     IRC1                              = IRC
 
     QModel_inout%option               = option
-    CALL set_print_level(printlevel) ! from the module QDUtil lib
+    IF (printlevel == -3) THEN 
+      printlevel = QML_print_level
+    ELSE
+      CALL QML_set_print_level(printlevel,force=.TRUE.) ! from the module QML lib
+      CALL set_print_level(QModel_inout,printlevel)
+    END IF
     QModel_inout%ndim                 = ndim
     QModel_inout%nsurf                = nsurf
     QModel_inout%adiabatic            = adiabatic

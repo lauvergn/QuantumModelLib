@@ -509,7 +509,7 @@ MODULE QML_Vibronic_m
       write(nio,*) ' Felix Plasser, Sandra Gómez, Maximilian F. S. J. Menger, Sebastian Mai and Leticia González, ...'
       write(nio,*) '  .... Phys. Chem. Chem. Phys., 2019, 21, 57--69; https://doi.org/10.1039/c8cp05662e'
     END SELECT
-    !IF (print_level > -1) THEN
+    !IF (QModel%QMLprint_level > -1) THEN
       DO i=1,QModel%nsurf
         write(nio,*) 'Qref_' // TO_String(i) // '-' // TO_String(i),QModel%Diab(i,i)%Qref
         CALL Write_dnS(QModel%Diab(i,i)%Ene,nio=nio,info='Diab_' // TO_String(i) // '-' // TO_String(i))

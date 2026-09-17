@@ -88,6 +88,7 @@ MODULE QML_Empty_m
 
     logical :: print_EigenVec_Grid  = .FALSE.
     logical :: print_EigenVec_Basis = .FALSE.
+    integer :: QMLprint_level       = -2
 
     character (len=:),  allocatable :: pot_name
     real (kind=Rkind),  allocatable :: d0GGdef(:,:)
@@ -124,14 +125,18 @@ MODULE QML_Empty_m
     MODULE PROCEDURE Qact_TO_Q_QML_Empty
   END INTERFACE
 
+  INTERFACE set_print_level
+    MODULE PROCEDURE set_QMLprint_level_QML_Empty
+  END INTERFACE
+
   !INTERFACE Empty2_TO_Empty1
   !  MODULE PROCEDURE Empty2_TO_Empty1_QML_Empty
   !END INTERFACE
 
   PUBLIC :: QML_Empty_t,QML_t
-  PUBLIC :: get_Q0_QModel, get2_Q0_QML_Empty, Qact_TO_Q
+  PUBLIC :: get_Q0_QModel, get2_Q0_QML_Empty, Qact_TO_Q, set_print_level
 
-  CONTAINS
+CONTAINS
 
   SUBROUTINE Empty2_TO_Empty1_QML_Empty(QModel,QModel_in)
     USE ADdnSVM_m, ONLY : dealloc_dnMat
@@ -194,6 +199,7 @@ MODULE QML_Empty_m
 
     QModel%print_EigenVec_Basis = QModel_in%print_EigenVec_Basis
     QModel%print_EigenVec_Grid  = QModel_in%print_EigenVec_Grid
+    QModel%QMLprint_level       = QModel_in%QMLprint_level
 
     IF (allocated(QModel_in%list_act)) THEN
       QModel%list_act     = QModel_in%list_act
@@ -208,6 +214,15 @@ MODULE QML_Empty_m
     END IF
 
   END SUBROUTINE Empty2_TO_Empty1_QML_Empty
+  SUBROUTINE set_QMLprint_level_QML_Empty(QModel,prtlev)
+    IMPLICIT NONE
+
+    CLASS(QML_Empty_t),   intent(inout)        :: QModel
+    integer,              intent(in)           :: prtlev
+
+    QModel%QMLprint_level = prtlev
+
+  END SUBROUTINE set_QMLprint_level_QML_Empty
   SUBROUTINE get2_Q0_QML_Empty(QModel,Q0)
     IMPLICIT NONE
 
@@ -231,7 +246,7 @@ MODULE QML_Empty_m
 
     CLASS(QML_Empty_t),   intent(in)              :: QModel
     real (kind=Rkind),    intent(inout)           :: Q0(:)
-    integer,              intent(inout), optional ::  err_Q0
+    integer,              intent(inout), optional :: err_Q0
 
     IF (size(Q0) /= QModel%ndim) THEN
       STOP 'STOP in get_Q0_QML_Empty, wrong ndim size.'
@@ -580,6 +595,7 @@ MODULE QML_Empty_m
         write(nio,*) 'list_inact(:):             ',QModel%list_inact(:)
     END IF
     write(nio,*) 'print_EigenVec Basis/Grid: ',QModel%print_EigenVec_Basis,QModel%print_EigenVec_Grid
+    write(nio,*) 'QMLprint_level: ',QModel%QMLprint_level
 
 
     IF (allocated(QModel%pot_name)) write(nio,*) 'pot_name: ',QModel%pot_name

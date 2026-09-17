@@ -423,7 +423,8 @@ CALL set_Qmodel_step(step)                 ! set the displacement value when
 - Subroutines to change default parameters:
 
 ```fortran
-CALL set_Qmodel_Print_level(printlevel)    ! change the default printing level (default, printlevel=-1)
+CALL set_Qmodel_Print_level(printlevel)    ! change the default printing level (default, printlevel=-1). 
+                                           !To be effective, this subroutine call must be placed before initialization. 
 CALL set_Qmodel_in_unit(inunitp)           ! change the reading unit.
                                            !  usefull, when the model is read from a user defined unit
 CALL set_Qmodel_out_unit(outunitp)         ! change the writing unit.

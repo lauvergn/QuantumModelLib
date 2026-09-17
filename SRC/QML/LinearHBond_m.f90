@@ -362,7 +362,7 @@ MODULE QML_LinearHBond_m
     USE ADdnSVM_m
     IMPLICIT NONE
 
-    CLASS(QML_LinearHBond_t),  intent(in)    :: QModel
+    CLASS(QML_LinearHBond_t),   intent(in)    :: QModel
     TYPE (dnS_t),               intent(inout) :: Mat_OF_PotDia(:,:)
     TYPE (dnS_t),               intent(in)    :: dnQ(:)
     integer,                    intent(in)    :: nderiv
@@ -377,7 +377,7 @@ MODULE QML_LinearHBond_m
 
     !logical, parameter :: debug=.TRUE.
     logical, parameter :: debug=.FALSE.
-    IF (debug .OR. print_level > 0) THEN
+    IF (debug .OR. QModel%QMLprint_level > 0) THEN
       write(out_unit,*) 'BEGINNING EvalPot_QML_LinearHBond'
       write(out_unit,*) 'r(:) or QQ,q: ',get_d0(dnQ(:))
       write(out_unit,*) 'nderiv',nderiv
@@ -386,7 +386,7 @@ MODULE QML_LinearHBond_m
       flush(out_unit)
     END IF
 
-    IF (debug .OR. print_level > 1) THEN
+    IF (debug .OR. QModel%QMLprint_level > 1) THEN
       write(out_unit,*) 'dnQQ'
       CALL Write_dnS(dnQ(1),all_type=.TRUE.)
       write(out_unit,*) 'dnsq'
@@ -398,7 +398,7 @@ MODULE QML_LinearHBond_m
        dnQQ = a0*dnQ(1) ! to convert the bhor into Angstrom.
        dnsq = a0*dnQ(2) ! to convert the bhor into Angstrom.
 
-      IF (debug .OR. print_level > 1) THEN
+      IF (debug .OR. QModel%QMLprint_level > 1) THEN
         write(out_unit,*) 'dnQQ in Angs'
         CALL Write_dnS(dnQQ,all_type=.TRUE.)
         write(out_unit,*) 'dnsq in Angs'
@@ -416,7 +416,7 @@ MODULE QML_LinearHBond_m
     dnX = dnQQ/TWO + dnsq
     dnY = dnQQ/TWO - dnsq
 
-    IF (debug .OR. print_level > 1) THEN
+    IF (debug .OR. QModel%QMLprint_level > 1) THEN
       write(out_unit,*) 'dnX'
       flush(out_unit)
       CALL Write_dnS(dnX)
@@ -427,7 +427,7 @@ MODULE QML_LinearHBond_m
     END IF
 
     PotVal_m1 = QML_dnMorse(dnX,QModel%Morse1)
-    IF (debug .OR. print_level > 1) THEN
+    IF (debug .OR. QModel%QMLprint_level > 1) THEN
       write(out_unit,*) 'PotVal_m1. x:',get_d0(dnX)
       CALL Write_dnS(PotVal_m1)
       flush(out_unit)
@@ -437,14 +437,14 @@ MODULE QML_LinearHBond_m
     PotVal_m2 = QML_dnMorse(dnY,QModel%Morse2)
     PotVal_m2 = PotVal_m2+QModel%Eref2
 
-    IF (debug .OR. print_level > 1) THEN
+    IF (debug .OR. QModel%QMLprint_level > 1) THEN
       write(out_unit,*) 'PotVal_m2. y:',get_d0(dnY)
       CALL Write_dnS(PotVal_m2)
       flush(out_unit)
     END IF
 
     PotVal_Buck = QML_dnBuck(dnQQ,QModel%Buck)
-    IF (debug .OR. print_level > 1) THEN
+    IF (debug .OR. QModel%QMLprint_level > 1) THEN
       write(out_unit,*) 'PotVal_Buck. QQ:',get_d0(dnQQ)
       CALL Write_dnS(PotVal_Buck)
       flush(out_unit)
@@ -452,7 +452,7 @@ MODULE QML_LinearHBond_m
 
     Mat_OF_PotDia(1,1) = PotVal_m1 + PotVal_m2 + PotVal_Buck
 
-    IF (debug .OR. print_level > 1) THEN
+    IF (debug .OR. QModel%QMLprint_level > 1) THEN
       write(out_unit,*) 'Mat_OF_PotDia(1,1):'
       CALL Write_dnS(Mat_OF_PotDia(1,1))
       flush(out_unit)
@@ -476,7 +476,7 @@ MODULE QML_LinearHBond_m
     CALL dealloc_dnS(PotVal_m2)
     CALL dealloc_dnS(PotVal_Buck)
 
-    IF (debug .OR. print_level > 0) THEN
+    IF (debug .OR. QModel%QMLprint_level > 0) THEN
       write(out_unit,*) 'Mat_OF_PotDia(1,1):'
       CALL Write_dnS(Mat_OF_PotDia(1,1))
       flush(out_unit)

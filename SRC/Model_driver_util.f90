@@ -132,7 +132,7 @@ SUBROUTINE set_Qmodel_Print_level(printlevel)
 
   integer,                intent(in)        :: printlevel
 
-  CALL set_print_level(printlevel,force=.TRUE.) ! from them module QDUtil lib
+  CALL QML_set_print_level(printlevel,force=.TRUE.) ! from them module QDUtil lib
 
 END SUBROUTINE set_Qmodel_Print_level
 SUBROUTINE set_Qmodel_in_unit(inunitp)
