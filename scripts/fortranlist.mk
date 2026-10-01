@@ -18,6 +18,7 @@ LinearHBond_m.f90  \
 OneDSOC_1S1T_m.f90  \
 HenonHeiles_m.f90  \
 Sum_m.f90  \
+H2O_PJT_m.f90  \
 ClH2p_Botschwina_m.f90  \
 fulvene_m.f90  \
 CH5_m.f90  \

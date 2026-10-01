@@ -17,6 +17,7 @@ qml_linearhbond_m := $(OBJ_DIR)/LinearHBond_m.o
 qml_onedsoc_1s1t_m := $(OBJ_DIR)/OneDSOC_1S1T_m.o
 qml_henonheiles_m := $(OBJ_DIR)/HenonHeiles_m.o
 qml_sum_m := $(OBJ_DIR)/Sum_m.o
+qml_h2o_pjt_m := $(OBJ_DIR)/H2O_PJT_m.o
 qml_clh2p_botschwina_m := $(OBJ_DIR)/ClH2p_Botschwina_m.o
 qml_fulvene_m := $(OBJ_DIR)/fulvene_m.o
 qml_ch5_m := $(OBJ_DIR)/CH5_m.o
@@ -164,6 +165,11 @@ $(OBJ_DIR)/Sum_m.o : \
           $(qml_empty_m) \
           $(addnsvm_m) \
           $(qdutil_m)
+#file+mod_name: SRC/QML/H2O_PJT_m.f90 qml_h2o_pjt_m
+$(OBJ_DIR)/H2O_PJT_m.o : \
+          $(qdutil_numparameters_m) \
+          $(qml_empty_m) \
+          $(addnsvm_m)
 #file+mod_name: SRC/QML/ClH2p_Botschwina_m.f90 qml_clh2p_botschwina_m
 $(OBJ_DIR)/ClH2p_Botschwina_m.o : \
           $(qdutil_numparameters_m) \
@@ -421,6 +427,7 @@ $(OBJ_DIR)/Model_m.o : \
           $(qml_h2nsi_m) \
           $(qml_chfclbr_m) \
           $(qml_h2o_m) \
+          $(qml_h2o_pjt_m) \
           $(qml_h2_h2on_m) \
           $(qml_clh2p_m) \
           $(qml_clh2p_botschwina_m) \

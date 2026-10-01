@@ -379,6 +379,7 @@ CONTAINS
   USE QML_CHFClBr_m
 
   USE QML_H2O_m
+  USE QML_H2O_PJT_m
   USE QML_H2_H2On_m
 
   USE QML_ClH2p_m
@@ -992,6 +993,20 @@ CONTAINS
       !! === END README ==
       allocate(QML_H2O_t :: QModel%QM)
       QModel%QM = Init_QML_H2O(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
+
+    CASE ('h2o_pjt')
+      !! === README ==
+      !! H2O_PJT potential:
+      !! pot_name  = 'H2O_PJT'
+      !! option    = 2(default 2)
+      !! ndim      = 3
+      !! nsurf     = 1
+      !! refs: H2O potential from:  
+      !! Polyansky, Jensen and Tennyson,
+      !! J. Chem. Phys., 105, 6490-6497 (1996)
+      !! === END README ==
+      allocate(QML_H2O_PJT_t :: QModel%QM)
+      QModel%QM = Init_QML_H2O_PJT(QModel_in,read_param=read_nml,nio_param_file=nio_loc)
 
     CASE ('h2_h2on','h2_clathrate')
       !! === README ==
