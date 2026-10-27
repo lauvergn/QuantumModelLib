@@ -1378,99 +1378,96 @@ CONTAINS
     USE ADdnSVM_m
     IMPLICIT NONE
 
-  TYPE (Model_t),                 intent(inout)            :: Model
-  real (kind=Rkind),              intent(in)               :: Qact(:)
-  real (kind=Rkind), allocatable, intent(inout)            :: tab_MatH(:,:,:)
+    TYPE (Model_t),                 intent(inout)            :: Model
+    real (kind=Rkind),              intent(in)               :: Qact(:)
+    real (kind=Rkind), allocatable, intent(inout)            :: tab_MatH(:,:,:)
+
+    integer                        :: nb_terms,nsurf
+
+    integer                        :: ia,ja,iterm,ii,ji,i,iq,ib,jb,nb,nq
+
+    TYPE (dnMat_t)                 :: PotVal_dia,PotVal,Vec,NAC,Mat_diag
+    LOGICAL                        :: PF ! phase_following
+    LOGICAL                        :: PC ! phase checking
+    real (kind=Rkind), allocatable :: Q(:)
+    real (kind=Rkind), allocatable :: d0GGdef_ii(:,:),d0GGdef_aa(:,:),d0GGdef_ai(:,:),d0GGdef_ia(:,:)
+
+    integer                        :: ndim_act,ndim_inact
+
+    TYPE (dnS_t), allocatable      :: dnV(:),dnHB(:)
+    TYPE (dnS_t)                   :: dnVfull,dnHij
+    TYPE (dnMat_t)                 :: dnH ! derivative of the Hamiltonian
 
 
-
-  integer                        :: nb_terms,nsurf
-
-  integer                        :: ia,ja,iterm,ii,ji,i,iq,ib,jb,nb,nq
-
-  TYPE (dnMat_t)                 :: PotVal_dia,PotVal,Vec,NAC,Mat_diag
-  LOGICAL                        :: PF ! phase_following
-  LOGICAL                        :: PC ! phase checking
-  real (kind=Rkind), allocatable :: Q(:)
-  real (kind=Rkind), allocatable :: d0GGdef_ii(:,:),d0GGdef_aa(:,:),d0GGdef_ai(:,:),d0GGdef_ia(:,:)
-
-  integer                        :: ndim_act,ndim_inact
-
-  TYPE (dnS_t), allocatable      :: dnV(:),dnHB(:)
-  TYPE (dnS_t)                   :: dnVfull,dnHij
-  TYPE (dnMat_t)                 :: dnH ! derivative of the Hamiltonian
-
-
-!----- for debuging --------------------------------------------------
+    !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='Eval_tab_HMatVibAdia'
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
+    !-----------------------------------------------------------
 
-  IF (debug) THEN
-    write(out_unit,*) ' BEGINNING ',name_sub
-    flush(out_unit)
-  END IF
-
-  CALL check_alloc_QM(Model,name_sub)
-
-  PF = Model%QM%Phase_Following
-  PC = Model%QM%Phase_Checking
-  CALL Eval_dnHVib_ana(Model,Qact,PotVal_dia,nderiv=2)
-  IF (.NOT. allocated(Model%QM%Vec0)) allocate(Model%QM%Vec0)
-  CALL dia_TO_adia(PotVal_dia,PotVal,Vec,Model%QM%Vec0,NAC,PF,PC,nderiv=2)
-
-  !CALL Write_dnMat(PotVal,nio=out_unit,info='PotVal (adia)')
-
-  !Mat_diag = matmul(transpose(Vec),matmul(PotVal_dia,Vec))
-  !CALL Write_dnMat(Mat_diag,nio=out_unit,info='Mat_diag')
-
-  !write(out_unit,*) 'nsurf,ndim',Model%nsurf,Model%ndim
-  nsurf    = Model%nsurf
-  nb_terms = (Model%ndim + 1)*(Model%ndim + 2)/2
-  IF (.NOT. allocated(tab_MatH)) THEN
-    allocate(tab_MatH(nsurf,nsurf,nb_terms))
-  END IF
-
-  !write(out_unit,*) Qact,'NAC1',NAC%d1(1:nsurf,1:nsurf,:)
-
-
-  IF ( any([nsurf,nsurf,nb_terms] /= shape(tab_MatH)) ) THEN
-    write(out_unit,*) ' ERROR in ',name_sub
-    write(out_unit,*) ' The shape of tab_MatH is wrong.'
-    write(out_unit,*) '    shape(tab_MatH):',shape(tab_MatH)
-    write(out_unit,*) '  It MUST be:      [',nsurf,nsurf,nb_terms,']'
-    write(out_unit,*) '  Check your data or the code!'
-    STOP 'ERROR in Eval_tab_HMatVibAdia: The shape of tab_MatH is wrong.'
-  END IF
-  tab_MatH(:,:,:) = ZERO
-
-  ndim_act    = size(Model%QM%list_act)
-  ndim_inact  = size(Model%QM%list_inact)
-
-  ! Veff
-  d0GGdef_aa = Model%QM%d0GGdef(Model%QM%list_act,Model%QM%list_act)
-  iterm = 1
-  tab_MatH(:,:,iterm) = PotVal%d0(1:nsurf,1:nsurf)
-  DO ia=1,ndim_act
-  DO ja=1,ndim_act
-    tab_MatH(:,:,iterm) = tab_MatH(:,:,iterm) - HALF*d0GGdef_aa(ja,ia) *        &
-       NAC%d2(1:nsurf,1:nsurf,ja,ia)
-  END DO
-  END DO
-
-  ! F2^jaia
-  d0GGdef_aa = Model%QM%d0GGdef(Model%QM%list_act,Model%QM%list_act)
-  DO ia=1,ndim_act
-  DO ja=ia,ndim_act
-    iterm = iterm + 1
-    IF (ja == ia) THEN
-      tab_MatH(:,:,iterm) = -HALF*d0GGdef_aa(ja,ia) * NAC%d0(1:nsurf,1:nsurf)
-    ELSE
-      tab_MatH(:,:,iterm) = -d0GGdef_aa(ja,ia) * NAC%d0(1:nsurf,1:nsurf)
+    IF (debug) THEN
+      write(out_unit,*) ' BEGINNING ',name_sub
+      flush(out_unit)
     END IF
-  END DO
-  END DO
+
+    CALL check_alloc_QM(Model,name_sub)
+
+    PF = Model%QM%Phase_Following
+    PC = Model%QM%Phase_Checking
+    CALL Eval_dnHVib_ana(Model,Qact,PotVal_dia,nderiv=2)
+    IF (.NOT. allocated(Model%QM%Vec0)) allocate(Model%QM%Vec0)
+    CALL dia_TO_adia(PotVal_dia,PotVal,Vec,Model%QM%Vec0,NAC,PF,PC,nderiv=2)
+
+    IF (debug) THEN
+      CALL Write_dnMat(PotVal,nio=out_unit,info='PotVal (adia)')
+      Mat_diag = matmul(transpose(Vec),matmul(PotVal_dia,Vec))
+      CALL Write_dnMat(Mat_diag,nio=out_unit,info='Mat_diag')
+      CALL Write_dnMat(NAC,nio=out_unit,info='Mat_dNACiag')
+    END IF
+
+    !write(out_unit,*) 'nsurf,ndim',Model%nsurf,Model%ndim
+    nsurf    = Model%nsurf
+    nb_terms = (Model%ndim + 1)*(Model%ndim + 2)/2
+    IF (.NOT. allocated(tab_MatH)) THEN
+      allocate(tab_MatH(nsurf,nsurf,nb_terms))
+    END IF
+
+    IF ( any([nsurf,nsurf,nb_terms] /= shape(tab_MatH)) ) THEN
+      write(out_unit,*) ' ERROR in ',name_sub
+      write(out_unit,*) ' The shape of tab_MatH is wrong.'
+      write(out_unit,*) '    shape(tab_MatH):',shape(tab_MatH)
+      write(out_unit,*) '  It MUST be:      [',nsurf,nsurf,nb_terms,']'
+      write(out_unit,*) '  Check your data or the code!'
+      STOP 'ERROR in Eval_tab_HMatVibAdia: The shape of tab_MatH is wrong.'
+    END IF
+    tab_MatH(:,:,:) = ZERO
+
+    ndim_act    = size(Model%QM%list_act)
+    ndim_inact  = size(Model%QM%list_inact)
+
+    ! Veff
+    d0GGdef_aa = Model%QM%d0GGdef(Model%QM%list_act,Model%QM%list_act)
+    iterm = 1
+    tab_MatH(:,:,iterm) = PotVal%d0(1:nsurf,1:nsurf)
+    DO ia=1,ndim_act
+    DO ja=1,ndim_act
+      tab_MatH(:,:,iterm) = tab_MatH(:,:,iterm) - HALF*d0GGdef_aa(ja,ia) *        &
+         NAC%d2(1:nsurf,1:nsurf,ja,ia)
+    END DO
+    END DO
+
+    ! F2^jaia
+    d0GGdef_aa = Model%QM%d0GGdef(Model%QM%list_act,Model%QM%list_act)
+    DO ia=1,ndim_act
+    DO ja=ia,ndim_act
+      iterm = iterm + 1
+      IF (ja == ia) THEN
+        tab_MatH(:,:,iterm) = -HALF*d0GGdef_aa(ja,ia) * NAC%d0(1:nsurf,1:nsurf)
+      ELSE
+        tab_MatH(:,:,iterm) = -d0GGdef_aa(ja,ia) * NAC%d0(1:nsurf,1:nsurf)
+      END IF
+    END DO
+    END DO
 
   ! F1^ia
   d0GGdef_aa = Model%QM%d0GGdef(Model%QM%list_act,Model%QM%list_act)
@@ -1484,14 +1481,14 @@ CONTAINS
     !the contribution d0GGdef_ai is missing
   END DO
 
-    IF (debug) THEN
-      DO iterm=1,nb_terms
-        write(out_unit,*) iterm
-        CALL Write_Mat(tab_MatH(:,:,iterm),nio=out_unit,nbcol=5)
-      END DO
-      write(out_unit,*) ' END ',name_sub
-      flush(out_unit)
-    END IF
+  IF (debug) THEN
+    DO iterm=1,nb_terms
+      write(out_unit,*) iterm
+      CALL Write_Mat(tab_MatH(:,:,iterm),nio=out_unit,nbcol=5)
+    END DO
+    write(out_unit,*) ' END ',name_sub
+    flush(out_unit)
+  END IF
 
   END SUBROUTINE Eval_tab_HMatVibAdia
  ! the Eval_ScalOp_dnMat is a subroutine which calls Eval_ScalOp_QMLValues with QMLValues derive type

@@ -4,10 +4,10 @@
   list_act=1
   read_nml=f
   nb_channels=6
-  print_EigenVec_Basis=f
-  print_EigenVec_Grid=f
+  print_EigenVec_Basis=t
+  print_EigenVec_Grid=t
   phase_checking  = t
   phase_following = t
 / 
-&basis_nD name='boxAB' nb=64 nq=64 A=-2.5 B=2.5 symab=1 /
+&basis_nD name='boxAB' nb=32 nq=64 A=-6.5 B=6.5 symab=1 /
 

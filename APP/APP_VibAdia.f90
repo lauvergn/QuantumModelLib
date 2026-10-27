@@ -46,20 +46,46 @@ PROGRAM TEST_Vibadia
 
   TYPE (Model_t)                  :: QModel
   real (kind=Rkind), allocatable  :: Qact(:)
-  TYPE (dnMat_t)                  :: PotVal,NAC
+  TYPE (dnMat_t)                  :: PotVal,NAC,Vec0
 
   real(kind=Rkind)            :: dQ
   integer                     :: i,iq
   integer,          parameter :: nq=100
   real(kind=Rkind), parameter :: auTOcm_inv = 219474.631443_Rkind
 
+  real (kind=Rkind), allocatable :: Qmin(:),Qmax(:)
+  character (len=:), allocatable :: grid_file
+  real (kind=Rkind), allocatable :: tab_MatH(:,:,:)
 
+
+  ! to plot the 2D potential
+  CALL Init_Model(QModel,pot_name='HBond')
+
+  grid_file = 'grid2D_Hbond'
+  Qmin=[3._Rkind,-6.5_Rkind]
+  Qmax=[14._Rkind,6.5_Rkind]
+
+  CALL Eval_pot_ON_Grid(QModel,Qmin=Qmin,Qmax=Qmax,       &
+                        nb_points=101,nderiv=0,grid_file=grid_file)
+
+  ! to plot the 1+1D potential
   CALL Init_Model(QModel,Print_init=.TRUE.,Vib_adia=.TRUE.)
+  Qact = [4.0_Rkind]
+  CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,Vec0=Vec0,nderiv=1)
 
-  dQ = TWO / real(nq,kind=Rkind)
+
+  allocate(tab_MatH(QModel%nsurf,QModel%nsurf,3))
+  Qact = [4.0_Rkind]
+  CALL Eval_tab_HMatVibAdia(QModel,Qact,tab_MatH)
+
+  QModel%QM%print_EigenVec_Basis = .FALSE.
+  QModel%QM%print_EigenVec_Grid  = .FALSE.
+
+  dQ = TEN / real(nq,kind=Rkind)
   DO iq=0,nq
     Qact = [4.0_Rkind+iq*dQ]
-    CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,nderiv=1)
+    CALL Eval_Pot(QModel,Qact,PotVal,NAC=NAC,Vec0=Vec0,nderiv=1)
+
     !write(out_unit,*) 'NAC'
     !CALL Write_RMat(NAC%d1(:,:,1),out_unit,6,name_info='NAC')
     write(out_unit,*) Qact,'Ene',(PotVal%d0(i,i)*auTOcm_inv,i=1,get_nsurf(PotVal))
