@@ -44,8 +44,6 @@ PROGRAM TEST_model
   TYPE (test_t)                  :: test_var
 
   CALL Initialize_Test(test_var,test_name='QModel')
-  !CALL test_ClH2p_op12()
-   ! CALL test_ClH2p_op34() ; CALL Finalize_Test(test_var) ; stop
 
   ! One electronic surface
   CALL test_Opt_LinearHBond()
